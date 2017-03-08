@@ -163,7 +163,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
 
     private void onDeleteAccount(PaymentAccount paymentAccount) {
         new Popup().warning("Do you really want to delete the selected account?")
-                .actionButtonText("Yes")
+                .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
                     boolean isPaymentAccountUsed = model.onDeleteAccount(paymentAccount);
                     if (!isPaymentAccountUsed)
@@ -174,7 +174,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                                     "open offer or in a trade.").show();
                         }, 100, TimeUnit.MILLISECONDS);
                 })
-                .closeButtonText("Cancel")
+                .closeButtonText(Res.get("shared.cancel"))
                 .show();
     }
 
@@ -262,7 +262,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             if (paymentMethodForm != null) {
                 paymentMethodForm.addFormForAddAccount();
                 gridRow = paymentMethodForm.getGridRow();
-                Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, "Save new account", "Cancel");
+                Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, "Save new account", Res.get("shared.cancel"));
                 saveNewAccountButton = tuple2.first;
                 saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccount()));
                 saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
@@ -282,7 +282,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForDisplayAccount();
             gridRow = paymentMethodForm.getGridRow();
-            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, "Delete account", "Cancel");
+            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, "Delete account", Res.get("shared.cancel"));
             Button deleteAccountButton = tuple.first;
             deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentMethodForm.getPaymentAccount()));
             Button cancelButton = tuple.second;

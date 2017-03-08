@@ -256,9 +256,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                             "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
                                             "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
                                             "Are you sure you want to withdraw that amount?")
-                                    .actionButtonText("Yes")
+                                    .actionButtonText(Res.get("shared.yes"))
                                     .onAction(() -> doWithdraw(amount, fee, callback))
-                                    .closeButtonText("Cancel")
+                                    .closeButtonText(Res.get("shared.cancel"))
                                     .show();
                         }
                     } else {

@@ -212,7 +212,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                         else if (tradable instanceof OpenOffer)
                                             offerDetailsWindow.show(tradable.getOffer());
                                     });
-                                    field.setTooltip(new Tooltip("Open popup for details"));
+                                    field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
@@ -306,10 +306,10 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                     int numPastTrades = model.getNumPastTrades(newItem.getTradable());
                                     Trade trade = (Trade) newItem.getTradable();
                                     String hostName = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress().hostName : "";
-                                    Node identIcon = new PeerInfoIcon(hostName, "Trading peers onion address: " + hostName, numPastTrades, privateNotificationManager, newItem.getTradable().getOffer());
+                                    Node peerInfoIcon = new PeerInfoIcon(hostName, "Trading peers onion address: " + hostName, numPastTrades, privateNotificationManager, newItem.getTradable().getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
-                                    if (identIcon != null)
-                                        setGraphic(identIcon);
+                                    if (peerInfoIcon != null)
+                                        setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);
                                 }

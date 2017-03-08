@@ -27,6 +27,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -168,7 +169,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                             initSeedWords(keyChainSeed);
                             showSeedScreen();
                         })
-                        .closeButtonText("No")
+                        .closeButtonText(Res.get("shared.no"))
                         .show();
             } else {
                 initSeedWords(keyChainSeed);
@@ -239,8 +240,8 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                     .information("Your wallets are encrypted.\n\n" +
                             "After restore, the wallets will no longer be encrypted and you must set a new password.\n\n" +
                             "Do you want to proceed?")
-                    .closeButtonText("No")
-                    .actionButtonText("Yes")
+                    .closeButtonText(Res.get("shared.no"))
+                    .actionButtonText(Res.get("shared.yes"))
                     .onAction(this::doRestore)
                     .show();
         } else {

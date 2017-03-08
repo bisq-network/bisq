@@ -36,6 +36,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import javafx.scene.control.Button;
@@ -165,7 +166,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                                     " Satoshis/byte)\n" +
                                     "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
                                     "Are you sure you want to send the transaction?")
-                            .actionButtonText("Yes")
+                            .actionButtonText(Res.get("shared.yes"))
                             .onAction(() -> {
                                 try {
                                     bsqWalletService.commitTx(txWithBtcFee);
@@ -194,7 +195,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                                     new Popup<>().warning(e.toString());
                                 }
                             })
-                            .closeButtonText("Cancel")
+                            .closeButtonText(Res.get("shared.cancel"))
                             .show();
                 } catch (InsufficientFundsException | IOException |
                         TransactionVerificationException | WalletException | InsufficientMoneyException | ChangeBelowDustException e) {

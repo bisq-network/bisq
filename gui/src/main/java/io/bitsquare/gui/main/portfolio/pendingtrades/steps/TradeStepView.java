@@ -166,8 +166,8 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void addTradeInfoBlock() {
-        tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 4, "Trade information");
-        txIdTextField = addLabelTxIdTextField(gridPane, gridRow, "Deposit transaction ID:", Layout.FIRST_ROW_DISTANCE).second;
+        tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 4, Res.get("portfolio.pending.tradeInformation"));
+        txIdTextField = addLabelTxIdTextField(gridPane, gridRow, Res.getWithCol("shared.depositTransactionId"), Layout.FIRST_ROW_DISTANCE).second;
         String id = model.dataModel.txId.get();
         if (!id.isEmpty())
             txIdTextField.setup(id);
@@ -177,7 +177,7 @@ public abstract class TradeStepView extends AnchorPane {
         PaymentMethodForm.addAllowedPeriod(gridPane, ++gridRow, model.dataModel.getSellersPaymentAccountContractData(),
                 model.getDateForOpenDispute());
 
-        timeLeftTextField = addLabelTextField(gridPane, ++gridRow, "Remaining time:").second;
+        timeLeftTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("portfolio.pending.remainingTime")).second;
 
         timeLeftProgressBar = new ProgressBar(0);
         timeLeftProgressBar.setOpacity(0.7);
@@ -258,31 +258,31 @@ public abstract class TradeStepView extends AnchorPane {
 
     protected void setInformationHeadline() {
         if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText("Notification");
+            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.notification"));
         }
     }
 
     protected void setOpenDisputeHeadline() {
         if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText("Open a dispute");
+            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.openDispute"));
         }
     }
 
     protected void setDisputeOpenedHeadline() {
         if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText("Dispute opened");
+            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.disputeOpened"));
         }
     }
 
     protected void setRequestSupportHeadline() {
         if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText("Open support ticket");
+            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.openSupport"));
         }
     }
 
     protected void setSupportOpenedHeadline() {
         if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText("Support ticket opened");
+            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.supportTicketOpened"));
         }
     }
 
@@ -292,15 +292,12 @@ public abstract class TradeStepView extends AnchorPane {
 
     private void showSupportFields() {
         if (notificationGroup != null) {
-            notificationGroup.button.setText("Request support");
+            notificationGroup.button.setText(Res.get("portfolio.pending.requestSupport"));
             notificationGroup.button.setId("open-support-button");
             notificationGroup.button.setOnAction(e -> model.dataModel.onOpenSupportTicket());
         }
         new Popup().warning(trade.errorMessageProperty().getValue()
-                + "\n\nPlease report the problem to your arbitrator.\n\n" +
-                "He will forward the information to the developers to investigate the problem.\n" +
-                "After the problem has be analyzed you will get back all the funds if funds was locked.\n" +
-                "There will be no arbitration fee charged in case of a software bug.")
+                + "\n\n" + Res.get("portfolio.pending.error.requestSupport"))
                 .show();
 
     }
@@ -373,12 +370,10 @@ public abstract class TradeStepView extends AnchorPane {
                     String msg;
                     if (dispute.isSupportTicket()) {
                         setSupportOpenedHeadline();
-                        msg = "You opened already a support ticket.\n" +
-                                "Please communicate in the \"Support\" screen with the arbitrator.";
+                        msg = Res.get("portfolio.pending.supportTicketOpenedMyUser", Res.get("portfolio.pending.communicateWithArbitrator"));
                     } else {
                         setDisputeOpenedHeadline();
-                        msg = "You opened already a dispute.\n" +
-                                "Please communicate in the \"Support\" screen with the arbitrator.";
+                        msg = Res.get("portfolio.pending.disputeOpenedMyUser", Res.get("portfolio.pending.communicateWithArbitrator"));
                     }
                     if (notificationGroup != null)
                         notificationGroup.label.setText(msg);
@@ -392,12 +387,10 @@ public abstract class TradeStepView extends AnchorPane {
                     String msg;
                     if (dispute.isSupportTicket()) {
                         setSupportOpenedHeadline();
-                        msg = "Your trading peer opened a support ticket due technical problems.\n" +
-                                "Please communicate in the \"Support\" screen with the arbitrator.";
+                        msg = Res.get("portfolio.pending.supportTicketOpenedByPeer", Res.get("portfolio.pending.communicateWithArbitrator"));
                     } else {
                         setDisputeOpenedHeadline();
-                        msg = "Your trading peer opened a dispute.\n" +
-                                "Please communicate in the \"Support\" screen with the arbitrator.";
+                        msg = Res.get("portfolio.pending.disputeOpenedByPeer", Res.get("portfolio.pending.communicateWithArbitrator"));
                     }
                     if (notificationGroup != null)
                         notificationGroup.label.setText(msg);

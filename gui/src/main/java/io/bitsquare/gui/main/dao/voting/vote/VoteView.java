@@ -37,6 +37,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BsqFormatter;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -224,7 +225,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                         " Satoshis/byte)\n" +
                                         "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
                                         "Are you sure you want to send the transaction?")
-                                .actionButtonText("Yes")
+                                .actionButtonText(Res.get("shared.yes"))
                                 .onAction(() -> {
                                     try {
                                         bsqWalletService.commitTx(txWithBtcFee);
@@ -253,7 +254,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                         new Popup<>().warning(e.toString());
                                     }
                                 })
-                                .closeButtonText("Cancel")
+                                .closeButtonText(Res.get("shared.cancel"))
                                 .show();
                     } catch (InsufficientMoneyException | WalletException | TransactionVerificationException |
                             ChangeBelowDustException | InsufficientFundsException e) {

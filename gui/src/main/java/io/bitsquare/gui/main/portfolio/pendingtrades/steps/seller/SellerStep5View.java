@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer.BuyerStep5View;
+import io.bitsquare.locale.Res;
 
 public class SellerStep5View extends BuyerStep5View {
 
@@ -32,11 +33,11 @@ public class SellerStep5View extends BuyerStep5View {
 
     @Override
     protected String getBtcTradeAmountLabel() {
-        return "You have sold:";
+        return Res.get("portfolio.pending.step5_seller.sold");
     }
 
     @Override
     protected String getFiatTradeAmountLabel() {
-        return "You have received:";
+        return Res.get("portfolio.pending.step5_seller.received");
     }
 }

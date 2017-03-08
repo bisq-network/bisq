@@ -21,6 +21,7 @@ import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -86,13 +87,13 @@ public abstract class TradeSubView extends HBox {
         leftVBox.getChildren().add(leftGridPane);
 
         leftGridPaneRowIndex = 0;
-        tradeProcessTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "Trade process");
+        tradeProcessTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, Res.get("portfolio.pending.tradeProcess"));
 
         addWizards();
 
         TitledGroupBg noticeTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", Layout.GROUP_DISTANCE);
         Label label = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        openDisputeButton = addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, "Open Dispute");
+        openDisputeButton = addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.openDispute"));
         GridPane.setColumnIndex(openDisputeButton, 0);
         openDisputeButton.setId("open-dispute-button");
 

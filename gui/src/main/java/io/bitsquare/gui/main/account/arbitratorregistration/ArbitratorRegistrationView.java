@@ -29,6 +29,7 @@ import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.HPos;
@@ -224,8 +225,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
                     () -> new Popup().feedback("You have successfully removed your arbitrator from the P2P network.").show(),
                     (errorMessage) -> new Popup().error("Could not remove arbitrator.\nError message: " + errorMessage).show());
         } else {
-            new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                    "That might take up to about 2 minutes at startup.").show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -235,8 +235,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
                     () -> new Popup().feedback("You have successfully registered your arbitrator to the P2P network.").show(),
                     (errorMessage) -> new Popup().error("Could not register arbitrator.\nError message: " + errorMessage).show());
         } else {
-            new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                    "That might take up to about 2 minutes at startup.").show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 }

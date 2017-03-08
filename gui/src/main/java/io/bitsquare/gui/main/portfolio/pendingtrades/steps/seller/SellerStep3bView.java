@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
+import io.bitsquare.locale.Res;
 
 public class SellerStep3bView extends TradeStepView {
 
@@ -38,14 +39,12 @@ public class SellerStep3bView extends TradeStepView {
 
     @Override
     protected String getInfoBlockTitle() {
-        return "Wait until peer finalizes the payout transaction";
+        return Res.get("portfolio.pending.step3b_seller.waitFinalize");
     }
 
     @Override
     protected String getInfoText() {
-        return "We requested from the trading peer to sign and finalize the payout transaction.\n" +
-                "It might be that the other peer is offline, so we need to wait until he finalizes the " +
-                "transaction when he goes online again.";
+        return Res.get("portfolio.pending.step3b_seller.info");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,11 +54,7 @@ public class SellerStep3bView extends TradeStepView {
     @Override
     protected String getWarningText() {
         setInformationHeadline();
-        return "The trading peer has not finalized the payout transaction!\n" +
-                "He might be offline. You need to wait until he finalizes the payout transaction.\n" +
-                "If the trade has not been completed on " +
-                model.getDateForOpenDispute() +
-                " the arbitrator will investigate.";
+        return Res.get("portfolio.pending.step3b_seller.warn", model.getDateForOpenDispute());
     }
 
 
@@ -69,9 +64,7 @@ public class SellerStep3bView extends TradeStepView {
 
     @Override
     protected String getOpenForDisputeText() {
-        return "The trading peer has not finalized the payout transaction!\n" +
-                "The max. period for the trade has elapsed.\n" +
-                "Please contact the arbitrator for opening a dispute.";
+        return Res.get("portfolio.pending.step3b_seller.openForDispute");
     }
 
     @Override

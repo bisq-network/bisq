@@ -150,7 +150,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                             preferences.setUseTorForBitcoinJ(selected);
                             UserThread.runAfter(BitsquareApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
                         })
-                        .closeButtonText("Cancel")
+                        .closeButtonText(Res.get("shared.cancel"))
                         .onClose(() -> useTorForBtcJCheckBox.setSelected(!selected))
                         .show();
             }
@@ -185,7 +185,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                             }
                             UserThread.runAfter(BitsquareApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
                         })
-                        .closeButtonText("Cancel")
+                        .closeButtonText(Res.get("shared.cancel"))
                         .onClose(() -> btcNodes.setText(btcNodesPreFocusText))
                         .show();
             }

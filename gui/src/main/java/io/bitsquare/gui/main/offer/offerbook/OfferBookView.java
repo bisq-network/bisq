@@ -756,8 +756,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     int numPastTrades = model.getNumPastTrades(newItem.getOffer());
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ?
-                                            Res.get("peerInfoIcon.tooltip.traded", hostName, numPastTrades) :
-                                            Res.get("peerInfoIcon.tooltip.notTraded", hostName);
+                                            Res.get("peerInfoIcon.tooltip.offer.traded", hostName, numPastTrades) :
+                                            Res.get("peerInfoIcon.tooltip.offer.notTraded", hostName);
                                     Node peerInfoIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
                                     setGraphic(peerInfoIcon);

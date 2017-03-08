@@ -223,7 +223,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
             showRestoreScreen();
         });
 
-        Button cancelButton = new Button("Cancel");
+        Button cancelButton = new Button(Res.get("shared.cancel"));
         cancelButton.setOnAction(event -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);
@@ -355,8 +355,8 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
                     .information("Your bitcoin wallet is encrypted.\n\n" +
                             "After restore, the wallet will no longer be encrypted and you must set a new password.\n\n" +
                             "Do you want to proceed?")
-                    .closeButtonText("No")
-                    .actionButtonText("Yes")
+                    .closeButtonText(Res.get("shared.no"))
+                    .actionButtonText(Res.get("shared.yes"))
                     .onAction(this::doRestore)
                     .show();
         } else {

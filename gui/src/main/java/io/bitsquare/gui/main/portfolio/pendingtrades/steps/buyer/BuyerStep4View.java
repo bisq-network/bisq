@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
+import io.bitsquare.locale.Res;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.bitcoinj.core.*;
@@ -94,8 +95,8 @@ public class BuyerStep4View extends TradeStepView {
     protected void addContent() {
         addTradeInfoBlock();
         if (model.getLockTime() > 0) {
-            blockTextField = addLabelTextField(gridPane, gridRow, "Block(s) to wait until lock time elapsed:", "").second;
-            timeTextField = addLabelTextField(gridPane, ++gridRow, "Approx. date when payout gets unlocked:").second;
+            blockTextField = addLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step4_buyer.blocks"), "").second;
+            timeTextField = addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step4_buyer.date")).second;
             GridPane.setRowSpan(tradeInfoTitledGroupBg, 5);
         } else {
             GridPane.setRowSpan(tradeInfoTitledGroupBg, 3); //TODO should never reach
@@ -112,20 +113,17 @@ public class BuyerStep4View extends TradeStepView {
     @Override
     protected String getInfoBlockTitle() {
         if (model.getLockTime() > 0)
-            return "Wait until payout lock time is over";
+            return Res.get("portfolio.pending.step4_buyer.wait");
         else
-            return "Sending payout transaction to peer";
+            return Res.get("portfolio.pending.step4_buyer.send");
     }
 
     @Override
     protected String getInfoText() {
         if (model.getLockTime() > 0)
-            return "The payout transaction is signed and finalized by both parties.\n" +
-                    "For reducing bank chargeback risks the payout transaction is blocked by a lock time.\n" +
-                    "After that lock time is over the payout transaction gets published and you receive " +
-                    "your bitcoin.";
+            return Res.get("portfolio.pending.step4_buyer.info");
         else
-            return "We are sending the payout transaction to the other peer.";
+            return Res.get("portfolio.pending.step4_buyer.sending");
     }
 
 
@@ -136,10 +134,7 @@ public class BuyerStep4View extends TradeStepView {
     @Override
     protected String getWarningText() {
         setInformationHeadline();
-        return "The payout transaction is still blocked by the lock time!\n" +
-                "If the trade has not been completed on " +
-                model.getDateForOpenDispute() +
-                " the arbitrator will investigate.";
+        return Res.get("portfolio.pending.step4_buyer.warn", model.getDateForOpenDispute());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

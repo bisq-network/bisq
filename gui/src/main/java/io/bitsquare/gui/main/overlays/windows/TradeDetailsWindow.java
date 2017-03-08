@@ -196,7 +196,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             addLabelTxIdTextField(gridPane, ++rowIndex, "Taker fee transaction ID:", trade.getTakeOfferFeeTxId());
 
         if (trade.getDepositTx() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, "Deposit transaction ID:", trade.getDepositTx().getHashAsString());
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.getWithCol("shared.depositTransactionId"), trade.getDepositTx().getHashAsString());
         if (trade.getPayoutTx() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Payout transaction ID:", trade.getPayoutTx().getHashAsString());
         if (showDisputedTx)

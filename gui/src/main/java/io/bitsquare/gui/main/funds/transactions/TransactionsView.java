@@ -382,7 +382,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     if (item.getDetailsAvailable()) {
                                         field = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.INFO_SIGN);
                                         field.setOnAction(event -> openDetailPopup(item));
-                                        field.setTooltip(new Tooltip("Open popup for details"));
+                                        field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                         setGraphic(field);
                                     } else {
                                         setGraphic(new Label(item.getDetails()));

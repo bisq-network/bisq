@@ -41,7 +41,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
     @FXML
     Tab openOffersTab, pendingTradesTab, closedTradesTab;
-    private final Tab failedTradesTab = new Tab("Failed");
+    private final Tab failedTradesTab = new Tab(Res.get("portfolio.tab.failed"));
     private Tab currentTab;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;

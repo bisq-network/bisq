@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades;
 import io.bitsquare.app.Log;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller.*;
+import io.bitsquare.locale.Res;
 import org.fxmisc.easybind.EasyBind;
 
 public class SellerSubView extends TradeSubView {
@@ -46,11 +47,12 @@ public class SellerSubView extends TradeSubView {
 
     @Override
     protected void addWizards() {
-        step1 = new TradeWizardItem(SellerStep1View.class, "Wait for blockchain confirmation");
-        step2 = new TradeWizardItem(SellerStep2View.class, "Wait until payment has started");
-        step3 = new TradeWizardItem(SellerStep3View.class, "Confirm payment received");
-        step4 = new TradeWizardItem(SellerStep4View.class, "Wait for payout unlock");
-        step5 = new TradeWizardItem(SellerStep5View.class, "Completed");
+        step1 = new TradeWizardItem(SellerStep1View.class, Res.get("portfolio.pending.step1.waitForConf"));
+        step2 = new TradeWizardItem(SellerStep2View.class, Res.get("portfolio.pending.step2_seller.waitPaymentStarted"));
+        step3 = new TradeWizardItem(SellerStep3View.class, Res.get("portfolio.pending.step3_seller.confirmPaymentReceived"));
+        step4 = new TradeWizardItem(SellerStep4View.class, Res.get("portfolio.pending.step4.waitPaymentUnlocked"));
+        step5 = new TradeWizardItem(SellerStep5View.class, Res.get("portfolio.pending.step5.completed"));
+
 
         if (model.getLockTime() > 0) {
             addWizardsToGridPane(step1);

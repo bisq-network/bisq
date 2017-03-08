@@ -628,8 +628,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     if (!text.isEmpty())
                         onSendMessage(text, selectedDispute);
                 } else {
-                    new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                            "That might take up to about 2 minutes at startup.").show();
+                    new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
                 }
             });
             inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
@@ -1039,7 +1038,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     Optional<Trade> tradeOptional = tradeManager.getTradeById(item.getTradeId());
                                     if (tradeOptional.isPresent()) {
                                         field.setMouseTransparent(false);
-                                        field.setTooltip(new Tooltip("Open popup for details"));
+                                        field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                         field.setOnAction(event -> tradeDetailsWindow.show(tradeOptional.get()));
                                     } else {
                                         field.setMouseTransparent(true);

@@ -39,6 +39,7 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -115,28 +116,25 @@ public class BuyerStep5View extends TradeStepView {
 
     @Override
     protected void addContent() {
-        addTitledGroupBg(gridPane, gridRow, 4, "Summary of completed trade ", 0);
+        addTitledGroupBg(gridPane, gridRow, 4, Res.get("portfolio.pending.step5_buyer.groupTitle"), 0);
         Tuple2<Label, TextField> btcTradeAmountPair = addLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.FIRST_ROW_DISTANCE);
         btcTradeAmountLabel = btcTradeAmountPair.first;
 
         Tuple2<Label, TextField> fiatTradeAmountPair = addLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
         fiatTradeAmountLabel = fiatTradeAmountPair.first;
-
-        addLabelTextField(gridPane, ++gridRow, "Total fees paid:", model.getTotalFees());
-
-        addLabelTextField(gridPane, ++gridRow, "Refunded security deposit:", model.getSecurityDeposit());
-
-        addTitledGroupBg(gridPane, ++gridRow, 2, "Withdraw your bitcoins", Layout.GROUP_DISTANCE);
-        addLabelTextField(gridPane, gridRow, "Amount to withdraw:", model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Withdraw to address:").second;
+        addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.totalPaid"), model.getTotalFees());
+        addLabelTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.refunded"), model.getSecurityDeposit());
+        addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("portfolio.pending.step5_buyer.withdrawBTC"), Layout.GROUP_DISTANCE);
+        addLabelTextField(gridPane, gridRow, Res.get("portfolio.pending.step5_buyer.amount"), model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("portfolio.pending.step5_buyer.withdrawToAddress")).second;
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        useSavingsWalletButton = new Button("Move funds to Bitsquare wallet");
+        useSavingsWalletButton = new Button(Res.get("portfolio.pending.step5_buyer.moveToBitsquareWallet"));
         useSavingsWalletButton.setDefaultButton(false);
-        Label label = new Label("OR");
+        Label label = new Label(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));
-        withdrawToExternalWalletButton = new Button("Withdraw to external wallet");
+        withdrawToExternalWalletButton = new Button(Res.get("portfolio.pending.step5_buyer.withdrawExternal"));
         withdrawToExternalWalletButton.setDefaultButton(false);
         hBox.getChildren().addAll(useSavingsWalletButton, label, withdrawToExternalWalletButton);
         GridPane.setRowIndex(hBox, ++gridRow);
@@ -158,8 +156,8 @@ public class BuyerStep5View extends TradeStepView {
             String key = "tradeCompleted" + trade.getId();
             if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                 preferences.dontShowAgain(key, true);
-                new Notification().headLine("Trade completed")
-                        .notification("You can withdraw your funds now to your external Bitcoin wallet or transfer it to the Bitsquare wallet.")
+                new Notification().headLine(Res.get("notification.tradeCompleted.headline"))
+                        .notification(Res.get("notification.tradeCompleted.msg"))
                         .autoClose()
                         .show();
             }
@@ -182,7 +180,7 @@ public class BuyerStep5View extends TradeStepView {
             Coin fee = feeEstimationTransaction.getFee();
             Coin receiverAmount = amount.subtract(fee);
             if (balance.isZero()) {
-                new Popup().warning("Your funds have already been withdrawn.\nPlease check the transaction history.").show();
+                new Popup().warning(Res.get("portfolio.pending.step5_buyer.alreadyWithdrawn")).show();
                 model.dataModel.tradeManager.addTradeToClosedTrades(trade);
             } else {
                 if (toAddresses.isEmpty()) {
@@ -195,17 +193,21 @@ public class BuyerStep5View extends TradeStepView {
                         String key = "reviewWithdrawalAtTradeComplete";
                         if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                             int txSize = feeEstimationTransaction.bitcoinSerialize().length;
-                            new Popup().headLine("Confirm withdrawal request")
-                                    .confirmation("Sending: " + formatter.formatCoinWithCode(amount) + "\n" +
-                                            "From address: " + fromAddresses + "\n" +
-                                            "To receiving address: " + toAddresses + ".\n" +
-                                            "Required transaction fee is: " + formatter.formatCoinWithCode(fee) + " (" + MathUtils.roundDouble(((double) fee.value / (double) txSize), 2) + " Satoshis/byte)\n" +
-                                            "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
-                                            "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
-                                            "Are you sure you want to withdraw that amount?")
-                                    .actionButtonText("Yes")
+                            double feePerByte = MathUtils.roundDouble(((double) fee.value / (double) txSize), 2);
+                            double kb = txSize / 1000d;
+                            String recAmount = formatter.formatCoinWithCode(receiverAmount);
+                            new Popup().headLine(Res.get("portfolio.pending.step5_buyer.confirmWithdrawal"))
+                                    .confirmation(Res.get("portfolio.pending.step5_buyer.sendInfo",
+                                            formatter.formatCoinWithCode(amount),
+                                            fromAddresses,
+                                            toAddresses,
+                                            formatter.formatCoinWithCode(fee),
+                                            feePerByte,
+                                            kb,
+                                            recAmount))
+                                    .actionButtonText(Res.get("shared.yes"))
                                     .onAction(() -> doWithdrawal(amount, fee))
-                                    .closeButtonText("Cancel")
+                                    .closeButtonText(Res.get("shared.cancel"))
                                     .onClose(() -> {
                                         useSavingsWalletButton.setDisable(false);
                                         withdrawToExternalWalletButton.setDisable(false);
@@ -218,9 +220,7 @@ public class BuyerStep5View extends TradeStepView {
                     }
 
                 } else {
-                    new Popup()
-                            .warning("The amount to transfer is lower than the transaction fee and the min. possible tx value (dust).")
-                            .show();
+                    new Popup().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
                 }
             }
         } catch (AddressFormatException e) {
@@ -267,10 +267,9 @@ public class BuyerStep5View extends TradeStepView {
     private void handleTradeCompleted() {
         if (!DevFlags.DEV_MODE) {
             String key = "tradeCompleteWithdrawCompletedInfo";
-            new Popup().headLine("Withdrawal completed")
-                    .feedback("Your completed trades are stored under \"Portfolio/History\".\n" +
-                            "You can review all your bitcoin transactions under \"Funds/Transactions\"")
-                    .actionButtonText("Go to \"Transactions\"")
+            new Popup().headLine(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.headline"))
+                    .feedback(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.msg"))
+                    .actionButtonTextWithGoTo("navigation.funds.transactions")
                     .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
                     .dontShowAgainId(key, preferences)
                     .show();
@@ -286,10 +285,10 @@ public class BuyerStep5View extends TradeStepView {
     }
 
     protected String getBtcTradeAmountLabel() {
-        return "You have bought:";
+        return Res.get("portfolio.pending.step5_buyer.bought");
     }
 
     protected String getFiatTradeAmountLabel() {
-        return "You have paid:";
+        return Res.get("portfolio.pending.step5_buyer.paid");
     }
 }

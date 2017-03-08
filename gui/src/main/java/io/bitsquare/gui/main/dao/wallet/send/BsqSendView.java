@@ -34,6 +34,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BsqFormatter;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -122,7 +123,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                                 "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
                                 /*"The recipient will receive: " + bsqFormatter.formatCoinWithCode(receiverAmount) + "\n\n" +*/
                                 "Are you sure you want to withdraw that amount?")
-                        .actionButtonText("Yes")
+                        .actionButtonText(Res.get("shared.yes"))
                         .onAction(() -> {
                             try {
                                 bsqWalletService.commitTx(txWithBtcFee);
@@ -149,7 +150,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                                 new Popup<>().warning(e.toString());
                             }
                         })
-                        .closeButtonText("Cancel")
+                        .closeButtonText(Res.get("shared.cancel"))
                         .show();
             } catch (AddressFormatException | InsufficientFundsException |
                     TransactionVerificationException | WalletException | InsufficientMoneyException e) {

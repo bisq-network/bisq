@@ -165,7 +165,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());
         addLabelTxIdTextField(gridPane, ++rowIndex, "Trading fee transaction ID:", contract.takeOfferFeeTxID);
         if (dispute.getDepositTxSerialized() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, "Deposit transaction ID:", dispute.getDepositTxId());
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.getWithCol("shared.depositTransactionId"), dispute.getDepositTxId());
         if (dispute.getPayoutTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, "Payout transaction ID:", dispute.getPayoutTxId());
 

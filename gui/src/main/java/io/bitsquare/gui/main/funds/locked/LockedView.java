@@ -249,7 +249,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
                                 field = new HyperlinkWithIcon("Locked in MultiSig for trade with ID: " + item.getAddressEntry().getShortOfferId(),
                                         AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
-                                field.setTooltip(new Tooltip("Open popup for details"));
+                                field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                 setGraphic(field);
                             } else if (item.getAddressEntry().getContext() == AddressEntry.Context.ARBITRATOR) {
                                 setGraphic(new Label("Arbitrator's fee"));

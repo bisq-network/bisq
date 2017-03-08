@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
+import io.bitsquare.locale.Res;
 
 public class BuyerStep1View extends TradeStepView {
 
@@ -37,13 +38,12 @@ public class BuyerStep1View extends TradeStepView {
 
     @Override
     protected String getInfoBlockTitle() {
-        return "Wait for blockchain confirmation";
+        return Res.get("portfolio.pending.step1.waitForConf");
     }
 
     @Override
     protected String getInfoText() {
-        return "Deposit transaction has been published.\n" +
-                "You need to wait for at least one blockchain confirmation.";
+        return Res.get("portfolio.pending.step1.info", Res.get("shared.You"));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -53,8 +53,7 @@ public class BuyerStep1View extends TradeStepView {
     @Override
     protected String getWarningText() {
         setWarningHeadline();
-        return "The deposit transaction still did not get confirmed.\n" +
-                "That might happen in rare cases when the funding fee of one trader from the external wallet was too low.";
+        return Res.get("portfolio.pending.step1.warn");
     }
 
 
@@ -64,10 +63,7 @@ public class BuyerStep1View extends TradeStepView {
 
     @Override
     protected String getOpenForDisputeText() {
-        return "The deposit transaction still did not get confirmed.\n" +
-                "That might happen in rare cases when the funding fee of one trader from the external wallet was too low.\n" +
-                "The max. period for the trade has elapsed.\n" +
-                "\nPlease contact the arbitrator for opening a dispute.";
+        return Res.get("portfolio.pending.step1.openForDispute");
     }
 }
 

@@ -91,7 +91,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         tradeIdColumn.setText(Res.get("shared.tradeId"));
         paymentMethodColumn.setText(Res.get("shared.paymentMethod"));
         avatarColumn.setText(Res.get(""));
-        
+
         setTradeIdColumnCellFactory();
         setDateColumnCellFactory();
         setAmountColumnCellFactory();
@@ -103,7 +103,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         setAvatarColumnCellFactory();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No pending trades available"));
+        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noItems", Res.get("shared.openTrades"))));
         tableView.setMinHeight(100);
 
         tradeIdColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
@@ -139,15 +139,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         keyEventEventHandler = event -> {
             if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event) || new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN).match(event)) {
                 Popup popup = new Popup();
-                popup.headLine("Open support ticket")
-                        .message("Please use that only in emergency case if you don't get displayed a \"Open support\" or \"Open dispute\" button.\n\n" +
-                                "When you open a support ticket the trade will be interrupted and handled by the arbitrator\n\n" +
-                                "Unjustified support tickets (e.g. caused by usability problems or questions) will " +
-                                "cause a loss of the security deposit by the trader who opened the ticket.")
-                        .actionButtonText("Open support ticket")
+                popup.headLine(Res.get("portfolio.pending.openSupportTicket.headline"))
+                        .message(Res.get("portfolio.pending.openSupportTicket.msg"))
+                        .actionButtonText(Res.get("portfolio.pending.openSupportTicket.headline"))
                         .onAction(model.dataModel::onOpenSupportTicket)
-                        .closeButtonText("Cancel")
-                        .onClose(() -> popup.hide())
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .onClose(popup::hide)
                         .show();
             }
         };
@@ -278,7 +275,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(item.getTrade().getShortId(), true);
                                     field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
-                                    field.setTooltip(new Tooltip("Open popup for details"));
+                                    field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
@@ -468,12 +465,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     String hostName = newItem.getTrade().getTradingPeerNodeAddress().hostName;
                                     int numPastTrades = model.getNumPastTrades(newItem.getTrade());
                                     boolean hasTraded = numPastTrades > 0;
-                                    String tooltipText = hasTraded ? "Trading peers onion address: " + hostName + "\n" +
-                                            "You have already traded " + numPastTrades + " times with that peer." : "Trading peers onion address: " + hostName;
-                                    Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getTrade().getOffer());
+                                    String tooltipText = hasTraded ?
+                                            Res.get("peerInfoIcon.tooltip.trade.traded", hostName, numPastTrades) :
+                                            Res.get("peerInfoIcon.tooltip.trade.notTraded", hostName);
+                                    Node peerInfoIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades,
+                                            privateNotificationManager, newItem.getTrade().getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
-                                    if (identIcon != null)
-                                        setGraphic(identIcon);
+                                    setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);
                                 }

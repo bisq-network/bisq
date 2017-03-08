@@ -407,7 +407,7 @@ public class CashDepositForm extends PaymentMethodForm {
             FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(countryComboBox.getSelectionModel().getSelectedItem().code);
             if (!defaultCurrency.equals(selectedItem)) {
                 new Popup<>().warning("Are you sure you want to choose a currency other than the country's default currency?")
-                        .actionButtonText("Yes")
+                        .actionButtonText(Res.get("shared.yes"))
                         .onAction(() -> {
                             paymentAccount.setSingleTradeCurrency(selectedItem);
                             autoFillNameTextField();

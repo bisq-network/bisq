@@ -32,6 +32,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.Transitions;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.Contract;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
@@ -565,7 +566,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addButtons(Contract contract) {
-        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++rowIndex, "Close ticket", "Cancel");
+        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++rowIndex, "Close ticket", Res.get("shared.cancel"));
         Button closeTicketButton = tuple.first;
         closeTicketButton.disableProperty().bind(Bindings.createBooleanBinding(
                 () -> tradeAmountToggleGroup.getSelectedToggle() == null

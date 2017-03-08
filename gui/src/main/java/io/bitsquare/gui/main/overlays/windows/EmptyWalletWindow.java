@@ -27,6 +27,7 @@ import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Transitions;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -138,7 +139,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
             }
         });
 
-        closeButton = new Button("Cancel");
+        closeButton = new Button(Res.get("shared.cancel"));
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);

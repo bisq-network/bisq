@@ -38,6 +38,7 @@ import io.bitsquare.gui.main.overlays.notifications.NotificationCenter;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.SelectDepositTxWindow;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.trade.BuyerTrade;
@@ -174,7 +175,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         faultHandler.handleFault(errorMessage, throwable);
                     });
         } else {
-            faultHandler.handleFault("No receiver address defined", null);
+            faultHandler.handleFault(Res.get("portfolio.pending.noReceiverAddressDefined"), null);
         }
     }
 
@@ -342,7 +343,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 else if (candidates.size() > 1)
                     new SelectDepositTxWindow().transactions(candidates)
                             .onSelect(transaction -> doOpenDispute(isSupportTicket, transaction))
-                            .closeButtonText("Cancel")
+                            .closeButtonText(Res.get("shared.cancel"))
                             .show();
                 else
                     log.error("Trade.depositTx is null and we did not find any MultiSig transaction.");
@@ -400,8 +401,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             if (p2PService.isBootstrapped()) {
                 sendOpenNewDisputeMessage(dispute, false);
             } else {
-                new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                        "That might take up to about 2 minutes at startup.").show();
+                new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
             }
         } else {
             log.warn("trade is null at doOpenDispute");
@@ -414,13 +414,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 () -> navigation.navigateTo(MainView.class, DisputesView.class),
                 (errorMessage, throwable) -> {
                     if ((throwable instanceof DisputeAlreadyOpenException)) {
-                        errorMessage += "\n\n" +
-                                "If you are not sure that the message to the arbitrator arrived (e.g. if you did not got " +
-                                "a response after 1 day) feel free to open a dispute again.";
+                        errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");
                         new Popup().warning(errorMessage)
-                                .actionButtonText("Open dispute again")
+                                .actionButtonText(Res.get("portfolio.pending.openAgainDispute.button"))
                                 .onAction(() -> sendOpenNewDisputeMessage(dispute, true))
-                                .closeButtonText("Cancel")
+                                .closeButtonText(Res.get("shared.cancel"))
                                 .show();
                     } else {
                         new Popup().warning(errorMessage).show();

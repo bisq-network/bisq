@@ -32,6 +32,7 @@ import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.*;
 import io.bitsquare.locale.CryptoCurrency;
+import io.bitsquare.locale.Res;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountFactory;
@@ -196,7 +197,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
     private void onDeleteAccount(PaymentAccount paymentAccount) {
         new Popup().warning("Do you really want to delete the selected account?")
-                .actionButtonText("Yes")
+                .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
                     boolean isPaymentAccountUsed = model.onDeleteAccount(paymentAccount);
                     if (!isPaymentAccountUsed)
@@ -207,7 +208,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                                     "open offer or in a trade.").show();
                         }, 100, TimeUnit.MILLISECONDS);
                 })
-                .closeButtonText("Cancel")
+                .closeButtonText(Res.get("shared.cancel"))
                 .show();
     }
 
@@ -275,7 +276,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForAddAccount();
             gridRow = paymentMethodForm.getGridRow();
-            Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, "Save new account", "Cancel");
+            Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, "Save new account", Res.get("shared.cancel"));
             saveNewAccountButton = tuple2.first;
             saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccount()));
             saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
@@ -294,7 +295,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForDisplayAccount();
             gridRow = paymentMethodForm.getGridRow();
-            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, "Delete account", "Cancel");
+            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, "Delete account", Res.get("shared.cancel"));
             Button deleteAccountButton = tuple.first;
             deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentMethodForm.getPaymentAccount()));
             Button cancelButton = tuple.second;
