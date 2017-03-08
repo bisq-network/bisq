@@ -121,14 +121,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler;
     private int gridRow = 0;
     private final Preferences preferences;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
     private ChangeListener<String> tradeCurrencyCodeListener;
     private ImageView qrCodeImageView;
     private HBox fundingHBox;
     private Subscription isWaitingForFundsSubscription;
     private Subscription cancelButton2StyleSubscription;
     private Subscription balanceSubscription;
-    private List<Node> editOfferElements = new ArrayList<>();
+    private final List<Node> editOfferElements = new ArrayList<>();
     private boolean isActivated;
     private Label xLabel;
     private VBox fixedPriceBox;
@@ -172,7 +172,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
             @Override
             public String toString(PaymentAccount paymentAccount) {
-                return paymentAccount.getAccountName() + " (" + paymentAccount.getSingleTradeCurrency().getCode() + ", " +
+                TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
+                String code = singleTradeCurrency != null ? singleTradeCurrency.getCode() : "";
+                return paymentAccount.getAccountName() + " (" + code + ", " +
                         Res.get(paymentAccount.getPaymentMethod().getId()) + ")";
             }
 
@@ -299,10 +301,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (model.isBootstrapped()) {
             if (model.hasAcceptedArbitrators()) {
                 Offer offer = model.createAndGetOffer();
+                //noinspection PointlessBooleanExpression
                 if (!DevFlags.DEV_MODE)
                     offerDetailsWindow.onPlaceOffer(() ->
-                            model.onPlaceOffer(offer, () ->
-                                    offerDetailsWindow.hide()))
+                            model.onPlaceOffer(offer, offerDetailsWindow::hide))
                             .show(offer);
                 else
                     model.onPlaceOffer(offer, () -> {
@@ -330,6 +332,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
 
+        //noinspection PointlessBooleanExpression
         if (!DevFlags.DEV_MODE) {
             String key = "securityDepositInfo";
             new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
@@ -416,7 +419,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
                 model.onPaymentAccountSelected(paymentAccount);
             } else {
-                currencyTextField.setText(paymentAccount.getSingleTradeCurrency().getNameAndCode());
+                TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
+                if (singleTradeCurrency != null)
+                    currencyTextField.setText(singleTradeCurrency.getNameAndCode());
                 model.onPaymentAccountSelected(paymentAccount);
                 model.onCurrencySelected(paymentAccount.getSingleTradeCurrency());
             }
@@ -563,7 +568,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton2StyleSubscription = EasyBind.subscribe(placeOfferButton.visibleProperty(),
                 isVisible -> cancelButton2.setId(isVisible ? "cancel-button" : null));
 
-        balanceSubscription = EasyBind.subscribe(model.dataModel.balance, newValue -> balanceTextField.setBalance(newValue));
+        balanceSubscription = EasyBind.subscribe(model.dataModel.balance, balanceTextField::setBalance);
     }
 
     private void removeSubscriptions() {
@@ -574,27 +579,27 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void createListeners() {
         amountFocusedListener = (o, oldValue, newValue) -> {
-            model.onFocusOutAmountTextField(oldValue, newValue, amountTextField.getText());
+            model.onFocusOutAmountTextField(oldValue, newValue);
             amountTextField.setText(model.amount.get());
         };
         minAmountFocusedListener = (o, oldValue, newValue) -> {
-            model.onFocusOutMinAmountTextField(oldValue, newValue, minAmountTextField.getText());
+            model.onFocusOutMinAmountTextField(oldValue, newValue);
             minAmountTextField.setText(model.minAmount.get());
         };
         priceFocusedListener = (o, oldValue, newValue) -> {
-            model.onFocusOutPriceTextField(oldValue, newValue, fixedPriceTextField.getText());
+            model.onFocusOutPriceTextField(oldValue, newValue);
             fixedPriceTextField.setText(model.price.get());
         };
         priceAsPercentageFocusedListener = (o, oldValue, newValue) -> {
-            model.onFocusOutPriceAsPercentageTextField(oldValue, newValue, marketBasedPriceTextField.getText());
+            model.onFocusOutPriceAsPercentageTextField(oldValue, newValue);
             marketBasedPriceTextField.setText(model.marketPriceMargin.get());
         };
         volumeFocusedListener = (o, oldValue, newValue) -> {
-            model.onFocusOutVolumeTextField(oldValue, newValue, volumeTextField.getText());
+            model.onFocusOutVolumeTextField(oldValue, newValue);
             volumeTextField.setText(model.volume.get());
         };
         securityDepositFocusedListener = (o, oldValue, newValue) -> {
-            model.onFocusOutSecurityDepositTextField(oldValue, newValue, securityDepositTextField.getText());
+            model.onFocusOutSecurityDepositTextField(oldValue, newValue);
             securityDepositTextField.setText(model.securityDeposit.get());
         };
         errorMessageListener = (o, oldValue, newValue) -> {
@@ -664,9 +669,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         };
 
 
-        marketPriceAvailableListener = (observable, oldValue, newValue) -> {
-            updateMarketPriceAvailable();
-        };
+        marketPriceAvailableListener = (observable, oldValue, newValue) -> updateMarketPriceAvailable();
     }
 
     private void updateMarketPriceAvailable() {
@@ -693,7 +696,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         marketBasedPriceTextField.focusedProperty().addListener(priceAsPercentageFocusedListener);
         volumeTextField.focusedProperty().addListener(volumeFocusedListener);
         securityDepositTextField.focusedProperty().addListener(securityDepositFocusedListener);
-       
+
         // warnings
         model.errorMessage.addListener(errorMessageListener);
         // model.dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
@@ -1054,9 +1057,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             model.dataModel.setUseMarketBasedPrice(!fixedPriceSelected);
 
             if (!fixedPriceButton.isSelected() && fixedPriceSelected)
-                fixedPriceButton.setSelected(fixedPriceSelected);
+                fixedPriceButton.setSelected(true);
             if (useMarketBasedPriceButton.isSelected() && !fixedPriceSelected)
-                useMarketBasedPriceButton.setSelected(!fixedPriceSelected);
+                useMarketBasedPriceButton.setSelected(false);
         }
 
         fixedPriceButton.setMouseTransparent(fixedPriceSelected);

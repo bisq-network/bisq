@@ -27,10 +27,8 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.btc.wallet.BtcWalletService;
-import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.offer.createoffer.monetary.Price;
 import io.bitsquare.gui.main.offer.createoffer.monetary.Volume;
@@ -66,7 +64,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class CreateOfferDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
     private final BtcWalletService walletService;
-    private final TradeWalletService tradeWalletService;
     private final Preferences preferences;
     private final User user;
     private final KeyRing keyRing;
@@ -74,7 +71,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final PriceFeedService priceFeedService;
     final String shortOfferId;
     private final FeeService feeService;
-    private final Navigation navigation;
     private final BSFormatter formatter;
     private final String offerId;
     private final AddressEntry addressEntry;
@@ -122,19 +118,17 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService walletService, TradeWalletService tradeWalletService,
+    CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService walletService,
                          Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService,
-                         FeeService feeService, Navigation navigation, BSFormatter formatter) {
+                         FeeService feeService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.walletService = walletService;
-        this.tradeWalletService = tradeWalletService;
         this.preferences = preferences;
         this.user = user;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.feeService = feeService;
-        this.navigation = navigation;
         this.formatter = formatter;
 
         offerId = Utilities.getRandomPrefix(5, 8) + "-" +
@@ -226,7 +220,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         fillPaymentAccounts();
 
         PaymentAccount account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
-        if (account != null && !isUSBankAccount(account)) {
+        if (account != null && isNotUSBankAccount(account)) {
             paymentAccount = account;
             this.tradeCurrency = tradeCurrency;
         } else {
@@ -240,7 +234,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
             }
         }
 
-        tradeCurrencyCode.set(this.tradeCurrency.getCode());
+        if (this.tradeCurrency != null)
+            tradeCurrencyCode.set(this.tradeCurrency.getCode());
 
         if (!preferences.getUseStickyMarketPrice())
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
@@ -556,6 +551,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         log.debug("missingCoin " + missingCoin.get().toFriendlyString());
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
+        //noinspection PointlessBooleanExpression
         if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevFlags.DEV_MODE) {
             walletFundedNotification = new Notification()
                     .headLine("Trading wallet update")
@@ -599,15 +595,16 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     private void fillPaymentAccounts() {
         paymentAccounts.setAll(user.getPaymentAccounts().stream()
-                .filter(e -> !isUSBankAccount(e))
+                .filter(this::isNotUSBankAccount)
                 .collect(Collectors.toSet()));
     }
 
-    private boolean isUSBankAccount(PaymentAccount paymentAccount) {
+    private boolean isNotUSBankAccount(PaymentAccount paymentAccount) {
+        //noinspection SimplifiableIfStatement
         if (paymentAccount instanceof SameCountryRestrictedBankAccount && paymentAccount.getContractData() instanceof BankAccountContractData)
-            return ((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
+            return !((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
         else
-            return false;
+            return true;
     }
 
     void setAmount(Coin amount) {

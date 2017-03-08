@@ -63,10 +63,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private final BtcValidator btcValidator;
     private final SecurityDepositValidator securityDepositValidator;
     private final P2PService p2PService;
-    private PriceFeedService priceFeedService;
-    private Preferences preferences;
-    private Navigation navigation;
-    final BSFormatter formatter;
+    private final PriceFeedService priceFeedService;
+    private final Preferences preferences;
+    private final Navigation navigation;
+    private final BSFormatter formatter;
     private final FiatValidator fiatValidator;
 
     private String amountDescription;
@@ -103,7 +103,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final BooleanProperty isNextButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty placeOfferCompleted = new SimpleBooleanProperty();
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
-    final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
+    private final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
     final BooleanProperty isWaitingForFunds = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
@@ -113,7 +113,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final ObjectProperty<InputValidator.ValidationResult> securityDepositValidationResult = new SimpleObjectProperty<>();
 
     // Those are needed for the addressTextField
-    final ObjectProperty<Address> address = new SimpleObjectProperty<>();
+    private final ObjectProperty<Address> address = new SimpleObjectProperty<>();
 
     private ChangeListener<String> amountStringListener;
     private ChangeListener<String> minAmountStringListener;
@@ -178,7 +178,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 minAmount.set(amount.get());
                 UserThread.runAfter(() -> {
                     price.set("1000");
-                    onFocusOutPriceAsPercentageTextField(true, false, "");
+                    onFocusOutPriceAsPercentageTextField(true, false);
                 }, 1);
 
                 setAmountToModel();
@@ -578,7 +578,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     "You need " + formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()) + " but you have only " +
                     formatter.formatCoinWithCode(dataModel.totalAvailableBalance) + " in your Bitsquare wallet.\n\n" +
                     "Please fund that trade from an external Bitcoin wallet or fund your Bitsquare " +
-                    "wallet at \"Funds/Depost funds\".")
+                    "wallet at \"Funds/Deposit funds\".")
                     .actionButtonText("Go to \"Funds/Deposit funds\"")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
@@ -593,7 +593,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // On focus out we do validation and apply the data to the model
-    void onFocusOutAmountTextField(boolean oldValue, boolean newValue, String userInput) {
+    void onFocusOutAmountTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(amount.get());
             amountValidationResult.set(result);
@@ -615,7 +615,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    void onFocusOutMinAmountTextField(boolean oldValue, boolean newValue, String userInput) {
+    void onFocusOutMinAmountTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(minAmount.get());
             minAmountValidationResult.set(result);
@@ -634,7 +634,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    void onFocusOutPriceTextField(boolean oldValue, boolean newValue, String userInput) {
+    void onFocusOutPriceTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isPriceInputValid(price.get());
             boolean isValid = result.isValid;
@@ -651,13 +651,13 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    void onFocusOutPriceAsPercentageTextField(boolean oldValue, boolean newValue, String userInput) {
+    void onFocusOutPriceAsPercentageTextField(boolean oldValue, boolean newValue) {
         inputIsMarketBasedPrice = !oldValue && newValue;
         if (oldValue && !newValue)
             marketPriceMargin.set(formatter.formatRoundedDoubleWithPrecision(dataModel.getMarketPriceMargin() * 100, 2));
     }
 
-    void onFocusOutVolumeTextField(boolean oldValue, boolean newValue, String userInput) {
+    void onFocusOutVolumeTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isVolumeInputValid(volume.get());
             volumeValidationResult.set(result);
@@ -685,7 +685,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    void onFocusOutSecurityDepositTextField(boolean oldValue, boolean newValue, String userInput) {
+    void onFocusOutSecurityDepositTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = securityDepositValidator.validate(securityDeposit.get());
             securityDepositValidationResult.set(result);
@@ -708,17 +708,17 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 ignoreSecurityDepositStringListener = false;
                             })
                             .closeButtonText("Yes, use my lower value")
-                            .onClose(() -> applySecurityDepositOnFocusOut(result))
+                            .onClose(() -> applySecurityDepositOnFocusOut())
                             .dontShowAgainId(securityDepositLowerAsDefault, preferences)
                             .show();
                 } else {
-                    applySecurityDepositOnFocusOut(result);
+                    applySecurityDepositOnFocusOut();
                 }
             }
         }
     }
 
-    private void applySecurityDepositOnFocusOut(InputValidator.ValidationResult result) {
+    private void applySecurityDepositOnFocusOut() {
         setSecurityDepositToModel();
         ignoreSecurityDepositStringListener = true;
         securityDeposit.set(formatter.formatCoin(dataModel.securityDeposit.get()));
@@ -750,7 +750,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent()) +
                 " and can be adjusted in the preferences.")
                 .actionButtonText("Change price")
-                .onAction(() -> popup.hide())
+                .onAction(popup::hide)
                 .closeButtonText("Go to \"Preferences\"")
                 .onClose(() -> navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class))
                 .show();
