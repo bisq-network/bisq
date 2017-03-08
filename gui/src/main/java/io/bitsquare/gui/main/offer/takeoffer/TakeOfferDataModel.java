@@ -25,7 +25,6 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.btc.wallet.BtcWalletService;
-import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
@@ -59,7 +58,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 class TakeOfferDataModel extends ActivatableDataModel {
     private final TradeManager tradeManager;
-    private final TradeWalletService tradeWalletService;
     private final BtcWalletService walletService;
     private final User user;
     private final FeeService feeService;
@@ -101,12 +99,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
 
     @Inject
-    TakeOfferDataModel(TradeManager tradeManager, TradeWalletService tradeWalletService,
+    TakeOfferDataModel(TradeManager tradeManager, 
                        BtcWalletService walletService, User user, FeeService feeService,
                        Preferences preferences, PriceFeedService priceFeedService,
                        BSFormatter formatter) {
         this.tradeManager = tradeManager;
-        this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
         this.user = user;
         this.feeService = feeService;
@@ -398,6 +395,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         log.debug("missingCoin " + missingCoin.get().toFriendlyString());
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
+        //noinspection ConstantConditions,ConstantConditions
         if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevFlags.DEV_MODE) {
             walletFundedNotification = new Notification()
                     .headLine("Trading wallet update")

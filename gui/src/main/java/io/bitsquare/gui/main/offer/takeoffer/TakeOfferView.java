@@ -45,6 +45,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.Res;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
@@ -272,6 +273,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     // called form parent as the view does not get notified when the tab is closed
     public void onClose() {
         Coin balance = model.dataModel.balance.get();
+        //noinspection ConstantConditions,ConstantConditions
         if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevFlags.DEV_MODE) {
             model.dataModel.swapTradeToSavings();
             new Popup().information("You had already funded that offer.\n" +
@@ -524,27 +526,29 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
 
         showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
+            //noinspection ConstantConditions
             if (newValue && DevFlags.DEV_MODE) {
                 close();
-            } else if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
-                String key = "takeOfferSuccessInfo";
-                if (preferences.showAgain(key)) {
-                    UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
-                            .feedback(Res.get("takeOffer.success.info"))
-                            .actionButtonText("Go to \"Open trades\"")
-                            .dontShowAgainId(key, preferences)
-                            .onAction(() -> {
-                                UserThread.runAfter(
-                                        () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
-                                        , 100, TimeUnit.MILLISECONDS);
-                                close();
-                            })
-                            .onClose(this::close)
-                            .show(), 1);
-                } else {
-                    close();
+            } else //noinspection ConstantConditions,ConstantConditions
+                if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
+                    String key = "takeOfferSuccessInfo";
+                    if (preferences.showAgain(key)) {
+                        UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
+                                .feedback(Res.get("takeOffer.success.info"))
+                                .actionButtonText("Go to \"Open trades\"")
+                                .dontShowAgainId(key, preferences)
+                                .onAction(() -> {
+                                    UserThread.runAfter(
+                                            () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
+                                            , 100, TimeUnit.MILLISECONDS);
+                                    close();
+                                })
+                                .onClose(this::close)
+                                .show(), 1);
+                    } else {
+                        close();
+                    }
                 }
-            }
         });
 
  /*       noSufficientFeeBinding = EasyBind.combine(model.dataModel.isWalletFunded, model.dataModel.isMainNet, model.dataModel.isFeeFromFundingTxSufficient,
@@ -569,7 +573,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         .show();
         });*/
 
-        balanceSubscription = EasyBind.subscribe(model.dataModel.balance, newValue -> balanceTextField.setBalance(newValue));
+        balanceSubscription = EasyBind.subscribe(model.dataModel.balance, balanceTextField::setBalance);
         cancelButton2StyleSubscription = EasyBind.subscribe(takeOfferButton.visibleProperty(),
                 isVisible -> cancelButton2.setId(isVisible ? "cancel-button" : null));
     }
@@ -635,7 +639,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
             @Override
             public String toString(PaymentAccount paymentAccount) {
-                return paymentAccount.getAccountName() + " (" + paymentAccount.getSingleTradeCurrency().getCode() + ", " +
+                TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
+                String code = singleTradeCurrency != null ? singleTradeCurrency.getCode() : "";
+                return paymentAccount.getAccountName() + " (" + code + ", " +
                         Res.get(paymentAccount.getPaymentMethod().getId()) + ")";
             }
 

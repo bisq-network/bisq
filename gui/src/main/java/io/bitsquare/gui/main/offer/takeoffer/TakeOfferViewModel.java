@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.offer.takeoffer;
 
 import io.bitsquare.arbitration.Arbitrator;
-import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -54,9 +53,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final TakeOfferDataModel dataModel;
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
-    private PriceFeedService priceFeedService;
     private final Navigation navigation;
-    final BSFormatter formatter;
+    private final BSFormatter formatter;
 
     private String amountRange;
     private String paymentLabel;
@@ -105,14 +103,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TakeOfferViewModel(TakeOfferDataModel dataModel, BtcValidator btcValidator, P2PService p2PService, PriceFeedService priceFeedService,
+    public TakeOfferViewModel(TakeOfferDataModel dataModel, BtcValidator btcValidator, P2PService p2PService, 
                               Navigation navigation, BSFormatter formatter) {
         super(dataModel);
         this.dataModel = dataModel;
 
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
-        this.priceFeedService = priceFeedService;
         this.navigation = navigation;
         this.formatter = formatter;
 
@@ -224,8 +221,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     "You need " + formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()) + " but you have only " +
                     formatter.formatCoinWithCode(dataModel.totalAvailableBalance) + " in your Bitsquare wallet.\n\n" +
                     "Please fund that trade from an external Bitcoin wallet or fund your Bitsquare " +
-                    "wallet at \"Funds/Depost funds\".")
-                    .actionButtonText("Go to \"Funds/Depost funds\"")
+                    "wallet at \"Funds/Deposit funds\".")
+                    .actionButtonText("Go to \"Funds/Deposit funds\"")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
             return false;
@@ -430,9 +427,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             updateButtonDisableState();
         };
         amountAsCoinListener = (ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue));
-        isWalletFundedListener = (ov, oldValue, newValue) -> {
-            updateButtonDisableState();
-        };
+        isWalletFundedListener = (ov, oldValue, newValue) -> updateButtonDisableState();
 
         tradeStateListener = (ov, oldValue, newValue) -> applyTradeState(newValue);
         tradeErrorListener = (ov, oldValue, newValue) -> applyTradeErrorMessage(newValue);
