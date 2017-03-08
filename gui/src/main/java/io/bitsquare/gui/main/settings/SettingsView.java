@@ -36,7 +36,7 @@ import javax.inject.Inject;
 @FxmlView
 public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> {
     @FXML
-    Tab settingsTab, networkTab, aboutTab;
+    Tab preferencesTab, networkTab, aboutTab;
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private Navigation.Listener navigationListener;
@@ -50,7 +50,7 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     @Override
     public void initialize() {
-        settingsTab.setText(Res.get("settings.tab.settings"));
+        preferencesTab.setText(Res.get("settings.tab.preferences"));
         networkTab.setText(Res.get("settings.tab.network"));
         aboutTab.setText(Res.get("settings.tab.aboutTab"));
                 
@@ -60,7 +60,7 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == settingsTab)
+            if (newValue == preferencesTab)
                 navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
             else if (newValue == networkTab)
                 navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
@@ -75,7 +75,7 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
         navigation.addListener(navigationListener);
 
         Tab selectedItem = root.getSelectionModel().getSelectedItem();
-        if (selectedItem == settingsTab)
+        if (selectedItem == preferencesTab)
             navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
         else if (selectedItem == networkTab)
             navigation.navigateTo(MainView.class, SettingsView.class, NetworkSettingsView.class);
@@ -93,7 +93,7 @@ public class SettingsView extends ActivatableViewAndModel<TabPane, Activatable> 
         final Tab tab;
         View view = viewLoader.load(viewClass);
 
-        if (view instanceof PreferencesView) tab = settingsTab;
+        if (view instanceof PreferencesView) tab = preferencesTab;
         else if (view instanceof NetworkSettingsView) tab = networkTab;
         else if (view instanceof AboutView) tab = aboutTab;
         else throw new IllegalArgumentException("Navigation to " + viewClass + " is not supported");

@@ -329,6 +329,15 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
+    public T goToForAction(String target) {
+        this.actionButtonText = Res.get("shared.goTo", Res.get(target));
+        return (T) this;
+    }
+
+    public T goToForClose(String target) {
+        this.closeButtonText = Res.get("shared.goTo", Res.get(target));
+        return (T) this;
+    }
 
     public T actionButtonText(String actionButtonText) {
         this.actionButtonText = actionButtonText;

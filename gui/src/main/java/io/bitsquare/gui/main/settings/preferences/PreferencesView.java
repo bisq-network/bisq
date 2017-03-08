@@ -418,7 +418,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             String selectedItem = userLanguageComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 preferences.setUserLanguage(selectedItem);
-                new Popup<>().information(Res.get("settings.languageChange")).show();
+                new Popup<>().information(Res.get("settings.languageChange"))
+                        .closeButtonText(Res.get("shared.ok"))
+                        .show();
             }
             // Should we apply the changed currency immediately to the language list?
             // If so and the user selects a unknown language he might get lost and it is hard to find 

@@ -321,10 +321,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onCreateOffer() {
         if (!model.hasPaymentAccount()) {
-            openPopupForMissingAccountSetup(Res.get("offerbook.warning.noTradingAccountSetup.headline"),
-                    Res.get("offerbook.warning.noTradingAccountSetup.msg"),
+            openPopupForMissingAccountSetup(Res.get("popup.warning.noTradingAccountSetup.headline"),
+                    Res.get("popup.warning.noTradingAccountSetup.msg"),
                     FiatAccountsView.class,
-                    Res.get("navigation.account"));
+                    "navigation.account");
         } else if (!model.hasPaymentAccountForCurrency()) {
             new Popup().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
                     .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
@@ -340,10 +340,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     })
                     .show();
         } else if (!model.hasAcceptedArbitrators()) {
-            openPopupForMissingAccountSetup(Res.get("offerbook.warning.noArbitratorSelected.headline"),
-                    Res.get("offerbook.warning.noArbitratorSelected.msg"),
+            openPopupForMissingAccountSetup(Res.get("popup.warning.noArbitratorSelected.headline"),
+                    Res.get("popup.warning.noArbitratorSelected.msg"),
                     ArbitratorSelectionView.class,
-                    Res.get("navigation.arbitratorSelection"));
+                    "navigation.arbitratorSelection");
         } else {
             createOfferButton.setDisable(true);
             offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
@@ -354,15 +354,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             boolean hasSameProtocolVersion, boolean isIgnored,
                             boolean isOfferBanned, boolean isNodeBanned) {
         if (!hasMatchingArbitrator) {
-            openPopupForMissingAccountSetup(Res.get("offerbook.warning.noArbitratorSelected.headline"),
-                    Res.get("offerbook.warning.noArbitratorSelected.msg"),
+            openPopupForMissingAccountSetup(Res.get("popup.warning.noArbitratorSelected.headline"),
+                    Res.get("popup.warning.noArbitratorSelected.msg"),
                     ArbitratorSelectionView.class,
-                    Res.get("navigation.arbitratorSelection"));
+                    "navigation.arbitratorSelection");
         } else if (!isPaymentAccountValidForOffer) {
             openPopupForMissingAccountSetup(Res.get("offerbook.warning.noMatchingAccount.headline"),
                     Res.get("offerbook.warning.noMatchingAccount.msg"),
                     FiatAccountsView.class,
-                    Res.get("navigation.account"));
+                    "navigation.account");
         } else if (!hasSameProtocolVersion) {
             new Popup().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
         } else if (isIgnored) {
@@ -378,14 +378,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         if (model.isBootstrapped())
             offerActionHandler.onTakeOffer(offer);
         else
-            new Popup().information(Res.get("offerbook.warning.notFullyConnected")).show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
     }
 
     private void onRemoveOpenOffer(Offer offer) {
         if (model.isBootstrapped()) {
             String key = "RemoveOfferWarning";
             if (model.preferences.showAgain(key))
-                new Popup().warning(Res.get("offerbook.warning.removeOffer", model.formatter.formatCoinWithCode(offer.getCreateOfferFee())))
+                new Popup().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(offer.getCreateOfferFee())))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOffer(offer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
@@ -394,7 +394,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             else
                 doRemoveOffer(offer);
         } else {
-            new Popup().information(Res.get("offerbook.warning.notFullyConnected")).show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -405,7 +405,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     log.debug(Res.get("offerbook.removeOffer.success"));
                     if (model.preferences.showAgain(key))
                         new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
-                                .actionButtonText(Res.get("shared.goTo", Res.get("navigation.funds.availableForWithdrawal")))
+                                .goToForAction("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                                 .dontShowAgainId(key, model.preferences)
                                 .show();
@@ -419,7 +419,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void openPopupForMissingAccountSetup(String headLine, String message, Class target, String targetAsString) {
         new Popup().headLine(headLine)
                 .instruction(message)
-                .actionButtonText(Res.get("shared.goTo", targetAsString))
+                .goToForAction(targetAsString)
                 .onAction(() -> {
                     navigation.setReturnPath(navigation.getCurrentPath());
                     navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, target);

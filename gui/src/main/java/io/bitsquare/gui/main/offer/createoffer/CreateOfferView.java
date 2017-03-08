@@ -31,6 +31,7 @@ import io.bitsquare.gui.components.*;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.AccountView;
 import io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
+import io.bitsquare.gui.main.account.content.fiataccounts.FiatAccountsView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
@@ -254,14 +255,21 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     public void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         boolean result = model.initWithData(direction, tradeCurrency);
 
-        if (!result)
-            new Popup().warning("You don't have a trading account set up.").onClose(this::close).show();
+        if (!result) {
+            new Popup().headLine(Res.get("popup.warning.noTradingAccountSetup.headline"))
+                    .instruction(Res.get("popup.warning.noTradingAccountSetup.msg"))
+                    .goToForAction("navigation.account")
+                    .onAction(() -> {
+                        navigation.setReturnPath(navigation.getCurrentPath());
+                        navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
+                    }).show();
+        }
 
         if (direction == Offer.Direction.BUY) {
             imageView.setId("image-buy-large");
 
             placeOfferButton.setId("buy-button-big");
-            placeOfferButton.setText("Review: Place offer to buy bitcoin");
+            placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
         } else {
             imageView.setId("image-sell-large");
@@ -269,7 +277,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             totalToPayTextField.setPromptText(Res.get("createOffer.fundsBox.totalsNeeded.prompt"));
 
             placeOfferButton.setId("sell-button-big");
-            placeOfferButton.setText("Review: Place offer to sell bitcoin");
+            placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
             nextButton.setId("sell-button");
         }
     }
@@ -279,10 +287,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         // we use model.placeOfferCompleted to not react on close which was triggered by a successful placeOffer
         if (model.dataModel.balance.get().isPositive() && !model.placeOfferCompleted.get()) {
             model.dataModel.swapTradeToSavings();
-            new Popup().information("You had already funded that offer.\n" +
-                    "Your funds have been moved to your local Bitsquare wallet and are available for " +
-                    "withdrawal in the \"Funds/Available for withdrawal\" screen.")
-                    .actionButtonText("Go to \"Funds/Available for withdrawal\"")
+            new Popup().information(Res.get("createOffer.alreadyFunded"))
+                    .goToForAction("navigation.funds.availableForWithdrawal")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                     .show();
         }
@@ -310,15 +316,16 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     model.onPlaceOffer(offer, () -> {
                     });
             } else {
-                new Popup().warning("You have no arbitrator selected.\n" +
-                        "You need to select at least one arbitrator.")
-                        .actionButtonText("Go to \"Arbitrator selection\"")
-                        .onAction(() -> navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class))
-                        .show();
+                new Popup().headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
+                        .instruction(Res.get("popup.warning.noArbitratorSelected.msg"))
+                        .goToForAction("navigation.arbitratorSelection")
+                        .onAction(() -> {
+                            navigation.setReturnPath(navigation.getCurrentPath());
+                            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
+                        }).show();
             }
         } else {
-            new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                    "That might take up to about 2 minutes at startup.").show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -335,38 +342,26 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         //noinspection PointlessBooleanExpression
         if (!DevFlags.DEV_MODE) {
             String key = "securityDepositInfo";
-            new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
-                    "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
-                    "It will be refunded to you after the trade has successfully completed.\n\n" +
-                    "Please note that you need to keep you application running if you have an open offer.\n" +
-                    "When another trader wants to take your offer it requires that your application is online and able to react.\n" +
-                    "Be sure that you have standby mode deactivated as that would disconnect your client from the network (standby of the monitor is not a problem).")
-                    .actionButtonText("Visit FAQ web page")
+            new Popup().backgroundInfo(Res.get("createOffer.securityDepositInfo"))
+                    .actionButtonText(Res.get("shared.faq"))
                     .onAction(() -> GUIUtil.openWebPage("https://bitsquare.io/faq#6"))
                     .useIUnderstandButton()
                     .dontShowAgainId(key, preferences)
                     .show();
 
             key = "createOfferFundWalletInfo";
-            String tradeAmountText = model.isSellOffer() ? "- Trade amount: " + model.getTradeAmount() + "\n" : "";
-
-            new Popup().headLine("Fund your offer").instruction("You need to deposit " +
-                    model.totalToPay.get() + " to this offer.\n\n" +
-
-                    "Those funds are reserved in your local wallet and will get locked into the Multisig " +
-                    "deposit address once someone takes your offer.\n\n" +
-
-                    "The amount is the sum of:\n" +
-                    tradeAmountText +
-                    "- Security deposit: " + model.getSecurityDepositInfo() + "\n" +
-                    "- Trading fee: " + model.getCreateOfferFee() + "\n" +
-                    "- Mining fee: " + model.getTxFee() + "\n\n" +
-
-                    "You can choose between two options when funding your trade:\n" +
-                    "- Use your Bitsquare wallet (convenient, but transactions may be linkable) OR\n" +
-                    "- Transfer from an external wallet (potentially more private)\n\n" +
-
-                    "You will see all funding options and details after closing this popup.")
+            String tradeAmountText = model.isSellOffer() ? Res.get("createOffer.createOfferFundWalletInfo.tradeAmount", model.getTradeAmount()) : "";
+            String message = Res.get("createOffer.createOfferFundWalletInfo.msg",
+                    model.totalToPay.get(),
+                    tradeAmountText,
+                    model.getSecurityDepositInfo(),
+                    model.getCreateOfferFee(),
+                    model.getTxFee()
+            );
+            //TODO remove
+            log.error(message);
+            new Popup().headLine(Res.get("createOffer.createOfferFundWalletInfo.headline"))
+                    .instruction(message)
                     .dontShowAgainId(key, preferences)
                     .show();
         }
@@ -604,9 +599,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         };
         errorMessageListener = (o, oldValue, newValue) -> {
             if (newValue != null)
-                UserThread.runAfter(() -> new Popup().error(Res.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()) +
-                        "\n\nNo funds have left your wallet yet.\n" +
-                        "Please try to restart you application and check your network connection to see if you can resolve the issue.")
+                UserThread.runAfter(() -> new Popup().error(Res.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()))
                         .show(), 100, TimeUnit.MILLISECONDS);
         };
 
@@ -652,7 +645,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     UserThread.runAfter(() -> new Popup().headLine(Res.get("createOffer.success.headline"))
                                     .feedback(Res.get("createOffer.success.info"))
                                     .dontShowAgainId(key, preferences)
-                                    .actionButtonText("Go to \"My open offers\"")
+                                    .goToForAction("navigation.portfolio.myOpenOffers")
                                     .onAction(() -> {
                                         UserThread.runAfter(() ->
                                                         navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class),
@@ -768,11 +761,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addPaymentGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Select trading account");
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, Res.get("createOffer.selectTradingAccount"));
         GridPane.setColumnSpan(titledGroupBg, 3);
 
-        paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, "Trading account:", Layout.FIRST_ROW_DISTANCE).second;
-        paymentAccountsComboBox.setPromptText("Select trading account");
+        paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE).second;
+        paymentAccountsComboBox.setPromptText(Res.get("createOffer.selectTradingAccount"));
         paymentAccountsComboBox.setMinWidth(300);
         editOfferElements.add(paymentAccountsComboBox);
 
@@ -803,7 +796,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addAmountPriceGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, "Set amount and price", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, Res.get("createOffer.setAmountPrice"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 3);
 
         imageView = new ImageView();
@@ -826,7 +819,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         addThirdRow();
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow,
-                Res.get("createOffer.amountPriceBox.next"), Res.get("shared.cancel"));
+                Res.get("shared.nextStep"), Res.get("shared.cancel"));
         nextButton = tuple.first;
         editOfferElements.add(nextButton);
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
@@ -876,7 +869,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         qrCodeImageView = new ImageView();
         qrCodeImageView.setVisible(false);
         qrCodeImageView.setStyle("-fx-cursor: hand;");
-        Tooltip.install(qrCodeImageView, new Tooltip("Open large QR-Code window"));
+        Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
                         () -> new QRCodeWindow(getBitcoinURI()).show(),
@@ -904,13 +897,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fundingHBox.setVisible(false);
         fundingHBox.setManaged(false);
         fundingHBox.setSpacing(10);
-        fundFromSavingsWalletButton = new Button("Transfer funds from Bitsquare wallet");
+        fundFromSavingsWalletButton = new Button(Res.get("createOffer.fundFromSavingsWalletButton"));
         fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.setDefaultButton(false);
         fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
-        Label label = new Label("OR");
+        Label label = new Label(Res.get("createOffer.or"));
         label.setPadding(new Insets(5, 0, 0, 0));
-        fundFromExternalWalletButton = new Button("Open your external wallet for funding");
+        fundFromExternalWalletButton = new Button(Res.get("createOffer.fundFromExternalWalletButton"));
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
         waitingForFundsBusyAnimation = new BusyAnimation();
@@ -932,12 +925,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton2 = addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.isWalletFunded.get()) {
-                new Popup().warning("You have already funded that offer.\n" +
-                        "If you cancel now, your funds will be moved to your local Bitsquare wallet and are available " +
-                        "for withdrawal in the \"Funds/Available for withdrawal\" screen.\n" +
-                        "Are you sure you want to cancel?")
-                        .closeButtonText("No")
-                        .actionButtonText("Yes, cancel")
+                new Popup().warning(Res.get("createOffer.warnCancelOffer"))
+                        .closeButtonText(Res.get("shared.no"))
+                        .actionButtonText(Res.get("shared.yesCancel"))
                         .onAction(() -> {
                             close();
                             model.dataModel.swapTradeToSavings();
@@ -957,8 +947,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception ex) {
             log.warn(ex.getMessage());
-            new Popup().warning("Opening a default bitcoin wallet application has failed. " +
-                    "Perhaps you don't have one installed?").show();
+            new Popup().warning(Res.get("createOffer.openDefaultWalletFailed")).show();
         }
     }
 
@@ -995,13 +984,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         editOfferElements.add(marketBasedPriceTextField);
         marketBasedPriceLabel = priceAsPercentageTuple.third;
         editOfferElements.add(marketBasedPriceLabel);
-        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, "Distance in % from market price");
+        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, Res.get("createOffer.distanceInPercent"));
         priceAsPercentageInputBoxTuple.first.setPrefWidth(200);
         percentagePriceBox = priceAsPercentageInputBoxTuple.second;
 
         // Fixed/Percentage toggle
         ToggleGroup toggleGroup = new ToggleGroup();
-        fixedPriceButton = new ToggleButton("Fixed");
+        fixedPriceButton = new ToggleButton(Res.get("createOffer.fixed"));
         editOfferElements.add(fixedPriceButton);
         fixedPriceButton.setId("toggle-price-left");
         fixedPriceButton.setToggleGroup(toggleGroup);
@@ -1009,7 +998,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             updateToggleButtons(newValue);
         });
 
-        useMarketBasedPriceButton = new ToggleButton("Percentage");
+        useMarketBasedPriceButton = new ToggleButton(Res.get("createOffer.percentage"));
         editOfferElements.add(useMarketBasedPriceButton);
         useMarketBasedPriceButton.setId("toggle-price-right");
         useMarketBasedPriceButton.setToggleGroup(toggleGroup);
@@ -1103,7 +1092,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         editOfferElements.add(priceDescriptionLabel);
         fixedPriceBox = priceInputBoxTuple.second;
 
-        marketBasedPriceTextField.setPromptText("Enter % value");
+        marketBasedPriceTextField.setPromptText(Res.get("createOffer.enterPercentageValue"));
         marketBasedPriceLabel.setText("%");
         marketBasedPriceLabel.setStyle("-fx-alignment: center;");
 

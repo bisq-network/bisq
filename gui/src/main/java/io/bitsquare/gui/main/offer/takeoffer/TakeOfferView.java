@@ -678,7 +678,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
-        nextButton = new Button(Res.get("takeOffer.amountPriceBox.next"));
+        nextButton = new Button(Res.get("shared.nextStep"));
         nextButton.setDefaultButton(true);
         nextButton.setOnAction(e -> onShowPayFundsScreen());
 
