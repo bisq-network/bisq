@@ -60,7 +60,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         stateColumn.setText(Res.get("shared.state"));
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No closed trades available"));
+        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noItems", Res.get("shared.trades"))));
 
         setTradeIdColumnCellFactory();
         setDirectionColumnCellFactory();
