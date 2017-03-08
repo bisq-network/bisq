@@ -258,7 +258,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (!result) {
             new Popup().headLine(Res.get("popup.warning.noTradingAccountSetup.headline"))
                     .instruction(Res.get("popup.warning.noTradingAccountSetup.msg"))
-                    .goToForAction("navigation.account")
+                    .actionButtonTextWithGoTo("navigation.account")
                     .onAction(() -> {
                         navigation.setReturnPath(navigation.getCurrentPath());
                         navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
@@ -288,7 +288,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (model.dataModel.balance.get().isPositive() && !model.placeOfferCompleted.get()) {
             model.dataModel.swapTradeToSavings();
             new Popup().information(Res.get("createOffer.alreadyFunded"))
-                    .goToForAction("navigation.funds.availableForWithdrawal")
+                    .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                     .show();
         }
@@ -318,7 +318,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             } else {
                 new Popup().headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
                         .instruction(Res.get("popup.warning.noArbitratorSelected.msg"))
-                        .goToForAction("navigation.arbitratorSelection")
+                        .actionButtonTextWithGoTo("navigation.arbitratorSelection")
                         .onAction(() -> {
                             navigation.setReturnPath(navigation.getCurrentPath());
                             navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
@@ -342,7 +342,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         //noinspection PointlessBooleanExpression
         if (!DevFlags.DEV_MODE) {
             String key = "securityDepositInfo";
-            new Popup().backgroundInfo(Res.get("createOffer.securityDepositInfo"))
+            new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
                     .onAction(() -> GUIUtil.openWebPage("https://bitsquare.io/faq#6"))
                     .useIUnderstandButton()
@@ -645,7 +645,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     UserThread.runAfter(() -> new Popup().headLine(Res.get("createOffer.success.headline"))
                                     .feedback(Res.get("createOffer.success.info"))
                                     .dontShowAgainId(key, preferences)
-                                    .goToForAction("navigation.portfolio.myOpenOffers")
+                                    .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
                                     .onAction(() -> {
                                         UserThread.runAfter(() ->
                                                         navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class),
@@ -761,11 +761,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addPaymentGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, Res.get("createOffer.selectTradingAccount"));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, Res.get("shared.selectTradingAccount"));
         GridPane.setColumnSpan(titledGroupBg, 3);
 
         paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE).second;
-        paymentAccountsComboBox.setPromptText(Res.get("createOffer.selectTradingAccount"));
+        paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
         paymentAccountsComboBox.setMinWidth(300);
         editOfferElements.add(paymentAccountsComboBox);
 
@@ -897,13 +897,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fundingHBox.setVisible(false);
         fundingHBox.setManaged(false);
         fundingHBox.setSpacing(10);
-        fundFromSavingsWalletButton = new Button(Res.get("createOffer.fundFromSavingsWalletButton"));
+        fundFromSavingsWalletButton = new Button(Res.get("shared.fundFromSavingsWalletButton"));
         fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.setDefaultButton(false);
         fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
-        Label label = new Label(Res.get("createOffer.or"));
+        Label label = new Label(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));
-        fundFromExternalWalletButton = new Button(Res.get("createOffer.fundFromExternalWalletButton"));
+        fundFromExternalWalletButton = new Button(Res.get("shared.fundFromExternalWalletButton"));
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
         waitingForFundsBusyAnimation = new BusyAnimation();
@@ -947,7 +947,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception ex) {
             log.warn(ex.getMessage());
-            new Popup().warning(Res.get("createOffer.openDefaultWalletFailed")).show();
+            new Popup().warning(Res.get("shared.openDefaultWalletFailed")).show();
         }
     }
 
@@ -984,7 +984,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         editOfferElements.add(marketBasedPriceTextField);
         marketBasedPriceLabel = priceAsPercentageTuple.third;
         editOfferElements.add(marketBasedPriceLabel);
-        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, Res.get("createOffer.distanceInPercent"));
+        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, Res.get("shared.distanceInPercent"));
         priceAsPercentageInputBoxTuple.first.setPrefWidth(200);
         percentagePriceBox = priceAsPercentageInputBoxTuple.second;
 
@@ -1092,7 +1092,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         editOfferElements.add(priceDescriptionLabel);
         fixedPriceBox = priceInputBoxTuple.second;
 
-        marketBasedPriceTextField.setPromptText(Res.get("createOffer.enterPercentageValue"));
+        marketBasedPriceTextField.setPromptText(Res.get("shared.enterPercentageValue"));
         marketBasedPriceLabel.setText("%");
         marketBasedPriceLabel.setStyle("-fx-alignment: center;");
 

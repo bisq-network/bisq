@@ -227,7 +227,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             directionLabel.setId("direction-icon-label-buy");
 
             takeOfferButton.setId("buy-button-big");
-            takeOfferButton.setText("Review: Take offer to buy bitcoin");
+            takeOfferButton.setText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
         } else {
             imageView.setId("image-sell-large");
@@ -235,7 +235,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
-            takeOfferButton.setText("Review: Take offer to sell bitcoin");
+            takeOfferButton.setText(Res.get("takeOffer.takeOfferButton", Res.get("shared.sell")));
         }
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
@@ -260,8 +260,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
 
         if (offer.getPrice() == null)
-            new Popup().warning("You cannot take that offer as it uses a percentage price based on the " +
-                    "market price but there is no price feed available.")
+            new Popup().warning(Res.get("takeOffer.noPriceFeedAvailable"))
                     .onClose(this::close)
                     .show();
     }
@@ -276,10 +275,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         //noinspection ConstantConditions,ConstantConditions
         if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevFlags.DEV_MODE) {
             model.dataModel.swapTradeToSavings();
-            new Popup().information("You had already funded that offer.\n" +
-                    "Your funds have been moved to your local Bitsquare wallet and are available for " +
-                    "withdrawal in the \"Funds/Available for withdrawal\" screen.")
-                    .actionButtonText("Go to \"Funds/Available for withdrawal\"")
+            new Popup().information(Res.get("takeOffer.alreadyFunded.movedFunds"))
+                    .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                     .show();
         }
@@ -314,11 +311,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 });
             }
         } else {
-            new Popup().warning("You have no arbitrator selected.\n" +
-                    "You need to select at least one arbitrator.")
-                    .actionButtonText("Go to \"Arbitrator selection\"")
-                    .onAction(() -> navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class))
-                    .show();
+            new Popup().headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
+                    .instruction(Res.get("popup.warning.noArbitratorSelected.msg"))
+                    .actionButtonTextWithGoTo("navigation.arbitratorSelection")
+                    .onAction(() -> {
+                        navigation.setReturnPath(navigation.getCurrentPath());
+                        navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
+                    }).show();
         }
     }
 
@@ -336,31 +335,27 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         if (!DevFlags.DEV_MODE) {
             String key = "securityDepositInfo";
-            new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
-                    "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
-                    "It will be refunded to you after the trade has successfully completed.")
-                    .actionButtonText("Visit FAQ web page")
+            new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
+                    .actionButtonText(Res.get("shared.faq"))
                     .onAction(() -> GUIUtil.openWebPage("https://bitsquare.io/faq#6"))
                     .useIUnderstandButton()
                     .dontShowAgainId(key, preferences)
                     .show();
 
+
+            String tradeAmountText = model.isSeller() ? Res.get("takeOffer.takeOfferFundWalletInfo.tradeAmount", model.getTradeAmount()) : "";
+            String message = Res.get("takeOffer.takeOfferFundWalletInfo.msg",
+                    model.totalToPay.get(),
+                    tradeAmountText,
+                    model.getSecurityDepositInfo(),
+                    model.getTakerFee(),
+                    model.getTxFee()
+            );
+            //TODO remove
+            log.error(message);
             key = "takeOfferFundWalletInfo";
-            String tradeAmountText = model.isSeller() ? "- Trade amount: " + model.getTradeAmount() + "\n" : "";
-            new Popup().headLine("Fund your trade").instruction("You need to deposit " +
-                    model.totalToPay.get() + " for taking this offer.\n\n" +
-
-                    "The amount is the sum of:\n" +
-                    tradeAmountText +
-                    "- Security deposit: " + model.getSecurityDepositInfo() + "\n" +
-                    "- Trading fee: " + model.getTakerFee() + "\n" +
-                    "- Mining fee (3x): " + model.getTxFee() + "\n\n" +
-
-                    "You can choose between two options when funding your trade:\n" +
-                    "- Use your Bitsquare wallet (convenient, but transactions may be linkable) OR\n" +
-                    "- Transfer from an external wallet (potentially more private)\n\n" +
-
-                    "You will see all funding options and details after closing this popup.")
+            new Popup().headLine(Res.get("takeOffer.takeOfferFundWalletInfo.headline"))
+                    .instruction(message)
                     .dontShowAgainId(key, preferences)
                     .show();
         }
@@ -388,9 +383,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (model.dataModel.isWalletFunded.get()) {
             if (walletFundedNotification == null) {
                 walletFundedNotification = new Notification()
-                        .headLine("Trading wallet update")
-                        .notification("Your trading wallet was already sufficiently funded from an earlier take offer attempt.\n" +
-                                "Amount: " + formatter.formatCoinWithCode(model.dataModel.totalToPayAsCoin.get()))
+                        .headLine(Res.get("notification.walletUpdate.headline"))
+                        .notification(Res.get("notification.takeOffer.walletUpdate.msg", formatter.formatCoinWithCode(model.dataModel.totalToPayAsCoin.get())))
                         .autoClose();
                 walletFundedNotification.show();
             }
@@ -473,9 +467,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     offerDetailsWindow.hide();
 
                 UserThread.runAfter(() -> new Popup().warning(newValue + "\n\n" +
-                        "If you have already paid in funds you can withdraw it in the " +
-                        "\"Funds/Available for withdrawal\" screen.")
-                        .actionButtonText("Go to \"Available for withdrawal\"")
+                        Res.get("takeOffer.alreadyPaidInFunds"))
+                        .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                         .onAction(() -> {
                             errorPopupDisplayed.set(true);
                             model.resetOfferWarning();
@@ -494,7 +487,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         errorMessageSubscription = EasyBind.subscribe(model.errorMessage, newValue -> {
             if (newValue != null) {
                 new Popup().error(Res.get("takeOffer.error.message", model.errorMessage.get()) +
-                        "Please try to restart you application and check your network connection to see if you can resolve the issue.")
+                        Res.get("popup.error.tryRestart"))
                         .onClose(() -> {
                             errorPopupDisplayed.set(true);
                             model.resetErrorMessage();
@@ -535,7 +528,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     if (preferences.showAgain(key)) {
                         UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
                                 .feedback(Res.get("takeOffer.success.info"))
-                                .actionButtonText("Go to \"Open trades\"")
+                                .actionButtonTextWithGoTo("navigation.portfolio.pending")
                                 .dontShowAgainId(key, preferences)
                                 .onAction(() -> {
                                     UserThread.runAfter(
@@ -627,15 +620,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void addPaymentGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Payment info");
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, Res.get("takeOffer.paymentInfo"));
         GridPane.setColumnSpan(titledGroupBg, 3);
 
-        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, gridRow, "Trading account:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE);
         paymentAccountsLabel = tuple.first;
         paymentAccountsLabel.setVisible(false);
         paymentAccountsLabel.setManaged(false);
         paymentAccountsComboBox = tuple.second;
-        paymentAccountsComboBox.setPromptText("Select trading account");
+        paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
         paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
             @Override
             public String toString(PaymentAccount paymentAccount) {
@@ -654,14 +647,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentAccountsComboBox.setManaged(false);
         paymentAccountsComboBox.setOnAction(e -> model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem()));
 
-        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, gridRow, "Payment method:", "", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.paymentMethod"), "", Layout.FIRST_ROW_DISTANCE);
         paymentMethodLabel = tuple2.first;
         paymentMethodTextField = tuple2.second;
-        currencyTextField = addLabelTextField(gridPane, ++gridRow, "Trade currency:", "").second;
+        currencyTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.tradeCurrency"), "").second;
     }
 
     private void addAmountPriceGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, "Set amount and price", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("takeOffer.setAmountPrice"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 3);
 
         imageView = new ImageView();
@@ -740,7 +733,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         qrCodeImageView = new ImageView();
         qrCodeImageView.setVisible(false);
         qrCodeImageView.setStyle("-fx-cursor: hand;");
-        Tooltip.install(qrCodeImageView, new Tooltip("Open large QR-Code window"));
+        Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
                         () -> new QRCodeWindow(getBitcoinURI()).show(),
@@ -768,13 +761,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         fundingHBox.setVisible(false);
         fundingHBox.setManaged(false);
         fundingHBox.setSpacing(10);
-        fundFromSavingsWalletButton = new Button("Transfer funds from Bitsquare wallet");
+        fundFromSavingsWalletButton = new Button(Res.get("shared.fundFromSavingsWalletButton"));
         fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.setDefaultButton(false);
         fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
-        Label label = new Label("OR");
+        Label label = new Label(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));
-        fundFromExternalWalletButton = new Button("Open your external wallet for funding");
+        fundFromExternalWalletButton = new Button(Res.get("shared.fundFromExternalWalletButton"));
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
         waitingForFundsBusyAnimation = new BusyAnimation(false);
@@ -796,12 +789,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         cancelButton2 = addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.isWalletFunded.get()) {
-                new Popup().warning("You have already funded that offer.\n" +
-                        "If you cancel now, your funds will be moved to your local Bitsquare wallet and are available " +
-                        "for withdrawal in the \"Funds/Available for withdrawal\" screen.\n" +
-                        "Are you sure you want to cancel?")
-                        .closeButtonText("No")
-                        .actionButtonText("Yes, cancel")
+                new Popup().warning(Res.get("takeOffer.alreadyFunded.askCancel"))
+                        .closeButtonText(Res.get("shared.no"))
+                        .actionButtonText(Res.get("shared.yesCancel"))
                         .onAction(() -> {
                             model.dataModel.swapTradeToSavings();
                             close();
@@ -821,8 +811,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception ex) {
             log.warn(ex.getMessage());
-            new Popup().warning("Opening a default bitcoin wallet application has failed. " +
-                    "Perhaps you don't have one installed?").show();
+            new Popup().warning(Res.get("shared.openDefaultWalletFailed")).show();
         }
     }
 
@@ -888,11 +877,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceAsPercentageTextField = priceAsPercentageTuple.second;
         priceAsPercentageLabel = priceAsPercentageTuple.third;
 
-        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, "Distance in % from market price");
+        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, Res.get("shared.distanceInPercent"));
         priceAsPercentageInputBoxTuple.first.setPrefWidth(220);
         priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
 
-        priceAsPercentageTextField.setPromptText("Enter % value");
+        priceAsPercentageTextField.setPromptText(Res.get("shared.enterPercentageValue"));
         priceAsPercentageLabel.setText("%");
         priceAsPercentageLabel.setStyle("-fx-alignment: center;");
 

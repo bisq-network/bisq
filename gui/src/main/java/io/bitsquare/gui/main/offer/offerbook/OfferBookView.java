@@ -405,7 +405,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     log.debug(Res.get("offerbook.removeOffer.success"));
                     if (model.preferences.showAgain(key))
                         new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
-                                .goToForAction("navigation.funds.availableForWithdrawal")
+                                .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                                 .dontShowAgainId(key, model.preferences)
                                 .show();
@@ -419,7 +419,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void openPopupForMissingAccountSetup(String headLine, String message, Class target, String targetAsString) {
         new Popup().headLine(headLine)
                 .instruction(message)
-                .goToForAction(targetAsString)
+                .actionButtonTextWithGoTo(targetAsString)
                 .onAction(() -> {
                     navigation.setReturnPath(navigation.getCurrentPath());
                     navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, target);

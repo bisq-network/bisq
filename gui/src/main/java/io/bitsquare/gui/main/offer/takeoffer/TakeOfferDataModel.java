@@ -31,6 +31,7 @@ import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountUtil;
 import io.bitsquare.payment.PaymentMethod;
@@ -398,9 +399,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //noinspection ConstantConditions,ConstantConditions
         if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevFlags.DEV_MODE) {
             walletFundedNotification = new Notification()
-                    .headLine("Trading wallet update")
-                    .notification("Your trading wallet is sufficiently funded.\n" +
-                            "Amount: " + formatter.formatCoinWithCode(totalToPayAsCoin.get()))
+                    .headLine(Res.get("notification.walletUpdate.headline"))
+                    .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
                     .autoClose();
 
             walletFundedNotification.show();

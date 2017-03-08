@@ -349,16 +349,16 @@ public class BSFormatter {
 
     public String getDirectionWithCode(Offer.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == Offer.Direction.BUY) ? "Buy BTC" : "Sell BTC";
+            return (direction == Offer.Direction.BUY) ? Res.get("shared.buyCurrency", "BTC") : Res.get("shared.sellCurrency", "BTC");
         else
-            return (direction == Offer.Direction.SELL) ? "Buy " + currencyCode : "Sell " + currencyCode;
+            return (direction == Offer.Direction.SELL) ? Res.get("shared.buyCurrency", currencyCode) : Res.get("shared.sellCurrency", currencyCode);
     }
 
     public String getDirectionWithCodeDetailed(Offer.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == Offer.Direction.BUY) ? "buying BTC with " + currencyCode : "selling BTC for " + currencyCode;
+            return (direction == Offer.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
         else
-            return (direction == Offer.Direction.SELL) ? "buying " + currencyCode + " (selling BTC)" : "selling " + currencyCode + " (buying BTC)";
+            return (direction == Offer.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
     }
 
     public String arbitratorAddressesToString(List<NodeAddress> nodeAddresses) {

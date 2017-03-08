@@ -568,10 +568,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             updateButtonDisableState();
             return true;
         } else {
-            new Popup().warning(Res.get("createOffer.notEnoughFunds",
+            new Popup().warning(Res.get("shared.notEnoughFunds",
                     formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
                     formatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
-                    .goToForAction("navigation.funds.depositFunds")
+                    .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
             return false;
@@ -739,7 +739,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())))
                 .actionButtonText(Res.get("createOffer.changePrice"))
                 .onAction(popup::hide)
-                .goToForClose("navigation.settings.preferences")
+                .closeButtonTextWithGoTo("navigation.settings.preferences")
                 .onClose(() -> navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class))
                 .show();
     }
@@ -907,7 +907,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 spinnerInfoText.set("Check if funding tx miner fee is sufficient...");
             }*/
         } else {
-            waitingForFundsText.set(Res.get("createOffer.waitingForFunds"));
+            waitingForFundsText.set(Res.get("shared.waitingForFunds"));
         }
 
         isWaitingForFunds.set(!waitingForFundsText.get().isEmpty());

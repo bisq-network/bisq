@@ -217,12 +217,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             updateButtonDisableState();
             return true;
         } else {
-            new Popup().warning("You don't have enough funds in your Bitsquare wallet.\n" +
-                    "You need " + formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()) + " but you have only " +
-                    formatter.formatCoinWithCode(dataModel.totalAvailableBalance) + " in your Bitsquare wallet.\n\n" +
-                    "Please fund that trade from an external Bitcoin wallet or fund your Bitsquare " +
-                    "wallet at \"Funds/Deposit funds\".")
-                    .actionButtonText("Go to \"Funds/Deposit funds\"")
+            new Popup().warning(Res.get("shared.notEnoughFunds",
+                    formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
+                    formatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
+                    .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
             return false;
@@ -289,23 +287,22 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 break;
             case NOT_AVAILABLE:
                 if (takeOfferRequested)
-                    offerWarning.set("Take offer request failed because the offer is not available anymore. " +
-                            "Maybe another trader has taken the offer in the meantime.");
+                    offerWarning.set(Res.get("takeOffer.failed.offerNotAvailable"));
                 else
-                    offerWarning.set("You cannot take that offer because the offer was already taken by another trader.");
+                    offerWarning.set(Res.get("takeOffer.failed.offerTaken"));
                 takeOfferRequested = false;
                 break;
             case REMOVED:
                 if (!takeOfferRequested)
-                    offerWarning.set("You cannot take that offer because the offer has been removed in the meantime.");
+                    offerWarning.set(Res.get("takeOffer.failed.offerRemoved"));
 
                 takeOfferRequested = false;
                 break;
             case OFFERER_OFFLINE:
                 if (takeOfferRequested)
-                    offerWarning.set("Take offer request failed because offerer is not online anymore.");
+                    offerWarning.set(Res.get("takeOffer.failed.offererNotOnline"));
                 else
-                    offerWarning.set("You cannot take that offer because the offerer is offline.");
+                    offerWarning.set(Res.get("takeOffer.failed.offererOffline"));
                 takeOfferRequested = false;
                 break;
             default:
@@ -323,31 +320,22 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             String appendMsg = "";
             switch (trade.getState().getPhase()) {
                 case PREPARATION:
-                    appendMsg = "\n\nNo funds have left your wallet yet.\n" +
-                            "Please try to restart you application and check your network connection to see if you can resolve the issue.";
+                    appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;
                 case TAKER_FEE_PAID:
-                    appendMsg = "\n\nThe trading fee is already paid. In the worst case you have lost that fee. " +
-                            "We are sorry about that but keep in mind it is a very small amount.\n" +
-                            "Please try to restart you application and check your network connection to see if you can resolve the issue.";
+                    appendMsg = Res.get("takeOffer.error.feePaid");
                     break;
                 case DEPOSIT_PAID:
                 case FIAT_SENT:
                 case FIAT_RECEIVED:
-                    appendMsg = "\n\nThe deposit transaction is already published.\n" +
-                            "Please try to restart you application and check your network connection to see if you can resolve the issue.\n" +
-                            "If the problem still remains please contact the developers for support.";
+                    appendMsg = Res.get("takeOffer.error.depositPublished");
                     break;
                 case PAYOUT_PAID:
                 case WITHDRAWN:
-                    appendMsg = "\n\nThe payout transaction is already published.\n" +
-                            "Please try to restart you application and check your network connection to see if you can resolve the issue.\n" +
-                            "If the problem still remains please contact the developers for support.";
+                    appendMsg = Res.get("takeOffer.error.payoutPublished");
                     break;
                 case DISPUTE:
-                    appendMsg = "\n\nThe trade is handled already by an arbitrator.\n" +
-                            "Please try to restart you application and check your network connection to see if you can resolve the issue.\n" +
-                            "If the problem still remains please contact the arbitrator or the developers for support.";
+                    appendMsg = Res.get("takeOffer.error.disputed");
                     break;
             }
             this.errorMessage.set(errorMessage + appendMsg);
@@ -437,10 +425,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 if (connection.getPeersNodeAddressOptional().isPresent() &&
                         connection.getPeersNodeAddressOptional().get().equals(offer.getOffererNodeAddress())) {
-                    offerWarning.set("You lost connection to the offerer.\n" +
-                            "He might have gone offline or has closed the connection to you because of too " +
-                            "many open connections.\n\n" +
-                            "If you can still see his offer in the offerbook you can try to take the offer again.");
+                    offerWarning.set(Res.get("takeOffer.warning.connectionToPeerLost"));
                     updateSpinnerInfo();
                 }
             }
@@ -469,7 +454,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 spinnerInfoText.set("Check if funding tx miner fee is sufficient...");
             }*/
         } else {
-            spinnerInfoText.set("Waiting for funds...");
+            spinnerInfoText.set(Res.get("shared.waitingForFunds"));
         }
 
         isWaitingForFunds.set(!spinnerInfoText.get().isEmpty());
