@@ -31,10 +31,7 @@ import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Immutable
@@ -184,9 +181,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoBuf())
                 .setSenderNodeAddress(senderNodeAddress.toProtoBuf())
                 .setUid(uid);
-        if (Objects.nonNull(changeOutputAddress)) {
-            builderForValue.setChangeOutputAddress(changeOutputAddress);
-        }
+        Optional.ofNullable(changeOutputAddress).ifPresent(builderForValue::setChangeOutputAddress);
         return baseEnvelope.setPayDepositRequest(builderForValue).build();
     }
 }
