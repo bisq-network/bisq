@@ -19,6 +19,7 @@ package io.bitsquare.app;
 
 import com.google.inject.Singleton;
 import io.bitsquare.alert.AlertModule;
+import io.bitsquare.api.app.ApiModule;
 import io.bitsquare.arbitration.ArbitratorModule;
 import io.bitsquare.btc.BitcoinModule;
 import io.bitsquare.common.Clock;
@@ -82,7 +83,7 @@ class BitsquareAppModule extends AppModule {
         install(guiModule());
         install(alertModule());
         install(filterModule());
-//        install(apiModule());
+        install(apiModule());
     }
 
     private TradeModule tradeModule() {
@@ -105,7 +106,9 @@ class BitsquareAppModule extends AppModule {
         return new FilterModule(env);
     }
 
-    private OfferModule offerModule() { return new OfferModule(env); }
+    private OfferModule offerModule() {
+        return new OfferModule(env);
+    }
 
     private P2PModule torModule() {
         return new P2PModule(env);
@@ -118,6 +121,8 @@ class BitsquareAppModule extends AppModule {
     private GuiModule guiModule() {
         return new GuiModule(env, primaryStage);
     }
-//    private ApiModule apiModule() { return new ApiModule(env);
-//    }
+
+    private ApiModule apiModule() {
+        return new ApiModule(env);
+    }
 }
