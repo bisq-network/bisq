@@ -22,6 +22,7 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.BlurType;
@@ -112,27 +113,8 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateConfidence(TransactionConfidence confidence) {
+        GUIUtil.updateConfidence(confidence, progressIndicatorTooltip, txConfidenceIndicator);
         if (confidence != null) {
-            switch (confidence.getConfidenceType()) {
-                case UNKNOWN:
-                    progressIndicatorTooltip.setText("Unknown transaction status");
-                    txConfidenceIndicator.setProgress(0);
-                    break;
-                case PENDING:
-                    progressIndicatorTooltip.setText(
-                            "Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 " + "confirmations");
-                    txConfidenceIndicator.setProgress(-1.0);
-                    break;
-                case BUILDING:
-                    progressIndicatorTooltip.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                    txConfidenceIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
-                    break;
-                case DEAD:
-                    progressIndicatorTooltip.setText("Transaction is invalid.");
-                    txConfidenceIndicator.setProgress(0);
-                    break;
-            }
-
             if (txConfidenceIndicator.getProgress() != 0) {
                 txConfidenceIndicator.setVisible(true);
                 AnchorPane.setRightAnchor(txConfidenceIndicator, 0.0);

@@ -908,7 +908,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<Dispute, Dispute> getSelectColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Select") {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.select")) {
             {
                 setMinWidth(80);
                 setMaxWidth(80);
@@ -933,7 +933,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = new Button("Select");
+                                        button = new Button(Res.get("shared.select"));
                                         button.setOnAction(e -> tableView.getSelectionModel().select(item));
                                         setGraphic(button);
                                     }

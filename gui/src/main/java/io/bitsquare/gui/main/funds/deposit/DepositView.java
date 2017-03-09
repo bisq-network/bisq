@@ -87,7 +87,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private final FeeService feeService;
     private final BSFormatter formatter;
     private final Preferences preferences;
-    private final String paymentLabelString;
+    private String paymentLabelString;
     private final ObservableList<DepositListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<DepositListItem> sortedList = new SortedList<>(observableList);
     private BalanceListener balanceListener;
@@ -108,12 +108,11 @@ public class DepositView extends ActivatableView<VBox, Void> {
         this.feeService = feeService;
         this.formatter = formatter;
         this.preferences = preferences;
-
-        paymentLabelString = "Fund Bitsquare wallet";
     }
 
     @Override
     public void initialize() {
+        paymentLabelString = Res.get("funds.deposit.fundBitsquareWallet");
         selectColumn.setText(Res.get("shared.select"));
         addressColumn.setText(Res.get("shared.address"));
         balanceColumn.setText(Res.get("shared.balanceWithCur"));
@@ -124,7 +123,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No deposit addresses have been generated yet"));
+        tableView.setPlaceholder(new Label(Res.get("funds.deposit.noAddresses")));
         tableViewSelectionListener = (observableValue, oldValue, newValue) -> {
             if (newValue != null)
                 fillForm(newValue.getAddressString());
@@ -144,11 +143,11 @@ public class DepositView extends ActivatableView<VBox, Void> {
         tableView.getSortOrder().add(usageColumn);
         tableView.setItems(sortedList);
 
-        titledGroupBg = addTitledGroupBg(gridPane, gridRow, 3, "Fund your wallet");
+        titledGroupBg = addTitledGroupBg(gridPane, gridRow, 3, Res.get("funds.deposit.fundWallet"));
 
         qrCodeImageView = new ImageView();
         qrCodeImageView.setStyle("-fx-cursor: hand;");
-        Tooltip.install(qrCodeImageView, new Tooltip("Open large QR-Code window"));
+        Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
                         () -> new QRCodeWindow(getBitcoinURI()).show(),
@@ -159,7 +158,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(qrCodeImageView);
 
-        Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, "Address:");
+        Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, Res.getWithCol("shared.address"));
         addressLabel = addressTuple.first;
         //GridPane.setValignment(addressLabel, VPos.TOP);
         //GridPane.setMargin(addressLabel, new Insets(3, 0, 0, 0));
@@ -167,7 +166,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         addressTextField.setPaymentLabel(paymentLabelString);
 
 
-        Tuple2<Label, InputTextField> amountTuple = addLabelInputTextField(gridPane, ++gridRow, "Amount in BTC (optional):");
+        Tuple2<Label, InputTextField> amountTuple = addLabelInputTextField(gridPane, ++gridRow, Res.get("funds.deposit.amount"));
         amountLabel = amountTuple.first;
         amountTextField = amountTuple.second;
         if (DevFlags.DEV_MODE)
@@ -184,14 +183,14 @@ public class DepositView extends ActivatableView<VBox, Void> {
         amountLabel.setVisible(false);
         amountTextField.setManaged(false);
 
-        generateNewAddressButton = addButton(gridPane, ++gridRow, "Generate new address", -20);
+        generateNewAddressButton = addButton(gridPane, ++gridRow, Res.get("funds.deposit.generateAddress"), -20);
         GridPane.setColumnIndex(generateNewAddressButton, 0);
         GridPane.setHalignment(generateNewAddressButton, HPos.LEFT);
 
         generateNewAddressButton.setOnAction(event -> {
             boolean hasUnUsedAddress = observableList.stream().filter(e -> e.getNumTxOutputs() == 0).findAny().isPresent();
             if (hasUnUsedAddress) {
-                new Popup().warning("Please select an unused address from the table above rather than generating a new one.").show();
+                new Popup().warning(Res.get("funds.deposit.selectUnused")).show();
             } else {
                 AddressEntry newSavingsAddressEntry = walletService.getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE);
                 updateList();
@@ -275,15 +274,8 @@ public class DepositView extends ActivatableView<VBox, Void> {
     }
 
     private void openBlockExplorer(DepositListItem item) {
-        if (item.getAddressString() != null) {
-            try {
-                GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                new Popup().warning("Opening browser failed. Please check your internet " +
-                        "connection.").show();
-            }
-        }
+        if (item.getAddressString() != null)
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -355,7 +347,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = new Button("Select");
+                                        button = new Button(Res.get("shared.select"));
                                         button.setOnAction(e -> tableView.getSelectionModel().select(item));
                                         setGraphic(button);
                                     }
@@ -390,14 +382,13 @@ public class DepositView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    String addressString = item.getAddressString();
-                                    field = new HyperlinkWithIcon(addressString, AwesomeIcon.EXTERNAL_LINK);
+                                    String address = item.getAddressString();
+                                    field = new HyperlinkWithIcon(address, AwesomeIcon.EXTERNAL_LINK);
                                     field.setOnAction(event -> {
                                         openBlockExplorer(item);
                                         tableView.getSelectionModel().select(item);
                                     });
-                                    field.setTooltip(new Tooltip("Open external blockchain explorer for " +
-                                            "address: " + addressString));
+                                    field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);

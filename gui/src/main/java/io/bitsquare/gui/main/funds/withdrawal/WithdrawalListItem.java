@@ -21,6 +21,7 @@ import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.Res;
 import javafx.scene.control.Label;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -67,11 +68,11 @@ class WithdrawalListItem {
 
     public final String getLabel() {
         if (addressEntry.isOpenOffer())
-            return "Offer ID: " + addressEntry.getShortOfferId();
+            return Res.getWithCol("shared.offerId") + " " + addressEntry.getShortOfferId();
         else if (addressEntry.isTrade())
-            return "Trade ID: " + addressEntry.getShortOfferId();
+            return Res.getWithCol("shared.tradeId") + " " + addressEntry.getShortOfferId();
         else if (addressEntry.getContext() == AddressEntry.Context.ARBITRATOR)
-            return "Arbitration fee";
+            return Res.get("funds.withdrawal.arbitrationFee");
         else
             return "-";
     }

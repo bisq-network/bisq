@@ -24,6 +24,7 @@ import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.Res;
@@ -36,11 +37,13 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.Tooltip;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.TransactionConfidence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -260,6 +263,32 @@ public class GUIUtil {
         currencyListItems.setAll(list);
     }
 
+    public static void updateConfidence(TransactionConfidence confidence, Tooltip tooltip, TxConfidenceIndicator txConfidenceIndicator) {
+        if (confidence != null) {
+            switch (confidence.getConfidenceType()) {
+                case UNKNOWN:
+                    tooltip.setText(Res.get("confidence.unknown"));
+                    txConfidenceIndicator.setProgress(0);
+                    break;
+                case PENDING:
+                    tooltip.setText(Res.get("confidence.seen", confidence.numBroadcastPeers()));
+                    txConfidenceIndicator.setProgress(-1.0);
+                    break;
+                case BUILDING:
+                    tooltip.setText(Res.get("confidence.confirmed", confidence.getDepthInBlocks()));
+                    txConfidenceIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
+                    break;
+                case DEAD:
+                    tooltip.setText(Res.get("confidence.invalid"));
+                    txConfidenceIndicator.setProgress(0);
+                    break;
+            }
+
+            txConfidenceIndicator.setPrefSize(24, 24);
+        }
+    }
+
+
     public static void openWebPage(String target) {
         String key = "warnOpenURLWhenTorEnabled";
         final Preferences preferences = Preferences.INSTANCE;
@@ -307,7 +336,7 @@ public class GUIUtil {
         return " (" + formatter.formatToPercentWithSymbol((double) fee.value / (double) tradeAmount.value) +
                 " of trade amount)";
     }
-    
+
     public static <T> T getParentOfType(Node node, Class<T> t) {
         Node parent = node.getParent();
 
@@ -321,5 +350,5 @@ public class GUIUtil {
 
         return parent != null ? (T) parent : null;
     }
-    
+
 }

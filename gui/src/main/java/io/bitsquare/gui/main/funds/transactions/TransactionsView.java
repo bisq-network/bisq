@@ -127,9 +127,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         amountColumn.setText(Res.get("shared.amountWithCur", "BTC"));
         confidenceColumn.setText(Res.get("shared.confirmations", "BTC"));
         revertTxColumn.setText(Res.get("shared.revert", "BTC"));
-                
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No transactions available"));
+        tableView.setPlaceholder(new Label(Res.get("funds.tx.noTxAvailable")));
 
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();
@@ -197,7 +197,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 showStatisticsPopup();
         };
 
-        exportButton.setText("Export to csv");
+        exportButton.setText(Res.get("shared.exportCSV"));
     }
 
     @Override
@@ -299,26 +299,13 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     private void openTxInBlockExplorer(TransactionsListItem item) {
-        if (item.getTxId() != null) {
-            try {
-                GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + item.getTxId());
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                new Popup().warning("Opening browser failed. Please check your internet " +
-                        "connection.").show();
-            }
-        }
+        if (item.getTxId() != null)
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + item.getTxId());
     }
 
     private void openAddressInBlockExplorer(TransactionsListItem item) {
         if (item.getAddressString() != null) {
-            try {
-                GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                new Popup().warning("Opening browser failed. Please check your internet " +
-                        "connection.").show();
-            }
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
         }
     }
 
@@ -420,8 +407,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     field = new AddressWithIconAndDirection(item.getDirection(), addressString,
                                             AwesomeIcon.EXTERNAL_LINK, item.getReceived());
                                     field.setOnAction(event -> openAddressInBlockExplorer(item));
-                                    field.setTooltip(new Tooltip("Open external blockchain explorer for " +
-                                            "address: " + addressString));
+                                    field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
@@ -454,8 +440,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
                                     hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
-                                    hyperlinkWithIcon.setTooltip(new Tooltip("Open external blockchain explorer for " +
-                                            "transaction: " + transactionId));
+                                    hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
                                     setGraphic(null);
@@ -543,7 +528,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     if (confidence != null) {
                                         if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING) {
                                             if (button == null) {
-                                                button = new Button("Revert");
+                                                button = new Button(Res.get("funds.tx.revert"));
                                                 button.setOnAction(e -> revertTransaction(item.getTxId(), item.getTradable()));
                                                 setGraphic(button);
                                             }
@@ -574,13 +559,14 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 if (tradable != null)
                     walletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
 
-                new Popup().information("Transaction successfully sent to a new address in the local Bitsquare wallet.").show();
+                new Popup().information(Res.get("funds.tx.txSent")).show();
             }, errorMessage -> new Popup().warning(errorMessage).show());
         } catch (Throwable e) {
             new Popup().warning(e.getMessage()).show();
         }
     }
 
+    // This method is not intended for the public so we don't translate here
     private void showStatisticsPopup() {
         Map<Long, List<Coin>> map = new HashMap<>();
         Map<String, Tuple4<Date, Integer, Integer, Integer>> dataByDayMap = new HashMap<>();
@@ -629,6 +615,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         StringBuilder stringBuilder = new StringBuilder();
         map.entrySet().stream().forEach(e -> {
+            // This is not intended for the public so we don't translate here
             stringBuilder.append("No. of transactions for amount ").
                     append(formatter.formatCoinWithCode(Coin.valueOf(e.getKey()))).
                     append(": ").
@@ -647,6 +634,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         StringBuilder offersStringBuilder = new StringBuilder();
         StringBuilder tradesStringBuilder = new StringBuilder();
         StringBuilder allStringBuilder = new StringBuilder();
+        // This is not intended for the public so we don't translate here
         allStringBuilder.append("Date").append(";").append("Offers").append(";").append("Trades").append("\n");
         sortedDataByDayList.stream().forEach(tuple4 -> {
             offersStringBuilder.append(tuple4.forth.first).append(",");
@@ -662,6 +650,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                     append(tuple4.forth.second).
                     append(")");
         });
+        // This is not intended for the public so we don't translate here
         String message = stringBuilder.toString() + "\nNo. of transactions by day:" + transactionsByDayStringBuilder.toString();
         new Popup().headLine("Statistical info")
                 .information(message)

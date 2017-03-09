@@ -454,7 +454,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
         button.setGraphic(iconView);
         button.setGraphicTextGap(10);
-        button.setText(isSellOffer ? Res.get("button.buy") : Res.get("button.sell"));
+        button.setText(isSellOffer ? Res.get("market.offerBook.buy") : Res.get("market.offerBook.sell"));
         button.setMinHeight(40);
         button.setId(isSellOffer ? "buy-button-big" : "sell-button-big");
         button.setOnAction(e -> {

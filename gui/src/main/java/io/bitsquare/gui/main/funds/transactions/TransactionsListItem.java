@@ -21,8 +21,11 @@ import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
+import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.scene.control.Tooltip;
 import org.bitcoinj.core.*;
@@ -75,7 +78,7 @@ class TransactionsListItem {
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 if (!walletService.isTransactionOutputMine(transactionOutput)) {
-                    direction = "Sent to:";
+                    direction = Res.get("funds.tx.direction.sentTo");
                     received = false;
                     if (transactionOutput.getScriptPubKey().isSentToAddress()
                             || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
@@ -87,7 +90,7 @@ class TransactionsListItem {
         } else if (valueSentFromMe.isZero()) {
             amountAsCoin = valueSentToMe;
 
-            direction = "Received with:";
+            direction = Res.get("funds.tx.direction.receivedWith");
             received = true;
 
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
@@ -114,7 +117,7 @@ class TransactionsListItem {
             }
 
             if (outgoing) {
-                direction = "Sent to:";
+                direction = Res.get("funds.tx.direction.sentTo");
                 received = false;
             }
         }
@@ -122,7 +125,7 @@ class TransactionsListItem {
         // confidence
         txConfidenceIndicator = new TxConfidenceIndicator();
         txConfidenceIndicator.setId("funds-confidence");
-        tooltip = new Tooltip("Not used yet");
+        tooltip = new Tooltip(Res.get("shared.notUsedYet"));
         txConfidenceIndicator.setProgress(0);
         txConfidenceIndicator.setPrefHeight(30);
         txConfidenceIndicator.setPrefWidth(30);
@@ -131,48 +134,56 @@ class TransactionsListItem {
         txConfidenceListener = new TxConfidenceListener(txId) {
             @Override
             public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                updateConfidence(confidence);
+                GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
+                confirmations = confidence.getDepthInBlocks();
             }
         };
         walletService.addTxConfidenceListener(txConfidenceListener);
-        updateConfidence(transaction.getConfidence());
+        TransactionConfidence confidence = transaction.getConfidence();
+        GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
+        confirmations = confidence.getDepthInBlocks();
 
 
         if (tradableOptional.isPresent()) {
             tradable = tradableOptional.get();
             detailsAvailable = true;
+            String id = tradable.getShortId();
             if (tradable instanceof OpenOffer) {
-                details = "Create offer fee: " + tradable.getShortId();
+                details = Res.get("funds.tx.createOfferFee", id);
             } else if (tradable instanceof Trade) {
                 Trade trade = (Trade) tradable;
                 if (trade.getTakeOfferFeeTxId() != null && trade.getTakeOfferFeeTxId().equals(txId)) {
-                    details = "Take offer fee: " + tradable.getShortId();
-                } else if (trade.getOffer() != null &&
-                        trade.getOffer().getOfferFeePaymentTxID() != null &&
-                        trade.getOffer().getOfferFeePaymentTxID().equals(txId)) {
-                    details = "Create offer fee: " + tradable.getShortId();
-                } else if (trade.getDepositTx() != null &&
-                        trade.getDepositTx().getHashAsString().equals(txId)) {
-                    details = "MultiSig deposit: " + tradable.getShortId();
-                } else if (trade.getPayoutTx() != null &&
-                        trade.getPayoutTx().getHashAsString().equals(txId)) {
-                    details = "MultiSig payout: " + tradable.getShortId();
-                } else if (trade.getDisputeState() != Trade.DisputeState.NONE) {
-                    if (valueSentToMe.isPositive()) {
-                        details = "Dispute payout: " + tradable.getShortId();
-                    } else {
-                        details = "Lost dispute case: " + tradable.getShortId();
-                        txConfidenceIndicator.setVisible(false);
-                    }
+                    details = Res.get("funds.tx.takeOfferFee", id);
                 } else {
-                    details = "Unknown reason: " + tradable.getShortId();
+                    Offer offer = trade.getOffer();
+                    String offerFeePaymentTxID = offer.getOfferFeePaymentTxID();
+                    if (offer != null &&
+                            offerFeePaymentTxID != null &&
+                            offerFeePaymentTxID.equals(txId)) {
+                        details = Res.get("funds.tx.createOfferFee", id);
+                    } else if (trade.getDepositTx() != null &&
+                            trade.getDepositTx().getHashAsString().equals(txId)) {
+                        details = Res.get("funds.tx.multiSigDeposit", id);
+                    } else if (trade.getPayoutTx() != null &&
+                            trade.getPayoutTx().getHashAsString().equals(txId)) {
+                        details = Res.get("funds.tx.multiSigPayout", id);
+                    } else if (trade.getDisputeState() != Trade.DisputeState.NONE) {
+                        if (valueSentToMe.isPositive()) {
+                            details = Res.get("funds.tx.disputePayout", id);
+                        } else {
+                            details = Res.get("funds.tx.disputeLost", id);
+                            txConfidenceIndicator.setVisible(false);
+                        }
+                    } else {
+                        details = Res.get("funds.tx.unknown", id);
+                    }
                 }
             }
         } else {
             if (amountAsCoin.isZero())
-                details = "No refund from dispute";
+                details = Res.get("funds.tx.noFundsFromDispute");
             else
-                details = received ? "Received funds" : "Withdrawn from wallet";
+                details = received ? Res.get("funds.tx.receivedFunds") : Res.get("funds.tx.withdrawnFromWallet");
         }
 
         date = transaction.getUpdateTime();
@@ -184,30 +195,6 @@ class TransactionsListItem {
         walletService.removeTxConfidenceListener(txConfidenceListener);
     }
 
-    private void updateConfidence(TransactionConfidence confidence) {
-        confirmations = confidence.getDepthInBlocks();
-        switch (confidence.getConfidenceType()) {
-            case UNKNOWN:
-                tooltip.setText("Unknown transaction status");
-                txConfidenceIndicator.setProgress(0);
-                break;
-            case PENDING:
-                tooltip.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 confirmations");
-                txConfidenceIndicator.setProgress(-1.0);
-                break;
-            case BUILDING:
-                tooltip.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                txConfidenceIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
-                break;
-            case DEAD:
-                tooltip.setText("Transaction is invalid.");
-                txConfidenceIndicator.setStyle(" -fx-progress-color: -bs-error-red;");
-                txConfidenceIndicator.setProgress(-1);
-                break;
-        }
-
-        txConfidenceIndicator.setPrefSize(24, 24);
-    }
 
     public TxConfidenceIndicator getTxConfidenceIndicator() {
         return txConfidenceIndicator;

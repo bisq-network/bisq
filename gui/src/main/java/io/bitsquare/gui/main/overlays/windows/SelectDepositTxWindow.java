@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.locale.Res;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
@@ -98,7 +99,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
 
         Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, ++rowIndex, "Select deposit transaction");
         transactionsComboBox = tuple.second;
-        transactionsComboBox.setPromptText("Select");
+        transactionsComboBox.setPromptText(Res.get("shared.select"));
         transactionsComboBox.setConverter(new StringConverter<Transaction>() {
             @Override
             public String toString(Transaction transaction) {

@@ -197,7 +197,7 @@ public class BuyerStep5View extends TradeStepView {
                             double kb = txSize / 1000d;
                             String recAmount = formatter.formatCoinWithCode(receiverAmount);
                             new Popup().headLine(Res.get("portfolio.pending.step5_buyer.confirmWithdrawal"))
-                                    .confirmation(Res.get("portfolio.pending.step5_buyer.sendInfo",
+                                    .confirmation(Res.get("shared.sendFundsDetailsWithFee",
                                             formatter.formatCoinWithCode(amount),
                                             fromAddresses,
                                             toAddresses,
