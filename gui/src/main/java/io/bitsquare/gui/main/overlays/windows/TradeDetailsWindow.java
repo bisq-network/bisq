@@ -168,7 +168,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         if (trade.getTradingPeerNodeAddress() != null)
             rows++;
 
-        addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.details"), Layout.GROUP_DISTANCE);
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Trade ID:", trade.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, "Trade date:", formatter.formatDateTime(trade.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(offer.getSecurityDeposit()));

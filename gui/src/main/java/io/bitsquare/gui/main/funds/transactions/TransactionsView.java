@@ -635,7 +635,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         StringBuilder tradesStringBuilder = new StringBuilder();
         StringBuilder allStringBuilder = new StringBuilder();
         // This is not intended for the public so we don't translate here
-        allStringBuilder.append("Date").append(";").append("Offers").append(";").append("Trades").append("\n");
+        allStringBuilder.append(Res.get("shared.date")).append(";").append("Offers").append(";").append("Trades").append("\n");
         sortedDataByDayList.stream().forEach(tuple4 -> {
             offersStringBuilder.append(tuple4.forth.first).append(",");
             tradesStringBuilder.append(tuple4.forth.second).append(",");

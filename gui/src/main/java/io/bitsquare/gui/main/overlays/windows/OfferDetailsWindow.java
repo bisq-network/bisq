@@ -259,7 +259,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (offer.getOfferFeePaymentTxID() != null)
             rows++;
 
-        addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.details"), Layout.GROUP_DISTANCE);
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Offerer's onion address:", offer.getOffererNodeAddress().getFullAddress());
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
