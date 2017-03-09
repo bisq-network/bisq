@@ -68,7 +68,7 @@
 
     <Label fx:id="p2PPeersLabel" GridPane.rowIndex="4"/>
     <TableView fx:id="tableView" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
-               GridPane.vgrow="ALWAYS">
+               GridPane.vgrow="SOMETIMES">
         <columns>
             <TableColumn fx:id="onionAddressColumn" minWidth="220">
                 <cellValueFactory>

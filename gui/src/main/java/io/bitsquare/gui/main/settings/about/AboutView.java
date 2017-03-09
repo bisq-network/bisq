@@ -24,6 +24,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import javafx.geometry.HPos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -37,57 +38,55 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
 
     private int gridRow = 0;
 
-
     @Inject
     public AboutView() {
         super();
     }
 
     public void initialize() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 4, "About Bitsquare");
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 4, Res.get("setting.about.aboutBisq"));
         GridPane.setColumnSpan(titledGroupBg, 2);
-        Label label = addLabel(root, gridRow, "Bitsquare is an open source project and a decentralized network of users who want to " +
-                "exchange Bitcoin with national currencies or alternative crypto currencies in a privacy protecting way. " +
-                "Learn more about Bitsquare on our project web page.", Layout.FIRST_ROW_DISTANCE);
+        Label label = addLabel(root, gridRow, Res.get("setting.about.about"), Layout.FIRST_ROW_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
-        HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, "Bitsquare web page", "https://bitsquare.io");
+        HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.web"), "https://bitsquare.io");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
-        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, "Source code", "https://github.com/bitsquare/bitsquare");
+        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.code"), "https://github.com/bitsquare/bitsquare");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
-        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, "AGPL License", "https://github.com/bitsquare/bitsquare/blob/master/LICENSE");
+        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.agpl"), "https://github.com/bitsquare/bitsquare/blob/master/LICENSE");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
 
-        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Support Bitsquare", Layout.GROUP_DISTANCE);
+        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("setting.about.support"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);
-        label = addLabel(root, gridRow, "Bitsquare is not a company but a community project and open for participation. " +
-                "If you want to participate or support Bitsquare please follow the links below.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        label = addLabel(root, gridRow, Res.get("setting.about.def"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
-        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, "Contribute", "https://bitsquare.io/contribute");
+        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.contribute"), "https://bitsquare.io/contribute");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
-        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, "Donate", "https://bitsquare.io/contribute/#donation");
+        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.donate"), "https://bitsquare.io/contribute/#donation");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
 
-        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Data providers", Layout.GROUP_DISTANCE);
+        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("setting.about.providers"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);
-        label = addLabel(root, gridRow, "Bitsquare uses 3rd party APIs for Fiat and Altcoin market prices as well as for mining fee estimation.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        label = addLabel(root, gridRow, Res.get("setting.about.apis"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
-        addLabelTextField(root, ++gridRow, "Market prices provided by: ", "BitcoinAverage (https://bitcoinaverage.com), Poloniex (https://poloniex.com) and Coinmarketcap (https://coinmarketcap.com)");
-        addLabelTextField(root, ++gridRow, "Mining fee estimation provided by: 21 (https://bitcoinfees.21.co)");
+        addLabelTextField(root, ++gridRow, Res.get("setting.about.pricesProvided"), Res.get("setting.about.pricesProviders"));
+        addLabelTextField(root, ++gridRow, Res.get("setting.about.feeEstimation.label"), Res.get("setting.about.feeEstimation.val"));
 
-        titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, "Version details", Layout.GROUP_DISTANCE);
+        titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("setting.about.versionDetails"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 2);
-        addLabelTextField(root, gridRow, "Application version:", Version.VERSION, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(root, ++gridRow, "Versions of subsystems:",
-                "Network version: " + Version.P2P_NETWORK_VERSION +
-                        "; P2P message version: " + Version.getP2PMessageVersion() +
-                        "; Local DB version: " + Version.LOCAL_DB_VERSION +
-                        "; Trade protocol version: " + Version.TRADE_PROTOCOL_VERSION);
+        addLabelTextField(root, gridRow, Res.get("setting.about.version"), Version.VERSION, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(root, ++gridRow,
+                Res.get("setting.about.subsystems.label"),
+                Res.get("setting.about.subsystems.val",
+                        Version.P2P_NETWORK_VERSION,
+                        Version.getP2PMessageVersion(),
+                        Version.LOCAL_DB_VERSION,
+                        Version.TRADE_PROTOCOL_VERSION));
     }
 
     @Override

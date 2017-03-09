@@ -112,18 +112,19 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         roundTripTimeColumn.setText(Res.get("settings.net.roundTripTimeColumn"));
         sentBytesColumn.setText(Res.get("settings.net.sentBytesColumn"));
         receivedBytesColumn.setText(Res.get("settings.net.receivedBytesColumn"));
-        peerTypeColumn.setText(Res.get("settings.net.peerTypeColumn")); 
+        peerTypeColumn.setText(Res.get("settings.net.peerTypeColumn"));
 
         GridPane.setMargin(bitcoinPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(bitcoinPeersLabel, VPos.TOP);
         GridPane.setMargin(p2PPeersLabel, new Insets(4, 0, 0, 0));
         GridPane.setValignment(p2PPeersLabel, VPos.TOP);
 
-        bitcoinPeersTextArea.setPrefRowCount(10);
+        bitcoinPeersTextArea.setPrefRowCount(6);
 
         tableView.setMinHeight(230);
+        tableView.setPrefHeight(230);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No connections are available"));
+        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
         tableView.getSortOrder().add(creationDateColumn);
         creationDateColumn.setSortType(TableColumn.SortType.ASCENDING);
 
@@ -143,9 +144,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         useTorForBtcJCheckBox.setOnAction(event -> {
             boolean selected = useTorForBtcJCheckBox.isSelected();
             if (selected != preferences.getUseTorForBitcoinJ()) {
-                new Popup().information("You need to restart the application to apply that change.\n" +
-                        "Do you want to do that now?")
-                        .actionButtonText("Apply and shut down")
+                new Popup().information(Res.get("settings.net.needRestart"))
+                        .actionButtonText(Res.get("shared.applyAndShutDown"))
                         .onAction(() -> {
                             preferences.setUseTorForBitcoinJ(selected);
                             UserThread.runAfter(BitsquareApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
@@ -156,27 +156,32 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             }
         });
 
-        bitcoinPeersSubscription = EasyBind.subscribe(walletsSetup.connectedPeersProperty(), connectedPeers -> updateBitcoinPeersTextArea());
+        bitcoinPeersSubscription = EasyBind.subscribe(walletsSetup.connectedPeersProperty(),
+                connectedPeers -> updateBitcoinPeersTextArea());
 
         nodeAddressSubscription = EasyBind.subscribe(p2PService.getNetworkNode().nodeAddressProperty(),
-                nodeAddress -> onionAddress.setText(nodeAddress == null ? "Not known yet..." : p2PService.getAddress().getFullAddress()));
+                nodeAddress -> onionAddress.setText(nodeAddress == null ?
+                        Res.get("settings.net.notKnownYet") :
+                        p2PService.getAddress().getFullAddress()));
         numP2PPeersSubscription = EasyBind.subscribe(p2PService.getNumConnectedPeers(), numPeers -> updateP2PTable());
-        totalTrafficTextField.textProperty().bind(EasyBind.combine(Statistic.totalSentBytesProperty(), Statistic.totalReceivedBytesProperty(),
-                (sent, received) -> "Sent: " + formatter.formatBytes((long) sent) + ", received: " + formatter.formatBytes((long) received)));
+        totalTrafficTextField.textProperty().bind(EasyBind.combine(Statistic.totalSentBytesProperty(),
+                Statistic.totalReceivedBytesProperty(),
+                (sent, received) -> Res.get("settings.net.sentReceived",
+                        formatter.formatBytes((long) sent),
+                        formatter.formatBytes((long) received))));
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
         btcNodes.setText(preferences.getBitcoinNodes());
-        btcNodes.setPromptText("Add comma separated IP addresses");
+        btcNodes.setPromptText(Res.get("settings.net.ips"));
         btcNodesFocusListener = (observable, oldValue, newValue) -> {
             if (newValue) {
                 btcNodesPreFocusText = btcNodes.getText();
             }
             if (oldValue && !newValue && !btcNodesPreFocusText.equals(btcNodes.getText())) {
-                new Popup().information("You need to restart the application to apply that change.\n" +
-                        "Do you want to do that now?")
-                        .actionButtonText("Apply and shut down")
+                new Popup().information(Res.get("settings.net.needRestart"))
+                        .actionButtonText(Res.get("shared.applyAndShutDown"))
                         .onAction(() -> {
                             if (btcNodes.getText().isEmpty()) {
                                 preferences.setBitcoinNodes("");
