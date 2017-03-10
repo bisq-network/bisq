@@ -377,8 +377,9 @@ message Attachment {
 }
 
 message DisputeResultMessage {
-    DisputeResult dispute_result = 1;
-    NodeAddress my_node_address = 2;
+    string uid = 1;
+    DisputeResult dispute_result = 2;
+    NodeAddress my_node_address = 3;
 }
 
 // payload

@@ -64,6 +64,8 @@ public final class DisputeResultMessage extends DisputeMessage {
         Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
         return baseEnvelope.setDisputeResultMessage(Messages.DisputeResultMessage.newBuilder()
                 .setDisputeResult(disputeResult.toProtoBuf())
-                .setMyNodeAddress(myNodeAddress.toProtoBuf())).build();
+                .setMyNodeAddress(myNodeAddress.toProtoBuf())
+                .setUid(getUID()))
+                .build();
     }
 }
