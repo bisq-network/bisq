@@ -420,7 +420,8 @@ public class MainViewModel implements ViewModel {
                                     btcNetworkAsString);
                             btcSplashSyncIconId.set("image-connection-synced");
                         } else if (percentage > 0.0) {
-                            result = Res.get("mainView.footer.btcInfo", peers,
+                            result = Res.get("mainView.footer.btcInfo",
+                                    peers,
                                     Res.get("mainView.footer.btcInfo.synchronizedWith"),
                                     btcNetworkAsString + ": " + formatter.formatToPercentWithSymbol(percentage));
                         } else {

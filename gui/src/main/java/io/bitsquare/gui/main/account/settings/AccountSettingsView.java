@@ -30,6 +30,7 @@ import io.bitsquare.gui.main.account.content.fiataccounts.FiatAccountsView;
 import io.bitsquare.gui.main.account.content.password.PasswordView;
 import io.bitsquare.gui.main.account.content.seedwords.SeedWordsView;
 import io.bitsquare.gui.util.Colors;
+import io.bitsquare.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -76,13 +77,13 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        paymentAccount = new MenuItem(navigation, toggleGroup, "National currency accounts", FiatAccountsView.class, AwesomeIcon.MONEY);
-        altCoinsAccountView = new MenuItem(navigation, toggleGroup, "Altcoin accounts", AltCoinAccountsView.class, AwesomeIcon.LINK);
-        arbitratorSelection = new MenuItem(navigation, toggleGroup, "Arbitrator selection", ArbitratorSelectionView.class, AwesomeIcon.USER_MD);
-        password = new MenuItem(navigation, toggleGroup, "Wallet password", PasswordView.class, AwesomeIcon.UNLOCK_ALT);
-        seedWords = new MenuItem(navigation, toggleGroup, "Wallet seed", SeedWordsView.class, AwesomeIcon.KEY);
-        backup = new MenuItem(navigation, toggleGroup, "Backup", BackupView.class, AwesomeIcon.CLOUD_DOWNLOAD);
-
+        paymentAccount = new MenuItem(navigation, toggleGroup, Res.get("account.paymentAccount"), FiatAccountsView.class, AwesomeIcon.MONEY);
+        altCoinsAccountView = new MenuItem(navigation, toggleGroup, Res.get("account.altCoinsAccountView"), AltCoinAccountsView.class, AwesomeIcon.LINK);
+        arbitratorSelection = new MenuItem(navigation, toggleGroup, Res.get("account.arbitratorSelection"), ArbitratorSelectionView.class, AwesomeIcon.USER_MD);
+        password = new MenuItem(navigation, toggleGroup, Res.get("account.password"), PasswordView.class, AwesomeIcon.UNLOCK_ALT);
+        seedWords = new MenuItem(navigation, toggleGroup, Res.get("account.seedWords"), SeedWordsView.class, AwesomeIcon.KEY);
+        backup = new MenuItem(navigation, toggleGroup, Res.get("account.backup"), BackupView.class, AwesomeIcon.CLOUD_DOWNLOAD);
+                
         leftVBox.getChildren().addAll(paymentAccount, altCoinsAccountView, arbitratorSelection, password, seedWords, backup);
     }
 

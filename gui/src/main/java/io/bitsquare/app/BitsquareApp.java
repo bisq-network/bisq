@@ -210,7 +210,7 @@ public class BitsquareApp extends Application {
                     showSendAlertMessagePopup();
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showFilterPopup();
-                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.P, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showFPSWindow();
                 } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
