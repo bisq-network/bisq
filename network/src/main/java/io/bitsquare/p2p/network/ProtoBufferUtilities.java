@@ -9,6 +9,7 @@ import io.bitsquare.messages.alert.Alert;
 import io.bitsquare.messages.alert.PrivateNotification;
 import io.bitsquare.messages.alert.PrivateNotificationMessage;
 import io.bitsquare.messages.arbitration.*;
+import io.bitsquare.messages.arbitration.payload.Attachment;
 import io.bitsquare.messages.availability.AvailabilityResult;
 import io.bitsquare.messages.availability.OfferAvailabilityRequest;
 import io.bitsquare.messages.availability.OfferAvailabilityResponse;
@@ -429,6 +430,8 @@ public class ProtoBufferUtilities {
     private static Message getDisputeCommunicationMessage(Messages.DisputeCommunicationMessage disputeCommunicationMessage) {
         return new DisputeCommunicationMessage(disputeCommunicationMessage.getTradeId(), disputeCommunicationMessage.getTraderId(),
                 disputeCommunicationMessage.getSenderIsTrader(), disputeCommunicationMessage.getMessage(),
+                disputeCommunicationMessage.getAttachmentsList().stream()
+                        .map(attachment -> new Attachment(attachment.getFileName(), attachment.getBytes().toByteArray())).collect(Collectors.toList()),
                 getNodeAddress(disputeCommunicationMessage.getMyNodeAddress()), disputeCommunicationMessage.getDate(),
                 disputeCommunicationMessage.getArrived(), disputeCommunicationMessage.getStoredInMailbox());
     }

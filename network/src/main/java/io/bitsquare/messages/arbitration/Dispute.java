@@ -70,6 +70,7 @@ public final class Dispute implements Payload {
     private final String payoutTxId;
     private final String contractAsJson;
     private final String offererContractSignature;
+    @Nullable // not always filled in
     private final String takerContractSignature;
     private final PubKeyRing arbitratorPubKeyRing;
     private final boolean isSupportTicket;
@@ -77,6 +78,7 @@ public final class Dispute implements Payload {
     private final ArrayList<DisputeCommunicationMessage> disputeCommunicationMessages = new ArrayList<>();
 
     private boolean isClosed;
+    @Nullable // not always filled in
     private DisputeResult disputeResult;
     @Nullable
     private String disputePayoutTxId;
@@ -130,7 +132,7 @@ public final class Dispute implements Payload {
                    @Nullable String payoutTxId,
                    String contractAsJson,
                    String offererContractSignature,
-                   String takerContractSignature,
+                   @Nullable String takerContractSignature,
                    PubKeyRing arbitratorPubKeyRing,
                    boolean isSupportTicket) {
         this.tradeId = tradeId;
@@ -358,7 +360,8 @@ public final class Dispute implements Payload {
 
     @Override
     public Messages.Dispute toProtoBuf() {
-        Messages.Dispute.Builder builder = Messages.Dispute.newBuilder().setTradeId(tradeId)
+        Messages.Dispute.Builder builder = Messages.Dispute.newBuilder()
+                .setTradeId(tradeId)
                 .setId(id)
                 .setTraderId(traderId)
                 .setDisputeOpenerIsBuyer(disputeOpenerIsBuyer)
@@ -370,19 +373,19 @@ public final class Dispute implements Payload {
                 .setContractHash(ByteString.copyFrom(contractHash))
                 .setContractAsJson(contractAsJson)
                 .setOffererContractSignature(offererContractSignature)
-                .setTakerContractSignature(takerContractSignature)
                 .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoBuf())
                 .setIsSupportTicket(isSupportTicket)
                 .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream().map(
                         disputeCommunicationMessage -> disputeCommunicationMessage.toProtoBuf().getDisputeCommunicationMessage()).collect(Collectors.toList()))
-                .setIsClosed(isClosed)
-                .setDisputeResult(disputeResult.toProtoBuf());
+                .setIsClosed(isClosed);
 
         Optional.ofNullable(depositTxSerialized).ifPresent(tx -> builder.setDepositTxSerialized(ByteString.copyFrom(tx)));
         Optional.ofNullable(payoutTxSerialized).ifPresent(tx -> builder.setPayoutTxSerialized(ByteString.copyFrom(tx)));
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
         Optional.ofNullable(payoutTxId).ifPresent(builder::setPayoutTxId);
         Optional.ofNullable(disputePayoutTxId).ifPresent(builder::setDisputePayoutTxId);
+        Optional.ofNullable(takerContractSignature).ifPresent(builder::setTakerContractSignature);
+        Optional.ofNullable(disputeResult).ifPresent(result -> builder.setDisputeResult(disputeResult.toProtoBuf()));
         return builder.build();
     }
 }

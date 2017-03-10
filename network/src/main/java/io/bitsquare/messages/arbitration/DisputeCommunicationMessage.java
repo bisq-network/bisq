@@ -32,6 +32,7 @@ import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public final class DisputeCommunicationMessage extends DisputeMessage {
@@ -55,7 +56,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     transient private BooleanProperty storedInMailboxProperty = new SimpleBooleanProperty();
 
     public DisputeCommunicationMessage(String tradeId, int traderId, boolean senderIsTrader, String message,
-                                       NodeAddress myNodeAddress, long date, boolean arrived, boolean storedInMailbox) {
+                                       List<Attachment> attachments, NodeAddress myNodeAddress, long date,
+                                       boolean arrived, boolean storedInMailbox) {
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
@@ -64,12 +66,14 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         this.date = date;
         this.arrived = arrived;
         this.storedInMailbox = storedInMailbox;
+        Optional.ofNullable(attachments).ifPresent(attachments1 -> addAllAttachments(attachments));
         updateBooleanProperties();
     }
 
     public DisputeCommunicationMessage(String tradeId, int traderId, boolean senderIsTrader, String message,
                                        NodeAddress myNodeAddress) {
-        this(tradeId, traderId, senderIsTrader, message, myNodeAddress, new Date().getTime(), false, false);
+        this(tradeId, traderId, senderIsTrader, message, null, myNodeAddress, new Date().getTime(),
+                false, false);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
