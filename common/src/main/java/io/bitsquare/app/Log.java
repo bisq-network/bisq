@@ -21,12 +21,9 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
-import ch.qos.logback.classic.filter.LevelFilter;
-import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
-import ch.qos.logback.core.spi.FilterReply;
 import ch.qos.logback.core.util.FileSize;
 import io.bitsquare.common.util.Profiler;
 import org.slf4j.LoggerFactory;
@@ -39,11 +36,10 @@ public class Log {
     private static Logger logbackLogger;
 
     public static void setLevel(Level logLevel) {
-        //logbackLogger.setLevel(logLevel);
+        logbackLogger.setLevel(logLevel);
     }
 
     public static void setup(String fileName) {
-
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         RollingFileAppender appender = new RollingFileAppender();
@@ -76,10 +72,9 @@ public class Log {
         logbackLogger.addAppender(appender);
         logbackLogger.setLevel(Level.INFO);
 
-
         // log errors in separate file
         // not working as expected still.... damn logback...
-       FileAppender errorAppender = new FileAppender();
+       /* FileAppender errorAppender = new FileAppender();
         errorAppender.setEncoder(encoder);
         errorAppender.setName("Error");
         errorAppender.setContext(loggerContext);
@@ -91,7 +86,7 @@ public class Log {
         levelFilter.start();
         errorAppender.addFilter(levelFilter);
         errorAppender.start();
-        logbackLogger.addAppender(errorAppender);
+        logbackLogger.addAppender(errorAppender);*/
     }
 
     public static void traceCall() {
