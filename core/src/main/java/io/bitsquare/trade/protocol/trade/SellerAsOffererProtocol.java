@@ -20,12 +20,16 @@ package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.messages.protocol.trade.TradeMessage;
+import io.bitsquare.messages.trade.protocol.trade.messages.DepositTxPublishedMessage;
+import io.bitsquare.messages.trade.protocol.trade.messages.FiatTransferStartedMessage;
+import io.bitsquare.messages.trade.protocol.trade.messages.PayDepositRequest;
+import io.bitsquare.messages.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
+import io.bitsquare.messages.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.trade.SellerAsOffererTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.messages.*;
 import io.bitsquare.trade.protocol.trade.tasks.offerer.*;
 import io.bitsquare.trade.protocol.trade.tasks.seller.*;
 import io.bitsquare.trade.protocol.trade.tasks.shared.BroadcastAfterLockTime;
@@ -33,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static io.bitsquare.util.Validator.checkTradeId;
+import static io.bitsquare.messages.util.Validator.checkTradeId;
 
 public class SellerAsOffererProtocol extends TradeProtocol implements SellerProtocol, OffererProtocol {
     private static final Logger log = LoggerFactory.getLogger(SellerAsOffererProtocol.class);

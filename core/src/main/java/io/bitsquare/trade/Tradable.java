@@ -18,7 +18,7 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.common.persistance.Persistable;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 
 import java.util.Date;
 

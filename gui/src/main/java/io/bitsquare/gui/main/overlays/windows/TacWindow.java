@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.gui.main.overlays.Overlay;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

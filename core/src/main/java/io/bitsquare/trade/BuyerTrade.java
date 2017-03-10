@@ -22,7 +22,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.protocol.trade.BuyerProtocol;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;

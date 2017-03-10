@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.settings.preferences;
 
-import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
@@ -30,9 +30,9 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.locale.*;
-import io.bitsquare.user.BlockChainExplorer;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.locale.*;
+import io.bitsquare.messages.user.BlockChainExplorer;
+import io.bitsquare.messages.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

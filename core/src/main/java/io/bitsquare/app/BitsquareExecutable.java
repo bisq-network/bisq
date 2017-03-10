@@ -18,17 +18,18 @@
 package io.bitsquare.app;
 
 import io.bitsquare.BitsquareException;
-import io.bitsquare.btc.BitcoinNetwork;
-import io.bitsquare.btc.BtcOptionKeys;
 import io.bitsquare.btc.RegTestHost;
 import io.bitsquare.common.CommonOptionKeys;
-import io.bitsquare.dao.blockchain.RpcOptionKeys;
+import io.bitsquare.messages.btc.BitcoinNetwork;
+import io.bitsquare.messages.btc.BtcOptionKeys;
+import io.bitsquare.messages.dao.blockchain.RpcOptionKeys;
 import io.bitsquare.network.NetworkOptionKeys;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.util.joptsimple.EnumValueConverter;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import org.springframework.core.env.JOptCommandLinePropertySource;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -36,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bitsquare.app.BitsquareEnvironment.*;
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -127,10 +129,10 @@ public abstract class BitsquareExecutable {
         parser.accepts(RpcOptionKeys.RPC_WALLET_PORT, description("Bitcoind rpc port for wallet notifications", ""))
                 .withRequiredArg();
 
-        parser.accepts(BtcOptionKeys.BTC_NETWORK, description("Bitcoin network", BitcoinNetwork.DEFAULT))
+        parser.accepts(BtcOptionKeys.BTC_NETWORK, description("Bitcoin network", BitcoinNetwork.DEFAULT.name()))
                 .withRequiredArg()
-                .ofType(BitcoinNetwork.class)
-                .withValuesConvertedBy(new EnumValueConverter(BitcoinNetwork.class));
+                .ofType(String.class);
+                //.withValuesConvertedBy(new EnumValueConverter(String.class));
         parser.accepts(BtcOptionKeys.REG_TEST_HOST, description("", RegTestHost.DEFAULT))
                 .withRequiredArg()
                 .ofType(RegTestHost.class)
@@ -139,6 +141,10 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg();
         parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC, description("If set to true BitcoinJ is routed over tor (socks 5 proxy).", ""))
                 .withRequiredArg();
+    }
+
+    public static BitsquareEnvironment getBitsquareEnvironment(OptionSet options) {
+        return new BitsquareEnvironment(new JOptCommandLinePropertySource(BitsquareEnvironment.BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
     }
 
     protected static String description(String descText, Object defaultValue) {

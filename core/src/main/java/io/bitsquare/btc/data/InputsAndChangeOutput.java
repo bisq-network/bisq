@@ -17,6 +17,8 @@
 
 package io.bitsquare.btc.data;
 
+import io.bitsquare.messages.btc.data.RawTransactionInput;
+
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 

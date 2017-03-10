@@ -25,7 +25,7 @@ import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.GUIUtil;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;

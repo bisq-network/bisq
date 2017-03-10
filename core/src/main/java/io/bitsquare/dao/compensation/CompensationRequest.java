@@ -19,6 +19,7 @@ package io.bitsquare.dao.compensation;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
+import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

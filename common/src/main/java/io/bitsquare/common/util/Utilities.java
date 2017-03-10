@@ -39,6 +39,7 @@ import java.net.URI;
 import java.net.URLConnection;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.*;
 
@@ -256,7 +257,7 @@ public class Utilities {
         try {
             ByteArrayInputStream byteInputStream =
                     new ByteArrayInputStream(org.bitcoinj.core.Utils.parseAsHexOrBase58(serializedHexString));
-                    
+
             try (ObjectInputStream objectInputStream = new LookAheadObjectInputStream(byteInputStream)) {
                 result = objectInputStream.readObject();
             } catch (ClassNotFoundException e) {
@@ -446,8 +447,11 @@ public class Utilities {
             throw new LimitedKeyStrengthException();
     }
 
-    public static String toTruncatedString(Object message, int maxLenght) {
-        return StringUtils.abbreviate(message.toString(), maxLenght).replace("\n", "");
+    public static String toTruncatedString(Object message, int maxLength) {
+        if(Objects.nonNull(message)) {
+            return StringUtils.abbreviate(message.toString(), maxLength).replace("\n", "");
+        }
+        return "NULL";
     }
 
     public static String toTruncatedString(Object message) {

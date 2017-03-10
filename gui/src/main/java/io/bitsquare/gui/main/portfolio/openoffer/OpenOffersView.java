@@ -27,7 +27,7 @@ import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.trade.offer.OpenOffer;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;

@@ -1,7 +1,9 @@
 package io.bitsquare.p2p.storage.payload;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bitsquare.p2p.peers.BroadcastHandler;
@@ -11,7 +13,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.concurrent.TimeUnit;
 
@@ -55,22 +60,32 @@ public final class MailboxStoragePayload implements StoragePayload {
     private final byte[] receiverPubKeyForRemoveOperationBytes;
 
     public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage, PublicKey senderPubKeyForAddOperation, PublicKey receiverPubKeyForRemoveOperation) {
+        this(prefixedSealedAndSignedMessage, new X509EncodedKeySpec(senderPubKeyForAddOperation.getEncoded()).getEncoded(),
+                new X509EncodedKeySpec(receiverPubKeyForRemoveOperation.getEncoded()).getEncoded());
+    }
+
+    public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage, byte[] senderPubKeyForAddOperationBytes, byte[] receiverPubKeyForRemoveOperationBytes) {
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
-
-        this.senderPubKeyForAddOperation = senderPubKeyForAddOperation;
-        this.senderPubKeyForAddOperationBytes = new X509EncodedKeySpec(this.senderPubKeyForAddOperation.getEncoded()).getEncoded();
-
-        this.receiverPubKeyForRemoveOperation = receiverPubKeyForRemoveOperation;
-        this.receiverPubKeyForRemoveOperationBytes = new X509EncodedKeySpec(this.receiverPubKeyForRemoveOperation.getEncoded()).getEncoded();
+        this.senderPubKeyForAddOperationBytes = senderPubKeyForAddOperationBytes;
+        this.receiverPubKeyForRemoveOperationBytes = receiverPubKeyForRemoveOperationBytes;
+        init();
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            senderPubKeyForAddOperation = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(senderPubKeyForAddOperationBytes));
-            receiverPubKeyForRemoveOperation = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(receiverPubKeyForRemoveOperationBytes));
+            init();
         } catch (Throwable t) {
             log.warn("Exception at readObject: " + t.getMessage() + "\nThis= " + this.toString());
+        }
+    }
+
+    private void init() {
+        try {
+            senderPubKeyForAddOperation = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(senderPubKeyForAddOperationBytes));
+            receiverPubKeyForRemoveOperation = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(receiverPubKeyForRemoveOperationBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            log.error("Couldn't create the  public keys", e);
         }
     }
 
@@ -83,6 +98,16 @@ public final class MailboxStoragePayload implements StoragePayload {
     public PublicKey getOwnerPubKey() {
         return receiverPubKeyForRemoveOperation;
     }
+
+    @Override
+    public Messages.StoragePayload toProtoBuf() {
+        return Messages.StoragePayload.newBuilder().setMailboxStoragePayload(Messages.MailboxStoragePayload.newBuilder()
+                .setTTL(TTL)
+                .setPrefixedSealedAndSignedMessage(prefixedSealedAndSignedMessage.toProtoBuf().getPrefixedSealedAndSignedMessage())
+                .setSenderPubKeyForAddOperationBytes(ByteString.copyFrom(senderPubKeyForAddOperationBytes))
+                .setReceiverPubKeyForRemoveOperationBytes(ByteString.copyFrom(receiverPubKeyForRemoveOperationBytes))).build();
+    }
+
 
     @Override
     public boolean equals(Object o) {

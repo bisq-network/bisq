@@ -4,6 +4,8 @@ import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
+import lombok.Getter;
 
 import java.util.regex.Pattern;
 
@@ -11,7 +13,9 @@ public final class NodeAddress implements Persistable, Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
+    @Getter
     public final String hostName;
+    @Getter
     public final int port;
     transient private byte[] addressPrefixHash;
 
@@ -41,6 +45,10 @@ public final class NodeAddress implements Persistable, Payload {
         return hostName.replace(".onion", "");
     }
 
+
+    public Messages.NodeAddress toProtoBuf() {
+        return Messages.NodeAddress.newBuilder().setHostName(hostName).setPort(port).build();
+    }
 
     @Override
     public boolean equals(Object o) {

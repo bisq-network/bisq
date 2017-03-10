@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.disputes;
 
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.arbitration.Arbitrator;
+import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.common.crypto.KeyRing;
@@ -32,7 +32,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;

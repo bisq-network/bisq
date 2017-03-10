@@ -23,6 +23,7 @@ import io.bitsquare.btc.wallet.BsqWalletService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.dao.DaoPeriodService;
 import io.bitsquare.dao.vote.VotingDefaultValues;
+import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.payload.StoragePayload;

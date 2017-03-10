@@ -1,6 +1,6 @@
 package io.bitsquare.btc.provider.squ;
 
-import io.bitsquare.btc.provider.HttpClientProvider;
+import io.bitsquare.messages.btc.provider.HttpClientProvider;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.http.HttpClient;
 import io.bitsquare.http.HttpException;

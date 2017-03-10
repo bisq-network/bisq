@@ -17,14 +17,19 @@
 
 package io.bitsquare.common.crypto;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
@@ -47,13 +52,40 @@ public final class SealedAndSigned implements Payload {
         this.sigPublicKeyBytes = new X509EncodedKeySpec(this.sigPublicKey.getEncoded()).getEncoded();
     }
 
+    public SealedAndSigned(byte[] encryptedSecretKey, byte[] encryptedPayloadWithHmac, byte[] signature, byte[] sigPublicKeyBytes) {
+        this(encryptedSecretKey, encryptedPayloadWithHmac, signature, SealedAndSigned.init(sigPublicKeyBytes));
+    }
+
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            sigPublicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
+            sigPublicKey = init(sigPublicKeyBytes);
         } catch (Throwable t) {
             log.warn("Exception at readObject: " + t.getMessage());
         }
+    }
+
+    /**
+     * We have the bytes, now recreate the sigPublicKey. This happens when receiving this class over the wire,
+     * because the public key is transient.
+     */
+    static PublicKey init(byte[] sigPublicKeyBytes)  {
+        PublicKey publicKey = null;
+        try {
+            publicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC")
+                    .generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            log.error("Error creating sigPublicKey", e);
+        }
+        return publicKey;
+    }
+
+
+    public Messages.SealedAndSigned toProtoBuf() {
+        return Messages.SealedAndSigned.newBuilder().setEncryptedSecretKey(ByteString.copyFrom(encryptedSecretKey))
+                .setEncryptedPayloadWithHmac(ByteString.copyFrom(encryptedPayloadWithHmac))
+                .setSignature(ByteString.copyFrom(signature)).setSigPublicKeyBytes(ByteString.copyFrom(sigPublicKeyBytes))
+                .build();
     }
 
     @Override
@@ -78,4 +110,5 @@ public final class SealedAndSigned implements Payload {
         result = 31 * result + (sigPublicKey != null ? sigPublicKey.hashCode() : 0);
         return result;
     }
+
 }

@@ -1,5 +1,6 @@
 package io.bitsquare.p2p.storage.payload;
 
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 

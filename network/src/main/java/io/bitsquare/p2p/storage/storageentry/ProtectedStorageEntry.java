@@ -1,19 +1,27 @@
 package io.bitsquare.p2p.storage.storageentry;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.wire.Payload;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
+import lombok.EqualsAndHashCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
+@EqualsAndHashCode
 public class ProtectedStorageEntry implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -37,13 +45,31 @@ public class ProtectedStorageEntry implements Payload {
         this.ownerPubKeyBytes = new X509EncodedKeySpec(this.ownerPubKey.getEncoded()).getEncoded();
     }
 
+    public ProtectedStorageEntry(long creationTimeStamp, StoragePayload storagePayload, byte[] ownerPubKeyBytes,
+                                 int sequenceNumber, byte[] signature) {
+        this.storagePayload = storagePayload;
+        this.sequenceNumber = sequenceNumber;
+        this.signature = signature;
+        this.ownerPubKeyBytes = ownerPubKeyBytes;
+        this.creationTimeStamp = creationTimeStamp;
+        init();
+    }
+
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            ownerPubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(ownerPubKeyBytes));
-            checkCreationTimeStamp();
+            init();
         } catch (Throwable t) {
             log.warn("Exception at readObject: " + t.getMessage());
+        }
+    }
+
+    private void init() {
+        try {
+            ownerPubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(ownerPubKeyBytes));
+            checkCreationTimeStamp();
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            log.error("Couldn't create the pubkey", e);
         }
     }
 
@@ -77,6 +103,12 @@ public class ProtectedStorageEntry implements Payload {
 
     public boolean isExpired() {
         return (System.currentTimeMillis() - creationTimeStamp) > storagePayload.getTTL();
+    }
+
+    public Message toProtoBuf() {
+        return Messages.ProtectedStorageEntry.newBuilder().setStoragePayload((Messages.StoragePayload) storagePayload.toProtoBuf())
+                .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes)).setSequenceNumber(sequenceNumber)
+                .setSignature(ByteString.copyFrom(signature)).setCreationTimeStamp(creationTimeStamp).build();
     }
 
     @Override

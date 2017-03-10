@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.dao.compensation.active;
 
-import io.bitsquare.dao.compensation.CompensationRequestPayload;
+import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import javafx.scene.Scene;

@@ -17,7 +17,7 @@
 
 package io.bitsquare.provider.fee;
 
-import io.bitsquare.btc.provider.fee.FeeService;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.http.HttpException;
 import io.bitsquare.provider.fee.providers.BtcFeesProvider;

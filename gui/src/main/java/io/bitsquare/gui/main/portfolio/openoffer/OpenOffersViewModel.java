@@ -24,7 +24,7 @@ import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.collections.ObservableList;
 import org.bitcoinj.utils.Fiat;

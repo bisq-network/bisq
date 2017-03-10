@@ -5,7 +5,7 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.messages.Message;
 import io.bitsquare.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;

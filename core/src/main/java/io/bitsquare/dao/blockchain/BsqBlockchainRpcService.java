@@ -33,6 +33,7 @@ import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.messages.dao.blockchain.RpcOptionKeys;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;

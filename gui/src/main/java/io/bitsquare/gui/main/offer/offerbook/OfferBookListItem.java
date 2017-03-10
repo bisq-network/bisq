@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.offer.offerbook;
 
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 
 public class OfferBookListItem {
     private final Offer offer;

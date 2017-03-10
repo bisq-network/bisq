@@ -21,7 +21,7 @@ import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.messages.DepositTxPublishedMessage;
+import io.bitsquare.messages.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bitsquare.util.Validator.checkTradeId;
+import static io.bitsquare.messages.util.Validator.checkTradeId;
 
 public class ProcessDepositTxPublishedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessDepositTxPublishedMessage.class);

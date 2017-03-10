@@ -18,12 +18,11 @@
 package io.bitsquare.common.crypto;
 
 import com.google.common.base.Charsets;
-import io.bitsquare.common.util.Utilities;
+import io.bitsquare.messages.ToProtoBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -51,8 +50,8 @@ public class Hash {
      * @param data Any serializable object. Will be converted into a byte array using Java serialisation.
      * @return Hash of data
      */
-    public static byte[] getHash(Serializable data) {
-        return getHash(Utilities.serialize(data));
+    public static byte[] getHash(ToProtoBuffer data) {
+        return getHash(data.toProtoBuf().toByteArray());
     }
 
     /**

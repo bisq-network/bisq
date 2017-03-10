@@ -18,7 +18,10 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.locale.FiatCurrency;
+import io.bitsquare.messages.locale.FiatCurrency;
+import io.bitsquare.messages.payment.PaymentMethod;
+import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
+import io.bitsquare.messages.payment.payload.PerfectMoneyAccountContractData;
 
 public final class PerfectMoneyAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.

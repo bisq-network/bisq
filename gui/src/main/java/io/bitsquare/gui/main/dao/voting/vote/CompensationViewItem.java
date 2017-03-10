@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.dao.voting.vote;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.dao.compensation.CompensationRequest;
-import io.bitsquare.dao.compensation.CompensationRequestPayload;
+import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bitsquare.dao.vote.CompensationRequestVoteItem;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.MainView;

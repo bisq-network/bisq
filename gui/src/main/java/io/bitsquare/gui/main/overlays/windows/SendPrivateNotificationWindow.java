@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
-import io.bitsquare.alert.PrivateNotification;
+import io.bitsquare.messages.alert.PrivateNotification;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;

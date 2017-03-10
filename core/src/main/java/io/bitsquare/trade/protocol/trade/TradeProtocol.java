@@ -21,19 +21,19 @@ import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.messages.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.messages.protocol.trade.TradeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
 
-import static io.bitsquare.util.Validator.nonEmptyStringOf;
+import static io.bitsquare.messages.util.Validator.nonEmptyStringOf;
 
 public abstract class TradeProtocol {
     private static final Logger log = LoggerFactory.getLogger(TradeProtocol.class);

@@ -26,7 +26,7 @@ import io.bitsquare.gui.main.dao.compensation.CompensationView;
 import io.bitsquare.gui.main.dao.voting.VotingView;
 import io.bitsquare.gui.main.dao.wallet.BsqWalletView;
 import io.bitsquare.gui.main.dao.wallet.dashboard.BsqDashboardView;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;

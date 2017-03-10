@@ -1,6 +1,8 @@
 package io.bitsquare.p2p.storage.messages;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.util.ProtoBufferUtils;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 
 public final class RemoveDataMessage extends BroadcastMessage {
@@ -34,5 +36,13 @@ public final class RemoveDataMessage extends BroadcastMessage {
         return "RemoveDataMessage{" +
                 "protectedStorageEntry=" + protectedStorageEntry +
                 "} " + super.toString();
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
+        return baseEnvelope.setRemoveDataMessage(Messages.RemoveDataMessage.newBuilder()
+                .setProtectedStorageEntry((Messages.ProtectedStorageEntry) protectedStorageEntry.toProtoBuf())).build();
+
     }
 }

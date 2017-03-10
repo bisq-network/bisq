@@ -3,7 +3,7 @@ package io.bitsquare.p2p.peers.peerexchange;
 import io.bitsquare.app.Log;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.messages.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.PeerManager;

@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.app.DevFlags;
-import io.bitsquare.btc.Restrictions;
+import io.bitsquare.messages.btc.Restrictions;
 import io.bitsquare.btc.wallet.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;

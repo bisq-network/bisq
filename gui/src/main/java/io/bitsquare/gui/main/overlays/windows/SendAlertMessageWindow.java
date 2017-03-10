@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
-import io.bitsquare.alert.Alert;
+import io.bitsquare.messages.alert.Alert;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;

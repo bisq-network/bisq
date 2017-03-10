@@ -18,7 +18,9 @@
 package io.bitsquare.payment;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.locale.Country;
+import io.bitsquare.messages.locale.Country;
+import io.bitsquare.messages.payment.PaymentMethod;
+import io.bitsquare.messages.payment.payload.CountryBasedPaymentAccountContractData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

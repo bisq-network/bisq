@@ -7,6 +7,7 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.KeyStorage;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.Tuple3;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.p2p.*;
@@ -24,6 +25,7 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -819,6 +821,11 @@ final class StressTestDirectMessage implements DirectMessage {
         return messageVersion;
     }
 
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        throw new NotImplementedException();
+    }
+
     String getData() {
         return data;
     }
@@ -840,6 +847,11 @@ final class StressTestMailboxMessage implements MailboxMessage {
     @Override
     public int getMessageVersion() {
         return messageVersion;
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        throw new NotImplementedException();
     }
 
     @Override

@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.failed.FailedTradesManager;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;

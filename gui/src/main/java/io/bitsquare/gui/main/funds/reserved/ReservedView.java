@@ -34,7 +34,7 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;

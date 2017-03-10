@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.offer.offerbook;
 
 import io.bitsquare.app.Log;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.offer.OfferBookService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

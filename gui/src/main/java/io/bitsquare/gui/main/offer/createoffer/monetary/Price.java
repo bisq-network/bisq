@@ -1,7 +1,7 @@
 package io.bitsquare.gui.main.offer.createoffer.monetary;
 
 import io.bitsquare.common.util.MathUtils;
-import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.messages.locale.CurrencyUtil;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.ExchangeRate;

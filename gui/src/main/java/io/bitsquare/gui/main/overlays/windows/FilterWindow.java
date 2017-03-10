@@ -17,9 +17,9 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
-import io.bitsquare.filter.Filter;
+import io.bitsquare.messages.filter.payload.Filter;
 import io.bitsquare.filter.FilterManager;
-import io.bitsquare.filter.PaymentAccountFilter;
+import io.bitsquare.messages.filter.payload.PaymentAccountFilter;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;

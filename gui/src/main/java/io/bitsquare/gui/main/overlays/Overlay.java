@@ -25,7 +25,7 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;

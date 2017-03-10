@@ -79,8 +79,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static io.bitsquare.app.AppOptionKeys.APP_NAME_KEY;
-
 public class BitsquareApp extends Application {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
 
@@ -231,7 +229,7 @@ public class BitsquareApp extends Application {
             });
 
             // configure the primary stage
-            primaryStage.setTitle(env.getRequiredProperty(APP_NAME_KEY));
+            primaryStage.setTitle(env.getRequiredProperty(AppOptionKeys.APP_NAME_KEY));
             primaryStage.setScene(scene);
             primaryStage.setMinWidth(1020);
             primaryStage.setMinHeight(620);

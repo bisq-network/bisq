@@ -1,6 +1,8 @@
 package io.bitsquare.p2p.storage.mocks;
 
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.storage.payload.StoragePayload;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.security.PublicKey;
 
@@ -45,5 +47,10 @@ public class MockData implements StoragePayload {
     @Override
     public PublicKey getOwnerPubKey() {
         return publicKey;
+    }
+
+    @Override
+    public Messages.ProtectedMailboxStorageEntry toProtoBuf() {
+        throw new NotImplementedException();
     }
 }

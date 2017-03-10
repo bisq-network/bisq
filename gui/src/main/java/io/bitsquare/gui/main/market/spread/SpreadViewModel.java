@@ -18,14 +18,14 @@
 package io.bitsquare.gui.main.market.spread;
 
 import com.google.inject.Inject;
-import io.bitsquare.btc.provider.price.MarketPrice;
-import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.offer.offerbook.OfferBook;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.locale.CurrencyUtil;
+import io.bitsquare.messages.provider.price.MarketPrice;
+import io.bitsquare.messages.provider.price.PriceFeedService;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;

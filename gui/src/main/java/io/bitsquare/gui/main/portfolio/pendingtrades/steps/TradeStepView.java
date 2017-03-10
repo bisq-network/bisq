@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps;
 
 import io.bitsquare.app.Log;
-import io.bitsquare.arbitration.Dispute;
+import io.bitsquare.messages.arbitration.Dispute;
 import io.bitsquare.common.Clock;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.TxIdTextField;
@@ -28,7 +28,7 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.TradeSubView;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;

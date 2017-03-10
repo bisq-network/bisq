@@ -34,7 +34,7 @@ import io.bitsquare.p2p.P2PModule;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradeModule;
 import io.bitsquare.trade.offer.OfferModule;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.stage.Stage;
 import org.slf4j.Logger;

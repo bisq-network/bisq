@@ -67,7 +67,7 @@ public class MonitorMain extends BitsquareExecutable {
             System.exit(EXIT_FAILURE);
             return;
         }
-        BitsquareEnvironment bitsquareEnvironment = new BitsquareEnvironment(options);
+        BitsquareEnvironment bitsquareEnvironment = getBitsquareEnvironment(options);
 
         // need to call that before BitsquareAppMain().execute(args)
         BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
@@ -81,7 +81,7 @@ public class MonitorMain extends BitsquareExecutable {
 
     @Override
     protected void doExecute(OptionSet options) {
-        Monitor.setEnvironment(new BitsquareEnvironment(options));
+        Monitor.setEnvironment(getBitsquareEnvironment(options));
         UserThread.execute(() -> monitor = new Monitor());
 
         while (!isStopped) {

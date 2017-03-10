@@ -19,11 +19,12 @@ package io.bitsquare.trade.offer;
 
 import com.google.inject.name.Named;
 import io.bitsquare.app.AppOptionKeys;
-import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;

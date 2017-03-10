@@ -74,7 +74,7 @@ public class StatisticsMain extends BitsquareExecutable {
             System.exit(EXIT_FAILURE);
             return;
         }
-        BitsquareEnvironment bitsquareEnvironment = new BitsquareEnvironment(options);
+        BitsquareEnvironment bitsquareEnvironment = getBitsquareEnvironment(options);
 
         // need to call that before BitsquareAppMain().execute(args)
         BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
@@ -88,7 +88,7 @@ public class StatisticsMain extends BitsquareExecutable {
 
     @Override
     protected void doExecute(OptionSet options) {
-        final BitsquareEnvironment environment = new BitsquareEnvironment(options);
+        final BitsquareEnvironment environment = getBitsquareEnvironment(options);
         Statistics.setEnvironment(environment);
 
         UserThread.execute(() -> statistics = new Statistics());

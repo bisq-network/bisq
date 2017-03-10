@@ -11,8 +11,9 @@ import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.common.wire.Payload;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.messages.ToProtoBuffer;
+import io.bitsquare.messages.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.*;
 import io.bitsquare.p2p.peers.BroadcastHandler;
@@ -403,7 +404,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (sequenceNumberMap.containsKey(hashOfData))
             sequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr + 1;
         else
-            sequenceNumber = 0;
+            sequenceNumber = 1;
 
         byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
@@ -417,7 +418,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (sequenceNumberMap.containsKey(hashOfPayload))
             sequenceNumber = sequenceNumberMap.get(hashOfPayload).sequenceNr + 1;
         else
-            sequenceNumber = 0;
+            sequenceNumber = 1;
 
         byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
@@ -432,7 +433,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (sequenceNumberMap.containsKey(hashOfData))
             sequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr + 1;
         else
-            sequenceNumber = 0;
+            sequenceNumber = 1;
 
         byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(expirableMailboxStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(storageSignaturePubKey.getPrivate(), hashOfDataAndSeqNr);
@@ -515,7 +516,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
     }
 
-    private boolean checkSignature(PublicKey ownerPubKey, byte[] hashOfDataAndSeqNr, byte[] signature) {
+    boolean checkSignature(PublicKey ownerPubKey, byte[] hashOfDataAndSeqNr, byte[] signature) {
         try {
             boolean result = Sig.verify(ownerPubKey, hashOfDataAndSeqNr, signature);
             if (!result)
@@ -536,7 +537,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
     // Check that the pubkey of the storage entry matches the allowed pubkey for the addition or removal operation
     // in the contained mailbox message, or the pubkey of other kinds of messages.
-    private boolean checkPublicKeys(ProtectedStorageEntry protectedStorageEntry, boolean isAddOperation) {
+    boolean checkPublicKeys(ProtectedStorageEntry protectedStorageEntry, boolean isAddOperation) {
         boolean result;
         if (protectedStorageEntry.getStoragePayload() instanceof MailboxStoragePayload) {
             MailboxStoragePayload payload = (MailboxStoragePayload) protectedStorageEntry.getStoragePayload();
@@ -664,12 +665,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
      * Needs to be Serializable because we convert the object to a byte array via java serialization
      * before calculating the hash.
      */
-    public static final class DataAndSeqNrPair implements Serializable {
+    public static final class DataAndSeqNrPair implements Serializable, ToProtoBuffer {
         // data are only used for calculating cryptographic hash from both values so they are kept private
-        private final Payload data;
+        private final StoragePayload data;
         private final int sequenceNumber;
 
-        public DataAndSeqNrPair(Payload data, int sequenceNumber) {
+        public DataAndSeqNrPair(StoragePayload data, int sequenceNumber) {
             this.data = data;
             this.sequenceNumber = sequenceNumber;
         }
@@ -680,6 +681,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     "data=" + data +
                     ", sequenceNumber=" + sequenceNumber +
                     '}';
+        }
+
+        @Override
+        public com.google.protobuf.Message toProtoBuf() {
+            //data.toProtoBuf().getOneofFieldDescriptor();
+            //Messages.Payload payload = Messages.Payload.newBuilder().setUnknownFields()
+            return Messages.DataAndSeqNrPair.newBuilder().setPayload((Messages.StoragePayload) data.toProtoBuf()).setSequenceNumber(sequenceNumber).build();
         }
     }
 

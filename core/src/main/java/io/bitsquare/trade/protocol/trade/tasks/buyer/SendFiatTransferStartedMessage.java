@@ -22,7 +22,7 @@ import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.trade.protocol.trade.messages.FiatTransferStartedMessage;
+import io.bitsquare.messages.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

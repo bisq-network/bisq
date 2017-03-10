@@ -67,7 +67,7 @@ public class HeadlessMain extends BitsquareExecutable {
             System.exit(EXIT_FAILURE);
             return;
         }
-        BitsquareEnvironment bitsquareEnvironment = new BitsquareEnvironment(options);
+        BitsquareEnvironment bitsquareEnvironment = getBitsquareEnvironment(options);
 
         // need to call that before BitsquareAppMain().execute(args)
         BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
@@ -81,7 +81,7 @@ public class HeadlessMain extends BitsquareExecutable {
 
     @Override
     protected void doExecute(OptionSet options) {
-        Headless.setEnvironment(new BitsquareEnvironment(options));
+        Headless.setEnvironment(getBitsquareEnvironment(options));
         UserThread.execute(() -> headless = new Headless());
 
         while (!isStopped) {

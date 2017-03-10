@@ -49,10 +49,10 @@ public class BitsquareAppMain extends BitsquareExecutable {
             System.exit(EXIT_FAILURE);
             return;
         }
-        BitsquareEnvironment bitsquareEnvironment = new BitsquareEnvironment(options);
+        BitsquareEnvironment bitsquareEnvironment = getBitsquareEnvironment(options);
 
         // need to call that before BitsquareAppMain().execute(args)
-        BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
+        initAppDir(bitsquareEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
 
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
@@ -63,7 +63,7 @@ public class BitsquareAppMain extends BitsquareExecutable {
 
     @Override
     protected void doExecute(OptionSet options) {
-        BitsquareApp.setEnvironment(new BitsquareEnvironment(options));
+        BitsquareApp.setEnvironment(getBitsquareEnvironment(options));
         javafx.application.Application.launch(BitsquareApp.class);
     }
 }

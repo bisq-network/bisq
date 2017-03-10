@@ -21,7 +21,7 @@ import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TableGroupHeadline;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.messages.locale.CurrencyUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;

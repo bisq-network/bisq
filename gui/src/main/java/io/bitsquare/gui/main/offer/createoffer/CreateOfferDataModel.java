@@ -20,12 +20,8 @@ package io.bitsquare.gui.main.offer.createoffer;
 import com.google.inject.Inject;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Version;
-import io.bitsquare.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.btc.Restrictions;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.btc.provider.fee.FeeService;
-import io.bitsquare.btc.provider.price.PriceFeedService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.crypto.KeyRing;
@@ -36,14 +32,19 @@ import io.bitsquare.gui.main.offer.createoffer.monetary.Price;
 import io.bitsquare.gui.main.offer.createoffer.monetary.Volume;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.messages.arbitration.Arbitrator;
+import io.bitsquare.messages.btc.Restrictions;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
+import io.bitsquare.messages.locale.CurrencyUtil;
+import io.bitsquare.messages.locale.TradeCurrency;
+import io.bitsquare.messages.payment.payload.BankAccountContractData;
+import io.bitsquare.messages.provider.price.PriceFeedService;
+import io.bitsquare.messages.trade.offer.payload.Offer;
+import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.payment.*;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.trade.offer.OpenOfferManager;
-import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -332,6 +333,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         checkArgument(securityDepositAsCoin.compareTo(Restrictions.MIN_SECURITY_DEPOSIT) >= 0, "securityDeposit must be not be less than " +
                 Restrictions.MIN_SECURITY_DEPOSIT.toFriendlyString());
         return new Offer(offerId,
+                null,
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 direction,
@@ -344,6 +346,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 new ArrayList<>(user.getAcceptedArbitratorAddresses()),
                 paymentAccount.getPaymentMethod().getId(),
                 paymentAccount.getId(),
+                null,
                 countryCode,
                 acceptedCountryCodes,
                 bankId,

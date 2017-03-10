@@ -2,12 +2,15 @@ package io.bitsquare.p2p.peers.getdata.messages;
 
 import io.bitsquare.app.Capabilities;
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.messaging.SupportedCapabilitiesMessage;
+import io.bitsquare.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 public final class GetDataResponse implements SupportedCapabilitiesMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -37,6 +40,28 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage {
     public int getMessageVersion() {
         return messageVersion;
     }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.GetDataResponse.Builder builder = Messages.GetDataResponse.newBuilder();
+        builder.addAllDataSet(
+                dataSet.stream()
+                        .map(protectedStorageEntry ->  {
+                            Messages.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder builder1 =
+                                    Messages.ProtectedStorageEntryOrProtectedMailboxStorageEntry.newBuilder();
+                            if(protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
+                                builder1.setProtectedMailboxStorageEntry((Messages.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoBuf());
+                            } else {
+                                builder1.setProtectedStorageEntry((Messages.ProtectedStorageEntry) protectedStorageEntry.toProtoBuf());
+                            }
+                            return builder1.build();
+                        })
+                        .collect(Collectors.toList()))
+                .setRequestNonce(requestNonce)
+                .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
+        return Messages.Envelope.newBuilder().setGetDataResponse(builder).build();
+    }
+
 
     @Override
     public String toString() {

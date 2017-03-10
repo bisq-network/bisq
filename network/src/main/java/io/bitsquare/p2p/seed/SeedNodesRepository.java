@@ -20,7 +20,7 @@ public class SeedNodesRepository {
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
             // In alpha we change the network with new releases. That will be faded out once we become backwards compatible (Beta)
 
-            // We keep 1 seed node running for the last 2 mainnet versions, just in case a user has not updated and need to 
+            // We keep 1 seed node running for the last 2 mainnet versions, just in case a user has not updated and need to
             // access still his his app
 
             // mainnet
@@ -44,7 +44,7 @@ public class SeedNodesRepository {
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("2zxtnprnx5wqr7a3.onion:8000"),
 */
             // v0.5.0
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("ren4cuzpex24rdwo.onion:8000"),
+            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("vmox6ohwogklewem.onion:8002"),
 
             // local dev test
             // DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("23bnormzh2mvkz3z.onion:8000"),
@@ -55,9 +55,9 @@ public class SeedNodesRepository {
             // regtest
             // For development you need to change that to your local onion addresses
             // 1. Run a seed node with prog args: --bitcoinNetwork=regtest --nodePort=8002 --myAddress=rxdkppp3vicnbgqt:8002 --appName=Bitsquare_seed_node_rxdkppp3vicnbgqt.onion_8002
-            // 2. Find your local onion address in Bitsquare_seed_node_rxdkppp3vicnbgqt.onion_8002/tor/hiddenservice/hostname
+            // 2. Find your local onion address in Bitsquare_seed_node_rxdkppp3vicnbgqt.onion_8002/regtest/tor/hiddenservice/hostname
             // 3. Shut down the seed node
-            // 4. Rename the directory with your local onion address    
+            // 4. Rename the directory with your local onion address
             // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),

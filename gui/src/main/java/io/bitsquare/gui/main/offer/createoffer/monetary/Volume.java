@@ -1,6 +1,6 @@
 package io.bitsquare.gui.main.offer.createoffer.monetary;
 
-import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.messages.locale.CurrencyUtil;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;

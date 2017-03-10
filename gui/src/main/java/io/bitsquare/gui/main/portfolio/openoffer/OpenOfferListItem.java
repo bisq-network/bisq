@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.openoffer;
 
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
 
 /**

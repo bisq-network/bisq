@@ -1,6 +1,9 @@
 package io.bitsquare.p2p.storage.messages;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.common.util.ProtoBufferUtils;
+import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
 
 public final class AddDataMessage extends BroadcastMessage {
@@ -33,5 +36,22 @@ public final class AddDataMessage extends BroadcastMessage {
         return "AddDataMessage{" +
                 "protectedStorageEntry=" + protectedStorageEntry +
                 "} " + super.toString();
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        Messages.Envelope.Builder baseEnvelope = ProtoBufferUtils.getBaseEnvelope();
+        Messages.AddDataMessage.Builder builder;
+        Messages.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder choiceBuilder;
+        choiceBuilder = Messages.ProtectedStorageEntryOrProtectedMailboxStorageEntry.newBuilder();
+
+        if(protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
+            builder = Messages.AddDataMessage.newBuilder().setEntry(
+                    choiceBuilder.setProtectedMailboxStorageEntry((Messages.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoBuf()));
+        } else {
+            builder = Messages.AddDataMessage.newBuilder().setEntry(
+                    choiceBuilder.setProtectedStorageEntry((Messages.ProtectedStorageEntry) protectedStorageEntry.toProtoBuf()));
+        }
+        return baseEnvelope.setAddDataMessage(builder).build();
     }
 }

@@ -1,6 +1,6 @@
 package io.bitsquare.p2p.peers.getdata.messages;
 
-import io.bitsquare.p2p.Message;
+import io.bitsquare.messages.Message;
 
 import java.util.Set;
 

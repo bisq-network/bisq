@@ -1,7 +1,8 @@
 package io.bitsquare.payment;
 
-import io.bitsquare.locale.TradeCurrency;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.locale.TradeCurrency;
+import io.bitsquare.messages.payment.PaymentMethod;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;

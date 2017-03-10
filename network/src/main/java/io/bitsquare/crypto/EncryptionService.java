@@ -17,10 +17,18 @@
 
 package io.bitsquare.crypto;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.bitsquare.common.crypto.*;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.messages.Message;
+import io.bitsquare.p2p.network.ProtoBufferUtilities;
 
+import javax.crypto.SecretKey;
 import javax.inject.Inject;
+import java.security.PrivateKey;
+
+import static io.bitsquare.common.crypto.Encryption.decryptPayloadWithHmac;
+import static io.bitsquare.common.crypto.Encryption.decryptSecretKey;
 
 public class EncryptionService {
     private final KeyRing keyRing;
@@ -34,8 +42,32 @@ public class EncryptionService {
         return Encryption.encryptHybridWithSignature(message, keyRing.getSignatureKeyPair(), pubKeyRing.getEncryptionPubKey());
     }
 
+    /**
+     * @param sealedAndSigned The sealedAndSigned object.
+     * @param privateKey      The private key for decryption
+     * @return A DecryptedPayloadWithPubKey object.
+     * @throws CryptoException
+     */
+    public static DecryptedDataTuple decryptHybridWithSignature(SealedAndSigned sealedAndSigned, PrivateKey privateKey) throws CryptoException {
+        SecretKey secretKey = decryptSecretKey(sealedAndSigned.encryptedSecretKey, privateKey);
+        boolean isValid = Sig.verify(sealedAndSigned.sigPublicKey,
+                Hash.getHash(sealedAndSigned.encryptedPayloadWithHmac),
+                sealedAndSigned.signature);
+        if (!isValid)
+            throw new CryptoException("Signature verification failed.");
+
+        Message decryptedPayload = null;
+        try {
+            decryptedPayload = ProtoBufferUtilities
+                    .fromProtoBuf(Messages.Envelope.parseFrom(decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey))).get();
+        } catch (InvalidProtocolBufferException e) {
+            throw new CryptoException("Unable to parse protobuffer message.", e);
+        }
+        return new DecryptedDataTuple(decryptedPayload, sealedAndSigned.sigPublicKey);
+    }
+
     public DecryptedMsgWithPubKey decryptAndVerify(SealedAndSigned sealedAndSigned) throws CryptoException {
-        DecryptedDataTuple decryptedDataTuple = Encryption.decryptHybridWithSignature(sealedAndSigned,
+        DecryptedDataTuple decryptedDataTuple = decryptHybridWithSignature(sealedAndSigned,
                 keyRing.getEncryptionKeyPair().getPrivate());
         if (decryptedDataTuple.payload instanceof Message) {
             return new DecryptedMsgWithPubKey((Message) decryptedDataTuple.payload,

@@ -17,11 +17,11 @@
 
 package io.bitsquare.gui.main.offer;
 
-import io.bitsquare.btc.provider.price.PriceFeedService;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.ViewLoader;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 
 import javax.inject.Inject;
 

@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.peers.keepalive.messages;
 
 import io.bitsquare.app.Version;
-import io.bitsquare.p2p.Message;
+import io.bitsquare.messages.Message;
 
 public abstract class KeepAliveMessage implements Message {
     //TODO add serialVersionUID also in superclasses as changes would break compatibility

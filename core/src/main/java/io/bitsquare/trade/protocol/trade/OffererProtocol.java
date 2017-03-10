@@ -19,7 +19,7 @@ package io.bitsquare.trade.protocol.trade;
 
 
 import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.trade.protocol.trade.messages.TradeMessage;
+import io.bitsquare.messages.protocol.trade.TradeMessage;
 
 public interface OffererProtocol {
     void handleTakeOfferRequest(TradeMessage message, NodeAddress taker);

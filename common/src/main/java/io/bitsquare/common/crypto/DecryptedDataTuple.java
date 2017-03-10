@@ -17,14 +17,15 @@
 
 package io.bitsquare.common.crypto;
 
-import java.io.Serializable;
+import io.bitsquare.messages.Message;
+
 import java.security.PublicKey;
 
 public final class DecryptedDataTuple {
-    public final Serializable payload;
+    public final Message payload;
     public final PublicKey sigPublicKey;
 
-    public DecryptedDataTuple(Serializable payload, PublicKey sigPublicKey) {
+    public DecryptedDataTuple(Message payload, PublicKey sigPublicKey) {
         this.payload = payload;
         this.sigPublicKey = sigPublicKey;
     }

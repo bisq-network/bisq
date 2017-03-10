@@ -1,8 +1,9 @@
 package io.bitsquare.trade.statistics;
 
 import io.bitsquare.common.util.MathUtils;
-import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.locale.CurrencyUtil;
+import io.bitsquare.messages.trade.offer.payload.Offer;
+import io.bitsquare.messages.trade.statistics.payload.TradeStatistics;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;

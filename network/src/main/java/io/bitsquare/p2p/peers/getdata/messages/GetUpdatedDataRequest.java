@@ -1,10 +1,13 @@
 package io.bitsquare.p2p.peers.getdata.messages;
 
+import com.google.protobuf.ByteString;
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.network.messages.SendersNodeAddressMessage;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -42,6 +45,18 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, G
     @Override
     public int getMessageVersion() {
         return messageVersion;
+    }
+
+    @Override
+    public Messages.Envelope toProtoBuf() {
+        return Messages.Envelope.newBuilder().setP2PNetworkVersion(Version.P2P_NETWORK_VERSION)
+                .setGetUpdatedDataRequest(
+                Messages.GetUpdatedDataRequest.newBuilder()
+                        .setMessageVersion(messageVersion)
+                        .setSenderNodeAddress(senderNodeAddress.toProtoBuf())
+                        .setNonce(nonce)
+                        .addAllExcludedKeys(excludedKeys.stream()
+                                .map(bytes -> ByteString.copyFrom(bytes)).collect(Collectors.toList()))).build();
     }
 
     @Override

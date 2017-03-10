@@ -21,8 +21,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.common.util.Tuple3;
-import io.bitsquare.common.util.Utilities;
+import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.messages.filter.payload.Filter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.security.SignatureException;
-import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.bitcoinj.core.Utils.HEX;
 
@@ -159,8 +159,10 @@ public class FilterManager {
     }
 
     private String getHexFromData(Filter filter) {
-        Tuple3<List<String>, List<String>, List<PaymentAccountFilter>> tuple = new Tuple3<>(filter.bannedNodeAddress, filter.bannedOfferIds, filter.bannedPaymentAccounts);
-        return Utils.HEX.encode(Utilities.serialize(tuple));
+        Messages.Filter.Builder builder = Messages.Filter.newBuilder().addAllBannedNodeAddress(filter.bannedNodeAddress)
+                .addAllBannedOfferIds(filter.bannedOfferIds)
+                .addAllBannedPaymentAccounts(filter.bannedPaymentAccounts.stream().map(paymentAccountFilter -> paymentAccountFilter.toProtoBuf()).collect(Collectors.toList()));
+        return Utils.HEX.encode(builder.build().toByteArray());
     }
 
     @Nullable

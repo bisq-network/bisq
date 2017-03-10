@@ -18,7 +18,7 @@
 package io.bitsquare.gui.util;
 
 import io.bitsquare.common.UserThread;
-import io.bitsquare.user.Preferences;
+import io.bitsquare.messages.user.Preferences;
 import javafx.animation.*;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;

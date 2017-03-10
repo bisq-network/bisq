@@ -33,7 +33,7 @@ import io.bitsquare.gui.util.validation.*;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountFactory;
-import io.bitsquare.payment.PaymentMethod;
+import io.bitsquare.messages.payment.PaymentMethod;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.geometry.VPos;

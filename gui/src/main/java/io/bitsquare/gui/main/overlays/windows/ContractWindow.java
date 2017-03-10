@@ -18,18 +18,18 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
-import io.bitsquare.arbitration.Dispute;
+import io.bitsquare.messages.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
-import io.bitsquare.locale.CountryUtil;
-import io.bitsquare.payment.PaymentAccountContractData;
-import io.bitsquare.payment.PaymentMethod;
-import io.bitsquare.trade.Contract;
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.locale.CountryUtil;
+import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
+import io.bitsquare.messages.payment.PaymentMethod;
+import io.bitsquare.messages.trade.payload.Contract;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;

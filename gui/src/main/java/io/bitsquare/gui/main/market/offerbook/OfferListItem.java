@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.market.offerbook;
 
-import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
