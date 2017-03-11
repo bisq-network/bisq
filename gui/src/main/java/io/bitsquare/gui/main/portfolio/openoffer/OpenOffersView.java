@@ -26,8 +26,8 @@ import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
-import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.messages.user.Preferences;
+import io.bitsquare.trade.offer.OpenOffer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
@@ -302,24 +302,27 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
                         return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
                             final ImageView iconView = new ImageView();
-                            final Button button = new Button();
-
-                            {
-                                iconView.setId("image-remove");
-                                button.setText("Remove");
-                                button.setGraphic(iconView);
-                                button.setMinWidth(70);
-                            }
+                            Button button;
 
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
-                                if (item != null) {
+                                if (item != null && !empty) {
+                                    if (button == null) {
+                                        iconView.setId("image-remove");
+                                        button = new Button("Remove");
+                                        button.setMinWidth(70);
+                                        button.setGraphic(iconView);
+                                        setGraphic(button);
+                                    }
                                     button.setOnAction(event -> onRemoveOpenOffer(item.getOpenOffer()));
-                                    setGraphic(button);
                                 } else {
                                     setGraphic(null);
+                                    if (button != null) {
+                                        button.setOnAction(null);
+                                        button = null;
+                                    }
                                 }
                             }
                         };

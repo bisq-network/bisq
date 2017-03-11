@@ -21,7 +21,6 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
@@ -36,6 +35,7 @@ import io.bitsquare.gui.main.overlays.windows.QRCodeWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.messages.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -284,6 +284,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateList() {
+        observableList.forEach(DepositListItem::cleanup);
         observableList.clear();
         walletService.getAvailableAddressEntries().stream()
                 .forEach(e -> observableList.add(new DepositListItem(e, walletService, formatter)));
@@ -340,7 +341,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
                     public TableCell<DepositListItem, DepositListItem> call(TableColumn<DepositListItem,
                             DepositListItem> column) {
                         return new TableCell<DepositListItem, DepositListItem>() {
-
                             Button button;
 
                             @Override
@@ -349,9 +349,9 @@ public class DepositView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     if (button == null) {
                                         button = new Button("Select");
-                                        button.setOnAction(e -> tableView.getSelectionModel().select(item));
                                         setGraphic(button);
                                     }
+                                    button.setOnAction(e -> tableView.getSelectionModel().select(item));
                                 } else {
                                     setGraphic(null);
                                     if (button != null) {
@@ -417,8 +417,10 @@ public class DepositView extends ActivatableView<VBox, Void> {
                     public void updateItem(final DepositListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            if (!textProperty().isBound())
-                                textProperty().bind(item.balanceProperty());
+                            if (textProperty().isBound())
+                                textProperty().unbind();
+
+                            textProperty().bind(item.balanceProperty());
                         } else {
                             textProperty().unbind();
                             setText("");

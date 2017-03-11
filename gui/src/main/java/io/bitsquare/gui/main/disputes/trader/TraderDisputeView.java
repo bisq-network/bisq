@@ -22,11 +22,8 @@ import com.google.common.io.ByteStreams;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.alert.PrivateNotificationManager;
-import io.bitsquare.messages.arbitration.Dispute;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.DisputeManager;
-import io.bitsquare.messages.arbitration.DisputeCommunicationMessage;
-import io.bitsquare.messages.arbitration.payload.Attachment;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
@@ -46,10 +43,13 @@ import io.bitsquare.gui.main.overlays.windows.SendPrivateNotificationWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.messages.arbitration.Dispute;
+import io.bitsquare.messages.arbitration.DisputeCommunicationMessage;
+import io.bitsquare.messages.arbitration.payload.Attachment;
+import io.bitsquare.messages.trade.payload.Contract;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.Connection;
-import io.bitsquare.messages.trade.payload.Contract;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -934,9 +934,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     if (button == null) {
                                         button = new Button("Select");
-                                        button.setOnAction(e -> tableView.getSelectionModel().select(item));
                                         setGraphic(button);
                                     }
+                                    button.setOnAction(e -> tableView.getSelectionModel().select(item));
                                 } else {
                                     setGraphic(null);
                                     if (button != null) {
@@ -965,19 +965,18 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
                         return new TableCell<Dispute, Dispute>() {
-                            final Button button = new Button("Details");
-
-                            {
-
-                            }
+                            Button button;
 
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
+                                    if (button == null) {
+                                        button = new Button("Details");
+                                        setGraphic(button);
+                                    }
                                     button.setOnAction(e -> onOpenContract(item));
-                                    setGraphic(button);
                                 } else {
                                     setGraphic(null);
                                     button.setOnAction(null);

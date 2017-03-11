@@ -33,6 +33,7 @@ import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -40,7 +41,6 @@ import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
-import io.bitsquare.messages.user.Preferences;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -536,9 +536,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                         if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING) {
                                             if (button == null) {
                                                 button = new Button("Revert");
-                                                button.setOnAction(e -> revertTransaction(item.getTxId(), item.getTradable()));
                                                 setGraphic(button);
                                             }
+                                            button.setOnAction(e -> revertTransaction(item.getTxId(), item.getTradable()));
                                         } else {
                                             if (button != null) {
                                                 button.setOnAction(null);
