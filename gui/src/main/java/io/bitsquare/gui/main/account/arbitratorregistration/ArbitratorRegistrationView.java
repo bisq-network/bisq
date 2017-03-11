@@ -194,7 +194,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         revokeButton.disableProperty().bind(model.revokeButtonDisabled);
         revokeButton.setOnAction(e -> onRevoke());
 
-        addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("account.arbitratorRegistration.info.headline"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("shared.information"), Layout.GROUP_DISTANCE);
         Label infoLabel = addMultilineLabel(gridPane, gridRow);
         GridPane.setMargin(infoLabel, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         infoLabel.setText(Res.get("account.arbitratorRegistration.info.msg"));
@@ -222,7 +222,8 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         if (model.isBootstrapped()) {
             model.onRevoke(
                     () -> new Popup().feedback(Res.get("account.arbitratorRegistration.removedSuccess")).show(),
-                    (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.removedFailed", errorMessage)).show());
+                    (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.removedFailed",
+                            Res.get("shared.errorMessage", errorMessage))).show());
         } else {
             new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
@@ -232,7 +233,8 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         if (model.isBootstrapped()) {
             model.onRegister(
                     () -> new Popup().feedback(Res.get("account.arbitratorRegistration.registerSuccess")).show(),
-                    (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.registerFailed", errorMessage)).show());
+                    (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.registerFailed",
+                            Res.get("shared.errorMessage", errorMessage))).show());
         } else {
             new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }

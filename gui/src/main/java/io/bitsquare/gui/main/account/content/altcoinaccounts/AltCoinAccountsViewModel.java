@@ -21,18 +21,13 @@ import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.payment.PaymentAccount;
-import io.bitsquare.user.Preferences;
 import javafx.collections.ObservableList;
 
 class AltCoinAccountsViewModel extends ActivatableWithDataModel<AltCoinAccountsDataModel> implements ViewModel {
 
-
-    private Preferences preferences;
-
     @Inject
-    public AltCoinAccountsViewModel(AltCoinAccountsDataModel dataModel, Preferences preferences) {
+    public AltCoinAccountsViewModel(AltCoinAccountsDataModel dataModel) {
         super(dataModel);
-        this.preferences = preferences;
     }
 
     @Override

@@ -112,7 +112,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox.setConverter(GUIUtil.getTradeCurrencyConverter());
 
         paymentMethodComboBox = addLabelComboBox(root, ++gridRow, Res.get("offerbook.filterByPaymentMethod")).second;
-        paymentMethodComboBox.setPromptText(Res.get("offerbook.selectPaymentMethod"));
+        paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(20);
         paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
             @Override

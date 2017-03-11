@@ -25,7 +25,6 @@ import javafx.collections.ObservableList;
 
 class FiatAccountsViewModel extends ActivatableWithDataModel<FiatAccountsDataModel> implements ViewModel {
 
-
     @Inject
     public FiatAccountsViewModel(FiatAccountsDataModel dataModel) {
         super(dataModel);

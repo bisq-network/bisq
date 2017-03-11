@@ -79,7 +79,8 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         ToggleGroup toggleGroup = new ToggleGroup();
         paymentAccount = new MenuItem(navigation, toggleGroup, Res.get("account.paymentAccount"), FiatAccountsView.class, AwesomeIcon.MONEY);
         altCoinsAccountView = new MenuItem(navigation, toggleGroup, Res.get("account.altCoinsAccountView"), AltCoinAccountsView.class, AwesomeIcon.LINK);
-        arbitratorSelection = new MenuItem(navigation, toggleGroup, Res.get("account.arbitratorSelection"), ArbitratorSelectionView.class, AwesomeIcon.USER_MD);
+        arbitratorSelection = new MenuItem(navigation, toggleGroup, Res.get("account.arbitratorSelection"),
+                ArbitratorSelectionView.class, AwesomeIcon.USER_MD);
         password = new MenuItem(navigation, toggleGroup, Res.get("account.password"), PasswordView.class, AwesomeIcon.UNLOCK_ALT);
         seedWords = new MenuItem(navigation, toggleGroup, Res.get("account.seedWords"), SeedWordsView.class, AwesomeIcon.KEY);
         backup = new MenuItem(navigation, toggleGroup, Res.get("account.backup"), BackupView.class, AwesomeIcon.CLOUD_DOWNLOAD);

@@ -30,6 +30,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.PasswordValidator;
+import io.bitsquare.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -70,11 +71,11 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
     @Override
     public void initialize() {
         headline = addTitledGroupBg(root, gridRow, 2, "");
-        passwordField = addLabelPasswordTextField(root, gridRow, "Enter password:", Layout.FIRST_ROW_DISTANCE).second;
+        passwordField = addLabelPasswordTextField(root, gridRow, Res.get("password.enterPassword"), Layout.FIRST_ROW_DISTANCE).second;
         passwordField.setValidator(passwordValidator);
         passwordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
-        Tuple2<Label, PasswordTextField> tuple2 = addLabelPasswordTextField(root, ++gridRow, "Repeat password:");
+        Tuple2<Label, PasswordTextField> tuple2 = addLabelPasswordTextField(root, ++gridRow, Res.get("password.confirmPassword"));
         repeatedPasswordLabel = tuple2.first;
         repeatedPasswordField = tuple2.second;
         repeatedPasswordField.setValidator(passwordValidator);
@@ -90,10 +91,10 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
         pwButton.setOnAction(e -> {
             String password = passwordField.getText();
-            checkArgument(password.length() < 50, "Password must be less then 50 characters.");
+            checkArgument(password.length() < 50, Res.get("password.tooLong"));
 
             pwButton.setDisable(true);
-            deriveStatusLabel.setText("Derive key from password");
+            deriveStatusLabel.setText(Res.get("password.deriveKey"));
             busyAnimation.play();
 
             KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
@@ -105,7 +106,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                     if (walletsManager.checkAESKey(aesKey)) {
                         walletsManager.decryptWallets(aesKey);
                         new Popup()
-                                .feedback("Wallet successfully decrypted and password protection removed.")
+                                .feedback(Res.get("password.walletDecrypted"))
                                 .show();
                         passwordField.setText("");
                         repeatedPasswordField.setText("");
@@ -113,14 +114,13 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                     } else {
                         pwButton.setDisable(false);
                         new Popup()
-                                .warning("You entered the wrong password.\n\n" +
-                                        "Please try entering your password again, carefully checking for typos or spelling errors.")
+                                .warning(Res.get("password.wrongPw"))
                                 .show();
                     }
                 } else {
                     walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
                     new Popup()
-                            .feedback("Wallet successfully encrypted and password protection enabled.")
+                            .feedback(Res.get("password.walletEncrypted"))
                             .show();
                     passwordField.setText("");
                     repeatedPasswordField.setText("");
@@ -131,25 +131,22 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
             });
         });
 
-        addTitledGroupBg(root, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
-        addMultilineLabel(root, gridRow,
-                "With password protection you need to enter your password when" +
-                        " withdrawing bitcoin out of your wallet or " +
-                        "if you want to view or restore a wallet from seed words as well as at application startup.",
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.information"), Layout.GROUP_DISTANCE);
+        addMultilineLabel(root, gridRow, Res.get("account.password.info"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+
     }
 
     private void setText() {
         if (walletsManager.areWalletsEncrypted()) {
-            pwButton.setText("Remove password");
-            headline.setText("Remove password protection for wallet");
+            pwButton.setText(Res.get("account.password.removePw.button"));
+            headline.setText(Res.get("account.password.removePw.headline"));
             repeatedPasswordField.setVisible(false);
             repeatedPasswordField.setManaged(false);
             repeatedPasswordLabel.setVisible(false);
             repeatedPasswordLabel.setManaged(false);
         } else {
-            pwButton.setText("Set password");
-            headline.setText("Set password protection for wallet");
+            pwButton.setText(Res.get("account.password.setPw.button"));
+            headline.setText(Res.get("account.password.setPw.headline"));
             repeatedPasswordField.setVisible(true);
             repeatedPasswordField.setManaged(true);
             repeatedPasswordLabel.setVisible(true);
@@ -186,7 +183,8 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                         pwButton.setDisable(false);
                         return;
                     } else {
-                        passwordValidator.setExternalValidationResult(new InputValidator.ValidationResult(false, "The 2 passwords do not match."));
+                        passwordValidator.setExternalValidationResult(new InputValidator.ValidationResult(false,
+                                Res.get("password.passwordsDoNotMatch")));
                     }
                 }
             }
