@@ -74,9 +74,21 @@ For Mac OSX, you will need to set JAVA_HOME as:
     $ . ~/.bashrc
 
 
+### 2. Install the latest protobuffer release on your machine (3.2.0 at the time of writing):
+https://github.com/google/protobuf/releases
+
+### 2.1 Increase the Intellij Idea Code insight limit, because it breaks on the generated protobuffer files:
+Go to Help > Edit custom properties => paste the following line:
+idea.max.intellisense.filesize=12500
+Source: https://stackoverflow.com/questions/23057988/file-size-exceeds-configured-limit-2560000-code-insight-features-not-availabl
+
+At IntelliJ 14 you need to edit the idea.properties in the app container:
+/Applications/IntelliJ\ IDEA\ 14\ CE.app/Contents/bin/idea.properties 
+
+
 Build bitcoinj and btcd-cli4j fork
 -----------------
-### 2. Install bitcoinj fork
+### 3. Install bitcoinj fork
 > _**NOTE:**
 Bitcoinj versions later than 0.13.1 has removed support for Java serialisation.
 Version 0.13.1 is also missing support for Java serialisation in MainNetParams (HttpDiscovery.Details).
@@ -101,7 +113,7 @@ TODO: remove if not used in production
 Prepare Bitsquare build
 -----------------
 
-### 3. Get Bitsquare source code and build a preliminary Bitsquare version
+### 4. Get Bitsquare source code and build a preliminary Bitsquare version
 
 You need to get the Bitsquare dependencies first as we need to copy the BouncyCastle jar to the JRE directory.
 
@@ -109,14 +121,14 @@ You need to get the Bitsquare dependencies first as we need to copy the BouncyCa
     $ cd bitsquare
     $ mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
-### 4. Copy the BouncyCastle provider jar file
+### 5. Copy the BouncyCastle provider jar file
 
 Copy the BountyCastle provider jar file from the local maven repository to the jre/lib/ext directory.
 This prevents a "JCE cannot authenticate the provider BC" exception when starting the Bitsquare client.
 
     $ sudo cp ~/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar $JAVA_HOME/jre/lib/ext/
 
-###5. Edit the java.security file and add BouncyCastleProvider
+### 6. Edit the java.security file and add BouncyCastleProvider
 
 Add org.bouncycastle.jce.provider.BouncyCastleProvider as last entry at: ﻿List of providers and their preference orders
 E.g.:
@@ -125,7 +137,7 @@ security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider
     $ sudo gedit $JAVA_HOME/jre/lib/security/java.security
     ... edit and save
 
-### 6. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
+### 7. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
 
 If you are using Oracle JDK 8 you must **[enable strong cryptographic cyphers](https://github.com/jonathancross/jc-docs/blob/master/java-strong-crypto-test/README.md)**. If you use OpenJDK + OpenJFX you can skip this step.
 
@@ -135,7 +147,7 @@ In Windows the new crypto files need to be copied to `Java/jdk1.8.0_xxx/jre/lib/
 Build Bitsquare
 -----------------
 
-### 7. Build final Bitsquare jar
+### 8. Build final Bitsquare jar
 
 Now we have all prepared to build the correct Bitsquare jar.
 
