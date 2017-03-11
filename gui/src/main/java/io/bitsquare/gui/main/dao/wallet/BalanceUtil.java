@@ -55,7 +55,6 @@ public class BalanceUtil {
         walletEventListener = new WalletEventListener() {
             @Override
             public void onKeysAdded(List<ECKey> keys) {
-
             }
 
             @Override
@@ -80,7 +79,6 @@ public class BalanceUtil {
 
             @Override
             public void onWalletChanged(Wallet wallet) {
-
             }
 
             @Override

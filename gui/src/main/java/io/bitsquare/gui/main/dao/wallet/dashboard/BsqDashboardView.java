@@ -23,6 +23,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.main.dao.wallet.BalanceUtil;
 import io.bitsquare.gui.util.BsqFormatter;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
@@ -56,8 +57,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 1, "Balance");
-        balanceTextField = addLabelTextField(root, gridRow, "BSQ balance:", Layout.FIRST_ROW_DISTANCE).second;
+        addTitledGroupBg(root, gridRow, 1, Res.get("shared.balance"));
+        balanceTextField = addLabelTextField(root, gridRow, Res.get("shared.bsqBalance"), Layout.FIRST_ROW_DISTANCE).second;
         balanceUtil.setBalanceTextField(balanceTextField);
         balanceUtil.initialize();
     }

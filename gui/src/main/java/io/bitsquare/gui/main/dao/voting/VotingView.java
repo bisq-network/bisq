@@ -27,6 +27,7 @@ import io.bitsquare.gui.main.dao.voting.dashboard.VotingDashboardView;
 import io.bitsquare.gui.main.dao.voting.history.VotingHistoryView;
 import io.bitsquare.gui.main.dao.voting.vote.VoteView;
 import io.bitsquare.gui.util.Colors;
+import io.bitsquare.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -73,9 +74,9 @@ public class VotingView extends ActivatableViewAndModel {
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        dashboard = new MenuItem(navigation, toggleGroup, "Dashboard", VotingDashboardView.class, AwesomeIcon.DASHBOARD);
-        vote = new MenuItem(navigation, toggleGroup, "Vote", VoteView.class, AwesomeIcon.EDIT);
-        history = new MenuItem(navigation, toggleGroup, "History", VotingHistoryView.class, AwesomeIcon.TABLE);
+        dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"), VotingDashboardView.class, AwesomeIcon.DASHBOARD);
+        vote = new MenuItem(navigation, toggleGroup, Res.get("share.vote"), VoteView.class, AwesomeIcon.EDIT);
+        history = new MenuItem(navigation, toggleGroup, Res.get("share.history"), VotingHistoryView.class, AwesomeIcon.TABLE);
         leftVBox.getChildren().addAll(dashboard, vote, history);
     }
 

@@ -107,7 +107,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         AnchorPane.setTopAnchor(gridPane, 10d);
         topAnchorPane.getChildren().add(gridPane);
 
-        TableGroupHeadline header = new TableGroupHeadline("Active compensation request");
+        TableGroupHeadline header = new TableGroupHeadline(Res.get("dao.compensation.active.header"));
         GridPane.setRowIndex(header, 0);
         GridPane.setMargin(header, new Insets(0, -10, -10, -10));
         gridPane.getChildren().add(header);
@@ -123,7 +123,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
 
         // tableView.setMinHeight(100);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No transactions available"));
+        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
         sortedList = new SortedList<>(compensationRequestManger.getObservableCompensationRequestsList());
         tableView.setItems(sortedList);
         setColumns();
@@ -174,22 +174,22 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 compensationRequestDisplay = new CompensationRequestDisplay(gridPane);
             }
             compensationRequestDisplay.removeAllFields();
-            compensationRequestDisplay.createAllFields("Selected compensation request", Layout.GROUP_DISTANCE);
+            compensationRequestDisplay.createAllFields(Res.get("dao.compensation.active.selectedRequest"), Layout.GROUP_DISTANCE);
 
             //TODO
             compensationRequest.setInVotePeriod(true);
 
             if (compensationRequest.isWaitingForVotingPeriod()) {
-                addLabel(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), "This compensation request is not open anymore for funding. Please wait until the next funding period starts.");
+                addLabel(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.notOpenAnymore"));
             } else if (compensationRequest.isInVotePeriod()) {
-                voteButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), "Vote on compensation request");
+                voteButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.vote"));
                 voteButton.setOnAction(event -> {
                     compensationRequestManger.setSelectedCompensationRequest(compensationRequest);
                     navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VoteView.class);
                 });
             } else if (compensationRequest.isInFundingPeriod()) {
                 checkArgument(compensationRequest.isAccepted(), "A compensation request with state OPEN_FOR_FUNDING must be accepted.");
-                fundButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), "Fund compensation request");
+                fundButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.fund"));
                 fundButton.setOnAction(event -> {
                     fundCompensationRequestWindow.applyCompensationRequest(compensationRequest.getCompensationRequestPayload()).
                             onAction(() -> {
@@ -198,7 +198,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                                         new FutureCallback<Transaction>() {
                                             @Override
                                             public void onSuccess(Transaction transaction) {
-                                                UserThread.runAfter(() -> new Popup<>().feedback("Compensation request successfully funded.").show(), 1);
+                                                UserThread.runAfter(() -> new Popup<>().feedback(Res.get("dao.compensation.active.successfullyFunded")).show(), 1);
                                             }
 
                                             @Override
@@ -210,7 +210,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                             }).show();
                 });
             } else if (compensationRequest.isClosed()) {
-                addLabel(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), "This compensation request is not open anymore for funding. Please wait until the next funding period starts.");
+                addLabel(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.notOpenAnymore"));
             }
             compensationRequestDisplay.setAllFieldsEditable(false);
 
@@ -250,7 +250,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         tableView.getSortOrder().add(dateColumn);
 
 
-        TableColumn<CompensationRequest, CompensationRequest> nameColumn = new TableColumn<>("Name");
+        TableColumn<CompensationRequest, CompensationRequest> nameColumn = new TableColumn<>(Res.get("shared.name"));
         nameColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         nameColumn.setCellFactory(
                 new Callback<TableColumn<CompensationRequest, CompensationRequest>, TableCell<CompensationRequest,
@@ -274,7 +274,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         tableView.getColumns().add(nameColumn);
 
 
-        TableColumn<CompensationRequest, CompensationRequest> uidColumn = new TableColumn<>("ID");
+        TableColumn<CompensationRequest, CompensationRequest> uidColumn = new TableColumn<>(Res.get("shared.id"));
         uidColumn.setCellValueFactory((tradeStatistics) -> new ReadOnlyObjectWrapper<>(tradeStatistics.getValue()));
         uidColumn.setCellFactory(
                 new Callback<TableColumn<CompensationRequest, CompensationRequest>, TableCell<CompensationRequest,

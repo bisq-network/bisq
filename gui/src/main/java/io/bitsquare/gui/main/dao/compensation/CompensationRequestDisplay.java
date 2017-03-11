@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.dao.compensation;
 import io.bitsquare.dao.compensation.CompensationRequestPayload;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,17 +44,18 @@ public class CompensationRequestDisplay {
 
     public void createAllFields(String title, double top) {
         addTitledGroupBg(gridPane, gridRow, 10, title, top);
-        uidTextField = addLabelInputTextField(gridPane, gridRow, "ID:", top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
+        uidTextField = addLabelInputTextField(gridPane, gridRow, Res.getWithCol("shared.id"), top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE).second;
         uidTextField.setEditable(false);
-        nameTextField = addLabelInputTextField(gridPane, ++gridRow, "Name/nickname:").second;
-        titleTextField = addLabelInputTextField(gridPane, ++gridRow, "Title:").second;
-        categoryTextField = addLabelInputTextField(gridPane, ++gridRow, "Category:").second;
-        descriptionTextField = addLabelInputTextField(gridPane, ++gridRow, "Description:").second;
-        linkTextField = addLabelInputTextField(gridPane, ++gridRow, "Link to detail info:").second;
-        startDateTextField = addLabelInputTextField(gridPane, ++gridRow, "Start date:").second;
-        endDateTextField = addLabelInputTextField(gridPane, ++gridRow, "Delivery date:").second;
-        requestedBTCTextField = addLabelInputTextField(gridPane, ++gridRow, "Requested funds in BTC:").second;
-        btcAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Bitcoin address:").second;
+        nameTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.name")).second;
+        titleTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.title")).second;
+        categoryTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.category")).second;
+        descriptionTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.description")).second;
+        linkTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.link")).second;
+        startDateTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.startDate")).second;
+        endDateTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.endDate")).second;
+        requestedBTCTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.requestedBTC")).second;
+        btcAddressTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("dao.compensation.display.btcAddress")).second;
+
     }
 
     public void fillWithData(CompensationRequestPayload data) {

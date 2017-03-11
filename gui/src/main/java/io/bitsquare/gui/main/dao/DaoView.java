@@ -62,9 +62,9 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
-        bsqWalletTab.setText(Res.get("daoView.tab.bsqWallet"));
-        compensationTab.setText(Res.get("daoView.tab.compensation"));
-        votingTab.setText(Res.get("daoView.tab.voting"));
+        bsqWalletTab.setText(Res.get("dao.tab.bsqWallet"));
+        compensationTab.setText(Res.get("dao.tab.compensation"));
+        votingTab.setText(Res.get("dao.tab.voting"));
         
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {

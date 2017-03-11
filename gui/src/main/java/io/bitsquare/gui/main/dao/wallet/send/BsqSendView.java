@@ -25,7 +25,7 @@ import io.bitsquare.btc.exceptions.WalletException;
 import io.bitsquare.btc.provider.fee.FeeService;
 import io.bitsquare.btc.wallet.BsqWalletService;
 import io.bitsquare.btc.wallet.BtcWalletService;
-import io.bitsquare.common.util.MathUtils;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.InputTextField;
@@ -84,19 +84,20 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 1, "Balance");
-        balanceTextField = addLabelTextField(root, gridRow, "BSQ balance:", Layout.FIRST_ROW_DISTANCE).second;
+        addTitledGroupBg(root, gridRow, 1, Res.get("shared.balance"));
+        balanceTextField = addLabelTextField(root, gridRow, Res.get("shared.bsqBalance"), Layout.FIRST_ROW_DISTANCE).second;
         balanceUtil.setBalanceTextField(balanceTextField);
         balanceUtil.initialize();
 
-        addTitledGroupBg(root, ++gridRow, 3, "Send funds", Layout.GROUP_DISTANCE);
-        amountInputTextField = addLabelInputTextField(root, gridRow, "Amount in BSQ:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        amountInputTextField.setPromptText("Set amount to withdraw (min. amount is 547");
+        addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.wallet.send.sendFunds"), Layout.GROUP_DISTANCE);
+        amountInputTextField = addLabelInputTextField(root, gridRow, Res.get("dao.wallet.send.amount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", Transaction.MIN_NONDUST_OUTPUT.value));
 
-        receiversAddressInputTextField = addLabelInputTextField(root, ++gridRow, "Receiver's address:").second;
-        receiversAddressInputTextField.setPromptText("Fill in your destination address");
+        receiversAddressInputTextField = addLabelInputTextField(root, ++gridRow,
+                Res.get("dao.wallet.send.receiverAddress")).second;
+        receiversAddressInputTextField.setPromptText(Res.get("dao.wallet.send.setDestinationAddress"));
 
-        sendButton = addButtonAfterGroup(root, ++gridRow, "Send BSQ funds");
+        sendButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.send"));
 
         if (DevFlags.DEV_MODE) {
             amountInputTextField.setText("2.730"); // 2730 is dust limit
@@ -110,19 +111,16 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                 Transaction preparedSendTx = bsqWalletService.getPreparedSendTx(receiversAddressString, receiverAmount);
                 Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);
                 Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
-
                 Coin miningFee = signedTx.getFee();
                 int txSize = signedTx.bitcoinSerialize().length;
-                new Popup().headLine("Confirm withdrawal request")
-                        .confirmation("Sending: " + bsqFormatter.formatCoinWithCode(receiverAmount) + "\n" +
-                               /* "From address: " + withdrawFromTextField.getText() + "\n" +*/
-                                "Receiver address: " + receiversAddressString + "\n" +
-                                "Transaction fee: " + btcFormatter.formatCoinWithCode(miningFee) + " (" +
-                                MathUtils.roundDouble(((double) miningFee.value / (double) txSize), 2) +
-                                " Satoshis/byte)\n" +
-                                "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
-                                /*"The recipient will receive: " + bsqFormatter.formatCoinWithCode(receiverAmount) + "\n\n" +*/
-                                "Are you sure you want to withdraw that amount?")
+                new Popup().headLine(Res.get("dao.wallet.send.sendFunds.headline"))
+                        .confirmation(Res.get("dao.wallet.send.sendFunds.details",
+                                bsqFormatter.formatCoinWithCode(receiverAmount),
+                                receiversAddressString,
+                                btcFormatter.formatCoinWithCode(miningFee),
+                                Utilities.getFeePerByte(miningFee, txSize),
+                                txSize / 1000d,
+                                bsqFormatter.formatCoinWithCode(receiverAmount.subtract(miningFee))))
                         .actionButtonText(Res.get("shared.yes"))
                         .onAction(() -> {
                             try {

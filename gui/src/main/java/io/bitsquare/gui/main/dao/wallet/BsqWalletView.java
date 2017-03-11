@@ -28,6 +28,7 @@ import io.bitsquare.gui.main.dao.wallet.receive.BsqReceiveView;
 import io.bitsquare.gui.main.dao.wallet.send.BsqSendView;
 import io.bitsquare.gui.main.dao.wallet.tx.BsqTransactionsView;
 import io.bitsquare.gui.util.Colors;
+import io.bitsquare.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -74,10 +75,10 @@ public class BsqWalletView extends ActivatableViewAndModel {
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        dashboard = new MenuItem(navigation, toggleGroup, "Dashboard", BsqDashboardView.class, AwesomeIcon.DASHBOARD);
-        send = new MenuItem(navigation, toggleGroup, "Send", BsqSendView.class, AwesomeIcon.SIGNOUT);
-        receive = new MenuItem(navigation, toggleGroup, "Receive", BsqReceiveView.class, AwesomeIcon.SIGNIN);
-        transactions = new MenuItem(navigation, toggleGroup, "Transactions", BsqTransactionsView.class, AwesomeIcon.TABLE);
+        dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"), BsqDashboardView.class, AwesomeIcon.DASHBOARD);
+        send = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.send"), BsqSendView.class, AwesomeIcon.SIGNOUT);
+        receive = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.receive"), BsqReceiveView.class, AwesomeIcon.SIGNIN);
+        transactions = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.transactions"), BsqTransactionsView.class, AwesomeIcon.TABLE);
         leftVBox.getChildren().addAll(dashboard, send, receive, transactions);
     }
 
