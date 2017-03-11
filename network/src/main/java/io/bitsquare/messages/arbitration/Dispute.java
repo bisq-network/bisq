@@ -69,6 +69,7 @@ public final class Dispute implements Payload {
     @Nullable
     private final String payoutTxId;
     private final String contractAsJson;
+    @Nullable // not always filled in
     private final String offererContractSignature;
     @Nullable // not always filled in
     private final String takerContractSignature;
@@ -107,8 +108,8 @@ public final class Dispute implements Payload {
                    @Nullable String depositTxId,
                    @Nullable String payoutTxId,
                    String contractAsJson,
-                   String offererContractSignature,
-                   String takerContractSignature,
+                   @Nullable String offererContractSignature,
+                   @Nullable String takerContractSignature,
                    PubKeyRing arbitratorPubKeyRing,
                    boolean isSupportTicket) {
         this(tradeId, traderId, disputeOpenerIsBuyer, disputeOpenerIsOfferer, traderPubKeyRing, tradeDate,
@@ -131,7 +132,7 @@ public final class Dispute implements Payload {
                    @Nullable String depositTxId,
                    @Nullable String payoutTxId,
                    String contractAsJson,
-                   String offererContractSignature,
+                   @Nullable String offererContractSignature,
                    @Nullable String takerContractSignature,
                    PubKeyRing arbitratorPubKeyRing,
                    boolean isSupportTicket) {
@@ -281,10 +282,12 @@ public final class Dispute implements Payload {
         return contractAsJson;
     }
 
+    @Nullable
     public String getOffererContractSignature() {
         return offererContractSignature;
     }
 
+    @Nullable
     public String getTakerContractSignature() {
         return takerContractSignature;
     }
@@ -372,7 +375,6 @@ public final class Dispute implements Payload {
                 .setContract(contract.toProtoBuf())
                 .setContractHash(ByteString.copyFrom(contractHash))
                 .setContractAsJson(contractAsJson)
-                .setOffererContractSignature(offererContractSignature)
                 .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoBuf())
                 .setIsSupportTicket(isSupportTicket)
                 .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream().map(
@@ -385,6 +387,7 @@ public final class Dispute implements Payload {
         Optional.ofNullable(payoutTxId).ifPresent(builder::setPayoutTxId);
         Optional.ofNullable(disputePayoutTxId).ifPresent(builder::setDisputePayoutTxId);
         Optional.ofNullable(takerContractSignature).ifPresent(builder::setTakerContractSignature);
+        Optional.ofNullable(offererContractSignature).ifPresent(builder::setOffererContractSignature);
         Optional.ofNullable(disputeResult).ifPresent(result -> builder.setDisputeResult(disputeResult.toProtoBuf()));
         return builder.build();
     }
