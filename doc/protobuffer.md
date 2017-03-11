@@ -15,13 +15,16 @@ https://ruedigermoeller.github.io/fast-serialization/
 
 ### installing 
 
-* Install the latest protobuffer release on your machine (3.1.0 at the time of writing):
+* Install the latest protobuffer release on your machine (3.2.0 at the time of writing):
 https://github.com/google/protobuf/releases
 
 * Increase the Intellij Idea Code insight limit, because it breaks on the generated protobuffer files:
 Go to Help > Edit custom properties => paste the following line:
 idea.max.intellisense.filesize=12500
 Source: https://stackoverflow.com/questions/23057988/file-size-exceeds-configured-limit-2560000-code-insight-features-not-availabl
+
+At IntelliJ 14 you need to edit the idea.properties in the app container:
+/Applications/IntelliJ\ IDEA\ 14\ CE.app/Contents/bin/idea.properties 
 
 ### maven plugin vs ant plugin
 
