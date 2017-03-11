@@ -774,9 +774,20 @@ public class Connection implements MessageListener {
                             message = optMessage.get();
                         } else {
                             log.warn("Unknown message type received:{}", Utilities.toTruncatedString(envelope));
+                            // TODO shouldn't we report an RuleViolation and return here?
+                            reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                            return;
                         }
 
                         lastReadTimeStamp = now;
+
+                        // TODO we get nullpointers here, should be covered by the check above...
+                        if (envelope == null) {
+                            log.debug("Envelope is null, available={}", protoInputStream.available());
+                            reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                            return;
+                        }
+                        
                         int size = envelope.getSerializedSize();
 
                         if (message instanceof Pong || message instanceof RefreshTTLMessage) {
@@ -788,7 +799,7 @@ public class Connection implements MessageListener {
                                     connection,
                                     Utilities.toTruncatedString(envelope.toString()),
                                     size);
-                        }  else if (message instanceof Message) {
+                        } else if (message instanceof Message) {
                             // We want to log all incoming messages (except Pong and RefreshTTLMessage)
                             // so we log before the data type checks
                             //log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
