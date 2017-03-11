@@ -753,7 +753,7 @@ public class Connection implements MessageListener {
                         Messages.Envelope envelope = null;
                         try {
 //                            if (protoInputStream.available() > 0) {
-                                envelope = Messages.Envelope.parseDelimitedFrom(protoInputStream);
+                            envelope = Messages.Envelope.parseDelimitedFrom(protoInputStream);
 //                            } else {
 //                                return;
 //                            }
@@ -764,8 +764,10 @@ public class Connection implements MessageListener {
                                 return;
                             }
                         } catch (IOException e) {
-                            log.error("Invalid data arrived at inputHandler of connection " + connection, e);
-                            reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                            if (!sharedModel.stopped) {
+                                log.error("Invalid data arrived at inputHandler of connection " + connection, e);
+                                reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                            }
                         }
 
                         Message message = null;
@@ -787,7 +789,7 @@ public class Connection implements MessageListener {
                             reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                             return;
                         }
-                        
+
                         int size = envelope.getSerializedSize();
 
                         if (message instanceof Pong || message instanceof RefreshTTLMessage) {
