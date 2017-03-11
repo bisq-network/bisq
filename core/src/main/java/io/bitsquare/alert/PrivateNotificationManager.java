@@ -20,12 +20,13 @@ package io.bitsquare.alert;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.AppOptionKeys;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
+import io.bitsquare.messages.Message;
 import io.bitsquare.messages.alert.PrivateNotification;
 import io.bitsquare.messages.alert.PrivateNotificationMessage;
-import io.bitsquare.messages.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
@@ -50,7 +51,10 @@ public class PrivateNotificationManager {
     private final ObjectProperty<PrivateNotification> privateNotificationMessageProperty = new SimpleObjectProperty<>();
 
     // Pub key for developer global privateNotification message
-    private static final String pubKeyAsHex = "02ba7c5de295adfe57b60029f3637a2c6b1d0e969a8aaefb9e0ddc3a7963f26925";
+    private static final String pubKeyAsHex = DevFlags.USE_DEV_PRIVILEGE_KEYS ?
+            "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee" :
+            "02ba7c5de295adfe57b60029f3637a2c6b1d0e969a8aaefb9e0ddc3a7963f26925";
+
     private ECKey privateNotificationSigningKey;
     private DecryptedMsgWithPubKey decryptedMsgWithPubKey;
 

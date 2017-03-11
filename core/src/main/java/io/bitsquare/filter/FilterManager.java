@@ -20,9 +20,11 @@ package io.bitsquare.filter;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.AppOptionKeys;
+import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.messages.filter.payload.Filter;
+import io.bitsquare.messages.filter.payload.PaymentAccountFilter;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
@@ -50,7 +52,9 @@ public class FilterManager {
     private final User user;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
 
-    private static final String pubKeyAsHex = "022ac7b7766b0aedff82962522c2c14fb8d1961dabef6e5cfd10edc679456a32f1";
+    private static final String pubKeyAsHex = DevFlags.USE_DEV_PRIVILEGE_KEYS ?
+            "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee" :
+            "022ac7b7766b0aedff82962522c2c14fb8d1961dabef6e5cfd10edc679456a32f1";
     private ECKey filterSigningKey;
 
 
@@ -59,7 +63,8 @@ public class FilterManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FilterManager(P2PService p2PService, KeyRing keyRing, User user, @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
+    public FilterManager(P2PService p2PService, KeyRing keyRing, User user,
+                         @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
         this.user = user;
@@ -161,7 +166,9 @@ public class FilterManager {
     private String getHexFromData(Filter filter) {
         Messages.Filter.Builder builder = Messages.Filter.newBuilder().addAllBannedNodeAddress(filter.bannedNodeAddress)
                 .addAllBannedOfferIds(filter.bannedOfferIds)
-                .addAllBannedPaymentAccounts(filter.bannedPaymentAccounts.stream().map(paymentAccountFilter -> paymentAccountFilter.toProtoBuf()).collect(Collectors.toList()));
+                .addAllBannedPaymentAccounts(filter.bannedPaymentAccounts.stream()
+                        .map(PaymentAccountFilter::toProtoBuf)
+                        .collect(Collectors.toList()));
         return Utils.HEX.encode(builder.build().toByteArray());
     }
 

@@ -25,12 +25,12 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.messages.arbitration.Arbitrator;
+import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.storage.HashMapChangedListener;
 import io.bitsquare.p2p.storage.storageentry.ProtectedStorageEntry;
-import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
@@ -66,7 +66,7 @@ public class ArbitratorManager {
     // to the publicKeys list and use the test PrivKey for arbitrator registration.
     // PrivKey for dev testing: 6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a
     // Matching pubKey for dev testing: 027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee
-    private static final List<String> publicKeys = DevFlags.DEV_ARBITRATOR ?
+    private static final List<String> publicKeys = DevFlags.USE_DEV_PRIVILEGE_KEYS ?
             new ArrayList<>(Collections.singletonList("027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee")) :
             new ArrayList<>(Arrays.asList(
                     "03697a499d24f497b3c46bf716318231e46c4e6a685a4e122d8e2a2b229fa1f4b8",
