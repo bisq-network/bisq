@@ -118,13 +118,13 @@ public abstract class PaymentMethodForm {
     }
 
     protected static String getTimeText(long hours) {
-        String time = hours + " " + Res.get("payment.hours");
+        String time = hours + " " + Res.get("time.hours");
         if (hours == 1)
-            time = Res.get("payment.1hour");
+            time = Res.get("time.1hour");
         else if (hours == 24)
-            time = Res.get("payment.1day");
+            time = Res.get("time.1day");
         else if (hours > 24)
-            time = hours / 24 + " " + Res.get("payment.days");
+            time = hours / 24 + " " + Res.get("time.days");
 
         return time;
     }

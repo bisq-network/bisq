@@ -57,7 +57,7 @@ public class Res {
     public static String get(String key) {
         // TODO remove once translation done
         // for testing missing translation strings
-        if (true) return "#";
+        //if (true) return "#";
         try {
             return resourceBundle.getString(key);
         } catch (MissingResourceException e) {

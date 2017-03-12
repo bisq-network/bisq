@@ -26,6 +26,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -108,8 +109,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         model.onRemoveLanguage(locale);
 
         if (languagesListView.getItems().size() == 0) {
-            new Popup().warning("You need to set at least 1 language.\n" +
-                    "We added the default language for you.").show();
+            new Popup().warning(Res.get("account.arbitratorSelection.minOneArbitratorRequired")).show();
             model.onAddLanguage(LanguageUtil.getDefaultLanguageLocaleAsCode());
         }
     }
@@ -128,9 +128,9 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addLanguageGroup() {
-        addTitledGroupBg(root, gridRow, 1, "Which languages do you speak?");
+        addTitledGroupBg(root, gridRow, 1, Res.get("account.arbitratorSelection.whichLanguages"));
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your languages:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("shared.yourLanguage"), Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
         languagesListView = tuple.second;
         languagesListView.setMinHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
@@ -166,7 +166,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         });
 
         languageComboBox = addLabelComboBox(root, ++gridRow, "", 15).second;
-        languageComboBox.setPromptText("Add language");
+        languageComboBox.setPromptText(Res.get("shared.addLanguage"));
         languageComboBox.setConverter(new StringConverter<String>() {
             @Override
             public String toString(String code) {
@@ -182,7 +182,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
     }
 
     private void addArbitratorsGroup() {
-        TableGroupHeadline tableGroupHeadline = new TableGroupHeadline("Which arbitrators do you accept");
+        TableGroupHeadline tableGroupHeadline = new TableGroupHeadline(Res.get("account.arbitratorSelection.whichDoYouAccept"));
         GridPane.setRowIndex(tableGroupHeadline, ++gridRow);
         GridPane.setColumnSpan(tableGroupHeadline, 2);
         GridPane.setMargin(tableGroupHeadline, new Insets(40, -10, -10, -10));
@@ -194,30 +194,31 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         GridPane.setMargin(tableView, new Insets(60, -10, 5, -10));
         root.getChildren().add(tableView);
 
-        autoSelectAllMatchingCheckBox = addCheckBox(root, ++gridRow, "Auto select all arbitrators with matching language");
+        autoSelectAllMatchingCheckBox = addCheckBox(root, ++gridRow, Res.get("account.arbitratorSelection.autoSelect"));
         GridPane.setColumnSpan(autoSelectAllMatchingCheckBox, 2);
         GridPane.setHalignment(autoSelectAllMatchingCheckBox, HPos.LEFT);
         GridPane.setColumnIndex(autoSelectAllMatchingCheckBox, 0);
         GridPane.setMargin(autoSelectAllMatchingCheckBox, new Insets(0, -10, 0, -10));
         autoSelectAllMatchingCheckBox.setOnAction(event -> model.setAutoSelectArbitrators(autoSelectAllMatchingCheckBox.isSelected()));
 
-        TableColumn<ArbitratorListItem, String> dateColumn = new TableColumn("Registration date");
+        TableColumn<ArbitratorListItem, String> dateColumn = new TableColumn<>(Res.get("account.arbitratorSelection.regDate"));
         dateColumn.setSortable(false);
         dateColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getRegistrationDate()));
         dateColumn.setMinWidth(140);
         dateColumn.setMaxWidth(140);
 
-        TableColumn<ArbitratorListItem, String> nameColumn = new TableColumn("Onion address");
+        TableColumn<ArbitratorListItem, String> nameColumn = new TableColumn<>(Res.get("shared.onionAddress"));
         nameColumn.setSortable(false);
         nameColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getAddressString()));
         nameColumn.setMinWidth(90);
 
-        TableColumn<ArbitratorListItem, String> languagesColumn = new TableColumn("Languages");
+        TableColumn<ArbitratorListItem, String> languagesColumn = new TableColumn<>(Res.get("account.arbitratorSelection.languages"));
         languagesColumn.setSortable(false);
         languagesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getLanguageCodes()));
         languagesColumn.setMinWidth(130);
 
-        TableColumn<ArbitratorListItem, ArbitratorListItem> selectionColumn = new TableColumn<ArbitratorListItem, ArbitratorListItem>("Accept") {
+        TableColumn<ArbitratorListItem, ArbitratorListItem> selectionColumn = new TableColumn<ArbitratorListItem, ArbitratorListItem>(
+                Res.get("shared.accept")) {
             {
                 setMinWidth(60);
                 setMaxWidth(60);
@@ -253,13 +254,14 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                                     tableRow.setOpacity(hasMatchingLanguage && !isMyOwnRegisteredArbitrator ? 1 : 0.4);
 
                                     if (isMyOwnRegisteredArbitrator) {
-                                        tableRow.setTooltip(new Tooltip("An arbitrator cannot select himself for trading."));
+                                        String text = Res.get("account.arbitratorSelection.cannotSelectHimself");
+                                        tableRow.setTooltip(new Tooltip(text));
                                         tableRow.setOnMouseClicked(e -> new Popup().warning(
-                                                "An arbitrator cannot select himself for trading.").show());
+                                                text).show());
                                     } else if (!hasMatchingLanguage) {
-                                        tableRow.setTooltip(new Tooltip("No matching language."));
-                                        tableRow.setOnMouseClicked(e -> new Popup().warning(
-                                                "You can only select arbitrators who are speaking at least 1 common language.").show());
+                                        tableRow.setTooltip(new Tooltip(Res.get("account.arbitratorSelection.noMatchingLang")));
+                                        tableRow.setOnMouseClicked(e -> new Popup()
+                                                .warning(Res.get("account.arbitratorSelection.noLang")).show());
                                     } else {
                                         tableRow.setOnMouseClicked(null);
                                         tableRow.setTooltip(null);
@@ -286,7 +288,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                                                 } else if (model.isDeselectAllowed(item)) {
                                                     onRemoveArbitrator(item);
                                                 } else {
-                                                    new Popup().warning("You need to have at least one arbitrator selected.").show();
+                                                    new Popup().warning(Res.get("account.arbitratorSelection.minOne")).show();
                                                     checkBox.setSelected(true);
                                                 }
                                                 item.setIsSelected(checkBox.isSelected());

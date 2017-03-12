@@ -133,7 +133,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);
 
-        Tuple2<Label, ListView> tuple = addLabelListView(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.yourLanguage"));
+        Tuple2<Label, ListView> tuple = addLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
         GridPane.setValignment(tuple.first, VPos.TOP);
         languagesListView = tuple.second;
         languagesListView.disableProperty().bind(model.registrationEditDisabled);
@@ -171,7 +171,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
         languageComboBox = addLabelComboBox(gridPane, ++gridRow).second;
         languageComboBox.disableProperty().bind(model.registrationEditDisabled);
-        languageComboBox.setPromptText(Res.get("account.arbitratorRegistration.addLanguage"));
+        languageComboBox.setPromptText(Res.get("shared.addLanguage"));
         languageComboBox.setConverter(new StringConverter<String>() {
             @Override
             public String toString(String code) {
