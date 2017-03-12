@@ -257,7 +257,7 @@ public class MainViewModel implements ViewModel {
         MainView.blur();
         String details;
         if (!walletInitialized.get()) {
-            details = Res.get("popup.warning.cannotConnectAtStartup", Res.get("shared.bitcoin"));
+            details = Res.get("popup.warning.cannotConnectAtStartup", "bitcoin");
         } else if (!p2pNetWorkReady.get()) {
             details = Res.get("popup.warning.cannotConnectAtStartup", Res.get("shared.P2P"));
         } else {
@@ -745,7 +745,7 @@ public class MainViewModel implements ViewModel {
                 checkNumberOfBtcPeersTimer = UserThread.runAfter(() -> {
                     // check again numPeers
                     if (walletsSetup.numPeersProperty().get() == 0) {
-                        walletServiceErrorMsg.set(Res.get("mainView.networkWarning.allConnectionsLost", Res.get("shared.bitcoin")));
+                        walletServiceErrorMsg.set(Res.get("mainView.networkWarning.allConnectionsLost", "bitcoin"));
                     } else {
                         walletServiceErrorMsg.set(null);
                     }

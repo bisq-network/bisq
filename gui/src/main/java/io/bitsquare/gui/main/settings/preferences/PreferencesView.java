@@ -104,7 +104,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         this.formatter = formatter;
 
         blockExplorers = FXCollections.observableArrayList(preferences.getBlockChainExplorers());
-        languageCodes = FXCollections.observableArrayList(LanguageUtil.getAllLanguageCodes());
+        languageCodes = FXCollections.observableArrayList(LanguageUtil.getUserLanguageCodes());
         countries = FXCollections.observableArrayList(CountryUtil.getAllCountries());
         fiatCurrencies = preferences.getFiatCurrenciesAsObservable();
         cryptoCurrencies = preferences.getCryptoCurrenciesAsObservable();
