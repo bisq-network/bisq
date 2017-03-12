@@ -18,9 +18,9 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.protocol.trade.BuyerAsTakerProtocol;
 import io.bitsquare.trade.protocol.trade.TakerProtocol;
 import org.bitcoinj.core.Coin;

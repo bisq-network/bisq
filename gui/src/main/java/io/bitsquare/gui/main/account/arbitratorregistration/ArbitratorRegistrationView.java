@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.account.arbitratorregistration;
 
 
-import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
@@ -28,6 +27,8 @@ import io.bitsquare.gui.main.overlays.windows.EnterPrivKeyWindow;
 import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
+import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.messages.locale.LanguageUtil;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;

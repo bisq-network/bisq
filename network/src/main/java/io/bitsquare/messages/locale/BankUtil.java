@@ -17,6 +17,7 @@
 
 package io.bitsquare.messages.locale;
 
+import io.bitsquare.locale.Res;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

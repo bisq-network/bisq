@@ -17,8 +17,8 @@
 
 package io.bitsquare.messages.payment.payload;
 
-import io.bitsquare.common.wire.Payload;
 import io.bitsquare.app.Version;
+import io.bitsquare.common.wire.Payload;
 
 public abstract class PaymentAccountContractData implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.

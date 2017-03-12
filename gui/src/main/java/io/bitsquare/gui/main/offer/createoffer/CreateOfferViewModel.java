@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.offer.createoffer;
 
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.MathUtils;
@@ -39,7 +39,7 @@ import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.FiatValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.SecurityDepositValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.btc.Restrictions;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.locale.TradeCurrency;
@@ -172,7 +172,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Override
     protected void activate() {
-        if (DevFlags.DEV_MODE) {
+        if (DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
                 amount.set("1");
                 minAmount.set(amount.get());

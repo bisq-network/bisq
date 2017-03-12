@@ -2,8 +2,9 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.inject.Inject;
 import io.bitsquare.app.BitsquareApp;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,7 @@ public class TacWindow extends Overlay<TacWindow> {
     }
 
     public void showIfNeeded() {
-        if (!preferences.getTacAccepted() && !DevFlags.DEV_MODE) {
+        if (!preferences.getTacAccepted() && !DevEnv.DEV_MODE) {
             headLine(Res.get("tacWindow.headline"));
 
             // We do not translate the tacs because of the legal nature. We would need translations checked by lawyers
@@ -57,7 +58,8 @@ public class TacWindow extends Overlay<TacWindow> {
     @Override
     protected void addMessage() {
         super.addMessage();
-        addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("tacWindow.arbitrationSystem"), "https://bitsquare.io/arbitration_system.pdf", -6);
+        addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("tacWindow.arbitrationSystem"),
+                "https://bitsquare.io/arbitration_system.pdf", -6);
     }
 
     @Override

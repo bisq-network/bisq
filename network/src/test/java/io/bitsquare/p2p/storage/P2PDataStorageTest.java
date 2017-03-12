@@ -27,7 +27,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.util.CollectionUtils;
 import sun.security.provider.DSAPublicKeyImpl;
 
 import java.io.*;
@@ -37,7 +36,6 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.*;

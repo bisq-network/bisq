@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.offer;
 
-import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.ViewLoader;

@@ -1,8 +1,5 @@
 package io.bitsquare.common.crypto;
 
-import com.google.protobuf.Message;
-import io.bitsquare.common.wire.proto.Messages;
-import io.bitsquare.messages.ToProtoBuffer;
 import io.bitsquare.storage.FileUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;

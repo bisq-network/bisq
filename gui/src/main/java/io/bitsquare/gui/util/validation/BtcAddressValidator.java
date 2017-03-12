@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.util.validation;
 
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.user.Preferences;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;

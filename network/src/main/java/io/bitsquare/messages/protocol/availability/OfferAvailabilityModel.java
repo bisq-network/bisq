@@ -19,10 +19,10 @@ package io.bitsquare.messages.protocol.availability;
 
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.taskrunner.Model;
+import io.bitsquare.messages.availability.OfferAvailabilityResponse;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
-import io.bitsquare.messages.trade.offer.payload.Offer;
-import io.bitsquare.messages.availability.OfferAvailabilityResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

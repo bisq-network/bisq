@@ -18,7 +18,7 @@
   -->
 
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.*?>
 <TabPane fx:id="root" fx:controller="io.bitsquare.gui.main.market.MarketView"
          AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
          AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"

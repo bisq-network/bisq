@@ -18,7 +18,7 @@
 package io.bitsquare.arbitration;
 
 import com.google.inject.Inject;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.KeyRing;
@@ -61,13 +61,8 @@ public class ArbitratorManager {
     private static final long RETRY_REPUBLISH_SEC = 5;
     private static final long REPEATED_REPUBLISH_AT_STARTUP_SEC = 60;
 
-    // Keys for invited arbitrators in bootstrapping phase (before registration is open to anyone and security payment is implemented)
-    // For developers we add here 2 test keys so one can setup an arbitrator by adding that test pubKey
-    // to the publicKeys list and use the test PrivKey for arbitrator registration.
-    // PrivKey for dev testing: 6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a
-    // Matching pubKey for dev testing: 027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee
-    private static final List<String> publicKeys = DevFlags.USE_DEV_PRIVILEGE_KEYS ?
-            new ArrayList<>(Collections.singletonList("027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee")) :
+    private static final List<String> publicKeys = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
+            new ArrayList<>(Collections.singletonList(DevEnv.DEV_PRIVILEGE_PUB_KEY)) :
             new ArrayList<>(Arrays.asList(
                     "03697a499d24f497b3c46bf716318231e46c4e6a685a4e122d8e2a2b229fa1f4b8",
                     "0365c6af94681dbee69de1851f98d4684063bf5c2d64b1c73ed5d90434f375a054",

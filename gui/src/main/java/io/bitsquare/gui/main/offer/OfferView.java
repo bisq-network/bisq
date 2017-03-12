@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.offer;
 
-import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.ActivatableView;
@@ -28,16 +27,11 @@ import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.offer.createoffer.CreateOfferView;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookView;
 import io.bitsquare.gui.main.offer.takeoffer.TakeOfferView;
-import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.locale.TradeCurrency;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.user.Preferences;
-import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.Res;
-import io.bitsquare.locale.TradeCurrency;
-import io.bitsquare.trade.offer.Offer;
-import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.Tab;

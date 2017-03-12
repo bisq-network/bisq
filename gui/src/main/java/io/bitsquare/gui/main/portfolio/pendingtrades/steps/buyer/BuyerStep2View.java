@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
 import ch.qos.logback.core.pattern.util.RegularEscapeUtil;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
@@ -28,16 +28,13 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.payment.PaymentMethod;
 import io.bitsquare.messages.payment.payload.CashDepositAccountContractData;
 import io.bitsquare.messages.payment.payload.CryptoCurrencyAccountContractData;
 import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import io.bitsquare.messages.payment.payload.USPostalMoneyOrderAccountContractData;
-import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.Res;
-import io.bitsquare.payment.*;
 import io.bitsquare.trade.Trade;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -120,7 +117,7 @@ public class BuyerStep2View extends TradeStepView {
                                     refTextWarn + "\n\n" +
                                     fees;
 
-                        if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+                        if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
                             preferences.dontShowAgain(key, true);
                             new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
                                     .attention(message)
@@ -266,7 +263,7 @@ public class BuyerStep2View extends TradeStepView {
         if (model.p2PService.isBootstrapped()) {
             if (model.dataModel.getSellersPaymentAccountContractData() instanceof CashDepositAccountContractData) {
                 String key = "confirmPaperReceiptSent";
-                if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+                if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
                     Popup popup = new Popup();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.paperReceipt.headline"))
                             .feedback(Res.get("portfolio.pending.step2_buyer.paperReceipt.msg"))
@@ -288,7 +285,7 @@ public class BuyerStep2View extends TradeStepView {
 
     private void showConfirmPaymentStartedPopup() {
         String key = "confirmPaymentStarted";
-        if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+        if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
             Popup popup = new Popup();
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
                     .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg", CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode())))

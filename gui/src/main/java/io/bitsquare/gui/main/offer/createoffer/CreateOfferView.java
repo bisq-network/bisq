@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.offer.createoffer;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
@@ -45,11 +45,11 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.locale.TradeCurrency;
-import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.user.Preferences;
+import io.bitsquare.payment.PaymentAccount;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -308,7 +308,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             if (model.hasAcceptedArbitrators()) {
                 Offer offer = model.createAndGetOffer();
                 //noinspection PointlessBooleanExpression
-                if (!DevFlags.DEV_MODE)
+                if (!DevEnv.DEV_MODE)
                     offerDetailsWindow.onPlaceOffer(() ->
                             model.onPlaceOffer(offer, offerDetailsWindow::hide))
                             .show(offer);
@@ -340,7 +340,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
 
         //noinspection PointlessBooleanExpression
-        if (!DevFlags.DEV_MODE) {
+        if (!DevEnv.DEV_MODE) {
             String key = "securityDepositInfo";
             new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
@@ -636,7 +636,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         };
 
         placeOfferCompletedListener = (o, oldValue, newValue) -> {
-            if (DevFlags.DEV_MODE) {
+            if (DevEnv.DEV_MODE) {
                 close();
             } else if (newValue) {
                 // We need a bit of delay to avoid issues with fade out/fade in of 2 popups

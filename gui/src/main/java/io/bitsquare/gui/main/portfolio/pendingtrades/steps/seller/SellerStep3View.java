@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
@@ -26,15 +26,12 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.payment.payload.*;
 import io.bitsquare.messages.trade.payload.Contract;
-import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.Res;
-import io.bitsquare.payment.*;
-import io.bitsquare.trade.Contract;
-import io.bitsquare.trade.Trade;
 import io.bitsquare.messages.user.Preferences;
+import io.bitsquare.trade.Trade;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
@@ -93,7 +90,7 @@ public class SellerStep3View extends TradeStepView {
                         message = message + Res.get("portfolio.pending.step3_seller.bankCheck" + optionalHolderName.get(), part);
                     }
                 }
-                if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+                if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
                     preferences.dontShowAgain(key, true);
                     new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
                             .attention(message)
@@ -238,7 +235,7 @@ public class SellerStep3View extends TradeStepView {
         if (model.p2PService.isBootstrapped()) {
             Preferences preferences = model.dataModel.preferences;
             String key = "confirmPaymentReceived";
-            if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+            if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
                 PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
                 String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
                 if (!(paymentAccountContractData instanceof CryptoCurrencyAccountContractData)) {

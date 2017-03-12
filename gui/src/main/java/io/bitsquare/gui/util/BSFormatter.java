@@ -17,16 +17,13 @@
 
 package io.bitsquare.gui.util;
 
-import io.bitsquare.messages.btc.BitcoinNetwork;
 import io.bitsquare.common.util.MathUtils;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.locale.LanguageUtil;
-import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.LanguageUtil;
-import io.bitsquare.locale.Res;
-import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.user.Preferences;
+import io.bitsquare.p2p.NodeAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.bitcoinj.core.Coin;

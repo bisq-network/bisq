@@ -19,10 +19,10 @@ package io.bitsquare.messages.protocol.availability.tasks;
 
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.availability.AvailabilityResult;
-import io.bitsquare.messages.protocol.availability.OfferAvailabilityModel;
 import io.bitsquare.messages.availability.OfferAvailabilityResponse;
+import io.bitsquare.messages.protocol.availability.OfferAvailabilityModel;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -18,10 +18,11 @@
 package io.bitsquare.messages.user;
 
 import io.bitsquare.app.BitsquareEnvironment;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.btc.BitcoinNetwork;
 import io.bitsquare.messages.btc.BtcOptionKeys;
 import io.bitsquare.messages.btc.Restrictions;
@@ -48,8 +49,14 @@ public final class Preferences implements Persistable {
 
     private static final Logger log = LoggerFactory.getLogger(Preferences.class);
 
-
     public static Preferences INSTANCE;
+
+
+    static {
+        defaultLocale = Locale.getDefault();
+        Res.applyLocaleToResourceBundle(getDefaultLocale());
+    }
+
 
     // Deactivate mBit for now as most screens are not supporting it yet
     private static final List<String> BTC_DENOMINATIONS = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
@@ -82,9 +89,7 @@ public final class Preferences implements Persistable {
         return BTC_DENOMINATIONS;
     }
 
-    private static Locale defaultLocale = Locale.getDefault();
-    //TODO test with other locales
-    // private static Locale defaultLocale = Locale.US;
+    private static Locale defaultLocale;
 
     public static Locale getDefaultLocale() {
         return defaultLocale;
@@ -107,7 +112,7 @@ public final class Preferences implements Persistable {
     private String userLanguage = LanguageUtil.getDefaultLanguage();
     private Country userCountry = CountryUtil.getDefaultCountry();
     private String btcDenomination = MonetaryFormat.CODE_BTC;
-    private boolean useAnimations = DevFlags.STRESS_TEST_MODE ? false : true;
+    private boolean useAnimations = DevEnv.STRESS_TEST_MODE ? false : true;
     private final ArrayList<FiatCurrency> fiatCurrencies;
     private final ArrayList<CryptoCurrency> cryptoCurrencies;
     private BlockChainExplorer blockChainExplorerMainNet;

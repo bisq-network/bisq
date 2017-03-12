@@ -17,7 +17,6 @@
 
 package io.bitsquare.gui.main.settings.preferences;
 
-import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
@@ -30,6 +29,8 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.messages.locale.*;
 import io.bitsquare.messages.user.BlockChainExplorer;
 import io.bitsquare.messages.user.Preferences;
@@ -147,12 +148,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private void initializeGeneralOptions() {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 7, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 4);
-        userLanguageComboBox = addLabelComboBox(root, gridRow, Res.getWithCol("shared.language"), Layout.FIRST_ROW_DISTANCE).second;
-        userCountryComboBox = addLabelComboBox(root, ++gridRow, Res.getWithCol("shared.country")).second;
+        userLanguageComboBox = addLabelComboBox(root, gridRow,
+                Res.getWithCol("shared.language"), Layout.FIRST_ROW_DISTANCE).second;
+        userCountryComboBox = addLabelComboBox(root, ++gridRow,
+                Res.getWithCol("shared.country")).second;
         // btcDenominationComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin denomination:").second;
-        blockChainExplorerComboBox = addLabelComboBox(root, ++gridRow, Res.get("setting.preferences.explorer")).second;
-        deviationInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("setting.preferences.deviation")).second;
-        autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow, Res.get("setting.preferences.autoSelectArbitrators"), "").second;
+        blockChainExplorerComboBox = addLabelComboBox(root, ++gridRow,
+                Res.get("setting.preferences.explorer")).second;
+        deviationInputTextField = addLabelInputTextField(root, ++gridRow,
+                Res.get("setting.preferences.deviation")).second;
+        autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow,
+                Res.get("setting.preferences.autoSelectArbitrators"), "").second;
 
         deviationListener = (observable, oldValue, newValue) -> {
             try {

@@ -29,6 +29,7 @@ import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.CurrencyListItem;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import javafx.beans.property.ReadOnlyObjectWrapper;

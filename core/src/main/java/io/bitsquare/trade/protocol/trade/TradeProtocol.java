@@ -22,12 +22,12 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
 import io.bitsquare.messages.Message;
+import io.bitsquare.messages.protocol.trade.TradeMessage;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
 import io.bitsquare.trade.OffererTrade;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
-import io.bitsquare.messages.protocol.trade.TradeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

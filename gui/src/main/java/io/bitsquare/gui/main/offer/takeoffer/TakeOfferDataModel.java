@@ -18,26 +18,27 @@
 package io.bitsquare.gui.main.offer.takeoffer;
 
 import com.google.inject.Inject;
-import io.bitsquare.app.DevFlags;
-import io.bitsquare.messages.arbitration.Arbitrator;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.messages.btc.provider.fee.FeeService;
-import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.Res;
+import io.bitsquare.messages.arbitration.Arbitrator;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.messages.locale.CurrencyUtil;
-import io.bitsquare.payment.PaymentAccount;
-import io.bitsquare.payment.PaymentAccountUtil;
 import io.bitsquare.messages.payment.PaymentMethod;
-import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.handlers.TradeResultHandler;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.user.Preferences;
+import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.payment.PaymentAccountUtil;
+import io.bitsquare.trade.TradeManager;
+import io.bitsquare.trade.handlers.TradeResultHandler;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
@@ -165,7 +166,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         amountAsCoin.set(offer.getAmount());
 
-        if (DevFlags.DEV_MODE)
+        if (DevEnv.DEV_MODE)
             amountAsCoin.set(offer.getAmount());
 
         securityDepositAsCoin = offer.getSecurityDeposit();
@@ -396,7 +397,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
         //noinspection ConstantConditions,ConstantConditions
-        if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevFlags.DEV_MODE) {
+        if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
             walletFundedNotification = new Notification()
                     .headLine(Res.get("notification.walletUpdate.headline"))
                     .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))

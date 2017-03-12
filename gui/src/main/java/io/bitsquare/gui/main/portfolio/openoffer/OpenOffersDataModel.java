@@ -18,10 +18,10 @@
 package io.bitsquare.gui.main.portfolio.openoffer;
 
 import com.google.inject.Inject;
-import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;

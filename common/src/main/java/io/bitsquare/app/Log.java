@@ -112,7 +112,7 @@ public class Log {
     }
 
     public static void logIfStressTests(String msg) {
-        if (DevFlags.STRESS_TEST_MODE)
+        if (DevEnv.STRESS_TEST_MODE)
             System.err.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) +
                     " - " + msg +
                     " / Memory(MB): " + Profiler.getUsedMemoryInMB());

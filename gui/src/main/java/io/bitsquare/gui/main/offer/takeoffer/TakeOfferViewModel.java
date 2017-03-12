@@ -17,8 +17,6 @@
 
 package io.bitsquare.gui.main.offer.takeoffer;
 
-import io.bitsquare.messages.arbitration.Arbitrator;
-import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
@@ -31,14 +29,15 @@ import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.Res;
+import io.bitsquare.messages.arbitration.Arbitrator;
+import io.bitsquare.messages.payment.PaymentMethod;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.ConnectionListener;
 import io.bitsquare.payment.PaymentAccount;
-import io.bitsquare.messages.payment.PaymentMethod;
 import io.bitsquare.trade.Trade;
-import io.bitsquare.messages.trade.offer.payload.Offer;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;

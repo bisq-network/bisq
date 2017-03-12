@@ -19,13 +19,13 @@ package io.bitsquare.gui.main.dao.voting.vote;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.dao.compensation.CompensationRequest;
-import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bitsquare.dao.vote.CompensationRequestVoteItem;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.Res;
+import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
 import javafx.beans.property.DoubleProperty;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;

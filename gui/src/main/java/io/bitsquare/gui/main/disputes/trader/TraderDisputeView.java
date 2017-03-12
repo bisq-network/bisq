@@ -932,10 +932,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
+
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = new Button("Select");
-                                        button.setOnAction(e -> tableView.getSelectionModel().select(item));
+                                        button = new Button(Res.get("shared.select"));
                                         setGraphic(button);
                                     }
                                     button.setOnAction(e -> tableView.getSelectionModel().select(item));
@@ -967,7 +967,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
                         return new TableCell<Dispute, Dispute>() {
-                            final Button button = new Button("Details");
+                            Button button;
 
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
@@ -975,13 +975,16 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = new Button("Details");
+                                        button = new Button(Res.get("shared.details"));
                                         setGraphic(button);
                                     }
                                     button.setOnAction(e -> onOpenContract(item));
                                 } else {
                                     setGraphic(null);
-                                    button.setOnAction(null);
+                                    if (button != null) {
+                                        button.setOnAction(null);
+                                        button = null;
+                                    }
                                 }
                             }
                         };

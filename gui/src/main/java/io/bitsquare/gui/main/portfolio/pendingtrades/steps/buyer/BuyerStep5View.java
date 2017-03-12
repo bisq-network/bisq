@@ -17,12 +17,11 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.InsufficientFundsException;
-import io.bitsquare.messages.btc.Restrictions;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.handlers.FaultHandler;
@@ -40,6 +39,7 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.Res;
+import io.bitsquare.messages.btc.Restrictions;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -150,11 +150,11 @@ public class BuyerStep5View extends TradeStepView {
         });
         withdrawToExternalWalletButton.setOnAction(e -> reviewWithdrawal());
 
-        if (DevFlags.DEV_MODE) {
+        if (DevEnv.DEV_MODE) {
             withdrawAddressTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
         } else {
             String key = "tradeCompleted" + trade.getId();
-            if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+            if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
                 preferences.dontShowAgain(key, true);
                 new Notification().headLine(Res.get("notification.tradeCompleted.headline"))
                         .notification(Res.get("notification.tradeCompleted.msg"))
@@ -186,12 +186,12 @@ public class BuyerStep5View extends TradeStepView {
                 if (toAddresses.isEmpty()) {
                     validateWithdrawAddress();
                 } else if (Restrictions.isAboveDust(amount, fee)) {
-                    if (DevFlags.DEV_MODE) {
+                    if (DevEnv.DEV_MODE) {
                         doWithdrawal(amount, fee);
                     } else {
                         BSFormatter formatter = model.formatter;
                         String key = "reviewWithdrawalAtTradeComplete";
-                        if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+                        if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
                             int txSize = feeEstimationTransaction.bitcoinSerialize().length;
                             double feePerByte = MathUtils.roundDouble(((double) fee.value / (double) txSize), 2);
                             double kb = txSize / 1000d;
@@ -265,7 +265,7 @@ public class BuyerStep5View extends TradeStepView {
     }
 
     private void handleTradeCompleted() {
-        if (!DevFlags.DEV_MODE) {
+        if (!DevEnv.DEV_MODE) {
             String key = "tradeCompleteWithdrawCompletedInfo";
             new Popup().headLine(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.headline"))
                     .feedback(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.msg"))

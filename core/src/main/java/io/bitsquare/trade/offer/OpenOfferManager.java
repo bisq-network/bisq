@@ -18,10 +18,9 @@
 package io.bitsquare.trade.offer;
 
 import com.google.inject.Inject;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.app.Log;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.TradeWalletService;
 import io.bitsquare.common.Timer;
@@ -30,9 +29,16 @@ import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
 import io.bitsquare.crypto.DecryptedMsgWithPubKey;
-import io.bitsquare.messages.trade.offer.payload.Offer;
-import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.messages.Message;
+import io.bitsquare.messages.availability.AvailabilityResult;
+import io.bitsquare.messages.availability.OfferAvailabilityRequest;
+import io.bitsquare.messages.availability.OfferAvailabilityResponse;
+import io.bitsquare.messages.provider.price.PriceFeedService;
+import io.bitsquare.messages.trade.exceptions.MarketPriceNotAvailableException;
+import io.bitsquare.messages.trade.exceptions.TradePriceOutOfToleranceException;
+import io.bitsquare.messages.trade.offer.payload.Offer;
+import io.bitsquare.messages.user.Preferences;
+import io.bitsquare.p2p.BootstrapListener;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.messaging.DecryptedDirectMessageListener;
@@ -41,15 +47,9 @@ import io.bitsquare.p2p.peers.PeerManager;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradableList;
 import io.bitsquare.trade.closed.ClosedTradableManager;
-import io.bitsquare.messages.trade.exceptions.MarketPriceNotAvailableException;
-import io.bitsquare.messages.trade.exceptions.TradePriceOutOfToleranceException;
 import io.bitsquare.trade.handlers.TransactionResultHandler;
-import io.bitsquare.messages.availability.AvailabilityResult;
-import io.bitsquare.messages.availability.OfferAvailabilityRequest;
-import io.bitsquare.messages.availability.OfferAvailabilityResponse;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
-import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
@@ -73,8 +73,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private static final long RETRY_REPUBLISH_DELAY_SEC = 10;
     private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = 30;
-    private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 20 : 20);
-    private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 4 : 4);
+    private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevEnv.STRESS_TEST_MODE ? 20 : 20);
+    private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevEnv.STRESS_TEST_MODE ? 4 : 4);
 
     private final KeyRing keyRing;
     private final User user;

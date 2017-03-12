@@ -2,8 +2,8 @@ package io.bitsquare.trade.offer;
 
 import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.messages.locale.CurrencyUtil;
-import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.payment.PaymentMethod;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;

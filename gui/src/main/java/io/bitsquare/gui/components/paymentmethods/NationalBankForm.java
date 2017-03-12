@@ -19,8 +19,8 @@ package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
+import io.bitsquare.payment.PaymentAccount;
 import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

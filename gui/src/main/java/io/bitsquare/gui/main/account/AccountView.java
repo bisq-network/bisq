@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.account;
 
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.*;
 import io.bitsquare.gui.main.MainView;
@@ -25,6 +25,7 @@ import io.bitsquare.gui.main.account.arbitratorregistration.ArbitratorRegistrati
 import io.bitsquare.gui.main.account.content.fiataccounts.FiatAccountsView;
 import io.bitsquare.gui.main.account.settings.AccountSettingsView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
@@ -119,7 +120,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         }
 
         String key = "accountPrivacyInfo";
-        if (!DevFlags.DEV_MODE)
+        if (!DevEnv.DEV_MODE)
             new Popup()
                     .headLine(Res.get("account.info.headline"))
                     .backgroundInfo(Res.get("account.info.msg"))

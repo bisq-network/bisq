@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.dao.wallet.receive;
 
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.btc.wallet.BsqWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableView;
@@ -99,7 +99,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
         addressTextField.setPaymentLabel(paymentLabelString);
 
         amountTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.wallet.receive.amountOptional")).second;
-        if (DevFlags.DEV_MODE)
+        if (DevEnv.DEV_MODE)
             amountTextField.setText("10");
     }
 

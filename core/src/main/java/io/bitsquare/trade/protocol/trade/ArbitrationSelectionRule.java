@@ -17,8 +17,8 @@
 
 package io.bitsquare.trade.protocol.trade;
 
-import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.messages.trade.offer.payload.Offer;
+import io.bitsquare.p2p.NodeAddress;
 import org.bitcoinj.core.Sha256Hash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -20,7 +20,7 @@ package io.bitsquare.alert;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.AppOptionKeys;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.messages.alert.Alert;
 import io.bitsquare.p2p.P2PService;
@@ -49,8 +49,8 @@ public class AlertManager {
     private final ObjectProperty<Alert> alertMessageProperty = new SimpleObjectProperty<>();
 
     // Pub key for developer global alert message
-    private static final String pubKeyAsHex = DevFlags.USE_DEV_PRIVILEGE_KEYS ?
-            "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee" :
+    private static final String pubKeyAsHex = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
+            DevEnv.DEV_PRIVILEGE_PUB_KEY :
             "036d8a1dfcb406886037d2381da006358722823e1940acc2598c844bbc0fd1026f";
     private ECKey alertSigningKey;
 

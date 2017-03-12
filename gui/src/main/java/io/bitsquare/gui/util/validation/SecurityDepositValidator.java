@@ -18,9 +18,8 @@
 package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.BSResources;
-import io.bitsquare.messages.btc.Restrictions;
 import io.bitsquare.locale.Res;
+import io.bitsquare.messages.btc.Restrictions;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;

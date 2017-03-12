@@ -20,7 +20,7 @@ package io.bitsquare.filter;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bitsquare.app.AppOptionKeys;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.wire.proto.Messages;
 import io.bitsquare.messages.filter.payload.Filter;
@@ -52,8 +52,8 @@ public class FilterManager {
     private final User user;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
 
-    private static final String pubKeyAsHex = DevFlags.USE_DEV_PRIVILEGE_KEYS ?
-            "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee" :
+    private static final String pubKeyAsHex = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
+            DevEnv.DEV_PRIVILEGE_PUB_KEY :
             "022ac7b7766b0aedff82962522c2c14fb8d1961dabef6e5cfd10edc679456a32f1";
     private ECKey filterSigningKey;
 

@@ -17,7 +17,7 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
@@ -109,8 +109,8 @@ public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
         GridPane.setRowIndex(label, ++rowIndex);
 
         keyInputTextField = new InputTextField();
-        if (DevFlags.USE_DEV_PRIVILEGE_KEYS)
-            keyInputTextField.setText("6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a");
+        if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
+            keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
         GridPane.setMargin(keyInputTextField, new Insets(3, 0, 0, 0));
         GridPane.setRowIndex(keyInputTextField, rowIndex);
         GridPane.setColumnIndex(keyInputTextField, 1);

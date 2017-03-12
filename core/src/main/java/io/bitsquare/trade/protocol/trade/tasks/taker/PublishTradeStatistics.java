@@ -18,9 +18,9 @@
 package io.bitsquare.trade.protocol.trade.tasks.taker;
 
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.messages.trade.statistics.payload.TradeStatistics;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;
-import io.bitsquare.messages.trade.statistics.payload.TradeStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

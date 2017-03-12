@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.offer.createoffer;
 
 import com.google.inject.Inject;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.app.Version;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.listeners.BalanceListener;
@@ -30,6 +30,7 @@ import io.bitsquare.gui.main.offer.createoffer.monetary.Price;
 import io.bitsquare.gui.main.offer.createoffer.monetary.Volume;
 import io.bitsquare.gui.main.overlays.notifications.Notification;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.messages.btc.Restrictions;
 import io.bitsquare.messages.btc.provider.fee.FeeService;
@@ -555,7 +556,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
         //noinspection PointlessBooleanExpression
-        if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevFlags.DEV_MODE) {
+        if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
             walletFundedNotification = new Notification()
                     .headLine(Res.get("notification.walletUpdate.headline"))
                     .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))

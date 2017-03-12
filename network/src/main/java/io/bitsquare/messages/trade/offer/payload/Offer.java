@@ -20,7 +20,7 @@ package io.bitsquare.messages.trade.offer.payload;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.KeyRing;
 import io.bitsquare.common.crypto.PubKeyRing;
@@ -30,6 +30,7 @@ import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.common.wire.proto.Messages;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.btc.Restrictions;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.payment.PaymentMethod;
@@ -76,7 +77,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     @JsonExclude
     private static final Logger log = LoggerFactory.getLogger(Offer.class);
-    public static final long TTL = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 6 : 6);
+    public static final long TTL = TimeUnit.MINUTES.toMillis(DevEnv.STRESS_TEST_MODE ? 6 : 6);
     public final static String TAC_OFFERER = Res.get("createOffer.tac");
     public static final String TAC_TAKER = Res.get("takeOffer.tac");
 

@@ -33,8 +33,8 @@ import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
-import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.locale.Res;
+import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -529,15 +529,14 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                         if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING) {
                                             if (button == null) {
                                                 button = new Button(Res.get("funds.tx.revert"));
-                                                button.setOnAction(e -> revertTransaction(item.getTxId(), item.getTradable()));
                                                 setGraphic(button);
                                             }
                                             button.setOnAction(e -> revertTransaction(item.getTxId(), item.getTradable()));
                                         } else {
+                                            setGraphic(null);
                                             if (button != null) {
                                                 button.setOnAction(null);
                                                 button = null;
-                                                setGraphic(null);
                                             }
                                         }
                                     }

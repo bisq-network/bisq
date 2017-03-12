@@ -20,8 +20,8 @@ package io.bitsquare.gui.main;
 import io.bitsquare.BitsquareException;
 import io.bitsquare.app.AppOptionKeys;
 import io.bitsquare.app.BitsquareEnvironment;
-import io.bitsquare.app.DevFlags;
-import io.bitsquare.messages.provider.price.PriceFeedService;
+import io.bitsquare.app.DevEnv;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
@@ -42,6 +42,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.Res;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -69,22 +70,22 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     }
 
     public static void blur() {
-        if (!DevFlags.STRESS_TEST_MODE)
+        if (!DevEnv.STRESS_TEST_MODE)
             transitions.blur(MainView.rootContainer);
     }
 
     public static void blurLight() {
-        if (!DevFlags.STRESS_TEST_MODE)
+        if (!DevEnv.STRESS_TEST_MODE)
             transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 5);
     }
 
     public static void blurUltraLight() {
-        if (!DevFlags.STRESS_TEST_MODE)
+        if (!DevEnv.STRESS_TEST_MODE)
             transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 2);
     }
 
     public static void darken() {
-        if (!DevFlags.STRESS_TEST_MODE)
+        if (!DevEnv.STRESS_TEST_MODE)
             transitions.darken(MainView.rootContainer, Transitions.DEFAULT_DURATION, false);
     }
 

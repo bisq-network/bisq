@@ -36,7 +36,7 @@ import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.locale.FiatCurrency;
 import io.bitsquare.messages.locale.TradeCurrency;
 import io.bitsquare.messages.payment.PaymentMethod;

@@ -1,7 +1,7 @@
 package io.bitsquare.p2p.seed;
 
 import com.google.common.collect.Sets;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.p2p.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ public class SeedNodesRepository {
             DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("2zxtnprnx5wqr7a3.onion:8000"),
 */
             // v0.5.0
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("vmox6ohwogklewem.onion:8002"),
+            DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("vmox6ohwogklewem.onion:8002"),
 
             // local dev test
             // DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("23bnormzh2mvkz3z.onion:8000"),
@@ -59,9 +59,9 @@ public class SeedNodesRepository {
             // 3. Shut down the seed node
             // 4. Rename the directory with your local onion address
             // 5. Edit here your found onion address (new NodeAddress("YOUR_ONION.onion:8002")
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("mfla72c4igh5ta2t.onion:8002")
+            DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
+            DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("brmbf6mf67d2hlm4.onion:8002"),
+            DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8002") : new NodeAddress("mfla72c4igh5ta2t.onion:8002")
     );
 
     // Addresses are used if the last digit of their port match the network id:

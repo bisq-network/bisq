@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.dao.compensation.active;
 
-import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.locale.Res;
+import io.bitsquare.messages.dao.compensation.payload.CompensationRequestPayload;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;

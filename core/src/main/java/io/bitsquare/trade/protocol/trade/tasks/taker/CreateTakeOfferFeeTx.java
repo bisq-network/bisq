@@ -17,10 +17,10 @@
 
 package io.bitsquare.trade.protocol.trade.tasks.taker;
 
-import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.ArbitrationSelectionRule;

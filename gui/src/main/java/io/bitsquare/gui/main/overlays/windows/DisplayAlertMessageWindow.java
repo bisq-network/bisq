@@ -17,10 +17,10 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
-import io.bitsquare.messages.alert.Alert;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.locale.Res;
+import io.bitsquare.messages.alert.Alert;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;

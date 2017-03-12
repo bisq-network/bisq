@@ -24,6 +24,7 @@ import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.user.Preferences;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;

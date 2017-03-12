@@ -19,9 +19,9 @@ package io.bitsquare.gui.main.portfolio.closedtrades;
 
 import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableDataModel;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.closed.ClosedTradableManager;
-import io.bitsquare.messages.trade.offer.payload.Offer;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;

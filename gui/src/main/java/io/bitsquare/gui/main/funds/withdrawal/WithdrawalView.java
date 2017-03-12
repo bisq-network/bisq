@@ -19,12 +19,11 @@ package io.bitsquare.gui.main.funds.withdrawal;
 
 import com.google.common.util.concurrent.FutureCallback;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.AddressEntryException;
 import io.bitsquare.btc.InsufficientFundsException;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.MathUtils;
@@ -37,12 +36,13 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
 import io.bitsquare.locale.Res;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
+import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.closed.ClosedTradableManager;
 import io.bitsquare.trade.failed.FailedTradesManager;
-import io.bitsquare.messages.user.Preferences;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
@@ -245,7 +245,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     log.info("Fee for tx with size {}: {} BTC", txSize, fee.toPlainString());
 
                     if (receiverAmount.isPositive()) {
-                        if (DevFlags.DEV_MODE) {
+                        if (DevEnv.DEV_MODE) {
                             doWithdraw(amount, fee, callback);
                         } else {
                             double feePerByte = MathUtils.roundDouble(((double) fee.value / (double) txSize), 2);
@@ -384,7 +384,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         withdrawToTextField.setText("");
         withdrawToTextField.setPromptText(Res.get("funds.withdrawal.fillDestAddress"));
 
-        if (DevFlags.DEV_MODE)
+        if (DevEnv.DEV_MODE)
             withdrawToTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
     }
 

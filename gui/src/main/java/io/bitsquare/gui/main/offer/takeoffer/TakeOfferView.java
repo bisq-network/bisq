@@ -19,7 +19,7 @@ package io.bitsquare.gui.main.offer.takeoffer;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
@@ -45,10 +45,10 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.Res;
-import io.bitsquare.locale.TradeCurrency;
-import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.messages.locale.TradeCurrency;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.user.Preferences;
+import io.bitsquare.payment.PaymentAccount;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.*;
@@ -273,7 +273,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     public void onClose() {
         Coin balance = model.dataModel.balance.get();
         //noinspection ConstantConditions,ConstantConditions
-        if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevFlags.DEV_MODE) {
+        if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevEnv.DEV_MODE) {
             model.dataModel.swapTradeToSavings();
             new Popup().information(Res.get("takeOffer.alreadyFunded.movedFunds"))
                     .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
@@ -298,7 +298,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void onTakeOffer() {
         if (model.hasAcceptedArbitrators()) {
-            if (!DevFlags.DEV_MODE) {
+            if (!DevEnv.DEV_MODE) {
                 offerDetailsWindow.onTakeOffer(() ->
                                 model.onTakeOffer(() -> {
                                     offerDetailsWindow.hide();
@@ -333,7 +333,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
 
 
-        if (!DevFlags.DEV_MODE) {
+        if (!DevEnv.DEV_MODE) {
             String key = "securityDepositInfo";
             new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
@@ -520,7 +520,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
             //noinspection ConstantConditions
-            if (newValue && DevFlags.DEV_MODE) {
+            if (newValue && DevEnv.DEV_MODE) {
                 close();
             } else //noinspection ConstantConditions,ConstantConditions
                 if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {

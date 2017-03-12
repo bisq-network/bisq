@@ -19,10 +19,10 @@ package io.bitsquare.trade.protocol.trade.tasks.seller;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bitsquare.btc.AddressEntry;
-import io.bitsquare.messages.btc.data.RawTransactionInput;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.crypto.Hash;
 import io.bitsquare.common.taskrunner.TaskRunner;
+import io.bitsquare.messages.btc.data.RawTransactionInput;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.protocol.trade.TradingPeer;
 import io.bitsquare.trade.protocol.trade.tasks.TradeTask;

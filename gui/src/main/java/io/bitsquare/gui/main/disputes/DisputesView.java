@@ -17,8 +17,7 @@
 
 package io.bitsquare.gui.main.disputes;
 
-import io.bitsquare.app.DevFlags;
-import io.bitsquare.messages.arbitration.Arbitrator;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.arbitration.ArbitratorManager;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.common.crypto.KeyRing;
@@ -32,8 +31,9 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.locale.Res;
-import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.messages.user.Preferences;
+import io.bitsquare.p2p.NodeAddress;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
@@ -126,7 +126,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
             navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
 
         String key = "supportInfo";
-        if (!DevFlags.DEV_MODE)
+        if (!DevEnv.DEV_MODE)
             new Popup().backgroundInfo(Res.get("support.backgroundInfo"))
                     .width(900)
                     .actionButtonTextWithGoTo("navigation.portfolio.pending")

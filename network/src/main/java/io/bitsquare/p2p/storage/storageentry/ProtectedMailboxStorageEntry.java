@@ -1,9 +1,9 @@
 package io.bitsquare.p2p.storage.storageentry;
 
 import com.google.protobuf.ByteString;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.Sig;
 import io.bitsquare.common.wire.proto.Messages;
-import io.bitsquare.app.Version;
 import io.bitsquare.p2p.storage.P2PDataStorage;
 import io.bitsquare.p2p.storage.payload.MailboxStoragePayload;
 import org.slf4j.Logger;

@@ -18,12 +18,12 @@
 package io.bitsquare.trade;
 
 import io.bitsquare.app.Version;
+import io.bitsquare.messages.protocol.trade.TradeMessage;
+import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.trade.protocol.trade.BuyerAsOffererProtocol;
 import io.bitsquare.trade.protocol.trade.OffererProtocol;
-import io.bitsquare.messages.protocol.trade.TradeMessage;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -2,9 +2,9 @@ package io.bitsquare.provider.fee.providers;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
-import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.http.HttpClient;
 import io.bitsquare.http.HttpException;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -18,22 +18,15 @@
 package io.bitsquare.gui.main;
 
 import com.google.inject.Inject;
-import io.bitsquare.crypto.EncryptionService;
-import io.bitsquare.messages.alert.Alert;
 import io.bitsquare.alert.AlertManager;
-import io.bitsquare.messages.alert.PrivateNotification;
 import io.bitsquare.alert.PrivateNotificationManager;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
 import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.messages.arbitration.Dispute;
 import io.bitsquare.arbitration.DisputeManager;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.listeners.BalanceListener;
-import io.bitsquare.messages.btc.provider.fee.FeeService;
-import io.bitsquare.messages.provider.price.MarketPrice;
-import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.WalletsManager;
 import io.bitsquare.btc.wallet.WalletsSetup;
@@ -41,6 +34,7 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.crypto.*;
+import io.bitsquare.crypto.EncryptionService;
 import io.bitsquare.dao.DaoManager;
 import io.bitsquare.dao.blockchain.BsqBlockchainException;
 import io.bitsquare.filter.FilterManager;
@@ -53,9 +47,16 @@ import io.bitsquare.gui.main.overlays.windows.DisplayAlertMessageWindow;
 import io.bitsquare.gui.main.overlays.windows.TacWindow;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
+import io.bitsquare.messages.alert.Alert;
+import io.bitsquare.messages.alert.PrivateNotification;
+import io.bitsquare.messages.arbitration.Dispute;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.locale.TradeCurrency;
+import io.bitsquare.messages.provider.price.MarketPrice;
+import io.bitsquare.messages.provider.price.PriceFeedService;
+import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.P2PServiceListener;
 import io.bitsquare.p2p.network.CloseConnectionReason;
@@ -69,7 +70,6 @@ import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.trade.offer.OpenOffer;
 import io.bitsquare.trade.offer.OpenOfferManager;
-import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -121,7 +121,7 @@ public class MainViewModel implements ViewModel {
 
     // BTC network
     final StringProperty btcInfo = new SimpleStringProperty(Res.get("mainView.footer.btcInfo.initializing"));
-    final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(DevFlags.STRESS_TEST_MODE ? 0 : -1);
+    final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(DevEnv.STRESS_TEST_MODE ? 0 : -1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
     final StringProperty marketPriceCurrencyCode = new SimpleStringProperty("");
@@ -541,7 +541,7 @@ public class MainViewModel implements ViewModel {
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
         updateBalance();
-        if (DevFlags.DEV_MODE) {
+        if (DevEnv.DEV_MODE) {
             preferences.setShowOwnOffersInOfferBook(true);
             if (user.getPaymentAccounts().isEmpty())
                 setupDevDummyPaymentAccounts();

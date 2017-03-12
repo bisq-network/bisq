@@ -18,7 +18,7 @@
 package io.bitsquare.gui.main.dao.wallet.send;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.btc.InsufficientFundsException;
 import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.btc.exceptions.WalletException;
@@ -33,8 +33,8 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BsqFormatter;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.messages.btc.provider.fee.FeeService;
 import io.bitsquare.locale.Res;
+import io.bitsquare.messages.btc.provider.fee.FeeService;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -99,7 +99,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
 
         sendButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.send"));
 
-        if (DevFlags.DEV_MODE) {
+        if (DevEnv.DEV_MODE) {
             amountInputTextField.setText("2.730"); // 2730 is dust limit
             receiversAddressInputTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
         }

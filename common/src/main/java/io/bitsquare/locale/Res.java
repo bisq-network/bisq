@@ -17,7 +17,6 @@
 
 package io.bitsquare.locale;
 
-import io.bitsquare.user.Preferences;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +38,7 @@ public class Res {
     private static ResourceBundle resourceBundle;
 
     static {
-        applyLocaleToResourceBundle(Preferences.getDefaultLocale());
+        applyLocaleToResourceBundle(Locale.US);
     }
 
     public static void applyLocaleToResourceBundle(Locale locale) {

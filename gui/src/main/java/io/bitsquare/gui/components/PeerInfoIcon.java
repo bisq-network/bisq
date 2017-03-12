@@ -2,6 +2,7 @@ package io.bitsquare.gui.components;
 
 import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.gui.main.overlays.editor.PeerInfoWithTagEditor;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.user.Preferences;
 import javafx.geometry.Point2D;

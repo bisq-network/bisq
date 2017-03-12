@@ -17,11 +17,12 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.filter.FilterManager;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.filter.payload.Filter;
 import io.bitsquare.messages.filter.payload.PaymentAccountFilter;
 import javafx.geometry.HPos;
@@ -111,8 +112,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
     }
     private void addContent() {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10).second;
-        if (DevFlags.USE_DEV_PRIVILEGE_KEYS)
-            keyInputTextField.setText("6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a");
+        if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
+            keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
         InputTextField offerIdsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.offers")).second;
         InputTextField nodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.onions")).second;

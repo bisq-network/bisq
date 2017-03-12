@@ -19,11 +19,11 @@ package io.bitsquare.messages.trade.payload;
 
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
+import io.bitsquare.app.Version;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.JsonExclude;
 import io.bitsquare.common.wire.Payload;
 import io.bitsquare.common.wire.proto.Messages;
-import io.bitsquare.app.Version;
 import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.p2p.NodeAddress;

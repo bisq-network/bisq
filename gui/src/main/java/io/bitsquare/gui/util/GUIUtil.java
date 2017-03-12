@@ -22,18 +22,16 @@ import com.googlecode.jcsv.CSVStrategy;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.locale.TradeCurrency;
-import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.locale.Res;
-import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.storage.Storage;
-import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.user.User;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
@@ -79,7 +77,7 @@ public class GUIUtil {
 
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
         String key = "miningFeeInfo";
-        if (!DevFlags.DEV_MODE && Preferences.INSTANCE.showAgain(key)) {
+        if (!DevEnv.DEV_MODE && Preferences.INSTANCE.showAgain(key)) {
             new Popup<>().information(Res.get("guiUtil.miningFeeInfo"))
                     .dontShowAgainId(key, Preferences.INSTANCE)
                     .onClose(runnable::run)

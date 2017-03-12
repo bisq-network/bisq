@@ -17,13 +17,13 @@
 
 package io.bitsquare.trade.protocol.placeoffer.tasks;
 
-import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.btc.AddressEntry;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.taskrunner.Task;
 import io.bitsquare.common.taskrunner.TaskRunner;
-import io.bitsquare.p2p.NodeAddress;
+import io.bitsquare.messages.arbitration.Arbitrator;
 import io.bitsquare.messages.trade.offer.payload.Offer;
+import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bitsquare.trade.protocol.trade.ArbitrationSelectionRule;
 import org.bitcoinj.core.Address;

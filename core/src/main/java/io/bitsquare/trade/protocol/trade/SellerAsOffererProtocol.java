@@ -20,12 +20,12 @@ package io.bitsquare.trade.protocol.trade;
 
 import io.bitsquare.common.handlers.ErrorMessageHandler;
 import io.bitsquare.common.handlers.ResultHandler;
+import io.bitsquare.messages.Message;
 import io.bitsquare.messages.protocol.trade.TradeMessage;
 import io.bitsquare.messages.trade.protocol.trade.messages.DepositTxPublishedMessage;
 import io.bitsquare.messages.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bitsquare.messages.trade.protocol.trade.messages.PayDepositRequest;
 import io.bitsquare.messages.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
-import io.bitsquare.messages.Message;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.MailboxMessage;
 import io.bitsquare.trade.SellerAsOffererTrade;

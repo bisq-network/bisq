@@ -26,6 +26,7 @@ import io.bitsquare.gui.main.funds.FundsView;
 import io.bitsquare.gui.main.funds.withdrawal.WithdrawalView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.user.Preferences;
 import io.bitsquare.trade.offer.OpenOffer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -311,13 +312,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             final ImageView iconView = new ImageView();
                             Button button;
 
-                            {
-                                iconView.setId("image-remove");
-                                button.setText(Res.get("shared.remove"));
-                                button.setGraphic(iconView);
-                                button.setMinWidth(70);
-                            }
-
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -325,7 +319,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 if (item != null && !empty) {
                                     if (button == null) {
                                         iconView.setId("image-remove");
-                                        button = new Button("Remove");
+                                        button = new Button(Res.get("shared.remove"));
                                         button.setMinWidth(70);
                                         button.setGraphic(iconView);
                                         setGraphic(button);

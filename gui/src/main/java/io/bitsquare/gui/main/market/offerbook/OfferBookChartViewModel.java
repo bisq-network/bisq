@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.market.offerbook;
 
 import com.google.common.math.LongMath;
 import com.google.inject.Inject;
-import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.MainView;
@@ -31,6 +30,7 @@ import io.bitsquare.gui.util.CurrencyListItem;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.locale.TradeCurrency;
+import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.user.Preferences;
 import javafx.beans.property.ObjectProperty;

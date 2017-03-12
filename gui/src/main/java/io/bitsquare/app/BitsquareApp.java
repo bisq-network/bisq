@@ -200,7 +200,7 @@ public class BitsquareApp extends Application {
                     stop();
                 } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     showEmptyWalletPopup(injector.getInstance(BtcWalletService.class));
-                } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
+                } else if (DevEnv.DEV_MODE && new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     // BSQ empty wallet not public yet
                     showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
                 } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN).match(keyEvent)) {
@@ -222,7 +222,7 @@ public class BitsquareApp extends Application {
                         new SpendFromDepositTxWindow(tradeWalletService).show();
                     else
                         new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
-                } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                } else if (DevEnv.DEV_MODE && new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showDebugWindow();
                 }
             });

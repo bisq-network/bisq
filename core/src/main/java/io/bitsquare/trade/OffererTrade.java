@@ -18,8 +18,8 @@
 package io.bitsquare.trade;
 
 
-import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.messages.protocol.trade.TradeMessage;
+import io.bitsquare.p2p.NodeAddress;
 
 public interface OffererTrade {
     void handleTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress);

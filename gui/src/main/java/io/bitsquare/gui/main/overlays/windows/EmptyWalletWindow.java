@@ -17,8 +17,7 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
-import io.bitsquare.app.DevFlags;
-import io.bitsquare.messages.btc.Restrictions;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.btc.wallet.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
@@ -28,6 +27,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.Res;
+import io.bitsquare.messages.btc.Restrictions;
 import io.bitsquare.trade.offer.OpenOfferManager;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -112,7 +112,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
 
         Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address"));
         addressInputTextField = tuple.second;
-        if (DevFlags.DEV_MODE)
+        if (DevEnv.DEV_MODE)
             addressInputTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
 
         emptyWalletButton = new Button(Res.get("emptyWalletWindow.button"));

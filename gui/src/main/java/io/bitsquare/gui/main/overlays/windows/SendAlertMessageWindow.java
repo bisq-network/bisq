@@ -17,11 +17,12 @@
 
 package io.bitsquare.gui.main.overlays.windows;
 
-import io.bitsquare.app.DevFlags;
+import io.bitsquare.app.DevEnv;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.alert.Alert;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -108,8 +109,8 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     private void addContent() {
         InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("shared.unlock"), 10).second;
-        if (DevFlags.USE_DEV_PRIVILEGE_KEYS)
-            keyInputTextField.setText("6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a");
+        if (DevEnv.USE_DEV_PRIVILEGE_KEYS)
+            keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
 
         Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex,
                 Res.get("sendAlertMessageWindow.alertMsg"),
