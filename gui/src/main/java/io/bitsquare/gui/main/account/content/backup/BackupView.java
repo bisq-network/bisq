@@ -161,7 +161,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     }
 
     private void showWrongPathWarningAndReset(@Nullable Throwable t) {
-        String error = t != null ? Res.get("shared.errorMessage", t.getMessage()) : "";
+        String error = t != null ? Res.get("shared.errorMessageInline", t.getMessage()) : "";
         new Popup<>().warning(Res.get("account.backup.directoryNotAccessible", error)).show();
         applyBackupDirectory(Utilities.getSystemHomeDirectory());
     }

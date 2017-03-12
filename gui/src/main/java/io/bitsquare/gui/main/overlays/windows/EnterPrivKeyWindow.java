@@ -65,7 +65,7 @@ public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
         }
 
         if (headLine == null)
-            headLine = "Registration open for invited arbitrators only";
+            headLine = Res.get("enterPrivKeyWindow.headline");
 
         createGridPane();
         addHeadLine();
@@ -103,7 +103,7 @@ public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
     }
 
     private void addInputFields() {
-        Label label = new Label("Enter private key:");
+        Label label = new Label(Res.get("shared.enterPrivKey"));
         label.setWrapText(true);
         GridPane.setMargin(label, new Insets(3, 0, 0, 0));
         GridPane.setRowIndex(label, ++rowIndex);
@@ -122,20 +122,20 @@ public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
     }
 
     private void addButtons() {
-        unlockButton = new Button("Unlock");
+        unlockButton = new Button(Res.get("shared.unlock"));
         unlockButton.setDefaultButton(true);
         unlockButton.setDisable(keyInputTextField.getText().length() == 0);
         unlockButton.setOnAction(e -> {
             if (privKeyHandler.checkKey(keyInputTextField.getText()))
                 hide();
             else
-                new Popup().warning("The key you entered was not correct.").width(300).onClose(() -> blurAgain()).show();
+                new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
         });
 
         Button closeButton = new Button(Res.get("shared.close"));
         closeButton.setOnAction(event -> {
             hide();
-            closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
+            closeHandlerOptional.ifPresent(Runnable::run);
         });
 
         HBox hBox = new HBox();

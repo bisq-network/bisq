@@ -97,7 +97,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", usPostalMoneyOrderAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(usPostalMoneyOrderAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(usPostalMoneyOrderAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", usPostalMoneyOrderAccount.getHolderName());
         TextArea textArea = addLabelTextArea(gridPane, ++gridRow, "Postal address:", "").second;
         textArea.setText(usPostalMoneyOrderAccount.getPostalAddress());

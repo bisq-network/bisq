@@ -215,7 +215,7 @@ public class CashDepositForm extends PaymentMethodForm {
         String countryCode = cashDepositAccountContractData.getCountryCode();
 
         addLabelTextField(gridPane, gridRow, "Account name:", paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(paymentAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(paymentAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Country:", getCountryBasedPaymentAccount().getCountry() != null ? getCountryBasedPaymentAccount().getCountry().name : "");
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), paymentAccount.getSingleTradeCurrency().getNameAndCode());
         addAcceptedBanksForDisplayAccount();

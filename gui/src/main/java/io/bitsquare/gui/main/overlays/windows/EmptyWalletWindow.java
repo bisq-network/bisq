@@ -54,7 +54,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     private final WalletPasswordWindow walletPasswordWindow;
     private final BSFormatter formatter;
     private final OpenOfferManager openOfferManager;
-    
+
     private Button emptyWalletButton;
     private InputTextField addressInputTextField;
     private TextField balanceTextField;
@@ -77,7 +77,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
 
     public void show() {
         if (headLine == null)
-            headLine = "Empty wallet";
+            headLine = Res.get("emptyWalletWindow.headline");
 
         width = 700;
         createGridPane();
@@ -87,7 +87,6 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         applyStyles();
         display();
     }
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -105,24 +104,18 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     }
 
     private void addContent() {
-        addMultilineLabel(gridPane, ++rowIndex,
-                "Please use that only in emergency case if you cannot access your fund from the UI.\n\n" +
-                        "Please note that all open offers will be closed automatically when using this tool.\n\n" +
-                        "Before you use this tool, please backup your data directory. " +
-                        "You can do this under \"Account/Backup\".\n\n" +
-                        "Please file a bug report on Github so that we can investigate what was causing the problem.",
-                10);
+        addMultilineLabel(gridPane, ++rowIndex, Res.get("emptyWalletWindow.info"), 10);
 
         Coin totalBalance = walletService.getAvailableBalance();
-        balanceTextField = addLabelTextField(gridPane, ++rowIndex, "Your available wallet balance:",
+        balanceTextField = addLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.balance"),
                 formatter.formatCoinWithCode(totalBalance), 10).second;
 
-        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, "Your destination address:");
+        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.address"));
         addressInputTextField = tuple.second;
         if (DevFlags.DEV_MODE)
             addressInputTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
 
-        emptyWalletButton = new Button("Empty wallet");
+        emptyWalletButton = new Button(Res.get("emptyWalletWindow.button"));
         boolean isBalanceSufficient = Restrictions.isAboveDust(totalBalance);
         emptyWalletButton.setDefaultButton(isBalanceSufficient);
         emptyWalletButton.setDisable(!isBalanceSufficient && addressInputTextField.getText().length() > 0);
@@ -158,9 +151,8 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     private void doEmptyWallet(KeyParameter aesKey) {
         if (!openOfferManager.getOpenOffers().isEmpty()) {
             UserThread.runAfter(() ->
-                    new Popup().warning("You have open offers which will be removed if you empty the wallet.\n" +
-                            "Are you sure that you want to empty your wallet?")
-                            .actionButtonText("Yes, I am sure")
+                    new Popup().warning(Res.get("emptyWalletWindow.openOffers.warn"))
+                            .actionButtonText(Res.get("emptyWalletWindow.openOffers.yes"))
                             .onAction(() -> doEmptyWallet2(aesKey))
                             .show(), 300, TimeUnit.MILLISECONDS);
         } else {
@@ -180,7 +172,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                             emptyWalletButton.setDisable(true);
                             log.debug("wallet empty successful");
                             onClose(() -> UserThread.runAfter(() -> new Popup()
-                                    .feedback("The balance of your wallet was successfully transferred.")
+                                    .feedback(Res.get("emptyWalletWindow.sent.success"))
                                     .show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS));
                             doClose();
                         },

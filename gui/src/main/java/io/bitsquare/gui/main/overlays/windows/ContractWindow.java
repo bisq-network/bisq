@@ -130,12 +130,12 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.numDisputes"), disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
 
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.paymentDetails", Res.get("shared.buyer")),
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
                 Res.get(contract.getBuyerPaymentAccountContractData().getPaymentDetails())).second.setMouseTransparent(false);
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.paymentDetails", Res.get("shared.seller")),
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
                 Res.get(sellerPaymentAccountContractData.getPaymentDetails())).second.setMouseTransparent(false);
 
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.arbitrator"), contract.arbitratorNodeAddress.getFullAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"), contract.arbitratorNodeAddress.getFullAddress());
 
         if (showAcceptedCountryCodes) {
             String countries;
@@ -162,19 +162,19 @@ public class ContractWindow extends Overlay<ContractWindow> {
             }
         }
 
-        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("contractWindow.makerFeeTxId"), offer.getOfferFeePaymentTxID());
-        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("contractWindow.takerFeeTxId"), contract.takeOfferFeeTxID);
+        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxID());
+        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), contract.takeOfferFeeTxID);
         if (dispute.getDepositTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.getWithCol("shared.depositTransactionId"), dispute.getDepositTxId());
         if (dispute.getPayoutTxSerialized() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("contractWindow.payoutTxId"), dispute.getPayoutTxId());
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"), dispute.getPayoutTxId());
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.contractHash"),
                 Utils.HEX.encode(dispute.getContractHash())).second.setMouseTransparent(false);
 
         if (contract != null) {
-            Button viewContractButton = addLabelButton(gridPane, ++rowIndex, Res.get("contractWindow.contractAsJson"),
-                    Res.get("contractWindow.viewContractAsJson"), 0).second;
+            Button viewContractButton = addLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),
+                    Res.get("shared.viewContractAsJson"), 0).second;
             viewContractButton.setDefaultButton(false);
             viewContractButton.setOnAction(e -> {
                 TextArea textArea = new TextArea();
@@ -186,7 +186,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
                 Scene viewContractScene = new Scene(textArea);
                 Stage viewContractStage = new Stage();
-                viewContractStage.setTitle(Res.get("contractWindow.contract.title", dispute.getShortTradeId()));
+                viewContractStage.setTitle(Res.get("shared.contract.title", dispute.getShortTradeId()));
                 viewContractStage.setScene(viewContractScene);
                 if (owner == null)
                     owner = MainView.getRootContainer();
@@ -207,7 +207,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         //TODO app wide focus
         //closeButton.requestFocus();
         closeButton.setOnAction(e -> {
-            closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
+            closeHandlerOptional.ifPresent(Runnable::run);
             hide();
         });
     }

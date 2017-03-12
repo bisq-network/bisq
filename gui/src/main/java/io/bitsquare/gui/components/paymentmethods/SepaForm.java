@@ -309,7 +309,7 @@ public class SepaForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", sepaAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(sepaAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(sepaAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", sepaAccount.getHolderName());
         addLabelTextField(gridPane, ++gridRow, "IBAN:", sepaAccount.getIban()).second.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "BIC:", sepaAccount.getBic()).second.setMouseTransparent(false);

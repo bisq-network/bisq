@@ -223,7 +223,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             model.onRevoke(
                     () -> new Popup().feedback(Res.get("account.arbitratorRegistration.removedSuccess")).show(),
                     (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.removedFailed",
-                            Res.get("shared.errorMessage", errorMessage))).show());
+                            Res.get("shared.errorMessageInline", errorMessage))).show());
         } else {
             new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
@@ -234,7 +234,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             model.onRegister(
                     () -> new Popup().feedback(Res.get("account.arbitratorRegistration.registerSuccess")).show(),
                     (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.registerFailed",
-                            Res.get("shared.errorMessage", errorMessage))).show());
+                            Res.get("shared.errorMessageInline", errorMessage))).show());
         } else {
             new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }

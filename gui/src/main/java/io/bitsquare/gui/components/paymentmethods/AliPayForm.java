@@ -83,7 +83,7 @@ public class AliPayForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", aliPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(aliPayAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(aliPayAccount.getPaymentMethod().getId()));
         TextField field = addLabelTextField(gridPane, ++gridRow, "Account no.:", aliPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), aliPayAccount.getSingleTradeCurrency().getNameAndCode());

@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.gui.util.validation.InputValidator;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;

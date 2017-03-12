@@ -89,19 +89,19 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     @Override
     protected void initialize() {
         addTitledGroupBg(root, gridRow, 2, Res.get("account.seed.backup.title"));
-        displaySeedWordsTextArea = addLabelTextArea(root, gridRow, Res.get("account.seed.seedWords"), "", Layout.FIRST_ROW_DISTANCE).second;
+        displaySeedWordsTextArea = addLabelTextArea(root, gridRow, Res.get("seed.seedWords"), "", Layout.FIRST_ROW_DISTANCE).second;
         displaySeedWordsTextArea.setPrefHeight(60);
         displaySeedWordsTextArea.setEditable(false);
 
-        datePicker = addLabelDatePicker(root, ++gridRow, Res.get("account.seed.date")).second;
+        datePicker = addLabelDatePicker(root, ++gridRow, Res.get("seed.date")).second;
         datePicker.setMouseTransparent(true);
 
-        addTitledGroupBg(root, ++gridRow, 2, Res.get("account.seed.restore.title"), Layout.GROUP_DISTANCE);
-        seedWordsTextArea = addLabelTextArea(root, gridRow, Res.get("account.seed.seedWords"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        addTitledGroupBg(root, ++gridRow, 2, Res.get("seed.restore.title"), Layout.GROUP_DISTANCE);
+        seedWordsTextArea = addLabelTextArea(root, gridRow, Res.get("seed.seedWords"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         seedWordsTextArea.setPrefHeight(60);
 
-        restoreDatePicker = addLabelDatePicker(root, ++gridRow, Res.get("account.seed.date")).second;
-        restoreButton = addButtonAfterGroup(root, ++gridRow, Res.get("account.seed.restore"));
+        restoreDatePicker = addLabelDatePicker(root, ++gridRow, Res.get("seed.date")).second;
+        restoreButton = addButtonAfterGroup(root, ++gridRow, Res.get("seed.restore"));
 
         addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.information"), Layout.GROUP_DISTANCE);
         addMultilineLabel(root, gridRow, Res.get("account.seed.info"),
@@ -215,10 +215,10 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private void onRestore() {
         if (walletsManager.hasPositiveBalance()) {
-            new Popup().warning(Res.get("account.seed.warn.walletNotEmpty.msg"))
-                    .actionButtonText(Res.get("account.seed.warn.walletNotEmpty.restore"))
+            new Popup().warning(Res.get("seed.warn.walletNotEmpty.msg"))
+                    .actionButtonText(Res.get("seed.warn.walletNotEmpty.restore"))
                     .onAction(this::checkIfEncrypted)
-                    .closeButtonText(Res.get("account.seed.warn.walletNotEmpty.emptyWallet"))
+                    .closeButtonText(Res.get("seed.warn.walletNotEmpty.emptyWallet"))
                     .show();
         } else {
             checkIfEncrypted();
@@ -227,7 +227,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private void checkIfEncrypted() {
         if (walletsManager.areWalletsEncrypted()) {
-            new Popup().information(Res.get("account.seed.warn.notEncryptedAnymore"))
+            new Popup().information(Res.get("seed.warn.notEncryptedAnymore"))
                     .closeButtonText(Res.get("shared.no"))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(this::doRestore)
@@ -244,12 +244,13 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                 seed,
                 () -> UserThread.execute(() -> {
                     log.info("Wallets restored with seed words");
-                    new Popup().feedback(Res.get("account.seed.restore.success"))
+                    new Popup().feedback(Res.get("seed.restore.success"))
                             .useShutDownButton();
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());
-                    new Popup().error(Res.get("account.seed.restore.error", Res.get("shared.errorMessage", throwable.getMessage())))
+                    new Popup().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline",
+                            throwable.getMessage())))
                             .show();
                 }));
     }

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.locale.Res;
 import io.bitsquare.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,10 @@ public class TacWindow extends Overlay<TacWindow> {
 
     public void showIfNeeded() {
         if (!preferences.getTacAccepted() && !DevFlags.DEV_MODE) {
-            headLine("User agreement");
+            headLine(Res.get("tacWindow.headline"));
+
+            // We do not translate the tacs because of the legal nature. We would need translations checked by lawyers
+            // in each language which is too expensive atm.
             String text = "1. This software is experimental and provided \"as is\", without warranty of any kind, " +
                     "express or implied, including but not limited to the warranties of " +
                     "merchantability, fitness for a particular purpose and non-infringement.\n" +
@@ -42,8 +46,8 @@ public class TacWindow extends Overlay<TacWindow> {
                     "For more details and a general overview please read the full documentation about the " +
                     "arbitration system and the dispute process.";
             message(text);
-            actionButtonText("I agree");
-            closeButtonText("I disagree and quit");
+            actionButtonText(Res.get("tacWindow.agree"));
+            closeButtonText(Res.get("tacWindow.disagree"));
             onAction(() -> preferences.setTacAccepted(true));
             onClose(BitsquareApp.shutDownHandler::run);
 
@@ -54,7 +58,7 @@ public class TacWindow extends Overlay<TacWindow> {
     @Override
     protected void addMessage() {
         super.addMessage();
-        addHyperlinkWithIcon(gridPane, ++rowIndex, "Arbitration system", "https://bitsquare.io/arbitration_system.pdf", -6);
+        addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("tacWindow.arbitrationSystem"), "https://bitsquare.io/arbitration_system.pdf", -6);
     }
 
     @Override

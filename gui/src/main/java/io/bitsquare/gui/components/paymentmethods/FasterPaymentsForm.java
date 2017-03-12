@@ -94,7 +94,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", fasterPaymentsAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(fasterPaymentsAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(fasterPaymentsAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "UK Sort code:", fasterPaymentsAccount.getSortCode());
         TextField field = addLabelTextField(gridPane, ++gridRow, "Account number:", fasterPaymentsAccount.getAccountNr()).second;
         field.setMouseTransparent(false);

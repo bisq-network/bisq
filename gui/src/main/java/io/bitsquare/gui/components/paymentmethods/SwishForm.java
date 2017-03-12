@@ -92,7 +92,7 @@ public class SwishForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", swishAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(swishAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(swishAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", swishAccount.getHolderName());
         TextField field = addLabelTextField(gridPane, ++gridRow, "Mobile no.:", swishAccount.getMobileNr()).second;
         field.setMouseTransparent(false);

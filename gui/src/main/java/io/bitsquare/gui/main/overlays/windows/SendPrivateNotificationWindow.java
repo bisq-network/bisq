@@ -23,6 +23,7 @@ import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.p2p.messaging.SendMailboxMessageListener;
 import javafx.geometry.Insets;
@@ -70,7 +71,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
 
     public void show() {
         if (headLine == null)
-            headLine = "Send private message";
+            headLine = Res.get("sendPrivateNotificationWindow.headline");
 
         width = 800;
         createGridPane();
@@ -104,13 +105,16 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     }
 
     private void addContent() {
-        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Key for private notification:", 10).second;
-        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex, "Private notification:", "Enter notification");
+        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("shared.unlock"), 10).second;
+        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex,
+                Res.get("sendPrivateNotificationWindow.privateNotification"),
+                Res.get("sendPrivateNotificationWindow.enterNotification"));
         TextArea alertMessageTextArea = labelTextAreaTuple2.second;
         Label first = labelTextAreaTuple2.first;
         first.setMinWidth(200);
 
-        sendButton = new Button("Send private notification");
+        sendButton = new Button(Res.get("sendPrivateNotificationWindow.send"));
         sendButton.setOnAction(e -> {
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                 if (!sendPrivateNotificationHandler.handle(
@@ -122,28 +126,31 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
                             @Override
                             public void onArrived() {
                                 log.trace("PrivateNotificationMessage arrived at peer.");
-                                new Popup<>().feedback("Message arrived.").onClose(SendPrivateNotificationWindow.this::hide).show();
+                                new Popup<>().feedback(Res.get("shared.messageArrived"))
+                                        .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
                                 log.trace("PrivateNotificationMessage was stored in mailbox.");
-                                new Popup<>().feedback("Message stored in mailbox.").onClose(SendPrivateNotificationWindow.this::hide).show();
+                                new Popup<>().feedback(Res.get("shared.messageStoredInMailbox"))
+                                        .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
 
                             @Override
                             public void onFault(String errorMessage) {
-                                new Popup<>().feedback("Message sending failed. error=" + errorMessage).onClose(SendPrivateNotificationWindow.this::hide).show();
+                                new Popup<>().feedback(Res.get("shared.messageSendingFailed", errorMessage))
+                                        .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
                         }))
-                    new Popup().warning("The key you entered was not correct.").width(300).onClose(() -> blurAgain()).show();
+                    new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 
         closeButton = new Button(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
             hide();
-            closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
+            closeHandlerOptional.ifPresent(Runnable::run);
         });
 
         HBox hBox = new HBox();

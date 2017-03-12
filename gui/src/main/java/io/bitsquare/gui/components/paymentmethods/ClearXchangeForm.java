@@ -91,7 +91,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", clearXchangeAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(clearXchangeAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(clearXchangeAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", clearXchangeAccount.getHolderName());
         TextField field = addLabelTextField(gridPane, ++gridRow, "Email or mobile no.:", clearXchangeAccount.getEmailOrMobileNr()).second;
         field.setMouseTransparent(false);

@@ -109,7 +109,7 @@ public class InteracETransferForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", interacETransferAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(interacETransferAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(interacETransferAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", interacETransferAccount.getHolderName());
         addLabelTextField(gridPane, ++gridRow, "Email:", interacETransferAccount.getEmail()).second.setMouseTransparent(false);
         addLabelTextField(gridPane, ++gridRow, "Secret question:", interacETransferAccount.getQuestion()).second.setMouseTransparent(false);

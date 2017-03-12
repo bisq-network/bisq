@@ -42,6 +42,7 @@ import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
 
 public class FilterWindow extends Overlay<FilterWindow> {
     private static final Logger log = LoggerFactory.getLogger(FilterWindow.class);
+
     private Button sendButton;
     private SendFilterMessageHandler sendFilterMessageHandler;
     private RemoveFilterMessageHandler removeFilterMessageHandler;
@@ -71,7 +72,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
     public void show() {
         if (headLine == null)
-            headLine = "Edit filter list";
+            headLine = Res.get("filterWindow.headline");
 
         width = 900;
         createGridPane();
@@ -108,12 +109,11 @@ public class FilterWindow extends Overlay<FilterWindow> {
             });
         }
     }
-
     private void addContent() {
-        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Private key to unlock:", 10).second;
-        InputTextField offerIdsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Filtered offers (comma sep.):").second;
-        InputTextField nodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Filtered onion addresses (comma sep.):").second;
-        InputTextField paymentAccountFilterInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Filtered trading account data:\nFormat: comma sep. list of [payment method id | data field | value]").second;
+        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10).second;
+        InputTextField offerIdsInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.offers")).second;
+        InputTextField nodesInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.onions")).second;
+        InputTextField paymentAccountFilterInputTextField = addLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.accounts")).second;
         GridPane.setHalignment(paymentAccountFilterInputTextField, HPos.RIGHT);
 
         final Filter filter = filterManager.getDevelopersFilter();
@@ -135,18 +135,26 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 paymentAccountFilterInputTextField.setText(sb.toString());
             }
         }
-        sendButton = new Button("Add filter");
+        sendButton = new Button(Res.get("filterWindow.add"));
         sendButton.setOnAction(e -> {
             ArrayList<String> offerIds = new ArrayList<>();
             ArrayList<String> nodes = new ArrayList<>();
             ArrayList<PaymentAccountFilter> paymentAccountFilters = new ArrayList<>();
 
             if (!offerIdsInputTextField.getText().isEmpty())
-                offerIds = new ArrayList<>(Arrays.asList(offerIdsInputTextField.getText().replace(" ", "").replace(", ", ",").split(",")));
+                offerIds = new ArrayList<>(Arrays.asList(offerIdsInputTextField.getText().replace(" ", "")
+                        .replace(", ", ",")
+                        .split(",")));
             if (!nodesInputTextField.getText().isEmpty())
-                nodes = new ArrayList<>(Arrays.asList(nodesInputTextField.getText().replace(":9999", "").replace(".onion", "").replace(" ", "").replace(", ", ",").split(",")));
+                nodes = new ArrayList<>(Arrays.asList(nodesInputTextField.getText().replace(":9999", "")
+                        .replace(".onion", "")
+                        .replace(" ", "")
+                        .replace(", ", ",")
+                        .split(",")));
             if (!paymentAccountFilterInputTextField.getText().isEmpty())
-                paymentAccountFilters = new ArrayList<>(Arrays.asList(paymentAccountFilterInputTextField.getText().replace(", ", ",").split(","))
+                paymentAccountFilters = new ArrayList<>(Arrays.asList(paymentAccountFilterInputTextField.getText()
+                        .replace(", ", ",")
+                        .split(","))
                         .stream().map(item -> {
                             String[] list = item.split("\\|");
                             if (list.length == 3)
@@ -159,23 +167,23 @@ public class FilterWindow extends Overlay<FilterWindow> {
             if (sendFilterMessageHandler.handle(new Filter(offerIds, nodes, paymentAccountFilters), keyInputTextField.getText()))
                 hide();
             else
-                new Popup().warning("The key you entered was not correct.").width(300).onClose(() -> blurAgain()).show();
+                new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
         });
 
-        Button removeFilterMessageButton = new Button("Remove filter");
+        Button removeFilterMessageButton = new Button(Res.get("filterWindow.remove"));
         removeFilterMessageButton.setOnAction(e -> {
             if (keyInputTextField.getText().length() > 0) {
                 if (removeFilterMessageHandler.handle(keyInputTextField.getText()))
                     hide();
                 else
-                    new Popup().warning("The key you entered was not correct.").width(300).onClose(() -> blurAgain()).show();
+                    new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 
         closeButton = new Button(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
             hide();
-            closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
+            closeHandlerOptional.ifPresent(Runnable::run);
         });
 
         HBox hBox = new HBox();
@@ -186,6 +194,4 @@ public class FilterWindow extends Overlay<FilterWindow> {
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
     }
-
-
 }

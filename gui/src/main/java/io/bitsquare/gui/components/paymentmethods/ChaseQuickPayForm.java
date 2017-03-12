@@ -92,7 +92,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addLabelTextField(gridPane, gridRow, "Account name:", chaseQuickPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", Res.get(chaseQuickPayAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(chaseQuickPayAccount.getPaymentMethod().getId()));
         addLabelTextField(gridPane, ++gridRow, "Account holder name:", chaseQuickPayAccount.getHolderName());
         TextField field = addLabelTextField(gridPane, ++gridRow, "Email:", chaseQuickPayAccount.getEmail()).second;
         field.setMouseTransparent(false);
