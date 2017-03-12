@@ -9,15 +9,19 @@
         <key>CFBundleAllowMixedLocalizations</key>
         <true/>
         <key>CFBundleExecutable</key>
-        <string>Bitsquare</string>
+        <string>bisq</string>
         <key>CFBundleIconFile</key>
-        <string>package/mac/Bitsquare.icns</string>
+        <string>package/mac/bisq.icns</string>
         <key>CFBundleIdentifier</key>
+        
+        <!-- Do not change here yes as we have registered io.bitsquare.Bitsquare with the signing key
+         Change as soon the new ID is registered at Apple. -->
         <string>io.bitsquare.Bitsquare</string>
+        
         <key>CFBundleInfoDictionaryVersion</key>
         <string>6.0</string>
         <key>CFBundleName</key>
-        <string>Bitsquare</string>
+        <string>bisq</string>
         <key>CFBundlePackageType</key>
         <string>APPL</string>
         <key>CFBundleShortVersionString</key>

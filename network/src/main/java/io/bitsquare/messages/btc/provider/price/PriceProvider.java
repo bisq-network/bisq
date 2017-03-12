@@ -26,7 +26,7 @@ public class PriceProvider extends HttpClientProvider {
 
     public Tuple2<Map<String, Long>, Map<String, MarketPrice>> getAll() throws IOException, HttpException {
         Map<String, MarketPrice> marketPriceMap = new HashMap<>();
-        String json = httpClient.requestWithGET("getAllMarketPrices", "User-Agent", "Bitsquare/" + Version.VERSION + ", uid:" + httpClient.getUid());
+        String json = httpClient.requestWithGET("getAllMarketPrices", "User-Agent", "bisq/" + Version.VERSION + ", uid:" + httpClient.getUid());
         LinkedTreeMap<String, Object> map = new Gson().fromJson(json, LinkedTreeMap.class);
         Map<String, Long> tsMap = new HashMap<>();
         tsMap.put("btcAverageTs", ((Double) map.get("btcAverageTs")).longValue());

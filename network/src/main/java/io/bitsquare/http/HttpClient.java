@@ -96,7 +96,7 @@ public class HttpClient {
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(10_000);
             connection.setReadTimeout(10_000);
-            connection.setRequestProperty("User-Agent", "Bitsquare/" + Version.VERSION);
+            connection.setRequestProperty("User-Agent", "bisq/" + Version.VERSION);
             if (headerKey != null && headerValue != null)
                 connection.setRequestProperty(headerKey, headerValue);
 

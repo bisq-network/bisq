@@ -1,16 +1,16 @@
 # Running a seed node as a daemon
 
-This document presents some steps to be able to run a Bitsquare seed node as
+This document presents some steps to be able to run a bisq seed node as
 an unattended daemon in a GNU/Linux server with a traditional System V init.
 
 ## Before you start
 
-We assume that you have already configured a Bitsquare seed node to run in a
+We assume that you have already configured a bisq seed node to run in a
 computer.  You will need to upload the seed node code and configuration to the
 server:
 
   - The code is contained in the ``SeedNode.jar`` file which is usually left
-    under ``seednode/target`` after building Bitsquare.
+    under ``seednode/target`` after building bisq.
   - The seed node configuration is the ``Bitsquare_seed_node_HOST_PORT``
     directory under ``~/.local/share`` (Unix), ``%APPDATA%`` (Windows) or
     ``~/Library/Application Support`` (Mac OS X).
@@ -25,7 +25,7 @@ other users to access its files, for instance:
     # chmod go-rwx ~bsqsn
 
 Place the jar file where the ``bsqsn`` user can read it and tag it with
-Bitsquare's version number (to allow running several instances of mutually
+bisq's version number (to allow running several instances of mutually
 incompatible versions), e.g. ``~bsqsn/SeedNode-VERSION.jar``.  Copy the
 configuration directory to the ``~bsqsb/.local/share``  directory.
 

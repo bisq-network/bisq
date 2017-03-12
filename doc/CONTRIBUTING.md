@@ -1,4 +1,4 @@
-Contributing to Bitsquare
+Contributing to bisq
 ============================
 
 Pull requests
@@ -25,4 +25,4 @@ Copyright
 ---------
 
 By contributing to this repository, you agree to license your work under the AGPL license. 
-Please include the Bitsquare license header into your files.
+Please include the bisq license header into your files.

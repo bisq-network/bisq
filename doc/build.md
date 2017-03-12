@@ -1,16 +1,16 @@
 ﻿Building From Source
 ====================
 
-This guide will walk you through the process of building Bitsquare from source.
+This guide will walk you through the process of building bisq from source.
 
 > _**NOTE:** For most users, building from source is not necessary. See the [releases page](https://github.com/bitsquare/bitsquare/releases), where you'll find installers for Windows, Linux and Mac OS X._
 
-There is an install script (2 parts) for setup (JDK, git, maven, Bitcoinj, Bitsquare) on Linux in that directory (install_on_unix.sh, install_on_unix_fin.sh).
+There is an install script (2 parts) for setup (JDK, git, maven, Bitcoinj, bisq) on Linux in that directory (install_on_unix.sh, install_on_unix_fin.sh).
 
 System requirements
 -------------
 
-The prerequisite for building Bitsquare is installing the Java Development Kit (JDK), version 8u121 or better (as well as maven and git).
+The prerequisite for building bisq is installing the Java Development Kit (JDK), version 8u121 or better (as well as maven and git).
 In Debian/Ubuntu systems with OpenJDK you'll need OpenJFX as well, i.e. you'll need the `openjfx` package besides the `openjdk-8-jdk` package.
 
     $ sudo apt-get install openjdk-8-jdk maven libopenjfx-java
@@ -110,12 +110,12 @@ TODO: remove if not used in production
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
     
 
-Prepare Bitsquare build
+Prepare bisq build
 -----------------
 
-### 4. Get Bitsquare source code and build a preliminary Bitsquare version
+### 4. Get bisq source code and build a preliminary bisq version
 
-You need to get the Bitsquare dependencies first as we need to copy the BouncyCastle jar to the JRE directory.
+You need to get the bisq dependencies first as we need to copy the BouncyCastle jar to the JRE directory.
 
     $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bitsquare
@@ -124,7 +124,7 @@ You need to get the Bitsquare dependencies first as we need to copy the BouncyCa
 ### 5. Copy the BouncyCastle provider jar file
 
 Copy the BountyCastle provider jar file from the local maven repository to the jre/lib/ext directory.
-This prevents a "JCE cannot authenticate the provider BC" exception when starting the Bitsquare client.
+This prevents a "JCE cannot authenticate the provider BC" exception when starting the bisq client.
 
     $ sudo cp ~/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar $JAVA_HOME/jre/lib/ext/
 
@@ -144,12 +144,12 @@ If you are using Oracle JDK 8 you must **[enable strong cryptographic cyphers](h
 In Windows the new crypto files need to be copied to `Java/jdk1.8.0_xxx/jre/lib/security` AND `Java/jre1.8.0_xxx/jre/lib/security` otherwise the test in the above page will fail.
 
 
-Build Bitsquare
+Build bisq
 -----------------
 
-### 8. Build final Bitsquare jar
+### 8. Build final bisq jar
 
-Now we have all prepared to build the correct Bitsquare jar.
+Now we have all prepared to build the correct bisq jar.
 
     $ mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
@@ -166,18 +166,18 @@ If you want to build the binaries check out the build scripts under the package 
 Development mode
 -----------------
 
-Please check out our wiki for more information about [testing](https://github.com/bitsquare/bitsquare/wiki/Testing-Bitsquare-with-Mainnet)
-and how to use [regtest](https://github.com/bitsquare/bitsquare/wiki/How-to-use-Bitsquare-with-regtest-%28advanced%29)
+Please check out our wiki for more information about [testing](https://github.com/bitsquare/bitsquare/wiki/Testing-bisq-with-Mainnet)
+and how to use [regtest](https://github.com/bitsquare/bitsquare/wiki/How-to-use-bisq-with-regtest-%28advanced%29)
 
 Here are example program arguments for using regtest with localhost environment (not using Tor):
 
     $ java -jar seednode/target/SeedNode.jar --bitcoinNetwork=REGTEST --useLocalhost=true --myAddress=localhost:2002 --nodePort=2002 --appName=Bitsquare_seed_node_localhost_2002
 
-    $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --useLocalhost=true --myAddress=localhost:2222 --nodePort=2222 --appName=Bitsquare-Local-Regtest-Arbitrator
+    $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --useLocalhost=true --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
 
-    $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --useLocalhost=true --myAddress=localhost:3333 --nodePort=3333 --appName=Bitsquare-Local-Regtest-Alice
+    $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --useLocalhost=true --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
 
-    $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --useLocalhost=true --myAddress=localhost:4444 --nodePort=4444 --appName=Bitsquare-Local-Regtest-Bob
+    $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --useLocalhost=true --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
 
 
 Running local seed node with Tor and RegTest
@@ -200,11 +200,11 @@ Here are example program arguments for using regtest and using the Tor network (
 
      $ java -jar seednode/target/SeedNode.jar --bitcoinNetwork=REGTEST --nodePort=8002 --myAddress=ewdkppp3vicnbgqt.onion:8002 --appName=Bitsquare_seed_node_ewdkppp3vicnbgqt.oinion_8002
 
-     $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --myAddress=localhost:2222 --nodePort=2222 --appName=Bitsquare-Local-Regtest-Arbitrator
+     $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
 
-     $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --myAddress=localhost:3333 --nodePort=3333 --appName=Bitsquare-Local-Regtest-Alice
+     $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --myAddress=localhost:3333 --nodePort=3333 --appName=bisq-Local-Regtest-Alice
 
-     $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --myAddress=localhost:4444 --nodePort=4444 --appName=Bitsquare-Local-Regtest-Bob
+     $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --myAddress=localhost:4444 --nodePort=4444 --appName=bisq-Local-Regtest-Bob
 
 
 Problems?

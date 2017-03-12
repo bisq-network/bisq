@@ -235,7 +235,7 @@ public class Node {
                     // get incoming data
                     try {
                         out = prepareOOSForSocket(socket);
-                        // LookAheadObjectInputStream not needed here as the class it not used in Bitsquare (used to test the library)
+                        // LookAheadObjectInputStream not needed here as the class it not used in bisq (used to test the library)
                         objectInputStream = new ObjectInputStream(socket.getInputStream());
                     } catch (EOFException e) {
                         log.debug("Got bogus incoming connection");

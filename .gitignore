@@ -22,7 +22,7 @@ build
 *.java.hsp
 *.~ava
 /bundles
-/Bitsquare*
+/bisq*
 /xchange
 desktop.ini
 *.bat

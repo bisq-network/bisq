@@ -15,17 +15,17 @@ SET outdir=\\VBOXSVR\vm_shared_windows_32bit
 call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -BappVersion="%version%" ^
 -native exe ^
--name Bitsquare ^
--title Bitsquare ^
--vendor Bitsquare ^
+-name bisq ^
+-title bisq ^
+-vendor bisq ^
 -outdir %outdir% ^
 -appclass io.bitsquare.app.BitsquareAppMain ^
--srcfiles %outdir%\Bitsquare.jar ^
+-srcfiles %outdir%\bisq.jar ^
 -srcfiles "core/src/main/resources/bitsquare.policy" ^
--outfile Bitsquare ^
+-outfile bisq ^
 -Bruntime="%JAVA_HOME%\jre" ^
 -BjvmOptions=-Djava.security.manager ^
 -BjvmOptions=-Djava.security.debug=failure ^
 -BjvmOptions=-Djava.security.policy=file:bitsquare.policy ^
--Bicon=package\windows\Bitsquare.ico
+-Bicon=package\windows\bisq.ico
 

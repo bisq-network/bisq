@@ -1,5 +1,5 @@
 #!/bin/sh
-# Restart Bitsquare seed node daemons whose resident memory (RSS)
+# Restart bisq seed node daemons whose resident memory (RSS)
 # is over MAX_RSS_MiB.
 #
 # Scripts in the INITDIR must contain a ``SN_ADDRESS=<host:port>``
@@ -30,7 +30,7 @@ for pidfile in $PIDDIR/*.pid; do
     rss_kib=$(ps -o rss= "$pid")
     test "$rss_kib" || continue
     if [ "$rss_kib" -gt "$max_rss_kib" ]; then
-        echo "Bitsquare seed node $address ($((rss_kib/1024))M) surpassed memory limit of ${MAX_RSS_MiB}M, restarting." >&2
+        echo "bisq seed node $address ($((rss_kib/1024))M) surpassed memory limit of ${MAX_RSS_MiB}M, restarting." >&2
         restart $address
         restarted=y
     fi

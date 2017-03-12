@@ -12,7 +12,7 @@ import java.net.UnknownHostException;
 /**
  * Provides Socks5Proxies for the bitcoin network and http requests
  * <p>
- * By default there is only used the Bitsquare internal Tor proxy, which is used for the P2P network, Btc network
+ * By default there is only used the bisq internal Tor proxy, which is used for the P2P network, Btc network
  * (if Tor for btc is enabled) and http requests (if Tor for http requests is enabled).
  * If the user provides a socks5ProxyHttpAddress it will be used for http requests.
  * If the user provides a socks5ProxyBtcAddress, this will be used for the btc network.

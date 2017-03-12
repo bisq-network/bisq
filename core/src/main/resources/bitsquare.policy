@@ -95,8 +95,8 @@ grant {
 
   /* user data dir for Mac, Linux, Windows */
   permission "java.io.FilePermission" "${user.home}${/}Library${/}Application Support${/}-", "read,write,delete";
-  permission "java.io.FilePermission" "${user.home}${/}.local${/}share${/}Bitsquare-", "read,write,delete";
-  permission "java.io.FilePermission" "${appdata}${/}Bitsquare-", "read,write,delete";
+  permission "java.io.FilePermission" "${user.home}${/}.local${/}share${/}bisq-", "read,write,delete";
+  permission "java.io.FilePermission" "${appdata}${/}bisq-", "read,write,delete";
 
   /* temp dir Mac, Linux, Windows TODO */
   permission "java.io.FilePermission" "/var/folders/-", "read,write,delete";

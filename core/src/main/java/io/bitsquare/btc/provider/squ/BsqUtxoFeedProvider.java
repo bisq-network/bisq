@@ -28,7 +28,7 @@ public class BsqUtxoFeedProvider extends HttpClientProvider {
     }
 
     public Tuple2<Map<String, Long>, BsqUtxoFeedData> getBsqUtxo() throws IOException, HttpException {
-      /*  String json = httpClient.requestWithGET("getBsqUtxo", "User-Agent", "Bitsquare/" + Version.VERSION + ", uid:" + httpClient.getUid());
+      /*  String json = httpClient.requestWithGET("getBsqUtxo", "User-Agent", "bisq/" + Version.VERSION + ", uid:" + httpClient.getUid());
         LinkedTreeMap<String, Object> linkedTreeMap = new Gson().fromJson(json, LinkedTreeMap.class);
         Map<String, Long> tsMap = new HashMap<>();
         tsMap.put("getBsqUtxoTs", ((Double) linkedTreeMap.get("getBsqUtxoTs")).longValue());

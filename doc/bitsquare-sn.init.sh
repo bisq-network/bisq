@@ -9,9 +9,9 @@ fi
 # Required-Stop:     $local_fs $remote_fs $named $network $time
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Bitsquare seed node
+# Short-Description: bisq seed node
 # Description:       This script manages the execution of
-#                    a Bitsquare seed node process using
+#                    a bisq seed node process using
 #                    its own Tor node to provide a hidden service.
 ### END INIT INFO
 
@@ -37,7 +37,7 @@ SN_USER=bsqsn
 # Using a name different than the daemon's base name
 # causes problems when stopping the process.
 #NAME="bitsquare-sn"
-DESC="Bitsquare seed node $SN_ADDRESS"
+DESC="bisq seed node $SN_ADDRESS"
 START_ARGS="--chuid $SN_USER --background --make-pidfile"
 PIDFILE="/var/run/bitsquare-sn/$SN_ADDRESS.pid"
 DAEMON=/usr/bin/java
