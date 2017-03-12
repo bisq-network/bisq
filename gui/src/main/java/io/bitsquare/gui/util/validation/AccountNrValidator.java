@@ -20,6 +20,8 @@ package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.messages.locale.BankUtil;
+import io.bitsquare.locale.BankUtil;
+import io.bitsquare.locale.Res;
 import org.apache.commons.lang3.StringUtils;
 
 public final class AccountNrValidator extends BankValidator {
@@ -37,45 +39,45 @@ public final class AccountNrValidator extends BankValidator {
                 if (isNumberWithFixedLength(input, length))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.accountNr", length));
+                    return new ValidationResult(false, Res.get("validation.accountNr", length));
             case "US":
                 if (isNumberInRange(input, 4, 17))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.accountNr", "4 - 17"));
+                    return new ValidationResult(false, Res.get("validation.accountNr", "4 - 17"));
             case "BR":
                 if (isStringInRange(input, 1, 20))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.accountNrChars", "1 - 20"));
+                    return new ValidationResult(false, Res.get("validation.accountNrChars", "1 - 20"));
             case "NZ":
                 input2 = input != null ? input.replaceAll("-", "") : null;
                 if (isNumberInRange(input2, 15, 16))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, "Account number must be of format: 03-1587-0050000-00");
+                    return new ValidationResult(false, Res.get("validation.accountNrFormat", "03-1587-0050000-00"));
             case "AU":
                 if (isNumberInRange(input, 4, 10))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.accountNr", "4 - 10"));
+                    return new ValidationResult(false, Res.get("validation.accountNr", "4 - 10"));
             case "CA":
                 if (isNumberInRange(input, 7, 12))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.accountNr", "7 - 12"));
+                    return new ValidationResult(false, Res.get("validation.accountNr", "7 - 12"));
             case "MX":
                 length = 18;
                 if (isNumberWithFixedLength(input, length))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.sortCodeNumber", getLabel(), length));
+                    return new ValidationResult(false, Res.get("validation.sortCodeNumber", getLabel(), length));
             case "HK":
                 input2 = input != null ? input.replaceAll("-", "") : null;
                 if (isNumberInRange(input2, 9, 12))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, "Account number must be of format: 005-231289-112");
+                    return new ValidationResult(false, Res.get("validation.accountNrFormat", "005-231289-112"));
             case "NO":
                 if (input != null) {
                     length = 11;
@@ -93,10 +95,10 @@ public final class AccountNrValidator extends BankValidator {
                     input2 = StringUtils.remove(input2, ".");
                     // 11 digits, numbers only
                     if (input2.length() != length || !StringUtils.isNumeric(input2))
-                        return new ValidationResult(false, BSResources.get("validation.sortCodeNumber", getLabel(), length));
+                        return new ValidationResult(false, Res.get("validation.sortCodeNumber", getLabel(), length));
                     int lastDigit = Character.getNumericValue(input2.charAt(input2.length() - 1));
                     if (getMod11ControlDigit(input2) != lastDigit)
-                        return new ValidationResult(false, "Kontonummer har feil sjekksum");
+                        return new ValidationResult(false, "Kontonummer har feil sjekksum"); // not translated
                     else
                         return super.validate(input);
                 } else {

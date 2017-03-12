@@ -31,6 +31,7 @@ import io.bitsquare.gui.main.disputes.trader.TraderDisputeView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.messages.user.Preferences;
 import javafx.beans.value.ChangeListener;
@@ -71,14 +72,13 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         this.arbitratorManager = arbitratorManager;
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
-
-
         this.preferences = preferences;
     }
 
     @Override
     public void initialize() {
         log.debug("initialize ");
+        tradersDisputesTab.setText(Res.get("support.tab.support"));
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DisputesView.class) == 1)
                 loadView(viewPath.tip());
@@ -104,10 +104,10 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
                 .findAny().isPresent();
 
         if (arbitratorsDisputesTab == null && (isActiveArbitrator || hasDisputesAsArbitrator)) {
-            arbitratorsDisputesTab = new Tab("Arbitrator's support tickets");
+            arbitratorsDisputesTab = new Tab(Res.get("support.tab.ArbitratorsSupportTickets"));
             arbitratorsDisputesTab.setClosable(false);
             root.getTabs().add(arbitratorsDisputesTab);
-            tradersDisputesTab.setText("Trader's support tickets");
+            tradersDisputesTab.setText(Res.get("support.tab.TradersSupportTickets"));
         }
     }
 
@@ -127,24 +127,9 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         String key = "supportInfo";
         if (!DevFlags.DEV_MODE)
-            new Popup().backgroundInfo("Bitsquare is not a company and not operating any kind of customer support.\n\n" +
-                    "If there are disputes in the trade process (e.g. one trader does not follow the trade protocol) " +
-                    "the application will display a \"Open dispute\" button after the trade period is over " +
-                    "for contacting the arbitrator.\n" +
-                    "In cases of software bugs or network problems, which are detected by the application there will " +
-                    "be displayed a \"Open support ticket\" button to contact the arbitrator who will forward the issue " +
-                    "to the developers.\n\n" +
-                    "In cases where a user got stuck by a bug without getting displayed that \"Open support ticket\" button, " +
-                    "you can open a support ticket manually with a special short cut.\n\n" +
-                    "Please use that only if you are sure that the software is not working like expected. " +
-                    "If you have problems how to use Bitsquare or any questions please review the FAQ at the " +
-                    "Bitsquare.io web page or contact the Bitsquare team using " +
-                    "any of the communication channels offered " +
-                    "at the Bitsquare.io web page. The Bitsquare forum has a support section as well.\n\n" +
-                    "If you are sure you want to open a support ticket please select the trade which causes the problem " +
-                    "under \"Portfolio/Open trades\" and type the key combination \"cmd + o\" or \"crtl + o\" to open " +
-                    "the support ticket.")
-                    .actionButtonText("Go to \"Open trades\"")
+            new Popup().backgroundInfo(Res.get("support.backgroundInfo"))
+                    .width(900)
+                    .actionButtonTextWithGoTo("navigation.portfolio.pending")
                     .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class))
                     .dontShowAgainId(key, preferences)
                     .show();

@@ -27,6 +27,8 @@ import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.messages.user.Preferences;
+import io.bitsquare.locale.Res;
+import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -70,10 +72,11 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         dataDir = new File(environment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
     }
 
+
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 1, "Backup wallet and data directory");
-        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(root, gridRow, "Backup location:", Layout.FIRST_ROW_DISTANCE);
+        addTitledGroupBg(root, gridRow, 1, Res.get("account.backup.title"));
+        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(root, gridRow, Res.get("account.backup.location"), Layout.FIRST_ROW_DISTANCE);
         backUpLocationTextField = tuple.second;
         String backupDirectory = preferences.getBackupDirectory();
         if (backupDirectory != null)
@@ -84,13 +87,13 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                 applyBackupDirectory(backUpLocationTextField.getText());
         };
 
-        Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, "Select backup location", "Backup now (backup is not encrypted!)");
+        Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, Res.get("account.backup.backupNow"), Res.get("account.backup.openAppDir"));
         selectBackupDir = tuple2.first;
         backupNow = tuple2.second;
         updateButtons();
 
-        addTitledGroupBg(root, ++gridRow, 1, "Open data directory", Layout.GROUP_DISTANCE);
-        openDataDir = addLabelButton(root, gridRow, "Application data directory:", "Open directory", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        addTitledGroupBg(root, ++gridRow, 1, Res.get("account.backup.selectLocation"), Layout.GROUP_DISTANCE);
+        openDataDir = addLabelButton(root, gridRow, Res.get("account.backup.appDir"), Res.get("account.backup.openDirectory"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         openDataDir.setDefaultButton(false);
     }
 
@@ -105,7 +108,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
             }
             DirectoryChooser directoryChooser = new DirectoryChooser();
             directoryChooser.setInitialDirectory(new File(path));
-            directoryChooser.setTitle("Select backup location");
+            directoryChooser.setTitle(Res.get("account.backup.selectLocation"));
             try {
                 File dir = directoryChooser.showDialog(stage);
                 if (dir != null) {
@@ -133,7 +136,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                     String destination = Paths.get(backupDirectory, "bitsquare_backup_" + dateString).toString();
                     FileUtils.copyDirectory(dataDir,
                             new File(destination));
-                    new Popup().feedback("Backup successfully saved at:\n" + destination).show();
+                    new Popup().feedback(Res.get("account.backup.success", destination)).show();
                 } catch (IOException e) {
                     e.printStackTrace();
                     log.error(e.getMessage());
@@ -159,8 +162,8 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     }
 
     private void showWrongPathWarningAndReset(@Nullable Throwable t) {
-        String error = t != null ? "\nError message: " + t.getMessage() : "";
-        new Popup<>().warning("The directory you have chosen is not accessible." + error).show();
+        String error = t != null ? Res.get("shared.errorMessageInline", t.getMessage()) : "";
+        new Popup<>().warning(Res.get("account.backup.directoryNotAccessible", error)).show();
         applyBackupDirectory(Utilities.getSystemHomeDirectory());
     }
 

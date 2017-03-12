@@ -24,7 +24,7 @@ import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.messages.payment.PaymentMethod;
 import io.bitsquare.messages.trade.payload.Contract;
@@ -223,7 +223,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         String result = "";
         if (item != null) {
             Offer offer = item.getTrade().getOffer();
-            String method = BSResources.get(offer.getPaymentMethod().getId() + "_SHORT");
+            String method = Res.get(offer.getPaymentMethod().getId() + "_SHORT");
             String methodCountryCode = offer.getCountryCode();
 
             if (methodCountryCode != null)
@@ -248,7 +248,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public String getPaymentMethod() {
         if (dataModel.getTrade() != null && dataModel.getTrade().getContract() != null)
-            return BSResources.get(dataModel.getTrade().getContract().getPaymentMethodName());
+            return Res.get(dataModel.getTrade().getContract().getPaymentMethodName());
         else
             return "";
     }

@@ -17,6 +17,7 @@
 
 package io.bitsquare.dao.vote;
 
+import io.bitsquare.locale.Res;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,7 @@ public class VotingDefaultValues {
     public static final long MAX_BTC_AMOUNT_COMPENSATION_REQUEST_AT_GENESIS = 2_000_000_000; // 20 btc
 
     public static final long CONVERSION_RATE_AT_GENESIS = 1000; //0.000001; // how many btc you get for 1 squ (e.g. 1 000 000 squ = 1 btc)
-    public static final String ERROR_MSG_INVALID_VALUE = "Range for change can be 0 to 254. 255 is not supported as we want a 0 value in the middle. Received value=";
+    public static final String ERROR_MSG_INVALID_VALUE = Res.get("dao.voting.error.invalidValue");
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

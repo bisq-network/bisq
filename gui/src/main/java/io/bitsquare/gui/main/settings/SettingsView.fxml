@@ -24,21 +24,21 @@
          AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
          xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="preferencesTab" text="Settings" closable="false">
+    <Tab fx:id="preferencesTab" closable="false">
         <content>
             <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
                         AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                         AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
         </content>
     </Tab>
-    <Tab fx:id="networkSettingsTab" text="Network info" closable="false">
+    <Tab fx:id="networkTab" closable="false">
         <content>
             <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
                         AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                         AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
         </content>
     </Tab>
-    <Tab fx:id="aboutTab" text="About" closable="false">
+    <Tab fx:id="aboutTab" closable="false">
         <content>
             <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
                         AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"

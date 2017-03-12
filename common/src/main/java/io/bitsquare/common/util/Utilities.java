@@ -428,6 +428,10 @@ public class Utilities {
         return Utilities.isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home");
     }
 
+    public static double getFeePerByte(Coin miningFee, int txSize) {
+        return Utilities.getFeePerByte(miningFee, txSize);
+    }
+
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {
         @Override
         public boolean shouldSkipField(FieldAttributes f) {

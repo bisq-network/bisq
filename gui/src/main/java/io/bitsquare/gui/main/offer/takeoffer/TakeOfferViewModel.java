@@ -30,7 +30,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.p2p.network.CloseConnectionReason;
 import io.bitsquare.p2p.network.Connection;
@@ -54,9 +54,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     final TakeOfferDataModel dataModel;
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
-    private PriceFeedService priceFeedService;
     private final Navigation navigation;
-    final BSFormatter formatter;
+    private final BSFormatter formatter;
 
     private String amountRange;
     private String paymentLabel;
@@ -105,14 +104,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TakeOfferViewModel(TakeOfferDataModel dataModel, BtcValidator btcValidator, P2PService p2PService, PriceFeedService priceFeedService,
+    public TakeOfferViewModel(TakeOfferDataModel dataModel, BtcValidator btcValidator, P2PService p2PService, 
                               Navigation navigation, BSFormatter formatter) {
         super(dataModel);
         this.dataModel = dataModel;
 
         this.btcValidator = btcValidator;
         this.p2PService = p2PService;
-        this.priceFeedService = priceFeedService;
         this.navigation = navigation;
         this.formatter = formatter;
 
@@ -156,17 +154,17 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         this.offer = offer;
 
         if (offer.getDirection() == Offer.Direction.BUY) {
-            directionLabel = BSResources.get("shared.sellBitcoin");
-            amountDescription = BSResources.get("takeOffer.amountPriceBox.buy.amountDescription");
+            directionLabel = Res.get("shared.sellBitcoin");
+            amountDescription = Res.get("takeOffer.amountPriceBox.buy.amountDescription");
         } else {
-            directionLabel = BSResources.get("shared.buyBitcoin");
-            amountDescription = BSResources.get("takeOffer.amountPriceBox.sell.amountDescription");
+            directionLabel = Res.get("shared.buyBitcoin");
+            amountDescription = Res.get("takeOffer.amountPriceBox.sell.amountDescription");
         }
 
         amountRange = formatter.formatCoin(offer.getMinAmount()) + " - " + formatter.formatCoin(offer.getAmount());
         price = formatter.formatPrice(dataModel.tradePrice);
         marketPriceMargin = formatter.formatPercentagePrice(offer.getMarketPriceMargin());
-        paymentLabel = BSResources.get("takeOffer.fundsBox.paymentLabel", offer.getShortId());
+        paymentLabel = Res.get("takeOffer.fundsBox.paymentLabel", offer.getShortId());
 
         checkNotNull(dataModel.getAddressEntry(), "dataModel.getAddressEntry() must not be null");
 
@@ -220,12 +218,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             updateButtonDisableState();
             return true;
         } else {
-            new Popup().warning("You don't have enough funds in your Bitsquare wallet.\n" +
-                    "You need " + formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()) + " but you have only " +
-                    formatter.formatCoinWithCode(dataModel.totalAvailableBalance) + " in your Bitsquare wallet.\n\n" +
-                    "Please fund that trade from an external Bitcoin wallet or fund your Bitsquare " +
-                    "wallet at \"Funds/Depost funds\".")
-                    .actionButtonText("Go to \"Funds/Depost funds\"")
+            new Popup().warning(Res.get("shared.notEnoughFunds",
+                    formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
+                    formatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
+                    .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
             return false;
@@ -254,15 +250,15 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
                 if (!dataModel.isMinAmountLessOrEqualAmount())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
-                            BSResources.get("takeOffer.validation.amountSmallerThanMinAmount")));
+                            Res.get("takeOffer.validation.amountSmallerThanMinAmount")));
 
                 if (dataModel.isAmountLargerThanOfferAmount())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
-                            BSResources.get("takeOffer.validation.amountLargerThanOfferAmount")));
+                            Res.get("takeOffer.validation.amountLargerThanOfferAmount")));
 
                 if (dataModel.wouldCreateDustForOfferer())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
-                            BSResources.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
+                            Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
             }
         }
     }
@@ -292,23 +288,22 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 break;
             case NOT_AVAILABLE:
                 if (takeOfferRequested)
-                    offerWarning.set("Take offer request failed because the offer is not available anymore. " +
-                            "Maybe another trader has taken the offer in the meantime.");
+                    offerWarning.set(Res.get("takeOffer.failed.offerNotAvailable"));
                 else
-                    offerWarning.set("You cannot take that offer because the offer was already taken by another trader.");
+                    offerWarning.set(Res.get("takeOffer.failed.offerTaken"));
                 takeOfferRequested = false;
                 break;
             case REMOVED:
                 if (!takeOfferRequested)
-                    offerWarning.set("You cannot take that offer because the offer has been removed in the meantime.");
+                    offerWarning.set(Res.get("takeOffer.failed.offerRemoved"));
 
                 takeOfferRequested = false;
                 break;
             case OFFERER_OFFLINE:
                 if (takeOfferRequested)
-                    offerWarning.set("Take offer request failed because offerer is not online anymore.");
+                    offerWarning.set(Res.get("takeOffer.failed.offererNotOnline"));
                 else
-                    offerWarning.set("You cannot take that offer because the offerer is offline.");
+                    offerWarning.set(Res.get("takeOffer.failed.offererOffline"));
                 takeOfferRequested = false;
                 break;
             default:
@@ -326,31 +321,22 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             String appendMsg = "";
             switch (trade.getState().getPhase()) {
                 case PREPARATION:
-                    appendMsg = "\n\nNo funds have left your wallet yet.\n" +
-                            "Please try to restart you application and check your network connection to see if you can resolve the issue.";
+                    appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;
                 case TAKER_FEE_PAID:
-                    appendMsg = "\n\nThe trading fee is already paid. In the worst case you have lost that fee. " +
-                            "We are sorry about that but keep in mind it is a very small amount.\n" +
-                            "Please try to restart you application and check your network connection to see if you can resolve the issue.";
+                    appendMsg = Res.get("takeOffer.error.feePaid");
                     break;
                 case DEPOSIT_PAID:
                 case FIAT_SENT:
                 case FIAT_RECEIVED:
-                    appendMsg = "\n\nThe deposit transaction is already published.\n" +
-                            "Please try to restart you application and check your network connection to see if you can resolve the issue.\n" +
-                            "If the problem still remains please contact the developers for support.";
+                    appendMsg = Res.get("takeOffer.error.depositPublished");
                     break;
                 case PAYOUT_PAID:
                 case WITHDRAWN:
-                    appendMsg = "\n\nThe payout transaction is already published.\n" +
-                            "Please try to restart you application and check your network connection to see if you can resolve the issue.\n" +
-                            "If the problem still remains please contact the developers for support.";
+                    appendMsg = Res.get("takeOffer.error.payoutPublished");
                     break;
                 case DISPUTE:
-                    appendMsg = "\n\nThe trade is handled already by an arbitrator.\n" +
-                            "Please try to restart you application and check your network connection to see if you can resolve the issue.\n" +
-                            "If the problem still remains please contact the arbitrator or the developers for support.";
+                    appendMsg = Res.get("takeOffer.error.disputed");
                     break;
             }
             this.errorMessage.set(errorMessage + appendMsg);
@@ -404,9 +390,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         volume.bind(createStringBinding(() -> formatter.formatVolume(dataModel.volumeAsFiat.get()), dataModel.volumeAsFiat));
 
         if (dataModel.getDirection() == Offer.Direction.SELL) {
-            volumeDescriptionLabel.set(BSResources.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
+            volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
         } else {
-            volumeDescriptionLabel.set(BSResources.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));
+            volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));
         }
         totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()), dataModel.totalToPayAsCoin));
         btcCode.bind(dataModel.btcCode);
@@ -430,9 +416,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             updateButtonDisableState();
         };
         amountAsCoinListener = (ov, oldValue, newValue) -> amount.set(formatter.formatCoin(newValue));
-        isWalletFundedListener = (ov, oldValue, newValue) -> {
-            updateButtonDisableState();
-        };
+        isWalletFundedListener = (ov, oldValue, newValue) -> updateButtonDisableState();
 
         tradeStateListener = (ov, oldValue, newValue) -> applyTradeState(newValue);
         tradeErrorListener = (ov, oldValue, newValue) -> applyTradeErrorMessage(newValue);
@@ -442,10 +426,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 if (connection.getPeersNodeAddressOptional().isPresent() &&
                         connection.getPeersNodeAddressOptional().get().equals(offer.getOffererNodeAddress())) {
-                    offerWarning.set("You lost connection to the offerer.\n" +
-                            "He might have gone offline or has closed the connection to you because of too " +
-                            "many open connections.\n\n" +
-                            "If you can still see his offer in the offerbook you can try to take the offer again.");
+                    offerWarning.set(Res.get("takeOffer.warning.connectionToPeerLost"));
                     updateSpinnerInfo();
                 }
             }
@@ -474,7 +455,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 spinnerInfoText.set("Check if funding tx miner fee is sufficient...");
             }*/
         } else {
-            spinnerInfoText.set("Waiting for funds...");
+            spinnerInfoText.set(Res.get("shared.waitingForFunds"));
         }
 
         isWaitingForFunds.set(!spinnerInfoText.get().isEmpty());

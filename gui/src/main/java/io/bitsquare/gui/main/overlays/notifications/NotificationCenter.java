@@ -10,6 +10,7 @@ import io.bitsquare.gui.main.disputes.DisputesView;
 import io.bitsquare.gui.main.disputes.trader.TraderDisputeView;
 import io.bitsquare.gui.main.portfolio.PortfolioView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
 import io.bitsquare.messages.user.Preferences;
@@ -147,27 +148,25 @@ public class NotificationCenter {
     private void onTradeStateChanged(Trade trade, Trade.State tradeState) {
         Log.traceCall(tradeState.toString());
         String message = null;
-
         if (tradeState == Trade.State.PAYOUT_BROAD_CASTED) {
-            message = "The trade is now completed and you can withdraw your funds.";
+            message = Res.get("notification.trade.completed");
         } else {
             if (tradeManager.isBuyer(trade.getOffer())) {
                 switch (tradeState) {
                     case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
-                        message = "Your offer has been accepted by a BTC seller.";
+                        message = Res.get("notification.trade.accepted", Res.get("shared.seller"));
                         break;
                     case DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN:
-                        message = "Your trade has at least one blockchain confirmation.\n" +
-                                "You can start the payment now.";
+                        message = Res.get("notification.trade.confirmed");
                         break;
                 }
             } else {
                 switch (tradeState) {
                     case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
-                        message = "Your offer has been accepted by a BTC buyer.";
+                        message = Res.get("notification.trade.accepted", Res.get("shared.buyer"));
                         break;
                     case SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG:
-                        message = "The BTC buyer has started the payment.";
+                        message = Res.get("notification.trade.paymentStarted");
                         break;
                 }
             }
@@ -178,7 +177,7 @@ public class NotificationCenter {
             if (preferences.showAgain(key)) {
                 Notification notification = new Notification().tradeHeadLine(trade.getShortId()).message(message);
                 if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(PendingTradesView.class)) {
-                    notification.actionButtonText("Go to \"Open trades\"")
+                    notification.actionButtonTextWithGoTo("navigation.portfolio.pending")
                             .onAction(() -> {
                                 preferences.dontShowAgain(key, true);
                                 navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
@@ -188,7 +187,7 @@ public class NotificationCenter {
                             .onClose(() -> preferences.dontShowAgain(key, true))
                             .show();
                 } else if (selectedTradeId != null && !trade.getId().equals(selectedTradeId)) {
-                    notification.actionButtonText("Select trade")
+                    notification.actionButtonText(Res.get("notification.trade.selectTrade"))
                             .onAction(() -> {
                                 preferences.dontShowAgain(key, true);
                                 if (selectItemByTradeIdConsumer != null)
@@ -205,23 +204,25 @@ public class NotificationCenter {
         Log.traceCall(disputeState.toString());
         String message = null;
         if (disputeManager.findOwnDispute(trade.getId()).isPresent()) {
-            boolean supportTicket = disputeManager.findOwnDispute(trade.getId()).get().isSupportTicket();
+            String disputeOrTicket = disputeManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
+                    Res.get("shared.supportTicket") :
+                    Res.get("shared.dispute");
             switch (disputeState) {
                 case NONE:
                     break;
                 case DISPUTE_REQUESTED:
                     break;
                 case DISPUTE_STARTED_BY_PEER:
-                    message = supportTicket ? "Your trading peer has opened a support ticket." : "Your trading peer has requested a dispute.";
+                    message = Res.get("notification.trade.peerOpenedDispute", disputeOrTicket);
                     break;
                 case DISPUTE_CLOSED:
-                    message = supportTicket ? "The support ticket hase been closed." : "The dispute has been closed.";
+                    message = Res.get("notification.trade.disputeClosed", disputeOrTicket);
                     break;
             }
             if (message != null) {
                 Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
                 if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TraderDisputeView.class)) {
-                    notification.actionButtonText("Go to \"Support\"")
+                    notification.actionButtonTextWithGoTo("navigation.support")
                             .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class))
                             .show();
                 } else {

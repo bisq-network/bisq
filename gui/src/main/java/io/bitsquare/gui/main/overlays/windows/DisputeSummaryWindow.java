@@ -252,32 +252,32 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void addInfoPane() {
         Contract contract = dispute.getContract();
-        addTitledGroupBg(gridPane, ++rowIndex, 16, "Summary");
-        addLabelTextField(gridPane, rowIndex, "Trade ID:", dispute.getShortTradeId(), Layout.FIRST_ROW_DISTANCE);
-        addLabelTextField(gridPane, ++rowIndex, "Ticket opening date:", formatter.formatDateTime(dispute.getOpeningDate()));
+        addTitledGroupBg(gridPane, ++rowIndex, 16, Res.get("disputeSummaryWindow.title"));
+        addLabelTextField(gridPane, rowIndex, Res.getWithCol("shared.tradeId"), dispute.getShortTradeId(), Layout.FIRST_ROW_DISTANCE);
+        addLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), formatter.formatDateTime(dispute.getOpeningDate()));
         if (dispute.isDisputeOpenerIsOfferer()) {
             if (dispute.isDisputeOpenerIsBuyer())
-                role = "BTC Buyer/offerer";
+                role = Res.get("support.buyerOfferer");
             else
-                role = "BTC Seller/offerer";
+                role = Res.get("support.sellerOfferer");
         } else {
             if (dispute.isDisputeOpenerIsBuyer())
-                role = "BTC Buyer/taker";
+                role = Res.get("support.buyerTaker");
             else
-                role = "BTC Seller/taker";
+                role = Res.get("support.sellerTaker");
         }
-        addLabelTextField(gridPane, ++rowIndex, "Trader's role:", role);
-        addLabelTextField(gridPane, ++rowIndex, "Trade amount:", formatter.formatCoinWithCode(contract.getTradeAmount()));
-        addLabelTextField(gridPane, ++rowIndex, "Trade price:", formatter.formatPrice(contract.getTradePrice()));
-        addLabelTextField(gridPane, ++rowIndex, "Trade volume:", formatter.formatVolumeWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
+        addLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.role"), role);
+        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeAmount"), formatter.formatCoinWithCode(contract.getTradeAmount()));
+        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradePrice"), formatter.formatPrice(contract.getTradePrice()));
+        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeVolume"), formatter.formatVolumeWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
     }
 
     private void addCheckboxes() {
-        Label evidenceLabel = addLabel(gridPane, ++rowIndex, "Evidence:", 10);
+        Label evidenceLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.evidence"), 10);
         GridPane.setValignment(evidenceLabel, VPos.TOP);
-        CheckBox tamperProofCheckBox = new CheckBox("Tamper proof evidence");
-        CheckBox idVerificationCheckBox = new CheckBox("ID Verification");
-        CheckBox screenCastCheckBox = new CheckBox("Video/Screencast");
+        CheckBox tamperProofCheckBox = new CheckBox(Res.get("disputeSummaryWindow.evidence.tamperProof"));
+        CheckBox idVerificationCheckBox = new CheckBox(Res.get("disputeSummaryWindow.evidence.id"));
+        CheckBox screenCastCheckBox = new CheckBox(Res.get("disputeSummaryWindow.evidence.video"));
 
         tamperProofCheckBox.selectedProperty().bindBidirectional(disputeResult.tamperProofEvidenceProperty());
         idVerificationCheckBox.selectedProperty().bindBidirectional(disputeResult.idVerificationProperty());
@@ -294,13 +294,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addTradeAmountPayoutControls() {
-        Label distributionLabel = addLabel(gridPane, ++rowIndex, "Trade amount payout:", 10);
+        Label distributionLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), 10);
         GridPane.setValignment(distributionLabel, VPos.TOP);
 
-        buyerIsWinnerRadioButton = new RadioButton("BTC buyer gets trade amount payout");
-        sellerIsWinnerRadioButton = new RadioButton("BTC seller gets trade amount payout");
-        shareRadioButton = new RadioButton("Both gets half trade amount payout");
-        customRadioButton = new RadioButton("Custom payout");
+        buyerIsWinnerRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.buyerWinner"));
+        sellerIsWinnerRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.sellerWinner"));
+        shareRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.both"));
+        customRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.custom"));
         VBox radioButtonPane = new VBox();
         radioButtonPane.setSpacing(10);
         radioButtonPane.getChildren().addAll(buyerIsWinnerRadioButton, sellerIsWinnerRadioButton, shareRadioButton, customRadioButton);
@@ -314,7 +314,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         sellerIsWinnerRadioButton.setToggleGroup(tradeAmountToggleGroup);
         shareRadioButton.setToggleGroup(tradeAmountToggleGroup);
         customRadioButton.setToggleGroup(tradeAmountToggleGroup);
-
         shareRadioButtonSelectedListener = (observable, oldValue, newValue) -> {
             if (newValue) {
                 loserPaysFeeRadioButton.setSelected(false);
@@ -390,8 +389,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin totalAmount = buyerAmount.add(sellerAmount).add(arbitratorAmount);
 
         if (totalAmount.compareTo(available) > 0) {
-            new Popup<>().warning("Amount entered exceeds available amount of " + available.toFriendlyString() + ".\n" +
-                    "We adjust this input field to the max possible value.")
+            new Popup<>().warning(Res.get("disputeSummaryWindow.payout.adjustAmount", available.toFriendlyString()))
                     .show();
 
             if (inputTextField == buyerPayoutAmountInputTextField) {
@@ -419,12 +417,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addFeeControls() {
-        Label splitFeeLabel = addLabel(gridPane, ++rowIndex, "Arbitration fee:", 10);
+        Label splitFeeLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.arbitrationFee"), 10);
         GridPane.setValignment(splitFeeLabel, VPos.TOP);
 
-        loserPaysFeeRadioButton = new RadioButton("Loser pays arbitration fee");
-        splitFeeRadioButton = new RadioButton("Split arbitration fee");
-        waiveFeeRadioButton = new RadioButton("Waive arbitration fee");
+        loserPaysFeeRadioButton = new RadioButton(Res.get("disputeSummaryWindow.arbitrationFee.looserPay"));
+        splitFeeRadioButton = new RadioButton(Res.get("disputeSummaryWindow.split"));
+        waiveFeeRadioButton = new RadioButton(Res.get("disputeSummaryWindow.arbitrationFee.waive"));
         HBox feeRadioButtonPane = new HBox();
         feeRadioButtonPane.setSpacing(20);
         feeRadioButtonPane.getChildren().addAll(loserPaysFeeRadioButton, splitFeeRadioButton, waiveFeeRadioButton);
@@ -453,16 +451,20 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addPayoutAmountTextFields() {
-        buyerPayoutAmountInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Buyer's payout amount:").second;
+        buyerPayoutAmountInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("disputeSummaryWindow.payoutAmount.buyer")).second;
         buyerPayoutAmountInputTextField.setEditable(false);
 
-        sellerPayoutAmountInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Seller's payout amount:").second;
+        sellerPayoutAmountInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("disputeSummaryWindow.payoutAmount.seller")).second;
         sellerPayoutAmountInputTextField.setEditable(false);
 
-        arbitratorPayoutAmountInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Arbitrator's payout amount:").second;
+        arbitratorPayoutAmountInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("disputeSummaryWindow.payoutAmount.arbitrator")).second;
         arbitratorPayoutAmountInputTextField.setEditable(false);
 
-        isLoserPublisherCheckBox = addLabelCheckBox(gridPane, ++rowIndex, "Use loser as publisher:").second;
+        isLoserPublisherCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("disputeSummaryWindow.payoutAmount.invert")).second;
     }
 
     private void setFeeRadioButtonState() {
@@ -480,15 +482,15 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addReasonControls() {
-        Label label = addLabel(gridPane, ++rowIndex, "Reason of dispute:", 10);
+        Label label = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.reason"), 10);
         GridPane.setValignment(label, VPos.TOP);
-
-        reasonWasBugRadioButton = new RadioButton("Bug");
-        reasonWasUsabilityIssueRadioButton = new RadioButton("Usability");
-        reasonProtocolViolationRadioButton = new RadioButton("Protocol violation");
-        reasonNoReplyRadioButton = new RadioButton("No reply");
-        reasonWasScamRadioButton = new RadioButton("Scam");
-        reasonWasOtherRadioButton = new RadioButton("Other");
+        reasonWasBugRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.bug"));
+        reasonWasUsabilityIssueRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.usability"));
+        reasonProtocolViolationRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.protocolViolation"));
+        reasonNoReplyRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.noReply"));
+        reasonWasScamRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.scam"));
+        reasonWasOtherRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.other"));
+        //TODO add banks as reason
 
         HBox feeRadioButtonPane = new HBox();
         feeRadioButtonPane.setSpacing(20);
@@ -551,11 +553,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addSummaryNotes() {
-        Label label = addLabel(gridPane, ++rowIndex, "Summary notes:", 0);
+        Label label = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.summaryNotes"), 0);
         GridPane.setValignment(label, VPos.TOP);
 
         summaryNotesTextArea = new TextArea();
-        summaryNotesTextArea.setPromptText("Add summary notes");
+        summaryNotesTextArea.setPromptText(Res.get("disputeSummaryWindow.addSummaryNotes"));
         summaryNotesTextArea.setWrapText(true);
         summaryNotesTextArea.setPrefHeight(50);
         summaryNotesTextArea.textProperty().bindBidirectional(disputeResult.summaryNotesProperty());
@@ -565,7 +567,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addButtons(Contract contract) {
-        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++rowIndex, "Close ticket", "Cancel");
+        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++rowIndex,
+                Res.get("disputeSummaryWindow.close.button"),
+                Res.get("shared.cancel"));
         Button closeTicketButton = tuple.first;
         closeTicketButton.disableProperty().bind(Bindings.createBooleanBinding(
                 () -> tradeAmountToggleGroup.getSelectedToggle() == null
@@ -619,22 +623,25 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
                     disputeResult.setLoserIsPublisher(isLoserPublisherCheckBox.isSelected());
                     disputeResult.setCloseDate(new Date());
-                    String text = "Ticket closed on " + formatter.formatDateTime(disputeResult.getCloseDate()) +
-                            "\n\nSummary:" +
-                            "\n" + role + " delivered tamper proof evidence: " + formatter.booleanToYesNo(disputeResult.tamperProofEvidenceProperty().get()) +
-                            "\n" + role + " did ID verification: " + formatter.booleanToYesNo(disputeResult.idVerificationProperty().get()) +
-                            "\n" + role + " did screencast or video: " + formatter.booleanToYesNo(disputeResult.screenCastProperty().get()) +
-                            "\nPayout amount for BTC buyer: " + formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()) +
-                            "\nPayout amount for BTC seller: " + formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()) +
-                            "\nArbitrator's dispute fee: " + formatter.formatCoinWithCode(disputeResult.getArbitratorPayoutAmount()) +
-                            "\n\nSummary notes:\n" + disputeResult.summaryNotesProperty().get();
+                    String text = Res.get("disputeSummaryWindow.close.msg",
+                            formatter.formatDateTime(disputeResult.getCloseDate()),
+                            role,
+                            formatter.booleanToYesNo(disputeResult.tamperProofEvidenceProperty().get()),
+                            role,
+                            formatter.booleanToYesNo(disputeResult.idVerificationProperty().get()),
+                            role,
+                            formatter.booleanToYesNo(disputeResult.screenCastProperty().get()),
+                            formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
+                            formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
+                            formatter.formatCoinWithCode(disputeResult.getArbitratorPayoutAmount()),
+                            disputeResult.summaryNotesProperty().get());
 
                     dispute.setIsClosed(true);
                     disputeManager.sendDisputeResultMessage(disputeResult, dispute, text);
 
                     if (!finalPeersDispute.isClosed())
                         UserThread.runAfter(() ->
-                                        new Popup().attention("You need to close also the trading peers ticket!").show(),
+                                        new Popup().attention(Res.get("disputeSummaryWindow.close.closePeer")).show(),
                                 Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
 
                     hide();

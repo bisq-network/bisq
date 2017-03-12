@@ -43,6 +43,7 @@ import io.bitsquare.gui.main.overlays.windows.SendPrivateNotificationWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.messages.arbitration.Dispute;
 import io.bitsquare.messages.arbitration.DisputeCommunicationMessage;
 import io.bitsquare.messages.arbitration.payload.Attachment;
@@ -159,7 +160,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        Label label = new Label("Filter list:");
+        Label label = new Label(Res.get("support.filter"));
         HBox.setMargin(label, new Insets(5, 0, 0, 0));
         filterTextField = new InputTextField();
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
@@ -178,7 +179,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         root.getChildren().addAll(filterBox, tableView);
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        Label placeholder = new Label("There are no open tickets");
+        Label placeholder = new Label(Res.get("support.noTickets"));
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
         tableView.getSelectionModel().clearSelection();
@@ -250,6 +251,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 });
                 disputeGroups.sort((o1, o2) -> !o1.isEmpty() && !o2.isEmpty() ? o1.get(0).getOpeningDate().compareTo(o2.get(0).getOpeningDate()) : 0);
                 StringBuilder stringBuilder = new StringBuilder();
+
+                // We don't translate that as it is not intended for the public
                 stringBuilder.append("Summary of all disputes (No. of disputes: " + disputeGroups.size() + ")\n\n");
                 disputeGroups.stream().forEach(disputeGroup -> {
                     Dispute dispute0 = disputeGroup.get(0);
@@ -288,6 +291,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     stringBuilder.append("\n");
                 });
                 String message = stringBuilder.toString();
+                // We don't translate that as it is not intended for the public
                 new Popup().headLine("All disputes (" + disputeGroups.size() + ")")
                         .information(message)
                         .width(1000)
@@ -365,6 +369,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 disputes.sort((o1, o2) -> o1.getOpeningDate().compareTo(o2.getOpeningDate()));
                 List<List<Dispute>> subLists = Lists.partition(disputes, 1000);
                 StringBuilder sb = new StringBuilder();
+                // We don't translate that as it is not intended for the public
                 subLists.stream().forEach(list -> {
                     StringBuilder sb1 = new StringBuilder("\n<html><head><script type=\"text/javascript\">function load(){\n");
                     StringBuilder sb2 = new StringBuilder("\n}</script></head><body onload=\"load()\">\n");
@@ -432,7 +437,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         Timer timer = UserThread.runAfter(() -> {
             sendMsgInfoLabel.setVisible(true);
             sendMsgInfoLabel.setManaged(true);
-            sendMsgInfoLabel.setText("Sending Message...");
+            sendMsgInfoLabel.setText(Res.get("support.sendingMessage"));
 
             sendMsgBusyAnimation.play();
         }, 500, TimeUnit.MILLISECONDS);
@@ -448,7 +453,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             if (newValue) {
                 sendMsgInfoLabel.setVisible(true);
                 sendMsgInfoLabel.setManaged(true);
-                sendMsgInfoLabel.setText("Receiver is not online. Message is saved to his mailbox.");
+                sendMsgInfoLabel.setText(Res.get("support.receiverNotOnline"));
                 hideSendMsgInfo(timer);
             }
         };
@@ -474,9 +479,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     .show(dispute);
         } else {
             new Popup<>()
-                    .warning("The offer in that dispute has been created with an older version of Bitsquare.\n" +
-                            "You cannot close that dispute with your version of the application.\n\n" +
-                            "Please use an older version with protocol version " + protocolVersion)
+                    .warning(Res.get("support.wrongVersion", protocolVersion))
                     .show();
         }
     }
@@ -487,7 +490,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             FileChooser fileChooser = new FileChooser();
             int maxMsgSize = Connection.getMaxMsgSize();
             int maxSizeInKB = maxMsgSize / 1024;
-            fileChooser.setTitle("Open file to attach (max. file size: " + maxSizeInKB + " kb)");
+            fileChooser.setTitle(Res.get("support.openFile", maxSizeInKB));
            /* if (Utilities.isUnix())
                 fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));*/
             File result = fileChooser.showOpenDialog(stage);
@@ -499,13 +502,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         int size = filesAsBytes.length;
                         int newSize = totalSize + size;
                         if (newSize > maxMsgSize) {
-                            new Popup().warning("The total size of your attachments is " + (newSize / 1024) + " kb and is exceeding the max. allowed " +
-                                    "message size of " + maxSizeInKB + " kB.").show();
+                            new Popup().warning(Res.get("support.attachmentTooLarge", (newSize / 1024), maxSizeInKB)).show();
                         } else if (size > maxMsgSize) {
-                            new Popup().warning("The max. allowed file size is " + maxSizeInKB + " kB.").show();
+                            new Popup().warning(Res.get("support.maxSize", maxSizeInKB)).show();
                         } else {
                             tempAttachments.add(new Attachment(result.getName(), filesAsBytes));
-                            inputTextArea.setText(inputTextArea.getText() + "\n[Attachment " + result.getName() + "]");
+                            inputTextArea.setText(inputTextArea.getText() + "\n[" + Res.get("support.attachment") + " " + result.getName() + "]");
                         }
                     } catch (java.io.IOException e) {
                         e.printStackTrace();
@@ -517,13 +519,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 }
             }
         } else {
-            new Popup().warning("You cannot send more then 3 attachments in one message.").show();
+            new Popup().warning(Res.get("support.tooManyAttachments")).show();
         }
     }
 
     private void onOpenAttachment(Attachment attachment) {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save file to disk");
+        fileChooser.setTitle(Res.get("support.save"));
         fileChooser.setInitialFileName(attachment.getFileName());
        /* if (Utilities.isUnix())
             fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));*/
@@ -592,7 +594,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             boolean isTrader = disputeManager.isTrader(selectedDispute);
 
             tableGroupHeadline = new TableGroupHeadline();
-            tableGroupHeadline.setText("Messages");
+            tableGroupHeadline.setText(Res.get("support.messages"));
 
             AnchorPane.setTopAnchor(tableGroupHeadline, 10d);
             AnchorPane.setRightAnchor(tableGroupHeadline, 0d);
@@ -617,9 +619,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             inputTextArea.setPrefHeight(70);
             inputTextArea.setWrapText(true);
             if (!(this instanceof ArbitratorDisputeView))
-                inputTextArea.setPromptText("Please enter here your message to the arbitrator");
+                inputTextArea.setPromptText(Res.get("support.input.prompt"));
 
-            sendButton = new Button("Send");
+            sendButton = new Button(Res.get("support.send"));
             sendButton.setDefaultButton(true);
             sendButton.setOnAction(e -> {
                 if (p2PService.isBootstrapped()) {
@@ -627,13 +629,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     if (!text.isEmpty())
                         onSendMessage(text, selectedDispute);
                 } else {
-                    new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                            "That might take up to about 2 minutes at startup.").show();
+                    new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
                 }
             });
             inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
 
-            Button uploadButton = new Button("Add attachments");
+            Button uploadButton = new Button(Res.get("support.addAttachments"));
             uploadButton.setOnAction(e -> onRequestUpload());
 
             sendMsgInfoLabel = new Label();
@@ -649,7 +650,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
                 if (!isTrader) {
-                    Button closeDisputeButton = new Button("Close ticket");
+                    Button closeDisputeButton = new Button(Res.get("support.closeTicket"));
                     closeDisputeButton.setOnAction(e -> onCloseDispute(selectedDispute));
                     closeDisputeButton.setDefaultButton(true);
                     Pane spacer = new Pane();
@@ -700,7 +701,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             headerLabel.setTextAlignment(TextAlignment.CENTER);
                             attachmentsBox.setSpacing(5);
                             statusIcon.setStyle("-fx-font-size: 10;");
-                            Tooltip.install(copyIcon, new Tooltip("Copy to clipboard"));
+                            Tooltip.install(copyIcon, new Tooltip(Res.get("shared.copyToClipboard")));
                             messageAnchorPane.getChildren().addAll(bg, arrow, headerLabel, messageLabel, copyIcon, attachmentsBox, statusIcon);
                         }
 
@@ -817,7 +818,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 attachmentsBox.getChildren().clear();
                                 if (item.getAttachments().size() > 0) {
                                     AnchorPane.setBottomAnchor(messageLabel, bottomBorder + attachmentsBoxHeight + 10);
-                                    attachmentsBox.getChildren().add(new Label("Attachments: ") {{
+                                    attachmentsBox.getChildren().add(new Label(Res.get("support.attachments") + " ") {{
                                         setPadding(new Insets(0, 0, 3, 0));
                                         if (isMyMsg)
                                             setStyle("-fx-text-fill: white;");
@@ -878,14 +879,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         private void showMailboxIcon() {
                             statusIcon.setVisible(true);
                             AwesomeDude.setIcon(statusIcon, AwesomeIcon.ENVELOPE_ALT, "14");
-                            Tooltip.install(statusIcon, new Tooltip("Message saved in receiver's mailbox"));
+                            Tooltip.install(statusIcon, new Tooltip(Res.get("support.savedInMailbox")));
                             statusIcon.setTextFill(Paint.valueOf("#0f87c3"));
                         }
 
                         private void showArrivedIcon() {
                             statusIcon.setVisible(true);
                             AwesomeDude.setIcon(statusIcon, AwesomeIcon.OK, "14");
-                            Tooltip.install(statusIcon, new Tooltip("Message arrived at receiver"));
+                            Tooltip.install(statusIcon, new Tooltip(Res.get("support.arrived")));
                             statusIcon.setTextFill(Paint.valueOf("#0f87c3"));
                         }
                     };
@@ -908,7 +909,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private TableColumn<Dispute, Dispute> getSelectColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Select") {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.select")) {
             {
                 setMinWidth(80);
                 setMaxWidth(80);
@@ -934,6 +935,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     if (button == null) {
                                         button = new Button("Select");
+                                        button.setOnAction(e -> tableView.getSelectionModel().select(item));
                                         setGraphic(button);
                                     }
                                     button.setOnAction(e -> tableView.getSelectionModel().select(item));
@@ -952,7 +954,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getContractColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Details") {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.details")) {
             {
                 setMinWidth(80);
                 setSortable(false);
@@ -965,7 +967,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
                         return new TableCell<Dispute, Dispute>() {
-                            Button button;
+                            final Button button = new Button("Details");
 
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
@@ -989,7 +991,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getDateColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Date") {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.date")) {
             {
                 setMinWidth(150);
             }
@@ -1015,7 +1017,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getTradeIdColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Trade ID") {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.tradeId")) {
             {
                 setMinWidth(110);
             }
@@ -1037,7 +1039,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                     Optional<Trade> tradeOptional = tradeManager.getTradeById(item.getTradeId());
                                     if (tradeOptional.isPresent()) {
                                         field.setMouseTransparent(false);
-                                        field.setTooltip(new Tooltip("Open popup for details"));
+                                        field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                         field.setOnAction(event -> tradeDetailsWindow.show(tradeOptional.get()));
                                     } else {
                                         field.setMouseTransparent(true);
@@ -1056,7 +1058,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getBuyerOnionAddressColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("BTC buyer address") {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("support.buyerAddress")) {
             {
                 setMinWidth(170);
             }
@@ -1082,7 +1084,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getSellerOnionAddressColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("BTC seller address") {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("support.sellerAddress")) {
             {
                 setMinWidth(170);
             }
@@ -1115,9 +1117,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             if (buyerNodeAddress != null)
                 return buyerNodeAddress.getHostNameWithoutPostFix() + " (" + disputeManager.getNrOfDisputes(true, contract) + ")";
             else
-                return "N/A";
+                return Res.get("shared.na");
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 
@@ -1128,14 +1130,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             if (sellerNodeAddress != null)
                 return sellerNodeAddress.getHostNameWithoutPostFix() + " (" + disputeManager.getNrOfDisputes(false, contract) + ")";
             else
-                return "N/A";
+                return Res.get("shared.na");
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 
     private TableColumn<Dispute, Dispute> getMarketColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Market") {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.market")) {
             {
                 setMinWidth(130);
             }
@@ -1161,7 +1163,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getRoleColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("Role") {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("support.role")) {
             {
                 setMinWidth(130);
             }
@@ -1177,9 +1179,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (item.isDisputeOpenerIsOfferer())
-                                        setText(item.isDisputeOpenerIsBuyer() ? "BTC buyer/Offerer" : "BTC seller/Offerer");
+                                        setText(item.isDisputeOpenerIsBuyer() ? Res.get("support.buyerOfferer") : Res.get("support.sellerOfferer"));
                                     else
-                                        setText(item.isDisputeOpenerIsBuyer() ? "BTC buyer/Taker" : "BTC seller/Taker");
+                                        setText(item.isDisputeOpenerIsBuyer() ? Res.get("support.buyerTaker") : Res.get("support.sellerTaker"));
                                 } else {
                                     setText("");
                                 }
@@ -1191,7 +1193,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private TableColumn<Dispute, Dispute> getStateColumn() {
-        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>("State") {
+        TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("support.state")) {
             {
                 setMinWidth(50);
             }
@@ -1212,13 +1214,13 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     listener = (observable, oldValue, newValue) -> {
-                                        setText(newValue ? "Closed" : "Open");
+                                        setText(newValue ? Res.get("support.closed") : Res.get("support.open"));
                                         getTableRow().setOpacity(newValue ? 0.4 : 1);
                                     };
                                     closedProperty = item.isClosedProperty();
                                     closedProperty.addListener(listener);
                                     boolean isClosed = item.isClosed();
-                                    setText(isClosed ? "Closed" : "Open");
+                                    setText(isClosed ? Res.get("support.closed") : Res.get("support.open"));
                                     getTableRow().setOpacity(isClosed ? 0.4 : 1);
                                 } else {
                                     if (closedProperty != null) {

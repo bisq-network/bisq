@@ -48,7 +48,7 @@ public class SameBankForm extends BankForm {
 
     @Override
     protected void addHolderNameAndId() {
-        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++gridRow, "Account holder name:");
+        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"));
         holderNameInputTextField = tuple.second;
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -81,7 +81,7 @@ public class SameBankForm extends BankForm {
 
     @Override
     protected void addHolderNameAndIdForDisplayAccount() {
-        Tuple2<Label, TextField> tuple = addLabelTextField(gridPane, ++gridRow, "Account holder name:");
+        Tuple2<Label, TextField> tuple = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"));
         TextField holderNameTextField = tuple.second;
         holderNameTextField.setMinWidth(300);
         holderNameTextField.setText(bankAccountContractData.getHolderName());

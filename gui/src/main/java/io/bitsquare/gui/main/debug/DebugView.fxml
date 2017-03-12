@@ -32,9 +32,9 @@
         <Insets bottom="10.0" left="25.0" top="30.0" right="25"/>
     </padding>
 
-    <TitledGroupBg text="Intercept task" GridPane.rowSpan="8"/>
+    <TitledGroupBg fx:id="titledGroupBg" GridPane.rowSpan="8"/>
 
-    <Label text="Select Task:" GridPane.rowIndex="0">
+    <Label fx:id="label" GridPane.rowIndex="0">
         <GridPane.margin>
             <Insets top="10"/>
         </GridPane.margin>

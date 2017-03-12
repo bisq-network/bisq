@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui.util.validation;
 
+import io.bitsquare.locale.Res;
+
 import java.math.BigInteger;
 import java.util.Locale;
 
@@ -42,12 +44,12 @@ public final class IBANValidator extends InputValidator {
 
 		// check if country code is letters and checksum numeric
 		if (!( Character.isLetter(input.charAt(0)) && Character.isLetter(input.charAt(1)) ))
-			return new ValidationResult(false, "Country code invalid");
+			return new ValidationResult(false, Res.get("validation.iban.invalidCountryCode"));
 		if (!( Character.isDigit(input.charAt(2)) && Character.isDigit(input.charAt(3)) ))
-			return new ValidationResult(false, "Checksum must be numeric");
+			return new ValidationResult(false, Res.get("validation.iban.checkSumNotNumeric"));
 
 		// reorder IBAN to format <account number> <country code> <checksum>
-		String input2 = new String(input.substring(4, input.length()) + input.substring(0,4));
+		String input2 = input.substring(4, input.length()) + input.substring(0, 4);
 
 		// check if input is alphanumeric and count included letters
 		int charCount = 0;
@@ -57,7 +59,7 @@ public final class IBANValidator extends InputValidator {
 			if (Character.isLetter(ch))
 				charCount++;
 			else if (!Character.isDigit(ch))
-				return (new ValidationResult(false, "Non-alphanumeric character detected"));
+				return (new ValidationResult(false, Res.get("validation.iban.nonNumericChars")));
 		}
 
 		// create final char array for checksum validation
@@ -79,10 +81,10 @@ public final class IBANValidator extends InputValidator {
 		if (result == 1)
 			return new ValidationResult(true);
 		else
-			return new ValidationResult(false, "IBAN checksum is invalid");
+			return new ValidationResult(false, Res.get("validation.iban.checkSumInvalid"));
 	}
 //	return new ValidationResult(false, BSResources.get("validation.accountNrChars", "15 - 34"));
-	return new ValidationResult(false, "Number must have length 15 to 34 chars.");
+		return new ValidationResult(false, Res.get("validation.iban.invalidLength"));
     }
 
 

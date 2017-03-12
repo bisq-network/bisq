@@ -23,6 +23,8 @@ import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Tooltip;
@@ -54,7 +56,7 @@ class DepositListItem {
         // confidence
         txConfidenceIndicator = new TxConfidenceIndicator();
         txConfidenceIndicator.setId("funds-confidence");
-        tooltip = new Tooltip("Not used yet");
+        tooltip = new Tooltip(Res.get("shared.notUsedYet"));
         txConfidenceIndicator.setProgress(0);
         txConfidenceIndicator.setPrefHeight(30);
         txConfidenceIndicator.setPrefWidth(30);
@@ -66,7 +68,7 @@ class DepositListItem {
             public void onBalanceChanged(Coin balanceAsCoin, Transaction tx) {
                 DepositListItem.this.balanceAsCoin = balanceAsCoin;
                 DepositListItem.this.balance.set(formatter.formatCoin(balanceAsCoin));
-                updateConfidence(walletService.getConfidenceForTxId(tx.getHashAsString()));
+                GUIUtil.updateConfidence(walletService.getConfidenceForTxId(tx.getHashAsString()), tooltip, txConfidenceIndicator);
                 updateUsage(address);
             }
         });
@@ -76,14 +78,14 @@ class DepositListItem {
 
         updateUsage(address);
 
-        TransactionConfidence transactionConfidence = walletService.getConfidenceForAddress(address);
-        if (transactionConfidence != null) {
-            updateConfidence(transactionConfidence);
+        TransactionConfidence confidence = walletService.getConfidenceForAddress(address);
+        if (confidence != null) {
+            GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
 
-            txConfidenceListener = new TxConfidenceListener(transactionConfidence.getTransactionHash().toString()) {
+            txConfidenceListener = new TxConfidenceListener(confidence.getTransactionHash().toString()) {
                 @Override
                 public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                    updateConfidence(confidence);
+                    GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
                 }
             };
             walletService.addTxConfidenceListener(txConfidenceListener);
@@ -92,36 +94,11 @@ class DepositListItem {
 
     private void updateUsage(Address address) {
         numTxOutputs = walletService.getNumTxOutputsForAddress(address);
-        usage = numTxOutputs == 0 ? "Unused" : "Used in " + numTxOutputs + " transactions";
+        usage = numTxOutputs == 0 ? Res.get("funds.deposit.unused") : Res.get("funds.deposit.usedInTx", numTxOutputs);
     }
 
     public void cleanup() {
         walletService.removeTxConfidenceListener(txConfidenceListener);
-    }
-
-    private void updateConfidence(TransactionConfidence confidence) {
-        if (confidence != null) {
-            switch (confidence.getConfidenceType()) {
-                case UNKNOWN:
-                    tooltip.setText("Unknown transaction status");
-                    txConfidenceIndicator.setProgress(0);
-                    break;
-                case PENDING:
-                    tooltip.setText("Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 confirmations");
-                    txConfidenceIndicator.setProgress(-1.0);
-                    break;
-                case BUILDING:
-                    tooltip.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                    txConfidenceIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
-                    break;
-                case DEAD:
-                    tooltip.setText("Transaction is invalid.");
-                    txConfidenceIndicator.setProgress(0);
-                    break;
-            }
-
-            txConfidenceIndicator.setPrefSize(24, 24);
-        }
     }
 
     public TxConfidenceIndicator getTxConfidenceIndicator() {

@@ -33,6 +33,11 @@ import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.locale.TradeCurrency;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.user.Preferences;
+import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
+import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.trade.offer.Offer;
+import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.Tab;
@@ -48,25 +53,24 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private CreateOfferView createOfferView;
     private TakeOfferView takeOfferView;
     private AnchorPane createOfferPane;
-    private AnchorPane takeOfferPane;
-    private Navigation.Listener navigationListener;
-    private Offer offer;
+    private Tab takeOfferTab, createOfferTab, offerBookTab;
 
+    private AnchorPane takeOfferPane;
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final PriceFeedService priceFeedService;
-    private Preferences preferences;
+    private final Preferences preferences;
     private final Offer.Direction direction;
-    private Tab takeOfferTab, createOfferTab, offerBookTab;
+
+    private Offer offer;
     private TradeCurrency tradeCurrency;
     private boolean createOfferViewOpen, takeOfferViewOpen;
+    private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
     private ListChangeListener<Tab> tabListChangeListener;
 
-    protected OfferView(ViewLoader viewLoader, Navigation navigation, PriceFeedService priceFeedService, Preferences preferences) {
+    protected OfferView(ViewLoader viewLoader, Navigation navigation, Preferences preferences) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.priceFeedService = priceFeedService;
         this.preferences = preferences;
         this.direction = (this instanceof BuyOfferView) ? Offer.Direction.BUY : Offer.Direction.SELL;
     }
@@ -134,6 +138,14 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         root.getTabs().removeListener(tabListChangeListener);
     }
 
+    private String getCreateOfferTabName() {
+        return Res.get("offerbook.createOffer");
+    }
+
+    private String getTakeOfferTabName() {
+        return Res.get("offerbook.takeOffer");
+    }
+
     private void loadView(Class<? extends View> viewClass) {
         TabPane tabPane = root;
         View view;
@@ -142,7 +154,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);
             // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            offerBookTab = new Tab(isBuy ? "Buy bitcoin" : "Sell bitcoin");
+            offerBookTab = new Tab(isBuy ? Res.get("shared.buyBitcoin") : Res.get("shared.sellBitcoin"));
             offerBookTab.setClosable(false);
             offerBookTab.setContent(view.getRoot());
             tabPane.getTabs().add(offerBookTab);
@@ -158,7 +170,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                         OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
                                 CreateOfferView.class);
                     } else {
-                        new Popup().information("You have already a \"Create offer\" tab open.").show();
+                        log.error("You have already a \"Create offer\" tab open.");
                     }
                 }
 
@@ -170,7 +182,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                         OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
                                 TakeOfferView.class);
                     } else {
-                        new Popup().information("You have already a \"Take offer\" tab open.").show();
+                        log.error("You have already a \"Take offer\" tab open.");
                     }
                 }
             };
@@ -204,11 +216,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             tabPane.getSelectionModel().select(takeOfferTab);
         }
     }
-
-    protected abstract String getCreateOfferTabName();
-
-    protected abstract String getTakeOfferTabName();
-
 
     private void onCreateOfferViewRemoved() {
         createOfferViewOpen = false;

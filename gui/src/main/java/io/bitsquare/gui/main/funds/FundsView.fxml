@@ -23,10 +23,10 @@
          AnchorPane.topAnchor="0.0"
          xmlns:fx="http://javafx.com/fxml">
 
-    <Tab fx:id="depositTab" text="Deposit funds" closable="false"/>
-    <Tab fx:id="withdrawalTab" text="Available for withdrawal" closable="false"/>
-    <Tab fx:id="reservedTab" text="Reserved funds" closable="false"/>
-    <Tab fx:id="lockedTab" text="Locked funds" closable="false"/>
-    <Tab fx:id="transactionsTab" text="Transactions" closable="false"/>
+    <Tab fx:id="depositTab" closable="false"/>
+    <Tab fx:id="withdrawalTab" closable="false"/>
+    <Tab fx:id="reservedTab" closable="false"/>
+    <Tab fx:id="lockedTab" closable="false"/>
+    <Tab fx:id="transactionsTab" closable="false"/>
 
 </TabPane>

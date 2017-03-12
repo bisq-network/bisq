@@ -13,6 +13,7 @@ import io.bitsquare.messages.btc.provider.ProvidersRepository;
 import io.bitsquare.messages.btc.provider.price.PriceProvider;
 import io.bitsquare.messages.btc.provider.price.PriceRequest;
 import io.bitsquare.messages.btc.provider.price.PriceRequestException;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,9 +40,9 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public enum Type {
-        ASK("Ask"),
-        BID("Bid"),
-        LAST("Last");
+        ASK(Res.get("marketPrice.ask")),
+        BID(Res.get("marketPrice.bid")),
+        LAST(Res.get("marketPrice.last"));
 
         public final String name;
 

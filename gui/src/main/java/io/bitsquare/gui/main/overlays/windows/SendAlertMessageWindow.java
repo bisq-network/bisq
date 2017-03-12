@@ -39,6 +39,7 @@ import static io.bitsquare.gui.util.FormBuilder.*;
 
 public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     private static final Logger log = LoggerFactory.getLogger(SendAlertMessageWindow.class);
+
     private Button sendButton;
     private SendAlertMessageHandler sendAlertMessageHandler;
     private RemoveAlertMessageHandler removeAlertMessageHandler;
@@ -66,7 +67,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
 
     public void show() {
         if (headLine == null)
-            headLine = "Send global notification";
+            headLine = Res.get("sendAlertMessageWindow.headline");
 
         width = 800;
         createGridPane();
@@ -87,6 +88,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         return this;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -104,46 +106,53 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     }
 
     private void addContent() {
-        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Alert private key:", 10).second;
+        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("shared.unlock"), 10).second;
         if (DevFlags.USE_DEV_PRIVILEGE_KEYS)
             keyInputTextField.setText("6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a");
-        
-        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex, "Alert message:", "Enter message");
+
+        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex,
+                Res.get("sendAlertMessageWindow.alertMsg"),
+                Res.get("sendAlertMessageWindow.enterMsg"));
         TextArea alertMessageTextArea = labelTextAreaTuple2.second;
         Label first = labelTextAreaTuple2.first;
         first.setMinWidth(150);
-        CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex, "Is update notification:", "").second;
+        CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("sendAlertMessageWindow.isUpdate"), "").second;
         isUpdateCheckBox.setSelected(true);
 
-        InputTextField versionInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "New version no.:").second;
+        InputTextField versionInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("sendAlertMessageWindow.version")).second;
         versionInputTextField.disableProperty().bind(isUpdateCheckBox.selectedProperty().not());
 
-        sendButton = new Button("Send notification");
+        sendButton = new Button(Res.get("sendAlertMessageWindow.send"));
         sendButton.setOnAction(e -> {
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                 if (sendAlertMessageHandler.handle(
-                        new Alert(alertMessageTextArea.getText(), isUpdateCheckBox.isSelected(), versionInputTextField.getText()),
+                        new Alert(alertMessageTextArea.getText(),
+                                isUpdateCheckBox.isSelected(),
+                                versionInputTextField.getText()),
                         keyInputTextField.getText()))
                     hide();
                 else
-                    new Popup().warning("The key you entered was not correct.").width(300).onClose(() -> blurAgain()).show();
+                    new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 
-        Button removeAlertMessageButton = new Button("Remove notification");
+        Button removeAlertMessageButton = new Button(Res.get("sendAlertMessageWindow.remove"));
         removeAlertMessageButton.setOnAction(e -> {
             if (keyInputTextField.getText().length() > 0) {
                 if (removeAlertMessageHandler.handle(keyInputTextField.getText()))
                     hide();
                 else
-                    new Popup().warning("The key you entered was not correct.").width(300).onClose(() -> blurAgain()).show();
+                    new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 
-        closeButton = new Button("Close");
+        closeButton = new Button(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
             hide();
-            closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
+            closeHandlerOptional.ifPresent(Runnable::run);
         });
 
         HBox hBox = new HBox();
@@ -154,6 +163,4 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
     }
-
-
 }

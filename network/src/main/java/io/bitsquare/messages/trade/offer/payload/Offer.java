@@ -77,9 +77,8 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
     @JsonExclude
     private static final Logger log = LoggerFactory.getLogger(Offer.class);
     public static final long TTL = TimeUnit.MINUTES.toMillis(DevFlags.STRESS_TEST_MODE ? 6 : 6);
-    public final static String TAC_OFFERER = "With placing that offer I agree to trade " +
-            "with any trader who fulfills the conditions as defined above.";
-    public static final String TAC_TAKER = "With taking that offer I agree to the trade conditions as defined above.";
+    public final static String TAC_OFFERER = Res.get("createOffer.tac");
+    public static final String TAC_TAKER = Res.get("takeOffer.tac");
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

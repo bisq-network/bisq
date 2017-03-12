@@ -63,10 +63,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private final BtcValidator btcValidator;
     private final SecurityDepositValidator securityDepositValidator;
     private final P2PService p2PService;
-    private PriceFeedService priceFeedService;
-    private Preferences preferences;
-    private Navigation navigation;
-    final BSFormatter formatter;
+    private final PriceFeedService priceFeedService;
+    private final Preferences preferences;
+    private final Navigation navigation;
+    private final BSFormatter formatter;
     private final FiatValidator fiatValidator;
 
     private String amountDescription;
@@ -103,7 +103,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final BooleanProperty isNextButtonDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty placeOfferCompleted = new SimpleBooleanProperty();
     final BooleanProperty showPayFundsScreenDisplayed = new SimpleBooleanProperty();
-    final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
+    private final BooleanProperty showTransactionPublishedScreen = new SimpleBooleanProperty();
     final BooleanProperty isWaitingForFunds = new SimpleBooleanProperty();
 
     final ObjectProperty<InputValidator.ValidationResult> amountValidationResult = new SimpleObjectProperty<>();
@@ -113,7 +113,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final ObjectProperty<InputValidator.ValidationResult> securityDepositValidationResult = new SimpleObjectProperty<>();
 
     // Those are needed for the addressTextField
-    final ObjectProperty<Address> address = new SimpleObjectProperty<>();
+    private final ObjectProperty<Address> address = new SimpleObjectProperty<>();
 
     private ChangeListener<String> amountStringListener;
     private ChangeListener<String> minAmountStringListener;
@@ -161,7 +161,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         this.navigation = navigation;
         this.formatter = formatter;
 
-        paymentLabel = BSResources.get("createOffer.fundsBox.paymentLabel", dataModel.shortOfferId);
+        paymentLabel = Res.get("createOffer.fundsBox.paymentLabel", dataModel.shortOfferId);
 
         if (dataModel.getAddressEntry() != null) {
             addressAsString = dataModel.getAddressEntry().getAddressString();
@@ -178,7 +178,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 minAmount.set(amount.get());
                 UserThread.runAfter(() -> {
                     price.set("1000");
-                    onFocusOutPriceAsPercentageTextField(true, false, "");
+                    onFocusOutPriceAsPercentageTextField(true, false);
                 }, 1);
 
                 setAmountToModel();
@@ -198,11 +198,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         updateButtonDisableState();
 
         if (dataModel.getDirection() == Offer.Direction.BUY) {
-            directionLabel = BSResources.get("shared.buyBitcoin");
-            amountDescription = BSResources.get("createOffer.amountPriceBox.amountDescription", BSResources.get("shared.buy"));
+            directionLabel = Res.get("shared.buyBitcoin");
+            amountDescription = Res.get("createOffer.amountPriceBox.amountDescription", Res.get("shared.buy"));
         } else {
-            directionLabel = BSResources.get("shared.sellBitcoin");
-            amountDescription = BSResources.get("createOffer.amountPriceBox.amountDescription", BSResources.get("shared.sell"));
+            directionLabel = Res.get("shared.sellBitcoin");
+            amountDescription = Res.get("createOffer.amountPriceBox.amountDescription", Res.get("shared.sell"));
         }
 
         securityDeposit.set(formatter.formatCoin(dataModel.securityDeposit.get()));
@@ -220,15 +220,15 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private void addBindings() {
         if (dataModel.getDirection() == Offer.Direction.BUY) {
             volumeDescriptionLabel.bind(createStringBinding(
-                    () -> BSResources.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.tradeCurrencyCode.get()),
+                    () -> Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.tradeCurrencyCode.get()),
                     dataModel.tradeCurrencyCode));
         } else {
             volumeDescriptionLabel.bind(createStringBinding(
-                    () -> BSResources.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.tradeCurrencyCode.get()),
+                    () -> Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.tradeCurrencyCode.get()),
                     dataModel.tradeCurrencyCode));
         }
         volumePromptLabel.bind(createStringBinding(
-                () -> BSResources.get("createOffer.volume.prompt", dataModel.tradeCurrencyCode.get()),
+                () -> Res.get("createOffer.volume.prompt", dataModel.tradeCurrencyCode.get()),
                 dataModel.tradeCurrencyCode));
 
         totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
@@ -295,7 +295,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 marketPriceMargin.set(formatter.formatToPercent(percentage));
                             } catch (NumberFormatException t) {
                                 marketPriceMargin.set("");
-                                new Popup().warning("Input is not a valid number.").show();
+                                new Popup().warning(Res.get("validation.NaN")).show();
                             }
                         } else {
                             log.debug("We don't have a market price. We use the static price instead.");
@@ -311,7 +311,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     if (!newValue.isEmpty() && !newValue.equals("-")) {
                         double percentage = formatter.parsePercentStringToDouble(newValue);
                         if (percentage >= 1 || percentage <= -1) {
-                            new Popup().warning("You cannot set a percentage of 100% or larger. Please enter a percentage number like \"5.4\" for 5.4%")
+                            new Popup().warning(Res.get("popup.warning.tooLargePercentageValue") + "\n" + Res.get("popup.warning.examplePercentageValue"))
                                     .show();
                         } else {
                             final String currencyCode = dataModel.tradeCurrencyCode.get();
@@ -337,16 +337,13 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 dataModel.calculateTotalToPay();
                                 updateButtonDisableState();
                             } else {
-                                new Popup().warning("There is no price feed available for that currency. You cannot use a percent based price.\n" +
-                                        "Please select the fixed price.")
-                                        .show();
+                                new Popup().warning(Res.get("popup.warning.noPriceFeedAvailable")).show();
                                 marketPriceMargin.set("");
                             }
                         }
                     }
                 } catch (Throwable t) {
-                    new Popup().warning("Your input is not a valid number. Please enter a percentage number like \"5.4\" for 5.4%")
-                            .show();
+                    new Popup().warning(Res.get("validation.NaN") + "\n" + Res.get("popup.warning.examplePercentageValue")).show();
                 }
             }
         };
@@ -507,7 +504,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             timeoutTimer = UserThread.runAfter(() -> {
                 stopTimeoutTimer();
                 createOfferRequested = false;
-                errorMessage.set("A timeout occurred at publishing the offer.");
+                errorMessage.set(Res.get("createOffer.timeoutAtPublishing"));
 
                 updateButtonDisableState();
                 updateSpinnerInfo();
@@ -520,10 +517,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 stopTimeoutTimer();
                 createOfferRequested = false;
                 if (offer.getState() == Offer.State.OFFER_FEE_PAID)
-                    errorMessage.set(newValue +
-                            "\n\nThe offer fee is already paid. In the worst case you have lost that fee. " +
-                            "We are sorry about that but keep in mind it is a very small amount.\n" +
-                            "Please try to restart you application and check your network connection to see if you can resolve the issue.");
+                    errorMessage.set(newValue + Res.get("createOffer.errorInfo"));
                 else
                     errorMessage.set(newValue);
 
@@ -574,12 +568,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             updateButtonDisableState();
             return true;
         } else {
-            new Popup().warning("You don't have enough funds in your Bitsquare wallet.\n" +
-                    "You need " + formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()) + " but you have only " +
-                    formatter.formatCoinWithCode(dataModel.totalAvailableBalance) + " in your Bitsquare wallet.\n\n" +
-                    "Please fund that trade from an external Bitcoin wallet or fund your Bitsquare " +
-                    "wallet at \"Funds/Depost funds\".")
-                    .actionButtonText("Go to \"Funds/Deposit funds\"")
+            new Popup().warning(Res.get("shared.notEnoughFunds",
+                    formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
+                    formatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
+                    .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
             return false;
@@ -593,7 +585,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // On focus out we do validation and apply the data to the model
-    void onFocusOutAmountTextField(boolean oldValue, boolean newValue, String userInput) {
+    void onFocusOutAmountTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(amount.get());
             amountValidationResult.set(result);
@@ -615,7 +607,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    void onFocusOutMinAmountTextField(boolean oldValue, boolean newValue, String userInput) {
+    void onFocusOutMinAmountTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isBtcInputValid(minAmount.get());
             minAmountValidationResult.set(result);
@@ -634,7 +626,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    void onFocusOutPriceTextField(boolean oldValue, boolean newValue, String userInput) {
+    void onFocusOutPriceTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isPriceInputValid(price.get());
             boolean isValid = result.isValid;
@@ -651,13 +643,13 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    void onFocusOutPriceAsPercentageTextField(boolean oldValue, boolean newValue, String userInput) {
+    void onFocusOutPriceAsPercentageTextField(boolean oldValue, boolean newValue) {
         inputIsMarketBasedPrice = !oldValue && newValue;
         if (oldValue && !newValue)
             marketPriceMargin.set(formatter.formatRoundedDoubleWithPrecision(dataModel.getMarketPriceMargin() * 100, 2));
     }
 
-    void onFocusOutVolumeTextField(boolean oldValue, boolean newValue, String userInput) {
+    void onFocusOutVolumeTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = isVolumeInputValid(volume.get());
             volumeValidationResult.set(result);
@@ -685,7 +677,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    void onFocusOutSecurityDepositTextField(boolean oldValue, boolean newValue, String userInput) {
+    void onFocusOutSecurityDepositTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
             InputValidator.ValidationResult result = securityDepositValidator.validate(securityDeposit.get());
             securityDepositValidationResult.set(result);
@@ -695,30 +687,28 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 if (preferences.showAgain(securityDepositLowerAsDefault) &&
                         formatter.parseToCoin(securityDeposit.get()).compareTo(defaultSecurityDeposit) < 0) {
                     new Popup<>()
-                            .warning("You have set the security deposit to a lower value than the recommended default value of " +
-                                    formatter.formatCoinWithCode(defaultSecurityDeposit) + ".\n" +
-                                    "Are you sure you want to use a lower security deposit?\n" +
-                                    "It gives you less protection in case the trading peer does not follow the trade protocol.")
+                            .warning(Res.get("createOffer.tooLowSecDeposit.warning",
+                                    formatter.formatCoinWithCode(defaultSecurityDeposit)))
                             .width(800)
-                            .actionButtonText("No, reset to the default value")
+                            .actionButtonText(Res.get("createOffer.resetToDefault"))
                             .onAction(() -> {
                                 dataModel.setSecurityDeposit(defaultSecurityDeposit);
                                 ignoreSecurityDepositStringListener = true;
                                 securityDeposit.set(formatter.formatCoin(dataModel.securityDeposit.get()));
                                 ignoreSecurityDepositStringListener = false;
                             })
-                            .closeButtonText("Yes, use my lower value")
-                            .onClose(() -> applySecurityDepositOnFocusOut(result))
+                            .closeButtonText(Res.get("createOffer.useLowerValue"))
+                            .onClose(this::applySecurityDepositOnFocusOut)
                             .dontShowAgainId(securityDepositLowerAsDefault, preferences)
                             .show();
                 } else {
-                    applySecurityDepositOnFocusOut(result);
+                    applySecurityDepositOnFocusOut();
                 }
             }
         }
     }
 
-    private void applySecurityDepositOnFocusOut(InputValidator.ValidationResult result) {
+    private void applySecurityDepositOnFocusOut() {
         setSecurityDepositToModel();
         ignoreSecurityDepositStringListener = true;
         securityDeposit.set(formatter.formatCoin(dataModel.securityDeposit.get()));
@@ -745,13 +735,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private void displayPriceOutOfRangePopup() {
         Popup popup = new Popup();
-        popup.warning("The price you have entered is outside the max. allowed deviation from the market price.\n" +
-                "The max. allowed deviation is " +
-                formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent()) +
-                " and can be adjusted in the preferences.")
-                .actionButtonText("Change price")
-                .onAction(() -> popup.hide())
-                .closeButtonText("Go to \"Preferences\"")
+        popup.warning(Res.get("createOffer.priceOutSideOfDeviation",
+                formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())))
+                .actionButtonText(Res.get("createOffer.changePrice"))
+                .onAction(popup::hide)
+                .closeButtonTextWithGoTo("navigation.settings.preferences")
                 .onClose(() -> navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class))
                 .show();
     }
@@ -919,7 +907,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 spinnerInfoText.set("Check if funding tx miner fee is sufficient...");
             }*/
         } else {
-            waitingForFundsText.set("Waiting for funds...");
+            waitingForFundsText.set(Res.get("shared.waitingForFunds"));
         }
 
         isWaitingForFunds.set(!waitingForFundsText.get().isEmpty());

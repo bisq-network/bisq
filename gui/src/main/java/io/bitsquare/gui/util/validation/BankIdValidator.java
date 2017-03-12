@@ -20,6 +20,8 @@ package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.messages.locale.BankUtil;
+import io.bitsquare.locale.BankUtil;
+import io.bitsquare.locale.Res;
 
 public final class BankIdValidator extends BankValidator {
     public BankIdValidator(String countryCode) {
@@ -36,13 +38,13 @@ public final class BankIdValidator extends BankValidator {
                 if (isNumberWithFixedLength(input, length))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.bankIdNumber", getLabel(), length));
+                    return new ValidationResult(false, Res.get("validation.bankIdNumber", getLabel(), length));
             case "HK":
                 length = 3;
                 if (isNumberWithFixedLength(input, length))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.bankIdNumber", getLabel(), length));
+                    return new ValidationResult(false, Res.get("validation.bankIdNumber", getLabel(), length));
             default:
                 return super.validate(input);
         }

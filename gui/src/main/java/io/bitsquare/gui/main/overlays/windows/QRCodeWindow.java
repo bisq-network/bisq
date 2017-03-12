@@ -1,6 +1,7 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.locale.Res;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
@@ -33,8 +34,8 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
 
         type = Type.Information;
         width = 400;
-        headLine("QR-Code");
-        message("Please use that QR-Code for funding your Bitsquare wallet from your external wallet.");
+        headLine(Res.get("qRCodeWindow.headline"));
+        message(Res.get("qRCodeWindow.msg"));
     }
 
     @Override
@@ -49,7 +50,8 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
         GridPane.setHalignment(qrCodeImageView, HPos.CENTER);
         gridPane.getChildren().add(qrCodeImageView);
 
-        Label infoLabel = new Label("Payment request:\n" + bitcoinURI.replace("%20", " ").replace("?", "\n?").replace("&", "\n&"));
+        String request = bitcoinURI.replace("%20", " ").replace("?", "\n?").replace("&", "\n&");
+        Label infoLabel = new Label(Res.get("qRCodeWindow.request", request));
         infoLabel.setMouseTransparent(true);
         infoLabel.setWrapText(true);
         infoLabel.setId("popup-qr-code-info");

@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.offer.OpenOffer;
@@ -100,9 +101,9 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                     return "Failed";
                 else*/
                 if (trade.getState() == Trade.State.WITHDRAW_COMPLETED || trade.getState() == Trade.State.PAYOUT_BROAD_CASTED) {
-                    return "Completed";
+                    return Res.get("portfolio.closed.completed");
                 } else if (trade.getDisputeState() == Trade.DisputeState.DISPUTE_CLOSED) {
-                    return "Ticket closed";
+                    return Res.get("portfolio.closed.ticketClosed");
                 } else {
                     log.error("That must not happen. We got a pending state but we are in the closed trades list.");
                     return trade.getState().toString();
@@ -117,7 +118,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                         log.error("Invalid state {}", state);
                         return state.toString();
                     case CANCELED:
-                        return "Canceled";
+                        return Res.get("portfolio.closed.canceled");
                     default:
                         log.error("Unhandled state {}", state);
                         return state.toString();
@@ -127,11 +128,12 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         return "";
     }
 
-
     int getNumPastTrades(Tradable tradable) {
         return dataModel.closedTradableManager.getClosedTrades().stream()
                 .filter(e -> e instanceof Trade &&
                         tradable instanceof Trade &&
+                        ((Trade) e).getTradingPeerNodeAddress() != null &&
+                        ((Trade) tradable).getTradingPeerNodeAddress() != null &&
                         ((Trade) e).getTradingPeerNodeAddress() != null &&
                         ((Trade) tradable).getTradingPeerNodeAddress() != null &&
                         ((Trade) e).getTradingPeerNodeAddress().hostName.equals(((Trade) tradable).getTradingPeerNodeAddress().hostName))

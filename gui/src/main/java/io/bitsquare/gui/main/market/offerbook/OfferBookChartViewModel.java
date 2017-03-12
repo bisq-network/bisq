@@ -58,7 +58,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final OfferBook offerBook;
     final Preferences preferences;
     final PriceFeedService priceFeedService;
-    private Navigation navigation;
+    private final Navigation navigation;
 
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
     private final List<XYChart.Data> buyData = new ArrayList<>();
@@ -76,6 +76,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService, Navigation navigation) {
         this.offerBook = offerBook;

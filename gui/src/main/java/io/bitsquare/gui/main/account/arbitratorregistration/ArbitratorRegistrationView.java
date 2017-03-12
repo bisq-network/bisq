@@ -126,13 +126,13 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
         root.getChildren().add(gridPane);
 
-        addTitledGroupBg(gridPane, gridRow, 3, "Arbitrator registration");
-        pubKeyTextField = FormBuilder.addLabelTextField(gridPane, gridRow, "Public key:",
+        addTitledGroupBg(gridPane, gridRow, 3, Res.get("account.tab.arbitratorRegistration"));
+        pubKeyTextField = FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
                 model.registrationPubKeyAsHex.get(), Layout.FIRST_ROW_DISTANCE).second;
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);
 
-        Tuple2<Label, ListView> tuple = addLabelListView(gridPane, ++gridRow, "Your languages:");
+        Tuple2<Label, ListView> tuple = addLabelListView(gridPane, ++gridRow, Res.get("shared.yourLanguage"));
         GridPane.setValignment(tuple.first, VPos.TOP);
         languagesListView = tuple.second;
         languagesListView.disableProperty().bind(model.registrationEditDisabled);
@@ -170,7 +170,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
         languageComboBox = addLabelComboBox(gridPane, ++gridRow).second;
         languageComboBox.disableProperty().bind(model.registrationEditDisabled);
-        languageComboBox.setPromptText("Add language");
+        languageComboBox.setPromptText(Res.get("shared.addLanguage"));
         languageComboBox.setConverter(new StringConverter<String>() {
             @Override
             public String toString(String code) {
@@ -184,20 +184,19 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         });
         languageComboBox.setOnAction(e -> onAddLanguage());
 
-        registerButton = addButtonAfterGroup(gridPane, ++gridRow, "Register arbitrator");
+        registerButton = addButtonAfterGroup(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.register"));
         registerButton.disableProperty().bind(model.registrationEditDisabled);
         registerButton.setOnAction(e -> onRegister());
 
-        revokeButton = addButton(gridPane, ++gridRow, "Revoke registration");
+        revokeButton = addButton(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.revoke"));
         revokeButton.setDefaultButton(false);
         revokeButton.disableProperty().bind(model.revokeButtonDisabled);
         revokeButton.setOnAction(e -> onRevoke());
 
-        addTitledGroupBg(gridPane, ++gridRow, 2, "Information", Layout.GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("shared.information"), Layout.GROUP_DISTANCE);
         Label infoLabel = addMultilineLabel(gridPane, gridRow);
         GridPane.setMargin(infoLabel, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
-        infoLabel.setText("Please note that you need to stay  available for 15 days after revoking as there might be trades which are using you as " +
-                "arbitrator. The max. allowed trade period is 8 days and the dispute process might take up to 7 days.");
+        infoLabel.setText(Res.get("account.arbitratorRegistration.info.msg"));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -213,7 +212,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         model.onRemoveLanguage(locale);
 
         if (languagesListView.getItems().size() == 0) {
-            new Popup().warning("You need to set at least 1 language.\nWe added the default language for you.").show();
+            new Popup().warning(Res.get("account.arbitratorRegistration.warn.min1Language")).show();
             model.onAddLanguage(LanguageUtil.getDefaultLanguageLocaleAsCode());
         }
     }
@@ -221,22 +220,22 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     private void onRevoke() {
         if (model.isBootstrapped()) {
             model.onRevoke(
-                    () -> new Popup().feedback("You have successfully removed your arbitrator from the P2P network.").show(),
-                    (errorMessage) -> new Popup().error("Could not remove arbitrator.\nError message: " + errorMessage).show());
+                    () -> new Popup().feedback(Res.get("account.arbitratorRegistration.removedSuccess")).show(),
+                    (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.removedFailed",
+                            Res.get("shared.errorMessageInline", errorMessage))).show());
         } else {
-            new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                    "That might take up to about 2 minutes at startup.").show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
     private void onRegister() {
         if (model.isBootstrapped()) {
             model.onRegister(
-                    () -> new Popup().feedback("You have successfully registered your arbitrator to the P2P network.").show(),
-                    (errorMessage) -> new Popup().error("Could not register arbitrator.\nError message: " + errorMessage).show());
+                    () -> new Popup().feedback(Res.get("account.arbitratorRegistration.registerSuccess")).show(),
+                    (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.registerFailed",
+                            Res.get("shared.errorMessageInline", errorMessage))).show());
         } else {
-            new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                    "That might take up to about 2 minutes at startup.").show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 }

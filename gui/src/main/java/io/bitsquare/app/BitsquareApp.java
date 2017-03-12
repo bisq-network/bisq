@@ -38,11 +38,11 @@ import io.bitsquare.gui.common.view.View;
 import io.bitsquare.gui.common.view.ViewLoader;
 import io.bitsquare.gui.common.view.guice.InjectorViewFactory;
 import io.bitsquare.gui.main.MainView;
-import io.bitsquare.gui.main.MainViewModel;
 import io.bitsquare.gui.main.debug.DebugView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.*;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.P2PService;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.trade.TradeManager;
@@ -66,7 +66,6 @@ import javafx.stage.StageStyle;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.controlsfx.dialog.Dialogs;
 import org.reactfx.EventStreams;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -208,21 +207,21 @@ public class BitsquareApp extends Application {
                     showSendAlertMessagePopup();
                 } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showFilterPopup();
-                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                } else if (new KeyCodeCombination(KeyCode.P, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     showFPSWindow();
                 } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
                     if (walletsManager.areWalletsAvailable())
-                        new ShowWalletDataWindow(walletsManager).information("Wallet raw data").show();
+                        new ShowWalletDataWindow(walletsManager).show();
                     else
-                        new Popup<>().warning("The wallet is not initialized yet").show();
+                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
                     BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
                     if (walletService.isWalletReady())
-                        new SpendFromDepositTxWindow(tradeWalletService).information("Emergency wallet tool").show();
+                        new SpendFromDepositTxWindow(tradeWalletService).show();
                     else
-                        new Popup<>().warning("The wallet is not initialized yet").show();
+                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (DevFlags.DEV_MODE && new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showDebugWindow();
                 }
@@ -254,23 +253,16 @@ public class BitsquareApp extends Application {
                 String osArchitecture = Utilities.getOSArchitecture();
                 // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
                 // Needs at least more testing on different machines...
-                new Popup<>().warning("You probably have the wrong Bitsquare version for this computer.\n" +
-                        "Your computer's architecture is: " + osArchitecture + ".\n" +
-                        "The Bitsquare binary you installed is: " + Utilities.getJVMArchitecture() + ".\n" +
-                        "Please shut down and re-install the correct version (" + osArchitecture + ").")
+                new Popup<>().warning(Res.get("popup.warning.wrongVersion",
+                        osArchitecture,
+                        Utilities.getJVMArchitecture(),
+                        osArchitecture))
                         .show();
             }
-
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
-
-        } catch (
-                Throwable throwable
-                )
-
-        {
+        } catch (Throwable throwable) {
             showErrorPopup(throwable, false);
         }
-
     }
 
     private void showSendAlertMessagePopup() {
@@ -324,12 +316,7 @@ public class BitsquareApp extends Application {
                     stop();
             } catch (Throwable throwable2) {
                 // If printStackTrace cause a further exception we don't pass the throwable to the Popup.
-                Dialogs.create()
-                        .owner(primaryStage)
-                        .title("Error")
-                        .message(throwable.toString())
-                        .masthead("A fatal exception occurred at startup.")
-                        .showError();
+                log.error(throwable2.toString());
                 if (doShutDown)
                     stop();
             }
@@ -343,7 +330,7 @@ public class BitsquareApp extends Application {
         Parent parent = (Parent) debugView.getRoot();
         Stage stage = new Stage();
         stage.setScene(new Scene(parent));
-        stage.setTitle("Debug window");
+        stage.setTitle("Debug window"); // Don't translate, just for dev
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.UTILITY);
         stage.initOwner(scene.getWindow());
@@ -351,7 +338,6 @@ public class BitsquareApp extends Application {
         stage.setY(primaryStage.getY());
         stage.show();
     }
-
 
     private void showFPSWindow() {
         Label label = new Label();
@@ -361,14 +347,14 @@ public class BitsquareApp extends Application {
                     int n = ticks.size() - 1;
                     return n * 1_000_000_000.0 / (ticks.get(n) - ticks.get(0));
                 })
-                .map(d -> String.format("FPS: %.3f", d))
+                .map(d -> String.format("FPS: %.3f", d)) // Don't translate, just for dev
                 .feedTo(label.textProperty());
 
         Pane root = new StackPane();
         root.getChildren().add(label);
         Stage stage = new Stage();
         stage.setScene(new Scene(root));
-        stage.setTitle("FPS");
+        stage.setTitle("FPS"); // Don't translate, just for dev
         stage.initModality(Modality.NONE);
         stage.initStyle(StageStyle.UTILITY);
         stage.initOwner(scene.getWindow());
@@ -379,15 +365,16 @@ public class BitsquareApp extends Application {
         stage.show();
     }
 
+    @SuppressWarnings("CodeBlock2Expr")
     @Override
     public void stop() {
         if (!shutDownRequested) {
-            new Popup().headLine("Shut down in progress")
-                    .backgroundInfo("Shutting down application can take a few seconds.\n" +
-                            "Please don't interrupt this process.")
+            new Popup().headLine(Res.get("popup.shutDownInProgress.headline"))
+                    .backgroundInfo(Res.get("popup.shutDownInProgress.msg"))
                     .hideCloseButton()
                     .useAnimation(false)
                     .show();
+            //noinspection CodeBlock2Expr
             UserThread.runAfter(() -> {
                 gracefulShutDown(() -> {
                     log.debug("App shutdown complete");
@@ -403,8 +390,8 @@ public class BitsquareApp extends Application {
         try {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
-                injector.getInstance(MainViewModel.class).shutDown();
                 injector.getInstance(TradeManager.class).shutDown();
+                //noinspection CodeBlock2Expr
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {

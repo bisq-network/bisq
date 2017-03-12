@@ -23,7 +23,6 @@ import io.bitsquare.btc.listeners.TxConfidenceListener;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
-import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.messages.user.Preferences;
 import javafx.scene.control.Label;
@@ -38,13 +37,10 @@ public class TxIdTextField extends AnchorPane {
     private static final Logger log = LoggerFactory.getLogger(TxIdTextField.class);
 
     private static Preferences preferences;
-
     public static void setPreferences(Preferences preferences) {
         TxIdTextField.preferences = preferences;
     }
-
     private static BtcWalletService walletService;
-
     public static void setWalletService(BtcWalletService walletService) {
         TxIdTextField.walletService = walletService;
     }
@@ -76,11 +72,11 @@ public class TxIdTextField extends AnchorPane {
         copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().add("copy-icon");
-        copyIcon.setTooltip(new Tooltip("Copy transaction ID to clipboard"));
+        copyIcon.setTooltip(new Tooltip(Res.get("txIdTextField.copyIcon.tooltip")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         AnchorPane.setRightAnchor(copyIcon, 30.0);
 
-        Tooltip tooltip = new Tooltip("Open a blockchain explorer with that transactions ID");
+        Tooltip tooltip = new Tooltip(Res.get("txIdTextField.blockExplorerIcon.tooltip"));
 
         blockExplorerIcon = new Label();
         blockExplorerIcon.getStyleClass().add("external-link-icon");
@@ -135,38 +131,13 @@ public class TxIdTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void openBlockExplorer(String txID) {
-        try {
-            if (preferences != null)
-                GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + txID);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            new Popup().warning("Opening browser failed. Please check your internet " +
-                    "connection.").show();
-        }
+        if (preferences != null)
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + txID);
     }
 
     private void updateConfidence(TransactionConfidence confidence) {
+        GUIUtil.updateConfidence(confidence, progressIndicatorTooltip, txConfidenceIndicator);
         if (confidence != null) {
-            switch (confidence.getConfidenceType()) {
-                case UNKNOWN:
-                    progressIndicatorTooltip.setText("Unknown transaction status");
-                    txConfidenceIndicator.setProgress(0);
-                    break;
-                case PENDING:
-                    progressIndicatorTooltip.setText(
-                            "Seen by " + confidence.numBroadcastPeers() + " peer(s) / 0 " + "confirmations");
-                    txConfidenceIndicator.setProgress(-1.0);
-                    break;
-                case BUILDING:
-                    progressIndicatorTooltip.setText("Confirmed in " + confidence.getDepthInBlocks() + " block(s)");
-                    txConfidenceIndicator.setProgress(Math.min(1, (double) confidence.getDepthInBlocks() / 6.0));
-                    break;
-                case DEAD:
-                    progressIndicatorTooltip.setText("Transaction is invalid.");
-                    txConfidenceIndicator.setProgress(0);
-                    break;
-            }
-
             if (txConfidenceIndicator.getProgress() != 0) {
                 txConfidenceIndicator.setVisible(true);
                 AnchorPane.setRightAnchor(txConfidenceIndicator, 0.0);

@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.overlays.windows;
 import io.bitsquare.messages.alert.Alert;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.locale.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
@@ -46,7 +47,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
     public void show() {
         width = 700;
         // need to set headLine, otherwise the fields will not be created in addHeadLine
-        headLine = "Important information!";
+        headLine = Res.get("displayAlertMessageWindow.headline");
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -68,20 +69,20 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
         checkNotNull(alert, "alertMessage must not be null");
         addMultilineLabel(gridPane, ++rowIndex, alert.message, 10);
         if (alert.isUpdateInfo) {
-            headLine = "Important update information!";
+            headLine = Res.get("displayAlertMessageWindow.update.headline");
             headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
             String url = "https://bitsquare.io/downloads";
             HyperlinkWithIcon hyperlinkWithIcon = addLabelHyperlinkWithIcon(gridPane, ++rowIndex,
-                    "Download:", url, url).second;
+                    Res.get("displayAlertMessageWindow.update.download"), url, url).second;
             hyperlinkWithIcon.setMaxWidth(550);
         } else {
-            headLine = "Important information!";
+            headLine = Res.get("displayAlertMessageWindow.headline");
             headLineLabel.setStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 22;");
         }
-        closeButton = new Button("Close");
+        closeButton = new Button(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
             hide();
-            closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
+            closeHandlerOptional.ifPresent(Runnable::run);
         });
 
         GridPane.setRowIndex(closeButton, ++rowIndex);

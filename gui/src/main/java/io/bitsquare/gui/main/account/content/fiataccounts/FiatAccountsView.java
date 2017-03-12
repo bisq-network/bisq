@@ -30,7 +30,7 @@ import io.bitsquare.gui.util.FormBuilder;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.*;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountFactory;
 import io.bitsquare.messages.payment.PaymentMethod;
@@ -115,7 +115,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             if (newValue != null)
                 onSelectAccount(newValue);
         };
-        Label placeholder = new Label("There are no accounts set up yet");
+        Label placeholder = new Label(Res.get("shared.noAccountsSetupYet"));
         placeholder.setWrapText(true);
         paymentAccountsListView.setPlaceholder(placeholder);
     }
@@ -152,8 +152,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
         } else {
-            new Popup().warning("That account name is already used in a saved account.\n" +
-                    "Please use another name.").show();
+            new Popup().warning(Res.get("shared.accountNameAlreadyUsed")).show();
         }
     }
 
@@ -162,19 +161,18 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     }
 
     private void onDeleteAccount(PaymentAccount paymentAccount) {
-        new Popup().warning("Do you really want to delete the selected account?")
-                .actionButtonText("Yes")
+        new Popup().warning(Res.get("shared.askConfirmDeleteAccount"))
+                .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
                     boolean isPaymentAccountUsed = model.onDeleteAccount(paymentAccount);
                     if (!isPaymentAccountUsed)
                         removeSelectAccountForm();
                     else
-                        UserThread.runAfter(() -> {
-                            new Popup().warning("You cannot delete that account because it is used in an " +
-                                    "open offer or in a trade.").show();
-                        }, 100, TimeUnit.MILLISECONDS);
+                        UserThread.runAfter(() -> new Popup().warning(
+                                Res.get("shared.cannotDeleteAccount"))
+                                .show(), 100, TimeUnit.MILLISECONDS);
                 })
-                .closeButtonText("Cancel")
+                .closeButtonText(Res.get("shared.cancel"))
                 .show();
     }
 
@@ -184,9 +182,9 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void buildForm() {
-        addTitledGroupBg(root, gridRow, 1, "Manage accounts");
+        addTitledGroupBg(root, gridRow, 1, Res.get("shared.manageAccounts"));
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your national currency\naccounts:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("account.fiat.yourFiatAccounts"), Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
         tuple.first.setTextAlignment(TextAlignment.RIGHT);
         paymentAccountsListView = tuple.second;
@@ -221,7 +219,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             }
         });
 
-        Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, "Add new account", "Export Accounts", "Import Accounts");
+        Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, Res.get("shared.addNewAccount"),
+                Res.get("shared.ExportAccounts"), Res.get("shared.importAccounts"));
         addAccountButton = tuple3.first;
         exportButton = tuple3.second;
         importButton = tuple3.third;
@@ -232,9 +231,9 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentAccountsListView.getSelectionModel().clearSelection();
         removeAccountRows();
         addAccountButton.setDisable(true);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Create new account", Layout.GROUP_DISTANCE);
-        paymentMethodComboBox = addLabelComboBox(root, gridRow, "Payment method:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        paymentMethodComboBox.setPromptText("Select payment method");
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
+        paymentMethodComboBox = addLabelComboBox(root, gridRow, Res.getWithCol("shared.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(15);
         paymentMethodComboBox.setPrefWidth(250);
         List<PaymentMethod> list = PaymentMethod.ALL_VALUES.stream()
@@ -244,7 +243,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentMethodComboBox.setConverter(new StringConverter<PaymentMethod>() {
             @Override
             public String toString(PaymentMethod paymentMethod) {
-                return paymentMethod != null ? BSResources.get(paymentMethod.getId()) : "";
+                return paymentMethod != null ? Res.get(paymentMethod.getId()) : "";
             }
 
             @Override
@@ -262,7 +261,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             if (paymentMethodForm != null) {
                 paymentMethodForm.addFormForAddAccount();
                 gridRow = paymentMethodForm.getGridRow();
-                Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, "Save new account", "Cancel");
+                Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.saveNewAccount"), Res.get("shared.cancel"));
                 saveNewAccountButton = tuple2.first;
                 saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccount()));
                 saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
@@ -277,12 +276,12 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private void onSelectAccount(PaymentAccount paymentAccount) {
         removeAccountRows();
         addAccountButton.setDisable(false);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Selected account", Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
         paymentMethodForm = getPaymentMethodForm(paymentAccount);
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForDisplayAccount();
             gridRow = paymentMethodForm.getGridRow();
-            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, "Delete account", "Cancel");
+            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.deleteAccount"), Res.get("shared.cancel"));
             Button deleteAccountButton = tuple.first;
             deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentMethodForm.getPaymentAccount()));
             Button cancelButton = tuple.second;
@@ -316,11 +315,11 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             case PaymentMethod.FASTER_PAYMENTS_ID:
                 return new FasterPaymentsForm(paymentAccount, inputValidator, root, gridRow, formatter);
             case PaymentMethod.NATIONAL_BANK_ID:
-                return new NationalBankForm(paymentAccount, inputValidator, root, gridRow, formatter, () -> onCancelNewAccount());
+                return new NationalBankForm(paymentAccount, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
             case PaymentMethod.SAME_BANK_ID:
-                return new SameBankForm(paymentAccount, inputValidator, root, gridRow, formatter, () -> onCancelNewAccount());
+                return new SameBankForm(paymentAccount, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
             case PaymentMethod.SPECIFIC_BANKS_ID:
-                return new SpecificBankForm(paymentAccount, inputValidator, root, gridRow, formatter, () -> onCancelNewAccount());
+                return new SpecificBankForm(paymentAccount, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
             case PaymentMethod.ALI_PAY_ID:
                 return new AliPayForm(paymentAccount, aliPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SWISH_ID:

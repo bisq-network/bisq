@@ -25,8 +25,8 @@ import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.PeerInfoIcon;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
-import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
@@ -56,7 +56,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     @FXML
     Button exportButton;
-    private final BSFormatter formatter;
     private final OfferDetailsWindow offerDetailsWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
     private PrivateNotificationManager privateNotificationManager;
@@ -64,10 +63,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private SortedList<ClosedTradableListItem> sortedList;
 
     @Inject
-    public ClosedTradesView(ClosedTradesViewModel model, BSFormatter formatter, OfferDetailsWindow offerDetailsWindow,
+    public ClosedTradesView(ClosedTradesViewModel model, OfferDetailsWindow offerDetailsWindow,
                             TradeDetailsWindow tradeDetailsWindow, PrivateNotificationManager privateNotificationManager, Stage stage) {
         super(model);
-        this.formatter = formatter;
         this.offerDetailsWindow = offerDetailsWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
@@ -76,8 +74,18 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     @Override
     public void initialize() {
+        priceColumn.setText(Res.get("shared.price"));
+        amountColumn.setText(Res.get("shared.amountWithCur", "BTC"));
+        volumeColumn.setText(Res.get("shared.volume"));
+        marketColumn.setText(Res.get("shared.market"));
+        directionColumn.setText(Res.get("shared.tradeType"));
+        dateColumn.setText(Res.get("shared.dateTime"));
+        tradeIdColumn.setText(Res.get("shared.tradeId"));
+        stateColumn.setText(Res.get("shared.state"));
+        avatarColumn.setText(Res.get(""));
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No closed trades available"));
+        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noItems", Res.get("shared.trades"))));
 
         setTradeIdColumnCellFactory();
         setDirectionColumnCellFactory();
@@ -135,7 +143,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
-        exportButton.setText("Export to csv");
+        exportButton.setText(Res.get("shared.exportCSV"));
     }
 
     @Override
@@ -201,7 +209,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                         else if (tradable instanceof OpenOffer)
                                             offerDetailsWindow.show(tradable.getOffer());
                                     });
-                                    field.setTooltip(new Tooltip("Open popup for details"));
+                                    field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
@@ -295,10 +303,13 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                     int numPastTrades = model.getNumPastTrades(newItem.getTradable());
                                     Trade trade = (Trade) newItem.getTradable();
                                     String hostName = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress().hostName : "";
-                                    Node identIcon = new PeerInfoIcon(hostName, "Trading peers onion address: " + hostName, numPastTrades, privateNotificationManager, newItem.getTradable().getOffer());
+                                    Node peerInfoIcon = new PeerInfoIcon(hostName,
+                                            Res.get("portfolio.closed.peerInfoIcon", hostName),
+                                            numPastTrades,
+                                            privateNotificationManager,
+                                            newItem.getTradable().getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
-                                    if (identIcon != null)
-                                        setGraphic(identIcon);
+                                    setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);
                                 }

@@ -18,7 +18,6 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import com.google.common.base.Splitter;
-import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.wallet.WalletsManager;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
@@ -29,7 +28,7 @@ import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.gui.util.validation.PasswordValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
@@ -113,7 +112,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         }
 
         if (headLine == null)
-            headLine = "Enter password to unlock";
+            headLine = Res.get("walletPasswordWindow.headline");
 
         createGridPane();
         addHeadLine();
@@ -166,11 +165,10 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void addInputFields() {
-        Label label = new Label("Enter password:");
+        Label label = new Label(Res.get("password.enterPassword"));
         label.setWrapText(true);
         GridPane.setMargin(label, new Insets(3, 0, 0, 0));
         GridPane.setRowIndex(label, ++rowIndex);
-
 
         passwordTextField = new PasswordTextField();
         GridPane.setMargin(passwordTextField, new Insets(3, 0, 0, 0));
@@ -186,16 +184,16 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
         BusyAnimation busyAnimation = new BusyAnimation(false);
         Label deriveStatusLabel = new Label();
 
-        unlockButton = new Button("Unlock");
+        unlockButton = new Button(Res.get("shared.unlock"));
         unlockButton.setDefaultButton(true);
         unlockButton.setDisable(true);
         unlockButton.setOnAction(e -> {
             String password = passwordTextField.getText();
-            checkArgument(password.length() < 50, "Password must be less then 50 characters.");
+            checkArgument(password.length() < 50, Res.get("password.tooLong"));
             KeyCrypterScrypt keyCrypterScrypt = walletsManager.getKeyCrypterScrypt();
             if (keyCrypterScrypt != null) {
                 busyAnimation.play();
-                deriveStatusLabel.setText("Derive key from password");
+                deriveStatusLabel.setText(Res.get("password.deriveKey"));
                 ScryptUtil.deriveKeyWithScrypt(keyCrypterScrypt, password, aesKey -> {
                     if (walletsManager.checkAESKey(aesKey)) {
                         if (aesKeyHandler != null)
@@ -207,8 +205,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
                         deriveStatusLabel.setText("");
 
                         UserThread.runAfter(() -> new Popup()
-                                .warning("You entered the wrong password.\n\n" +
-                                        "Please try entering your password again, carefully checking for typos or spelling errors.")
+                                .warning(Res.get("password.wrongPw"))
                                 .onClose(this::blurAgain).show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
                     }
                 });
@@ -217,14 +214,14 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
             }
         });
 
-        forgotPasswordButton = new Button("Forgot password?");
+        forgotPasswordButton = new Button(Res.get("password.forgotPassword"));
         forgotPasswordButton.setOnAction(e -> {
             forgotPasswordButton.setDisable(true);
             unlockButton.setDefaultButton(false);
             showRestoreScreen();
         });
 
-        Button cancelButton = new Button("Cancel");
+        Button cancelButton = new Button(Res.get("shared.cancel"));
         cancelButton.setOnAction(event -> {
             hide();
             closeHandlerOptional.ifPresent(Runnable::run);
@@ -252,7 +249,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     private void showRestoreScreen() {
-        Label headLine2Label = new Label(BSResources.get("Restore wallet from seed words"));
+        Label headLine2Label = new Label(Res.get(Res.get("seed.restore.title")));
         headLine2Label.setId("popup-headline");
         headLine2Label.setMouseTransparent(true);
         GridPane.setHalignment(headLine2Label, HPos.LEFT);
@@ -271,14 +268,15 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
         gridPane.getChildren().add(separator);
 
-        Tuple2<Label, TextArea> tuple = addLabelTextArea(gridPane, ++rowIndex, "Wallet seed words:", "", 5);
+        Tuple2<Label, TextArea> tuple = addLabelTextArea(gridPane, ++rowIndex, Res.get("seed.seedWords"), "", 5);
         seedWordsTextArea = tuple.second;
         seedWordsTextArea.setPrefHeight(60);
         seedWordsTextArea.setStyle("-fx-border-color: #ddd;");
 
-        Tuple2<Label, DatePicker> labelDatePickerTuple2 = addLabelDatePicker(gridPane, ++rowIndex, "Creation Date:");
+        Tuple2<Label, DatePicker> labelDatePickerTuple2 = addLabelDatePicker(gridPane, ++rowIndex,
+                Res.get("seed.creationDate"));
         restoreDatePicker = labelDatePickerTuple2.second;
-        restoreButton = addButton(gridPane, ++rowIndex, "Restore wallets");
+        restoreButton = addButton(gridPane, ++rowIndex, Res.get("seed.restore"));
         restoreButton.setDefaultButton(true);
         stage.setHeight(340);
 
@@ -334,16 +332,10 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     private void onRestore() {
         if (walletsManager.hasPositiveBalance()) {
-            new Popup()
-                    .warning("Your bitcoin wallet is not empty.\n\n" +
-                            "You must empty this wallet before attempting to restore an older one, as mixing wallets " +
-                            "together can lead to invalidated backups.\n\n" +
-                            "Please finalize your trades, close all your open offers and go to the Funds section to withdraw your bitcoin.\n" +
-                            "In case you cannot access your bitcoin you can use the emergency tool to empty the wallet.\n" +
-                            "To open that emergency tool press \"cmd + e\".")
-                    .actionButtonText("I want to restore anyway")
+            new Popup().warning(Res.get("seed.warn.walletNotEmpty.msg"))
+                    .actionButtonText(Res.get("seed.warn.walletNotEmpty.restore"))
                     .onAction(this::checkIfEncrypted)
-                    .closeButtonText("I will empty my wallet first")
+                    .closeButtonText(Res.get("seed.warn.walletNotEmpty.emptyWallet"))
                     .show();
         } else {
             checkIfEncrypted();
@@ -352,12 +344,9 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     private void checkIfEncrypted() {
         if (walletsManager.areWalletsEncrypted()) {
-            new Popup()
-                    .information("Your bitcoin wallet is encrypted.\n\n" +
-                            "After restore, the wallet will no longer be encrypted and you must set a new password.\n\n" +
-                            "Do you want to proceed?")
-                    .closeButtonText("No")
-                    .actionButtonText("Yes")
+            new Popup().information(Res.get("seed.warn.notEncryptedAnymore"))
+                    .closeButtonText(Res.get("shared.no"))
+                    .actionButtonText(Res.get("shared.yes"))
                     .onAction(this::doRestore)
                     .show();
         } else {
@@ -372,19 +361,13 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
                 seed,
                 () -> UserThread.execute(() -> {
                     log.debug("Wallet restored with seed words");
-
-                    new Popup()
-                            .feedback("Wallet restored successfully with the new seed words.\n\n" +
-                                    "You need to shut down and restart the application.")
-                            .closeButtonText("Shut down")
-                            .onClose(BitsquareApp.shutDownHandler::run)
-                            .show();
+                    new Popup().feedback(Res.get("seed.restore.success"))
+                            .useShutDownButton();
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());
-                    new Popup()
-                            .error("An error occurred when restoring the wallet with seed words.\n" +
-                                    "Error message: " + throwable.getMessage())
+                    new Popup().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline",
+                            throwable.getMessage())))
                             .show();
                 }));
     }

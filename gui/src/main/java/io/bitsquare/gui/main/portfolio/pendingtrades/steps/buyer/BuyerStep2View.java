@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.portfolio.pendingtrades.steps.buyer;
 
+import ch.qos.logback.core.pattern.util.RegularEscapeUtil;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.BusyAnimation;
@@ -34,6 +35,9 @@ import io.bitsquare.messages.payment.payload.CashDepositAccountContractData;
 import io.bitsquare.messages.payment.payload.CryptoCurrencyAccountContractData;
 import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import io.bitsquare.messages.payment.payload.USPostalMoneyOrderAccountContractData;
+import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
+import io.bitsquare.payment.*;
 import io.bitsquare.trade.Trade;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -66,66 +70,62 @@ public class BuyerStep2View extends TradeStepView {
         if (tradeStatePropertySubscription == null) {
             tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
                 if (state == Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN) {
-                    PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
-                    String key = "startPayment" + trade.getId();
-                    String message = "";
-                    if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData)
-                        message = "Your trade has reached at least one blockchain confirmation.\n" +
-                                "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
-                                "Please transfer from your external " +
-                                CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " wallet\n" +
-                                model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the BTC seller.\n\n" +
-                                "Here are the trading account details of the bitcoin seller:\n" +
-                                "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n\n" +
-                                "(You can copy & paste the values from the main screen after closing that popup.)";
-                    else if (paymentAccountContractData != null)
-                        if (paymentAccountContractData instanceof CashDepositAccountContractData)
-                            message = "Your trade has reached at least one blockchain confirmation.\n" +
-                                    "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
-                                    "Please go to a bank and pay " +
-                                    model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the BTC seller.\n\n" +
-                                    "Here are the trading account details of the BTC seller:\n" +
-                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
-                                    "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
-                                    "Please don't forget to add the trade ID \"" + trade.getShortId() +
-                                    "\" as \"reason for payment\" so the receiver can assign your payment to this trade.\n\n" +
-                                    "DO NOT use any additional notice in the \"reason for payment\" text like " +
-                                    "Bitcoin, Btc or Bitsquare.\n\n" +
-                                    "If your bank charges fees you have to cover those fees.\n\n" +
-                                    "IMPORTANT REQUIREMENT:\n" +
-                                    "After you have done the payment write on the paper receipt: NO REFUNDS.\n" +
-                                    "Then tear it in 2 parts, make a photo and send it to the BTC seller's email address.";
-                        else if (paymentAccountContractData instanceof USPostalMoneyOrderAccountContractData)
-                            message = "Your trade has reached at least one blockchain confirmation.\n" +
-                                    "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
-                                    "Please send " +
-                                    model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " by \"US Postal Money Order\" to the BTC seller.\n\n" +
-                                    "Here are the trading account details of the BTC seller:\n" +
-                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
-                                    "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
-                                    "Please don't forget to add the trade ID \"" + trade.getShortId() +
-                                    "\" as \"reason for payment\" so the receiver can assign your payment to this trade.\n\n" +
-                                    "DO NOT use any additional notice in the \"reason for payment\" text like " +
-                                    "Bitcoin, Btc or Bitsquare.";
-                        else
-                            message = "Your trade has reached at least one blockchain confirmation.\n" +
-                                    "(You can wait for more confirmations if you want - 6 confirmations are considered as very secure.)\n\n" +
-                                    "Please go to your online banking web page and pay " +
-                                    model.formatter.formatVolumeWithCode(trade.getTradeVolume()) + " to the BTC seller.\n\n" +
-                                    "Here are the trading account details of the BTC seller:\n" +
-                                    "" + paymentAccountContractData.getPaymentDetailsForTradePopup() + ".\n" +
-                                    "(You can copy & paste the values from the main screen after closing that popup.)\n\n" +
-                                    "Please don't forget to add the trade ID \"" + trade.getShortId() +
-                                    "\" as \"reason for payment\" so the receiver can assign your payment to this trade.\n\n" +
-                                    "DO NOT use any additional notice in the \"reason for payment\" text like " +
-                                    "Bitcoin, Btc or Bitsquare.\n\n" +
-                                    "If your bank charges fees you have to cover those fees.";
 
-                    if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
-                        preferences.dontShowAgain(key, true);
-                        new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
-                                .attention(message)
-                                .show();
+                    PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
+                    if (paymentAccountContractData != null) {
+                        String paymentDetailsForTradePopup = paymentAccountContractData.getPaymentDetailsForTradePopup();
+                        String key = "startPayment" + trade.getId();
+                        String message = Res.get("portfolio.pending.step2.confReached");
+                        String copyPaste = Res.get("portfolio.pending.step2_buyer.copyPaste");
+                        String refTextWarn = Res.get("portfolio.pending.step2_buyer.refTextWarn");
+                        String accountDetails = Res.get("portfolio.pending.step2_buyer.accountDetails");
+                        String tradeId = Res.get("portfolio.pending.step2_buyer.tradeId");
+                        String assign = Res.get("portfolio.pending.step2_buyer.assign");
+                        String fees = Res.get("portfolio.pending.step2_buyer.fees");
+                        String id = trade.getShortId();
+                        String amount = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
+                        if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData)
+                            message += Res.get("portfolio.pending.step2_buyer.altcoin",
+                                    CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),
+                                    amount) +
+                                    accountDetails +
+                                    paymentDetailsForTradePopup + ".\n\n" +
+                                    copyPaste;
+                        else if (paymentAccountContractData instanceof CashDepositAccountContractData)
+                            message += Res.get("portfolio.pending.step2_buyer.cash",
+                                    amount) +
+                                    accountDetails +
+                                    paymentDetailsForTradePopup + ".\n" +
+                                    copyPaste + "\n\n" +
+                                    tradeId + id +
+                                    assign +
+                                    refTextWarn + "\n\n" +
+                                    fees + "\n\n" +
+                                    Res.get("portfolio.pending.step2_buyer.cash.extra");
+                        else if (paymentAccountContractData instanceof USPostalMoneyOrderAccountContractData)
+                            message += Res.get("portfolio.pending.step2_buyer.postal", amount) +
+                                    accountDetails +
+                                    paymentDetailsForTradePopup + ".\n" +
+                                    copyPaste + "\n\n" +
+                                    tradeId + id +
+                                    assign +
+                                    refTextWarn;
+                        else
+                            message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
+                                    accountDetails +
+                                    paymentDetailsForTradePopup + ".\n" +
+                                    copyPaste + "\n\n" +
+                                    tradeId + id +
+                                    assign +
+                                    refTextWarn + "\n\n" +
+                                    fees;
+
+                        if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
+                            preferences.dontShowAgain(key, true);
+                            new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
+                                    .attention(message)
+                                    .show();
+                        }
                     }
                 } else if (state == Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED && confirmButton.isDisabled()) {
                     showStatusInfo();
@@ -159,9 +159,9 @@ public class BuyerStep2View extends TradeStepView {
         PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
         String paymentMethodName = paymentAccountContractData != null ? paymentAccountContractData.getPaymentMethodName() : "";
         TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
-                "Start payment using " + BSResources.get(paymentMethodName),
+                Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodName)),
                 Layout.GROUP_DISTANCE);
-        TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to transfer:",
+        TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
                 model.getFiatVolume(),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
@@ -210,7 +210,7 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = CashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
-                String labelTitle = "Sellers " + CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) + " address:";
+                String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress", CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));
                 gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData, labelTitle);
                 break;
             default:
@@ -218,11 +218,11 @@ public class BuyerStep2View extends TradeStepView {
         }
 
         if (!(paymentAccountContractData instanceof CryptoCurrencyAccountContractData))
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Reason for payment:", model.dataModel.getReference());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
 
         GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
 
-        Tuple3<Button, BusyAnimation, Label> tuple3 = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow, "Payment started");
+        Tuple3<Button, BusyAnimation, Label> tuple3 = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow, Res.get("portfolio.pending.step2_buyer.paymentStarted"));
         confirmButton = tuple3.first;
         confirmButton.setOnAction(e -> onPaymentStarted());
         busyAnimation = tuple3.second;
@@ -239,10 +239,7 @@ public class BuyerStep2View extends TradeStepView {
     @Override
     protected String getWarningText() {
         setWarningHeadline();
-        return "You still have not done your " + model.dataModel.getCurrencyCode() + " payment!\n" +
-                "Please note that the trade has to be completed until " +
-                model.getDateForOpenDispute() +
-                " otherwise the trade will be investigated by the arbitrator.";
+        return Res.get("portfolio.pending.step2_buyer.warn", model.dataModel.getCurrencyCode(), model.getDateForOpenDispute());
     }
 
 
@@ -252,9 +249,7 @@ public class BuyerStep2View extends TradeStepView {
 
     @Override
     protected String getOpenForDisputeText() {
-        return "You have not completed your payment!\n" +
-                "The max. period for the trade has elapsed.\n" +
-                "\nPlease contact the arbitrator for opening a dispute.";
+        return Res.get("portfolio.pending.step2_buyer.openForDispute");
     }
 
     @Override
@@ -273,13 +268,10 @@ public class BuyerStep2View extends TradeStepView {
                 String key = "confirmPaperReceiptSent";
                 if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                     Popup popup = new Popup();
-                    popup.headLine("Did you sent the paper receipt to the BTC seller?")
-                            .feedback("Remember:\n" +
-                                    "You need to write on the paper receipt: NO REFUNDS.\n" +
-                                    "Then tear it in 2 parts, make a photo and send it to the BTC seller's email address.")
-                            .actionButtonText("Yes, I have sent the paper receipt")
+                    popup.headLine(Res.get("portfolio.pending.step2_buyer.paperReceipt.headline"))
+                            .feedback(Res.get("portfolio.pending.step2_buyer.paperReceipt.msg"))
                             .onAction(this::showConfirmPaymentStartedPopup)
-                            .closeButtonText("No")
+                            .closeButtonText(Res.get("shared.no"))
                             .onClose(popup::hide)
                             .dontShowAgainId(key, preferences)
                             .show();
@@ -290,8 +282,7 @@ public class BuyerStep2View extends TradeStepView {
                 showConfirmPaymentStartedPopup();
             }
         } else {
-            new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                    "That might take up to about 2 minutes at startup.").show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -299,13 +290,12 @@ public class BuyerStep2View extends TradeStepView {
         String key = "confirmPaymentStarted";
         if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
             Popup popup = new Popup();
-            popup.headLine("Confirm that you have started the payment")
-                    .confirmation("Did you initiate the " + CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()) +
-                            " payment to your trading partner?")
+            popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
+                    .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg", CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode())))
                     .width(700)
-                    .actionButtonText("Yes, I have started the payment")
+                    .actionButtonText(RegularEscapeUtil.basicEscape("portfolio.pending.step2_buyer.confirmStart.yes"))
                     .onAction(this::confirmPaymentStarted)
-                    .closeButtonText("No")
+                    .closeButtonText(Res.get("shared.no"))
                     .onClose(popup::hide)
                     .dontShowAgainId(key, preferences)
                     .show();
@@ -326,14 +316,13 @@ public class BuyerStep2View extends TradeStepView {
         }, errorMessage -> {
             confirmButton.setDisable(false);
             hideStatusInfo();
-            new Popup().warning("Sending message to your trading partner failed.\n" +
-                    "Please try again and if it continue to fail report a bug.").show();
+            new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 
     private void showStatusInfo() {
         busyAnimation.play();
-        statusLabel.setText("Sending confirmation...");
+        statusLabel.setText(Res.get("shared.sendingConfirmation"));
     }
 
     private void hideStatusInfo() {

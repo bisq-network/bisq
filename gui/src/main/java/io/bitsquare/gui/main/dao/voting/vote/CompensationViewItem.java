@@ -25,6 +25,7 @@ import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.DoubleProperty;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -108,17 +109,16 @@ public class CompensationViewItem {
 
 
             CompensationRequestDisplay compensationRequestDisplay = new CompensationRequestDisplay(gridPane);
-            compensationRequestDisplay.createAllFields("Compensation request", Layout.GROUP_DISTANCE);
+            compensationRequestDisplay.createAllFields(Res.get("dao.voting.item.title"), Layout.GROUP_DISTANCE);
             compensationRequestDisplay.setAllFieldsEditable(false);
             compensationRequestDisplay.fillWithData(compensationRequestPayload);
 
             Scene scene = new Scene(anchorPane);
             scene.getStylesheets().setAll(
                     "/io/bitsquare/gui/bitsquare.css",
-                    "/io/bitsquare/gui/images.css",
-                    "/io/bitsquare/gui/CandleStickChart.css");
+                    "/io/bitsquare/gui/images.css");
             Stage stage = new Stage();
-            stage.setTitle("Compensation request with ID: " + compensationRequestPayload.getShortId());
+            stage.setTitle(Res.get("dao.voting.item.stage.title", compensationRequestPayload.getShortId()));
             stage.setScene(scene);
             if (owner == null)
                 owner = MainView.getRootContainer();
@@ -136,10 +136,10 @@ public class CompensationViewItem {
 
         });
 
-        acceptCheckBox = new CheckBox("Accept");
+        acceptCheckBox = new CheckBox(Res.get("shared.accept"));
         HBox.setMargin(acceptCheckBox, new Insets(5, 0, 0, 0));
 
-        declineCheckBox = new CheckBox("Decline");
+        declineCheckBox = new CheckBox(Res.get("shared.decline"));
         HBox.setMargin(declineCheckBox, new Insets(5, 0, 0, 0));
 
 
@@ -169,7 +169,7 @@ public class CompensationViewItem {
         });
         declineCheckBox.setSelected(compensationRequestVoteItem.isDeclineVote());
 
-        removeButton = new Button("Remove");
+        removeButton = new Button(Res.get("shared.remove"));
         removeButton.setOnAction(event -> {
             vBox.getChildren().remove(hBox);
             cleanupInstance();

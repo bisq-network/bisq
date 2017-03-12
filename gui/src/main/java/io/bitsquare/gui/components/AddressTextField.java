@@ -22,6 +22,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -55,7 +56,7 @@ public class AddressTextField extends AnchorPane {
         textField.setId("address-text-field");
         textField.setEditable(false);
         textField.textProperty().bind(address);
-        String tooltipText = "Open your default bitcoin wallet";
+        String tooltipText = Res.get("addressTextField.openWallet");
         Tooltip.install(textField, new Tooltip(tooltipText));
 
         textField.setOnMousePressed(event -> wasPrimaryButtonDown = event.isPrimaryButtonDown());
@@ -80,7 +81,7 @@ public class AddressTextField extends AnchorPane {
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().add("copy-icon");
-        Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
+        Tooltip.install(copyIcon, new Tooltip(Res.get("addressTextField.copyToClipboard")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         copyIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(() -> {
             if (address.get() != null && address.get().length() > 0)
@@ -100,8 +101,7 @@ public class AddressTextField extends AnchorPane {
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception e) {
             log.warn(e.getMessage());
-            new Popup().warning("Opening a default bitcoin wallet application has failed. " +
-                    "Perhaps you don't have one installed?").show();
+            new Popup().warning(Res.get("addressTextField.openWallet.failed")).show();
         }
     }
 

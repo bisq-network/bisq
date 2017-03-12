@@ -36,6 +36,7 @@ import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.validation.BtcAddressValidator;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -66,6 +67,8 @@ import java.util.stream.Collectors;
 @FxmlView
 public class WithdrawalView extends ActivatableView<VBox, Void> {
 
+    @FXML
+    Label amountLabel, fromLabel, toLabel;
     @FXML
     Button withdrawButton;
     @FXML
@@ -119,8 +122,17 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        amountLabel.setText(Res.getWithCol("shared.amountWithCur", "BTC"));
+        fromLabel.setText(Res.getWithCol("funds.withdrawal.fromLabel", "BTC"));
+        toLabel.setText(Res.getWithCol("funds.withdrawal.toLabel", "BTC"));
+        withdrawButton.setText(Res.get("funds.withdrawal.withdrawButton"));
+
+        addressColumn.setText(Res.get("shared.address"));
+        balanceColumn.setText(Res.get("shared.balanceWithCur", "BTC"));
+        selectColumn.setText(Res.get("shared.select"));
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No funds are available for withdrawal"));
+        tableView.setPlaceholder(new Label(Res.get("funds.withdrawal.noFundsAvailable")));
         tableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         setAddressColumnCellFactory();
@@ -223,7 +235,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 } catch (InsufficientFundsException e) {
                     new Popup<>().warning(e.getMessage()).show();
                 } catch (Throwable t) {
-                    new Popup<>().error("Error at creating transaction: " + t.toString()).show();
+                    new Popup<>().error(Res.get("popup.error.createTx", t.toString())).show();
                 }
                 if (feeEstimationTransaction != null) {
                     Coin fee = feeEstimationTransaction.getFee();
@@ -236,22 +248,24 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         if (DevFlags.DEV_MODE) {
                             doWithdraw(amount, fee, callback);
                         } else {
-                            new Popup().headLine("Confirm withdrawal request")
-                                    .confirmation("Sending: " + formatter.formatCoinWithCode(senderAmountAsCoinProperty.get()) + "\n" +
-                                            "From address: " + withdrawFromTextField.getText() + "\n" +
-                                            "To receiving address: " + withdrawToTextField.getText() + ".\n" +
-                                            "Required transaction fee is: " + formatter.formatCoinWithCode(fee) + " (" + MathUtils.roundDouble(((double) fee.value / (double) txSize), 2) + " Satoshis/byte)\n" +
-                                            "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
-                                            "The recipient will receive: " + formatter.formatCoinWithCode(receiverAmount) + "\n\n" +
-                                            "Are you sure you want to withdraw that amount?")
-                                    .actionButtonText("Yes")
+                            double feePerByte = MathUtils.roundDouble(((double) fee.value / (double) txSize), 2);
+                            double kb = txSize / 1000d;
+                            new Popup().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
+                                    .confirmation(Res.get("shared.sendFundsDetailsWithFee",
+                                            formatter.formatCoinWithCode(senderAmountAsCoinProperty.get()),
+                                            withdrawFromTextField.getText(),
+                                            withdrawToTextField.getText(),
+                                            formatter.formatCoinWithCode(fee),
+                                            feePerByte,
+                                            kb,
+                                            formatter.formatCoinWithCode(receiverAmount)))
+                                    .actionButtonText(Res.get("shared.yes"))
                                     .onAction(() -> doWithdraw(amount, fee, callback))
-                                    .closeButtonText("Cancel")
+                                    .closeButtonText(Res.get("shared.cancel"))
                                     .show();
                         }
                     } else {
-                        new Popup().warning("The amount you would like to send is too low as the bitcoin transaction fee will be deducted.\n" +
-                                "Please use a higher amount.").show();
+                        new Popup().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
                     }
                 }
             } catch (Throwable e) {
@@ -288,17 +302,17 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 withdrawFromTextField.setText(selectedItems.stream().findAny().get().getAddressEntry().getAddressString());
                 withdrawFromTextField.setTooltip(null);
             } else {
-                String tooltipText = "Withdraw from multiple addresses:\n" +
-                        selectedItems.stream()
-                                .map(WithdrawalListItem::getAddressString)
-                                .collect(Collectors.joining(",\n"));
                 int abbr = Math.max(10, 66 / selectedItems.size());
-                String text = "Withdraw from multiple addresses (" +
-                        selectedItems.stream()
-                                .map(e -> StringUtils.abbreviate(e.getAddressString(), abbr))
-                                .collect(Collectors.joining(", ")) +
-                        ")";
+                String addressesShortened = selectedItems.stream()
+                        .map(e -> StringUtils.abbreviate(e.getAddressString(), abbr))
+                        .collect(Collectors.joining(", "));
+                String text = Res.get("funds.withdrawal.withdrawMultipleAddresses", addressesShortened);
                 withdrawFromTextField.setText(text);
+
+                String addresses = selectedItems.stream()
+                        .map(WithdrawalListItem::getAddressString)
+                        .collect(Collectors.joining(",\n"));
+                String tooltipText = Res.get("funds.withdrawal.withdrawMultipleAddresses.tooltip", addresses);
                 withdrawFromTextField.setTooltip(new Tooltip(tooltipText));
             }
         } else {
@@ -307,15 +321,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void openBlockExplorer(WithdrawalListItem item) {
-        if (item.getAddressString() != null) {
-            try {
-                GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                new Popup().warning("Opening browser failed. Please check your internet " +
-                        "connection.").show();
-            }
-        }
+        if (item.getAddressString() != null)
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
     }
 
 
@@ -346,15 +353,14 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             reset();
             updateList();
         } catch (AddressFormatException e) {
-            new Popup().warning("The address is not correct. Please check the address format.").show();
+            new Popup().warning(Res.get("validation.btc.invalidAddress")).show();
         } catch (Wallet.DustySendRequested e) {
-            new Popup().warning("The amount you would like to send is below the dust limit and would be rejected by the bitcoin network.\n" +
-                    "Please use a higher amount.").show();
+            new Popup().warning(Res.get("validation.btc.amountBelowDust")).show();
         } catch (AddressEntryException e) {
             new Popup().error(e.getMessage()).show();
         } catch (InsufficientMoneyException e) {
             log.warn(e.getMessage());
-            new Popup().warning("You don't have enough fund in your wallet.").show();
+            new Popup().warning(Res.get("funds.withdrawal.notEnoughFunds")).show();
         } catch (Throwable e) {
             log.warn(e.getMessage());
             new Popup().warning(e.getMessage()).show();
@@ -367,16 +373,16 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         tableView.getSelectionModel().clearSelection();
 
         withdrawFromTextField.setText("");
-        withdrawFromTextField.setPromptText("Select a source address from the table");
+        withdrawFromTextField.setPromptText(Res.get("funds.withdrawal.selectAddress"));
         withdrawFromTextField.setTooltip(null);
 
         amountOfSelectedItems = Coin.ZERO;
         senderAmountAsCoinProperty.set(Coin.ZERO);
         amountTextField.setText("");
-        amountTextField.setPromptText("Set the amount to withdraw");
+        amountTextField.setPromptText(Res.get("funds.withdrawal.setAmount"));
 
         withdrawToTextField.setText("");
-        withdrawToTextField.setPromptText("Fill in your destination address");
+        withdrawToTextField.setPromptText(Res.get("funds.withdrawal.fillDestAddress"));
 
         if (DevFlags.DEV_MODE)
             withdrawToTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
@@ -396,22 +402,21 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private boolean areInputsValid() {
         if (!senderAmountAsCoinProperty.get().isPositive()) {
-            new Popup().warning("Please fill in a valid value for the amount to send (max. 8 decimal places).").show();
+            new Popup().warning(Res.get("validation.negative")).show();
             return false;
         }
 
         if (!btcAddressValidator.validate(withdrawToTextField.getText()).isValid) {
-            new Popup().warning("Please fill in a valid receiver bitcoin address.").show();
+            new Popup().warning(Res.get("validation.btc.invalidAddress")).show();
             return false;
         }
         if (!amountOfSelectedItems.isPositive()) {
-            new Popup().warning("You need to select a source address in the table above.").show();
+            new Popup().warning(Res.get("funds.withdrawal.warn.noSourceAddressSelected")).show();
             return false;
         }
 
         if (senderAmountAsCoinProperty.get().compareTo(amountOfSelectedItems) > 0) {
-            new Popup().warning("Your amount exceeds the available amount for the selected address.\n" +
-                    "Consider to select multiple addresses in the table above if you want to withdraw more.").show();
+            new Popup().warning(Res.get("funds.withdrawal.warn.amountExceeds")).show();
             return false;
         }
 
@@ -443,8 +448,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                     String address = item.getAddressString();
                                     hyperlinkWithIcon = new HyperlinkWithIcon(address, AwesomeIcon.EXTERNAL_LINK);
                                     hyperlinkWithIcon.setOnAction(event -> openBlockExplorer(item));
-                                    hyperlinkWithIcon.setTooltip(new Tooltip("Open external blockchain explorer for " +
-                                            "address: " + address));
+                                    hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
                                     setGraphic(null);

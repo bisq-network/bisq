@@ -25,6 +25,7 @@ import io.bitsquare.gui.main.portfolio.closedtrades.ClosedTradesView;
 import io.bitsquare.gui.main.portfolio.failedtrades.FailedTradesView;
 import io.bitsquare.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.failed.FailedTradesManager;
 import javafx.beans.value.ChangeListener;
@@ -40,7 +41,7 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
     @FXML
     Tab openOffersTab, pendingTradesTab, closedTradesTab;
-    private final Tab failedTradesTab = new Tab("Failed");
+    private final Tab failedTradesTab = new Tab(Res.get("portfolio.tab.failed"));
     private Tab currentTab;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -58,6 +59,10 @@ public class PortfolioView extends ActivatableViewAndModel<TabPane, Activatable>
 
     @Override
     public void initialize() {
+        openOffersTab.setText(Res.get("portfolio.tab.openOffers"));
+        pendingTradesTab.setText(Res.get("portfolio.tab.pendingTrades"));
+        closedTradesTab.setText(Res.get("portfolio.tab.history"));
+                
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(PortfolioView.class) == 1)
                 loadView(viewPath.tip());

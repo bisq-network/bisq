@@ -26,7 +26,7 @@ import io.bitsquare.btc.wallet.BsqWalletService;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.ChangeBelowDustException;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.common.util.MathUtils;
+import io.bitsquare.common.util.Utilities;
 import io.bitsquare.dao.compensation.CompensationRequest;
 import io.bitsquare.dao.compensation.CompensationRequestManager;
 import io.bitsquare.dao.vote.*;
@@ -37,6 +37,7 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.BsqFormatter;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -106,10 +107,10 @@ public class VoteView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 2, "Add items for voting");
+        addTitledGroupBg(root, gridRow, 2, Res.get("dao.voting.addItems"));
 
         compensationRequestsComboBox = addLabelComboBox(root, gridRow, "", Layout.FIRST_ROW_DISTANCE).second;
-        compensationRequestsComboBox.setPromptText("Add compensation request");
+        compensationRequestsComboBox.setPromptText(Res.get("dao.voting.addRequest"));
         compensationRequestsComboBox.setConverter(new StringConverter<CompensationRequestVoteItem>() {
             @Override
             public String toString(CompensationRequestVoteItem item) {
@@ -130,7 +131,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                             () -> compensationRequestsTitledGroupBg.setManaged(!CompensationViewItem.isEmpty()));
                     UserThread.execute(selectionModel::clearSelection);
                 } else {
-                    new Popup<>().warning("You have already that compensation request added.").show();
+                    new Popup<>().warning(Res.get("dao.voting.requestAlreadyAdded")).show();
                 }
             }
 
@@ -138,7 +139,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         });
 
         parametersComboBox = addLabelComboBox(root, ++gridRow, "").second;
-        parametersComboBox.setPromptText("Add parameter");
+        parametersComboBox.setPromptText(Res.get("dao.voting.addParameter"));
         parametersComboBox.setConverter(new StringConverter<VoteItem>() {
             @Override
             public String toString(VoteItem item) {
@@ -159,14 +160,14 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                             () -> parametersTitledGroupBg.setManaged(!ParameterViewItem.isEmpty()));
                     UserThread.execute(selectionModel::clearSelection);
                 } else {
-                    new Popup<>().warning("You have already that parameter added.").show();
+                    new Popup<>().warning(Res.get("dao.voting.parameterAlreadyAdded")).show();
                 }
             }
             parametersTitledGroupBg.setManaged(!ParameterViewItem.isEmpty());
 
         });
 
-        compensationRequestsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Compensation requests", Layout.GROUP_DISTANCE);
+        compensationRequestsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("dao.voting.compensationRequests"), Layout.GROUP_DISTANCE);
         compensationRequestsTitledGroupBg.setManaged(false);
         compensationRequestsTitledGroupBg.visibleProperty().bind(compensationRequestsTitledGroupBg.managedProperty());
 
@@ -180,7 +181,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         compensationRequestsVBox.visibleProperty().bind(compensationRequestsVBox.managedProperty());
 
 
-        parametersTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Parameters", Layout.GROUP_DISTANCE);
+        parametersTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.parameters"), Layout.GROUP_DISTANCE);
         parametersTitledGroupBg.setManaged(false);
         parametersTitledGroupBg.visibleProperty().bind(parametersTitledGroupBg.managedProperty());
 
@@ -193,7 +194,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         parametersVBox.managedProperty().bind(parametersTitledGroupBg.managedProperty());
         parametersVBox.visibleProperty().bind(parametersVBox.managedProperty());
 
-        voteButton = addButtonAfterGroup(root, ++gridRow, "Vote");
+        voteButton = addButtonAfterGroup(root, ++gridRow, Res.get("shared.vote"));
         voteButton.managedProperty().bind(createBooleanBinding(() -> compensationRequestsTitledGroupBg.isManaged() || parametersTitledGroupBg.isManaged(),
                 compensationRequestsTitledGroupBg.managedProperty(), parametersTitledGroupBg.managedProperty()));
         voteButton.visibleProperty().bind(voteButton.managedProperty());
@@ -202,11 +203,11 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             log.error(voteItemsList.toString());
             //TODO
             if (voteItemsList.isMyVote()) {
-                new Popup<>().warning("You voted already.").show();
+                new Popup<>().warning(Res.get("dao.voting.votedAlready")).show();
             } else if (!voteItemsList.stream().filter(VoteItem::hasVoted).findAny().isPresent() &&
                     !voteItemsList.stream().filter(e -> e instanceof CompensationRequestVoteItemCollection)
                             .filter(e -> ((CompensationRequestVoteItemCollection) e).hasVotedOnAnyItem()).findAny().isPresent()) {
-                new Popup<>().warning("You did not vote on any entry.").show();
+                new Popup<>().warning(Res.get("dao.voting.notVotedOnAnyEntry")).show();
             } else {
                 try {
                     byte[] opReturnData = voteManager.calculateOpReturnData(voteItemsList);
@@ -217,14 +218,13 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                         Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                         Coin miningFee = signedTx.getFee();
                         int txSize = signedTx.bitcoinSerialize().length;
-                        new Popup().headLine("Confirm voting fee payment transaction")
-                                .confirmation("Voting fee: " + btcFormatter.formatCoinWithCode(votingTxFee) + "\n" +
-                                        "Mining fee: " + btcFormatter.formatCoinWithCode(miningFee) + " (" +
-                                        MathUtils.roundDouble(((double) miningFee.value / (double) txSize), 2) +
-                                        " Satoshis/byte)\n" +
-                                        "Transaction size: " + (txSize / 1000d) + " Kb\n\n" +
-                                        "Are you sure you want to send the transaction?")
-                                .actionButtonText("Yes")
+                        new Popup().headLine(Res.get("dao.voting.confirmTx"))
+                                .confirmation(Res.get("dao.tx.summary",
+                                        btcFormatter.formatCoinWithCode(votingTxFee),
+                                        btcFormatter.formatCoinWithCode(miningFee),
+                                        Utilities.getFeePerByte(miningFee, txSize),
+                                        (txSize / 1000d)))
+                                .actionButtonText(Res.get("shared.yes"))
                                 .onAction(() -> {
                                     try {
                                         bsqWalletService.commitTx(txWithBtcFee);
@@ -236,7 +236,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                             public void onSuccess(@Nullable Transaction transaction) {
                                                 checkNotNull(transaction, "Transaction must not be null at doSend callback.");
                                                 log.error("tx successful published" + transaction.getHashAsString());
-                                                new Popup<>().confirmation("Your transaction has been successfully published.").show();
+                                                new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
                                                 voteItemsList.setIsMyVote(true);
 
                                                 //TODO send to P2P network
@@ -253,7 +253,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                         new Popup<>().warning(e.toString());
                                     }
                                 })
-                                .closeButtonText("Cancel")
+                                .closeButtonText(Res.get("shared.cancel"))
                                 .show();
                     } catch (InsufficientMoneyException | WalletException | TransactionVerificationException |
                             ChangeBelowDustException | InsufficientFundsException e) {

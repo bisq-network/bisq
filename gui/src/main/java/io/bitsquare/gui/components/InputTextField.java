@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components;
 
 import io.bitsquare.gui.util.validation.InputValidator;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
@@ -178,7 +179,7 @@ public class InputTextField extends TextField {
 
         errorMessageDisplay = new PopOver(errorLabel);
         errorMessageDisplay.setDetachable(true);
-        errorMessageDisplay.setDetachedTitle("Close");
+        errorMessageDisplay.setDetachedTitle(Res.get("shared.close"));
         errorMessageDisplay.setArrowIndent(5);
     }
 

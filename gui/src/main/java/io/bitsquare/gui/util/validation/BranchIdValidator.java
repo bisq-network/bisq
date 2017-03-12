@@ -18,6 +18,8 @@
 package io.bitsquare.gui.util.validation;
 
 
+import io.bitsquare.locale.BankUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.messages.locale.BankUtil;
 
@@ -37,30 +39,30 @@ public final class BranchIdValidator extends BankValidator {
                 if (isNumberWithFixedLength(input, length))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.sortCodeNumber", getLabel(), length));
+                    return new ValidationResult(false, Res.get("validation.sortCodeNumber", getLabel(), length));
             case "US":
                 length = 9;
                 if (isNumberWithFixedLength(input, length))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.sortCodeNumber", getLabel(), length));
+                    return new ValidationResult(false, Res.get("validation.sortCodeNumber", getLabel(), length));
             case "BR":
                 if (isStringInRange(input, 2, 6))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.sortCodeChars", getLabel(), "2 - 6"));
+                    return new ValidationResult(false, Res.get("validation.sortCodeChars", getLabel(), "2 - 6"));
             case "AU":
                 length = 6;
                 if (isNumberWithFixedLength(input, length))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.sortCodeChars", getLabel(), length));
+                    return new ValidationResult(false, Res.get("validation.sortCodeChars", getLabel(), length));
             case "CA":
                 length = 5;
                 if (isNumberWithFixedLength(input, length))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, BSResources.get("validation.sortCodeNumber", getLabel(), length));
+                    return new ValidationResult(false, Res.get("validation.sortCodeNumber", getLabel(), length));
             default:
                 return super.validate(input);
         }

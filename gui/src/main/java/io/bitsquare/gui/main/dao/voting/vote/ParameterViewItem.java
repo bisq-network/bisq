@@ -21,6 +21,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.dao.vote.VoteItem;
 import io.bitsquare.dao.vote.VotingDefaultValues;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -142,12 +143,12 @@ public class ParameterViewItem {
         };
         slider.valueProperty().addListener(sliderListener);
 
-        resetButton = new Button("Reset");
+        resetButton = new Button(Res.get("shared.reset"));
         resetButton.setOnAction(event -> {
             inputTextField.setText(String.valueOf(originalValue));
         });
 
-        removeButton = new Button("Remove");
+        removeButton = new Button(Res.get("shared.remove"));
         removeButton.setOnAction(event -> {
             vBox.getChildren().remove(hBox);
             cleanupInstance();

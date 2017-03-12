@@ -62,6 +62,15 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     @Override
     public void initialize() {
+        priceColumn.setText(Res.get("shared.price"));
+        amountColumn.setText(Res.get("shared.BTCMinMax"));
+        volumeColumn.setText(Res.get("shared.amountMinMax"));
+        marketColumn.setText(Res.get("shared.market"));
+        directionColumn.setText(Res.get("shared.tradeType"));
+        dateColumn.setText(Res.get("shared.dateTime"));
+        offerIdColumn.setText(Res.get("shared.offerId"));
+        removeItemColumn.setText("");
+
         setOfferIdColumnCellFactory();
         setDirectionColumnCellFactory();
         setMarketColumnCellFactory();
@@ -72,7 +81,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setRemoveColumnCellFactory();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No open offers available"));
+        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noItems", Res.get("shared.openOffers"))));
 
         offerIdColumn.setComparator((o1, o2) -> o1.getOffer().getId().compareTo(o2.getOffer().getId()));
         directionColumn.setComparator((o1, o2) -> o1.getOffer().getDirection().compareTo(o2.getOffer().getDirection()));
@@ -110,18 +119,16 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         if (model.isBootstrapped()) {
             String key = "RemoveOfferWarning";
             if (preferences.showAgain(key))
-                new Popup().warning("Are you sure you want to remove that offer?\n" +
-                        "The offer fee of " + model.formatter.formatCoinWithCode(openOffer.getOffer().getCreateOfferFee()) + " will be lost if you remove that offer.")
-                        .actionButtonText("Remove offer")
+                new Popup().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(openOffer.getOffer().getCreateOfferFee())))
+                        .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOpenOffer(openOffer))
-                        .closeButtonText("Don't remove the offer")
+                        .closeButtonText(Res.get("shared.dontRemoveOffer"))
                         .dontShowAgainId(key, preferences)
                         .show();
             else
                 doRemoveOpenOffer(openOffer);
         } else {
-            new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                    "That might take up to about 2 minutes at startup.").show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -131,15 +138,15 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     log.debug("Remove offer was successful");
                     String key = "WithdrawFundsAfterRemoveOfferInfo";
                     if (preferences.showAgain(key))
-                        new Popup().instruction("You can withdraw the funds you paid in from the \"Fund/Available for withdrawal\" screen.")
-                                .actionButtonText("Go to \"Funds/Available for withdrawal\"")
+                        new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
+                                .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                                 .dontShowAgainId(key, preferences)
                                 .show();
                 },
                 (message) -> {
                     log.error(message);
-                    new Popup().warning("Remove offer failed:\n" + message).show();
+                    new Popup().warning(Res.get("offerbook.removeOffer.failed", message)).show();
                 });
     }
 
@@ -161,7 +168,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(model.getTradeId(item), true);
                                     field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
-                                    field.setTooltip(new Tooltip("Open popup for details"));
+                                    field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
@@ -303,6 +310,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                         return new TableCell<OpenOfferListItem, OpenOfferListItem>() {
                             final ImageView iconView = new ImageView();
                             Button button;
+
+                            {
+                                iconView.setId("image-remove");
+                                button.setText(Res.get("shared.remove"));
+                                button.setGraphic(iconView);
+                                button.setMinWidth(70);
+                            }
 
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {

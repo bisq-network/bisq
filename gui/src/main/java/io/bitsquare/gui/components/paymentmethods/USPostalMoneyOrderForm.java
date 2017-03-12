@@ -22,7 +22,8 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.USPostalMoneyOrderValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import io.bitsquare.payment.USPostalMoneyOrderAccount;
@@ -42,9 +43,11 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
     private final USPostalMoneyOrderValidator usPostalMoneyOrderValidator;
     private TextArea postalAddressTextArea;
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", ((USPostalMoneyOrderAccountContractData) paymentAccountContractData).getHolderName());
-        TextArea textArea = addLabelTextArea(gridPane, ++gridRow, "Postal address:", "").second;
+    public static int addFormForBuyer(GridPane gridPane, int gridRow,
+                                      PaymentAccountContractData paymentAccountContractData) {
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+                ((USPostalMoneyOrderAccountContractData) paymentAccountContractData).getHolderName());
+        TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
         textArea.setPrefHeight(60);
         textArea.setEditable(false);
         textArea.setId("text-area-disabled");
@@ -52,7 +55,9 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public USPostalMoneyOrderForm(PaymentAccount paymentAccount, USPostalMoneyOrderValidator usPostalMoneyOrderValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public USPostalMoneyOrderForm(PaymentAccount paymentAccount,
+                                  USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
+                                  InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.usPostalMoneyOrderAccount = (USPostalMoneyOrderAccount) paymentAccount;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
@@ -62,14 +67,16 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account holder name:").second;
+        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow,
+                Res.getWithCol("payment.account.owner")).second;
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             usPostalMoneyOrderAccount.setHolderName(newValue);
             updateFromInputs();
         });
 
-        postalAddressTextArea = addLabelTextArea(gridPane, ++gridRow, "Postal address:", "").second;
+        postalAddressTextArea = addLabelTextArea(gridPane, ++gridRow,
+                Res.get("payment.postal.address"), "").second;
         postalAddressTextArea.setPrefHeight(60);
         //postalAddressTextArea.setValidator(usPostalMoneyOrderValidator);
         postalAddressTextArea.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -78,7 +85,10 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
         });
 
 
-        addLabelTextField(gridPane, ++gridRow, "Currency:", usPostalMoneyOrderAccount.getSingleTradeCurrency().getNameAndCode());
+        TradeCurrency singleTradeCurrency = usPostalMoneyOrderAccount.getSingleTradeCurrency();
+        String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
+                nameAndCode);
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -88,7 +98,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String postalAddress = postalAddressTextArea.getText();
             postalAddress = StringUtils.abbreviate(postalAddress, 9);
-            String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
+            String method = Res.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(": ").concat(postalAddress));
         }
     }
@@ -96,14 +106,19 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, "Account name:", usPostalMoneyOrderAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(usPostalMoneyOrderAccount.getPaymentMethod().getId()));
-        addLabelTextField(gridPane, ++gridRow, "Account holder name:", usPostalMoneyOrderAccount.getHolderName());
-        TextArea textArea = addLabelTextArea(gridPane, ++gridRow, "Postal address:", "").second;
+        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+                usPostalMoneyOrderAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+                Res.get(usPostalMoneyOrderAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+                usPostalMoneyOrderAccount.getHolderName());
+        TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
         textArea.setText(usPostalMoneyOrderAccount.getPostalAddress());
         textArea.setPrefHeight(60);
         textArea.setEditable(false);
-        addLabelTextField(gridPane, ++gridRow, "Currency:", usPostalMoneyOrderAccount.getSingleTradeCurrency().getNameAndCode());
+        TradeCurrency singleTradeCurrency = usPostalMoneyOrderAccount.getSingleTradeCurrency();
+        String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
         addAllowedPeriod();
     }
 

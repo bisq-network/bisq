@@ -29,18 +29,8 @@ import javax.inject.Inject;
 public class SellOfferView extends OfferView {
 
     @Inject
-    public SellOfferView(ViewLoader viewLoader, Navigation navigation, PriceFeedService priceFeedService, Preferences preferences) {
-        super(viewLoader, navigation, priceFeedService, preferences);
-    }
-
-    @Override
-    protected String getCreateOfferTabName() {
-        return "Create offer";
-    }
-
-    @Override
-    protected String getTakeOfferTabName() {
-        return "Take offer";
+    public SellOfferView(ViewLoader viewLoader, Navigation navigation, Preferences preferences) {
+        super(viewLoader, navigation, preferences);
     }
 }
 

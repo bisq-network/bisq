@@ -21,21 +21,73 @@ import io.bitsquare.messages.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class LanguageUtil {
     private static final Logger log = LoggerFactory.getLogger(LanguageUtil.class);
 
+    private static List<String> userLanguageCodes = Arrays.asList(
+            "en", // English
+            "de" // German
+            
+            /*
+            // not translated yet
+            "es", // Spanish
+            "zh", // Chinese
+            "pt", // Portuguese
+            "it", // Italian
+            "el", // Greek
+            "fr", // French
+            "sr", // Serbian
+            "ja", // Japanese
+            "iw", // Hebrew
+            "hi", // Hindi
+            "ru", // Russian
+            "ko", // Korean
+            "pl", // Polish
+            "sv", // Swedish
+            "no", // Norwegian
+            "nl", // Dutch
+            "be", // Belarusian
+            "fi", // Finnish
+            "bg", // Bulgarian
+            "lt", // Lithuanian
+            "lv", // Latvian
+            "hr", // Croatian
+            "hu", // Hungarian
+            "uk", // Ukrainian
+            "sk", // Slovak
+            "sl", // Slovenian
+            "ga", // Irish
+            "sq", // Albanian
+            "ca", // Catalan
+            "mk", // Macedonian
+            "kk", // Kazakh
+            "km", // Khmer
+            "sw", // Swahili
+            "in", // Indonesian
+            "ms", // Malay
+            "is", // Icelandic
+            "et", // Estonian
+            "cs", // Czech
+            "ar", // Arabic
+            "vi", // Vietnamese
+            "th", // Thai
+            "da", // Danish
+            "ro", // Romanian
+            "tr", // Turkish
+            "mt"  // Maltese
+            */
+    );
+
     public static List<String> getAllLanguageCodes() {
         List<Locale> allLocales = LocaleUtil.getAllLocales();
 
         // Filter duplicate locale entries 
-        Set<String> allLocalesAsSet = allLocales.stream().filter(locale -> !locale.getLanguage().isEmpty() && !locale.getDisplayLanguage().isEmpty())
-                .map(locale -> locale.getLanguage())
+        Set<String> allLocalesAsSet = allLocales.stream().filter(locale -> !locale.getLanguage().isEmpty() &&
+                !locale.getDisplayLanguage().isEmpty())
+                .map(Locale::getLanguage)
                 .collect(Collectors.toSet());
 
         List<String> allLanguageCodes = new ArrayList<>();
@@ -59,5 +111,9 @@ public class LanguageUtil {
 
     public static String getDisplayName(String code) {
         return new Locale(code.toUpperCase()).getDisplayName(Preferences.getDefaultLocale());
+    }
+
+    public static List<String> getUserLanguageCodes() {
+        return userLanguageCodes;
     }
 }

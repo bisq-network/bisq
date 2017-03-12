@@ -24,11 +24,11 @@ import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
-import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.Tradable;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.trade.TradeManager;
@@ -56,7 +56,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @FXML
     TableView<ReservedListItem> tableView;
     @FXML
-    TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn, confidenceColumn;
+    TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn;
 
     private final BtcWalletService walletService;
     private final TradeManager tradeManager;
@@ -90,8 +90,13 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        dateColumn.setText(Res.get("shared.dateTime"));
+        detailsColumn.setText(Res.get("shared.details"));
+        addressColumn.setText(Res.get("shared.address"));
+        balanceColumn.setText(Res.get("shared.balanceWithCur", "BTC"));
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No funds are reserved in open offers"));
+        tableView.setPlaceholder(new Label(Res.get("funds.reserved.noFunds")));
 
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();
@@ -156,13 +161,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     }
 
     private void openBlockExplorer(ReservedListItem item) {
-        try {
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            new Popup().warning("Opening browser failed. Please check your internet " +
-                    "connection.").show();
-        }
+        GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
     }
 
     private Optional<Tradable> getTradable(ReservedListItem item) {
@@ -211,7 +210,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                             if (getTradable(item).isPresent())
                                 setText(formatter.formatDateTime(getTradable(item).get().getDate()));
                             else
-                                setText("No date available");
+                                setText(Res.get("shared.noDateAvailable"));
                         } else {
                             setText("");
                         }
@@ -240,15 +239,15 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                         if (item != null && !empty) {
                             Optional<Tradable> tradableOptional = getTradable(item);
                             if (tradableOptional.isPresent()) {
-                                field = new HyperlinkWithIcon("Reserved in local wallet for offer with ID: " + item.getAddressEntry().getShortOfferId(),
+                                field = new HyperlinkWithIcon(Res.get("funds.reserved.reserved", item.getAddressEntry().getShortOfferId()),
                                         AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
-                                field.setTooltip(new Tooltip("Open popup for details"));
+                                field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                 setGraphic(field);
                             } else if (item.getAddressEntry().getContext() == AddressEntry.Context.ARBITRATOR) {
-                                setGraphic(new Label("Arbitrator's fee"));
+                                setGraphic(new Label(Res.get("shared.arbitratorsFee")));
                             } else {
-                                setGraphic(new Label("No details available"));
+                                setGraphic(new Label(Res.get("shared.noDetailsAvailable")));
                             }
 
                         } else {
@@ -282,8 +281,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                                     String address = item.getAddressString();
                                     hyperlinkWithIcon = new HyperlinkWithIcon(address, AwesomeIcon.EXTERNAL_LINK);
                                     hyperlinkWithIcon.setOnAction(event -> openBlockExplorer(item));
-                                    hyperlinkWithIcon.setTooltip(new Tooltip("Open external blockchain explorer for " +
-                                            "address: " + address));
+                                    hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
                                     setGraphic(null);

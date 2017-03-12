@@ -26,13 +26,9 @@ import javafx.collections.ObservableList;
 
 class AltCoinAccountsViewModel extends ActivatableWithDataModel<AltCoinAccountsDataModel> implements ViewModel {
 
-
-    private Preferences preferences;
-
     @Inject
-    public AltCoinAccountsViewModel(AltCoinAccountsDataModel dataModel, Preferences preferences) {
+    public AltCoinAccountsViewModel(AltCoinAccountsDataModel dataModel) {
         super(dataModel);
-        this.preferences = preferences;
     }
 
     @Override

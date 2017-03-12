@@ -38,6 +38,7 @@ import javax.annotation.Nullable;
 
 import static io.bitsquare.gui.util.FormBuilder.addLabelInputTextField;
 
+// We dont translate here as it is for dev only purpose
 public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> {
     private static final Logger log = LoggerFactory.getLogger(SpendFromDepositTxWindow.class);
     private final TradeWalletService tradeWalletService;
@@ -54,7 +55,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
 
     public void show() {
         if (headLine == null)
-            headLine = "Emergency MS payout tool";
+            headLine = "Emergency MultiSig payout tool"; // We dont translate here as it is for dev only purpose
 
         width = 1000;
         createGridPane();
@@ -83,6 +84,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
     }
 
     private void addContent() {
+        // We dont translate here as it is for dev only purpose
         InputTextField depositTxHex = addLabelInputTextField(gridPane, ++rowIndex, "depositTxHex:").second;
 
         InputTextField buyerPayoutAmount = addLabelInputTextField(gridPane, ++rowIndex, "buyerPayoutAmount:").second;

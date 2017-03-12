@@ -58,7 +58,6 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
     private Scene scene;
     private EventHandler<KeyEvent> keyEventEventHandler;
 
-
     @Inject
     private AccountView(AccountViewModel model, CachingViewLoader viewLoader, Navigation navigation, Preferences preferences) {
         super(model);
@@ -81,7 +80,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         keyEventEventHandler = event -> {
             if (new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN).match(event) &&
                     arbitratorRegistrationTab == null) {
-                arbitratorRegistrationTab = new Tab("Arbitrator registration");
+                arbitratorRegistrationTab = new Tab(Res.get("account.tab.arbitratorRegistration"));
                 arbitratorRegistrationTab.setClosable(false);
                 root.getTabs().add(arbitratorRegistrationTab);
             }
@@ -122,12 +121,8 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         String key = "accountPrivacyInfo";
         if (!DevFlags.DEV_MODE)
             new Popup()
-                    .headLine("Welcome to your Bitsquare Account")
-                    .backgroundInfo(
-                        "Here you can setup trading accounts for national currencies & altcoins, select arbitrators and backup your wallet & account data.\n\n" +
-                        "An empty Bitcoin wallet was created the first time you started Bitsquare.  For Bitcoin trading, you are not required to set up any additional accounts.  We recommend you write down your Bitcoin wallet seed words (see button on the left) and consider adding a password before funding.  Bitcoin deposits and withdrawals are managed in the \"Funds\" section.\n\n" +
-                        "Privacy & Security:\n" +
-                        "Bitsquare is a decentralized exchange – meaning all of your data is kept on your computer, there are no servers and we have no access to your personal info, your funds or even your IP address.  Data such as bank account numbers, altcoin & Bitcoin addresses, etc are only shared with your trading partner and the arbitrator as needed to fulfill trades you initiate.")
+                    .headLine(Res.get("account.info.headline"))
+                    .backgroundInfo(Res.get("account.info.msg"))
                     .dontShowAgainId(key, preferences)
                     .show();
     }
@@ -147,7 +142,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         if (view instanceof AccountSettingsView) {
             selectedTab = accountSettingsTab;
             accountSettingsView = (AccountSettingsView) view;
-            selectedTab.setText("Account");
+            selectedTab.setText(Res.get("account.tab.account"));
             if (arbitratorRegistrationTab != null) {
                 arbitratorRegistrationTab.setDisable(false);
                 if (arbitratorRegistrationView != null)

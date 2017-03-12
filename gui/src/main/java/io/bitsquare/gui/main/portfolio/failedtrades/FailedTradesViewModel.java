@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import io.bitsquare.gui.common.model.ActivatableWithDataModel;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.trade.Trade;
+import io.bitsquare.locale.Res;
 import javafx.collections.ObservableList;
 
 class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataModel> implements ViewModel {
@@ -78,10 +78,10 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
 
     String getState(FailedTradesListItem item) {
         if (item != null) {
-            Trade trade = item.getTrade();
+            //Trade trade = item.getTrade();
             //TODO
             //if (trade.isFailedState())
-            return "Failed";
+            return Res.get("portfolio.failed.Failed");
            /* else {
                 log.error("Wrong state " + trade.getTradeState());
                 return trade.getTradeState().toString();

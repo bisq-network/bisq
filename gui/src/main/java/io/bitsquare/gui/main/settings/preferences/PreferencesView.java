@@ -59,7 +59,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     // not supported yet
     //private ComboBox<String> btcDenominationComboBox; 
     private ComboBox<BlockChainExplorer> blockChainExplorerComboBox;
-    //  private ComboBox<String> userLanguageComboBox;
+    private ComboBox<String> userLanguageComboBox;
+    private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
     private CheckBox useAnimationsCheckBox, autoSelectArbitratorsCheckBox, showOwnOffersInOfferBook, sortMarketCurrenciesNumericallyCheckBox, useCustomFeeCheckbox;
@@ -79,6 +80,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     final ObservableList<String> btcDenominations = FXCollections.observableArrayList(Preferences.getBtcDenominations());
     final ObservableList<BlockChainExplorer> blockExplorers;
     final ObservableList<String> languageCodes;
+    final ObservableList<Country> countries;
     public final ObservableList<FiatCurrency> fiatCurrencies;
     public final ObservableList<FiatCurrency> allFiatCurrencies;
     public final ObservableList<CryptoCurrency> cryptoCurrencies;
@@ -102,7 +104,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         this.formatter = formatter;
 
         blockExplorers = FXCollections.observableArrayList(preferences.getBlockChainExplorers());
-        languageCodes = FXCollections.observableArrayList(LanguageUtil.getAllLanguageCodes());
+        languageCodes = FXCollections.observableArrayList(LanguageUtil.getUserLanguageCodes());
+        countries = FXCollections.observableArrayList(CountryUtil.getAllCountries());
         fiatCurrencies = preferences.getFiatCurrenciesAsObservable();
         cryptoCurrencies = preferences.getCryptoCurrenciesAsObservable();
         tradeCurrencies = preferences.getTradeCurrenciesAsObservable();
@@ -116,23 +119,23 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
     @Override
     public void initialize() {
+        initializeGeneralOptions();
         initializeDisplayCurrencies();
-        initializeOtherOptions();
         initializeDisplayOptions();
     }
 
 
     @Override
     protected void activate() {
+        activateGeneralOptions();
         activateDisplayCurrencies();
-        activateOtherOptions();
         activateDisplayPreferences();
     }
 
     @Override
     protected void deactivate() {
+        deactivateGeneralOptions();
         deactivateDisplayCurrencies();
-        deactivateOtherOptions();
         deactivateDisplayPreferences();
     }
 
@@ -141,160 +144,15 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     // Initialize
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void initializeDisplayCurrencies() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 3, "Currencies in market price feed list");
+    private void initializeGeneralOptions() {
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 7, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 4);
-
-        preferredTradeCurrencyComboBox = addLabelComboBox(root, gridRow, "Preferred currency:", Layout.FIRST_ROW_DISTANCE).second;
-        preferredTradeCurrencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
-            @Override
-            public String toString(TradeCurrency tradeCurrency) {
-                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
-                return tradeCurrency.getDisplayPrefix() + tradeCurrency.getNameAndCode();
-            }
-
-            @Override
-            public TradeCurrency fromString(String s) {
-                return null;
-            }
-        });
-
-        Tuple2<Label, ListView> fiatTuple = addLabelListView(root, ++gridRow, "Display national currencies:");
-        GridPane.setValignment(fiatTuple.first, VPos.TOP);
-        fiatCurrenciesListView = fiatTuple.second;
-        fiatCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
-        fiatCurrenciesListView.setMaxHeight(6 * Layout.LIST_ROW_HEIGHT + 2);
-        Label placeholder = new Label("There are no national currencies selected");
-        placeholder.setWrapText(true);
-        fiatCurrenciesListView.setPlaceholder(placeholder);
-        fiatCurrenciesListView.setCellFactory(new Callback<ListView<FiatCurrency>, ListCell<FiatCurrency>>() {
-            @Override
-            public ListCell<FiatCurrency> call(ListView<FiatCurrency> list) {
-                return new ListCell<FiatCurrency>() {
-                    final Label label = new Label();
-                    final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
-                    final Button removeButton = new Button("", icon);
-                    final AnchorPane pane = new AnchorPane(label, removeButton);
-
-                    {
-                        label.setLayoutY(5);
-                        removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
-                    }
-
-                    @Override
-                    public void updateItem(final FiatCurrency item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            label.setText(item.getNameAndCode());
-                            removeButton.setOnAction(e -> {
-                                if (item.equals(preferences.getPreferredTradeCurrency())) {
-                                    new Popup().warning("You cannot remove your selected preferred display currency").show();
-                                } else {
-                                    preferences.removeFiatCurrency(item);
-                                    if (!allFiatCurrencies.contains(item))
-                                        allFiatCurrencies.add(item);
-                                }
-                            });
-                            setGraphic(pane);
-                        } else {
-                            setGraphic(null);
-                            removeButton.setOnAction(null);
-                        }
-                    }
-                };
-            }
-        });
-
-        Tuple2<Label, ListView> cryptoCurrenciesTuple = addLabelListView(root, gridRow, "Display altcoins:");
-        GridPane.setValignment(cryptoCurrenciesTuple.first, VPos.TOP);
-        GridPane.setMargin(cryptoCurrenciesTuple.first, new Insets(0, 0, 0, 20));
-        cryptoCurrenciesListView = cryptoCurrenciesTuple.second;
-        GridPane.setColumnIndex(cryptoCurrenciesTuple.first, 2);
-        GridPane.setColumnIndex(cryptoCurrenciesListView, 3);
-        cryptoCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
-        cryptoCurrenciesListView.setMaxHeight(6 * Layout.LIST_ROW_HEIGHT + 2);
-        placeholder = new Label("There are no altcoins selected");
-        placeholder.setWrapText(true);
-        cryptoCurrenciesListView.setPlaceholder(placeholder);
-        cryptoCurrenciesListView.setCellFactory(new Callback<ListView<CryptoCurrency>, ListCell<CryptoCurrency>>() {
-            @Override
-            public ListCell<CryptoCurrency> call(ListView<CryptoCurrency> list) {
-                return new ListCell<CryptoCurrency>() {
-                    final Label label = new Label();
-                    final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
-                    final Button removeButton = new Button("", icon);
-                    final AnchorPane pane = new AnchorPane(label, removeButton);
-
-                    {
-                        label.setLayoutY(5);
-                        removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
-                    }
-
-                    @Override
-                    public void updateItem(final CryptoCurrency item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            label.setText(item.getNameAndCode());
-                            removeButton.setOnAction(e -> {
-                                if (item.equals(preferences.getPreferredTradeCurrency())) {
-                                    new Popup().warning("You cannot remove your selected preferred display currency").show();
-                                } else {
-                                    preferences.removeCryptoCurrency(item);
-                                    if (!allCryptoCurrencies.contains(item))
-                                        allCryptoCurrencies.add(item);
-                                }
-                            });
-                            setGraphic(pane);
-                        } else {
-                            setGraphic(null);
-                            removeButton.setOnAction(null);
-                        }
-                    }
-                };
-            }
-        });
-
-        fiatCurrenciesComboBox = addLabelComboBox(root, ++gridRow).second;
-        fiatCurrenciesComboBox.setPromptText("Add national currency");
-        fiatCurrenciesComboBox.setConverter(new StringConverter<FiatCurrency>() {
-            @Override
-            public String toString(FiatCurrency tradeCurrency) {
-                return tradeCurrency.getNameAndCode();
-            }
-
-            @Override
-            public FiatCurrency fromString(String s) {
-                return null;
-            }
-        });
-
-        Tuple2<Label, ComboBox> labelComboBoxTuple2 = addLabelComboBox(root, gridRow);
-        cryptoCurrenciesComboBox = labelComboBoxTuple2.second;
-        GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
-        cryptoCurrenciesComboBox.setPromptText("Add altcoin");
-        cryptoCurrenciesComboBox.setConverter(new StringConverter<CryptoCurrency>() {
-            @Override
-            public String toString(CryptoCurrency tradeCurrency) {
-                return tradeCurrency.getNameAndCode();
-            }
-
-            @Override
-            public CryptoCurrency fromString(String s) {
-                return null;
-            }
-        });
-    }
-
-    private void initializeOtherOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 5, "General preferences", Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 4);
-        // userLanguageComboBox = addLabelComboBox(root, gridRow, "Language:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        userLanguageComboBox = addLabelComboBox(root, gridRow, Res.getWithCol("shared.language"), Layout.FIRST_ROW_DISTANCE).second;
+        userCountryComboBox = addLabelComboBox(root, ++gridRow, Res.getWithCol("shared.country")).second;
         // btcDenominationComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin denomination:").second;
-        blockChainExplorerComboBox = addLabelComboBox(root, gridRow, "Bitcoin block explorer:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        deviationInputTextField = addLabelInputTextField(root, ++gridRow, "Max. deviation from market price:").second;
-        autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow, "Auto select arbitrators:", "").second;
+        blockChainExplorerComboBox = addLabelComboBox(root, ++gridRow, Res.get("setting.preferences.explorer")).second;
+        deviationInputTextField = addLabelInputTextField(root, ++gridRow, Res.get("setting.preferences.deviation")).second;
+        autoSelectArbitratorsCheckBox = addLabelCheckBox(root, ++gridRow, Res.get("setting.preferences.autoSelectArbitrators"), "").second;
 
         deviationListener = (observable, oldValue, newValue) -> {
             try {
@@ -302,7 +160,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 if (value <= 0.3) {
                     preferences.setMaxPriceDistanceInPercent(value);
                 } else {
-                    new Popup().warning("Values higher than 30 % are not allowed.").show();
+                    new Popup().warning(Res.get("setting.preferences.deviationToLarge")).show();
                     UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
                 }
             } catch (NumberFormatException t) {
@@ -315,7 +173,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
         };
 
-        Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(root, ++gridRow, "Withdrawal transaction fee (satoshi/byte):", "Use custom value");
+        Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(root, ++gridRow,
+                Res.get("setting.preferences.txFee"), Res.get("setting.preferences.useCustomValue"));
         transactionFeeInputTextField = tuple.second;
         useCustomFeeCheckbox = tuple.third;
 
@@ -340,43 +199,292 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 try {
                     int withdrawalTxFeeInBytes = Integer.parseInt(transactionFeeInputTextField.getText());
                     if (withdrawalTxFeeInBytes * 1000 < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value) {
-                        new Popup().warning("Transaction fee must be at least 5 satoshi/byte").show();
+                        new Popup().warning(Res.get("setting.preferences.txFeeMin")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else if (withdrawalTxFeeInBytes > 5000) {
-                        new Popup().warning("Your input is above any reasonable value (>5000 satoshi/byte). Transaction fee is usually in the range of 10-200 satoshi/byte. ").show();
+                        new Popup().warning(Res.get("setting.preferences.txFeeTooLarge")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else {
                         preferences.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes);
                     }
                 } catch (NumberFormatException t) {
-                    new Popup().warning("Please enter integer numbers only.").show();
+                    new Popup().warning(Res.get("validation.integerOnly")).show();
                     transactionFeeInputTextField.setText(estimatedFee);
                 } catch (Throwable t) {
-                    new Popup().warning("Your input was not accepted.\n" + t.getMessage()).show();
+                    new Popup().warning(Res.get("validation.inputError", t.getMessage())).show();
                     transactionFeeInputTextField.setText(estimatedFee);
                 }
             }
         };
 
-        ignoreTradersListInputTextField = addLabelInputTextField(root, ++gridRow, "Ignore traders with onion address (comma sep.):").second;
+        ignoreTradersListInputTextField = addLabelInputTextField(root, ++gridRow,
+                Res.get("setting.preferences.ignorePeers")).second;
         ignoreTradersListListener = (observable, oldValue, newValue) ->
-                preferences.setIgnoreTradersList(Arrays.asList(newValue.replace(" ", "").replace(":9999", "").replace(".onion", "").split(",")));
+                preferences.setIgnoreTradersList(Arrays.asList(newValue.replace(" ", "")
+                        .replace(":9999", "").replace(".onion", "")
+                        .split(",")));
     }
 
-    private void initializeDisplayOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, "Display options", Layout.GROUP_DISTANCE);
+    private void initializeDisplayCurrencies() {
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("setting.preferences.currenciesInList"),
+                Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
 
-        showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, "Show my own offers in offer book:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, "Use animations:", "").second;
+        preferredTradeCurrencyComboBox = addLabelComboBox(root, gridRow, Res.get("setting.preferences.prefCurrency"),
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        preferredTradeCurrencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
+            @Override
+            public String toString(TradeCurrency tradeCurrency) {
+                // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
+                return tradeCurrency.getDisplayPrefix() + tradeCurrency.getNameAndCode();
+            }
+
+            @Override
+            public TradeCurrency fromString(String s) {
+                return null;
+            }
+        });
+
+        Tuple2<Label, ListView> fiatTuple = addLabelListView(root, ++gridRow, Res.get("setting.preferences.displayFiat"));
+        GridPane.setValignment(fiatTuple.first, VPos.TOP);
+        fiatCurrenciesListView = fiatTuple.second;
+        fiatCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
+        fiatCurrenciesListView.setPrefHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
+        Label placeholder = new Label(Res.get("setting.preferences.noFiat"));
+        placeholder.setWrapText(true);
+        fiatCurrenciesListView.setPlaceholder(placeholder);
+        fiatCurrenciesListView.setCellFactory(new Callback<ListView<FiatCurrency>, ListCell<FiatCurrency>>() {
+            @Override
+            public ListCell<FiatCurrency> call(ListView<FiatCurrency> list) {
+                return new ListCell<FiatCurrency>() {
+                    final Label label = new Label();
+                    final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
+                    final Button removeButton = new Button("", icon);
+                    final AnchorPane pane = new AnchorPane(label, removeButton);
+
+                    {
+                        label.setLayoutY(5);
+                        removeButton.setId("icon-button");
+                        AnchorPane.setRightAnchor(removeButton, 0d);
+                    }
+
+                    @Override
+                    public void updateItem(final FiatCurrency item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            label.setText(item.getNameAndCode());
+                            removeButton.setOnAction(e -> {
+                                if (item.equals(preferences.getPreferredTradeCurrency())) {
+                                    new Popup().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
+                                } else {
+                                    preferences.removeFiatCurrency(item);
+                                    if (!allFiatCurrencies.contains(item))
+                                        allFiatCurrencies.add(item);
+                                }
+                            });
+                            setGraphic(pane);
+                        } else {
+                            setGraphic(null);
+                            removeButton.setOnAction(null);
+                        }
+                    }
+                };
+            }
+        });
+
+        Tuple2<Label, ListView> cryptoCurrenciesTuple = addLabelListView(root, gridRow, Res.get("setting.preferences.displayAltcoins"));
+        GridPane.setValignment(cryptoCurrenciesTuple.first, VPos.TOP);
+        GridPane.setMargin(cryptoCurrenciesTuple.first, new Insets(0, 0, 0, 20));
+        cryptoCurrenciesListView = cryptoCurrenciesTuple.second;
+        GridPane.setColumnIndex(cryptoCurrenciesTuple.first, 2);
+        GridPane.setColumnIndex(cryptoCurrenciesListView, 3);
+        cryptoCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
+        cryptoCurrenciesListView.setPrefHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
+        placeholder = new Label(Res.get("setting.preferences.noAltcoins"));
+        placeholder.setWrapText(true);
+        cryptoCurrenciesListView.setPlaceholder(placeholder);
+        cryptoCurrenciesListView.setCellFactory(new Callback<ListView<CryptoCurrency>, ListCell<CryptoCurrency>>() {
+            @Override
+            public ListCell<CryptoCurrency> call(ListView<CryptoCurrency> list) {
+                return new ListCell<CryptoCurrency>() {
+                    final Label label = new Label();
+                    final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
+                    final Button removeButton = new Button("", icon);
+                    final AnchorPane pane = new AnchorPane(label, removeButton);
+
+                    {
+                        label.setLayoutY(5);
+                        removeButton.setId("icon-button");
+                        AnchorPane.setRightAnchor(removeButton, 0d);
+                    }
+
+                    @Override
+                    public void updateItem(final CryptoCurrency item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            label.setText(item.getNameAndCode());
+                            removeButton.setOnAction(e -> {
+                                if (item.equals(preferences.getPreferredTradeCurrency())) {
+                                    new Popup().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
+                                } else {
+                                    preferences.removeCryptoCurrency(item);
+                                    if (!allCryptoCurrencies.contains(item))
+                                        allCryptoCurrencies.add(item);
+                                }
+                            });
+                            setGraphic(pane);
+                        } else {
+                            setGraphic(null);
+                            removeButton.setOnAction(null);
+                        }
+                    }
+                };
+            }
+        });
+
+        fiatCurrenciesComboBox = addLabelComboBox(root, ++gridRow).second;
+        fiatCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addFiat"));
+        fiatCurrenciesComboBox.setConverter(new StringConverter<FiatCurrency>() {
+            @Override
+            public String toString(FiatCurrency tradeCurrency) {
+                return tradeCurrency.getNameAndCode();
+            }
+
+            @Override
+            public FiatCurrency fromString(String s) {
+                return null;
+            }
+        });
+
+        Tuple2<Label, ComboBox> labelComboBoxTuple2 = addLabelComboBox(root, gridRow);
+        cryptoCurrenciesComboBox = labelComboBoxTuple2.second;
+        GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
+        cryptoCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addAltcoin"));
+        cryptoCurrenciesComboBox.setConverter(new StringConverter<CryptoCurrency>() {
+            @Override
+            public String toString(CryptoCurrency tradeCurrency) {
+                return tradeCurrency.getNameAndCode();
+            }
+
+            @Override
+            public CryptoCurrency fromString(String s) {
+                return null;
+            }
+        });
+    }
+
+
+    private void initializeDisplayOptions() {
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 4, Res.get("setting.preferences.displayOptions"), Layout.GROUP_DISTANCE);
+        GridPane.setColumnSpan(titledGroupBg, 4);
+
+        showOwnOffersInOfferBook = addLabelCheckBox(root, gridRow, Res.get("setting.preferences.showOwnOffers"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        useAnimationsCheckBox = addLabelCheckBox(root, ++gridRow, Res.get("setting.preferences.useAnimations"), "").second;
         // useStickyMarketPriceCheckBox = addLabelCheckBox(root, ++gridRow, "Use sticky market price:", "").second;
-        sortMarketCurrenciesNumericallyCheckBox = addLabelCheckBox(root, ++gridRow, "Sort market lists with no. of offers/trades:", "").second;
-        resetDontShowAgainButton = addLabelButton(root, ++gridRow, "Reset all 'Don't show again' flags:", "Reset", 0).second;
+        sortMarketCurrenciesNumericallyCheckBox = addLabelCheckBox(root, ++gridRow, Res.get("setting.preferences.sortWithNumOffers"), "").second;
+        resetDontShowAgainButton = addLabelButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"),
+                Res.get("setting.preferences.reset"), 0).second;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Activate
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void activateGeneralOptions() {
+        boolean useCustomWithdrawalTxFee = preferences.getUseCustomWithdrawalTxFee();
+        useCustomFeeCheckbox.setSelected(useCustomWithdrawalTxFee);
+
+        transactionFeeInputTextField.setEditable(useCustomWithdrawalTxFee);
+        if (!useCustomWithdrawalTxFee)
+            transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
+
+
+        transactionFeeInputTextField.setText(getNonTradeTxFeePerBytes());
+        ignoreTradersListInputTextField.setText(preferences.getIgnoreTradersList().stream().collect(Collectors.joining(", ")));
+        
+    /* btcDenominationComboBox.setDisable(true);
+     btcDenominationComboBox.setItems(btcDenominations);
+     btcDenominationComboBox.getSelectionModel().select(getBtcDenomination());
+     btcDenominationComboBox.setOnAction(e -> onSelectBtcDenomination(btcDenominationComboBox.getSelectionModel().getSelectedItem()));*/
+
+        userLanguageComboBox.setItems(languageCodes);
+        userLanguageComboBox.getSelectionModel().select(preferences.getUserLanguage());
+        userLanguageComboBox.setConverter(new StringConverter<String>() {
+            @Override
+            public String toString(String code) {
+                return LanguageUtil.getDisplayName(code);
+            }
+
+            @Override
+            public String fromString(String string) {
+                return null;
+            }
+        });
+
+        userLanguageComboBox.setOnAction(e -> {
+            String selectedItem = userLanguageComboBox.getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                preferences.setUserLanguage(selectedItem);
+                new Popup<>().information(Res.get("settings.preferences.languageChange"))
+                        .closeButtonText(Res.get("shared.ok"))
+                        .show();
+            }
+            // Should we apply the changed currency immediately to the language list?
+            // If so and the user selects a unknown language he might get lost and it is hard to find 
+            // again the language he understands
+           /* if (selectedItem != null && !selectedItem.equals(preferences.getUserLanguage())) {
+                preferences.setUserLanguage(selectedItem);
+                UserThread.execute(() -> {
+                    languageCodes.clear();
+                    languageCodes.addAll(LanguageUtil.getAllLanguageCodes());
+                    userLanguageComboBox.getSelectionModel().select(preferences.getUserLanguage());
+                });
+            }*/
+        });
+
+        userCountryComboBox.setItems(countries);
+        userCountryComboBox.getSelectionModel().select(preferences.getUserCountry());
+        userCountryComboBox.setConverter(new StringConverter<Country>() {
+            @Override
+            public String toString(Country country) {
+                return CountryUtil.getNameByCode(country.code);
+            }
+
+            @Override
+            public Country fromString(String string) {
+                return null;
+            }
+        });
+        userCountryComboBox.setOnAction(e -> {
+            Country country = userCountryComboBox.getSelectionModel().getSelectedItem();
+            if (country != null) {
+                preferences.setUserCountry(country);
+            }
+        });
+
+        blockChainExplorerComboBox.setItems(blockExplorers);
+        blockChainExplorerComboBox.getSelectionModel().select(preferences.getBlockChainExplorer());
+        blockChainExplorerComboBox.setConverter(new StringConverter<BlockChainExplorer>() {
+            @Override
+            public String toString(BlockChainExplorer blockChainExplorer) {
+                return blockChainExplorer.name;
+            }
+
+            @Override
+            public BlockChainExplorer fromString(String string) {
+                return null;
+            }
+        });
+        blockChainExplorerComboBox.setOnAction(e -> preferences.setBlockChainExplorer(blockChainExplorerComboBox.getSelectionModel().getSelectedItem()));
+
+        deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent()));
+        deviationInputTextField.textProperty().addListener(deviationListener);
+        deviationInputTextField.focusedProperty().addListener(deviationFocusedListener);
+
+        transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
+        ignoreTradersListInputTextField.textProperty().addListener(ignoreTradersListListener);
+        useCustomFeeCheckbox.selectedProperty().addListener(useCustomFeeCheckboxListener);
+    }
 
     private void activateDisplayCurrencies() {
         preferredTradeCurrencyComboBox.setItems(tradeCurrencies);
@@ -420,72 +528,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         });
     }
 
-    private void activateOtherOptions() {
-        boolean useCustomWithdrawalTxFee = preferences.getUseCustomWithdrawalTxFee();
-        useCustomFeeCheckbox.setSelected(useCustomWithdrawalTxFee);
-
-        transactionFeeInputTextField.setEditable(useCustomWithdrawalTxFee);
-        if (!useCustomWithdrawalTxFee)
-            transactionFeeInputTextField.setText(String.valueOf(feeService.getTxFeePerByte().value));
-
-
-        transactionFeeInputTextField.setText(getNonTradeTxFeePerBytes());
-        ignoreTradersListInputTextField.setText(preferences.getIgnoreTradersList().stream().collect(Collectors.joining(", ")));
-        
-    /* btcDenominationComboBox.setDisable(true);
-     btcDenominationComboBox.setItems(btcDenominations);
-     btcDenominationComboBox.getSelectionModel().select(getBtcDenomination());
-     btcDenominationComboBox.setOnAction(e -> onSelectBtcDenomination(btcDenominationComboBox.getSelectionModel().getSelectedItem()));*/
-
-     /*   userLanguageComboBox.setItems(languageCodes);
-        userLanguageComboBox.getSelectionModel().select(preferences.getPreferredLocale().getLanguage());
-        userLanguageComboBox.setConverter(new StringConverter<String>() {
-            @Override
-            public String toString(String code) {
-                return LanguageUtil.getDisplayName(code);
-            }
-
-            @Override
-            public String fromString(String string) {
-                return null;
-            }
-        });
-        userLanguageComboBox.setOnAction(e -> {
-            String code = userLanguageComboBox.getSelectionModel().getSelectedItem();
-            preferences.setPreferredLocale(new Locale(code, preferences.getPreferredLocale().getCountry()));
-        });*/
-
-
-        blockChainExplorerComboBox.setItems(blockExplorers);
-        blockChainExplorerComboBox.getSelectionModel().select(preferences.getBlockChainExplorer());
-        blockChainExplorerComboBox.setConverter(new StringConverter<BlockChainExplorer>() {
-            @Override
-            public String toString(BlockChainExplorer blockChainExplorer) {
-                return blockChainExplorer.name;
-            }
-
-            @Override
-            public BlockChainExplorer fromString(String string) {
-                return null;
-            }
-        });
-        blockChainExplorerComboBox.setOnAction(e -> preferences.setBlockChainExplorer(blockChainExplorerComboBox.getSelectionModel().getSelectedItem()));
-
-        deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent()));
-        deviationInputTextField.textProperty().addListener(deviationListener);
-        deviationInputTextField.focusedProperty().addListener(deviationFocusedListener);
-
-        transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
-        ignoreTradersListInputTextField.textProperty().addListener(ignoreTradersListListener);
-        useCustomFeeCheckbox.selectedProperty().addListener(useCustomFeeCheckboxListener);
-    }
-
-    private String getNonTradeTxFeePerBytes() {
-        return preferences.getUseCustomWithdrawalTxFee() ?
-                String.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
-                String.valueOf(feeService.getTxFeePerByte().value);
-    }
-
     private void activateDisplayPreferences() {
         showOwnOffersInOfferBook.setSelected(preferences.getShowOwnOffersInOfferBook());
         showOwnOffersInOfferBook.setOnAction(e -> preferences.setShowOwnOffersInOfferBook(showOwnOffersInOfferBook.isSelected()));
@@ -505,17 +547,20 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         autoSelectArbitratorsCheckBox.setOnAction(e -> preferences.setAutoSelectArbitrators(autoSelectArbitratorsCheckBox.isSelected()));
     }
 
+    private String getNonTradeTxFeePerBytes() {
+        return preferences.getUseCustomWithdrawalTxFee() ?
+                String.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
+                String.valueOf(feeService.getTxFeePerByte().value);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Deactivate
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void deactivateDisplayCurrencies() {
-        preferredTradeCurrencyComboBox.setOnAction(null);
-    }
-
-    private void deactivateOtherOptions() {
+    private void deactivateGeneralOptions() {
         //btcDenominationComboBox.setOnAction(null);
-        // userLanguageComboBox.setOnAction(null);
+        userLanguageComboBox.setOnAction(null);
+        userCountryComboBox.setOnAction(null);
         blockChainExplorerComboBox.setOnAction(null);
         deviationInputTextField.textProperty().removeListener(deviationListener);
         deviationInputTextField.focusedProperty().removeListener(deviationFocusedListener);
@@ -524,6 +569,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         useCustomFeeCheckbox.selectedProperty().removeListener(useCustomFeeCheckboxListener);
     }
 
+    private void deactivateDisplayCurrencies() {
+        preferredTradeCurrencyComboBox.setOnAction(null);
+    }
 
     private void deactivateDisplayPreferences() {
         useAnimationsCheckBox.setOnAction(null);

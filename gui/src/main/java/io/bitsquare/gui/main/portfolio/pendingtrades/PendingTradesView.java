@@ -26,6 +26,7 @@ import io.bitsquare.gui.components.PeerInfoIcon;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
@@ -55,7 +56,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
-    TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, tradeVolumeColumn, tradeAmountColumn, avatarColumn, marketColumn, roleColumn, paymentMethodColumn, idColumn, dateColumn;
+    TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, volumeColumn, amountColumn, avatarColumn, marketColumn, roleColumn, paymentMethodColumn, tradeIdColumn, dateColumn;
     @FXML
 
     private SortedList<PendingTradesListItem> sortedList;
@@ -81,6 +82,16 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     public void initialize() {
+        priceColumn.setText(Res.get("shared.price"));
+        amountColumn.setText(Res.get("shared.amountWithCur", "BTC"));
+        volumeColumn.setText(Res.get("shared.volume"));
+        marketColumn.setText(Res.get("shared.market"));
+        roleColumn.setText(Res.get("portfolio.pending.role"));
+        dateColumn.setText(Res.get("shared.dateTime"));
+        tradeIdColumn.setText(Res.get("shared.tradeId"));
+        paymentMethodColumn.setText(Res.get("shared.paymentMethod"));
+        avatarColumn.setText(Res.get(""));
+
         setTradeIdColumnCellFactory();
         setDateColumnCellFactory();
         setAmountColumnCellFactory();
@@ -92,18 +103,18 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         setAvatarColumnCellFactory();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setPlaceholder(new Label("No pending trades available"));
+        tableView.setPlaceholder(new Label(Res.get("table.placeholder.noItems", Res.get("shared.openTrades"))));
         tableView.setMinHeight(100);
 
-        idColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
+        tradeIdColumn.setComparator((o1, o2) -> o1.getTrade().getId().compareTo(o2.getTrade().getId()));
         dateColumn.setComparator((o1, o2) -> o1.getTrade().getDate().compareTo(o2.getTrade().getDate()));
-        tradeVolumeColumn.setComparator((o1, o2) -> {
+        volumeColumn.setComparator((o1, o2) -> {
             if (o1.getTrade().getTradeVolume() != null && o2.getTrade().getTradeVolume() != null)
                 return o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume());
             else
                 return 0;
         });
-        tradeAmountColumn.setComparator((o1, o2) -> {
+        amountColumn.setComparator((o1, o2) -> {
             if (o1.getTrade().getTradeAmount() != null && o2.getTrade().getTradeAmount() != null)
                 return o1.getTrade().getTradeAmount().compareTo(o2.getTrade().getTradeAmount());
             else
@@ -128,15 +139,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         keyEventEventHandler = event -> {
             if (new KeyCodeCombination(KeyCode.O, KeyCombination.SHORTCUT_DOWN).match(event) || new KeyCodeCombination(KeyCode.O, KeyCombination.CONTROL_DOWN).match(event)) {
                 Popup popup = new Popup();
-                popup.headLine("Open support ticket")
-                        .message("Please use that only in emergency case if you don't get displayed a \"Open support\" or \"Open dispute\" button.\n\n" +
-                                "When you open a support ticket the trade will be interrupted and handled by the arbitrator\n\n" +
-                                "Unjustified support tickets (e.g. caused by usability problems or questions) will " +
-                                "cause a loss of the security deposit by the trader who opened the ticket.")
-                        .actionButtonText("Open support ticket")
+                popup.headLine(Res.get("portfolio.pending.openSupportTicket.headline"))
+                        .message(Res.get("portfolio.pending.openSupportTicket.msg"))
+                        .actionButtonText(Res.get("portfolio.pending.openSupportTicket.headline"))
                         .onAction(model.dataModel::onOpenSupportTicket)
-                        .closeButtonText("Cancel")
-                        .onClose(() -> popup.hide())
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .onClose(popup::hide)
                         .show();
             }
         };
@@ -250,8 +258,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setTradeIdColumnCellFactory() {
-        idColumn.setCellValueFactory((pendingTradesListItem) -> new ReadOnlyObjectWrapper<>(pendingTradesListItem.getValue()));
-        idColumn.setCellFactory(
+        tradeIdColumn.setCellValueFactory((pendingTradesListItem) -> new ReadOnlyObjectWrapper<>(pendingTradesListItem.getValue()));
+        tradeIdColumn.setCellFactory(
                 new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem, PendingTradesListItem>>() {
 
                     @Override
@@ -267,7 +275,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(item.getTrade().getShortId(), true);
                                     field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
-                                    field.setTooltip(new Tooltip("Open popup for details"));
+                                    field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
                                 } else {
                                     setGraphic(null);
@@ -311,8 +319,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setAmountColumnCellFactory() {
-        tradeAmountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        tradeAmountColumn.setCellFactory(
+        amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        amountColumn.setCellFactory(
                 new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
                         PendingTradesListItem>>() {
                     @Override
@@ -355,8 +363,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void setVolumeColumnCellFactory() {
-        tradeVolumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-        tradeVolumeColumn.setCellFactory(
+        volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        volumeColumn.setCellFactory(
                 new Callback<TableColumn<PendingTradesListItem, PendingTradesListItem>, TableCell<PendingTradesListItem,
                         PendingTradesListItem>>() {
                     @Override
@@ -457,12 +465,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     String hostName = newItem.getTrade().getTradingPeerNodeAddress().hostName;
                                     int numPastTrades = model.getNumPastTrades(newItem.getTrade());
                                     boolean hasTraded = numPastTrades > 0;
-                                    String tooltipText = hasTraded ? "Trading peers onion address: " + hostName + "\n" +
-                                            "You have already traded " + numPastTrades + " times with that peer." : "Trading peers onion address: " + hostName;
-                                    Node identIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getTrade().getOffer());
+                                    String tooltipText = hasTraded ?
+                                            Res.get("peerInfoIcon.tooltip.trade.traded", hostName, numPastTrades) :
+                                            Res.get("peerInfoIcon.tooltip.trade.notTraded", hostName);
+                                    Node peerInfoIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades,
+                                            privateNotificationManager, newItem.getTrade().getOffer());
                                     setPadding(new Insets(-2, 0, -2, 0));
-                                    if (identIcon != null)
-                                        setGraphic(identIcon);
+                                    setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);
                                 }

@@ -19,6 +19,7 @@ package io.bitsquare.messages.payment;
 
 import io.bitsquare.app.Version;
 import io.bitsquare.common.persistance.Persistable;
+import io.bitsquare.locale.Res;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -148,7 +149,7 @@ public final class PaymentMethod implements Persistable, Comparable {
         if (paymentMethodOptional.isPresent())
             return paymentMethodOptional.get();
         else
-            return new PaymentMethod("N/A", 1, DAY, Coin.parseCoin("0"));
+            return new PaymentMethod(Res.get("shared.na"), 1, DAY, Coin.parseCoin("0"));
     }
 
     public String getId() {

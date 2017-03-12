@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.portfolio.pendingtrades.steps.seller;
 
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
+import io.bitsquare.locale.Res;
 
 public class SellerStep2View extends TradeStepView {
 
@@ -37,13 +38,12 @@ public class SellerStep2View extends TradeStepView {
 
     @Override
     protected String getInfoBlockTitle() {
-        return "Wait for payment";
+        return Res.get("portfolio.pending.step2_seller.waitPayment.headline");
     }
 
     @Override
     protected String getInfoText() {
-        return "The deposit transaction has at least one blockchain confirmation.\n" +
-                "You need to wait until the BTC buyer starts the " + model.dataModel.getCurrencyCode() + " payment.";
+        return Res.get("portfolio.pending.step2_seller.waitPayment.msg", model.dataModel.getCurrencyCode());
     }
 
 
@@ -54,11 +54,9 @@ public class SellerStep2View extends TradeStepView {
     @Override
     protected String getWarningText() {
         setInformationHeadline();
-        return "The BTC buyer still has not done the " + model.dataModel.getCurrencyCode() + " payment.\n" +
-                "You need to wait until he starts the payment.\n" +
-                "If the trade has not been completed on " +
-                model.getDateForOpenDispute() +
-                " the arbitrator will investigate.";
+        return Res.get("portfolio.pending.step2_seller.warn",
+                model.dataModel.getCurrencyCode(),
+                model.getDateForOpenDispute());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,9 +65,7 @@ public class SellerStep2View extends TradeStepView {
 
     @Override
     protected String getOpenForDisputeText() {
-        return "The BTC buyer has not started his payment!\n" +
-                "The max. allowed period for the trade has elapsed.\n" +
-                "Please contact the arbitrator for opening a dispute.";
+        return Res.get("portfolio.pending.step2_seller.openForDispute");
     }
 
     @Override

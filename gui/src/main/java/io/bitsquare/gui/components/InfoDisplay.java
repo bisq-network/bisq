@@ -20,7 +20,7 @@ package io.bitsquare.gui.components;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.common.UserThread;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
@@ -74,7 +74,7 @@ public class InfoDisplay extends Parent {
         // width is set a frame later so we hide it first
         label.setVisible(false);
 
-        link = new Hyperlink(BSResources.get("shared.readMore"));
+        link = new Hyperlink(Res.get("shared.readMore"));
         link.setPadding(new Insets(0, 0, 0, -2));
 
         // We need that to know if we have a wrapping or not.
@@ -88,7 +88,7 @@ public class InfoDisplay extends Parent {
 
         testLabel.widthProperty().addListener((ov, o, n) -> {
             useReadMore = (double) n > textFlow.getWidth();
-            link.setText(BSResources.get(useReadMore ? "shared.readMore" : "shared.openHelp"));
+            link.setText(Res.get(useReadMore ? "shared.readMore" : "shared.openHelp"));
             UserThread.execute(() -> textFlow.getChildren().setAll(label, link));
         });
 
@@ -107,7 +107,7 @@ public class InfoDisplay extends Parent {
                 if (useReadMore) {
 
                     label.setWrapText(true);
-                    link.setText(BSResources.get("shared.openHelp"));
+                    link.setText(Res.get("shared.openHelp"));
                     getScene().getWindow().widthProperty().removeListener(listener);
                     if (label.prefWidthProperty().isBound())
                         label.prefWidthProperty().unbind();

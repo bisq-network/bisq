@@ -33,6 +33,11 @@ import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.*;
 import io.bitsquare.messages.locale.CryptoCurrency;
 import io.bitsquare.messages.locale.TradeCurrency;
+import io.bitsquare.gui.util.validation.AltCoinAddressValidator;
+import io.bitsquare.gui.util.validation.InputValidator;
+import io.bitsquare.locale.CryptoCurrency;
+import io.bitsquare.locale.Res;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountFactory;
 import io.bitsquare.messages.payment.PaymentMethod;
@@ -57,13 +62,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
     private ListView<PaymentAccount> paymentAccountsListView;
 
-    private final IBANValidator ibanValidator;
-    private final BICValidator bicValidator;
     private final InputValidator inputValidator;
-    private final OKPayValidator okPayValidator;
-    private final AliPayValidator aliPayValidator;
-    private final PerfectMoneyValidator perfectMoneyValidator;
-    private final SwishValidator swishValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
     private BSFormatter formatter;
 
@@ -75,24 +74,12 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
     @Inject
     public AltCoinAccountsView(AltCoinAccountsViewModel model,
-                               IBANValidator ibanValidator,
-                               BICValidator bicValidator,
                                InputValidator inputValidator,
-                               OKPayValidator okPayValidator,
-                               AliPayValidator aliPayValidator,
-                               PerfectMoneyValidator perfectMoneyValidator,
-                               SwishValidator swishValidator,
                                AltCoinAddressValidator altCoinAddressValidator,
                                BSFormatter formatter) {
         super(model);
 
-        this.ibanValidator = ibanValidator;
-        this.bicValidator = bicValidator;
         this.inputValidator = inputValidator;
-        this.okPayValidator = okPayValidator;
-        this.aliPayValidator = aliPayValidator;
-        this.perfectMoneyValidator = perfectMoneyValidator;
-        this.swishValidator = swishValidator;
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.formatter = formatter;
     }
@@ -104,7 +91,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
             if (newValue != null)
                 onSelectAccount(newValue);
         };
-        Label placeholder = new Label("There are no accounts set up yet");
+        Label placeholder = new Label(Res.get("shared.noAccountsSetupYet"));
         placeholder.setWrapText(true);
         paymentAccountsListView.setPlaceholder(placeholder);
     }
@@ -134,59 +121,38 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         TradeCurrency selectedTradeCurrency = paymentAccount.getSelectedTradeCurrency();
         String code = selectedTradeCurrency.getCode();
         if (selectedTradeCurrency instanceof CryptoCurrency && ((CryptoCurrency) selectedTradeCurrency).isAsset()) {
-            new Popup().information("Please be sure that you follow the requirements for the usage of " +
-                    selectedTradeCurrency.getCodeAndName() + " wallets as described on the " +
-                    selectedTradeCurrency.getName() + " web page.\n" +
-                    "Using wallets from centralized exchanges where you don't have your keys under your control or " +
-                    "using a not compatible wallet software can lead to loss of the traded funds!\n" +
-                    "The arbitrator is not a " + selectedTradeCurrency.getName() + " specialist and cannot help in such cases.")
-                    .closeButtonText("I understand and confirm that I know which wallet I need to use.")
+            new Popup().information(Res.get("account.altcoin.popup.wallet.msg",
+                    selectedTradeCurrency.getCodeAndName(),
+                    selectedTradeCurrency.getName(),
+                    selectedTradeCurrency.getName()))
+                    .closeButtonText(Res.get("account.altcoin.popup.wallet.confirm"))
                     .show();
         }
 
-        if (code.equals("XMR")) {
-            new Popup().information("If you want to trade XMR on Bitsquare please be sure you understand and fulfill " +
-                    "the following requirements:\n\n" +
-                    "For sending XMR you need to use the Monero simple wallet with the " +
-                    "store-tx-info flag enabled (default in new versions).\n" +
-                    "Please be sure that you can access the tx key (use the get_tx_key command in simplewallet) as that " +
-                    "would be required in case of a dispute to enable the arbitrator to verify the XMR transfer with " +
-                    "the XMR checktx tool (http://xmr.llcoins.net/checktx.html).\n" +
-                    "At normal block explorers the transfer is not verifiable.\n\n" +
-                    "You need to provide the arbitrator the following data in case of a dispute:\n" +
-                    "- The tx private key\n" +
-                    "- The transaction hash\n" +
-                    "- The recipient's public address\n\n" +
-                    "If you cannot provide the above data or if you used an incompatible wallet it would result in losing the " +
-                    "dispute case. The XMR sender is responsible to be able to verify the XMR transfer to the " +
-                    "arbitrator in case of a dispute.\n\n" +
-                    "There is no payment ID required, just the normal public address.\n\n" +
-                    "If you are not sure about that process visit the Monero forum (https://forum.getmonero.org) to find more information.")
-                    .closeButtonText("I understand")
-                    .show();
-        } else if (code.equals("ZEC")) {
-            new Popup().information("When using ZEC you can only use the transparent addresses (starting with t) not " +
-                    "the z-addresses, because the arbitrator would not be able to verify the transaction with z-addresses.")
-                    .closeButtonText("I understand")
-                    .show();
-        } else if (code.equals("XZC")) {
-            new Popup().information("When using XZC you can only use the transparent transactions not " +
-                    "the private transactions, because the arbitrator would not be able to verify the private transactions.")
-                    .closeButtonText("I understand")
-                    .show();
+        switch (code) {
+            case "XMR":
+                new Popup().information(Res.get("account.altcoin.popup.xmr.msg"))
+                        .useIUnderstandButton()
+                        .show();
+                break;
+            case "ZEC":
+                new Popup().information(Res.get("account.altcoin.popup.transparentTx.msg", "ZEC"))
+                        .useIUnderstandButton()
+                        .show();
+                break;
+            case "XZC":
+                new Popup().information(Res.get("account.altcoin.popup.transparentTx.msg", "XZC"))
+                        .useIUnderstandButton()
+                        .show();
+                break;
         }
 
-        if (!model.getPaymentAccounts().stream().filter(e -> {
-            if (e.getAccountName() != null)
-                return e.getAccountName().equals(paymentAccount.getAccountName());
-            else
-                return false;
-        }).findAny().isPresent()) {
+        if (!model.getPaymentAccounts().stream().filter(e -> e.getAccountName() != null &&
+                e.getAccountName().equals(paymentAccount.getAccountName())).findAny().isPresent()) {
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
         } else {
-            new Popup().warning("That account name is already used in a saved account.\n" +
-                    "Please use another name.").show();
+            new Popup().warning(Res.get("shared.accountNameAlreadyUsed")).show();
         }
     }
 
@@ -195,19 +161,18 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     }
 
     private void onDeleteAccount(PaymentAccount paymentAccount) {
-        new Popup().warning("Do you really want to delete the selected account?")
-                .actionButtonText("Yes")
+        new Popup().warning(Res.get("shared.askConfirmDeleteAccount"))
+                .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
                     boolean isPaymentAccountUsed = model.onDeleteAccount(paymentAccount);
                     if (!isPaymentAccountUsed)
                         removeSelectAccountForm();
                     else
-                        UserThread.runAfter(() -> {
-                            new Popup().warning("You cannot delete that account because it is used in an " +
-                                    "open offer or in a trade.").show();
-                        }, 100, TimeUnit.MILLISECONDS);
+                        UserThread.runAfter(() -> new Popup().warning(
+                                Res.get("shared.cannotDeleteAccount"))
+                                .show(), 100, TimeUnit.MILLISECONDS);
                 })
-                .closeButtonText("Cancel")
+                .closeButtonText(Res.get("shared.cancel"))
                 .show();
     }
 
@@ -217,9 +182,9 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void buildForm() {
-        addTitledGroupBg(root, gridRow, 1, "Manage accounts");
+        addTitledGroupBg(root, gridRow, 1, Res.get("shared.manageAccounts"));
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your altcoin accounts:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, Res.get("account.altcoin.yourAltcoinAccounts"), Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
         paymentAccountsListView = tuple.second;
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
@@ -253,7 +218,8 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
             }
         });
 
-        Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, "Add new account", "Export Accounts", "Import Accounts");
+        Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, Res.get("shared.addNewAccount"),
+                Res.get("shared.ExportAccounts"), Res.get("shared.importAccounts"));
         addAccountButton = tuple3.first;
         exportButton = tuple3.second;
         importButton = tuple3.third;
@@ -264,7 +230,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         paymentAccountsListView.getSelectionModel().clearSelection();
         removeAccountRows();
         addAccountButton.setDisable(true);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Create new account", Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
 
         if (paymentMethodForm != null) {
             FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
@@ -275,7 +241,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForAddAccount();
             gridRow = paymentMethodForm.getGridRow();
-            Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, "Save new account", "Cancel");
+            Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.saveNewAccount"), Res.get("shared.cancel"));
             saveNewAccountButton = tuple2.first;
             saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccount()));
             saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
@@ -289,12 +255,12 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private void onSelectAccount(PaymentAccount paymentAccount) {
         removeAccountRows();
         addAccountButton.setDisable(false);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Selected account", Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
         paymentMethodForm = getPaymentMethodForm(paymentAccount);
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForDisplayAccount();
             gridRow = paymentMethodForm.getGridRow();
-            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, "Delete account", "Cancel");
+            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.deleteAccount"), Res.get("shared.cancel"));
             Button deleteAccountButton = tuple.first;
             deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentMethodForm.getPaymentAccount()));
             Button cancelButton = tuple.second;

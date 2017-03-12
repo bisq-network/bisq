@@ -22,7 +22,7 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.ClearXchangeValidator;
 import io.bitsquare.gui.util.validation.InputValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.ClearXchangeAccount;
 import io.bitsquare.messages.payment.payload.ClearXchangeAccountContractData;
 import io.bitsquare.payment.PaymentAccount;
@@ -43,8 +43,10 @@ public class ClearXchangeForm extends PaymentMethodForm {
     private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account holder name:", ((ClearXchangeAccountContractData) paymentAccountContractData).getHolderName());
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Email or mobile no.:", ((ClearXchangeAccountContractData) paymentAccountContractData).getEmailOrMobileNr());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+                ((ClearXchangeAccountContractData) paymentAccountContractData).getHolderName());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email.mobile"),
+                ((ClearXchangeAccountContractData) paymentAccountContractData).getEmailOrMobileNr());
         return gridRow;
     }
 
@@ -58,21 +60,24 @@ public class ClearXchangeForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account holder name:").second;
+        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow,
+                Res.getWithCol("payment.account.owner")).second;
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             clearXchangeAccount.setHolderName(newValue);
             updateFromInputs();
         });
 
-        mobileNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Email or mobile no.:").second;
+        mobileNrInputTextField = addLabelInputTextField(gridPane, ++gridRow,
+                Res.get("payment.email.mobile")).second;
         mobileNrInputTextField.setValidator(clearXchangeValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             clearXchangeAccount.setEmailOrMobileNr(newValue);
             updateFromInputs();
         });
 
-        addLabelTextField(gridPane, ++gridRow, "Currency:", clearXchangeAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
+                clearXchangeAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -82,7 +87,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String mobileNr = mobileNrInputTextField.getText();
             mobileNr = StringUtils.abbreviate(mobileNr, 9);
-            String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
+            String method = Res.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(": ").concat(mobileNr));
         }
     }
@@ -90,12 +95,17 @@ public class ClearXchangeForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, "Account name:", clearXchangeAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(clearXchangeAccount.getPaymentMethod().getId()));
-        addLabelTextField(gridPane, ++gridRow, "Account holder name:", clearXchangeAccount.getHolderName());
-        TextField field = addLabelTextField(gridPane, ++gridRow, "Email or mobile no.:", clearXchangeAccount.getEmailOrMobileNr()).second;
+        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+                clearXchangeAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+                Res.get(clearXchangeAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+                clearXchangeAccount.getHolderName());
+        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.email.mobile"),
+                clearXchangeAccount.getEmailOrMobileNr()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Currency:", clearXchangeAccount.getSingleTradeCurrency().getNameAndCode());
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
+                clearXchangeAccount.getSingleTradeCurrency().getNameAndCode());
         addAllowedPeriod();
     }
 

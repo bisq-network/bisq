@@ -29,6 +29,7 @@ import io.bitsquare.gui.main.overlays.windows.QRCodeWindow;
 import io.bitsquare.gui.util.BsqFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -74,30 +75,30 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
         this.bsqWalletService = bsqWalletService;
         this.formatter = formatter;
         this.balanceUtil = balanceUtil;
-        paymentLabelString = "Fund Bitsquare BSQ wallet";
+        paymentLabelString = Res.get("dao.wallet.receive.fundBSQWallet");
     }
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 1, "Balance");
-        balanceTextField = addLabelTextField(root, gridRow, "BSQ balance:", Layout.FIRST_ROW_DISTANCE).second;
+        addTitledGroupBg(root, gridRow, 1, Res.get("shared.balance"));
+        balanceTextField = addLabelTextField(root, gridRow, Res.get("shared.bsqBalance"), Layout.FIRST_ROW_DISTANCE).second;
         balanceUtil.setBalanceTextField(balanceTextField);
         balanceUtil.initialize();
 
-        addTitledGroupBg(root, ++gridRow, 3, "Fund your BSQ wallet", Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.wallet.receive.fundYourWallet"), Layout.GROUP_DISTANCE);
 
         qrCodeImageView = new ImageView();
         qrCodeImageView.setStyle("-fx-cursor: hand;");
-        Tooltip.install(qrCodeImageView, new Tooltip("Open large QR-Code window"));
+        Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 1);
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         root.getChildren().add(qrCodeImageView);
 
-        addressTextField = addLabelAddressTextField(root, ++gridRow, "Address:").second;
+        addressTextField = addLabelAddressTextField(root, ++gridRow, Res.getWithCol("shared.address")).second;
         addressTextField.setPaymentLabel(paymentLabelString);
 
-        amountTextField = addLabelInputTextField(root, ++gridRow, "Amount (optional):").second;
+        amountTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.wallet.receive.amountOptional")).second;
         if (DevFlags.DEV_MODE)
             amountTextField.setText("10");
     }

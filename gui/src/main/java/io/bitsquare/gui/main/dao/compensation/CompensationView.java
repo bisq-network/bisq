@@ -27,6 +27,7 @@ import io.bitsquare.gui.main.dao.compensation.active.ActiveCompensationRequestVi
 import io.bitsquare.gui.main.dao.compensation.create.CreateCompensationRequestView;
 import io.bitsquare.gui.main.dao.compensation.past.PastCompensationRequestView;
 import io.bitsquare.gui.util.Colors;
+import io.bitsquare.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -73,9 +74,9 @@ public class CompensationView extends ActivatableViewAndModel {
         };
 
         ToggleGroup toggleGroup = new ToggleGroup();
-        create = new MenuItem(navigation, toggleGroup, "Create request", CreateCompensationRequestView.class, AwesomeIcon.EDIT);
-        active = new MenuItem(navigation, toggleGroup, "Active requests", ActiveCompensationRequestView.class, AwesomeIcon.ARROW_RIGHT);
-        past = new MenuItem(navigation, toggleGroup, "Past requests", PastCompensationRequestView.class, AwesomeIcon.LIST);
+        create = new MenuItem(navigation, toggleGroup, Res.get("dao.compensation.menuItem.createRequest"), CreateCompensationRequestView.class, AwesomeIcon.EDIT);
+        active = new MenuItem(navigation, toggleGroup, Res.get("dao.compensation.menuItem.activeRequests"), ActiveCompensationRequestView.class, AwesomeIcon.ARROW_RIGHT);
+        past = new MenuItem(navigation, toggleGroup, Res.get("dao.compensation.menuItem.pastRequests"), PastCompensationRequestView.class, AwesomeIcon.LIST);
         leftVBox.getChildren().addAll(create, active, past);
     }
 

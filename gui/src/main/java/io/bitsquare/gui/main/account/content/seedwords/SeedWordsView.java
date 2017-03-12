@@ -19,7 +19,6 @@ package io.bitsquare.gui.main.account.content.seedwords;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.btc.wallet.WalletsManager;
 import io.bitsquare.common.UserThread;
@@ -29,6 +28,8 @@ import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.messages.user.Preferences;
+import io.bitsquare.locale.Res;
+import io.bitsquare.user.Preferences;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
@@ -88,25 +89,23 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void initialize() {
-        addTitledGroupBg(root, gridRow, 2, "Backup your wallet seed words");
-        displaySeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_DISTANCE).second;
+        addTitledGroupBg(root, gridRow, 2, Res.get("account.seed.backup.title"));
+        displaySeedWordsTextArea = addLabelTextArea(root, gridRow, Res.get("seed.seedWords"), "", Layout.FIRST_ROW_DISTANCE).second;
         displaySeedWordsTextArea.setPrefHeight(60);
         displaySeedWordsTextArea.setEditable(false);
 
-        datePicker = addLabelDatePicker(root, ++gridRow, "Wallet Date:").second;
+        datePicker = addLabelDatePicker(root, ++gridRow, Res.get("seed.date")).second;
         datePicker.setMouseTransparent(true);
 
-        addTitledGroupBg(root, ++gridRow, 2, "Restore your wallet seed words", Layout.GROUP_DISTANCE);
-        seedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        addTitledGroupBg(root, ++gridRow, 2, Res.get("seed.restore.title"), Layout.GROUP_DISTANCE);
+        seedWordsTextArea = addLabelTextArea(root, gridRow, Res.get("seed.seedWords"), "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         seedWordsTextArea.setPrefHeight(60);
 
-        restoreDatePicker = addLabelDatePicker(root, ++gridRow, "Wallet Date:").second;
-        restoreButton = addButtonAfterGroup(root, ++gridRow, "Restore wallet");
+        restoreDatePicker = addLabelDatePicker(root, ++gridRow, Res.get("seed.date")).second;
+        restoreButton = addButtonAfterGroup(root, ++gridRow, Res.get("seed.restore"));
 
-        addTitledGroupBg(root, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
-        addMultilineLabel(root, gridRow, "Please write down both wallet seed words and the date! " +
-                        "You can recover your wallet any time with those seed words and the date.\n" +
-                        "The seed words are used for both the bitcoin and teh BSQ wallet.",
+        addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.information"), Layout.GROUP_DISTANCE);
+        addMultilineLabel(root, gridRow, Res.get("account.seed.info"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
         seedWordsValidChangeListener = (observable, oldValue, newValue) -> {
@@ -161,15 +160,14 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         } else {
             String key = "showSeedWordsWarning";
             if (preferences.showAgain(key)) {
-                new Popup().warning("You have not setup a wallet password which would protect the display of the seed words.\n\n" +
-                        "Do you want to display the seed words?")
-                        .actionButtonText("Yes, and don't ask me again")
+                new Popup().warning(Res.get("account.seed.warn.noPw.msg"))
+                        .actionButtonText(Res.get("account.seed.warn.noPw.yes"))
                         .onAction(() -> {
                             preferences.dontShowAgain(key, true);
                             initSeedWords(keyChainSeed);
                             showSeedScreen();
                         })
-                        .closeButtonText("No")
+                        .closeButtonText(Res.get("shared.no"))
                         .show();
             } else {
                 initSeedWords(keyChainSeed);
@@ -198,7 +196,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     }
 
     private void askForPassword() {
-        walletPasswordWindow.headLine("Enter password to view seed words").onAesKey(aesKey -> {
+        walletPasswordWindow.headLine(Res.get("account.seed.enterPw")).onAesKey(aesKey -> {
             initSeedWords(walletsManager.getDecryptedSeed(aesKey, btcWalletService.getKeyChainSeed(), btcWalletService.getKeyCrypter()));
             showSeedScreen();
         }).show();
@@ -218,16 +216,10 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private void onRestore() {
         if (walletsManager.hasPositiveBalance()) {
-            new Popup()
-                    .warning("Your bitcoin wallet is not empty.\n\n" +
-                            "You must empty this wallet before attempting to restore an older one, as mixing wallets " +
-                            "together can lead to invalidated backups.\n\n" +
-                            "Please finalize your trades, close all your open offers and go to the Funds section to withdraw your bitcoin.\n" +
-                            "In case you cannot access your bitcoin you can use the emergency tool to empty the wallet.\n" +
-                            "To open that emergency tool press \"cmd + e\".")
-                    .actionButtonText("I want to restore anyway")
+            new Popup().warning(Res.get("seed.warn.walletNotEmpty.msg"))
+                    .actionButtonText(Res.get("seed.warn.walletNotEmpty.restore"))
                     .onAction(this::checkIfEncrypted)
-                    .closeButtonText("I will empty my wallets first")
+                    .closeButtonText(Res.get("seed.warn.walletNotEmpty.emptyWallet"))
                     .show();
         } else {
             checkIfEncrypted();
@@ -236,12 +228,9 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private void checkIfEncrypted() {
         if (walletsManager.areWalletsEncrypted()) {
-            new Popup()
-                    .information("Your wallets are encrypted.\n\n" +
-                            "After restore, the wallets will no longer be encrypted and you must set a new password.\n\n" +
-                            "Do you want to proceed?")
-                    .closeButtonText("No")
-                    .actionButtonText("Yes")
+            new Popup().information(Res.get("seed.warn.notEncryptedAnymore"))
+                    .closeButtonText(Res.get("shared.no"))
+                    .actionButtonText(Res.get("shared.yes"))
                     .onAction(this::doRestore)
                     .show();
         } else {
@@ -256,18 +245,13 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                 seed,
                 () -> UserThread.execute(() -> {
                     log.info("Wallets restored with seed words");
-
-                    new Popup()
-                            .feedback("Wallets restored successfully with the new seed words.\n\n" +
-                                    "You need to shut down and restart the application.")
-                            .closeButtonText("Shut down")
-                            .onClose(BitsquareApp.shutDownHandler::run).show();
+                    new Popup().feedback(Res.get("seed.restore.success"))
+                            .useShutDownButton();
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());
-                    new Popup()
-                            .error("An error occurred when restoring the wallets with seed words.\n" +
-                                    "Error message: " + throwable.getMessage())
+                    new Popup().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline",
+                            throwable.getMessage())))
                             .show();
                 }));
     }

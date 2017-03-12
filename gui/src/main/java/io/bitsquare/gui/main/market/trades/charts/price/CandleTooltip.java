@@ -33,6 +33,7 @@ package io.bitsquare.gui.main.market.trades.charts.price;
 
 import io.bitsquare.gui.main.market.trades.charts.CandleData;
 import io.bitsquare.gui.util.Layout;
+import io.bitsquare.locale.Res;
 import javafx.geometry.HPos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.ColumnConstraints;
@@ -59,12 +60,12 @@ public class CandleTooltip extends GridPane {
 
         setVgap(2);
 
-        Label open = new Label("Open:");
-        Label close = new Label("Close:");
-        Label high = new Label("High:");
-        Label low = new Label("Low:");
-        Label average = new Label("Average:");
-        Label date = new Label("Date:");
+        Label open = new Label(Res.get("market.trades.tooltip.candle.open"));
+        Label close = new Label(Res.get("market.trades.tooltip.candle.close"));
+        Label high = new Label(Res.get("market.trades.tooltip.candle.high"));
+        Label low = new Label(Res.get("market.trades.tooltip.candle.low"));
+        Label average = new Label(Res.get("market.trades.tooltip.candle.average"));
+        Label date = new Label(Res.get("market.trades.tooltip.candle.date"));
         setConstraints(open, 0, 0);
         setConstraints(openValue, 1, 0);
         setConstraints(close, 0, 1);

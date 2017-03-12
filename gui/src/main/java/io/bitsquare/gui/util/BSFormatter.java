@@ -21,6 +21,9 @@ import io.bitsquare.messages.btc.BitcoinNetwork;
 import io.bitsquare.common.util.MathUtils;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.locale.LanguageUtil;
+import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.LanguageUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.NodeAddress;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.user.Preferences;
@@ -198,10 +201,10 @@ public class BSFormatter {
                 return fiatFormat.noCode().format(fiat).toString();
             } catch (Throwable t) {
                 log.warn("Exception at formatFiat: " + t.toString());
-                return "N/A " + fiat.getCurrencyCode();
+                return Res.get("shared.na") + " " + fiat.getCurrencyCode();
             }
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 
@@ -211,10 +214,10 @@ public class BSFormatter {
                 return fiatFormat.noCode().format(fiat).toString() + " " + fiat.getCurrencyCode();
             } catch (Throwable t) {
                 log.warn("Exception at formatFiatWithCode: " + t.toString());
-                return "N/A " + fiat.getCurrencyCode();
+                return Res.get("shared.na") + " " + fiat.getCurrencyCode();
             }
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 
@@ -276,7 +279,9 @@ public class BSFormatter {
     }
 
     public String formatVolumeLabel(String currencyCode, String postFix) {
-        return CurrencyUtil.getNameByCode(currencyCode) + " amount" + postFix;
+        return Res.get("formatter.formatVolumeLabel",
+                CurrencyUtil.getNameByCode(currencyCode),
+                postFix);
     }
 
     public String formatMinVolumeAndVolume(Offer offer) {
@@ -312,7 +317,7 @@ public class BSFormatter {
             } else
                 return formatFiat(fiat);
         } else {
-            return "N/A";
+            return Res.get("shared.na");
         }
     }
 
@@ -349,16 +354,16 @@ public class BSFormatter {
 
     public String getDirectionWithCode(Offer.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == Offer.Direction.BUY) ? "Buy BTC" : "Sell BTC";
+            return (direction == Offer.Direction.BUY) ? Res.get("shared.buyCurrency", "BTC") : Res.get("shared.sellCurrency", "BTC");
         else
-            return (direction == Offer.Direction.SELL) ? "Buy " + currencyCode : "Sell " + currencyCode;
+            return (direction == Offer.Direction.SELL) ? Res.get("shared.buyCurrency", currencyCode) : Res.get("shared.sellCurrency", currencyCode);
     }
 
     public String getDirectionWithCodeDetailed(Offer.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == Offer.Direction.BUY) ? "buying BTC with " + currencyCode : "selling BTC for " + currencyCode;
+            return (direction == Offer.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
         else
-            return (direction == Offer.Direction.SELL) ? "buying " + currencyCode + " (selling BTC)" : "selling " + currencyCode + " (buying BTC)";
+            return (direction == Offer.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
     }
 
     public String arbitratorAddressesToString(List<NodeAddress> nodeAddresses) {
@@ -459,22 +464,30 @@ public class BSFormatter {
 
     public static String formatDurationAsWords(long durationMillis, boolean showSeconds) {
         String format;
-        if (showSeconds)
-            format = "d\' days, \'H\' hours, \'m\' minutes, \'s\' seconds\'";
-        else
-            format = "d\' days, \'H\' hours, \'m\' minutes\'";
+        String second = Res.get("time.second");
+        String minute = Res.get("time.minute");
+        String hour = Res.get("time.hour").toLowerCase();
+        String day = Res.get("time.day").toLowerCase();
+        String days = Res.get("time.days");
+        String hours = Res.get("time.hours");
+        String minutes = Res.get("time.minutes");
+        String seconds = Res.get("time.seconds");
+        if (showSeconds) {
+            format = "d\' " + days + ", \'H\' " + hours + ", \'m\' " + minutes + ", \'s\' " + seconds + "\'";
+        } else
+            format = "d\' " + days + ", \'H\' " + hours + ", \'m\' " + minutes + "\'";
         String duration = DurationFormatUtils.formatDuration(durationMillis, format);
         String tmp;
         duration = " " + duration;
-        tmp = StringUtils.replaceOnce(duration, " 0 days", "");
+        tmp = StringUtils.replaceOnce(duration, " 0 " + days, "");
         if (tmp.length() != duration.length()) {
             duration = tmp;
-            tmp = StringUtils.replaceOnce(tmp, " 0 hours", "");
+            tmp = StringUtils.replaceOnce(tmp, " 0 " + hours, "");
             if (tmp.length() != duration.length()) {
-                tmp = StringUtils.replaceOnce(tmp, " 0 minutes", "");
+                tmp = StringUtils.replaceOnce(tmp, " 0 " + minutes, "");
                 duration = tmp;
                 if (tmp.length() != tmp.length()) {
-                    duration = StringUtils.replaceOnce(tmp, " 0 seconds", "");
+                    duration = StringUtils.replaceOnce(tmp, " 0 " + seconds, "");
                 }
             }
         }
@@ -483,108 +496,130 @@ public class BSFormatter {
             duration = duration.substring(1);
         }
 
-        tmp = StringUtils.replaceOnce(duration, " 0 seconds", "");
+        tmp = StringUtils.replaceOnce(duration, " 0 " + seconds, "");
 
         if (tmp.length() != duration.length()) {
             duration = tmp;
-            tmp = StringUtils.replaceOnce(tmp, " 0 minutes", "");
+            tmp = StringUtils.replaceOnce(tmp, " 0 " + minutes, "");
             if (tmp.length() != duration.length()) {
                 duration = tmp;
-                tmp = StringUtils.replaceOnce(tmp, " 0 hours", "");
+                tmp = StringUtils.replaceOnce(tmp, " 0 " + hours, "");
                 if (tmp.length() != duration.length()) {
-                    duration = StringUtils.replaceOnce(tmp, " 0 days", "");
+                    duration = StringUtils.replaceOnce(tmp, " 0 " + days, "");
                 }
             }
         }
 
         duration = " " + duration;
-        duration = StringUtils.replaceOnce(duration, " 1 seconds", " 1 second");
-        duration = StringUtils.replaceOnce(duration, " 1 minutes", " 1 minute");
-        duration = StringUtils.replaceOnce(duration, " 1 hours", " 1 hour");
-        duration = StringUtils.replaceOnce(duration, " 1 days", " 1 day");
+        duration = StringUtils.replaceOnce(duration, " 1 " + seconds, " 1 " + second);
+        duration = StringUtils.replaceOnce(duration, " 1 " + minutes, " 1 " + minute);
+        duration = StringUtils.replaceOnce(duration, " 1 " + hours, " 1 " + hour);
+        duration = StringUtils.replaceOnce(duration, " 1 " + days, " 1 " + day);
         if (duration.startsWith(" ,"))
             duration = duration.replace(" ,", "");
         else if (duration.startsWith(", "))
             duration = duration.replace(", ", "");
         if (duration.equals(""))
-            duration = "Trade period is over";
+            duration = Res.get("formatter.tradePeriodOver");
         return duration.trim();
     }
 
 
     public String booleanToYesNo(boolean value) {
-        return value ? "Yes" : "No";
-    }
-
-    public String formatBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
-        switch (bitcoinNetwork) {
-            case MAINNET:
-                return "Mainnet";
-            case TESTNET:
-                return "Testnet";
-            case REGTEST:
-                return "Regtest";
-            default:
-                return "";
-        }
+        return value ? Res.get("shared.yes") : Res.get("shared.no");
     }
 
     public String getDirectionBothSides(Offer.Direction direction, String currencyCode) {
-        if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return direction == Offer.Direction.BUY ? "Offerer as BTC buyer / Taker as BTC seller" :
-                    "Offerer as BTC seller / Taker as BTC buyer";
-        else
-            return direction == Offer.Direction.SELL ? "Offerer as " + currencyCode + " buyer / Taker as " + currencyCode + " seller" :
-                    "Offerer as " + currencyCode + " seller / Taker as " + currencyCode + " buyer";
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            currencyCode = "BTC";
+            return direction == Offer.Direction.BUY ?
+                    Res.get("formatter.makerTaker", currencyCode, Res.get("shared.buyer"), currencyCode, Res.get("shared.seller")) :
+                    Res.get("formatter.makerTaker", currencyCode, Res.get("shared.seller"), currencyCode, Res.get("shared.buyer"));
+        } else {
+            String code = currencyCode;
+            return direction == Offer.Direction.SELL ?
+                    Res.get("formatter.makerTaker", code, Res.get("shared.buyer"), code, Res.get("shared.seller")) :
+                    Res.get("formatter.makerTaker", code, Res.get("shared.seller"), code, Res.get("shared.buyer"));
+        }
     }
 
     public String getDirectionForBuyer(boolean isMyOffer, String currencyCode) {
-        if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return isMyOffer ? "You are buying BTC as offerer / Taker is selling BTC" :
-                    "You are buying BTC as taker / Offerer is selling BTC";
-        else
-            return isMyOffer ? "You are selling " + currencyCode + " as offerer / Taker is buying " + currencyCode + "" :
-                    "You are selling " + currencyCode + " as taker / Offerer is buying " + currencyCode + "";
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            String code = "BTC";
+            return isMyOffer ?
+                    Res.get("formatter.youAreAsMaker", Res.get("shared.buying"), code, Res.get("shared.selling"), code) :
+                    Res.get("formatter.youAreAsTaker", Res.get("shared.buying"), code, Res.get("shared.selling"), code);
+        } else {
+            String code = currencyCode;
+            return isMyOffer ?
+                    Res.get("formatter.youAreAsMaker", Res.get("shared.selling"), code, Res.get("shared.buying"), code) :
+                    Res.get("formatter.youAreAsTaker", Res.get("shared.selling"), code, Res.get("shared.buying"), code);
+        }
     }
 
     public String getDirectionForSeller(boolean isMyOffer, String currencyCode) {
-        if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return isMyOffer ? "You are selling BTC as offerer / Taker is buying BTC" :
-                    "You are selling BTC as taker / Offerer is buying BTC";
-        else
-            return isMyOffer ? "You are buying " + currencyCode + " as offerer / Taker is selling " + currencyCode + "" :
-                    "You are buying " + currencyCode + " as taker / Offerer is selling " + currencyCode + "";
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            String code = "BTC";
+            return isMyOffer ?
+                    Res.get("formatter.youAreAsMaker", Res.get("shared.selling"), code, Res.get("shared.buying"), code) :
+                    Res.get("formatter.youAreAsTaker", Res.get("shared.selling"), code, Res.get("shared.buying"), code);
+        } else {
+            String code = currencyCode;
+            return isMyOffer ?
+                    Res.get("formatter.youAreAsMaker", Res.get("shared.buying"), code, Res.get("shared.selling"), code) :
+                    Res.get("formatter.youAreAsTaker", Res.get("shared.buying"), code, Res.get("shared.selling"), code);
+        }
     }
 
     public String getDirectionForTakeOffer(Offer.Direction direction, String currencyCode) {
-        if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return direction == Offer.Direction.BUY ? "You are selling BTC (buying " + currencyCode + ")" :
-                    "You are buying BTC (selling " + currencyCode + ")";
-        else
-            return direction == Offer.Direction.SELL ? "You are selling " + currencyCode + " (buying BTC)" :
-                    "You are buying " + currencyCode + " (selling BTC)";
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            String btc = "BTC";
+            return direction == Offer.Direction.BUY ?
+                    Res.get("formatter.youAre", Res.get("shared.selling"), btc, Res.get("shared.buying"), currencyCode) :
+                    Res.get("formatter.youAre", Res.get("shared.buying"), btc, Res.get("shared.selling"), currencyCode);
+        } else {
+            String btc = "BTC";
+            return direction == Offer.Direction.SELL ?
+                    Res.get("formatter.youAre", Res.get("shared.selling"), currencyCode, Res.get("shared.buying"), btc) :
+                    Res.get("formatter.youAre", Res.get("shared.buying"), currencyCode, Res.get("shared.selling"), btc);
+        }
     }
 
     public String getOfferDirectionForCreateOffer(Offer.Direction direction, String currencyCode) {
-        if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return direction == Offer.Direction.BUY ? "You are creating an offer to buy BTC" :
-                    "You are creating an offer to sell BTC";
-        else
-            return direction == Offer.Direction.SELL ? "You are creating an offer to buy " + currencyCode + " (selling BTC)" :
-                    "You are creating an offer to sell " + currencyCode + " (buying BTC)";
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            String btc = "BTC";
+            return direction == Offer.Direction.BUY ?
+                    Res.get("formatter.youAreCreatingAnOffer.fiat", Res.get("shared.buy"), btc) :
+                    Res.get("formatter.youAreCreatingAnOffer.fiat", Res.get("shared.sell"), btc);
+        } else {
+            String btc = "BTC";
+            return direction == Offer.Direction.SELL ?
+                    Res.get("formatter.youAreCreatingAnOffer.altcoin", Res.get("shared.buy"), currencyCode, Res.get("shared.selling"), btc) :
+                    Res.get("formatter.youAreCreatingAnOffer.altcoin", Res.get("shared.sell"), currencyCode, Res.get("shared.buying"), btc);
+        }
     }
 
     public String getRole(boolean isBuyerOffererAndSellerTaker, boolean isOfferer, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            String btc = "BTC";
             if (isBuyerOffererAndSellerTaker)
-                return isOfferer ? "BTC buyer as offerer" : "BTC seller as taker";
+                return isOfferer ?
+                        Res.get("formatter.asMaker", btc, Res.get("shared.buyer")) :
+                        Res.get("formatter.asTaker", btc, Res.get("shared.seller"));
             else
-                return isOfferer ? "BTC seller as offerer" : "BTC buyer as taker";
+                return isOfferer ?
+                        Res.get("formatter.asMaker", btc, Res.get("shared.seller")) :
+                        Res.get("formatter.asTaker", btc, Res.get("shared.buyer"));
         } else {
+            String btc = "BTC";
             if (isBuyerOffererAndSellerTaker)
-                return isOfferer ? currencyCode + " seller as offerer" : currencyCode + " buyer as taker";
+                return isOfferer ?
+                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.seller")) :
+                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.buyer"));
             else
-                return isOfferer ? currencyCode + " buyer as offerer" : currencyCode + " seller as taker";
+                return isOfferer ?
+                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.buyer")) :
+                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.seller"));
         }
 
     }
@@ -632,8 +667,8 @@ public class BSFormatter {
 
     public String getPriceWithCurrencyCode(String currencyCode) {
         if (CurrencyUtil.isCryptoCurrency(currencyCode))
-            return "Price in BTC for 1 " + currencyCode;
+            return Res.get("shared.priceInCurForCur", "BTC", currencyCode);
         else
-            return "Price in " + currencyCode + " for 1 BTC";
+            return Res.get("shared.priceInCurForCur", currencyCode, "BTC");
     }
 }

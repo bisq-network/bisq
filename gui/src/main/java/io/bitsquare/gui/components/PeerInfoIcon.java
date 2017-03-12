@@ -118,7 +118,7 @@ public class PeerInfoIcon extends Group {
         String tag;
         if (peerTagMap.containsKey(hostName)) {
             tag = peerTagMap.get(hostName);
-            Tooltip.install(this, new Tooltip(tooltipText + "\nTag: " + tag));
+            Tooltip.install(this, new Tooltip(Res.get("peerInfoIcon.tooltip", tooltipText, tag)));
         } else {
             tag = "";
             Tooltip.install(this, new Tooltip(tooltipText));

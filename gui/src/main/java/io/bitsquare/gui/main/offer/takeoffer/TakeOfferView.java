@@ -44,7 +44,8 @@ import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.messages.trade.offer.payload.Offer;
 import io.bitsquare.messages.user.Preferences;
@@ -182,7 +183,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         volumeCurrencyLabel.setText(model.dataModel.getCurrencyCode());
         String currencyCode = model.dataModel.getCurrencyCode();
-        priceDescriptionLabel.setText(BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode));
+        priceDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode));
        /* priceDescriptionLabel.setText(CurrencyUtil.isCryptoCurrency(currencyCode) ?
                 BSResources.get("createOffer.amountPriceBox.priceDescriptionAltcoin", currencyCode) :
                 BSResources.get("createOffer.amountPriceBox.priceDescriptionFiat", currencyCode));*/
@@ -226,7 +227,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             directionLabel.setId("direction-icon-label-buy");
 
             takeOfferButton.setId("buy-button-big");
-            takeOfferButton.setText("Review: Take offer to buy bitcoin");
+            takeOfferButton.setText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
         } else {
             imageView.setId("image-sell-large");
@@ -234,7 +235,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
-            takeOfferButton.setText("Review: Take offer to sell bitcoin");
+            takeOfferButton.setText(Res.get("takeOffer.takeOfferButton", Res.get("shared.sell")));
         }
 
         boolean showComboBox = model.getPossiblePaymentAccounts().size() > 1;
@@ -247,7 +248,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentMethodLabel.setVisible(!showComboBox);
         paymentMethodLabel.setManaged(!showComboBox);
         if (!showComboBox)
-            paymentMethodTextField.setText(BSResources.get(model.getPaymentMethod().getId()));
+            paymentMethodTextField.setText(Res.get(model.getPaymentMethod().getId()));
         currencyTextField.setText(model.dataModel.getCurrencyNameAndCode());
         directionLabel.setText(model.getDirectionLabel());
         amountDescriptionLabel.setText(model.getAmountDescription());
@@ -259,8 +260,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
 
         if (offer.getPrice() == null)
-            new Popup().warning("You cannot take that offer as it uses a percentage price based on the " +
-                    "market price but there is no price feed available.")
+            new Popup().warning(Res.get("takeOffer.noPriceFeedAvailable"))
                     .onClose(this::close)
                     .show();
     }
@@ -272,12 +272,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     // called form parent as the view does not get notified when the tab is closed
     public void onClose() {
         Coin balance = model.dataModel.balance.get();
+        //noinspection ConstantConditions,ConstantConditions
         if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevFlags.DEV_MODE) {
             model.dataModel.swapTradeToSavings();
-            new Popup().information("You had already funded that offer.\n" +
-                    "Your funds have been moved to your local Bitsquare wallet and are available for " +
-                    "withdrawal in the \"Funds/Available for withdrawal\" screen.")
-                    .actionButtonText("Go to \"Funds/Available for withdrawal\"")
+            new Popup().information(Res.get("takeOffer.alreadyFunded.movedFunds"))
+                    .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                     .show();
         }
@@ -312,11 +311,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 });
             }
         } else {
-            new Popup().warning("You have no arbitrator selected.\n" +
-                    "You need to select at least one arbitrator.")
-                    .actionButtonText("Go to \"Arbitrator selection\"")
-                    .onAction(() -> navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class))
-                    .show();
+            new Popup().headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
+                    .instruction(Res.get("popup.warning.noArbitratorSelected.msg"))
+                    .actionButtonTextWithGoTo("navigation.arbitratorSelection")
+                    .onAction(() -> {
+                        navigation.setReturnPath(navigation.getCurrentPath());
+                        navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
+                    }).show();
         }
     }
 
@@ -334,31 +335,27 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         if (!DevFlags.DEV_MODE) {
             String key = "securityDepositInfo";
-            new Popup().backgroundInfo("To ensure that both traders follow the trade protocol they need to pay a security deposit.\n\n" +
-                    "The deposit will stay in your local trading wallet until the offer gets accepted by another trader.\n" +
-                    "It will be refunded to you after the trade has successfully completed.")
-                    .actionButtonText("Visit FAQ web page")
+            new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
+                    .actionButtonText(Res.get("shared.faq"))
                     .onAction(() -> GUIUtil.openWebPage("https://bitsquare.io/faq#6"))
-                    .closeButtonText("I understand")
+                    .useIUnderstandButton()
                     .dontShowAgainId(key, preferences)
                     .show();
 
+
+            String tradeAmountText = model.isSeller() ? Res.get("takeOffer.takeOfferFundWalletInfo.tradeAmount", model.getTradeAmount()) : "";
+            String message = Res.get("takeOffer.takeOfferFundWalletInfo.msg",
+                    model.totalToPay.get(),
+                    tradeAmountText,
+                    model.getSecurityDepositInfo(),
+                    model.getTakerFee(),
+                    model.getTxFee()
+            );
+            //TODO remove
+            log.error(message);
             key = "takeOfferFundWalletInfo";
-            String tradeAmountText = model.isSeller() ? "- Trade amount: " + model.getTradeAmount() + "\n" : "";
-            new Popup().headLine("Fund your trade").instruction("You need to deposit " +
-                    model.totalToPay.get() + " for taking this offer.\n\n" +
-
-                    "The amount is the sum of:\n" +
-                    tradeAmountText +
-                    "- Security deposit: " + model.getSecurityDepositInfo() + "\n" +
-                    "- Trading fee: " + model.getTakerFee() + "\n" +
-                    "- Mining fee (3x): " + model.getTxFee() + "\n\n" +
-
-                    "You can choose between two options when funding your trade:\n" +
-                    "- Use your Bitsquare wallet (convenient, but transactions may be linkable) OR\n" +
-                    "- Transfer from an external wallet (potentially more private)\n\n" +
-
-                    "You will see all funding options and details after closing this popup.")
+            new Popup().headLine(Res.get("takeOffer.takeOfferFundWalletInfo.headline"))
+                    .instruction(message)
                     .dontShowAgainId(key, preferences)
                     .show();
         }
@@ -386,9 +383,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (model.dataModel.isWalletFunded.get()) {
             if (walletFundedNotification == null) {
                 walletFundedNotification = new Notification()
-                        .headLine("Trading wallet update")
-                        .notification("Your trading wallet was already sufficiently funded from an earlier take offer attempt.\n" +
-                                "Amount: " + formatter.formatCoinWithCode(model.dataModel.totalToPayAsCoin.get()))
+                        .headLine(Res.get("notification.walletUpdate.headline"))
+                        .notification(Res.get("notification.takeOffer.walletUpdate.msg", formatter.formatCoinWithCode(model.dataModel.totalToPayAsCoin.get())))
                         .autoClose();
                 walletFundedNotification.show();
             }
@@ -471,9 +467,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     offerDetailsWindow.hide();
 
                 UserThread.runAfter(() -> new Popup().warning(newValue + "\n\n" +
-                        "If you have already paid in funds you can withdraw it in the " +
-                        "\"Funds/Available for withdrawal\" screen.")
-                        .actionButtonText("Go to \"Available for withdrawal\"")
+                        Res.get("takeOffer.alreadyPaidInFunds"))
+                        .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                         .onAction(() -> {
                             errorPopupDisplayed.set(true);
                             model.resetOfferWarning();
@@ -491,8 +486,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         errorMessageSubscription = EasyBind.subscribe(model.errorMessage, newValue -> {
             if (newValue != null) {
-                new Popup().error(BSResources.get("takeOffer.error.message", model.errorMessage.get()) +
-                        "Please try to restart you application and check your network connection to see if you can resolve the issue.")
+                new Popup().error(Res.get("takeOffer.error.message", model.errorMessage.get()) +
+                        Res.get("popup.error.tryRestart"))
                         .onClose(() -> {
                             errorPopupDisplayed.set(true);
                             model.resetErrorMessage();
@@ -518,33 +513,35 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         showWarningInvalidBtcDecimalPlacesSubscription = EasyBind.subscribe(model.showWarningInvalidBtcDecimalPlaces, newValue -> {
             if (newValue) {
-                new Popup().warning(BSResources.get("takeOffer.amountPriceBox.warning.invalidBtcDecimalPlaces")).show();
+                new Popup().warning(Res.get("takeOffer.amountPriceBox.warning.invalidBtcDecimalPlaces")).show();
                 model.showWarningInvalidBtcDecimalPlaces.set(false);
             }
         });
 
         showTransactionPublishedScreenSubscription = EasyBind.subscribe(model.showTransactionPublishedScreen, newValue -> {
+            //noinspection ConstantConditions
             if (newValue && DevFlags.DEV_MODE) {
                 close();
-            } else if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
-                String key = "takeOfferSuccessInfo";
-                if (preferences.showAgain(key)) {
-                    UserThread.runAfter(() -> new Popup().headLine(BSResources.get("takeOffer.success.headline"))
-                            .feedback(BSResources.get("takeOffer.success.info"))
-                            .actionButtonText("Go to \"Open trades\"")
-                            .dontShowAgainId(key, preferences)
-                            .onAction(() -> {
-                                UserThread.runAfter(
-                                        () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
-                                        , 100, TimeUnit.MILLISECONDS);
-                                close();
-                            })
-                            .onClose(this::close)
-                            .show(), 1);
-                } else {
-                    close();
+            } else //noinspection ConstantConditions,ConstantConditions
+                if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
+                    String key = "takeOfferSuccessInfo";
+                    if (preferences.showAgain(key)) {
+                        UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
+                                .feedback(Res.get("takeOffer.success.info"))
+                                .actionButtonTextWithGoTo("navigation.portfolio.pending")
+                                .dontShowAgainId(key, preferences)
+                                .onAction(() -> {
+                                    UserThread.runAfter(
+                                            () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)
+                                            , 100, TimeUnit.MILLISECONDS);
+                                    close();
+                                })
+                                .onClose(this::close)
+                                .show(), 1);
+                    } else {
+                        close();
+                    }
                 }
-            }
         });
 
  /*       noSufficientFeeBinding = EasyBind.combine(model.dataModel.isWalletFunded, model.dataModel.isMainNet, model.dataModel.isFeeFromFundingTxSufficient,
@@ -561,7 +558,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         "Please check at your external wallet that you set the required fee and " +
                         "do a funding again with the correct fee.\n\n" +
                         "In the \"Funds/Open for withdrawal\" section you can withdraw those funds.")
-                        .closeButtonText("Close")
+                        .closeButtonText(Res.get("shared.close"))
                         .onClose(() -> {
                             close();
                             navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
@@ -569,7 +566,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         .show();
         });*/
 
-        balanceSubscription = EasyBind.subscribe(model.dataModel.balance, newValue -> balanceTextField.setBalance(newValue));
+        balanceSubscription = EasyBind.subscribe(model.dataModel.balance, balanceTextField::setBalance);
         cancelButton2StyleSubscription = EasyBind.subscribe(takeOfferButton.visibleProperty(),
                 isVisible -> cancelButton2.setId(isVisible ? "cancel-button" : null));
     }
@@ -623,20 +620,22 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void addPaymentGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Payment info");
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, Res.get("takeOffer.paymentInfo"));
         GridPane.setColumnSpan(titledGroupBg, 3);
 
-        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, gridRow, "Trading account:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE);
         paymentAccountsLabel = tuple.first;
         paymentAccountsLabel.setVisible(false);
         paymentAccountsLabel.setManaged(false);
         paymentAccountsComboBox = tuple.second;
-        paymentAccountsComboBox.setPromptText("Select trading account");
+        paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
         paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
             @Override
             public String toString(PaymentAccount paymentAccount) {
-                return paymentAccount.getAccountName() + " (" + paymentAccount.getSingleTradeCurrency().getCode() + ", " +
-                        BSResources.get(paymentAccount.getPaymentMethod().getId()) + ")";
+                TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
+                String code = singleTradeCurrency != null ? singleTradeCurrency.getCode() : "";
+                return paymentAccount.getAccountName() + " (" + code + ", " +
+                        Res.get(paymentAccount.getPaymentMethod().getId()) + ")";
             }
 
             @Override
@@ -648,14 +647,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentAccountsComboBox.setManaged(false);
         paymentAccountsComboBox.setOnAction(e -> model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem()));
 
-        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, gridRow, "Payment method:", "", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.paymentMethod"), "", Layout.FIRST_ROW_DISTANCE);
         paymentMethodLabel = tuple2.first;
         paymentMethodTextField = tuple2.second;
-        currencyTextField = addLabelTextField(gridPane, ++gridRow, "Trade currency:", "").second;
+        currencyTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.tradeCurrency"), "").second;
     }
 
     private void addAmountPriceGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, "Set amount and price", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("takeOffer.setAmountPrice"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 3);
 
         imageView = new ImageView();
@@ -678,13 +677,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         HBox hBox = new HBox();
         hBox.setSpacing(10);
 
-        nextButton = new Button(BSResources.get("takeOffer.amountPriceBox.next"));
+        nextButton = new Button(Res.get("shared.nextStep"));
         nextButton.setDefaultButton(true);
         nextButton.setOnAction(e -> onShowPayFundsScreen());
 
         //UserThread.runAfter(() -> nextButton.requestFocus(), 100, TimeUnit.MILLISECONDS);
 
-        cancelButton1 = new Button(BSResources.get("shared.cancel"));
+        cancelButton1 = new Button(Res.get("shared.cancel"));
         cancelButton1.setDefaultButton(false);
         cancelButton1.setId("cancel-button");
         cancelButton1.setOnAction(e -> {
@@ -693,7 +692,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
 
         offerAvailabilityBusyAnimation = new BusyAnimation();
-        offerAvailabilityLabel = new Label(BSResources.get("takeOffer.fundsBox.isOfferAvailable"));
+        offerAvailabilityLabel = new Label(Res.get("takeOffer.fundsBox.isOfferAvailable"));
 
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.getChildren().addAll(nextButton, cancelButton1, offerAvailabilityBusyAnimation, offerAvailabilityLabel);
@@ -706,11 +705,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void addFundingGroup() {
         // don't increase gridRow as we removed button when this gets visible
-        payFundsPane = addTitledGroupBg(gridPane, gridRow, 3, BSResources.get("takeOffer.fundsBox.title"), Layout.GROUP_DISTANCE);
+        payFundsPane = addTitledGroupBg(gridPane, gridRow, 3, Res.get("takeOffer.fundsBox.title"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(payFundsPane, 3);
         payFundsPane.setVisible(false);
 
-        totalToPayLabel = new Label(BSResources.get("takeOffer.fundsBox.totalsNeeded"));
+        totalToPayLabel = new Label(Res.get("shared.totalsNeeded"));
         totalToPayLabel.setVisible(false);
         totalToPayInfoIconLabel = new Label();
         totalToPayInfoIconLabel.setVisible(false);
@@ -724,7 +723,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         totalToPayTextField = new TextFieldWithCopyIcon();
         totalToPayTextField.setFocusTraversable(false);
         totalToPayTextField.setVisible(false);
-        totalToPayTextField.setPromptText(BSResources.get("createOffer.fundsBox.totalsNeeded.prompt"));
+        totalToPayTextField.setPromptText(Res.get("createOffer.fundsBox.totalsNeeded.prompt"));
         totalToPayTextField.setCopyWithoutCurrencyPostFix(true);
         GridPane.setRowIndex(totalToPayTextField, gridRow);
         GridPane.setColumnIndex(totalToPayTextField, 1);
@@ -734,7 +733,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         qrCodeImageView = new ImageView();
         qrCodeImageView.setVisible(false);
         qrCodeImageView.setStyle("-fx-cursor: hand;");
-        Tooltip.install(qrCodeImageView, new Tooltip("Open large QR-Code window"));
+        Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
                         () -> new QRCodeWindow(getBitcoinURI()).show(),
@@ -746,13 +745,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE - 9, 0, 0, 5));
         gridPane.getChildren().add(qrCodeImageView);
 
-        Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, BSResources.get("takeOffer.fundsBox.address"));
+        Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, Res.get("shared.tradeWalletAddress"));
         addressLabel = addressTuple.first;
         addressLabel.setVisible(false);
         addressTextField = addressTuple.second;
         addressTextField.setVisible(false);
 
-        Tuple2<Label, BalanceTextField> balanceTuple = addLabelBalanceTextField(gridPane, ++gridRow, BSResources.get("takeOffer.fundsBox.balance"));
+        Tuple2<Label, BalanceTextField> balanceTuple = addLabelBalanceTextField(gridPane, ++gridRow, Res.get("shared.tradeWalletBalance"));
         balanceLabel = balanceTuple.first;
         balanceLabel.setVisible(false);
         balanceTextField = balanceTuple.second;
@@ -762,13 +761,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         fundingHBox.setVisible(false);
         fundingHBox.setManaged(false);
         fundingHBox.setSpacing(10);
-        fundFromSavingsWalletButton = new Button("Transfer funds from Bitsquare wallet");
+        fundFromSavingsWalletButton = new Button(Res.get("shared.fundFromSavingsWalletButton"));
         fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.setDefaultButton(false);
         fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
-        Label label = new Label("OR");
+        Label label = new Label(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));
-        fundFromExternalWalletButton = new Button("Open your external wallet for funding");
+        fundFromExternalWalletButton = new Button(Res.get("shared.fundFromExternalWalletButton"));
         fundFromExternalWalletButton.setDefaultButton(false);
         fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
         waitingForFundsBusyAnimation = new BusyAnimation(false);
@@ -787,15 +786,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         takeOfferButton.setPadding(new Insets(0, 20, 0, 20));
         takeOfferButton.setOnAction(e -> onTakeOffer());
 
-        cancelButton2 = addButton(gridPane, ++gridRow, BSResources.get("shared.cancel"));
+        cancelButton2 = addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.isWalletFunded.get()) {
-                new Popup().warning("You have already funded that offer.\n" +
-                        "If you cancel now, your funds will be moved to your local Bitsquare wallet and are available " +
-                        "for withdrawal in the \"Funds/Available for withdrawal\" screen.\n" +
-                        "Are you sure you want to cancel?")
-                        .closeButtonText("No")
-                        .actionButtonText("Yes, cancel")
+                new Popup().warning(Res.get("takeOffer.alreadyFunded.askCancel"))
+                        .closeButtonText(Res.get("shared.no"))
+                        .actionButtonText(Res.get("shared.yesCancel"))
                         .onAction(() -> {
                             model.dataModel.swapTradeToSavings();
                             close();
@@ -815,8 +811,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception ex) {
             log.warn(ex.getMessage());
-            new Popup().warning("Opening a default bitcoin wallet application has failed. " +
-                    "Perhaps you don't have one installed?").show();
+            new Popup().warning(Res.get("shared.openDefaultWalletFailed")).show();
         }
     }
 
@@ -829,7 +824,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void addAmountPriceFields() {
         // amountBox
-        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getAmountCurrencyBox(BSResources.get("takeOffer.amount.prompt"));
+        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getAmountCurrencyBox(Res.get("takeOffer.amount.prompt"));
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         amountTextField = amountValueCurrencyBoxTuple.second;
         amountBtcLabel = amountValueCurrencyBoxTuple.third;
@@ -847,7 +842,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         HBox priceValueCurrencyBox = priceValueCurrencyBoxTuple.first;
         priceTextField = priceValueCurrencyBoxTuple.second;
         priceCurrencyLabel = priceValueCurrencyBoxTuple.third;
-        Tuple2<Label, VBox> priceInputBoxTuple = getTradeInputBox(priceValueCurrencyBox, BSResources.get("takeOffer.amountPriceBox.priceDescription"));
+        Tuple2<Label, VBox> priceInputBoxTuple = getTradeInputBox(priceValueCurrencyBox, Res.get("takeOffer.amountPriceBox.priceDescription"));
         priceDescriptionLabel = priceInputBoxTuple.first;
         VBox priceBox = priceInputBoxTuple.second;
 
@@ -882,11 +877,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceAsPercentageTextField = priceAsPercentageTuple.second;
         priceAsPercentageLabel = priceAsPercentageTuple.third;
 
-        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, "Distance in % from market price");
+        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, Res.get("shared.distanceInPercent"));
         priceAsPercentageInputBoxTuple.first.setPrefWidth(220);
         priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
 
-        priceAsPercentageTextField.setPromptText("Enter % value");
+        priceAsPercentageTextField.setPromptText(Res.get("shared.enterPercentageValue"));
         priceAsPercentageLabel.setText("%");
         priceAsPercentageLabel.setStyle("-fx-alignment: center;");
 
@@ -896,7 +891,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         amountRangeTextField = amountValueCurrencyBoxTuple.second;
         amountRangeBtcLabel = amountValueCurrencyBoxTuple.third;
 
-        Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, BSResources.get("takeOffer.amountPriceBox.amountRangeDescription"));
+        Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, Res.get("takeOffer.amountPriceBox.amountRangeDescription"));
 
         Label xLabel = new Label("x");
         xLabel.setFont(Font.font("Helvetica-Bold", 20));
@@ -909,7 +904,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         securityDepositTextField = securityDepositValueCurrencyBoxTuple.second;
         securityDepositBtcLabel = securityDepositValueCurrencyBoxTuple.third;
         Tuple2<Label, VBox> securityDepositInputBoxTuple = getTradeInputBox(securityDepositValueCurrencyBox,
-                BSResources.get("takeOffer.securityDepositBox.description"));
+                Res.get("takeOffer.securityDepositBox.description"));
 
         Label resultLabel = new Label("=");
         resultLabel.setFont(Font.font("Helvetica-Bold", 20));
@@ -996,17 +991,17 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         int i = 0;
         if (model.isSeller())
-            addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.tradeAmount"), model.getTradeAmount());
+            addPayInfoEntry(infoGridPane, i++, Res.get("takeOffer.fundsBox.tradeAmount"), model.getTradeAmount());
 
-        addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.securityDeposit"), model.getSecurityDepositInfo());
-        addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.offerFee"), model.getTakerFee());
-        addPayInfoEntry(infoGridPane, i++, BSResources.get("takeOffer.fundsBox.networkFee"), model.getTxFee());
+        addPayInfoEntry(infoGridPane, i++, Res.getWithCol("shared.securityDeposit"), model.getSecurityDepositInfo());
+        addPayInfoEntry(infoGridPane, i++, Res.get("takeOffer.fundsBox.offerFee"), model.getTakerFee());
+        addPayInfoEntry(infoGridPane, i++, Res.get("takeOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.setStyle("-fx-background: #666;");
         GridPane.setConstraints(separator, 1, i++);
         infoGridPane.getChildren().add(separator);
-        addPayInfoEntry(infoGridPane, i, BSResources.get("takeOffer.fundsBox.total"),
+        addPayInfoEntry(infoGridPane, i, Res.getWithCol("shared.total"),
                 model.totalToPay.get());
         totalToPayInfoPopover = new PopOver(infoGridPane);
         if (totalToPayInfoIconLabel.getScene() != null) {

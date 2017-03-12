@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.main.overlays;
 
+import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
@@ -26,6 +27,8 @@ import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Transitions;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.messages.user.Preferences;
+import io.bitsquare.locale.Res;
+import io.bitsquare.user.Preferences;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -221,7 +224,7 @@ public abstract class Overlay<T extends Overlay> {
     public T notification(String message) {
         type = Type.Notification;
         if (headLine == null)
-            this.headLine = "Notification";
+            this.headLine = Res.get("popup.headline.notification");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -230,7 +233,7 @@ public abstract class Overlay<T extends Overlay> {
     public T instruction(String message) {
         type = Type.Instruction;
         if (headLine == null)
-            this.headLine = "Please note:";
+            this.headLine = Res.get("popup.headline.instruction");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -239,7 +242,7 @@ public abstract class Overlay<T extends Overlay> {
     public T attention(String message) {
         type = Type.Attention;
         if (headLine == null)
-            this.headLine = "Attention";
+            this.headLine = Res.get("popup.headline.attention");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -248,7 +251,7 @@ public abstract class Overlay<T extends Overlay> {
     public T backgroundInfo(String message) {
         type = Type.BackgroundInfo;
         if (headLine == null)
-            this.headLine = "Background information";
+            this.headLine = Res.get("popup.headline.backgroundInfo");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -257,7 +260,7 @@ public abstract class Overlay<T extends Overlay> {
     public T feedback(String message) {
         type = Type.Feedback;
         if (headLine == null)
-            this.headLine = "Completed";
+            this.headLine = Res.get("popup.headline.feedback");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -266,7 +269,7 @@ public abstract class Overlay<T extends Overlay> {
     public T confirmation(String message) {
         type = Type.Confirmation;
         if (headLine == null)
-            this.headLine = "Confirmation";
+            this.headLine = Res.get("popup.headline.confirmation");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -275,7 +278,7 @@ public abstract class Overlay<T extends Overlay> {
     public T information(String message) {
         type = Type.Information;
         if (headLine == null)
-            this.headLine = "Information";
+            this.headLine = Res.get("popup.headline.information");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -285,7 +288,7 @@ public abstract class Overlay<T extends Overlay> {
         type = Type.Warning;
 
         if (headLine == null)
-            this.headLine = "Warning";
+            this.headLine = Res.get("popup.headline.warning");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -295,7 +298,7 @@ public abstract class Overlay<T extends Overlay> {
         type = Type.Error;
         showReportErrorButtons();
         if (headLine == null)
-            this.headLine = "Error";
+            this.headLine = Res.get("popup.headline.error");
         this.message = message;
         setTruncatedMessage();
         return (T) this;
@@ -317,8 +320,35 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
+    public T useReportBugButton() {
+        this.closeButtonText = Res.get("shared.reportBug");
+        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues"));
+        return (T) this;
+    }
+
+    public T useIUnderstandButton() {
+        this.closeButtonText = Res.get("shared.iUnderstand");
+        return (T) this;
+    }
+
+    public T actionButtonTextWithGoTo(String target) {
+        this.actionButtonText = Res.get("shared.goTo", Res.get(target));
+        return (T) this;
+    }
+
+    public T closeButtonTextWithGoTo(String target) {
+        this.closeButtonText = Res.get("shared.goTo", Res.get(target));
+        return (T) this;
+    }
+
     public T actionButtonText(String actionButtonText) {
         this.actionButtonText = actionButtonText;
+        return (T) this;
+    }
+
+    public T useShutDownButton() {
+        this.actionButtonText = Res.get("shared.shutDown");
+        this.actionHandlerOptional = Optional.of(BitsquareApp.shutDownHandler::run);
         return (T) this;
     }
 
@@ -624,7 +654,7 @@ public abstract class Overlay<T extends Overlay> {
         if (headLine != null) {
             ++rowIndex;
 
-            headLineLabel = new Label(BSResources.get(headLine));
+            headLineLabel = new Label(headLine);
             headLineLabel.setMouseTransparent(true);
 
             if (headlineStyle != null)
@@ -667,33 +697,29 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     private void addReportErrorButtons() {
-        messageLabel.setText(truncatedMessage
-                + "\n\nTo help us to improve the software please report the bug at our issue tracker at Github or send it by email to the developers.\n" +
-                "The error message will be copied to clipboard when you click the below buttons.\n" +
-                "It will make debugging easier if you can attach the bitsquare.log file which you can find in the application directory.");
+        messageLabel.setText(Res.get("popup.reportError", truncatedMessage));
 
-        Button githubButton = new Button("Report to Github issue tracker");
-        GridPane.setMargin(githubButton, new Insets(20, 0, 0, 0));
-        GridPane.setHalignment(githubButton, HPos.RIGHT);
-        GridPane.setRowIndex(githubButton, ++rowIndex);
-        GridPane.setColumnIndex(githubButton, 1);
-        gridPane.getChildren().add(githubButton);
+        Button gitHubButton = new Button(Res.get("popup.reportError.gitHub"));
+        GridPane.setMargin(gitHubButton, new Insets(20, 0, 0, 0));
+        GridPane.setHalignment(gitHubButton, HPos.RIGHT);
+        GridPane.setRowIndex(gitHubButton, ++rowIndex);
+        GridPane.setColumnIndex(gitHubButton, 1);
+        gridPane.getChildren().add(gitHubButton);
 
-        githubButton.setOnAction(event -> {
+        gitHubButton.setOnAction(event -> {
             Utilities.copyToClipboard(message);
             GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues");
         });
 
-        Button mailButton = new Button("Report by email");
-        GridPane.setHalignment(mailButton, HPos.RIGHT);
-        GridPane.setRowIndex(mailButton, ++rowIndex);
-        GridPane.setColumnIndex(mailButton, 1);
-        gridPane.getChildren().add(mailButton);
-        mailButton.setOnAction(event -> {
+        Button forumButton = new Button(Res.get("popup.reportError.forum"));
+        GridPane.setHalignment(forumButton, HPos.RIGHT);
+        GridPane.setRowIndex(forumButton, ++rowIndex);
+        GridPane.setColumnIndex(forumButton, 1);
+        gridPane.getChildren().add(forumButton);
+
+        forumButton.setOnAction(event -> {
             Utilities.copyToClipboard(message);
-            GUIUtil.openMail("manfred@bitsquare.io",
-                    "Error report",
-                    "Error message:\n" + message);
+            GUIUtil.openWebPage("http://forum.bitsquare.io");
         });
     }
 
@@ -707,8 +733,10 @@ public abstract class Overlay<T extends Overlay> {
 
     protected void addDontShowAgainCheckBox() {
         if (dontShowAgainId != null && preferences != null) {
+            // We might have set it and overridden the default, so we check if it is not set
             if (dontShowAgainText == null)
-                dontShowAgainText = "Don't show again";
+                dontShowAgainText = Res.get("popup.doNotShowAgain");
+            
             CheckBox dontShowAgainCheckBox = addCheckBox(gridPane, rowIndex, dontShowAgainText, buttonDistance - 1);
             GridPane.setColumnIndex(dontShowAgainCheckBox, 0);
             GridPane.setHalignment(dontShowAgainCheckBox, HPos.LEFT);
@@ -717,11 +745,11 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected void addCloseButton() {
-        closeButton = new Button(closeButtonText == null ? "Close" : closeButtonText);
+        closeButton = new Button(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
         closeButton.setOnAction(event -> doClose());
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
-            actionButton = new Button(actionButtonText == null ? "Ok" : actionButtonText);
+            actionButton = new Button(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
             actionButton.setDefaultButton(true);
             //TODO app wide focus
             //actionButton.requestFocus();

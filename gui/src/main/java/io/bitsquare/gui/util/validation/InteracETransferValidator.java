@@ -29,6 +29,8 @@ package io.bitsquare.gui.util.validation;
  * They are to change in some future (according to the linked document around 2019/2020)
  */
 
+import io.bitsquare.locale.Res;
+
 public final class InteracETransferValidator extends InputValidator {
 
     private static final String[] NPAS = {"204", "226", "236", "249", "250", "289", "306", "343", "365", "403", "416", "418", "431", "437", "438", "450", "506", "514", "519", "548", "579", "581", "587", "604", "613", "639", "647", "705", "709", "778", "780", "782", "807", "819", "825", "867", "873", "902", "905"};
@@ -75,9 +77,9 @@ public final class InteracETransferValidator extends InputValidator {
                 if (inputAreaCode.compareTo(s) == 0)
                     return new ValidationResult(true);
             }
-            return new ValidationResult(false, "Non-Canadian area code");
+            return new ValidationResult(false, Res.get("validation.interacETransfer.invalidAreaCode"));
         } else {
-            return new ValidationResult(false, "Invalid phone number format and not an email address");
+            return new ValidationResult(false, Res.get("validation.interacETransfer.invalidPhone"));
         }
     }
 }

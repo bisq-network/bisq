@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.locale.Res;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
@@ -39,6 +40,7 @@ import static io.bitsquare.gui.util.FormBuilder.addMultilineLabel;
 
 public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
     private static final Logger log = LoggerFactory.getLogger(SelectDepositTxWindow.class);
+
     private ComboBox<Transaction> transactionsComboBox;
     private List<Transaction> transactions;
     private Optional<Consumer<Transaction>> selectHandlerOptional;
@@ -55,7 +57,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
 
     public void show() {
         if (headLine == null)
-            headLine = "Select deposit transaction for dispute";
+            headLine = Res.get("selectDepositTxWindow.headline");
 
         width = 700;
         createGridPane();
@@ -82,23 +84,12 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addContent() {
-        Label label = addMultilineLabel(gridPane, ++rowIndex,
-                "The deposit transaction was not stored in the trade.\n" +
-                        "Please select one of the existing MultiSig transactions from your wallet which was the " +
-                        "deposit transaction used in the failed trade.\n\n" +
-                        "You can find the correct transaction by opening the trade details window (click on the trade ID in the list)" +
-                        " and following the offer fee payment transaction output to the next transaction where you see " +
-                        "the Multisig deposit transaction (the address starts with 3). That transaction ID should be " +
-                        "visible in the list presented here. Once you found the correct transaction select that transaction here and continue.\n\n" +
-                        "Sorry for the inconvenience but that error case should be happen very rare and in future we will try " +
-                        "to find better ways to resolve it.",
-                10);
-
+        Label label = addMultilineLabel(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.msg"), 10);
         GridPane.setMargin(label, new Insets(0, 0, 10, 0));
 
-        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, ++rowIndex, "Select deposit transaction");
+        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.select"));
         transactionsComboBox = tuple.second;
-        transactionsComboBox.setPromptText("Select");
+        transactionsComboBox.setPromptText(Res.get("shared.select"));
         transactionsComboBox.setConverter(new StringConverter<Transaction>() {
             @Override
             public String toString(Transaction transaction) {

@@ -28,15 +28,15 @@
 
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn text="Trade ID" fx:id="tradeIdColumn" minWidth="120" maxWidth="120"/>
-            <TableColumn text="Date/Time" fx:id="dateColumn" minWidth="180"/>
-            <TableColumn text="Market" fx:id="marketColumn" minWidth="100"/>
-            <TableColumn text="Price" fx:id="priceColumn" minWidth="100"/>
-            <TableColumn text="Amount in BTC" fx:id="amountColumn" minWidth="130"/>
-            <TableColumn text="Amount" fx:id="volumeColumn" minWidth="130"/>
-            <TableColumn text="Trade type" fx:id="directionColumn" minWidth="80"/>
-            <TableColumn text="Status" fx:id="stateColumn" minWidth="80"/>
-            <TableColumn text="" fx:id="avatarColumn" minWidth="40" maxWidth="40"/>
+            <TableColumn fx:id="tradeIdColumn" minWidth="120" maxWidth="120"/>
+            <TableColumn fx:id="dateColumn" minWidth="180"/>
+            <TableColumn fx:id="marketColumn" minWidth="100"/>
+            <TableColumn fx:id="priceColumn" minWidth="100"/>
+            <TableColumn fx:id="amountColumn" minWidth="130"/>
+            <TableColumn fx:id="volumeColumn" minWidth="130"/>
+            <TableColumn fx:id="directionColumn" minWidth="80"/>
+            <TableColumn fx:id="stateColumn" minWidth="80"/>
+            <TableColumn fx:id="avatarColumn" minWidth="40" maxWidth="40"/>
         </columns>
     </TableView>
     <Button fx:id="exportButton"/>

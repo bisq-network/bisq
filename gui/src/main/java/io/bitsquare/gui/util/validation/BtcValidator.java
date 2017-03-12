@@ -18,7 +18,7 @@
 package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.gui.util.BSFormatter;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
 import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;
@@ -64,7 +64,7 @@ public class BtcValidator extends NumberValidator {
         BigDecimal bd = new BigDecimal(input);
         final BigDecimal satoshis = bd.movePointRight(8);
         if (satoshis.scale() > 0)
-            return new ValidationResult(false, BSResources.get("validation.btc.toSmall"));
+            return new ValidationResult(false, Res.get("validation.btc.toSmall"));
         else
             return new ValidationResult(true);
     }
@@ -73,11 +73,11 @@ public class BtcValidator extends NumberValidator {
         try {
             final Coin coin = Coin.parseCoin(input);
             if (maxValueInBitcoin != null && coin.compareTo(maxValueInBitcoin) > 0)
-                return new ValidationResult(false, BSResources.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxValueInBitcoin)));
+                return new ValidationResult(false, Res.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxValueInBitcoin)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {
-            return new ValidationResult(false, "Invalid input: " + t.getMessage());
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
         }
     }
 }

@@ -22,7 +22,8 @@ import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.gui.util.validation.SwishValidator;
-import io.bitsquare.locale.BSResources;
+import io.bitsquare.locale.Res;
+import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.messages.payment.payload.PaymentAccountContractData;
 import io.bitsquare.payment.SwishAccount;
@@ -43,13 +44,17 @@ public class SwishForm extends PaymentMethodForm {
     private final SwishValidator swishValidator;
     private InputTextField mobileNrInputTextField;
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextField(gridPane, ++gridRow, "Account holder name:", ((SwishAccountContractData) paymentAccountContractData).getHolderName());
-        addLabelTextField(gridPane, ++gridRow, "Mobile no.:", ((SwishAccountContractData) paymentAccountContractData).getMobileNr());
+    public static int addFormForBuyer(GridPane gridPane, int gridRow,
+                                      PaymentAccountContractData paymentAccountContractData) {
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+                ((SwishAccountContractData) paymentAccountContractData).getHolderName());
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"),
+                ((SwishAccountContractData) paymentAccountContractData).getMobileNr());
         return gridRow;
     }
 
-    public SwishForm(PaymentAccount paymentAccount, SwishValidator swishValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public SwishForm(PaymentAccount paymentAccount, SwishValidator swishValidator,
+                     InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.swishAccount = (SwishAccount) paymentAccount;
         this.swishValidator = swishValidator;
@@ -59,21 +64,25 @@ public class SwishForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account holder name:").second;
+        InputTextField holderNameInputTextField = addLabelInputTextField(gridPane, ++gridRow,
+                Res.getWithCol("payment.account.owner")).second;
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             swishAccount.setHolderName(newValue);
             updateFromInputs();
         });
 
-        mobileNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Mobile no.:").second;
+        mobileNrInputTextField = addLabelInputTextField(gridPane, ++gridRow,
+                Res.get("payment.mobile")).second;
         mobileNrInputTextField.setValidator(swishValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             swishAccount.setMobileNr(newValue);
             updateFromInputs();
         });
 
-        addLabelTextField(gridPane, ++gridRow, "Currency:", swishAccount.getSingleTradeCurrency().getNameAndCode());
+        TradeCurrency singleTradeCurrency = swishAccount.getSingleTradeCurrency();
+        String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -83,7 +92,7 @@ public class SwishForm extends PaymentMethodForm {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String mobileNr = mobileNrInputTextField.getText();
             mobileNr = StringUtils.abbreviate(mobileNr, 9);
-            String method = BSResources.get(paymentAccount.getPaymentMethod().getId());
+            String method = Res.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(": ").concat(mobileNr));
         }
     }
@@ -91,12 +100,18 @@ public class SwishForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, "Account name:", swishAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(swishAccount.getPaymentMethod().getId()));
-        addLabelTextField(gridPane, ++gridRow, "Account holder name:", swishAccount.getHolderName());
-        TextField field = addLabelTextField(gridPane, ++gridRow, "Mobile no.:", swishAccount.getMobileNr()).second;
+        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+                swishAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+                Res.get(swishAccount.getPaymentMethod().getId()));
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
+                swishAccount.getHolderName());
+        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"),
+                swishAccount.getMobileNr()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, "Currency:", swishAccount.getSingleTradeCurrency().getNameAndCode());
+        TradeCurrency singleTradeCurrency = swishAccount.getSingleTradeCurrency();
+        String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
         addAllowedPeriod();
     }
 

@@ -21,6 +21,7 @@ import io.bitsquare.btc.wallet.WalletsManager;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.locale.Res;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -34,6 +35,7 @@ import static io.bitsquare.gui.util.FormBuilder.addLabelTextArea;
 
 public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
     private static final Logger log = LoggerFactory.getLogger(ShowWalletDataWindow.class);
+
     private final WalletsManager walletsManager;
 
 
@@ -48,7 +50,7 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
 
     public void show() {
         if (headLine == null)
-            headLine = "Wallet data";
+            headLine = Res.get("showWalletDataWindow.walletData");
 
         width = 1200;
         createGridPane();
@@ -77,13 +79,15 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
     }
 
     private void addContent() {
-        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex, "Wallet data:", "");
+        Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex,
+                Res.getWithCol("showWalletDataWindow.walletData"), "");
         TextArea textArea = labelTextAreaTuple2.second;
         Label label = labelTextAreaTuple2.first;
         label.setMinWidth(150);
         textArea.setPrefHeight(500);
         textArea.setStyle("-fx-font-size: 10;");
-        CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex, "Include private keys:", "").second;
+        CheckBox isUpdateCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("showWalletDataWindow.includePrivKeys"), "").second;
         isUpdateCheckBox.setSelected(false);
 
         isUpdateCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
@@ -92,7 +96,7 @@ public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
 
         showWallet(textArea, isUpdateCheckBox);
 
-        actionButtonText("Copy to clipboard");
+        actionButtonText(Res.get("shared.copyToClipboard"));
         onAction(() -> Utilities.copyToClipboard(textArea.getText()));
     }
 

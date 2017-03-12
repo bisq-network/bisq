@@ -18,7 +18,8 @@
 package io.bitsquare.gui.main;
 
 import io.bitsquare.BitsquareException;
-import io.bitsquare.app.BitsquareApp;
+import io.bitsquare.app.AppOptionKeys;
+import io.bitsquare.app.BitsquareEnvironment;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.messages.provider.price.PriceFeedService;
 import io.bitsquare.common.UserThread;
@@ -40,6 +41,7 @@ import io.bitsquare.gui.main.settings.SettingsView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Transitions;
+import io.bitsquare.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -53,7 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -62,8 +63,6 @@ import static javafx.scene.layout.AnchorPane.*;
 @FxmlView
 public class MainView extends InitializableView<StackPane, MainViewModel> {
     private static final Logger log = LoggerFactory.getLogger(MainView.class);
-
-    public static final String TITLE_KEY = "viewTitle";
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;
@@ -98,7 +97,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private static Transitions transitions;
-    private BSFormatter formatter;
+    private final BitsquareEnvironment environment;
+    private final BSFormatter formatter;
     private ChangeListener<String> walletServiceErrorMsgListener;
     private ChangeListener<String> btcSyncIconIdListener;
     private ChangeListener<String> splashP2PNetworkErrorMsgListener;
@@ -112,12 +112,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Popup<?> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
     private static StackPane rootContainer;
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
-                    BSFormatter formatter, @Named(MainView.TITLE_KEY) String title) {
+                    BitsquareEnvironment environment, BSFormatter formatter) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+        this.environment = environment;
         this.formatter = formatter;
         MainView.transitions = transitions;
     }
@@ -126,15 +128,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     protected void initialize() {
         MainView.rootContainer = this.root;
 
-        ToggleButton marketButton = new NavButton(MarketView.class, "Market");
-        ToggleButton buyButton = new NavButton(BuyOfferView.class, "Buy BTC");
-        ToggleButton sellButton = new NavButton(SellOfferView.class, "Sell BTC");
-        ToggleButton portfolioButton = new NavButton(PortfolioView.class, "Portfolio");
-        ToggleButton fundsButton = new NavButton(FundsView.class, "Funds");
-        ToggleButton disputesButton = new NavButton(DisputesView.class, "Support");
-        ToggleButton settingsButton = new NavButton(SettingsView.class, "Settings");
-        ToggleButton accountButton = new NavButton(AccountView.class, "Account");
-        ToggleButton daoButton = new NavButton(DaoView.class, "DAO");
+        ToggleButton marketButton = new NavButton(MarketView.class, Res.get("mainView.menu.market"));
+        ToggleButton buyButton = new NavButton(BuyOfferView.class, Res.get("mainView.menu.buyBtc"));
+        ToggleButton sellButton = new NavButton(SellOfferView.class, Res.get("mainView.menu.sellBtc"));
+        ToggleButton portfolioButton = new NavButton(PortfolioView.class, Res.get("mainView.menu.portfolio"));
+        ToggleButton fundsButton = new NavButton(FundsView.class, Res.get("mainView.menu.funds"));
+        ToggleButton disputesButton = new NavButton(DisputesView.class, Res.get("mainView.menu.support"));
+        ToggleButton settingsButton = new NavButton(SettingsView.class, Res.get("mainView.menu.settings"));
+        ToggleButton accountButton = new NavButton(AccountView.class, Res.get("mainView.menu.account"));
+        ToggleButton daoButton = new NavButton(DaoView.class, Res.get("mainView.menu.dao"));
         Pane portfolioButtonHolder = new Pane(portfolioButton);
         Pane disputesButtonHolder = new Pane(disputesButton);
 
@@ -144,36 +146,36 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         }};
 
 
-        Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> marketPriceBox = getMarketPriceBox("Market price");
+        Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> marketPriceBox = getMarketPriceBox();
         ComboBox<PriceFeedComboBoxItem> priceComboBox = marketPriceBox.first;
 
         priceComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             model.setPriceFeedComboBoxItem(newValue);
         });
-        ChangeListener<PriceFeedComboBoxItem> selectedPriceFeedItemListender = (observable, oldValue, newValue) -> {
+        ChangeListener<PriceFeedComboBoxItem> selectedPriceFeedItemListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
                 priceComboBox.getSelectionModel().select(newValue);
 
         };
-        model.selectedPriceFeedComboBoxItemProperty.addListener(selectedPriceFeedItemListender);
+        model.selectedPriceFeedComboBoxItemProperty.addListener(selectedPriceFeedItemListener);
         priceComboBox.setItems(model.priceFeedComboBoxItems);
 
         marketPriceBox.second.textProperty().bind(createStringBinding(
                 () -> {
                     PriceFeedService.Type type = model.typeProperty.get();
-                    return type != null ? "Market price (" + type.name + ")" : "";
+                    return type != null ? Res.get("mainView.marketPrice", type.name) : "";
                 },
                 model.marketPriceCurrencyCode, model.typeProperty));
         HBox.setMargin(marketPriceBox.third, new Insets(0, 0, 0, 0));
 
 
-        Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox("Available balance");
+        Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox(Res.get("mainView.balance.available"));
         availableBalanceBox.first.textProperty().bind(model.availableBalance);
 
-        Tuple2<TextField, VBox> reservedBalanceBox = getBalanceBox("Reserved in offers");
+        Tuple2<TextField, VBox> reservedBalanceBox = getBalanceBox(Res.get("mainView.balance.reserved"));
         reservedBalanceBox.first.textProperty().bind(model.reservedBalance);
 
-        Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox("Locked in trades");
+        Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox(Res.get("mainView.balance.locked"));
         lockedBalanceBox.first.textProperty().bind(model.lockedBalance);
 
         HBox rightNavPane = new HBox(marketPriceBox.third, availableBalanceBox.second, reservedBalanceBox.second, lockedBalanceBox.second,
@@ -238,17 +240,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 if (!persistedFilesCorrupted.isEmpty()) {
                     if (persistedFilesCorrupted.size() > 1 || !persistedFilesCorrupted.get(0).equals("Navigation")) {
                         // show warning that some files has been corrupted
-                        new Popup().warning("We detected incompatible data base files!\n\n" +
-                                "Those database file(s) are not compatible with our current code base:" +
-                                "\n" + persistedFilesCorrupted.toString() +
-                                "\n\nWe made a backup of the corrupted file(s) and applied the default values to a new " +
-                                "database version." +
-                                "\n\nThe backup is located at:\n[you local app data directory]/db/backup_of_corrupted_data.\n\n" +
-                                "Please check if you have the latest version of Bitsquare installed.\n" +
-                                "You can download it at:\nhttps://github.com/bitsquare/bitsquare/releases\n\n" +
-                                "Please restart the application.")
-                                .closeButtonText("Shut down")
-                                .onClose(BitsquareApp.shutDownHandler::run)
+                        new Popup()
+                                .warning(Res.get("popup.warning.incompatibleDB",
+                                        persistedFilesCorrupted.toString(),
+                                        environment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY)))
+                                .useShutDownButton()
                                 .show();
                     } else {
                         log.debug("We detected incompatible data base file for Navigation. That is a minor issue happening with refactoring of UI classes " +
@@ -298,7 +294,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
     }
 
-    private Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> getMarketPriceBox(String text) {
+    private Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> getMarketPriceBox() {
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new ComboBox<>();
         priceComboBox.setVisibleRowCount(20);
         priceComboBox.setMaxWidth(220);
@@ -310,7 +306,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         buttonCell.setId("price-feed-combo");
         priceComboBox.setButtonCell(buttonCell);
 
-        Label label = new Label(text);
+        Label label = new Label();
         label.setId("nav-balance-label");
         label.setPadding(new Insets(0, 0, 0, 2));
 
@@ -327,9 +323,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.managedProperty().bind(model.isFiatCurrencyPriceFeedSelected);
         btcAverageIconButton.setOnMouseEntered(e -> {
-            btcAverageIconButton.setTooltip(new Tooltip("Market price is provided by https://bitcoinaverage.com\n" +
-                    "Last update: " + formatter.formatTime(model.priceFeedService.getLastRequestTimeStampBtcAverage())));
-        });
+                    String res = Res.get("mainView.marketPrice.tooltip",
+                            "https://bitcoinaverage.com",
+                            "",
+                            formatter.formatTime(model.priceFeedService.getLastRequestTimeStampBtcAverage()));
+                    btcAverageIconButton.setTooltip(
+                            new Tooltip(res)
+                    );
+                }
+        );
 
         final ImageView poloniexIcon = new ImageView();
         poloniexIcon.setId("poloniex");
@@ -344,9 +346,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.setOnMouseEntered(e -> {
-            poloniexIconButton.setTooltip(new Tooltip("Market price is provided by https://poloniex.com.\n" +
-                    "If the altcoin is not available at Poloniex we use https://coinmarketcap.com\n" +
-                    "Last update: " + formatter.formatTime(model.priceFeedService.getLastRequestTimeStampPoloniex())));
+            String altcoinExtra = Res.get("mainView.marketPrice.tooltip.altcoinExtra");
+            String res = Res.get("mainView.marketPrice.tooltip",
+                    "https://poloniex.com",
+                    altcoinExtra,
+                    formatter.formatTime(model.priceFeedService.getLastRequestTimeStampPoloniex()));
+            poloniexIconButton.setTooltip(
+                    new Tooltip(res)
+            );
         });
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -378,9 +385,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         // createBitcoinInfoBox
         btcSplashInfo = new Label();
         btcSplashInfo.textProperty().bind(model.btcInfo);
-        walletServiceErrorMsgListener = (ov, oldValue, newValue) -> {
-            btcSplashInfo.setId("splash-error-state-msg");
-        };
+        walletServiceErrorMsgListener = (ov, oldValue, newValue) -> btcSplashInfo.setId("splash-error-state-msg");
         model.walletServiceErrorMsg.addListener(walletServiceErrorMsgListener);
 
         btcSyncIndicator = new ProgressBar();
@@ -525,7 +530,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         versionLabel.setId("footer-pane");
         versionLabel.setTextAlignment(TextAlignment.CENTER);
         versionLabel.setAlignment(Pos.BASELINE_CENTER);
-        versionLabel.setText(model.version);
+        versionLabel.setText("v" + Version.VERSION);
         root.widthProperty().addListener((ov, oldValue, newValue) -> {
             versionLabel.setLayoutX(((double) newValue - versionLabel.getWidth()) / 2);
         });

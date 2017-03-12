@@ -29,6 +29,10 @@ import io.bitsquare.gui.util.Layout;
 import io.bitsquare.messages.locale.CurrencyUtil;
 import io.bitsquare.messages.payment.payload.*;
 import io.bitsquare.messages.trade.payload.Contract;
+import io.bitsquare.locale.CurrencyUtil;
+import io.bitsquare.locale.Res;
+import io.bitsquare.payment.*;
+import io.bitsquare.trade.Contract;
 import io.bitsquare.trade.Trade;
 import io.bitsquare.messages.user.Preferences;
 import javafx.scene.control.Button;
@@ -69,49 +73,29 @@ public class SellerStep3View extends TradeStepView {
                 String message;
                 String tradeVolumeWithCode = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
                 String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
+                String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
+                String id = trade.getShortId();
                 if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData) {
                     String address = ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress();
-                    message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
-                            "Please check on your favorite " + currencyName +
-                            " blockchain explorer if the transaction to your receiving address\n" +
-                            "" + address + "\n" +
-                            "has already sufficient blockchain confirmations.\n" +
-                            "The payment amount has to be " + tradeVolumeWithCode + "\n\n" +
-                            "You can copy & paste your " + currencyName + " address from the main screen after " +
-                            "closing that popup.";
+                    message = Res.get("portfolio.pending.step3_seller.altcoin", part1, currencyName, address, tradeVolumeWithCode, currencyName);
                 } else {
                     if (paymentAccountContractData instanceof USPostalMoneyOrderAccountContractData)
-                        message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
-                                "Please check if you have received " +
-                                tradeVolumeWithCode + " with \"US Postal Money Order\" from the BTC buyer.\n\n" +
-                                "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
+                        message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);
                     else
-                        message = "Your trading partner has confirmed that he initiated the " + currencyName + " payment.\n\n" +
-                                "Please go to your online banking web page and check if you have received " +
-                                tradeVolumeWithCode + " from the BTC buyer.\n\n" +
-                                "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"";
+                        message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
 
+                    String part = Res.get("portfolio.pending.step3_seller.openDispute");
                     if (paymentAccountContractData instanceof CashDepositAccountContractData)
-                        message += "\n\nBecause the payment is done via Cash/ATM Deposit the BTC buyer has to write \"NO REFUND\" " +
-                                "on the paper receipt, tear it in 2 parts and send you a photo by email.\n\n" +
-                                "To avoid chargeback risk, only confirm if you received the email and if you are " +
-                                "sure the paper receipt is valid.\n" +
-                                "If you are not sure, please don't confirm but open a dispute " +
-                                "by entering \"cmd + o\" or \"ctrl + o\".";
+                        message = message + Res.get("portfolio.pending.step3_seller.cash", part);
 
                     Optional<String> optionalHolderName = getOptionalHolderName();
                     if (optionalHolderName.isPresent()) {
-                        message = message + "\n\n" +
-                                "Please also verify that the senders name in your bank statement matches that one from the " +
-                                "trade contract:\n" +
-                                "Senders name: " + optionalHolderName.get() + "\n\n" +
-                                "If the name is not the same as the one displayed here, please don't confirm but open a dispute " +
-                                "by entering \"cmd + o\" or \"ctrl + o\".";
+                        message = message + Res.get("portfolio.pending.step3_seller.bankCheck" + optionalHolderName.get(), part);
                     }
                 }
                 if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                     preferences.dontShowAgain(key, true);
-                    new Popup().headLine("Attention required for trade with ID " + trade.getShortId())
+                    new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
                             .attention(message)
                             .show();
                 }
@@ -145,9 +129,9 @@ public class SellerStep3View extends TradeStepView {
     protected void addContent() {
         addTradeInfoBlock();
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, "Confirm payment receipt", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, Res.get("portfolio.pending.step3_seller.confirmPaymentReceipt"), Layout.GROUP_DISTANCE);
 
-        TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to receive:",
+        TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, Res.get("portfolio.pending.step3_seller.amountToReceive"),
                 model.getFiatVolume(), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
@@ -164,14 +148,14 @@ public class SellerStep3View extends TradeStepView {
             if (myPaymentAccountContractData instanceof CryptoCurrencyAccountContractData) {
                 myPaymentDetails = ((CryptoCurrencyAccountContractData) myPaymentAccountContractData).getAddress();
                 peersPaymentDetails = ((CryptoCurrencyAccountContractData) peersPaymentAccountContractData).getAddress();
-                myTitle = "Your " + nameByCode + " address:";
-                peersTitle = "Buyers " + nameByCode + " address:";
+                myTitle = Res.get("portfolio.pending.step3_seller.yourAddress");
+                peersTitle = Res.get("portfolio.pending.step3_seller.buyersAddress", nameByCode);
                 isBlockChain = true;
             } else {
                 myPaymentDetails = myPaymentAccountContractData.getPaymentDetails();
                 peersPaymentDetails = peersPaymentAccountContractData.getPaymentDetails();
-                myTitle = "Your trading account:";
-                peersTitle = "Buyers trading account:";
+                myTitle = Res.get("portfolio.pending.step3_seller.yourAccount");
+                peersTitle = Res.get("portfolio.pending.step3_seller.buyersAccount");
             }
         }
 
@@ -184,11 +168,11 @@ public class SellerStep3View extends TradeStepView {
         peersPaymentDetailsTextField.setTooltip(new Tooltip(peersPaymentDetails));
 
         if (!isBlockChain) {
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Reason for payment:", model.dataModel.getReference());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
             GridPane.setRowSpan(titledGroupBg, 4);
         }
 
-        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow, "Confirm payment receipt");
+        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow, Res.get("portfolio.pending.step3_seller.confirmReceipt"));
         confirmButton = tuple.first;
         confirmButton.setOnAction(e -> onPaymentReceived());
         busyAnimation = tuple.second;
@@ -205,14 +189,11 @@ public class SellerStep3View extends TradeStepView {
 
     @Override
     protected String getInfoText() {
+        String currencyCode = model.dataModel.getCurrencyCode();
         if (model.isBlockChainMethod()) {
-            return "The BTC buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +
-                    "Check for blockchain confirmations at your altcoin wallet or block explorer and " +
-                    "confirm the payment when you have sufficient blockchain confirmations.";
+            return Res.get("portfolio.pending.step3_seller.buyerStartedPayment", Res.get("portfolio.pending.step3_seller.buyerStartedPayment.altcoin", currencyCode));
         } else {
-            return "The BTC buyer has started the " + model.dataModel.getCurrencyCode() + " payment.\n" +
-                    "Check at your trading account (e.g. bank account) and confirm when you have " +
-                    "received the payment.";
+            return Res.get("portfolio.pending.step3_seller.buyerStartedPayment", Res.get("portfolio.pending.step3_seller.buyerStartedPayment.fiat", currencyCode));
         }
     }
 
@@ -225,13 +206,11 @@ public class SellerStep3View extends TradeStepView {
     protected String getWarningText() {
         setWarningHeadline();
         String substitute = model.isBlockChainMethod() ?
-                "on the " + model.dataModel.getCurrencyCode() + "blockchain" :
-                "at your payment provider (e.g. bank)";
-        return "You still have not confirmed the receipt of the payment!\n" +
-                "Please check " + substitute + " if you have received the payment.\n" +
-                "If you do not confirm receipt until " +
-                model.getDateForOpenDispute() +
-                " the trade will be investigated by the arbitrator.";
+                Res.get("portfolio.pending.step3_seller.warn.part1a", model.dataModel.getCurrencyCode()) :
+                Res.get("portfolio.pending.step3_seller.warn.part1b");
+        return Res.get("portfolio.pending.step3_seller.warn.part2", substitute, model.getDateForOpenDispute());
+
+
     }
 
 
@@ -241,9 +220,7 @@ public class SellerStep3View extends TradeStepView {
 
     @Override
     protected String getOpenForDisputeText() {
-        return "You have not confirmed the receipt of the payment!\n" +
-                "The max. period for the trade has elapsed.\n" +
-                "Please contact the arbitrator for opening a dispute.";
+        return Res.get("portfolio.pending.step3_seller.openForDispute");
     }
 
     @Override
@@ -263,35 +240,29 @@ public class SellerStep3View extends TradeStepView {
             String key = "confirmPaymentReceived";
             if (!DevFlags.DEV_MODE && preferences.showAgain(key)) {
                 PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
-                String message = "Have you received the " + CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()) +
-                        " payment from your trading partner?\n\n";
+                String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
                 if (!(paymentAccountContractData instanceof CryptoCurrencyAccountContractData)) {
-                    message += "The trade ID (\"reason for payment\" text) of the transaction is: \"" + trade.getShortId() + "\"\n\n";
+                    message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getShortId());
 
                     Optional<String> optionalHolderName = getOptionalHolderName();
                     if (optionalHolderName.isPresent()) {
-                        message += "Please also verify that the senders name in your bank statement matches that one from the trade contract:\n" +
-                                "Senders name: " + optionalHolderName.get() + "\n\n" +
-                                "If the name is not the same as the one displayed here, please don't confirm but open a " +
-                                "dispute by entering \"cmd + o\" or \"ctrl + o\".\n\n";
+                        message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.name", optionalHolderName.get());
                     }
                 }
-                message += "Please note, that as soon you have confirmed the receipt, the locked trade amount will be released " +
-                        "to the BTC buyer and the security deposit will be refunded.";
+                message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
                 new Popup()
-                        .headLine("Confirm that you have received the payment")
+                        .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
                         .confirmation(message)
                         .width(700)
-                        .actionButtonText("Yes, I have received the payment")
+                        .actionButtonText(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.yes"))
                         .onAction(this::confirmPaymentReceived)
-                        .closeButtonText("Cancel")
+                        .closeButtonText(Res.get("shared.cancel"))
                         .show();
             } else {
                 confirmPaymentReceived();
             }
         } else {
-            new Popup().information("You need to wait until you are fully connected to the network.\n" +
-                    "That might take up to about 2 minutes at startup.").show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -308,14 +279,13 @@ public class SellerStep3View extends TradeStepView {
         }, errorMessage -> {
             confirmButton.setDisable(false);
             hideStatusInfo();
-            new Popup().warning("Sending message to your trading partner failed.\n" +
-                    "Please try again and if it continue to fail report a bug.").show();
+            new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 
     private void showStatusInfo() {
         busyAnimation.play();
-        statusLabel.setText("Sending confirmation...");
+        statusLabel.setText(Res.get("shared.sendingConfirmation"));
     }
 
     private void hideStatusInfo() {

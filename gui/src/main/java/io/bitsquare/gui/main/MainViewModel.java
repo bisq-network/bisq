@@ -23,7 +23,6 @@ import io.bitsquare.messages.alert.Alert;
 import io.bitsquare.alert.AlertManager;
 import io.bitsquare.messages.alert.PrivateNotification;
 import io.bitsquare.alert.PrivateNotificationManager;
-import io.bitsquare.app.BitsquareApp;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.app.Log;
 import io.bitsquare.app.Version;
@@ -45,13 +44,11 @@ import io.bitsquare.common.crypto.*;
 import io.bitsquare.dao.DaoManager;
 import io.bitsquare.dao.blockchain.BsqBlockchainException;
 import io.bitsquare.filter.FilterManager;
-import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.model.ViewModel;
 import io.bitsquare.gui.components.BalanceWithConfirmationTextField;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.main.overlays.notifications.NotificationCenter;
 import io.bitsquare.gui.main.overlays.popups.Popup;
-import io.bitsquare.gui.main.overlays.windows.AddBitcoinNodesWindow;
 import io.bitsquare.gui.main.overlays.windows.DisplayAlertMessageWindow;
 import io.bitsquare.gui.main.overlays.windows.TacWindow;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
@@ -111,20 +108,19 @@ public class MainViewModel implements ViewModel {
     private final Preferences preferences;
     private final AlertManager alertManager;
     private final PrivateNotificationManager privateNotificationManager;
+    @SuppressWarnings("unused")
     private final FilterManager filterManager;
     private final WalletPasswordWindow walletPasswordWindow;
-    private final AddBitcoinNodesWindow addBitcoinNodesWindow;
     private final NotificationCenter notificationCenter;
     private final TacWindow tacWindow;
     private final Clock clock;
     private final FeeService feeService;
     private final DaoManager daoManager;
     private final KeyRing keyRing;
-    private final Navigation navigation;
     private final BSFormatter formatter;
 
     // BTC network
-    final StringProperty btcInfo = new SimpleStringProperty("Initializing");
+    final StringProperty btcInfo = new SimpleStringProperty(Res.get("mainView.footer.btcInfo.initializing"));
     final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(DevFlags.STRESS_TEST_MODE ? 0 : -1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
@@ -138,7 +134,7 @@ public class MainViewModel implements ViewModel {
     final StringProperty lockedBalance = new SimpleStringProperty();
     private MonadicBinding<String> btcInfoBinding;
 
-    private final StringProperty marketPrice = new SimpleStringProperty("N/A");
+    private final StringProperty marketPrice = new SimpleStringProperty(Res.get("shared.na"));
 
     // P2P network
     final StringProperty p2PNetworkInfo = new SimpleStringProperty();
@@ -147,10 +143,6 @@ public class MainViewModel implements ViewModel {
     final StringProperty p2pNetworkWarnMsg = new SimpleStringProperty();
     final StringProperty p2PNetworkIconId = new SimpleStringProperty();
     final BooleanProperty bootstrapComplete = new SimpleBooleanProperty();
-
-    // software update
-    final String version = "v" + Version.VERSION;
-
     final BooleanProperty showAppScreen = new SimpleBooleanProperty();
     final StringProperty numPendingTradesAsString = new SimpleStringProperty();
     final BooleanProperty showPendingTradesNotification = new SimpleBooleanProperty();
@@ -169,6 +161,7 @@ public class MainViewModel implements ViewModel {
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     final ObservableList<PriceFeedComboBoxItem> priceFeedComboBoxItems = FXCollections.observableArrayList();
     private MonadicBinding<String> marketPriceBinding;
+    @SuppressWarnings("unused")
     private Subscription priceFeedAllLoadedSubscription;
     private Popup startupTimeoutPopup;
     private BooleanProperty p2pNetWorkReady;
@@ -179,16 +172,17 @@ public class MainViewModel implements ViewModel {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public MainViewModel(WalletsManager walletsManager, WalletsSetup walletsSetup,
                          BtcWalletService btcWalletService, PriceFeedService priceFeedService,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
-                         FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, AddBitcoinNodesWindow addBitcoinNodesWindow,
+                         FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, 
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
                          DaoManager daoManager,
-                         KeyRing keyRing, Navigation navigation,
+                         KeyRing keyRing, 
                          BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
@@ -203,20 +197,18 @@ public class MainViewModel implements ViewModel {
         this.preferences = preferences;
         this.alertManager = alertManager;
         this.privateNotificationManager = privateNotificationManager;
-        this.filterManager = filterManager; // Reference so it's initialized and eventlistener gets registered
+        this.filterManager = filterManager; // Reference so it's initialized and eventListener gets registered
         this.walletPasswordWindow = walletPasswordWindow;
-        this.addBitcoinNodesWindow = addBitcoinNodesWindow;
         this.notificationCenter = notificationCenter;
         this.tacWindow = tacWindow;
         this.clock = clock;
         this.feeService = feeService;
         this.daoManager = daoManager;
         this.keyRing = keyRing;
-        this.navigation = navigation;
         this.formatter = formatter;
 
-        btcNetworkAsString = formatter.formatBitcoinNetwork(preferences.getBitcoinNetwork()) +
-                (preferences.getUseTorForBitcoinJ() ? " (using Tor)" : "");
+        btcNetworkAsString = Res.get(preferences.getBitcoinNetwork().name()) +
+                (preferences.getUseTorForBitcoinJ() ? (" " + Res.get("mainView.footer.usingTor")) : "");
 
         TxIdTextField.setPreferences(preferences);
 
@@ -266,23 +258,16 @@ public class MainViewModel implements ViewModel {
         MainView.blur();
         String details;
         if (!walletInitialized.get()) {
-            details = "You still did not get connected to the bitcoin network.\n" +
-                    "If you use Tor for Bitcoin it might be that you got an unstable Tor path.\n" +
-                    "You can wait longer or try to restart.";
+            details = Res.get("popup.warning.cannotConnectAtStartup", "bitcoin");
         } else if (!p2pNetWorkReady.get()) {
-            details = "You still did not get connected to the P2P network.\n" +
-                    "That can happen sometimes when you got an unstable Tor path.\n" +
-                    "You can wait longer or try to restart.";
+            details = Res.get("popup.warning.cannotConnectAtStartup", Res.get("shared.P2P"));
         } else {
             log.error("Startup timeout with unknown problem.");
-            details = "There is an unknown problem at startup.\n" +
-                    "Please restart and if the problem continues file a bug report.";
+            details = Res.get("popup.warning.unknownProblemAtStartup");
         }
         startupTimeoutPopup = new Popup();
-        startupTimeoutPopup.warning("The application could not startup after 4 minutes.\n\n" +
-                details)
-                .actionButtonText("Shut down")
-                .onAction(BitsquareApp.shutDownHandler::run)
+        startupTimeoutPopup.warning(Res.get("popup.warning.startupFailed.timeout", details))
+                .useShutDownButton()
                 .show();
     }
 
@@ -308,12 +293,13 @@ public class MainViewModel implements ViewModel {
                     if (warning != null && peers == 0) {
                         result = warning;
                     } else {
-                        if (dataReceived && hiddenService)
-                            result = "P2P network peers: " + numPeers;
-                        else if (peers == 0)
+                        String p2pInfo = Res.get("mainView.footer.p2pInfo", numPeers);
+                        if (dataReceived && hiddenService) {
+                            result = p2pInfo;
+                        } else if (peers == 0)
                             result = state;
                         else
-                            result = state + " / P2P network peers: " + numPeers;
+                            result = state + " / " + p2pInfo;
                     }
                     return result;
                 });
@@ -321,7 +307,7 @@ public class MainViewModel implements ViewModel {
             p2PNetworkInfo.set(newValue);
         });
 
-        bootstrapState.set("Connecting to Tor network...");
+        bootstrapState.set(Res.get("mainView.bootstrapState.connectionToTorNetwork"));
 
         p2PService.getNetworkNode().addConnectionListener(new ConnectionListener() {
             @Override
@@ -336,16 +322,6 @@ public class MainViewModel implements ViewModel {
                         closeConnectionReason == CloseConnectionReason.RULE_VIOLATION) {
                     log.warn("RULE_VIOLATION onDisconnect closeConnectionReason=" + closeConnectionReason);
                     log.warn("RULE_VIOLATION onDisconnect connection=" + connection);
-                    //TODO
-                   /* new Popup()
-                            .warning("You got disconnected from a seed node.\n\n" +
-                                    "Reason for getting disconnected: " + connection.getRuleViolation().name() + "\n\n" +
-                                    "It might be that your installed version is not compatible with " +
-                                    "the network.\n\n" +
-                                    "Please check if you run the latest software version.\n" +
-                                    "You can download the latest version of Bitsquare at:\n" +
-                                    "https://github.com/bitsquare/bitsquare/releases")
-                            .show();*/
                 }
             }
 
@@ -358,7 +334,7 @@ public class MainViewModel implements ViewModel {
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onTorNodeReady() {
-                bootstrapState.set("Tor node created");
+                bootstrapState.set(Res.get("mainView.bootstrapState.torNodeCreated"));
                 p2PNetworkIconId.set("image-connection-tor");
 
                 if (preferences.getUseTorForBitcoinJ())
@@ -368,13 +344,13 @@ public class MainViewModel implements ViewModel {
             @Override
             public void onHiddenServicePublished() {
                 hiddenServicePublished.set(true);
-                bootstrapState.set("Hidden Service published");
+                bootstrapState.set(Res.get("mainView.bootstrapState.hiddenServicePublished"));
             }
 
             @Override
             public void onRequestingDataCompleted() {
                 initialP2PNetworkDataReceived.set(true);
-                bootstrapState.set("Initial data received");
+                bootstrapState.set(Res.get("mainView.bootstrapState.initialDataReceived"));
                 splashP2PNetworkAnimationVisible.set(false);
                 p2pNetworkInitialized.set(true);
             }
@@ -382,7 +358,7 @@ public class MainViewModel implements ViewModel {
             @Override
             public void onNoSeedNodeAvailable() {
                 if (p2PService.getNumConnectedPeers().get() == 0)
-                    bootstrapWarning.set("No seed nodes available");
+                    bootstrapWarning.set(Res.get("mainView.bootstrapWarning.noSeedNodesAvailable"));
                 else
                     bootstrapWarning.set(null);
 
@@ -393,9 +369,8 @@ public class MainViewModel implements ViewModel {
             @Override
             public void onNoPeersAvailable() {
                 if (p2PService.getNumConnectedPeers().get() == 0) {
-                    p2pNetworkWarnMsg.set("There are no seed nodes or persisted peers available for requesting data.\n" +
-                            "Please check your internet connection or try to restart the application.");
-                    bootstrapWarning.set("No seed nodes and peers available");
+                    p2pNetworkWarnMsg.set(Res.get("mainView.p2pNetworkWarnMsg.noNodesAvailable"));
+                    bootstrapWarning.set(Res.get("mainView.bootstrapWarning.noNodesAvailable"));
                     p2pNetworkLabelId.set("splash-error-state-msg");
                 } else {
                     bootstrapWarning.set(null);
@@ -413,11 +388,9 @@ public class MainViewModel implements ViewModel {
 
             @Override
             public void onSetupFailed(Throwable throwable) {
-                p2pNetworkWarnMsg.set("Connecting to the P2P network failed (reported error: "
-                        + throwable.getMessage() + ").\n" +
-                        "Please check your internet connection or try to restart the application.");
+                p2pNetworkWarnMsg.set(Res.get("mainView.p2pNetworkWarnMsg.connectionToP2PFailed", throwable.getMessage()));
                 splashP2PNetworkAnimationVisible.set(false);
-                bootstrapWarning.set("Bootstrapping to P2P network failed");
+                bootstrapWarning.set(Res.get("mainView.bootstrapWarning.bootstrappingToP2PFailed"));
                 p2pNetworkLabelId.set("splash-error-state-msg");
             }
         });
@@ -443,36 +416,45 @@ public class MainViewModel implements ViewModel {
                     if (exception == null) {
                         double percentage = (double) downloadPercentage;
                         int peers = (int) numPeers;
-                        String numPeersString = "Bitcoin network peers: " + peers;
-
                         btcSyncProgress.set(percentage);
                         if (percentage == 1) {
-                            result = numPeersString + " / synchronized with " + btcNetworkAsString;
+                            result = Res.get("mainView.footer.btcInfo",
+                                    peers,
+                                    Res.get("mainView.footer.btcInfo.synchronizedWith"),
+                                    btcNetworkAsString);
                             btcSplashSyncIconId.set("image-connection-synced");
                         } else if (percentage > 0.0) {
-                            result = numPeersString + " / synchronizing with " + btcNetworkAsString + ": " + formatter.formatToPercentWithSymbol(percentage);
+                            result = Res.get("mainView.footer.btcInfo",
+                                    peers,
+                                    Res.get("mainView.footer.btcInfo.synchronizedWith"),
+                                    btcNetworkAsString + ": " + formatter.formatToPercentWithSymbol(percentage));
                         } else {
-                            result = numPeersString + " / connecting to " + btcNetworkAsString;
+                            result = Res.get("mainView.footer.btcInfo",
+                                    peers,
+                                    Res.get("mainView.footer.btcInfo.connectingTo"),
+                                    btcNetworkAsString);
                         }
                     } else {
-                        result = "Bitcoin network peers: " + numBtcPeers + " / connecting to " + btcNetworkAsString + " failed";
+                        result = Res.get("mainView.footer.btcInfo",
+                                numBtcPeers,
+                                Res.get("mainView.footer.btcInfo.connectionFailed"),
+                                btcNetworkAsString);
                         if (exception instanceof TimeoutException) {
-                            walletServiceErrorMsg.set("Connecting to the bitcoin network failed because of a timeout.");
+                            walletServiceErrorMsg.set(Res.get("mainView.walletServiceErrorMsg.timeout"));
                         } else if (exception.getCause() instanceof BlockStoreException) {
                             log.error(exception.getMessage());
                             // Ugly, but no other way to cover that specific case
-                            if (exception.getMessage().equals("Store file is already locked by another process"))
-                                new Popup().warning("Bitsquare is already running. You cannot run two instances of Bitsquare.")
-                                        .closeButtonText("Shut down")
-                                        .onClose(BitsquareApp.shutDownHandler::run)
+                            if (exception.getMessage().equals("Store file is already locked by another process")) {
+                                new Popup().warning(Res.get("popup.warning.startupFailed.twoInstances"))
+                                        .useShutDownButton()
                                         .show();
-                            else
-                                new Popup().error("Cannot open wallet because of an exception:\n" + exception.getMessage())
+                            } else {
+                                new Popup().error(Res.get("popup.error.walletException",
+                                        exception.getMessage()))
                                         .show();
-                        } else if (exception.getMessage() != null) {
-                            walletServiceErrorMsg.set("Connection to the bitcoin network failed because of an error:" + exception.getMessage());
+                            }
                         } else {
-                            walletServiceErrorMsg.set("Connection to the bitcoin network failed because of an error:" + exception.toString());
+                            walletServiceErrorMsg.set(Res.get("mainView.walletServiceErrorMsg.connectionError", exception.toString()));
                         }
                     }
                     return result;
@@ -595,17 +577,11 @@ public class MainViewModel implements ViewModel {
                         throw new CryptoException("Payload not correct after decryption");
                 } catch (CryptoException e) {
                     e.printStackTrace();
-                    String msg = "Seems that you use a self compiled binary and have not following the build " +
-                            "instructions in https://github.com/bitsquare/bitsquare/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys.\n\n" +
-                            "If that is not the case and you use the official Bitsquare binary, " +
-                            "please file a bug report to the Github page.\n" +
-                            "Error=" + e.getMessage();
+                    String msg = Res.get("popup.warning.cryptoTestFailed", e.getMessage());
                     log.error(msg);
                     UserThread.execute(() -> new Popup<>().warning(msg)
-                            .actionButtonText("Shut down")
-                            .onAction(BitsquareApp.shutDownHandler::run)
-                            .closeButtonText("Report bug at Github issues")
-                            .onClose(() -> GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
+                            .useShutDownButton()
+                            .useReportBugButton()
                             .show());
                 }
             }
@@ -613,23 +589,17 @@ public class MainViewModel implements ViewModel {
         checkCryptoThread.start();
 
         if (Security.getProvider("BC") == null) {
-            new Popup<>().warning("There is a problem with the crypto libraries. BountyCastle is not available.")
-                    .actionButtonText("Shut down")
-                    .onAction(BitsquareApp.shutDownHandler::run)
-                    .closeButtonText("Report bug at Github issues")
-                    .onClose(() -> GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues"))
+            new Popup<>().warning(Res.get("popup.warning.noBountyCastle"))
+                    .useShutDownButton()
+                    .useReportBugButton()
                     .show();
         }
 
         String remindPasswordAndBackupKey = "remindPasswordAndBackup";
         user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
             if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(remindPasswordAndBackupKey) && change.wasAdded()) {
-                new Popup<>().headLine("Important security recommendation")
-                        .information("We would like to remind you to consider using password protection for your wallet if you have not already enabled that.\n\n" +
-                                "It is also highly recommended to write down the wallet seed words. Those seed words are like a master password for recovering your Bitcoin wallet.\n" +
-                                "At the \"Wallet Seed\" section you find more information.\n\n" +
-                                "Additionally you can backup the complete application data folder at the \"Backup\" section.\n" +
-                                "Please note, that this backup is not encrypted!")
+                new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
+                        .information(Res.get("popup.securityRecommendation.msg"))
                         .dontShowAgainId(remindPasswordAndBackupKey, preferences)
                         .show();
             }
@@ -644,18 +614,15 @@ public class MainViewModel implements ViewModel {
                 .filter(e -> e.getOffer().getProtocolVersion() != Version.TRADE_PROTOCOL_VERSION)
                 .collect(Collectors.toList());
         if (!outDatedOffers.isEmpty()) {
+            String offers = outDatedOffers.stream()
+                    .map(e -> e.getId() + "\n")
+                    .collect(Collectors.toList()).toString()
+                    .replace("[", "").replace("]", "");
             new Popup<>()
-                    .warning("You have open offers which have been created with an older version of Bitsquare.\n" +
-                            "Please remove those offers as they are not valid anymore.\n\n" +
-                            "Offers (ID): " +
-                            outDatedOffers.stream()
-                                    .map(e -> e.getId() + "\n")
-                                    .collect(Collectors.toList()).toString()
-                                    .replace("[", "").replace("]", ""))
-                    .actionButtonText("Remove outdated offer(s)")
+                    .warning(Res.get("popup.warning.oldOffers.msg", offers))
+                    .actionButtonText(Res.get("popup.warning.oldOffers.buttonText"))
                     .onAction(() -> openOfferManager.removeOpenOffers(outDatedOffers, null))
-                    .closeButtonText("Shut down")
-                    .onClose(BitsquareApp.shutDownHandler::run)
+                    .useShutDownButton()
                     .show();
         }
     }
@@ -717,11 +684,9 @@ public class MainViewModel implements ViewModel {
                             key = "displayHalfTradePeriodOver" + trade.getId();
                             if (preferences.showAgain(key)) {
                                 preferences.dontShowAgain(key, true);
-                                new Popup().warning("Your trade with ID " + trade.getShortId() +
-                                        " has reached the half of the max. allowed trading period and " +
-                                        "is still not completed.\n\n" +
-                                        "The trade period ends on " + formatter.formatDateTime(maxTradePeriodDate) + "\n\n" +
-                                        "Please check your trade state at \"Portfolio/Open trades\" for further information.")
+                                new Popup().warning(Res.get("popup.warning.tradePeriod.halfReached",
+                                        trade.getShortId(),
+                                        formatter.formatDateTime(maxTradePeriodDate)))
                                         .show();
                             }
                             break;
@@ -729,12 +694,9 @@ public class MainViewModel implements ViewModel {
                             key = "displayTradePeriodOver" + trade.getId();
                             if (preferences.showAgain(key)) {
                                 preferences.dontShowAgain(key, true);
-                                new Popup().warning("Your trade with ID " + trade.getShortId() +
-                                        " has reached the max. allowed trading period and is " +
-                                        "not completed.\n\n" +
-                                        "The trade period ended on " + formatter.formatDateTime(maxTradePeriodDate) + "\n\n" +
-                                        "Please check your trade at \"Portfolio/Open trades\" for contacting " +
-                                        "the arbitrator.")
+                                new Popup().warning(Res.get("popup.warning.tradePeriod.ended",
+                                        trade.getShortId(),
+                                        formatter.formatDateTime(maxTradePeriodDate)))
                                         .show();
                             }
                             break;
@@ -760,8 +722,7 @@ public class MainViewModel implements ViewModel {
                 checkNumberOfP2pNetworkPeersTimer = UserThread.runAfter(() -> {
                     // check again numPeers
                     if (p2PService.getNumConnectedPeers().get() == 0) {
-                        p2pNetworkWarnMsg.set("You lost the connection to all P2P network peers.\n" +
-                                "Maybe you lost your internet connection or your computer was in standby mode.");
+                        p2pNetworkWarnMsg.set(Res.get("mainView.networkWarning.allConnectionsLost", Res.get("shared.P2P")));
                         p2pNetworkLabelId.set("splash-error-state-msg");
                     } else {
                         p2pNetworkWarnMsg.set(null);
@@ -788,8 +749,7 @@ public class MainViewModel implements ViewModel {
                 checkNumberOfBtcPeersTimer = UserThread.runAfter(() -> {
                     // check again numPeers
                     if (walletsSetup.numPeersProperty().get() == 0) {
-                        walletServiceErrorMsg.set("You lost the connection to all bitcoin network peers.\n" +
-                                "Maybe you lost your internet connection or your computer was in standby mode.");
+                        walletServiceErrorMsg.set(Res.get("mainView.networkWarning.allConnectionsLost", "bitcoin"));
                     } else {
                         walletServiceErrorMsg.set(null);
                     }
@@ -808,7 +768,7 @@ public class MainViewModel implements ViewModel {
         if (priceFeedService.getType() == null)
             priceFeedService.setType(PriceFeedService.Type.LAST);
         priceFeedService.init(price -> marketPrice.set(formatter.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
-                (errorMessage, throwable) -> marketPrice.set("N/A"));
+                (errorMessage, throwable) -> marketPrice.set(Res.get("shared.na")));
         marketPriceCurrencyCode.bind(priceFeedService.currencyCodeProperty());
         typeProperty.bind(priceFeedService.typeProperty());
 
@@ -869,11 +829,11 @@ public class MainViewModel implements ViewModel {
                     priceString = formatter.formatMarketPrice(price, currencyCode);
                     item.setIsPriceAvailable(true);
                 } else {
-                    priceString = "N/A";
+                    priceString = Res.get("shared.na");
                     item.setIsPriceAvailable(false);
                 }
             } else {
-                priceString = "N/A";
+                priceString = Res.get("shared.na");
                 item.setIsPriceAvailable(false);
             }
             item.setDisplayString(formatter.getCurrencyPair(currencyCode) + ": " + priceString);
@@ -933,11 +893,11 @@ public class MainViewModel implements ViewModel {
     }
 
     private void displayPrivateNotification(PrivateNotification privateNotification) {
-        new Popup<>().headLine("Important private notification!")
+        new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
                 .attention(privateNotification.message)
                 .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
                 .onClose(privateNotificationManager::removePrivateNotification)
-                .closeButtonText("I understand")
+                .useIUnderstandButton()
                 .show();
     }
 
@@ -1034,12 +994,12 @@ public class MainViewModel implements ViewModel {
     private void setupDevDummyPaymentAccounts() {
         OKPayAccount okPayAccount = new OKPayAccount();
         okPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
-        okPayAccount.setAccountName("OKPay dummy");
+        okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
         okPayAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
         user.addPaymentAccount(okPayAccount);
 
         CryptoCurrencyAccount cryptoCurrencyAccount = new CryptoCurrencyAccount();
-        cryptoCurrencyAccount.setAccountName("ETH dummy");
+        cryptoCurrencyAccount.setAccountName("ETH dummy");// Don't translate only for dev
         cryptoCurrencyAccount.setAddress("0x" + new Random().nextInt(1000000));
         cryptoCurrencyAccount.setSingleTradeCurrency(CurrencyUtil.getCryptoCurrency("ETH").get());
         user.addPaymentAccount(cryptoCurrencyAccount);

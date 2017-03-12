@@ -23,6 +23,10 @@ import io.bitsquare.gui.common.view.InitializableView;
 import io.bitsquare.messages.protocol.availability.OfferAvailabilityProtocol;
 import io.bitsquare.messages.protocol.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bitsquare.messages.protocol.availability.tasks.SendOfferAvailabilityRequest;
+import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.trade.protocol.availability.OfferAvailabilityProtocol;
+import io.bitsquare.trade.protocol.availability.tasks.ProcessOfferAvailabilityResponse;
+import io.bitsquare.trade.protocol.availability.tasks.SendOfferAvailabilityRequest;
 import io.bitsquare.trade.protocol.placeoffer.PlaceOfferProtocol;
 import io.bitsquare.trade.protocol.placeoffer.tasks.AddOfferToRemoteOfferBook;
 import io.bitsquare.trade.protocol.placeoffer.tasks.BroadcastCreateOfferFeeTx;
@@ -41,6 +45,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.util.StringConverter;
 
 import javax.inject.Inject;
@@ -51,6 +56,10 @@ public class DebugView extends InitializableView {
 
 
     @FXML
+    TitledGroupBg titledGroupBg;
+    @FXML
+    Label label;
+    @FXML
     ComboBox<Class> taskComboBox1, taskComboBox2;
 
     @Inject
@@ -59,6 +68,8 @@ public class DebugView extends InitializableView {
 
     @Override
     public void initialize() {
+        titledGroupBg.setText("Intercept task");
+        label.setText("Select Task:");
         final ObservableList<Class> items1 = FXCollections.observableArrayList(Arrays.asList(
                         /*---- Protocol ----*/
                         OfferAvailabilityProtocol.class,
