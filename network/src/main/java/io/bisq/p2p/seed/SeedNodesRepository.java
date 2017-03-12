@@ -18,38 +18,13 @@ public class SeedNodesRepository {
     // - testnet uses port 8001
     // - regtest uses port 8002
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
-            // In alpha we change the network with new releases. That will be faded out once we become backwards compatible (Beta)
-
-            // We keep 1 seed node running for the last 2 mainnet versions, just in case a user has not updated and need to
-            // access still his his app
-
-            // mainnet
-            // v0.3.5, v0.3.6 (backwards compatible)
-            /*new NodeAddress("hulvbm5xjn7b7ku4.onion:8000"),
-            new NodeAddress("3efgjjbdvhbvck3x.onion:8000"),
-            new NodeAddress("3unfcshgwipxhxfm.onion:8000"),*/
-
-            // v0.4.0, v0.4.1
-           /* new NodeAddress("ybmi4iaesugslxrw.onion:8000"),
-            new NodeAddress("ufwnvo775jfnjeux.onion:8000"),
-            new NodeAddress("b66vnevaljo6xt5a.onion:8000"),*/
-
-            // v0.4.2
-            // ...83
-           /* DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("uadzuib66jupaept.onion:8000"),
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("wgthuiqn3aoiovbm.onion:8000"),
-
-            // ...14
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("hbma455xxbqhcuqh.onion:8000"),
-            DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("2zxtnprnx5wqr7a3.onion:8000"),
-*/
             // v0.5.0
             DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("vmox6ohwogklewem.onion:8002"),
 
             // local dev test
             // DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("23bnormzh2mvkz3z.onion:8000"),
 
-            // testnet
+            // testnet (not operated by bisq devs)
             new NodeAddress("znmy44wcstn2rkva.onion:8001"),
 
             // regtest

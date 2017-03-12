@@ -85,13 +85,15 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                 applyBackupDirectory(backUpLocationTextField.getText());
         };
 
-        Tuple2<Button, Button> tuple2 = FormBuilder.add2ButtonsAfterGroup(root, ++gridRow, Res.get("account.backup.backupNow"), Res.get("account.backup.openAppDir"));
+        Tuple2<Button, Button> tuple2 = FormBuilder.add2ButtonsAfterGroup(root, ++gridRow,
+                Res.get("account.backup.selectLocation"), Res.get("account.backup.backupNow"));
         selectBackupDir = tuple2.first;
         backupNow = tuple2.second;
         updateButtons();
 
-        FormBuilder.addTitledGroupBg(root, ++gridRow, 1, Res.get("account.backup.selectLocation"), Layout.GROUP_DISTANCE);
-        openDataDir = FormBuilder.addLabelButton(root, gridRow, Res.get("account.backup.appDir"), Res.get("account.backup.openDirectory"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        FormBuilder.addTitledGroupBg(root, ++gridRow, 1, Res.get("account.backup.appDir"), Layout.GROUP_DISTANCE);
+        openDataDir = FormBuilder.addLabelButton(root, gridRow, Res.getWithCol("account.backup.appDir"),
+                Res.get("account.backup.openDirectory"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         openDataDir.setDefaultButton(false);
     }
 
