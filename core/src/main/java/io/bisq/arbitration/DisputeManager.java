@@ -32,6 +32,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.crypto.DecryptedMsgWithPubKey;
+import io.bisq.locale.Res;
 import io.bisq.messages.Message;
 import io.bisq.messages.arbitration.*;
 import io.bisq.messages.arbitration.payload.Attachment;
@@ -116,13 +117,7 @@ public class DisputeManager {
         closedDisputes = new HashMap<>();
         disputes.stream().forEach(dispute -> dispute.setStorage(getDisputeStorage()));
 
-        disputeInfo = "Please note the basic rules for the dispute process:\n" +
-                "1. You need to respond to the arbitrators requests in between 2 days.\n" +
-                "2. The maximum period for the dispute is 14 days.\n" +
-                "3. You need to fulfill what the arbitrator is requesting from you to deliver evidence for your case.\n" +
-                "4. You accepted the rules outlined in the wiki in the user agreement when you first started the application.\n\n" +
-                "Please read more in detail about the dispute process in our wiki:\nhttps://github" +
-                ".com/bitsquare/bitsquare/wiki/Dispute-process";
+        disputeInfo = Res.get("support.initialInfo");
 
         // We get first the message handler called then the onBootstrapped
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, senderAddress) -> {
@@ -220,12 +215,13 @@ public class DisputeManager {
         if (!disputes.contains(dispute)) {
             final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
             if (!storedDisputeOptional.isPresent() || reOpen) {
+                String sysMsg = dispute.isSupportTicket() ?
+                        Res.get("support.youOpenedTicket")
+                        : Res.get("support.youOpenedDispute", disputeInfo);
                 DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
                         keyRing.getPubKeyRing().hashCode(),
                         true,
-                        "System message: " + (dispute.isSupportTicket() ?
-                                "You opened a request for support."
-                                : "You opened a request for a dispute.\n\n" + disputeInfo),
+                        Res.get("support.systemMsg", sysMsg),
                         p2PService.getAddress());
                 disputeCommunicationMessage.setIsSystemMessage(true);
                 dispute.addDisputeMessage(disputeCommunicationMessage);
@@ -296,12 +292,13 @@ public class DisputeManager {
         );
         final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
         if (!storedDisputeOptional.isPresent()) {
+            String sysMsg = dispute.isSupportTicket() ?
+                    Res.get("support.peerOpenedTicket")
+                    : Res.get("support.peerOpenedDispute", disputeInfo);
             DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     true,
-                    "System message: " + (dispute.isSupportTicket() ?
-                            "Your trading peer has requested support due technical problems. Please wait for further instructions."
-                            : "Your trading peer has requested a dispute.\n\n" + disputeInfo),
+                    Res.get("support.systemMsg", sysMsg),
                     p2PService.getAddress());
             disputeCommunicationMessage.setIsSystemMessage(true);
             dispute.addDisputeMessage(disputeCommunicationMessage);
