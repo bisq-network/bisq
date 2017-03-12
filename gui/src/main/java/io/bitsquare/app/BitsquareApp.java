@@ -66,7 +66,6 @@ import javafx.stage.StageStyle;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.controlsfx.dialog.Dialogs;
 import org.reactfx.EventStreams;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -316,13 +315,7 @@ public class BitsquareApp extends Application {
                     stop();
             } catch (Throwable throwable2) {
                 // If printStackTrace cause a further exception we don't pass the throwable to the Popup.
-                //TODO check if Dialogs is still wanted?
-                Dialogs.create()
-                        .owner(primaryStage)
-                        .title(Res.get("shared.error"))
-                        .message(throwable.toString())
-                        .masthead(Res.get("popup.error.fatalStartupException"))
-                        .showError();
+                log.error(throwable2.toString());
                 if (doShutDown)
                     stop();
             }

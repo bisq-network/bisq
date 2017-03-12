@@ -86,7 +86,8 @@ public abstract class PaymentMethodForm {
     }
 
     protected void addAccountNameTextFieldWithAutoFillCheckBox() {
-        Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(gridPane, ++gridRow, "Account name:", "Use custom account name");
+        Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(gridPane, ++gridRow,
+                Res.get("payment.account.name"), Res.get("payment.useCustomAccountName"));
         accountNameTextField = tuple.second;
         accountNameTextField.setPrefWidth(300);
         accountNameTextField.setEditable(false);
@@ -107,31 +108,34 @@ public abstract class PaymentMethodForm {
     }
 
     public static void addAllowedPeriod(GridPane gridPane, int gridRow,
-                                        @Nullable PaymentAccountContractData paymentAccountContractData, String dateFromBlocks) {
+                                        @Nullable PaymentAccountContractData paymentAccountContractData,
+                                        String dateFromBlocks) {
         if (paymentAccountContractData != null) {
             long hours = paymentAccountContractData.getMaxTradePeriod() / 3600_000;
-            addLabelTextField(gridPane, gridRow, "Max. allowed trade period / date:", getTimeText(hours) + " / " + dateFromBlocks);
+            addLabelTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
+                    getTimeText(hours) + " / " + dateFromBlocks);
         }
     }
 
     protected static String getTimeText(long hours) {
-        String time = hours + " hours";
+        String time = hours + " " + Res.get("payment.hours");
         if (hours == 1)
-            time = "1 hour";
+            time = Res.get("payment.1hour");
         else if (hours == 24)
-            time = "1 day";
+            time = Res.get("payment.1day");
         else if (hours > 24)
-            time = hours / 24 + " days";
+            time = hours / 24 + " " + Res.get("payment.days");
 
         return time;
     }
 
     protected void addAllowedPeriod() {
         long hours = paymentAccount.getPaymentMethod().getMaxTradePeriod() / 3600_000;
-        String displayText = "Max. trade duration: " + getTimeText(hours) + " / Max. trade limit: " +
-                formatter.formatCoinWithCode(paymentAccount.getPaymentMethod().getMaxTradeLimit());
 
-        addLabelTextField(gridPane, ++gridRow, "Limitations:", displayText);
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"),
+                Res.get("payment.maxPeriodAndLimit",
+                        getTimeText(hours),
+                        formatter.formatCoinWithCode(paymentAccount.getPaymentMethod().getMaxTradeLimit())));
     }
 
     abstract protected void autoFillNameTextField();

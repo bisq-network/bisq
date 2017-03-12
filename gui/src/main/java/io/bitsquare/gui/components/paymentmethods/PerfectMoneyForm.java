@@ -45,7 +45,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
     private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Account no.:", ((PerfectMoneyAccountContractData) paymentAccountContractData).getAccountNr());
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((PerfectMoneyAccountContractData) paymentAccountContractData).getAccountNr());
         return gridRow;
     }
 
@@ -60,7 +60,7 @@ public class PerfectMoneyForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Account no.:").second;
+        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.account.no")).second;
         accountNrInputTextField.setValidator(perfectMoneyValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             perfectMoneyAccount.setAccountNr(newValue);
@@ -88,9 +88,9 @@ public class PerfectMoneyForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, "Account name:", perfectMoneyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), perfectMoneyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(perfectMoneyAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, "Account no.:", perfectMoneyAccount.getAccountNr()).second;
+        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), perfectMoneyAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
 
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), perfectMoneyAccount.getSingleTradeCurrency().getNameAndCode());

@@ -2,6 +2,7 @@ package io.bitsquare.gui.components;
 
 import io.bitsquare.alert.PrivateNotificationManager;
 import io.bitsquare.gui.main.overlays.editor.PeerInfoWithTagEditor;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import javafx.geometry.Point2D;
@@ -118,7 +119,7 @@ public class PeerInfoIcon extends Group {
         String tag;
         if (peerTagMap.containsKey(hostName)) {
             tag = peerTagMap.get(hostName);
-            Tooltip.install(this, new Tooltip(tooltipText + "\nTag: " + tag));
+            Tooltip.install(this, new Tooltip(Res.get("peerInfoIcon.tooltip", tooltipText, tag)));
         } else {
             tag = "";
             Tooltip.install(this, new Tooltip(tooltipText));

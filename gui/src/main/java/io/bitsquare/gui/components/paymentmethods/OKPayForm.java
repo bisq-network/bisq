@@ -49,12 +49,15 @@ public class OKPayForm extends PaymentMethodForm {
     private final OKPayValidator okPayValidator;
     private InputTextField accountNrInputTextField;
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "Wallet ID:", ((OKPayAccountContractData) paymentAccountContractData).getAccountNr());
+    public static int addFormForBuyer(GridPane gridPane, int gridRow,
+                                      PaymentAccountContractData paymentAccountContractData) {
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.wallet"),
+                ((OKPayAccountContractData) paymentAccountContractData).getAccountNr());
         return gridRow;
     }
 
-    public OKPayForm(PaymentAccount paymentAccount, OKPayValidator okPayValidator, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public OKPayForm(PaymentAccount paymentAccount, OKPayValidator okPayValidator,
+                     InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.okPayAccount = (OKPayAccount) paymentAccount;
         this.okPayValidator = okPayValidator;
@@ -64,7 +67,7 @@ public class OKPayForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, "Wallet ID:").second;
+        accountNrInputTextField = addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.wallet")).second;
         accountNrInputTextField.setValidator(okPayValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             okPayAccount.setAccountNr(newValue);
@@ -77,7 +80,7 @@ public class OKPayForm extends PaymentMethodForm {
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
-        Label label = addLabel(gridPane, ++gridRow, "Supported currencies:", 0);
+        Label label = addLabel(gridPane, ++gridRow, Res.get("payment.supported.okpay"), 0);
         GridPane.setValignment(label, VPos.TOP);
         FlowPane flowPane = new FlowPane();
         flowPane.setPadding(new Insets(10, 10, 10, 10));
@@ -126,9 +129,12 @@ public class OKPayForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, "Account name:", okPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(okPayAccount.getPaymentMethod().getId()));
-        TextField field = addLabelTextField(gridPane, ++gridRow, "Wallet ID:", okPayAccount.getAccountNr()).second;
+        addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
+                okPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
+                Res.get(okPayAccount.getPaymentMethod().getId()));
+        TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.wallet"),
+                okPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
         addAllowedPeriod();
         addCurrenciesGrid(false);

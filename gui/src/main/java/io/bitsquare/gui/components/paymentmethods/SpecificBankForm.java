@@ -22,6 +22,7 @@ import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
 import io.bitsquare.payment.SpecificBanksAccountContractData;
@@ -55,13 +56,16 @@ public class SpecificBankForm extends BankForm {
 
     @Override
     protected void addAcceptedBanksForAddAccount() {
-        Tuple3<Label, InputTextField, Button> addBankTuple = addLabelInputTextFieldButton(gridPane, ++gridRow, "Name of accepted bank:", "Add accepted bank");
+        Tuple3<Label, InputTextField, Button> addBankTuple = addLabelInputTextFieldButton(gridPane, ++gridRow,
+                Res.get("payment.nameOfAcceptedBank"), Res.get("payment.addAcceptedBank"));
         InputTextField addBankInputTextField = addBankTuple.second;
         Button addButton = addBankTuple.third;
         addButton.setMinWidth(200);
-        addButton.disableProperty().bind(Bindings.createBooleanBinding(() -> addBankInputTextField.getText().isEmpty(), addBankInputTextField.textProperty()));
+        addButton.disableProperty().bind(Bindings.createBooleanBinding(() -> addBankInputTextField.getText().isEmpty(),
+                addBankInputTextField.textProperty()));
 
-        Tuple3<Label, TextField, Button> acceptedBanksTuple = addLabelTextFieldButton(gridPane, ++gridRow, "Accepted banks:", "Clear accepted banks");
+        Tuple3<Label, TextField, Button> acceptedBanksTuple = addLabelTextFieldButton(gridPane, ++gridRow,
+                Res.get("payment.accepted.banks"), Res.get("payment.clearAcceptedBanks"));
         acceptedBanksTextField = acceptedBanksTuple.second;
         acceptedBanksTextField.setMouseTransparent(false);
         acceptedBanksTooltip = new Tooltip();
@@ -96,7 +100,7 @@ public class SpecificBankForm extends BankForm {
 
     @Override
     public void addAcceptedBanksForDisplayAccount() {
-        addLabelTextField(gridPane, ++gridRow, "Accepted banks:",
+        addLabelTextField(gridPane, ++gridRow, Res.get("payment.accepted.banks"),
                 Joiner.on(", ").join(specificBanksAccountContractData.getAcceptedBanks())).second.setMouseTransparent(false);
     }
 

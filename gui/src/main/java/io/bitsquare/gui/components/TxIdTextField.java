@@ -24,6 +24,7 @@ import io.bitsquare.btc.wallet.BtcWalletService;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
 import io.bitsquare.gui.util.GUIUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.user.Preferences;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -37,13 +38,10 @@ public class TxIdTextField extends AnchorPane {
     private static final Logger log = LoggerFactory.getLogger(TxIdTextField.class);
 
     private static Preferences preferences;
-
     public static void setPreferences(Preferences preferences) {
         TxIdTextField.preferences = preferences;
     }
-
     private static BtcWalletService walletService;
-
     public static void setWalletService(BtcWalletService walletService) {
         TxIdTextField.walletService = walletService;
     }
@@ -75,11 +73,11 @@ public class TxIdTextField extends AnchorPane {
         copyIcon = new Label();
         copyIcon.setLayoutY(3);
         copyIcon.getStyleClass().add("copy-icon");
-        copyIcon.setTooltip(new Tooltip("Copy transaction ID to clipboard"));
+        copyIcon.setTooltip(new Tooltip(Res.get("txIdTextField.copyIcon.tooltip")));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
         AnchorPane.setRightAnchor(copyIcon, 30.0);
 
-        Tooltip tooltip = new Tooltip("Open a blockchain explorer with that transactions ID");
+        Tooltip tooltip = new Tooltip(Res.get("txIdTextField.blockExplorerIcon.tooltip"));
 
         blockExplorerIcon = new Label();
         blockExplorerIcon.getStyleClass().add("external-link-icon");

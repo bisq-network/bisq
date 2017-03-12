@@ -22,6 +22,7 @@ import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.BankUtil;
+import io.bitsquare.locale.Res;
 import io.bitsquare.payment.CountryBasedPaymentAccount;
 import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountContractData;
@@ -48,7 +49,7 @@ public class SameBankForm extends BankForm {
 
     @Override
     protected void addHolderNameAndId() {
-        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++gridRow, "Account holder name:");
+        Tuple2<Label, InputTextField> tuple = addLabelInputTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"));
         holderNameInputTextField = tuple.second;
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -81,7 +82,7 @@ public class SameBankForm extends BankForm {
 
     @Override
     protected void addHolderNameAndIdForDisplayAccount() {
-        Tuple2<Label, TextField> tuple = addLabelTextField(gridPane, ++gridRow, "Account holder name:");
+        Tuple2<Label, TextField> tuple = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"));
         TextField holderNameTextField = tuple.second;
         holderNameTextField.setMinWidth(300);
         holderNameTextField.setText(bankAccountContractData.getHolderName());
