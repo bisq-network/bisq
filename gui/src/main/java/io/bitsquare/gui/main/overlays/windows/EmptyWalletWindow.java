@@ -175,7 +175,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                 walletService.emptyWallet(addressInputTextField.getText(),
                         aesKey,
                         () -> {
-                            closeButton.setText("Close");
+                            closeButton.setText(Res.get("shared.close"));
                             balanceTextField.setText(formatter.formatCoinWithCode(walletService.getAvailableBalance()));
                             emptyWalletButton.setDisable(true);
                             log.debug("wallet empty successful");

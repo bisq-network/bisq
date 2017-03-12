@@ -165,7 +165,7 @@ public class PasswordTextField extends PasswordField {
 
         errorMessageDisplay = new PopOver(errorLabel);
         errorMessageDisplay.setDetachable(true);
-        errorMessageDisplay.setDetachedTitle("Close");
+        errorMessageDisplay.setDetachedTitle(Res.get("shared.close"));
         errorMessageDisplay.setArrowIndent(5);
     }
 

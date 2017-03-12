@@ -115,11 +115,11 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         String fiatDirectionInfo;
         String btcDirectionInfo;
         if (tradeManager.isBuyer(offer)) {
-            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForBuyer(myOffer, offer.getCurrencyCode()), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, Res.getWithCol("shared.offerType"), formatter.getDirectionForBuyer(myOffer, offer.getCurrencyCode()), Layout.FIRST_ROW_DISTANCE);
             fiatDirectionInfo = " to spend:";
             btcDirectionInfo = " to receive:";
         } else {
-            addLabelTextField(gridPane, rowIndex, "Trade type:", formatter.getDirectionForSeller(myOffer, offer.getCurrencyCode()), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, Res.getWithCol("shared.offerType"), formatter.getDirectionForSeller(myOffer, offer.getCurrencyCode()), Layout.FIRST_ROW_DISTANCE);
             fiatDirectionInfo = " to receive:";
             btcDirectionInfo = " to spend:";
         }
@@ -251,10 +251,10 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             state.setText(trade.getState().getPhase().name());
         }
 
-        Button cancelButton = addButtonAfterGroup(gridPane, ++rowIndex, "Close");
+        Button closeButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
         //TODO app wide focus
-        //cancelButton.requestFocus();
-        cancelButton.setOnAction(e -> {
+        //closeButton.requestFocus();
+        closeButton.setOnAction(e -> {
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
             hide();
         });

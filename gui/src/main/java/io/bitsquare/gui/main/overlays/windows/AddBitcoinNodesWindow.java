@@ -38,6 +38,7 @@ import javax.inject.Inject;
 
 import static io.bitsquare.gui.util.FormBuilder.*;
 
+//TODO not used yet but keep it for later
 public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
     private static final Logger log = LoggerFactory.getLogger(AddBitcoinNodesWindow.class);
     private Button saveButton;
@@ -102,13 +103,15 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
         GridPane.setHalignment(hyperlinkWithIcon, HPos.LEFT);
         gridPane.getChildren().add(hyperlinkWithIcon);
 
-        Tuple2<Label, InputTextField> labelInputTextFieldTuple2 = addLabelInputTextField(gridPane, ++rowIndex, "Add custom Bitcoin nodes:", 20);
+        Tuple2<Label, InputTextField> labelInputTextFieldTuple2 = addLabelInputTextField(gridPane, ++rowIndex,
+                "Add custom Bitcoin nodes:", 20);
         InputTextField input = labelInputTextFieldTuple2.second;
         input.setPromptText("Add comma separated IP addresses");
         if (!preferences.getBitcoinNodes().isEmpty())
             input.setText(preferences.getBitcoinNodes());
 
-        Tuple2<Button, Button> tuple = add2Buttons(gridPane, ++rowIndex, "Save", "Ignore and use public Bitcoin network nodes");
+        Tuple2<Button, Button> tuple = add2Buttons(gridPane, ++rowIndex, "Save",
+                "Ignore and use public Bitcoin network nodes");
         saveButton = tuple.first;
         saveButton.setOnAction(e -> {
             preferences.setBitcoinNodes(input.getText());

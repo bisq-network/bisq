@@ -616,7 +616,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         "Please check at your external wallet that you set the required fee and " +
                         "do a funding again with the correct fee.\n\n" +
                         "In the \"Funds/Open for withdrawal\" section you can withdraw those funds.")
-                        .closeButtonText("Close")
+                        .closeButtonText(Res.get("shared.close"))
                         .onClose(() -> {
                             close();
                             model.dataModel.swapTradeToSavings();

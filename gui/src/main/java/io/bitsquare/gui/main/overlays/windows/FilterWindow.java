@@ -23,6 +23,7 @@ import io.bitsquare.filter.PaymentAccountFilter;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.locale.Res;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -171,7 +172,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             }
         });
 
-        closeButton = new Button("Close");
+        closeButton = new Button(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());

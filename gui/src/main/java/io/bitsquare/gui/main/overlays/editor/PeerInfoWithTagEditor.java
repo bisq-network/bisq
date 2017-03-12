@@ -5,6 +5,7 @@ import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.windows.SendPrivateNotificationWindow;
 import io.bitsquare.gui.util.FormBuilder;
+import io.bitsquare.locale.Res;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import javafx.animation.Interpolator;
@@ -82,8 +83,8 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     @Override
     public void show() {
-        headLine("Peer info");
-        actionButtonText("Save");
+        headLine(Res.get("peerInfo.title"));
+        actionButtonText(Res.get("shared.save"));
         createGridPane();
         addHeadLine();
         addContent();
@@ -139,9 +140,9 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     }
 
     protected void addContent() {
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, "Onion address:", hostName).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, "Number of completed trades:", String.valueOf(numTrades));
-        inputTextField = FormBuilder.addLabelInputTextField(gridPane, ++rowIndex, "Set tag for that peer:").second;
+        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.onionAddress"), hostName).second.setMouseTransparent(false);
+        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.get("peerInfo.nrOfTrades"), String.valueOf(numTrades));
+        inputTextField = FormBuilder.addLabelInputTextField(gridPane, ++rowIndex, Res.get("peerInfo.setTag")).second;
         Map<String, String> peerTagMap = Preferences.INSTANCE.getPeerTagMap();
         String tag = peerTagMap.containsKey(hostName) ? peerTagMap.get(hostName) : "";
         inputTextField.setText(tag);
@@ -173,7 +174,6 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
             }
         });
     }
-
 
     @Override
     protected void animateHide(Runnable onFinishedHandler) {

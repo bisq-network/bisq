@@ -235,7 +235,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             String countries;
             Tooltip tooltip = null;
             if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes)) {
-                countries = "All Euro countries";
+                countries = Res.getWithCol("shared.allEuroCountries");
             } else {
                 if (acceptedCountryCodes.size() == 1) {
                     countries = CountryUtil.getNameAndCode(acceptedCountryCodes.get(0));
@@ -245,7 +245,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                     tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
                 }
             }
-            TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex, "Accepted taker countries:", countries).second;
+            TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex,
+                    Res.getWithCol("shared.acceptedTakerCountries"), countries).second;
             if (tooltip != null) {
                 acceptedCountries.setMouseTransparent(false);
                 acceptedCountries.setTooltip(tooltip);
@@ -260,8 +261,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.details"), Layout.GROUP_DISTANCE);
-        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Offerer's onion address:", offer.getOffererNodeAddress().getFullAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.getWithCol("shared.offerId"), offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.makersOnion"), offer.getOffererNodeAddress().getFullAddress());
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(offer.getSecurityDeposit()));
 
@@ -284,8 +285,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
             addConfirmAndCancelButtons(false);
         } else {
-            Button cancelButton = addButtonAfterGroup(gridPane, ++rowIndex, "Close");
-            cancelButton.setOnAction(e -> {
+            Button closeButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
+            closeButton.setOnAction(e -> {
                 closeHandlerOptional.ifPresent(Runnable::run);
                 hide();
             });

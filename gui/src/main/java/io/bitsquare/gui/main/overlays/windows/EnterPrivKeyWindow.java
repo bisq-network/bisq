@@ -21,6 +21,7 @@ import io.bitsquare.app.DevFlags;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -131,8 +132,8 @@ public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
                 new Popup().warning("The key you entered was not correct.").width(300).onClose(() -> blurAgain()).show();
         });
 
-        Button cancelButton = new Button("Close");
-        cancelButton.setOnAction(event -> {
+        Button closeButton = new Button(Res.get("shared.close"));
+        closeButton.setOnAction(event -> {
             hide();
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
         });
@@ -141,7 +142,7 @@ public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
         hBox.setSpacing(10);
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        hBox.getChildren().addAll(unlockButton, cancelButton);
+        hBox.getChildren().addAll(unlockButton, closeButton);
         gridPane.getChildren().add(hBox);
     }
 

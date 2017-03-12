@@ -695,33 +695,29 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     private void addReportErrorButtons() {
-        messageLabel.setText(truncatedMessage
-                + "\n\nTo help us to improve the software please report the bug at our issue tracker at Github or send it by email to the developers.\n" +
-                "The error message will be copied to clipboard when you click the below buttons.\n" +
-                "It will make debugging easier if you can attach the bitsquare.log file which you can find in the application directory.");
+        messageLabel.setText(Res.get("popup.reportError", truncatedMessage));
 
-        Button githubButton = new Button("Report to Github issue tracker");
-        GridPane.setMargin(githubButton, new Insets(20, 0, 0, 0));
-        GridPane.setHalignment(githubButton, HPos.RIGHT);
-        GridPane.setRowIndex(githubButton, ++rowIndex);
-        GridPane.setColumnIndex(githubButton, 1);
-        gridPane.getChildren().add(githubButton);
+        Button gitHubButton = new Button(Res.get("popup.reportError.gitHub"));
+        GridPane.setMargin(gitHubButton, new Insets(20, 0, 0, 0));
+        GridPane.setHalignment(gitHubButton, HPos.RIGHT);
+        GridPane.setRowIndex(gitHubButton, ++rowIndex);
+        GridPane.setColumnIndex(gitHubButton, 1);
+        gridPane.getChildren().add(gitHubButton);
 
-        githubButton.setOnAction(event -> {
+        gitHubButton.setOnAction(event -> {
             Utilities.copyToClipboard(message);
             GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues");
         });
 
-        Button mailButton = new Button("Report by email");
-        GridPane.setHalignment(mailButton, HPos.RIGHT);
-        GridPane.setRowIndex(mailButton, ++rowIndex);
-        GridPane.setColumnIndex(mailButton, 1);
-        gridPane.getChildren().add(mailButton);
-        mailButton.setOnAction(event -> {
+        Button forumButton = new Button(Res.get("popup.reportError.forum"));
+        GridPane.setHalignment(forumButton, HPos.RIGHT);
+        GridPane.setRowIndex(forumButton, ++rowIndex);
+        GridPane.setColumnIndex(forumButton, 1);
+        gridPane.getChildren().add(forumButton);
+
+        forumButton.setOnAction(event -> {
             Utilities.copyToClipboard(message);
-            GUIUtil.openMail("manfred@bitsquare.io",
-                    "Error report",
-                    "Error message:\n" + message);
+            GUIUtil.openWebPage("http://forum.bitsquare.io");
         });
     }
 
@@ -735,8 +731,10 @@ public abstract class Overlay<T extends Overlay> {
 
     protected void addDontShowAgainCheckBox() {
         if (dontShowAgainId != null && preferences != null) {
+            // We might have set it and overridden the default, so we check if it is not set
             if (dontShowAgainText == null)
-                dontShowAgainText = "Don't show again";
+                dontShowAgainText = Res.get("popup.doNotShowAgain");
+            
             CheckBox dontShowAgainCheckBox = addCheckBox(gridPane, rowIndex, dontShowAgainText, buttonDistance - 1);
             GridPane.setColumnIndex(dontShowAgainCheckBox, 0);
             GridPane.setHalignment(dontShowAgainCheckBox, HPos.LEFT);
@@ -745,11 +743,11 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected void addCloseButton() {
-        closeButton = new Button(closeButtonText == null ? "Close" : closeButtonText);
+        closeButton = new Button(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
         closeButton.setOnAction(event -> doClose());
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
-            actionButton = new Button(actionButtonText == null ? "Ok" : actionButtonText);
+            actionButton = new Button(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
             actionButton.setDefaultButton(true);
             //TODO app wide focus
             //actionButton.requestFocus();

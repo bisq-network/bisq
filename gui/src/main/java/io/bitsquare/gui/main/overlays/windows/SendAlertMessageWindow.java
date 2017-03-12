@@ -137,7 +137,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
             }
         });
 
-        closeButton = new Button("Close");
+        closeButton = new Button(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());

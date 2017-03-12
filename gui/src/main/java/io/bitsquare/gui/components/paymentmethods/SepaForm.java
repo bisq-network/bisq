@@ -319,7 +319,7 @@ public class SepaForm extends PaymentMethodForm {
         String countries;
         Tooltip tooltip = null;
         if (CountryUtil.containsAllSepaEuroCountries(sepaAccount.getAcceptedCountryCodes())) {
-            countries = "All Euro countries";
+            countries = Res.getWithCol("shared.allEuroCountries");
         } else {
             countries = CountryUtil.getCodesString(sepaAccount.getAcceptedCountryCodes());
             tooltip = new Tooltip(CountryUtil.getNamesByCodesString(sepaAccount.getAcceptedCountryCodes()));

@@ -140,7 +140,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
             }
         });
 
-        closeButton = new Button("Close");
+        closeButton = new Button(Res.get("shared.close"));
         closeButton.setOnAction(e -> {
             hide();
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());

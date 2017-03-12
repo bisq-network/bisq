@@ -3,6 +3,7 @@ package io.bitsquare.gui.main.overlays.notifications;
 import io.bitsquare.common.Timer;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.locale.Res;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -33,7 +34,7 @@ public class Notification extends Overlay<Notification> {
     public void onReadyForDisplay() {
         super.display();
         if (autoClose && autoCloseTimer == null)
-            autoCloseTimer = UserThread.runAfter(() -> doClose(), 4);
+            autoCloseTimer = UserThread.runAfter(this::doClose, 4);
     }
 
     @Override
@@ -62,11 +63,11 @@ public class Notification extends Overlay<Notification> {
     }
 
     public Notification tradeHeadLine(String tradeId) {
-        return headLine("Notification for trade with ID " + tradeId);
+        return headLine(Res.get("notification.trade.headline", tradeId));
     }
 
     public Notification disputeHeadLine(String tradeId) {
-        return headLine("Support ticket for trade with ID " + tradeId);
+        return headLine(Res.get("notification.ticket.headline", tradeId));
     }
 
     @Override
@@ -198,7 +199,7 @@ public class Notification extends Overlay<Notification> {
 
    /* @Override
     protected void addCloseButton() {
-        closeButton = new Button("Close");
+        closeButton = new Button(Res.get("shared.close"));
         closeButton.setOnAction(event -> {
             hide();
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());

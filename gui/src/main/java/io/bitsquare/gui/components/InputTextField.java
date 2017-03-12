@@ -178,7 +178,7 @@ public class InputTextField extends TextField {
 
         errorMessageDisplay = new PopOver(errorLabel);
         errorMessageDisplay.setDetachable(true);
-        errorMessageDisplay.setDetachedTitle("Close");
+        errorMessageDisplay.setDetachedTitle(Res.get("shared.close"));
         errorMessageDisplay.setArrowIndent(5);
     }
 
