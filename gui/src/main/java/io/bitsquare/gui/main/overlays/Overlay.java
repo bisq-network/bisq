@@ -652,7 +652,7 @@ public abstract class Overlay<T extends Overlay> {
         if (headLine != null) {
             ++rowIndex;
 
-            headLineLabel = new Label(Res.get(headLine));
+            headLineLabel = new Label(headLine);
             headLineLabel.setMouseTransparent(true);
 
             if (headlineStyle != null)

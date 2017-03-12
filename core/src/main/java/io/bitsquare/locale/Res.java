@@ -61,7 +61,7 @@ public class Res {
         try {
             return resourceBundle.getString(key);
         } catch (MissingResourceException e) {
-            log.trace("Missing resource for key: " + key);
+            log.warn("Missing resource for key: " + key);
             return key;
         }
     }
