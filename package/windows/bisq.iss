@@ -1,15 +1,15 @@
 ;This file will be executed next to the application bundle image
 ;I.e. current directory will contain folder bisq with application files
 [Setup]
-AppId={{bitsquare}}
+AppId={{bisq}}
 AppName=bisq
 AppVersion=0.5.0.0
 AppVerName=bisq
 AppPublisher=bisq
 AppComments=bisq
 AppCopyright=Copyright (C) 2016
-AppPublisherURL=https://bitsquare.io
-AppSupportURL=https://bitsquare.io
+AppPublisherURL=https://bisq.io
+AppSupportURL=https://bisq.io
 ;AppUpdatesURL=http://java.com/
 DefaultDirName={localappdata}\bisq
 DisableStartupPrompt=Yes

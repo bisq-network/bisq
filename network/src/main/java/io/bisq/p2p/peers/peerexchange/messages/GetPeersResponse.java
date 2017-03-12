@@ -2,9 +2,9 @@ package io.bisq.p2p.peers.peerexchange.messages;
 
 import io.bisq.app.Capabilities;
 import io.bisq.app.Version;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bisq.p2p.peers.peerexchange.Peer;
-import io.bitsquare.common.wire.proto.Messages;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

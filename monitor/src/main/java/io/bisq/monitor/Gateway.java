@@ -1,4 +1,4 @@
-package io.bitsquare.monitor;
+package io.bisq.monitor;
 
 import io.bisq.messages.trade.offer.payload.Offer;
 import io.bisq.trade.offer.OfferBookService;

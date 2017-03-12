@@ -20,8 +20,8 @@ package io.bisq.messages.arbitration;
 import com.google.protobuf.ByteString;
 import io.bisq.app.Version;
 import io.bisq.common.util.ProtoBufferUtils;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.p2p.NodeAddress;
-import io.bitsquare.common.wire.proto.Messages;
 
 import java.util.Arrays;
 

@@ -1,11 +1,11 @@
 syntax = "proto3";
-package io.bitsquare.proto;
+package io.bisq.proto;
 
 //
 // A simple protocol for describing signed sets of IP addresses. Intended to be distributed via HTTP[S] or in files.
 //
 
-option java_package = "io.bitsquare.common.wire.proto";
+option java_package = "io.bisq.common.wire.proto";
 option java_outer_classname = "Messages";
 
 message Envelope {

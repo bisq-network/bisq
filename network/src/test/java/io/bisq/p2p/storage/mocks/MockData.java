@@ -1,7 +1,7 @@
 package io.bisq.p2p.storage.mocks;
 
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.p2p.storage.payload.StoragePayload;
-import io.bitsquare.common.wire.proto.Messages;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.security.PublicKey;

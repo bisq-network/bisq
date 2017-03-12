@@ -115,7 +115,7 @@ public class CompensationViewItem {
 
             Scene scene = new Scene(anchorPane);
             scene.getStylesheets().setAll(
-                    "/io/bisq/gui/bitsquare.css",
+                    "/io/bisq/gui/bisq.css",
                     "/io/bisq/gui/images.css");
             Stage stage = new Stage();
             stage.setTitle(Res.get("dao.voting.item.stage.title", compensationRequestPayload.getShortId()));

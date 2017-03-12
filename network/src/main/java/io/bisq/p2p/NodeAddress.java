@@ -4,7 +4,7 @@ import io.bisq.app.Version;
 import io.bisq.common.crypto.Hash;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.wire.Payload;
-import io.bitsquare.common.wire.proto.Messages;
+import io.bisq.common.wire.proto.Messages;
 import lombok.Getter;
 
 import java.util.regex.Pattern;

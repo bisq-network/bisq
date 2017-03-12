@@ -17,7 +17,7 @@
 
 package io.bisq.app;
 
-import io.bisq.BitsquareException;
+import io.bisq.BisqException;
 import io.bisq.btc.RegTestHost;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.messages.btc.BitcoinNetwork;
@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.lang.String.join;
 
-public abstract class BitsquareExecutable {
+public abstract class BisqExecutable {
     private static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = 1;
     private static final String HELP_KEY = "help";
@@ -73,7 +73,7 @@ public abstract class BitsquareExecutable {
 
     protected void customizeOptionParsing(OptionParser parser) {
         parser.accepts(CommonOptionKeys.LOG_LEVEL_KEY,
-                description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", BitsquareEnvironment.LOG_LEVEL_DEFAULT))
+                description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", BisqEnvironment.LOG_LEVEL_DEFAULT))
                 .withRequiredArg();
 
         parser.accepts(NetworkOptionKeys.SEED_NODES_KEY,
@@ -110,16 +110,16 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg();
 
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
-                description("User data directory", BitsquareEnvironment.DEFAULT_USER_DATA_DIR))
+                description("User data directory", BisqEnvironment.DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
         parser.accepts(AppOptionKeys.APP_NAME_KEY,
-                description("Application name", BitsquareEnvironment.DEFAULT_APP_NAME))
+                description("Application name", BisqEnvironment.DEFAULT_APP_NAME))
                 .withRequiredArg();
         parser.accepts(AppOptionKeys.MAX_MEMORY,
                 description("Max. permitted memory (used only at headless versions)", 600))
                 .withRequiredArg();
         parser.accepts(AppOptionKeys.APP_DATA_DIR_KEY,
-                description("Application data directory", BitsquareEnvironment.DEFAULT_APP_DATA_DIR))
+                description("Application data directory", BisqEnvironment.DEFAULT_APP_DATA_DIR))
                 .withRequiredArg();
         parser.accepts(AppOptionKeys.IGNORE_DEV_MSG_KEY,
                 description("If set to true all signed messages from bisq developers are ignored " +
@@ -168,8 +168,8 @@ public abstract class BitsquareExecutable {
                 .withRequiredArg();
     }
 
-    public static BitsquareEnvironment getBitsquareEnvironment(OptionSet options) {
-        return new BitsquareEnvironment(new JOptCommandLinePropertySource(BitsquareEnvironment.BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
+    public static BisqEnvironment getBisqEnvironment(OptionSet options) {
+        return new BisqEnvironment(new JOptCommandLinePropertySource(BisqEnvironment.BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(options)));
     }
 
     protected static String description(String descText, Object defaultValue) {
@@ -188,14 +188,14 @@ public abstract class BitsquareExecutable {
         Path dir = Paths.get(appDir);
         if (Files.exists(dir)) {
             if (!Files.isWritable(dir))
-                throw new BitsquareException("Application data directory '%s' is not writeable", dir);
+                throw new BisqException("Application data directory '%s' is not writeable", dir);
             else
                 return;
         }
         try {
             Files.createDirectories(dir);
         } catch (IOException ex) {
-            throw new BitsquareException(ex, "Application data directory '%s' could not be created", dir);
+            throw new BisqException(ex, "Application data directory '%s' could not be created", dir);
         }
     }
 }

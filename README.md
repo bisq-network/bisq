@@ -1,4 +1,4 @@
-<img src="https://bitsquare.io/images/logo.png" width="240"/>
+<img src="https://bisq.io/images/logo.png" width="240"/>
 
 
 What is bisq?
@@ -12,19 +12,19 @@ There are no central points of control or failure in the bisq network. There are
 
 Because the national currency portion of any trade must be transferred via traditional means such as a wire transfer, bisq incorporates first-class support for human arbitration to resolve any errors or disputes.
 
-You can read about all of this and more in the [whitepaper](https://bitsquare.io/bitsquare.pdf) and [arbitration](https://bitsquare.io/arbitration_system.pdf) documents. Several [videos](https://bitsquare.io/blog/category/video) are available as well.
+You can read about all of this and more in the [whitepaper](https://bisq.io/bisq.pdf) and [arbitration](https://bisq.io/arbitration_system.pdf) documents. Several [videos](https://bisq.io/blog/category/video) are available as well.
 
 Status
 ------
 bisq has released the beta version on the 27th of April 2016 after 3 months testing on mainnet.
-For the latest version checkout our [releases page](https://github.com/bitsquare/bitsquare/releases) at Github.
+For the latest version checkout our [releases page](https://github.com/bisq/bisq/releases) at Github.
 
 Building from source
 --------------------
 
 See [doc/build.md](doc/build.md).
 
-[AUR for Arch Linux](https://aur.archlinux.org/packages/bitsquare-git)
+[AUR for Arch Linux](https://aur.archlinux.org/packages/bisq-git)
 
 
 Staying in Touch
@@ -32,13 +32,13 @@ Staying in Touch
 
 Contact the team and keep up to date using any of the following:
 
- - The [bisq Website](https://bitsquare.io)
- - GitHub [Issues](https://github.com/bitsquare/bitsquare/issues)
- - The [bisq Forum]( https://forum.bitsquare.io)
- - The [#bitsquare](https://webchat.freenode.net/?channels=bitsquare) IRC channel on Freenode ([logs](https://botbot.me/freenode/bitsquare)) 
- - Our [mailing list](https://groups.google.com/forum/#!forum/bitsquare)
- - [@bitsquare_](https://twitter.com/bitsquare_) on Twitter
- - Get in [contact](https://bitsquare.io/contact/) with us
+ - The [bisq Website](https://bisq.io)
+ - GitHub [Issues](https://github.com/bisq/bisq/issues)
+ - The [bisq Forum]( https://forum.bisq.io)
+ - The [#bisq](https://webchat.freenode.net/?channels=bisq) IRC channel on Freenode ([logs](https://botbot.me/freenode/bisq)) 
+ - Our [mailing list](https://groups.google.com/forum/#!forum/bisq)
+ - [@bisq_](https://twitter.com/bisq_) on Twitter
+ - Get in [contact](https://bisq.io/contact/) with us
 
 
 License

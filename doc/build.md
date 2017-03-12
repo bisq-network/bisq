@@ -3,7 +3,7 @@
 
 This guide will walk you through the process of building bisq from source.
 
-> _**NOTE:** For most users, building from source is not necessary. See the [releases page](https://github.com/bitsquare/bitsquare/releases), where you'll find installers for Windows, Linux and Mac OS X._
+> _**NOTE:** For most users, building from source is not necessary. See the [releases page](https://github.com/bisq/bisq/releases), where you'll find installers for Windows, Linux and Mac OS X._
 
 There is an install script (2 parts) for setup (JDK, git, maven, Bitcoinj, bisq) on Linux in that directory (install_on_unix.sh, install_on_unix_fin.sh).
 
@@ -92,20 +92,20 @@ Build bitcoinj and btcd-cli4j fork
 > _**NOTE:**
 Bitcoinj versions later than 0.13.1 has removed support for Java serialisation.
 Version 0.13.1 is also missing support for Java serialisation in MainNetParams (HttpDiscovery.Details).
-We removed usage of Cartographer/HttpDiscovery in our [fork of version 0.13.1.7](https://github.com/bitsquare/bitcoinj/tree/FixBloomFilters).
+We removed usage of Cartographer/HttpDiscovery in our [fork of version 0.13.1.7](https://github.com/bisq/bitcoinj/tree/FixBloomFilters).
 Beside the Java serialisation issues there are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer.
-Here is a Github issue with background and open tasks regarding [Bloom Filters](https://github.com/bitsquare/bitsquare/issues/414)._  Note: use a fresh directory, this should not be done inside the bitsquare folder.
+Here is a Github issue with background and open tasks regarding [Bloom Filters](https://github.com/bisq/bisq/issues/414)._  Note: use a fresh directory, this should not be done inside the bisq folder.
 
 Btcd-cli4j is used for RPC communication to a local Bitcoin Core node.
 TODO: remove if not used in production
 
     $ cd ..
-    $ git clone -b FixBloomFilters https://github.com/bitsquare/bitcoinj.git
+    $ git clone -b FixBloomFilters https://github.com/bisq/bitcoinj.git
     $ cd bitcoinj
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
     
     $ cd ..
-    $ git clone https://github.com/bitsquare/btcd-cli4j.git
+    $ git clone https://github.com/bisq/btcd-cli4j.git
     $ cd btcd-cli4j
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
     
@@ -117,8 +117,8 @@ Prepare bisq build
 
 You need to get the bisq dependencies first as we need to copy the BouncyCastle jar to the JRE directory.
 
-    $ git clone https://github.com/bitsquare/bitsquare.git
-    $ cd bitsquare
+    $ git clone https://github.com/bisq/bisq.git
+    $ cd bisq
     $ mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
 ### 5. Copy the BouncyCastle provider jar file
@@ -166,12 +166,12 @@ If you want to build the binaries check out the build scripts under the package 
 Development mode
 -----------------
 
-Please check out our wiki for more information about [testing](https://github.com/bitsquare/bitsquare/wiki/Testing-bisq-with-Mainnet)
-and how to use [regtest](https://github.com/bitsquare/bitsquare/wiki/How-to-use-bisq-with-regtest-%28advanced%29)
+Please check out our wiki for more information about [testing](https://github.com/bisq/bisq/wiki/Testing-bisq-with-Mainnet)
+and how to use [regtest](https://github.com/bisq/bisq/wiki/How-to-use-bisq-with-regtest-%28advanced%29)
 
 Here are example program arguments for using regtest with localhost environment (not using Tor):
 
-    $ java -jar seednode/target/SeedNode.jar --bitcoinNetwork=REGTEST --useLocalhost=true --myAddress=localhost:2002 --nodePort=2002 --appName=Bitsquare_seed_node_localhost_2002
+    $ java -jar seednode/target/SeedNode.jar --bitcoinNetwork=REGTEST --useLocalhost=true --myAddress=localhost:2002 --nodePort=2002 --appName=bisq_seed_node_localhost_2002
 
     $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --useLocalhost=true --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
 
@@ -186,11 +186,11 @@ Running local seed node with Tor and RegTest
 If you want to run locally a seed node via Tor you need to add your seed node's hidden service address to the SeedNodesRepository.java class.
 You can find the hidden service address after you started once a seed node. Start it with a placeholder address like:
 
-    $ java -jar seednode/target/SeedNode.jar --bitcoinNetwork=REGTEST --nodePort=8002 --myAddress=xxxxxxxx.onion:8002 --appName=Bitsquare_seed_node_xxxxxxxx.onion_8000
+    $ java -jar seednode/target/SeedNode.jar --bitcoinNetwork=REGTEST --nodePort=8002 --myAddress=xxxxxxxx.onion:8002 --appName=bisq_seed_node_xxxxxxxx.onion_8000
 
 Once the hidden service is published (check console output) quit the seed node and copy the hidden service address from the console output.
-Alternatively you can navigate to the application directory and open Bitsquare_seed_node_xxxxxxx.onion_8002/tor/hiddenservice/hostname.
-use that hidden service address also to rename the xxxxxxx placeholder of your Bitsquare_seed_node_xxxxxxx.onion_8002 directory.
+Alternatively you can navigate to the application directory and open bisq_seed_node_xxxxxxx.onion_8002/tor/hiddenservice/hostname.
+use that hidden service address also to rename the xxxxxxx placeholder of your bisq_seed_node_xxxxxxx.onion_8002 directory.
 Start again the SeedNode.jar now with the correct hidden service address.
 Instructions are also at the SeedNodesRepository class.
 
@@ -198,7 +198,7 @@ Here are example program arguments for using regtest and using the Tor network (
 
      $ java -jar seednode/target/SeedNode.jar ewdkppp3vicnbgqt.onion:8002 2 50
 
-     $ java -jar seednode/target/SeedNode.jar --bitcoinNetwork=REGTEST --nodePort=8002 --myAddress=ewdkppp3vicnbgqt.onion:8002 --appName=Bitsquare_seed_node_ewdkppp3vicnbgqt.oinion_8002
+     $ java -jar seednode/target/SeedNode.jar --bitcoinNetwork=REGTEST --nodePort=8002 --myAddress=ewdkppp3vicnbgqt.onion:8002 --appName=bisq_seed_node_ewdkppp3vicnbgqt.oinion_8002
 
      $ java -jar gui/target/shaded.jar --bitcoinNetwork=REGTEST --myAddress=localhost:2222 --nodePort=2222 --appName=bisq-Local-Regtest-Arbitrator
 
@@ -210,4 +210,4 @@ Here are example program arguments for using regtest and using the Tor network (
 Problems?
 ---------
 
-If the instructions above don't work for you, please [raise an issue](https://github.com/bitsquare/bitsquare/issues/new?labels=%5Bbuild%5D). Thanks!
+If the instructions above don't work for you, please [raise an issue](https://github.com/bisq/bisq/issues/new?labels=%5Bbuild%5D). Thanks!

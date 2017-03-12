@@ -23,7 +23,7 @@ import org.bitcoinj.wallet.KeyChainGroup;
 
 import java.security.SecureRandom;
 
-class BitsquareKeyChainGroup extends KeyChainGroup {
+class BisqKeyChainGroup extends KeyChainGroup {
     private final boolean useBitcoinDeterministicKeyChain;
     private int lookaheadSize;
 
@@ -31,13 +31,13 @@ class BitsquareKeyChainGroup extends KeyChainGroup {
         return useBitcoinDeterministicKeyChain;
     }
 
-    public BitsquareKeyChainGroup(NetworkParameters params, boolean useBitcoinDeterministicKeyChain, int lookaheadSize) {
+    public BisqKeyChainGroup(NetworkParameters params, boolean useBitcoinDeterministicKeyChain, int lookaheadSize) {
         super(params);
         this.useBitcoinDeterministicKeyChain = useBitcoinDeterministicKeyChain;
         this.lookaheadSize = lookaheadSize;
     }
 
-    public BitsquareKeyChainGroup(NetworkParameters params, DeterministicKeyChain chain, boolean useBitcoinDeterministicKeyChain, int lookaheadSize) {
+    public BisqKeyChainGroup(NetworkParameters params, DeterministicKeyChain chain, boolean useBitcoinDeterministicKeyChain, int lookaheadSize) {
         super(params, chain);
 
         this.useBitcoinDeterministicKeyChain = useBitcoinDeterministicKeyChain;

@@ -1,7 +1,7 @@
 package io.bisq.gui.main.overlays.windows;
 
 import com.google.inject.Inject;
-import io.bisq.app.BitsquareApp;
+import io.bisq.app.BisqApp;
 import io.bisq.app.DevEnv;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.locale.Res;
@@ -49,7 +49,7 @@ public class TacWindow extends Overlay<TacWindow> {
             actionButtonText(Res.get("tacWindow.agree"));
             closeButtonText(Res.get("tacWindow.disagree"));
             onAction(() -> preferences.setTacAccepted(true));
-            onClose(BitsquareApp.shutDownHandler::run);
+            onClose(BisqApp.shutDownHandler::run);
 
             super.show();
         }
@@ -59,7 +59,7 @@ public class TacWindow extends Overlay<TacWindow> {
     protected void addMessage() {
         super.addMessage();
         addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("tacWindow.arbitrationSystem"),
-                "https://bitsquare.io/arbitration_system.pdf", -6);
+                "https://bisq.io/arbitration_system.pdf", -6);
     }
 
     @Override

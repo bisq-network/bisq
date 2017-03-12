@@ -23,11 +23,11 @@ import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.bisq.app.BitsquareEnvironment.DEFAULT_APP_NAME;
-import static io.bisq.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
+import static io.bisq.app.BisqEnvironment.DEFAULT_APP_NAME;
+import static io.bisq.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
-public class BitsquareAppMain extends BitsquareExecutable {
-    private static final Logger log = LoggerFactory.getLogger(BitsquareAppMain.class);
+public class BisqAppMain extends BisqExecutable {
+    private static final Logger log = LoggerFactory.getLogger(BisqAppMain.class);
 
     public static void main(String[] args) throws Exception {
         // We don't want to do the full argument parsing here as that might easily change in update versions
@@ -49,21 +49,21 @@ public class BitsquareAppMain extends BitsquareExecutable {
             System.exit(EXIT_FAILURE);
             return;
         }
-        BitsquareEnvironment bitsquareEnvironment = getBitsquareEnvironment(options);
+        BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
 
-        // need to call that before BitsquareAppMain().execute(args)
-        initAppDir(bitsquareEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
+        // need to call that before bisqAppMain().execute(args)
+        initAppDir(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
 
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
-        Thread.currentThread().setContextClassLoader(BitsquareAppMain.class.getClassLoader());
+        Thread.currentThread().setContextClassLoader(BisqAppMain.class.getClassLoader());
 
-        new BitsquareAppMain().execute(args);
+        new BisqAppMain().execute(args);
     }
 
     @Override
     protected void doExecute(OptionSet options) {
-        BitsquareApp.setEnvironment(getBitsquareEnvironment(options));
-        javafx.application.Application.launch(BitsquareApp.class);
+        BisqApp.setEnvironment(getBisqEnvironment(options));
+        javafx.application.Application.launch(BisqApp.class);
     }
 }

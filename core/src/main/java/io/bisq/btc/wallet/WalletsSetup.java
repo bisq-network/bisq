@@ -80,8 +80,8 @@ public class WalletsSetup {
     private final NetworkParameters params;
     private final File walletDir;
     private final int socks5DiscoverMode;
-    private final String walletFileName = "Bitsquare_BTC";
-    private final String bsqWalletFileName = "Bitsquare_BSQ";
+    private final String walletFileName = "bisq_BTC";
+    private final String bsqWalletFileName = "bisq_BSQ";
     private final Long bloomFilterTweak;
     private final Storage<Long> storage;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);

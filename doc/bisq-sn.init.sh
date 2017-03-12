@@ -4,7 +4,7 @@ if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
     set "$0" "$@"; INIT_D_SCRIPT_SOURCED=true . /lib/init/init-d-script
 fi
 ### BEGIN INIT INFO
-# Provides:          bitsquare-sn
+# Provides:          bisq-sn
 # Required-Start:    $local_fs $remote_fs $named $network $time
 # Required-Stop:     $local_fs $remote_fs $named $network $time
 # Default-Start:     2 3 4 5
@@ -36,10 +36,10 @@ SN_USER=bsqsn
 
 # Using a name different than the daemon's base name
 # causes problems when stopping the process.
-#NAME="bitsquare-sn"
+#NAME="bisq-sn"
 DESC="bisq seed node $SN_ADDRESS"
 START_ARGS="--chuid $SN_USER --background --make-pidfile"
-PIDFILE="/var/run/bitsquare-sn/$SN_ADDRESS.pid"
+PIDFILE="/var/run/bisq-sn/$SN_ADDRESS.pid"
 DAEMON=/usr/bin/java
 DAEMON_ARGS="-jar $SN_JAR $SN_ADDRESS $SN_NETWORK_ID $SN_MAX_CONNECTIONS"
 

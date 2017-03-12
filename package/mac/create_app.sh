@@ -20,7 +20,7 @@ echo "Using JAVA_HOME: $JAVA_HOME"
 $JAVA_HOME/bin/javapackager \
     -deploy \
     -BappVersion=$version \
-    -Bmac.CFBundleIdentifier=io.bitsquare \
+    -Bmac.CFBundleIdentifier=io.bisq \
     -Bmac.CFBundleName=bisq \
     -Bicon=package/mac/bisq.icns \
     -Bruntime="$JAVA_HOME/jre" \
@@ -30,12 +30,12 @@ $JAVA_HOME/bin/javapackager \
     -vendor bisq \
     -outdir gui/deploy \
     -srcfiles "gui/deploy/bisq-$version.jar" \
-    -srcfiles "core/src/main/resources/bitsquare.policy" \
-    -appclass io.bitsquare.app.BitsquareAppMain \
+    -srcfiles "core/src/main/resources/bisq.policy" \
+    -appclass io.bisq.app.BisqAppMain \
     -outfile bisq \
     -BjvmOptions=-Djava.security.manager \
     -BjvmOptions=-Djava.security.debug=failure \
-    -BjvmOptions=-Djava.security.policy=file:bitsquare.policy
+    -BjvmOptions=-Djava.security.policy=file:bisq.policy
 
 rm "gui/deploy/bisq.html"
 rm "gui/deploy/bisq.jnlp"

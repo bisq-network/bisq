@@ -4,7 +4,7 @@
 /out
 **/target
 .idea
-!.idea/copyright/Bitsquare_Affero_GPLv3.xml
+!.idea/copyright/bisq_Affero_GPLv3.xml
 !.idea/copyright/profiles_settings.xml
 !.idea/codeStyleSettings.xml
 *.iml

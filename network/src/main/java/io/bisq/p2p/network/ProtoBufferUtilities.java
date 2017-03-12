@@ -3,6 +3,7 @@ package io.bisq.p2p.network;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.crypto.SealedAndSigned;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.messages.Message;
 import io.bisq.messages.alert.Alert;
 import io.bisq.messages.alert.PrivateNotification;
@@ -41,7 +42,6 @@ import io.bisq.p2p.storage.payload.MailboxStoragePayload;
 import io.bisq.p2p.storage.payload.StoragePayload;
 import io.bisq.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bisq.p2p.storage.storageentry.ProtectedStorageEntry;
-import io.bitsquare.common.wire.proto.Messages;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.WriterOutputStream;
 import org.bitcoinj.core.Coin;
@@ -55,7 +55,7 @@ import java.io.StringWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.bitsquare.common.wire.proto.Messages.Envelope.MessageCase.*;
+import static io.bisq.common.wire.proto.Messages.Envelope.MessageCase.*;
 
 /**
  * If the Messages class is giving errors in IntelliJ, you should change the IntelliJ IDEA Platform Properties file,

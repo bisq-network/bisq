@@ -2,9 +2,9 @@ package io.bisq.messages.alert;
 
 import io.bisq.app.Version;
 import io.bisq.common.util.ProtoBufferUtils;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.p2p.NodeAddress;
 import io.bisq.p2p.messaging.MailboxMessage;
-import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

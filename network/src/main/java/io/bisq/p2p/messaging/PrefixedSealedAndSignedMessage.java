@@ -3,9 +3,9 @@ package io.bisq.p2p.messaging;
 import com.google.protobuf.ByteString;
 import io.bisq.app.Version;
 import io.bisq.common.crypto.SealedAndSigned;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.p2p.NodeAddress;
 import io.bisq.p2p.network.messages.SendersNodeAddressMessage;
-import io.bitsquare.common.wire.proto.Messages;
 
 import java.util.Arrays;
 import java.util.UUID;

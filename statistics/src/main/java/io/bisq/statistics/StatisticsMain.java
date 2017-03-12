@@ -19,8 +19,8 @@ package io.bisq.statistics;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bisq.app.AppOptionKeys;
-import io.bisq.app.BitsquareEnvironment;
-import io.bisq.app.BitsquareExecutable;
+import io.bisq.app.BisqEnvironment;
+import io.bisq.app.BisqExecutable;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Profiler;
 import io.bisq.common.util.RestartUtil;
@@ -36,10 +36,10 @@ import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import static io.bisq.app.BitsquareEnvironment.DEFAULT_APP_NAME;
-import static io.bisq.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
+import static io.bisq.app.BisqEnvironment.DEFAULT_APP_NAME;
+import static io.bisq.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
-public class StatisticsMain extends BitsquareExecutable {
+public class StatisticsMain extends BisqExecutable {
     private static final Logger log = LoggerFactory.getLogger(StatisticsMain.class);
     private static long MAX_MEMORY_MB_DEFAULT = 400;
     private static final long CHECK_MEMORY_PERIOD_SEC = 3 * 60;
@@ -56,7 +56,7 @@ public class StatisticsMain extends BitsquareExecutable {
 
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
-        BitsquareEnvironment.setDefaultAppName("Bitsquare_statistics");
+        BisqEnvironment.setDefaultAppName("bisq_statistics");
         OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
@@ -74,10 +74,10 @@ public class StatisticsMain extends BitsquareExecutable {
             System.exit(EXIT_FAILURE);
             return;
         }
-        BitsquareEnvironment bitsquareEnvironment = getBitsquareEnvironment(options);
+        BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
 
-        // need to call that before BitsquareAppMain().execute(args)
-        BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
+        // need to call that before BisqAppMain().execute(args)
+        BisqExecutable.initAppDir(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
 
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
@@ -88,7 +88,7 @@ public class StatisticsMain extends BitsquareExecutable {
 
     @Override
     protected void doExecute(OptionSet options) {
-        final BitsquareEnvironment environment = getBitsquareEnvironment(options);
+        final BisqEnvironment environment = getBisqEnvironment(options);
         Statistics.setEnvironment(environment);
 
         UserThread.execute(() -> statistics = new Statistics());
@@ -156,7 +156,7 @@ public class StatisticsMain extends BitsquareExecutable {
         }
     }
 
-    private void restart(BitsquareEnvironment environment) {
+    private void restart(BisqEnvironment environment) {
         stopped = true;
         statistics.gracefulShutDown(() -> {
             try {

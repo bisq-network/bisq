@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.settings.network;
 
-import io.bisq.app.BitsquareApp;
+import io.bisq.app.BisqApp;
 import io.bisq.btc.wallet.WalletsSetup;
 import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
@@ -148,7 +148,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                         .actionButtonText(Res.get("shared.applyAndShutDown"))
                         .onAction(() -> {
                             preferences.setUseTorForBitcoinJ(selected);
-                            UserThread.runAfter(BitsquareApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
+                            UserThread.runAfter(BisqApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
                         })
                         .closeButtonText(Res.get("shared.cancel"))
                         .onClose(() -> useTorForBtcJCheckBox.setSelected(!selected))
@@ -188,7 +188,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                             } else {
                                 preferences.setBitcoinNodes(btcNodes.getText());
                             }
-                            UserThread.runAfter(BitsquareApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
+                            UserThread.runAfter(BisqApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
                         })
                         .closeButtonText(Res.get("shared.cancel"))
                         .onClose(() -> btcNodes.setText(btcNodesPreFocusText))

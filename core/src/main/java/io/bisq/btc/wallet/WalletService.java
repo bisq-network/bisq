@@ -64,7 +64,7 @@ public abstract class WalletService {
     protected final Preferences preferences;
     protected final FeeService feeService;
     protected final NetworkParameters params;
-    protected final WalletEventListener walletEventListener = new BitsquareWalletEventListener();
+    protected final WalletEventListener walletEventListener = new BisqWalletEventListener();
     protected final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
     protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
     protected final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
@@ -565,10 +565,10 @@ public abstract class WalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BitsquareWalletEventListener
+    // bisqWalletEventListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public class BitsquareWalletEventListener extends AbstractWalletEventListener {
+    public class BisqWalletEventListener extends AbstractWalletEventListener {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
             notifyBalanceListeners(tx);

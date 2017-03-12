@@ -20,8 +20,8 @@ package io.bisq.messages.availability;
 import io.bisq.app.Capabilities;
 import io.bisq.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.p2p.messaging.SupportedCapabilitiesMessage;
-import io.bitsquare.common.wire.proto.Messages;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

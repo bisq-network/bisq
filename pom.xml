@@ -3,15 +3,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.bitsquare</groupId>
+    <groupId>io.bisq</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
     <version>0.5.0.0</version>
     <description>bisq - The decentralized bitcoin exchange</description>
-    <url>https://bitsquare.io</url>
+    <url>https://bisq.io</url>
 
     <organization>
-        <name>bitsquare.io</name>
+        <name>bisq.io</name>
     </organization>
 
     <licenses>
@@ -24,13 +24,13 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/bitsquare/bitsquare/issues</url>
+        <url>https://github.com/bisq/bisq/issues</url>
     </issueManagement>
 
     <scm>
-        <connection>scm:git:https://github.com/bitsquare/bitsquare</connection>
-        <developerConnection>scm:git:https://github.com/bitsquare/bitsquare</developerConnection>
-        <url>scm:git:https://github.com/bitsquare/bitsquare</url>
+        <connection>scm:git:https://github.com/bisq/bisq</connection>
+        <developerConnection>scm:git:https://github.com/bisq/bisq</developerConnection>
+        <url>scm:git:https://github.com/bisq/bisq</url>
     </scm>
 
     <properties>

@@ -66,8 +66,8 @@ public class Socks5ProxyProvider {
         return socks5ProxyInternal;
     }
 
-    public void setSocks5ProxyInternal(@Nullable Socks5Proxy bitsquareSocks5Proxy) {
-        this.socks5ProxyInternal = bitsquareSocks5Proxy;
+    public void setSocks5ProxyInternal(@Nullable Socks5Proxy bisqSocks5Proxy) {
+        this.socks5ProxyInternal = bisqSocks5Proxy;
     }
 
     @Nullable

@@ -36,7 +36,7 @@ import java.util.List;
  * possible. This means that the transaction is the most likely to get confirmed. Note that this means we may end up
  * "spending" more priority than would be required to get the transaction we are creating confirmed.
  */
-public abstract class BitsquareDefaultCoinSelector implements CoinSelector {
+public abstract class BisqDefaultCoinSelector implements CoinSelector {
     @Override
     public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
         ArrayList<TransactionOutput> selected = new ArrayList<>();

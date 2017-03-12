@@ -18,7 +18,7 @@
 package io.bisq.messages.payment.payload;
 
 import io.bisq.app.Version;
-import io.bitsquare.common.wire.proto.Messages;
+import io.bisq.common.wire.proto.Messages;
 
 public final class CryptoCurrencyAccountContractData extends PaymentAccountContractData {
     // That object is sent over the wire, so we need to take care of version compatibility.

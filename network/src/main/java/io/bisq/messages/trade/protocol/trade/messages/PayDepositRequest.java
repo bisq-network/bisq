@@ -21,12 +21,12 @@ import com.google.protobuf.ByteString;
 import io.bisq.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.util.ProtoBufferUtils;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.messages.btc.data.RawTransactionInput;
 import io.bisq.messages.payment.payload.PaymentAccountContractData;
 import io.bisq.messages.protocol.trade.TradeMessage;
 import io.bisq.p2p.NodeAddress;
 import io.bisq.p2p.messaging.MailboxMessage;
-import io.bitsquare.common.wire.proto.Messages;
 import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;

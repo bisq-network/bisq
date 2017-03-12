@@ -17,19 +17,19 @@
 
 package io.bisq;
 
-public class BitsquareException extends RuntimeException {
+public class BisqException extends RuntimeException {
 
     private static final long serialVersionUID = 556191645860856173L;
 
-    public BitsquareException(Throwable cause) {
+    public BisqException(Throwable cause) {
         super(cause);
     }
 
-    public BitsquareException(String format, Object... args) {
+    public BisqException(String format, Object... args) {
         super(String.format(format, args));
     }
 
-    public BitsquareException(Throwable cause, String format, Object... args) {
+    public BisqException(Throwable cause, String format, Object... args) {
         super(String.format(format, args), cause);
     }
 }

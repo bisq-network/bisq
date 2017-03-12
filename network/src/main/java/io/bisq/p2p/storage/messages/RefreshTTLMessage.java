@@ -2,8 +2,8 @@ package io.bisq.p2p.storage.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.app.Version;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.messages.ToProtoBuffer;
-import io.bitsquare.common.wire.proto.Messages;
 
 import java.util.Arrays;
 

@@ -18,7 +18,7 @@
 package io.bisq.app;
 
 import ch.qos.logback.classic.Level;
-import io.bisq.BitsquareException;
+import io.bisq.BisqException;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.util.Utilities;
@@ -45,8 +45,8 @@ import java.util.Properties;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class BitsquareEnvironment extends StandardEnvironment {
-    private static final Logger log = LoggerFactory.getLogger(BitsquareEnvironment.class);
+public class BisqEnvironment extends StandardEnvironment {
+    private static final Logger log = LoggerFactory.getLogger(BisqEnvironment.class);
 
     private static final String BITCOIN_NETWORK_PROP = "bitcoinNetwork.properties";
 
@@ -61,11 +61,11 @@ public class BitsquareEnvironment extends StandardEnvironment {
 
     public static final String LOG_LEVEL_DEFAULT = Level.INFO.levelStr;
 
-    public static final String BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME = "bitsquareCommandLineProperties";
-    public static final String BITSQUARE_APP_DIR_PROPERTY_SOURCE_NAME = "bitsquareAppDirProperties";
-    public static final String BITSQUARE_HOME_DIR_PROPERTY_SOURCE_NAME = "bitsquareHomeDirProperties";
-    public static final String BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME = "bitsquareClasspathProperties";
-    public static final String BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME = "bitsquareDefaultProperties";
+    public static final String BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME = "bisqCommandLineProperties";
+    public static final String BISQ_APP_DIR_PROPERTY_SOURCE_NAME = "bisqAppDirProperties";
+    public static final String BISQ_HOME_DIR_PROPERTY_SOURCE_NAME = "bisqHomeDirProperties";
+    public static final String BISQ_CLASSPATH_PROPERTY_SOURCE_NAME = "bisqClasspathProperties";
+    public static final String BISQ_DEFAULT_PROPERTY_SOURCE_NAME = "bisqDefaultProperties";
 
     private final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
@@ -111,12 +111,12 @@ public class BitsquareEnvironment extends StandardEnvironment {
         return appDataDir;
     }
 
-    public BitsquareEnvironment(OptionSet options) {
-        this(new JOptCommandLinePropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
+    public BisqEnvironment(OptionSet options) {
+        this(new JOptCommandLinePropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME, checkNotNull(
                 options)));
     }
 
-    public BitsquareEnvironment(PropertySource commandLineProperties) {
+    public BisqEnvironment(PropertySource commandLineProperties) {
         logLevel = commandLineProperties.containsProperty(CommonOptionKeys.LOG_LEVEL_KEY) ?
                 (String) commandLineProperties.getProperty(CommonOptionKeys.LOG_LEVEL_KEY) :
                 LOG_LEVEL_DEFAULT;
@@ -197,12 +197,12 @@ public class BitsquareEnvironment extends StandardEnvironment {
             // btcNetworkDir used in defaultProperties
             propertySources.addLast(defaultProperties());
         } catch (Exception ex) {
-            throw new BitsquareException(ex);
+            throw new BisqException(ex);
         }
     }
 
     private Resource getAppDirPropertiesResource() {
-        String location = String.format("file:%s/bitsquare.properties", appDataDir);
+        String location = String.format("file:%s/bisq.properties", appDataDir);
         return resourceLoader.getResource(location);
     }
 
@@ -210,21 +210,21 @@ public class BitsquareEnvironment extends StandardEnvironment {
         Resource resource = getAppDirPropertiesResource();
 
         if (!resource.exists())
-            return new PropertySource.StubPropertySource(BITSQUARE_APP_DIR_PROPERTY_SOURCE_NAME);
+            return new PropertySource.StubPropertySource(BISQ_APP_DIR_PROPERTY_SOURCE_NAME);
 
-        return new ResourcePropertySource(BITSQUARE_APP_DIR_PROPERTY_SOURCE_NAME, resource);
+        return new ResourcePropertySource(BISQ_APP_DIR_PROPERTY_SOURCE_NAME, resource);
     }
 
     private PropertySource<?> homeDirProperties() throws Exception {
-        return new PropertySource.StubPropertySource(BITSQUARE_HOME_DIR_PROPERTY_SOURCE_NAME);
+        return new PropertySource.StubPropertySource(BISQ_HOME_DIR_PROPERTY_SOURCE_NAME);
     }
 
     private PropertySource<?> classpathProperties() throws Exception {
-        return new PropertySource.StubPropertySource(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME);
+        return new PropertySource.StubPropertySource(BISQ_CLASSPATH_PROPERTY_SOURCE_NAME);
     }
 
     private PropertySource<?> defaultProperties() {
-        return new PropertiesPropertySource(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
+        return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
             private static final long serialVersionUID = -8478089705207326165L;
 
             {

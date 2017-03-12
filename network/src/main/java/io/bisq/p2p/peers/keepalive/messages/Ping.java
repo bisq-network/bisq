@@ -2,7 +2,7 @@ package io.bisq.p2p.peers.keepalive.messages;
 
 import io.bisq.app.Version;
 import io.bisq.common.util.ProtoBufferUtils;
-import io.bitsquare.common.wire.proto.Messages;
+import io.bisq.common.wire.proto.Messages;
 
 public final class Ping extends KeepAliveMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.

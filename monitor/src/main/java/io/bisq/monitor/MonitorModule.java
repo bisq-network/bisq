@@ -15,12 +15,12 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.monitor;
+package io.bisq.monitor;
 
 import com.google.inject.Singleton;
 import io.bisq.alert.AlertModule;
 import io.bisq.app.AppModule;
-import io.bisq.app.BitsquareEnvironment;
+import io.bisq.app.BisqEnvironment;
 import io.bisq.arbitration.ArbitratorModule;
 import io.bisq.btc.BitcoinModule;
 import io.bisq.common.Clock;
@@ -64,7 +64,7 @@ class MonitorModule extends AppModule {
         File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.DIR_KEY));
         bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
 
-        bind(BitsquareEnvironment.class).toInstance((BitsquareEnvironment) env);
+        bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
 
         // ordering is used for shut down sequence
         install(tradeModule());

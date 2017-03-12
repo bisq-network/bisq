@@ -17,7 +17,7 @@
 
 package io.bisq.gui;
 
-import io.bisq.BitsquareException;
+import io.bisq.BisqException;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Utilities;
 import io.bisq.gui.util.GUIUtil;
@@ -110,7 +110,7 @@ public class SystemTray {
         } catch (AWTException e1) {
             log.error("Icon could not be added to system tray.", e1);
         } catch (IOException e2) {
-            throw new BitsquareException(e2);
+            throw new BisqException(e2);
         }
 
         toggleShowHideItem.addActionListener(e -> {
@@ -125,7 +125,7 @@ public class SystemTray {
 
         aboutItem.addActionListener(e -> {
             try {
-                GUIUtil.openWebPage("https://bitsquare.io");
+                GUIUtil.openWebPage("https://bisq.io");
             } catch (Exception e1) {
                 e1.printStackTrace();
             }

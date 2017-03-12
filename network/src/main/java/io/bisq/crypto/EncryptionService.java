@@ -19,9 +19,9 @@ package io.bisq.crypto;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.bisq.common.crypto.*;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.messages.Message;
 import io.bisq.p2p.network.ProtoBufferUtilities;
-import io.bitsquare.common.wire.proto.Messages;
 
 import javax.crypto.SecretKey;
 import javax.inject.Inject;

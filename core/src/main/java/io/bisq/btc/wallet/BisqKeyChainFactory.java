@@ -28,10 +28,10 @@ import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.KeyChainFactory;
 import org.bitcoinj.wallet.Protos;
 
-class BitsquareKeyChainFactory implements KeyChainFactory {
+class BisqKeyChainFactory implements KeyChainFactory {
     private final boolean useBitcoinDeterministicKeyChain;
 
-    public BitsquareKeyChainFactory(boolean useBitcoinDeterministicKeyChain) {
+    public BisqKeyChainFactory(boolean useBitcoinDeterministicKeyChain) {
         this.useBitcoinDeterministicKeyChain = useBitcoinDeterministicKeyChain;
     }
 

@@ -1,4 +1,4 @@
-:: Invoke from bitsquare home directory
+:: Invoke from bisq home directory
 :: edit iss file -> AppVersion
 :: edit -> -BappVersion and -srcfiles
 
@@ -19,12 +19,12 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -title bisq ^
 -vendor bisq ^
 -outdir %outdir% ^
--appclass io.bitsquare.app.BitsquareAppMain ^
+-appclass io.bisq.app.BisqAppMain ^
 -srcfiles %outdir%\bisq.jar ^
--srcfiles "core/src/main/resources/bitsquare.policy" ^
+-srcfiles "core/src/main/resources/bisq.policy" ^
 -outfile bisq ^
 -Bruntime="%JAVA_HOME%\jre" ^
 -BjvmOptions=-Djava.security.manager ^
 -BjvmOptions=-Djava.security.debug=failure ^
--BjvmOptions=-Djava.security.policy=file:bitsquare.policy ^
+-BjvmOptions=-Djava.security.policy=file:bisq.policy ^
 -Bicon=package\windows\bisq.ico

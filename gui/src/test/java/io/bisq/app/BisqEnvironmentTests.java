@@ -23,23 +23,23 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 import org.springframework.mock.env.MockPropertySource;
 
-import static io.bisq.app.BitsquareEnvironment.*;
+import static io.bisq.app.BisqEnvironment.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.springframework.core.env.PropertySource.named;
 
-public class BitsquareEnvironmentTests {
+public class BisqEnvironmentTests {
 
     @Test
     public void testPropertySourcePrecedence() {
-        PropertySource commandlineProps = new MockPropertySource(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME)
+        PropertySource commandlineProps = new MockPropertySource(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME)
                 .withProperty("key.x", "x.commandline");
 
-        PropertySource filesystemProps = new MockPropertySource(BITSQUARE_APP_DIR_PROPERTY_SOURCE_NAME)
+        PropertySource filesystemProps = new MockPropertySource(BISQ_APP_DIR_PROPERTY_SOURCE_NAME)
                 .withProperty("key.x", "x.env")
                 .withProperty("key.y", "y.env");
 
-        ConfigurableEnvironment env = new BitsquareEnvironment(commandlineProps) {
+        ConfigurableEnvironment env = new BisqEnvironment(commandlineProps) {
             @Override
             PropertySource<?> appDirProperties() {
                 return filesystemProps;
@@ -47,13 +47,13 @@ public class BitsquareEnvironmentTests {
         };
         MutablePropertySources propertySources = env.getPropertySources();
 
-        assertThat(propertySources.precedenceOf(named(BITSQUARE_COMMANDLINE_PROPERTY_SOURCE_NAME)), equalTo(0));
+        assertThat(propertySources.precedenceOf(named(BISQ_COMMANDLINE_PROPERTY_SOURCE_NAME)), equalTo(0));
         assertThat(propertySources.precedenceOf(named(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME)), equalTo(1));
         assertThat(propertySources.precedenceOf(named(SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME)), equalTo(2));
-        assertThat(propertySources.precedenceOf(named(BITSQUARE_APP_DIR_PROPERTY_SOURCE_NAME)), equalTo(3));
-        assertThat(propertySources.precedenceOf(named(BITSQUARE_HOME_DIR_PROPERTY_SOURCE_NAME)), equalTo(4));
-        assertThat(propertySources.precedenceOf(named(BITSQUARE_CLASSPATH_PROPERTY_SOURCE_NAME)), equalTo(5));
-        assertThat(propertySources.precedenceOf(named(BITSQUARE_DEFAULT_PROPERTY_SOURCE_NAME)), equalTo(6));
+        assertThat(propertySources.precedenceOf(named(BISQ_APP_DIR_PROPERTY_SOURCE_NAME)), equalTo(3));
+        assertThat(propertySources.precedenceOf(named(BISQ_HOME_DIR_PROPERTY_SOURCE_NAME)), equalTo(4));
+        assertThat(propertySources.precedenceOf(named(BISQ_CLASSPATH_PROPERTY_SOURCE_NAME)), equalTo(5));
+        assertThat(propertySources.precedenceOf(named(BISQ_DEFAULT_PROPERTY_SOURCE_NAME)), equalTo(6));
         assertThat(propertySources.size(), equalTo(7));
 
         assertThat(env.getProperty("key.x"), equalTo("x.commandline")); // commandline value wins due to precedence

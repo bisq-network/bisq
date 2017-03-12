@@ -35,14 +35,14 @@ rm -r UnlimitedJCEPolicyJDK8 jce_policy-8.zip
 
 echo "Install bitcoinj"
 cd ~
-git clone -b FixBloomFilters https://github.com/bitsquare/bitcoinj.git
+git clone -b FixBloomFilters https://github.com/bisq/bitcoinj.git
 cd bitcoinj
 mvn clean install -DskipTests -Dmaven.javadoc.skip=true
 
-echo "Install and resolve dependencies for bitsquare"
+echo "Install and resolve dependencies for bisq"
 cd ~
-git clone https://github.com/bitsquare/bitsquare.git
-cd bitsquare
+git clone https://github.com/bisq/bisq.git
+cd bisq
 mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
 echo "Add BountyCastle.jar"

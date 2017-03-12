@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bisq.app.AppOptionKeys;
-import io.bisq.app.BitsquareEnvironment;
+import io.bisq.app.BisqEnvironment;
 import io.bisq.app.Log;
 import io.bisq.app.Version;
 import io.bisq.arbitration.ArbitratorManager;
@@ -46,7 +46,7 @@ public class Headless {
     }
 
     public Headless() {
-        String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bitsquare").toString();
+        String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Version.printVersion();
@@ -81,7 +81,7 @@ public class Headless {
 
         headlessModule = new HeadlessModule(env);
         injector = Guice.createInjector(headlessModule);
-        Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
+        Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
         p2pService = injector.getInstance(P2PService.class);
         offerBookService = injector.getInstance(OfferBookService.class);
         openOfferManager = injector.getInstance(OpenOfferManager.class);

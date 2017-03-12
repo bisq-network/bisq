@@ -10,14 +10,14 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="io.bitsquare" level="TRACE"/>
+    <logger name="io.bisq" level="TRACE"/>
     <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="WARN"/>
 
-    <logger name="io.bitsquare.btc.AddressBasedCoinSelector" level="OFF"/>
+    <logger name="io.bisq.btc.AddressBasedCoinSelector" level="OFF"/>
 
-    <logger name="io.bitsquare.gui.util.Profiler" level="ERROR"/>
+    <logger name="io.bisq.gui.util.Profiler" level="ERROR"/>
     <logger name="io.bisq.locale.Res" level="ERROR"/>
-    <logger name="io.bitsquare.temp.storage.RemoteStorage" level="WARN"/>
+    <logger name="io.bisq.temp.storage.RemoteStorage" level="WARN"/>
     <logger name="io.bisq.storage.FileManager" level="WARN"/>
 
     <logger name="org.bitcoinj" level="WARN"/>
@@ -35,7 +35,7 @@
     <!-- <logger name="org.bitcoinj.core.BitcoinSerializer" level="WARN"/>
      <logger name="org.bitcoinj.core.AbstractBlockChain" level="WARN"/>
      <logger name="org.bitcoinj.wallet.DeterministicKeyChain" level="WARN"/>-->
-    <!-- <logger name="io.bitsquare.btc.WalletService" level="WARN"/>-->
+    <!-- <logger name="io.bisq.btc.WalletService" level="WARN"/>-->
 
     <!--
     <logger name="org.bitcoinj.core.Wallet" level="OFF"/>

@@ -71,7 +71,7 @@ public class CurrencyUtil {
     }
 
     // Don't make a PR for adding a coin but follow the steps described here: 
-    // https://forum.bitsquare.io/t/how-to-add-your-favorite-altcoin/
+    // https://forum.bisq.io/t/how-to-add-your-favorite-altcoin/
     public static List<CryptoCurrency> createAllSortedCryptoCurrenciesList() {
         final List<CryptoCurrency> result = new ArrayList<>();
 

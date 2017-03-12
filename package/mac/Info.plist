@@ -14,9 +14,7 @@
         <string>package/mac/bisq.icns</string>
         <key>CFBundleIdentifier</key>
         
-        <!-- Do not change here yes as we have registered io.bitsquare.Bitsquare with the signing key
-         Change as soon the new ID is registered at Apple. -->
-        <string>io.bitsquare.Bitsquare</string>
+        <string>io.bisq.bisq</string>
         
         <key>CFBundleInfoDictionaryVersion</key>
         <string>6.0</string>
@@ -44,13 +42,13 @@
         <key>JVMRuntime</key>
         <string>..</string>
         <key>JVMMainClassName</key>
-        <string>io.bitsquare.app.core.BitsquareAppMain</string>
+        <string>io.bisq.app.core.BisqAppMain</string>
         <key>JVMAppClasspath</key>
         <string></string>
         <key>JVMMainJarName</key>
         <string>shaded.jar</string>
         <key>JVMPreferencesID</key>
-        <string>bitsquare</string>
+        <string>bisq</string>
         <key>JVMOptions</key>
         <array>
         </array>

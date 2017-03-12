@@ -78,14 +78,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class BitsquareApp extends Application {
-    private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BitsquareApp.class);
+public class BisqApp extends Application {
+    private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(BisqApp.class);
 
     private static final long LOG_MEMORY_PERIOD_MIN = 10;
 
     private static Environment env;
 
-    private BitsquareAppModule bitsquareAppModule;
+    private BisqAppModule bisqAppModule;
     private Injector injector;
     private boolean popupOpened;
 
@@ -98,14 +98,14 @@ public class BitsquareApp extends Application {
     private boolean shutDownRequested;
 
     public static void setEnvironment(Environment env) {
-        BitsquareApp.env = env;
+        BisqApp.env = env;
     }
 
     @Override
     public void start(Stage stage) throws IOException {
-        BitsquareApp.primaryStage = stage;
+        BisqApp.primaryStage = stage;
 
-        String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bitsquare").toString();
+        String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
         Version.printVersion();
@@ -149,11 +149,11 @@ public class BitsquareApp extends Application {
 
         try {
             // Guice
-            bitsquareAppModule = new BitsquareAppModule(env, primaryStage);
-            injector = Guice.createInjector(bitsquareAppModule);
+            bisqAppModule = new BisqAppModule(env, primaryStage);
+            injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
 
-            Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
+            Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
 
             if (Utilities.isLinux())
                 System.setProperty("prism.lcdtext", "false");
@@ -182,7 +182,7 @@ public class BitsquareApp extends Application {
             Font.loadFont(getClass().getResource("/fonts/VerdanaItalic.ttf").toExternalForm(), 13);
             Font.loadFont(getClass().getResource("/fonts/VerdanaBoldItalic.ttf").toExternalForm(), 13);
             scene.getStylesheets().setAll(
-                    "/io/bisq/gui/bitsquare.css",
+                    "/io/bisq/gui/bisq.css",
                     "/io/bisq/gui/images.css",
                     "/io/bisq/gui/CandleStickChart.css");
 
@@ -293,7 +293,7 @@ public class BitsquareApp extends Application {
                 log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in guice.");
                 scene = new Scene(new StackPane(), 1000, 650);
                 scene.getStylesheets().setAll(
-                        "/io/bisq/gui/bitsquare.css",
+                        "/io/bisq/gui/bisq.css",
                         "/io/bisq/gui/images.css");
                 primaryStage.setScene(scene);
                 primaryStage.show();
@@ -395,7 +395,7 @@ public class BitsquareApp extends Application {
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
-                            bitsquareAppModule.close(injector);
+                            bisqAppModule.close(injector);
                             log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
                         });

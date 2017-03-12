@@ -3,8 +3,8 @@ package io.bisq.p2p.peers.peerexchange;
 import io.bisq.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.wire.Payload;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.p2p.NodeAddress;
-import io.bitsquare.common.wire.proto.Messages;
 
 import java.util.Date;
 

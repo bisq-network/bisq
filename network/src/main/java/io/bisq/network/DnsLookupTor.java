@@ -57,7 +57,7 @@ public class DnsLookupTor {
     public static InetAddress lookup(Socks5Proxy proxy, String host) throws DnsLookupException {
         try {
             // note:  This is creating a new connection to our proxy, without any authentication.
-            //        This works fine when connecting to bitsquare's internal Tor proxy, but
+            //        This works fine when connecting to bisq's internal Tor proxy, but
             //        would fail if user has configured an external proxy that requires auth.
             //        It would be much better to use the already connected proxy socket, but when I
             //        tried that I get weird errors and the lookup fails.

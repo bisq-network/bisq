@@ -160,7 +160,7 @@ public class DummySeedNode {
                                          @Nullable Set<NodeAddress> progArgSeedNodes,
                                          @Nullable P2PServiceListener listener) {
         Path appPath = Paths.get(defaultUserDataDir,
-                "Bitsquare_seed_node_" + String.valueOf(mySeedNodeAddress.getFullAddress().replace(":", "_")));
+                "bisq_seed_node_" + String.valueOf(mySeedNodeAddress.getFullAddress().replace(":", "_")));
 
         String logPath = Paths.get(appPath.toString(), "logs").toString();
         Log.setup(logPath);

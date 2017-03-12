@@ -10,9 +10,9 @@ import java.security.PublicKey;
  * Messages which support ownership protection (using signatures) and a time to live
  * <p>
  * Implementations:
- * io.bitsquare.alert.Alert
- * io.bitsquare.arbitration.Arbitrator
- * io.bitsquare.trade.offer.Offer
+ * io.bisq.alert.Alert
+ * io.bisq.arbitration.Arbitrator
+ * io.bisq.trade.offer.Offer
  */
 public interface StoragePayload extends ExpirablePayload {
     /**

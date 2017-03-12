@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.regex.Pattern;
 
+//TODO remove once protobuffer is applied everywhere
 /**
  * Based on https://github.com/ikkisoft/SerialKiller but we removed the support for a config file as
  * that introduced many dependencies (like the vulnerable commons collections).
@@ -34,7 +35,7 @@ public class LookAheadObjectInputStream extends ObjectInputStream {
     // based filter gives us sufficient security.
     // This white list is not sufficient for the objects used for local persistence! We don't use any white list for those.
     private static final Pattern[] whiteListP2PNetwork = {
-            Pattern.compile("io\\.bitsquare\\..*$"),
+            Pattern.compile("io\\.bisq\\..*$"),
             Pattern.compile("org\\.bitcoinj\\..*$"),
 
             Pattern.compile("java\\.lang\\.Boolean$"),

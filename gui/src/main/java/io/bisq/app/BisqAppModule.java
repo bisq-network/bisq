@@ -45,12 +45,12 @@ import java.io.File;
 
 import static com.google.inject.name.Names.named;
 
-class BitsquareAppModule extends AppModule {
-    private static final Logger log = LoggerFactory.getLogger(BitsquareAppModule.class);
+class BisqAppModule extends AppModule {
+    private static final Logger log = LoggerFactory.getLogger(BisqAppModule.class);
 
     private final Stage primaryStage;
 
-    public BitsquareAppModule(Environment env, Stage primaryStage) {
+    public BisqAppModule(Environment env, Stage primaryStage) {
         super(env);
         this.primaryStage = primaryStage;
     }
@@ -71,7 +71,7 @@ class BitsquareAppModule extends AppModule {
         File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.DIR_KEY));
         bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
 
-        bind(BitsquareEnvironment.class).toInstance((BitsquareEnvironment) env);
+        bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
 
         // ordering is used for shut down sequence
         install(tradeModule());

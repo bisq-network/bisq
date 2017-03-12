@@ -30,12 +30,12 @@
     <logger name="io.bisq.storage.Storage" level="WARN"/>
     <logger name="io.bisq.storage.FileManager" level="WARN"/>
 
-    <!-- <logger name="io.bitsquare.p2p.peers.PeerGroup" level="INFO"/>
-     <logger name="io.bitsquare.p2p.P2PService" level="INFO"/>
-     <logger name="io.bitsquare.p2p.storage.ProtectedExpirableDataStorage" level="INFO"/>
-     <logger name="io.bitsquare.p2p.network.LocalhostNetworkNode" level="INFO"/>
-     <logger name="io.bitsquare.p2p.network.TorNetworkNode" level="TRACE"/>
-     <logger name="io.bitsquare.p2p.network.NetworkNode" level="TRACE"/>-->
+    <!-- <logger name="io.bisq.p2p.peers.PeerGroup" level="INFO"/>
+     <logger name="io.bisq.p2p.P2PService" level="INFO"/>
+     <logger name="io.bisq.p2p.storage.ProtectedExpirableDataStorage" level="INFO"/>
+     <logger name="io.bisq.p2p.network.LocalhostNetworkNode" level="INFO"/>
+     <logger name="io.bisq.p2p.network.TorNetworkNode" level="TRACE"/>
+     <logger name="io.bisq.p2p.network.NetworkNode" level="TRACE"/>-->
 
     <logger name="com.msopentech.thali.toronionproxy.OnionProxyManagerEventHandler" level="INFO"/>
 

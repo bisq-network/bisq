@@ -17,7 +17,7 @@
 
 package io.bisq.messages.user;
 
-import io.bisq.app.BitsquareEnvironment;
+import io.bisq.app.BisqEnvironment;
 import io.bisq.app.DevEnv;
 import io.bisq.app.Version;
 import io.bisq.common.persistance.Persistable;
@@ -104,7 +104,7 @@ public final class Preferences implements Persistable {
     private static boolean staticUseAnimations = true;
 
     transient private final Storage<Preferences> storage;
-    transient private final BitsquareEnvironment bitsquareEnvironment;
+    transient private final BisqEnvironment bisqEnvironment;
 
     transient private BitcoinNetwork bitcoinNetwork;
 
@@ -163,13 +163,13 @@ public final class Preferences implements Persistable {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public Preferences(Storage<Preferences> storage, BitsquareEnvironment bitsquareEnvironment,
+    public Preferences(Storage<Preferences> storage, BisqEnvironment bisqEnvironment,
                        FeeService feeService,
                        @Named(BtcOptionKeys.BTC_NODES) String btcNodesFromOptions,
                        @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
         INSTANCE = this;
         this.storage = storage;
-        this.bitsquareEnvironment = bitsquareEnvironment;
+        this.bisqEnvironment = bisqEnvironment;
 
         directoryChooserPath = Utilities.getSystemHomeDirectory();
 
@@ -286,7 +286,7 @@ public final class Preferences implements Persistable {
             storage.queueUpForSave();
         }
 
-        this.bitcoinNetwork = bitsquareEnvironment.getBitcoinNetwork();
+        this.bitcoinNetwork = bisqEnvironment.getBitcoinNetwork();
 
         fiatCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
         cryptoCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
@@ -333,7 +333,7 @@ public final class Preferences implements Persistable {
 
     public void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
         if (this.bitcoinNetwork != bitcoinNetwork)
-            bitsquareEnvironment.saveBitcoinNetwork(bitcoinNetwork);
+            bisqEnvironment.saveBitcoinNetwork(bitcoinNetwork);
 
         this.bitcoinNetwork = bitcoinNetwork;
 

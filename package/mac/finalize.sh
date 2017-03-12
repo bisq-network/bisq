@@ -2,8 +2,8 @@
 
 version="0.5.0.0"
 
-target_dir="/Users/dev/Documents/__bitsquare/_releases/$version"
-src_dir="/Users/dev/Documents/intellij/bitsquare"
+target_dir="/Users/dev/Documents/__bisq/_releases/$version"
+src_dir="/Users/dev/Documents/intellij/bisq"
 
 rm -r $target_dir
 
@@ -44,11 +44,11 @@ cp "/Users/dev/vm_shared_windows/bundles/$exe" "/Users/dev/vm_shared_win10/$win6
 cd "$target_dir"
 
 
-gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $mac.asc --detach-sig --armor $mac
-gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $deb64.asc --detach-sig --armor $deb64
-gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $deb32.asc --detach-sig --armor $deb32
-gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $win64.asc --detach-sig --armor $win64
-gpg --digest-algo SHA256 --local-user manfred@bitsquare.io --output $win32.asc --detach-sig --armor $win32
+gpg --digest-algo SHA256 --local-user manfred@bisq.io --output $mac.asc --detach-sig --armor $mac
+gpg --digest-algo SHA256 --local-user manfred@bisq.io --output $deb64.asc --detach-sig --armor $deb64
+gpg --digest-algo SHA256 --local-user manfred@bisq.io --output $deb32.asc --detach-sig --armor $deb32
+gpg --digest-algo SHA256 --local-user manfred@bisq.io --output $win64.asc --detach-sig --armor $win64
+gpg --digest-algo SHA256 --local-user manfred@bisq.io --output $win32.asc --detach-sig --armor $win32
 
 gpg --digest-algo SHA256 --verify $mac{.asc*,}
 gpg --digest-algo SHA256 --verify $deb64{.asc*,}

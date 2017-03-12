@@ -19,8 +19,8 @@ package io.bisq.headless;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.bisq.app.AppOptionKeys;
-import io.bisq.app.BitsquareEnvironment;
-import io.bisq.app.BitsquareExecutable;
+import io.bisq.app.BisqEnvironment;
+import io.bisq.app.BisqExecutable;
 import io.bisq.common.UserThread;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -32,10 +32,10 @@ import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import static io.bisq.app.BitsquareEnvironment.DEFAULT_APP_NAME;
-import static io.bisq.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
+import static io.bisq.app.BisqEnvironment.DEFAULT_APP_NAME;
+import static io.bisq.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
-public class HeadlessMain extends BitsquareExecutable {
+public class HeadlessMain extends BisqExecutable {
     private static final Logger log = LoggerFactory.getLogger(HeadlessMain.class);
     private Headless headless;
     private boolean isStopped;
@@ -49,7 +49,7 @@ public class HeadlessMain extends BitsquareExecutable {
 
         // We don't want to do the full argument parsing here as that might easily change in update versions
         // So we only handle the absolute minimum which is APP_NAME, APP_DATA_DIR_KEY and USER_DATA_DIR
-        BitsquareEnvironment.setDefaultAppName("Bitsquare_headless");
+        BisqEnvironment.setDefaultAppName("bisq_headless");
         OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY, description("User data directory", DEFAULT_USER_DATA_DIR))
@@ -67,10 +67,10 @@ public class HeadlessMain extends BitsquareExecutable {
             System.exit(EXIT_FAILURE);
             return;
         }
-        BitsquareEnvironment bitsquareEnvironment = getBitsquareEnvironment(options);
+        BisqEnvironment bisqEnvironment = getBisqEnvironment(options);
 
-        // need to call that before BitsquareAppMain().execute(args)
-        BitsquareExecutable.initAppDir(bitsquareEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
+        // need to call that before BisqAppMain().execute(args)
+        BisqExecutable.initAppDir(bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
 
         // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
         // In order to work around a bug in JavaFX 8u25 and below, you must include the following code as the first line of your realMain method:
@@ -81,7 +81,7 @@ public class HeadlessMain extends BitsquareExecutable {
 
     @Override
     protected void doExecute(OptionSet options) {
-        Headless.setEnvironment(getBitsquareEnvironment(options));
+        Headless.setEnvironment(getBisqEnvironment(options));
         UserThread.execute(() -> headless = new Headless());
 
         while (!isStopped) {

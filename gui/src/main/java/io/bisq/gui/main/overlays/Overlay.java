@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.overlays;
 
-import io.bisq.app.BitsquareApp;
+import io.bisq.app.BisqApp;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Utilities;
@@ -320,7 +320,7 @@ public abstract class Overlay<T extends Overlay> {
 
     public T useReportBugButton() {
         this.closeButtonText = Res.get("shared.reportBug");
-        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues"));
+        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bisq/bisq/issues"));
         return (T) this;
     }
 
@@ -346,7 +346,7 @@ public abstract class Overlay<T extends Overlay> {
 
     public T useShutDownButton() {
         this.actionButtonText = Res.get("shared.shutDown");
-        this.actionHandlerOptional = Optional.of(BitsquareApp.shutDownHandler::run);
+        this.actionHandlerOptional = Optional.of(BisqApp.shutDownHandler::run);
         return (T) this;
     }
 
@@ -706,7 +706,7 @@ public abstract class Overlay<T extends Overlay> {
 
         gitHubButton.setOnAction(event -> {
             Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("https://github.com/bitsquare/bitsquare/issues");
+            GUIUtil.openWebPage("https://github.com/bisq/bisq/issues");
         });
 
         Button forumButton = new Button(Res.get("popup.reportError.forum"));
@@ -717,7 +717,7 @@ public abstract class Overlay<T extends Overlay> {
 
         forumButton.setOnAction(event -> {
             Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("http://forum.bitsquare.io");
+            GUIUtil.openWebPage("http://forum.bisq.io");
         });
     }
 

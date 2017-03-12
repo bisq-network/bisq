@@ -35,7 +35,7 @@ import java.util.Set;
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches our address of our address.
  */
-class BsqCoinSelector extends BitsquareDefaultCoinSelector {
+class BsqCoinSelector extends BisqDefaultCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(BsqCoinSelector.class);
 
     private final boolean permitForeignPendingTx;

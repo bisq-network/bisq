@@ -65,7 +65,7 @@ public class WalletConfig extends AbstractIdleService {
     // WalletFactory
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public interface BitsquareWalletFactory extends WalletProtobufSerializer.WalletFactory {
+    public interface BisqWalletFactory extends WalletProtobufSerializer.WalletFactory {
         Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup);
 
         Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup, boolean isBsqWallet);
@@ -82,7 +82,7 @@ public class WalletConfig extends AbstractIdleService {
     private final String btcWalletFilePrefix;
     private final String bsqWalletFilePrefix;
     private final Socks5Proxy socks5Proxy;
-    private final BitsquareWalletFactory walletFactory;
+    private final BisqWalletFactory walletFactory;
 
     private volatile Wallet vBtcWallet;
     private volatile Wallet vBsqWallet;
@@ -125,7 +125,7 @@ public class WalletConfig extends AbstractIdleService {
         this.bsqWalletFilePrefix = bsqWalletFilePrefix;
         this.socks5Proxy = socks5Proxy;
 
-        walletFactory = new BitsquareWalletFactory() {
+        walletFactory = new BisqWalletFactory() {
             @Override
             public Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup) {
                 // This is called when we load an existing wallet
@@ -387,19 +387,19 @@ public class WalletConfig extends AbstractIdleService {
             // BTC wallet
             vBtcWalletFile = new File(directory, btcWalletFilePrefix + ".wallet");
             boolean shouldReplayWallet = (vBtcWalletFile.exists() && !chainFileExists) || seed != null;
-            BitsquareKeyChainGroup keyChainGroup;
+            BisqKeyChainGroup keyChainGroup;
             if (seed != null)
-                keyChainGroup = new BitsquareKeyChainGroup(params, new BtcDeterministicKeyChain(seed), true, btcWalletLookaheadSize);
+                keyChainGroup = new BisqKeyChainGroup(params, new BtcDeterministicKeyChain(seed), true, btcWalletLookaheadSize);
             else
-                keyChainGroup = new BitsquareKeyChainGroup(params, true, btcWalletLookaheadSize);
+                keyChainGroup = new BisqKeyChainGroup(params, true, btcWalletLookaheadSize);
             vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayWallet, seed, keyChainGroup, false);
 
             // BSQ walelt
             vBsqWalletFile = new File(directory, bsqWalletFilePrefix + ".wallet");
             if (seed != null)
-                keyChainGroup = new BitsquareKeyChainGroup(params, new BsqDeterministicKeyChain(seed), false, bsqWalletLookaheadSize);
+                keyChainGroup = new BisqKeyChainGroup(params, new BsqDeterministicKeyChain(seed), false, bsqWalletLookaheadSize);
             else
-                keyChainGroup = new BitsquareKeyChainGroup(params, new BsqDeterministicKeyChain(vBtcWallet.getKeyChainSeed()), false, bsqWalletLookaheadSize);
+                keyChainGroup = new BisqKeyChainGroup(params, new BsqDeterministicKeyChain(vBtcWallet.getKeyChainSeed()), false, bsqWalletLookaheadSize);
             vBsqWallet = createOrLoadWallet(vBsqWalletFile, shouldReplayWallet, seed, keyChainGroup, true);
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
@@ -493,7 +493,7 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet, @Nullable DeterministicSeed seed,
-                                      BitsquareKeyChainGroup keyChainGroup, boolean isBsqWallet)
+                                      BisqKeyChainGroup keyChainGroup, boolean isBsqWallet)
             throws Exception {
         Wallet wallet;
 
@@ -526,7 +526,7 @@ public class WalletConfig extends AbstractIdleService {
             else
                 serializer = new WalletProtobufSerializer();
 
-            serializer.setKeyChainFactory(new BitsquareKeyChainFactory(useBitcoinDeterministicKeyChain));
+            serializer.setKeyChainFactory(new BisqKeyChainFactory(useBitcoinDeterministicKeyChain));
             wallet = serializer.readWallet(params, extArray, proto);
             if (shouldReplayWallet)
                 wallet.reset();
@@ -536,7 +536,7 @@ public class WalletConfig extends AbstractIdleService {
         return wallet;
     }
 
-    private Wallet createWallet(BitsquareKeyChainGroup keyChainGroup, boolean isBsqWallet) {
+    private Wallet createWallet(BisqKeyChainGroup keyChainGroup, boolean isBsqWallet) {
         checkNotNull(walletFactory, "walletFactory must not be null");
         return walletFactory.create(params, keyChainGroup, isBsqWallet);
     }

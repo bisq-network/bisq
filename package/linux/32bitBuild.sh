@@ -16,7 +16,7 @@ $JAVA_HOME/bin/javapackager \
     -Bruntime="$JAVA_HOME/jre" \
     -BappVersion=$version \
     -Bcategory=Network \
-    -Bemail=team@bitsquare.io \
+    -Bemail=team@bisq.io \
     -BlicenseType=GPLv3 \
     -BlicenseFile=LICENSE \
     -Bicon=package/linux/icon.png \
@@ -26,20 +26,20 @@ $JAVA_HOME/bin/javapackager \
     -vendor bisq \
     -outdir gui/deploy \
     -srcfiles $jarFile:$jdkfixFile \
-    -srcfiles "core/src/main/resources/bitsquare.policy" \
+    -srcfiles "core/src/main/resources/bisq.policy" \
     -srcfiles package/linux/LICENSE \
-    -appclass io.bitsquare.app.BitsquareAppMain \
+    -appclass io.bisq.app.BisqAppMain \
     -outfile bisq \
     -BjvmOptions=-Djava.security.manager \
     -BjvmOptions=-Djava.security.debug=failure \
-    -BjvmOptions=-Djava.security.policy=file:bitsquare.policy \
+    -BjvmOptions=-Djava.security.policy=file:bisq.policy \
 
 
-# sudo alien -r -c -k gui/deploy/bundles/bitsquare-$version.deb
+# sudo alien -r -c -k gui/deploy/bundles/bisq-$version.deb
 
-cp "gui/deploy/bundles/bitsquare-$version.deb" "﻿/home/bitsquare/Desktop/bisq-32bit-$version.deb"
-mv "gui/deploy/bundles/bitsquare-$version.deb" "/media/sf_vm_shared_ubuntu14_32bit/bisq-32bit-$version.deb"
-# mv "bitsquare-$version-1.i386.rpm" "/media/sf_vm_shared_ubuntu14_32bit/bisq-32bit-$version.rpm"
+cp "gui/deploy/bundles/bisq-$version.deb" "﻿/home/bisq/Desktop/bisq-32bit-$version.deb"
+mv "gui/deploy/bundles/bisq-$version.deb" "/media/sf_vm_shared_ubuntu14_32bit/bisq-32bit-$version.deb"
+# mv "bisq-$version-1.i386.rpm" "/media/sf_vm_shared_ubuntu14_32bit/bisq-32bit-$version.rpm"
 rm -r gui/deploy/
 
 cd package/linux

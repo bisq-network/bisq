@@ -18,7 +18,7 @@
 package io.bisq.gui.main.account.content.backup;
 
 import io.bisq.app.AppOptionKeys;
-import io.bisq.app.BitsquareEnvironment;
+import io.bisq.app.BisqEnvironment;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.gui.common.view.ActivatableView;
@@ -63,7 +63,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BackupView(Stage stage, Preferences preferences, BitsquareEnvironment environment) {
+    private BackupView(Stage stage, Preferences preferences, BisqEnvironment environment) {
         super();
         this.stage = stage;
         this.preferences = preferences;
@@ -131,7 +131,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
             if (backupDirectory.length() > 0) {
                 try {
                     String dateString = new SimpleDateFormat("YYYY-MM-dd-HHmmss").format(new Date());
-                    String destination = Paths.get(backupDirectory, "bitsquare_backup_" + dateString).toString();
+                    String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();
                     FileUtils.copyDirectory(dataDir,
                             new File(destination));
                     new Popup().feedback(Res.get("account.backup.success", destination)).show();

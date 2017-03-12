@@ -20,7 +20,7 @@ package io.bisq.messages.arbitration;
 import com.google.protobuf.ByteString;
 import io.bisq.app.Version;
 import io.bisq.common.wire.Payload;
-import io.bitsquare.common.wire.proto.Messages;
+import io.bisq.common.wire.proto.Messages;
 import javafx.beans.property.*;
 import lombok.EqualsAndHashCode;
 import org.bitcoinj.core.Coin;

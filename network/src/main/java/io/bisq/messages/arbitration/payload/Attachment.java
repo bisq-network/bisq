@@ -3,7 +3,7 @@ package io.bisq.messages.arbitration.payload;
 import com.google.protobuf.ByteString;
 import io.bisq.app.Version;
 import io.bisq.common.wire.Payload;
-import io.bitsquare.common.wire.proto.Messages;
+import io.bisq.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

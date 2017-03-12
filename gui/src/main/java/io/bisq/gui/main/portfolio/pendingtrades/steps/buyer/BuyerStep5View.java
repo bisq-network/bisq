@@ -130,7 +130,7 @@ public class BuyerStep5View extends TradeStepView {
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        useSavingsWalletButton = new Button(Res.get("portfolio.pending.step5_buyer.moveToBitsquareWallet"));
+        useSavingsWalletButton = new Button(Res.get("portfolio.pending.step5_buyer.moveToBisqWallet"));
         useSavingsWalletButton.setDefaultButton(false);
         Label label = new Label(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));

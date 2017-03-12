@@ -17,7 +17,7 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 
 //TODO causes java.lang.NullPointerException
-// at io.bitsquare.gui.main.market.trades.TradesChartsViewModel.getCurrencyCode(TradesChartsViewModel.java:209)
+// at io.bisq.gui.main.market.trades.TradesChartsViewModel.getCurrencyCode(TradesChartsViewModel.java:209)
 @Ignore
 public class TradesChartsViewModelTest {
     private static final Logger log = LoggerFactory.getLogger(TradesChartsViewModelTest.class);

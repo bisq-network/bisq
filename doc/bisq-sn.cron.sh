@@ -10,7 +10,7 @@
 # Author: Ivan Vilata-i-Balaguer <ivan@selidor.net>
 MAX_RSS_MiB=400
 
-PIDDIR=/var/run/bitsquare-sn
+PIDDIR=/var/run/bisq-sn
 INITDIR=/etc/init.d
 
 # Restart de daemon with the given address.

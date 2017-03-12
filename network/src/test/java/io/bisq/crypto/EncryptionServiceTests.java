@@ -20,13 +20,13 @@ package io.bisq.crypto;
 
 import io.bisq.app.Version;
 import io.bisq.common.crypto.*;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.messages.Message;
 import io.bisq.p2p.NodeAddress;
 import io.bisq.p2p.messaging.MailboxMessage;
 import io.bisq.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bisq.p2p.peers.keepalive.messages.Ping;
 import io.bisq.storage.FileUtil;
-import io.bitsquare.common.wire.proto.Messages;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;

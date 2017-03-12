@@ -17,9 +17,9 @@
 
 package io.bisq.gui.main;
 
-import io.bisq.BitsquareException;
+import io.bisq.BisqException;
 import io.bisq.app.AppOptionKeys;
-import io.bisq.app.BitsquareEnvironment;
+import io.bisq.app.BisqEnvironment;
 import io.bisq.app.DevEnv;
 import io.bisq.app.Version;
 import io.bisq.common.UserThread;
@@ -98,7 +98,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private static Transitions transitions;
-    private final BitsquareEnvironment environment;
+    private final BisqEnvironment environment;
     private final BSFormatter formatter;
     private ChangeListener<String> walletServiceErrorMsgListener;
     private ChangeListener<String> btcSyncIconIdListener;
@@ -116,7 +116,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
-                    BitsquareEnvironment environment, BSFormatter formatter) {
+                    BisqEnvironment environment, BSFormatter formatter) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
@@ -226,7 +226,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                     .filter(toggle -> toggle instanceof NavButton)
                     .filter(button -> viewClass == ((NavButton) button).viewClass)
                     .findFirst()
-                    .orElseThrow(() -> new BitsquareException("No button matching %s found", viewClass))
+                    .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
                     .setSelected(true);
         });
 

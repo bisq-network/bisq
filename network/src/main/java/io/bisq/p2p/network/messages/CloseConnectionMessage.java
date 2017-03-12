@@ -1,8 +1,8 @@
 package io.bisq.p2p.network.messages;
 
 import io.bisq.app.Version;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.messages.Message;
-import io.bitsquare.common.wire.proto.Messages;
 
 public final class CloseConnectionMessage implements Message {
     // That object is sent over the wire, so we need to take care of version compatibility.

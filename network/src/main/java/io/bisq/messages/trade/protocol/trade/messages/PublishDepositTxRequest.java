@@ -21,10 +21,10 @@ import com.google.protobuf.ByteString;
 import io.bisq.app.Version;
 import io.bisq.common.util.ProtoBufferUtils;
 import io.bisq.common.util.Utilities;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.messages.btc.data.RawTransactionInput;
 import io.bisq.messages.payment.payload.PaymentAccountContractData;
 import io.bisq.messages.protocol.trade.TradeMessage;
-import io.bitsquare.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

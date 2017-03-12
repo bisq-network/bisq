@@ -1,7 +1,7 @@
 package io.bisq.common.util;
 
 import io.bisq.app.Version;
-import io.bitsquare.common.wire.proto.Messages;
+import io.bisq.common.wire.proto.Messages;
 
 /**
  * Created by mike on 07/02/2017.

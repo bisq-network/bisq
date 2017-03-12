@@ -96,7 +96,7 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
         GridPane.setHalignment(label, HPos.LEFT);
 
         HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon("Open bisq FAQ", AwesomeIcon.EXTERNAL_LINK);
-        hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage("https://bitsquare.io/faq/#privacy_btc"));
+        hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage("https://bisq.io/faq/#privacy_btc"));
         GridPane.setRowIndex(hyperlinkWithIcon, ++rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(0, 0, 0, -4));

@@ -344,7 +344,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             String key = "securityDepositInfo";
             new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
-                    .onAction(() -> GUIUtil.openWebPage("https://bitsquare.io/faq#6"))
+                    .onAction(() -> GUIUtil.openWebPage("https://bisq.io/faq#6"))
                     .useIUnderstandButton()
                     .dontShowAgainId(key, preferences)
                     .show();

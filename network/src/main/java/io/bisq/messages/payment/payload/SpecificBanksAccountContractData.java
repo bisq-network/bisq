@@ -19,7 +19,7 @@ package io.bisq.messages.payment.payload;
 
 import com.google.common.base.Joiner;
 import io.bisq.app.Version;
-import io.bitsquare.common.wire.proto.Messages;
+import io.bisq.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

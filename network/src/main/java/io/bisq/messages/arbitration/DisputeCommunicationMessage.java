@@ -19,9 +19,9 @@ package io.bisq.messages.arbitration;
 
 import io.bisq.app.Version;
 import io.bisq.common.util.ProtoBufferUtils;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.messages.arbitration.payload.Attachment;
 import io.bisq.p2p.NodeAddress;
-import io.bitsquare.common.wire.proto.Messages;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.slf4j.Logger;

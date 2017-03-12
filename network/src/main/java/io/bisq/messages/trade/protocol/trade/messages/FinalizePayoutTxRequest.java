@@ -20,10 +20,10 @@ package io.bisq.messages.trade.protocol.trade.messages;
 import com.google.protobuf.ByteString;
 import io.bisq.app.Version;
 import io.bisq.common.util.ProtoBufferUtils;
+import io.bisq.common.wire.proto.Messages;
 import io.bisq.messages.protocol.trade.TradeMessage;
 import io.bisq.p2p.NodeAddress;
 import io.bisq.p2p.messaging.MailboxMessage;
-import io.bitsquare.common.wire.proto.Messages;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.Arrays;
