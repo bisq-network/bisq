@@ -42,7 +42,7 @@
                     <transformers>
                         <transformer
                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>io.bitsquare.provider.ProviderMain</mainClass>
+                            <mainClass>io.bisq.provider.ProviderMain</mainClass>
                         </transformer>
                     </transformers>
                     <filters>

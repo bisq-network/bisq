@@ -42,7 +42,7 @@
                     <transformers>
                         <transformer
                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>io.bitsquare.headless.HeadlessMain</mainClass>
+                            <mainClass>io.bisq.headless.HeadlessMain</mainClass>
                         </transformer>
                     </transformers>
                     <filters>

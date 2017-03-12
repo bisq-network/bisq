@@ -27,8 +27,8 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="io.bitsquare.storage.Storage" level="WARN"/>
-    <logger name="io.bitsquare.storage.FileManager" level="WARN"/>
+    <logger name="io.bisq.storage.Storage" level="WARN"/>
+    <logger name="io.bisq.storage.FileManager" level="WARN"/>
 
     <!-- <logger name="io.bitsquare.p2p.peers.PeerGroup" level="INFO"/>
      <logger name="io.bitsquare.p2p.P2PService" level="INFO"/>

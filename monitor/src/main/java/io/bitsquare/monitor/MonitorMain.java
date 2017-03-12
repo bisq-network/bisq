@@ -18,10 +18,10 @@
 package io.bitsquare.monitor;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.bitsquare.app.AppOptionKeys;
-import io.bitsquare.app.BitsquareEnvironment;
-import io.bitsquare.app.BitsquareExecutable;
-import io.bitsquare.common.UserThread;
+import io.bisq.app.AppOptionKeys;
+import io.bisq.app.BitsquareEnvironment;
+import io.bisq.app.BitsquareExecutable;
+import io.bisq.common.UserThread;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -32,8 +32,8 @@ import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_APP_NAME;
-import static io.bitsquare.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
+import static io.bisq.app.BitsquareEnvironment.DEFAULT_APP_NAME;
+import static io.bisq.app.BitsquareEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class MonitorMain extends BitsquareExecutable {
     private static final Logger log = LoggerFactory.getLogger(MonitorMain.class);
