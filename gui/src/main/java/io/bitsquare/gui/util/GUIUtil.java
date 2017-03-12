@@ -78,11 +78,7 @@ public class GUIUtil {
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
         String key = "miningFeeInfo";
         if (!DevFlags.DEV_MODE && Preferences.INSTANCE.showAgain(key)) {
-            new Popup<>().information("Please be sure that the mining fee used at your external wallet is " +
-                    "sufficiently high so that the funding transaction will be accepted by the miners.\n" +
-                    "Otherwise the trade transactions cannot be confirmed and a trade would end up in a dispute.\n\n" +
-                    "The recommended fee is about 120 Satoshi/Byte which is for an average transaction about 0.0005 BTC.\n\n" +
-                    "You can check out the currently recommended fees at: https://bitcoinfees.21.co")
+            new Popup<>().information(Res.get("guiUtil.miningFeeInfo"))
                     .dontShowAgainId(key, Preferences.INSTANCE)
                     .onClose(runnable::run)
                     .useIUnderstandButton()
@@ -98,16 +94,16 @@ public class GUIUtil {
             Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
             paymentAccountsStorage.initAndGetPersisted(accounts, fileName);
             paymentAccountsStorage.queueUpForSave();
-            new Popup<>().feedback("Trading accounts saved to path:\n" + Paths.get(directory, fileName).toAbsolutePath()).show();
+            new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
         } else {
-            new Popup<>().warning("You don't have trading accounts set up for exporting.").show();
+            new Popup<>().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
         }
     }
 
     public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
-        fileChooser.setTitle("Select path to " + fileName);
+        fileChooser.setTitle(Res.get("guiUtil.accountExport.selectPath", fileName));
         File file = fileChooser.showOpenDialog(stage.getOwner());
         if (file != null) {
             String path = file.getAbsolutePath();
@@ -122,18 +118,18 @@ public class GUIUtil {
                         final String id = paymentAccount.getId();
                         if (user.getPaymentAccount(id) == null) {
                             user.addPaymentAccount(paymentAccount);
-                            msg.append("Trading account with id ").append(id).append("\n");
+                            msg.append(Res.get("guiUtil.accountExport.tradingAccount", id));
                         } else {
-                            msg.append("We did not import trading account with id ").append(id).append(" because it exists already.\n");
+                            msg.append(Res.get("guiUtil.accountImport.noImport", id));
                         }
                     });
-                    new Popup<>().feedback("Trading account imported from path:\n" + path + "\n\nImported accounts:\n" + msg).show();
+                    new Popup<>().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
 
                 } else {
-                    new Popup<>().warning("No exported trading accounts has been found at path: " + path + ".\n" + "File name is " + fileName + ".").show();
+                    new Popup<>().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
                 }
             } else {
-                new Popup<>().warning("The selected file is not the expected file for import. The expected file name is: " + fileName + ".").show();
+                log.error("The selected file is not the expected file for import. The expected file name is: " + fileName + ".");
             }
         }
     }
@@ -161,15 +157,14 @@ public class GUIUtil {
         } catch (RuntimeException | IOException e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            new Popup().error("Exporting to CSV failed because of an error.\n" +
-                    "Error = " + e.getMessage());
+            new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
         }
     }
 
     public static String getDirectoryFromChooser(Preferences preferences, Stage stage) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
-        directoryChooser.setTitle("Select export path");
+        directoryChooser.setTitle(Res.get("guiUtil.accountExport.selectExportPath"));
         File dir = directoryChooser.showDialog(stage);
         if (dir != null) {
             String directory = dir.getAbsolutePath();
@@ -293,18 +288,13 @@ public class GUIUtil {
         String key = "warnOpenURLWhenTorEnabled";
         final Preferences preferences = Preferences.INSTANCE;
         if (preferences.showAgain(key)) {
-            new Popup<>().information("You are going to open a web page " +
-                    "in your system web browser.\n" +
-                    "Do you want to open the web page now?\n\n" +
-                    "If you are not using the \"Tor Browser\" as your default system web browser you " +
-                    "will connect to the web page in clear net.\n\n" +
-                    "URL: \"" + target)
-                    .actionButtonText("Open the web page and don't ask again")
+            new Popup<>().information(Res.get("guiUtil.openWebBrowser.warning", target))
+                    .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
                     .onAction(() -> {
                         preferences.dontShowAgain(key, true);
                         doOpenWebPage(target);
                     })
-                    .closeButtonText("Copy URL and cancel")
+                    .closeButtonText(Res.get("guiUtil.openWebBrowser.copyUrl"))
                     .onClose(() -> Utilities.copyToClipboard(target))
                     .show();
         } else {
@@ -334,7 +324,7 @@ public class GUIUtil {
 
     public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, BSFormatter formatter) {
         return " (" + formatter.formatToPercentWithSymbol((double) fee.value / (double) tradeAmount.value) +
-                " of trade amount)";
+                " " + Res.get("guiUtil.ofTradeAmount") + ")";
     }
 
     public static <T> T getParentOfType(Node node, Class<T> t) {

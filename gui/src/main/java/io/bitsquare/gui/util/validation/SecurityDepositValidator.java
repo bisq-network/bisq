@@ -63,7 +63,7 @@ public class SecurityDepositValidator extends BtcValidator {
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {
-            return new ValidationResult(false, "Invalid input: " + t.getMessage());
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
         }
     }
 }

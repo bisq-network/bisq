@@ -17,6 +17,8 @@
 
 package io.bitsquare.gui.util.validation;
 
+import io.bitsquare.locale.Res;
+
 import java.util.Locale;
 
 /*
@@ -51,20 +53,20 @@ public final class BICValidator extends InputValidator {
 
 	// check ensure length 8 or 11
 	if (!isStringWithFixedLength(input,8) && !isStringWithFixedLength(input,11))
-		return new ValidationResult(false, "Input length is neither 8 nor 11");
+		return new ValidationResult(false, Res.get("validation.bic.invalidLength"));
 
 	input = input.toUpperCase(Locale.ROOT);
 
 	// ensure Bank and Contry code to be letters only
 	for (int k=0; k<6; k++) {
 		if (!Character.isLetter(input.charAt(k)))
-			return new ValidationResult(false, "Bank and Country code must be letters");
+			return new ValidationResult(false, Res.get("validation.bic.letters"));
 	}
 
 	// ensure location code starts not with 0 or 1 and ends not with O
 	char ch = input.charAt(6);
 	if (ch == '0' || ch == '1' || input.charAt(7) == 'O')
-		return new ValidationResult(false, "BIC contains invalid location code");
+		return new ValidationResult(false, Res.get("validation.bic.invalidLocationCode"));
 
 	// check complete for 8 char BIC
 	if (input.length() == 8)
@@ -73,7 +75,7 @@ public final class BICValidator extends InputValidator {
 	// ensure branch code does not start with X unless it is XXX
 	if (input.charAt(8) == 'X')
 		if (input.charAt(9) != 'X' || input.charAt(10) != 'X')
-			return new ValidationResult(false, "BIC contains invalid branch code");
+			return new ValidationResult(false, Res.get("validation.bic.invalidBranchCode"));
 	return new ValidationResult(true);
     }
 

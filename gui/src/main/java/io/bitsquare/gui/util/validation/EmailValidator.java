@@ -34,13 +34,15 @@ package io.bitsquare.gui.util.validation;
  *
  */
 
+import io.bitsquare.locale.Res;
+
 public final class EmailValidator extends InputValidator {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private final ValidationResult invalidAddress = new ValidationResult(false, "Invalid address");
+    private final ValidationResult invalidAddress = new ValidationResult(false, Res.get("validation.email.invalidAddress"));
 
     @Override
     public ValidationResult validate(String input) {

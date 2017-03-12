@@ -53,7 +53,7 @@ public final class AccountNrValidator extends BankValidator {
                 if (isNumberInRange(input2, 15, 16))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, "Account number must be of format: 03-1587-0050000-00");
+                    return new ValidationResult(false, Res.get("validation.accountNrFormat", "03-1587-0050000-00"));
             case "AU":
                 if (isNumberInRange(input, 4, 10))
                     return super.validate(input);
@@ -75,7 +75,7 @@ public final class AccountNrValidator extends BankValidator {
                 if (isNumberInRange(input2, 9, 12))
                     return super.validate(input);
                 else
-                    return new ValidationResult(false, "Account number must be of format: 005-231289-112");
+                    return new ValidationResult(false, Res.get("validation.accountNrFormat", "005-231289-112"));
             case "NO":
                 if (input != null) {
                     length = 11;
@@ -96,7 +96,7 @@ public final class AccountNrValidator extends BankValidator {
                         return new ValidationResult(false, Res.get("validation.sortCodeNumber", getLabel(), length));
                     int lastDigit = Character.getNumericValue(input2.charAt(input2.length() - 1));
                     if (getMod11ControlDigit(input2) != lastDigit)
-                        return new ValidationResult(false, "Kontonummer har feil sjekksum");
+                        return new ValidationResult(false, "Kontonummer har feil sjekksum"); // not translated
                     else
                         return super.validate(input);
                 } else {
