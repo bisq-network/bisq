@@ -20,6 +20,7 @@ package io.bitsquare.gui.main.dao.compensation.active;
 import io.bitsquare.dao.compensation.CompensationRequestPayload;
 import io.bitsquare.gui.components.InputTextField;
 import io.bitsquare.gui.main.overlays.Overlay;
+import io.bitsquare.locale.Res;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -48,7 +49,7 @@ public class FundCompensationRequestWindow extends Overlay<FundCompensationReque
 
     public void show() {
         if (headLine == null)
-            headLine = "Fund compensation request";
+            headLine = Res.get("dao.compensation.active.fund");
 
         createGridPane();
         addHeadLine();

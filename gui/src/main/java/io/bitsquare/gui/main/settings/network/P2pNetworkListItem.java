@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.settings.network;
 
 import io.bitsquare.common.Clock;
 import io.bitsquare.gui.util.BSFormatter;
+import io.bitsquare.locale.Res;
 import io.bitsquare.p2p.network.Connection;
 import io.bitsquare.p2p.network.OutboundConnection;
 import io.bitsquare.p2p.network.Statistic;
@@ -59,7 +60,7 @@ public class P2pNetworkListItem {
         receivedBytesSubscription = EasyBind.subscribe(statistic.receivedBytesProperty(),
                 e -> receivedBytes.set(formatter.formatBytes((long) e)));
         onionAddressSubscription = EasyBind.subscribe(connection.peersNodeAddressProperty(),
-                nodeAddress -> onionAddress.set(nodeAddress != null ? nodeAddress.getFullAddress() : "Not known yet"));
+                nodeAddress -> onionAddress.set(nodeAddress != null ? nodeAddress.getFullAddress() : Res.get("settings.net.notKnownYet")));
         roundTripTimeSubscription = EasyBind.subscribe(statistic.roundTripTimeProperty(),
                 roundTripTime -> this.roundTripTime.set((int) roundTripTime == 0 ? "-" : roundTripTime + " ms"));
 
@@ -101,16 +102,16 @@ public class P2pNetworkListItem {
     }
 
     public void updateConnectionType() {
-        connectionType.set(connection instanceof OutboundConnection ? "outbound" : "inbound");
+        connectionType.set(connection instanceof OutboundConnection ? Res.get("settings.net.outbound") : Res.get("settings.net.inbound"));
     }
 
     public void updatePeerType() {
         if (connection.getPeerType() == Connection.PeerType.SEED_NODE)
-            peerType.set("Seed node");
+            peerType.set(Res.get("settings.net.seedNode"));
         else if (connection.getPeerType() == Connection.PeerType.DIRECT_MSG_PEER)
-            peerType.set("Peer (direct)");
+            peerType.set(Res.get("settings.net.directPeer"));
         else
-            peerType.set("Peer");
+            peerType.set(Res.get("settings.net.peer"));
     }
 
     public String getCreationDate() {

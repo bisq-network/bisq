@@ -472,7 +472,7 @@ public class BSFormatter {
         if (showSeconds) {
             format = "d\' " + days + ", \'H\' " + hours + ", \'m\' " + minutes + ", \'s\' " + seconds + "\'";
         } else
-            format = "d\' \" + days + \", \'H\' \" + hours + \", \'m\' \" + minutes + \"\'";
+            format = "d\' " + days + ", \'H\' " + hours + ", \'m\' " + minutes + "\'";
         String duration = DurationFormatUtils.formatDuration(durationMillis, format);
         String tmp;
         duration = " " + duration;

@@ -22,6 +22,7 @@ import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.ImageUtil;
+import io.bitsquare.locale.Res;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -44,8 +45,8 @@ public class SystemTray {
     private static final String ICON_LINUX = "/images/system_tray_icon_linux.png";
 
 
-    private static final String SHOW_WINDOW_LABEL = "Show exchange window";
-    private static final String HIDE_WINDOW_LABEL = "Hide exchange window";
+    private static final String SHOW_WINDOW_LABEL = Res.get("systemTray.show");
+    private static final String HIDE_WINDOW_LABEL = Res.get("systemTray.hide");
     private static SystemTray systemTray;
 
     private final Stage stage;
@@ -74,8 +75,8 @@ public class SystemTray {
         // Later we only let it close via the system trays exit.
         Platform.setImplicitExit(false);
 
-        MenuItem aboutItem = new MenuItem("Info about Bitsquare");
-        MenuItem exitItem = new MenuItem("Exit");
+        MenuItem aboutItem = new MenuItem(Res.get("systemTray.info"));
+        MenuItem exitItem = new MenuItem(Res.get("systemTray.exit"));
 
         PopupMenu popupMenu = new PopupMenu();
         popupMenu.add(aboutItem);
@@ -103,7 +104,7 @@ public class SystemTray {
             }
 
             trayIcon.setPopupMenu(popupMenu);
-            trayIcon.setToolTip("Bitsquare: The decentralized bitcoin exchange");
+            trayIcon.setToolTip(Res.get("systemTray.tooltip"));
 
             java.awt.SystemTray.getSystemTray().add(trayIcon);
         } catch (AWTException e1) {
