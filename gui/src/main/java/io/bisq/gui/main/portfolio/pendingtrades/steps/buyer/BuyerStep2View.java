@@ -17,7 +17,6 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades.steps.buyer;
 
-import ch.qos.logback.core.pattern.util.RegularEscapeUtil;
 import io.bisq.app.DevEnv;
 import io.bisq.common.util.Tuple3;
 import io.bisq.gui.components.BusyAnimation;
@@ -290,7 +289,7 @@ public class BuyerStep2View extends TradeStepView {
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
                     .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg", CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode())))
                     .width(700)
-                    .actionButtonText(RegularEscapeUtil.basicEscape("portfolio.pending.step2_buyer.confirmStart.yes"))
+                    .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.yes"))
                     .onAction(this::confirmPaymentStarted)
                     .closeButtonText(Res.get("shared.no"))
                     .onClose(popup::hide)

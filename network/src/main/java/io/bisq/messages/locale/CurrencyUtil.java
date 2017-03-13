@@ -184,7 +184,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("XLM", "Stellar Lumens"));
         result.add(new CryptoCurrency("SJCX", "StorjcoinX"));
         result.add(new CryptoCurrency("STRAT", "Stratis"));
-        result.add(new CryptoCurrency("SWT", "Swarm City Token"));
+        result.add(new CryptoCurrency("SWT", "Swarm City Token", true));
         result.add(new CryptoCurrency("SYNX", "Syndicate"));
         result.add(new CryptoCurrency("AMP", "Synereo", true));
         result.add(new CryptoCurrency("TRI", "Triangles"));

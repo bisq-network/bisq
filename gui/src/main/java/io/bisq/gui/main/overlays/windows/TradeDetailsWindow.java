@@ -199,13 +199,13 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             if (buyerPaymentAccountContractData != null) {
                 TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                         Res.get("shared.paymentDetails", Res.get("shared.buyer")),
-                        Res.get(buyerPaymentAccountContractData.getPaymentDetails())).second;
+                        buyerPaymentAccountContractData.getPaymentDetails()).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (sellerPaymentAccountContractData != null) {
                 TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                         Res.get("shared.paymentDetails", Res.get("shared.seller")),
-                        Res.get(sellerPaymentAccountContractData.getPaymentDetails())).second;
+                        sellerPaymentAccountContractData.getPaymentDetails()).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (buyerPaymentAccountContractData == null && sellerPaymentAccountContractData == null)

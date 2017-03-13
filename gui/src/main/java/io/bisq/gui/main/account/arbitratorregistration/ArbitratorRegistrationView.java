@@ -23,7 +23,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.gui.main.overlays.windows.EnterPrivKeyWindow;
+import io.bisq.gui.main.overlays.windows.UnlockArbitrationRegistrationWindow;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
@@ -57,7 +57,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     private Button revokeButton;
 
     private ChangeListener<Arbitrator> arbitratorChangeListener;
-    private EnterPrivKeyWindow enterPrivKeyWindow;
+    private UnlockArbitrationRegistrationWindow unlockArbitrationRegistrationWindow;
     private ListChangeListener<String> listChangeListener;
 
 
@@ -94,9 +94,9 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             model.myArbitratorProperty.addListener(arbitratorChangeListener);
             updateLanguageList();
 
-            if (model.registrationPubKeyAsHex.get() == null && enterPrivKeyWindow == null) {
-                enterPrivKeyWindow = new EnterPrivKeyWindow();
-                enterPrivKeyWindow.onClose(() -> enterPrivKeyWindow = null)
+            if (model.registrationPubKeyAsHex.get() == null && unlockArbitrationRegistrationWindow == null) {
+                unlockArbitrationRegistrationWindow = new UnlockArbitrationRegistrationWindow();
+                unlockArbitrationRegistrationWindow.onClose(() -> unlockArbitrationRegistrationWindow = null)
                         .onKey(privKey -> model.setPrivKeyAndCheckPubKey(privKey))
                         .width(700)
                         .show();

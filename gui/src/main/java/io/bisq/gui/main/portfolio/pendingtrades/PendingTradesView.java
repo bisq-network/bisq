@@ -90,7 +90,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         dateColumn.setText(Res.get("shared.dateTime"));
         tradeIdColumn.setText(Res.get("shared.tradeId"));
         paymentMethodColumn.setText(Res.get("shared.paymentMethod"));
-        avatarColumn.setText(Res.get(""));
+        avatarColumn.setText("");
 
         setTradeIdColumnCellFactory();
         setDateColumnCellFactory();

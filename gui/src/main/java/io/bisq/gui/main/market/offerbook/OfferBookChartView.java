@@ -75,11 +75,11 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private Subscription tradeCurrencySubscriber;
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
     private final StringProperty priceColumnLabel = new SimpleStringProperty();
-    private Button buyOfferButton;
-    private Button sellOfferButton;
+    private Button leftButton;
+    private Button rightButton;
     private ChangeListener<Number> selectedTabIndexListener;
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
-    private Label buyOfferHeaderLabel, sellOfferHeaderLabel;
+    private Label leftHeaderLabel, rightHeaderLabel;
     private ChangeListener<OfferListItem> sellTableRowSelectionListener, buyTableRowSelectionListener;
     private HBox bottomHBox;
     private ListChangeListener<OfferBookListItem> changeListener;
@@ -125,11 +125,11 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         buyOfferTableView = tupleBuy.first;
         sellOfferTableView = tupleSell.first;
 
-        buyOfferButton = tupleBuy.third;
-        sellOfferButton = tupleSell.third;
+        leftButton = tupleBuy.third;
+        rightButton = tupleSell.third;
 
-        buyOfferHeaderLabel = tupleBuy.forth;
-        sellOfferHeaderLabel = tupleSell.forth;
+        leftHeaderLabel = tupleBuy.forth;
+        rightHeaderLabel = tupleSell.forth;
 
         bottomHBox = new HBox();
         bottomHBox.setSpacing(20); //30
@@ -201,11 +201,11 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             reverseTableColumns();
                         }
 
-                        buyOfferHeaderLabel.setText(Res.get("market.offerBook.buyOfferHeaderLabel", code, "BTC"));
-                        buyOfferButton.setText(Res.get("market.offerBook.buyOfferButton", code, "BTC"));
+                        leftHeaderLabel.setText(Res.get("market.offerBook.leftHeaderLabel", code, "BTC"));
+                        leftButton.setText(Res.get("market.offerBook.leftButtonAltcoin", code, "BTC"));
 
-                        sellOfferHeaderLabel.setText(Res.get("market.offerBook.sellOfferHeaderLabel", code, "BTC"));
-                        sellOfferButton.setText(Res.get("market.offerBook.sellOfferButton", code, "BTC"));
+                        rightHeaderLabel.setText(Res.get("market.offerBook.rightHeaderLabel", code, "BTC"));
+                        rightButton.setText(Res.get("market.offerBook.rightButtonAltcoin", code, "BTC"));
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", "BTC"));
                     } else {
@@ -214,18 +214,18 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                             reverseTableColumns();
                         }
 
-                        buyOfferHeaderLabel.setText(Res.get("market.offerBook.buyOfferHeaderLabel", "BTC", code));
-                        buyOfferButton.setText(Res.get("market.offerBook.buyOfferButton", "BTC", code));
+                        leftHeaderLabel.setText(Res.get("market.offerBook.rightHeaderLabel", "BTC", code));
+                        leftButton.setText(Res.get("market.offerBook.rightButtonFiat", "BTC", code));
 
-                        sellOfferHeaderLabel.setText(Res.get("market.offerBook.sellOfferHeaderLabel", "BTC", code));
-                        sellOfferButton.setText(Res.get("market.offerBook.sellOfferButton", "BTC", code));
-
+                        rightHeaderLabel.setText(Res.get("market.offerBook.leftHeaderLabel", "BTC", code));
+                        rightButton.setText(Res.get("market.offerBook.leftButtonFiat", "BTC", code));
+                       
                         priceColumnLabel.set(Res.get("shared.priceWithCur", code));
                     }
                     xAxis.setLabel(formatter.getPriceWithCurrencyCode(code));
 
-                    seriesBuy.setName(buyOfferHeaderLabel.getText() + "   ");
-                    seriesSell.setName(sellOfferHeaderLabel.getText());
+                    seriesBuy.setName(leftHeaderLabel.getText() + "   ");
+                    seriesSell.setName(rightHeaderLabel.getText());
                 });
 
         buyOfferTableView.setItems(model.getTopBuyOfferList());

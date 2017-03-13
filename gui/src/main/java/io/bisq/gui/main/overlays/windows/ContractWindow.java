@@ -130,9 +130,9 @@ public class ContractWindow extends Overlay<ContractWindow> {
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.numDisputes"), disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
 
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
-                Res.get(contract.getBuyerPaymentAccountContractData().getPaymentDetails())).second.setMouseTransparent(false);
+                contract.getBuyerPaymentAccountContractData().getPaymentDetails()).second.setMouseTransparent(false);
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
-                Res.get(sellerPaymentAccountContractData.getPaymentDetails())).second.setMouseTransparent(false);
+                sellerPaymentAccountContractData.getPaymentDetails()).second.setMouseTransparent(false);
 
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"), contract.arbitratorNodeAddress.getFullAddress());
 

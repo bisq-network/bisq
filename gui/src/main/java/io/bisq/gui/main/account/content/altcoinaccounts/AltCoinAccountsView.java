@@ -118,10 +118,11 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         TradeCurrency selectedTradeCurrency = paymentAccount.getSelectedTradeCurrency();
         String code = selectedTradeCurrency.getCode();
         if (selectedTradeCurrency instanceof CryptoCurrency && ((CryptoCurrency) selectedTradeCurrency).isAsset()) {
+            String name = selectedTradeCurrency.getName();
             new Popup().information(Res.get("account.altcoin.popup.wallet.msg",
                     selectedTradeCurrency.getCodeAndName(),
-                    selectedTradeCurrency.getName(),
-                    selectedTradeCurrency.getName()))
+                    name,
+                    name))
                     .closeButtonText(Res.get("account.altcoin.popup.wallet.confirm"))
                     .show();
         }

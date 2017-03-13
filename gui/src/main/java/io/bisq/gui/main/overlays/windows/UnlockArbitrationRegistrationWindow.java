@@ -31,7 +31,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
-public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
+public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrationRegistrationWindow> {
     private Button unlockButton;
     private InputTextField keyInputTextField;
     private PrivKeyHandler privKeyHandler;
@@ -51,7 +51,7 @@ public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public EnterPrivKeyWindow() {
+    public UnlockArbitrationRegistrationWindow() {
         if (keyInputTextField != null)
             keyInputTextField.textProperty().addListener(changeListener);
 
@@ -76,7 +76,7 @@ public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
         display();
     }
 
-    public EnterPrivKeyWindow onKey(PrivKeyHandler privKeyHandler) {
+    public UnlockArbitrationRegistrationWindow onKey(PrivKeyHandler privKeyHandler) {
         this.privKeyHandler = privKeyHandler;
         return this;
     }

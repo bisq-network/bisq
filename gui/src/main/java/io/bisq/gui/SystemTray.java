@@ -125,7 +125,7 @@ public class SystemTray {
 
         aboutItem.addActionListener(e -> {
             try {
-                GUIUtil.openWebPage("https://bisq.io");
+                UserThread.execute(() -> GUIUtil.openWebPage("https://bisq.io"));
             } catch (Exception e1) {
                 e1.printStackTrace();
             }

@@ -82,7 +82,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         dateColumn.setText(Res.get("shared.dateTime"));
         tradeIdColumn.setText(Res.get("shared.tradeId"));
         stateColumn.setText(Res.get("shared.state"));
-        avatarColumn.setText(Res.get(""));
+        avatarColumn.setText("");
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label(Res.get("table.placeholder.noItems", Res.get("shared.trades"))));

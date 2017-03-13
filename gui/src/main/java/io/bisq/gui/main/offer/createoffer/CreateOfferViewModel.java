@@ -343,7 +343,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         }
                     }
                 } catch (Throwable t) {
-                    new Popup().warning(Res.get("validation.NaN") + "\n" + Res.get("popup.warning.examplePercentageValue")).show();
+                    new Popup().warning(Res.get("validation.inputError", t.toString())).show();
                 }
             }
         };
