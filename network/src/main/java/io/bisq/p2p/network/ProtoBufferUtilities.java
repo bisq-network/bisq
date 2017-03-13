@@ -247,8 +247,20 @@ public class ProtoBufferUtilities {
     }
 
     private static Message getDisputeResultMessage(Messages.DisputeResultMessage disputeResultMessage) {
-        DisputeResult disputeResult = new DisputeResult(disputeResultMessage.getDisputeResult().getTradeId(),
-                disputeResultMessage.getDisputeResult().getTraderId());
+
+        Messages.DisputeResult disputeResultproto = disputeResultMessage.getDisputeResult();
+        DisputeResult disputeResult = new DisputeResult(disputeResultproto.getTradeId(),
+                disputeResultproto.getTraderId(), DisputeResult.DisputeFeePolicy.valueOf(disputeResultproto.getDisputeFeePolicy().name()),
+                DisputeResult.Winner.valueOf(disputeResultproto.getWinner().name()), disputeResultproto.getReasonOrdinal(),
+                disputeResultproto.getTamperProofEvidence(), disputeResultproto.getIdVerification(), disputeResultproto.getScreenCast(),
+                disputeResultproto.getSummaryNotes(),
+                (DisputeCommunicationMessage) getDisputeCommunicationMessage(disputeResultproto.getDisputeCommunicationMessage()),
+                disputeResultproto.getArbitratorSignature().toByteArray(), disputeResultproto.getBuyerPayoutAmount(),
+                disputeResultproto.getSellerPayoutAmount(), disputeResultproto.getArbitratorPayoutAmount(),
+                disputeResultproto.getArbitratorAddressAsString(),
+                disputeResultproto.getArbitratorPubKey().toByteArray(), disputeResultproto.getCloseDate(),
+                disputeResultproto.getIsLoserPublisher());
+        disputeResult.setArbitratorAddressAsString(disputeResultproto.getArbitratorAddressAsString());
         return new DisputeResultMessage(disputeResult, getNodeAddress(disputeResultMessage.getMyNodeAddress()));
     }
 
@@ -560,7 +572,7 @@ public class ProtoBufferUtilities {
 
     // TODO UNIT TEST THIS !!!
     @NotNull
-    private static Offer.Direction getDirection(Messages.Offer.Direction direction) {
+    public static Offer.Direction getDirection(Messages.Offer.Direction direction) {
         return Offer.Direction.valueOf(direction.name());
     }
 

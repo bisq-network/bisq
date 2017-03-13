@@ -89,8 +89,34 @@ public final class DisputeResult implements Payload {
     public DisputeResult(String tradeId, int traderId) {
         this.tradeId = tradeId;
         this.traderId = traderId;
+        this.disputeFeePolicy = DisputeFeePolicy.LOSER;
+        init();
+    }
 
-        disputeFeePolicy = DisputeFeePolicy.LOSER;
+    public DisputeResult(String tradeId, int traderId, DisputeFeePolicy disputeFeePolicy, Winner winner,
+                         int reasonOrdinal, boolean tamperProofEvidence, boolean idVerification, boolean screenCast,
+                         String summaryNotes, DisputeCommunicationMessage disputeCommunicationMessage,
+                         byte[] arbitratorSignature, long buyerPayoutAmount, long sellerPayoutAmount,
+                         long arbitratorPayoutAmount, String arbitratorAddressAsString, byte[] arbitratorPubKey,
+                         long closeDate, boolean isLoserPublisher) {
+        this.tradeId = tradeId;
+        this.traderId = traderId;
+        this.disputeFeePolicy = disputeFeePolicy;
+        this.winner = winner;
+        this.reasonOrdinal = reasonOrdinal;
+        this.tamperProofEvidence = tamperProofEvidence;
+        this.idVerification = idVerification;
+        this.screenCast = screenCast;
+        this.summaryNotes = summaryNotes;
+        this.disputeCommunicationMessage = disputeCommunicationMessage;
+        this.arbitratorSignature = arbitratorSignature;
+        this.buyerPayoutAmount = buyerPayoutAmount;
+        this.sellerPayoutAmount = sellerPayoutAmount;
+        this.arbitratorPayoutAmount = arbitratorPayoutAmount;
+        this.arbitratorAddressAsString = arbitratorAddressAsString;
+        this.arbitratorPubKey = arbitratorPubKey;
+        this.closeDate = closeDate;
+        this.isLoserPublisher = isLoserPublisher;
         init();
     }
 
@@ -268,7 +294,7 @@ public final class DisputeResult implements Payload {
                 .setBuyerPayoutAmount(buyerPayoutAmount)
                 .setSellerPayoutAmount(sellerPayoutAmount)
                 .setArbitratorPayoutAmount(arbitratorPayoutAmount)
-                .setArbitratorAddressAsstring(arbitratorAddressAsString)
+                .setArbitratorAddressAsString(arbitratorAddressAsString)
                 .setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey))
                 .setCloseDate(closeDate)
                 .setIsLoserPublisher(isLoserPublisher).build();

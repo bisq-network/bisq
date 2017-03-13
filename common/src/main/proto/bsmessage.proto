@@ -421,7 +421,7 @@ message DisputeResult {
     int64 buyer_payout_amount = 12;
     int64 seller_payout_amount = 13;
     int64 arbitrator_payout_amount = 14;
-    string arbitrator_address_asstring = 15;
+    string arbitrator_address_as_string = 15;
     bytes arbitrator_pub_key = 16;
     int64 close_date = 17;
     bool is_loser_publisher = 18;
