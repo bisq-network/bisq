@@ -570,7 +570,6 @@ public class ProtoBufferUtilities {
         return storagePayload;
     }
 
-    // TODO UNIT TEST THIS !!!
     @NotNull
     public static Offer.Direction getDirection(Messages.Offer.Direction direction) {
         return Offer.Direction.valueOf(direction.name());
