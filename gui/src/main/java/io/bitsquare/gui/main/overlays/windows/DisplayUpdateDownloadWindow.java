@@ -79,7 +79,6 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
 
 
 
-        switch (Utilities.get)
         ProgressIndicator indicator = new ProgressIndicator(0L);
         indicator.setVisible(false);
         GridPane.setRowIndex(indicator, ++rowIndex);
@@ -107,7 +106,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
             indicator.setVisible(true);
             try {
             Utilities.downloadFile(url, null, indicator);
-            } catch (IOException e) {
+            } catch (IOException exception)  {
                 messageLabel.setText("Unable to download files.\n" +
                 "Please manually download and verify the file from https://bitsquare.io/downloads");
                 downloadButton.setDisable(true);
