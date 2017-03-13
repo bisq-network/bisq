@@ -57,7 +57,7 @@ public class DownloadUtil extends Task<File> {
             String disposition = httpConn.getHeaderField("Content-Disposition");
             String contentType = httpConn.getContentType();
             int contentLength = httpConn.getContentLength();
-            if (! contentLength > 0)
+            if (!(contentLength > 0))
                 contentLength = -1;
 
             if (disposition != null) {
@@ -81,9 +81,10 @@ public class DownloadUtil extends Task<File> {
             String saveFilePath = saveDir + File.separator + fileName;
 
             // opens an output stream to save into file
-            FileOutputStream outputStream = new FileOutputStream(saveFilePath);
+            File outputFile = new File(saveFilePath);
+            FileOutputStream outputStream = new FileOutputStream(outputFile);
 
-            int bytesRead = -1;
+            int bytesRead;
             int totalRead = 0;
             byte[] buffer = new byte[BUFFER_SIZE];
             while ((bytesRead = inputStream.read(buffer)) != -1) {
@@ -100,7 +101,7 @@ public class DownloadUtil extends Task<File> {
             }
 
             System.out.println("File downloaded");
-            return saveFilePath;
+            return outputFile.getParentFile();
         } else {
             System.out.println("No file to download. Server replied HTTP code: " + responseCode);
         }
