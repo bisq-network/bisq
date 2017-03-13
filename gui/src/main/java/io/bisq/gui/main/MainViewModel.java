@@ -223,8 +223,14 @@ public class MainViewModel implements ViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void start() {
+        checkCryptoSetup();
+    }
+
+    private void startBasicServices() {
         Log.traceCall();
+
         UserThread.runAfter(tacWindow::showIfNeeded, 2);
+
         ChangeListener<Boolean> walletInitializedListener = (observable, oldValue, newValue) -> {
             if (newValue && !p2pNetWorkReady.get())
                 showStartupTimeoutPopup();
@@ -239,7 +245,11 @@ public class MainViewModel implements ViewModel {
         }, 4, TimeUnit.MINUTES);
 
         p2pNetWorkReady = initP2PNetwork();
-        initBitcoinWallet();
+
+        // We only init wallet service here if not using Tor for bitcoinj.        
+        // When using Tor, wallet init must be deferred until Tor is ready.
+        if (!preferences.getUseTorForBitcoinJ())
+            initWalletService();
 
         // need to store it to not get garbage collected
         allServicesDone = EasyBind.combine(walletInitialized, p2pNetWorkReady, (a, b) -> a && b);
@@ -247,7 +257,7 @@ public class MainViewModel implements ViewModel {
             if (newValue) {
                 startupTimeout.stop();
                 walletInitialized.removeListener(walletInitializedListener);
-                onAllServicesInitialized();
+                onBasicServicesInitialized();
                 if (startupTimeoutPopup != null)
                     startupTimeoutPopup.hide();
             }
@@ -269,9 +279,6 @@ public class MainViewModel implements ViewModel {
         startupTimeoutPopup.warning(Res.get("popup.warning.startupFailed.timeout", details))
                 .useShutDownButton()
                 .show();
-    }
-
-    public void shutDown() {
     }
 
 
@@ -398,15 +405,6 @@ public class MainViewModel implements ViewModel {
         return p2pNetworkInitialized;
     }
 
-    private void initBitcoinWallet() {
-        Log.traceCall();
-
-        // We only init wallet service here if not using Tor for bitcoinj.        
-        // When using Tor, wallet init must be deferred until Tor is ready.
-        if (!preferences.getUseTorForBitcoinJ())
-            initWalletService();
-    }
-
     private void initWalletService() {
         Log.traceCall();
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
@@ -487,7 +485,7 @@ public class MainViewModel implements ViewModel {
                 walletServiceException::set);
     }
 
-    private void onAllServicesInitialized() {
+    private void onBasicServicesInitialized() {
         Log.traceCall();
 
         clock.start();
@@ -552,7 +550,20 @@ public class MainViewModel implements ViewModel {
 
         showAppScreen.set(true);
 
+        String remindPasswordAndBackupKey = "remindPasswordAndBackup";
+        user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
+            if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(remindPasswordAndBackupKey) && change.wasAdded()) {
+                new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
+                        .information(Res.get("popup.securityRecommendation.msg"))
+                        .dontShowAgainId(remindPasswordAndBackupKey, preferences)
+                        .show();
+            }
+        });
 
+        checkIfOpenOffersMatchTradeProtocolVersion();
+    }
+
+    private void checkCryptoSetup() {
         // We want to test if the client is compiled with the correct crypto provider (BountyCastle) 
         // and if the unlimited Strength for cryptographic keys is set.
         // If users compile themselves they might miss that step and then would get an exception in the trade.
@@ -571,10 +582,17 @@ public class MainViewModel implements ViewModel {
                     DecryptedDataTuple tuple = EncryptionService.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
                     if (tuple.payload instanceof Ping &&
                             ((Ping) tuple.payload).nonce == payload.nonce &&
-                            ((Ping) tuple.payload).lastRoundTripTime == payload.lastRoundTripTime)
+                            ((Ping) tuple.payload).lastRoundTripTime == payload.lastRoundTripTime) {
                         log.debug("Crypto test succeeded");
-                    else
+
+                        if (Security.getProvider("BC") != null) {
+                            UserThread.execute(MainViewModel.this::startBasicServices);
+                        } else {
+                            throw new CryptoException("Security provider BountyCastle is not available.");
+                        }
+                    } else {
                         throw new CryptoException("Payload not correct after decryption");
+                    }
                 } catch (CryptoException e) {
                     e.printStackTrace();
                     String msg = Res.get("popup.warning.cryptoTestFailed", e.getMessage());
@@ -587,25 +605,6 @@ public class MainViewModel implements ViewModel {
             }
         };
         checkCryptoThread.start();
-
-        if (Security.getProvider("BC") == null) {
-            new Popup<>().warning(Res.get("popup.warning.noBountyCastle"))
-                    .useShutDownButton()
-                    .useReportBugButton()
-                    .show();
-        }
-
-        String remindPasswordAndBackupKey = "remindPasswordAndBackup";
-        user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
-            if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(remindPasswordAndBackupKey) && change.wasAdded()) {
-                new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
-                        .information(Res.get("popup.securityRecommendation.msg"))
-                        .dontShowAgainId(remindPasswordAndBackupKey, preferences)
-                        .show();
-            }
-        });
-
-        checkIfOpenOffersMatchTradeProtocolVersion();
     }
 
     private void checkIfOpenOffersMatchTradeProtocolVersion() {
