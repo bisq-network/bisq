@@ -268,7 +268,7 @@ public final class DisputeResult implements Payload {
                 .setBuyerPayoutAmount(buyerPayoutAmount)
                 .setSellerPayoutAmount(sellerPayoutAmount)
                 .setArbitratorPayoutAmount(arbitratorPayoutAmount)
-                .setArbitratorAddressAsstring(arbitratorAddressAsString)
+                .setArbitratorAddressAsString(arbitratorAddressAsString)
                 .setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey))
                 .setCloseDate(closeDate)
                 .setIsLoserPublisher(isLoserPublisher).build();
