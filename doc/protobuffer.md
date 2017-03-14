@@ -1,9 +1,31 @@
-# Protobuffer migration
+# Protobuffer FAQ
+
+## Why protobuffer?
+
+There are a number of reasons why protobuffer was chosen, here are some of them:
+* avoids java serialisation security issues
+* smaller in size than java serialisation (less network usage)
+* All P2P network messages are described in a clear protobuffer schema
+* allows to evolve your schema in a backward compatible way
+* can generate code in many languages, making alternative bisq clients or monitoring tools easier
+
+## Which classes are transformed to protobuffer?
 
 * classes sent over the wire (P2P network)
 * classes serialized to disk
 
-If possible we'll start with the P2P network because this has wider backward compatibility impact.
+## Where are the protobuffer related files? 
+
+The protobuffer schema file(s), generated classes and domain classes are in the 'network-messages' module.
+
+## How is serialisation done (Java -> Protobuffer)
+
+Some interfaces have a 'toProtobuf' method to force all extending classes to implement that method.
+
+## default values?
+
+## 
+
 
 ## Frameworks
 
@@ -39,71 +61,7 @@ Output is in target/generated-sources which avoids the temptation of checking in
 
 In order to support this, we need to use .writeDelimitedTo(outputstream) and parseDelimitedFrom(inputstream).
 The writeDelimited writes a length varint before the object, allowing the parseDelimited to know the extent of the message. 
-
-## P2P Network
-
-### Extends Payload search results
-
-```
-public final class PubKeyRing implements Payload {
-public final class SealedAndSigned implements Payload {
-public final class PrivateNotification implements Payload {
-public final class Dispute implements Payload {
-public final class DisputeResult implements Payload {
-public final class Attachment implements Payload {
-public final class RawTransactionInput implements Payload {
-public abstract class PaymentAccountContractData implements Payload {
-public final class Contract implements Payload {
-public final class NodeAddress implements Persistable, Payload {
-public final class Peer implements Payload, Persistable {
-public interface CapabilityRequiringPayload extends Payload {
-public interface ExpirablePayload extends Payload {
-public interface RequiresOwnerIsOnlinePayload extends Payload {
-public class ProtectedStorageEntry implements Payload {
-```
-
-### Messages
-
-```
-public interface DirectMessage extends Message {
-public interface SupportedCapabilitiesMessage extends Message {
-public final class MockPayload implements Message, ExpirablePayload {
-public interface AnonymousMessage extends Message {
-public final class CloseConnectionMessage implements Message {
-public interface SendersNodeAddressMessage extends Message {
-public interface GetDataRequest extends Message {
-public abstract class KeepAliveMessage implements Message {
-abstract class PeerExchangeMessage implements Message {
-public abstract class BroadcastMessage implements Message {
-
-```
-
-## Disk serialization
-
-extends Serializable
-
-```
-private static class MockMessage implements Serializable {
-public interface Persistable extends Serializable {
-public class Tuple2<A, B> implements Serializable {
-public class Tuple3<A, B, C> implements Serializable {
-public class Tuple4<A, B, C, D> implements Serializable {
-public static <T extends Serializable> T deserialize(byte[] data) {
-public interface Payload extends Serializable {
-public class PlainTextWrapper implements Serializable {
-public class Storage<T extends Serializable> {
-public abstract class HttpClientProvider implements Serializable {
-public class PaymentAccountFilter implements Serializable {
-public class CurrencyTuple implements Serializable {
-public class ProcessModel implements Model, Serializable {
-public final class Altcoin implements Monetary, Comparable<Altcoin>, Serializable {
-public class AltcoinExchangeRate implements Serializable {
-public interface Message extends Serializable {
-public interface Message extends Serializable {
-public static final class DataAndSeqNrPair implements Serializable {
-                        
-```                        
-
+              
 
 ## Actually transformed subtypes of Message 
 
