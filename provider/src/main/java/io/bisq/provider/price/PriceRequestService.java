@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class PriceRequestService {
     private static final Logger log = LoggerFactory.getLogger(PriceRequestService.class);
@@ -42,6 +43,7 @@ public class PriceRequestService {
     private static final long INTERVAL_BTC_AV_GLOBAL_MS = 150_000;    // 2.5 min 
     private static final long INTERVAL_POLONIEX_MS = 60_000;          // 1 min
     private static final long INTERVAL_COIN_MARKET_CAP_MS = 300_000;  // 5 min
+    private static final long MARKET_PRICE_TTL_SEC = 1800;            // 30 min
 
     private final Timer timerBtcAverageLocal = new Timer();
     private final Timer timerBtcAverageGlobal = new Timer();
@@ -145,6 +147,8 @@ public class PriceRequestService {
         long ts = System.currentTimeMillis();
         Map<String, PriceData> map = coinmarketcapProvider.request();
         log.info("requestCoinmarketcapPrices took {} ms.", (System.currentTimeMillis() - ts));
+        removeOutdatedPrices(poloniexMap);
+        removeOutdatedPrices(allPricesMap);
         // we don't replace prices which we got form the Poloniex request, just in case the Coinmarketcap data are 
         // received earlier at startup we allow them but Poloniex will overwrite them.
         map.entrySet().stream()
@@ -160,6 +164,7 @@ public class PriceRequestService {
         long ts = System.currentTimeMillis();
         poloniexMap = poloniexProvider.request();
         log.info("requestPoloniexPrices took {} ms.", (System.currentTimeMillis() - ts));
+        removeOutdatedPrices(allPricesMap);
         allPricesMap.putAll(poloniexMap);
         poloniexTs = Instant.now().getEpochSecond();
         log.info("Poloniex LTC (last): " + poloniexMap.get("LTC").l);
@@ -171,6 +176,7 @@ public class PriceRequestService {
         btcAverageLocalMap = btcAverageProvider.getLocal();
         log.info("BTCAverage local USD (last):" + btcAverageLocalMap.get("USD").l);
         log.info("requestBtcAverageLocalPrices took {} ms.", (System.currentTimeMillis() - ts));
+        removeOutdatedPrices(allPricesMap);
         allPricesMap.putAll(btcAverageLocalMap);
         btcAverageTs = Instant.now().getEpochSecond();
         writeToJson();
@@ -181,6 +187,8 @@ public class PriceRequestService {
         Map<String, PriceData> map = btcAverageProvider.getGlobal();
         log.info("BTCAverage global USD (last):" + map.get("USD").l);
         log.info("requestBtcAverageGlobalPrices took {} ms.", (System.currentTimeMillis() - ts));
+        removeOutdatedPrices(btcAverageLocalMap);
+        removeOutdatedPrices(allPricesMap);
         // we don't replace prices which we got form the local request, just in case the global data are received 
         // earlier at startup we allow them but the local request will overwrite them.
         map.entrySet().stream()
@@ -197,5 +205,15 @@ public class PriceRequestService {
         map.put("coinmarketcapTs", coinmarketcapTs);
         map.put("data", allPricesMap.values().toArray());
         json = Utilities.objectToJson(map);
+    }
+
+    private void removeOutdatedPrices(Map<String, PriceData> map) {
+        long epochSecond = Instant.now().getEpochSecond();
+        long limit = epochSecond - MARKET_PRICE_TTL_SEC;
+        Map<String, PriceData> filtered = map.entrySet().stream()
+                .filter(e -> e.getValue().e > limit)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        map.clear();
+        map.putAll(filtered);
     }
 }
