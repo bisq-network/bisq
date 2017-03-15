@@ -435,7 +435,10 @@ public class ProtoBufferUtilities {
         return new Offer(offer.getId(), offer.getDate(), getNodeAddress(offer.getOffererNodeAddress()), getPubKeyRing(offer.getPubKeyRing()), getDirection(offer.getDirection()),
                 offer.getFiatPrice(), offer.getMarketPriceMargin(), offer.getUseMarketBasedPrice(), offer.getAmount(), offer.getMinAmount(), offer.getCurrencyCode(), arbitratorNodeAddresses,
                 offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(), offer.getOfferFeePaymentTxID(), offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds, priceFeedService,
-                offer.getVersionNr(), offer.getBlockHeightAtOfferCreation(), offer.getTxFee(), offer.getCreateOfferFee(), offer.getSecurityDeposit(), offer.getMaxTradeLimit(), offer.getMaxTradePeriod(), offer.getUseAutoClose(),
+                offer.getVersionNr(), offer.getBlockHeightAtOfferCreation(), offer.getTxFee(), offer.getCreateOfferFee(),
+                offer.getBuyerSecurityDeposit(),
+                offer.getSellerSecurityDeposit(),
+                offer.getMaxTradeLimit(), offer.getMaxTradePeriod(), offer.getUseAutoClose(),
                 offer.getUseReOpenAfterAutoClose(), offer.getLowerClosePrice(), offer.getUpperClosePrice(), offer.getIsPrivateOffer(), offer.getHashOfChallenge(), extraDataMapMap);
     }
 

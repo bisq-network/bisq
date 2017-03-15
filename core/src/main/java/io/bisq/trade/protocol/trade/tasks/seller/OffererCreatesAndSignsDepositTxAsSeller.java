@@ -49,9 +49,11 @@ public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin securityDeposit = trade.getOffer().getSecurityDeposit();
-            Coin sellerInputAmount = securityDeposit.add(trade.getTradeAmount());
-            Coin msOutputAmount = sellerInputAmount.add(trade.getTxFee()).add(securityDeposit);
+            Coin sellerInputAmount = trade.getOffer().getSellerSecurityDeposit()
+                    .add(trade.getTradeAmount());
+            Coin msOutputAmount = sellerInputAmount
+                    .add(trade.getTxFee())
+                    .add(trade.getOffer().getBuyerSecurityDeposit());
 
             log.debug("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"

@@ -23,6 +23,7 @@ import io.bisq.common.Clock;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcAddressValidator;
 import io.bisq.locale.Res;
 import io.bisq.messages.payment.PaymentMethod;
@@ -35,6 +36,7 @@ import io.bisq.user.User;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import org.bitcoinj.core.BlockChainListener;
+import org.bitcoinj.core.Coin;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -263,14 +265,29 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getTotalFees() {
-        return formatter.formatCoinWithCode(dataModel.getTotalFees());
+        Offer offer = dataModel.getOffer();
+        Trade trade = dataModel.getTrade();
+        Coin totalFees = dataModel.getTotalFees();
+        if (offer != null && trade != null) {
+            String percentage = GUIUtil.getPercentageOfTradeAmount(totalFees, trade.getTradeAmount(), formatter);
+            return formatter.formatCoinWithCode(totalFees) + percentage;
+        } else {
+            return "";
+        }
     }
 
     public String getSecurityDeposit() {
-        if (dataModel.getOffer() != null)
-            return formatter.formatCoinWithCode(dataModel.getOffer().getSecurityDeposit());
-        else
+        Offer offer = dataModel.getOffer();
+        Trade trade = dataModel.getTrade();
+        if (offer != null && trade != null) {
+            Coin securityDeposit = dataModel.isBuyer() ?
+                    offer.getBuyerSecurityDeposit()
+                    : offer.getSellerSecurityDeposit();
+            String percentage = GUIUtil.getPercentageOfTradeAmount(securityDeposit, trade.getTradeAmount(), formatter);
+            return formatter.formatCoinWithCode(securityDeposit) + percentage;
+        } else {
             return "";
+        }
     }
 
     public boolean isBlockChainMethod() {

@@ -77,7 +77,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     final StringProperty amount = new SimpleStringProperty();
     final StringProperty minAmount = new SimpleStringProperty();
-    final StringProperty securityDeposit = new SimpleStringProperty();
+    final StringProperty buyerSecurityDeposit = new SimpleStringProperty();
+    final String sellerSecurityDeposit;
 
     // Price in the viewModel is always dependent on fiat/altcoin: Fiat Fiat/BTC, for altcoins we use inverted price.
     // The domain (dataModel) uses always the same price model (otherCurrencyBTC)
@@ -110,7 +111,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     final ObjectProperty<InputValidator.ValidationResult> minAmountValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> priceValidationResult = new SimpleObjectProperty<>();
     final ObjectProperty<InputValidator.ValidationResult> volumeValidationResult = new SimpleObjectProperty<>();
-    final ObjectProperty<InputValidator.ValidationResult> securityDepositValidationResult = new SimpleObjectProperty<>();
+    final ObjectProperty<InputValidator.ValidationResult> buyerSecurityDepositValidationResult = new SimpleObjectProperty<>();
 
     // Those are needed for the addressTextField
     private final ObjectProperty<Address> address = new SimpleObjectProperty<>();
@@ -162,6 +163,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         this.formatter = formatter;
 
         paymentLabel = Res.get("createOffer.fundsBox.paymentLabel", dataModel.shortOfferId);
+        sellerSecurityDeposit = formatter.formatCoin(dataModel.sellerSecurityDeposit);
 
         if (dataModel.getAddressEntry() != null) {
             addressAsString = dataModel.getAddressEntry().getAddressString();
@@ -205,7 +207,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             amountDescription = Res.get("createOffer.amountPriceBox.amountDescription", Res.get("shared.sell"));
         }
 
-        securityDeposit.set(formatter.formatCoin(dataModel.securityDeposit.get()));
+        buyerSecurityDeposit.set(formatter.formatCoin(dataModel.buyerSecurityDeposit.get()));
 
         updateMarketPriceAvailable();
     }
@@ -366,7 +368,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         securityDepositStringListener = (ov, oldValue, newValue) -> {
             if (!ignoreSecurityDepositStringListener) {
                 if (securityDepositValidator.validate(newValue).isValid) {
-                    setSecurityDepositToModel();
+                    setBuyerSecurityDepositToModel();
                     dataModel.calculateTotalToPay();
                 }
                 updateButtonDisableState();
@@ -407,9 +409,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         securityDepositAsCoinListener = (ov, oldValue, newValue) -> {
             if (newValue != null)
-                securityDeposit.set(formatter.formatCoin(newValue));
+                buyerSecurityDeposit.set(formatter.formatCoin(newValue));
             else
-                securityDeposit.set("");
+                buyerSecurityDeposit.set("");
         };
 
 
@@ -438,14 +440,14 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         marketPriceMargin.addListener(marketPriceMarginStringListener);
         dataModel.useMarketBasedPrice.addListener(useMarketBasedPriceListener);
         volume.addListener(volumeStringListener);
-        securityDeposit.addListener(securityDepositStringListener);
+        buyerSecurityDeposit.addListener(securityDepositStringListener);
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
         dataModel.amount.addListener(amountAsCoinListener);
         dataModel.minAmount.addListener(minAmountAsCoinListener);
         dataModel.price.addListener(priceListener);
         dataModel.volume.addListener(volumeListener);
-        dataModel.securityDeposit.addListener(securityDepositAsCoinListener);
+        dataModel.buyerSecurityDeposit.addListener(securityDepositAsCoinListener);
 
         // dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.addListener(isWalletFundedListener);
@@ -460,14 +462,14 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         marketPriceMargin.removeListener(marketPriceMarginStringListener);
         dataModel.useMarketBasedPrice.removeListener(useMarketBasedPriceListener);
         volume.removeListener(volumeStringListener);
-        securityDeposit.removeListener(securityDepositStringListener);
+        buyerSecurityDeposit.removeListener(securityDepositStringListener);
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
         dataModel.amount.removeListener(amountAsCoinListener);
         dataModel.minAmount.removeListener(minAmountAsCoinListener);
         dataModel.price.removeListener(priceListener);
         dataModel.volume.removeListener(volumeListener);
-        dataModel.securityDeposit.removeListener(securityDepositAsCoinListener);
+        dataModel.buyerSecurityDeposit.removeListener(securityDepositAsCoinListener);
 
         //dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
         dataModel.isWalletFunded.removeListener(isWalletFundedListener);
@@ -677,41 +679,41 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    void onFocusOutSecurityDepositTextField(boolean oldValue, boolean newValue) {
+    void onFocusOutBuyerSecurityDepositTextField(boolean oldValue, boolean newValue) {
         if (oldValue && !newValue) {
-            InputValidator.ValidationResult result = securityDepositValidator.validate(securityDeposit.get());
-            securityDepositValidationResult.set(result);
+            InputValidator.ValidationResult result = securityDepositValidator.validate(buyerSecurityDeposit.get());
+            buyerSecurityDepositValidationResult.set(result);
             if (result.isValid) {
-                Coin defaultSecurityDeposit = Restrictions.DEFAULT_SECURITY_DEPOSIT;
-                String securityDepositLowerAsDefault = "securityDepositLowerAsDefault";
-                if (preferences.showAgain(securityDepositLowerAsDefault) &&
-                        formatter.parseToCoin(securityDeposit.get()).compareTo(defaultSecurityDeposit) < 0) {
+                Coin defaultSecurityDeposit = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT;
+                String buyerSecurityDepositLowerAsDefault = "buyerSecurityDepositLowerAsDefault";
+                if (preferences.showAgain(buyerSecurityDepositLowerAsDefault) &&
+                        formatter.parseToCoin(buyerSecurityDeposit.get()).compareTo(defaultSecurityDeposit) < 0) {
                     new Popup<>()
                             .warning(Res.get("createOffer.tooLowSecDeposit.warning",
                                     formatter.formatCoinWithCode(defaultSecurityDeposit)))
                             .width(800)
                             .actionButtonText(Res.get("createOffer.resetToDefault"))
                             .onAction(() -> {
-                                dataModel.setSecurityDeposit(defaultSecurityDeposit);
+                                dataModel.setBuyerSecurityDeposit(defaultSecurityDeposit);
                                 ignoreSecurityDepositStringListener = true;
-                                securityDeposit.set(formatter.formatCoin(dataModel.securityDeposit.get()));
+                                buyerSecurityDeposit.set(formatter.formatCoin(dataModel.buyerSecurityDeposit.get()));
                                 ignoreSecurityDepositStringListener = false;
                             })
                             .closeButtonText(Res.get("createOffer.useLowerValue"))
-                            .onClose(this::applySecurityDepositOnFocusOut)
-                            .dontShowAgainId(securityDepositLowerAsDefault, preferences)
+                            .onClose(this::applyBuyerSecurityDepositOnFocusOut)
+                            .dontShowAgainId(buyerSecurityDepositLowerAsDefault, preferences)
                             .show();
                 } else {
-                    applySecurityDepositOnFocusOut();
+                    applyBuyerSecurityDepositOnFocusOut();
                 }
             }
         }
     }
 
-    private void applySecurityDepositOnFocusOut() {
-        setSecurityDepositToModel();
+    private void applyBuyerSecurityDepositOnFocusOut() {
+        setBuyerSecurityDepositToModel();
         ignoreSecurityDepositStringListener = true;
-        securityDeposit.set(formatter.formatCoin(dataModel.securityDeposit.get()));
+        buyerSecurityDeposit.set(formatter.formatCoin(dataModel.buyerSecurityDeposit.get()));
         ignoreSecurityDepositStringListener = false;
     }
 
@@ -863,11 +865,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    private void setSecurityDepositToModel() {
-        if (securityDeposit.get() != null && !securityDeposit.get().isEmpty()) {
-            dataModel.setSecurityDeposit(formatter.parseToCoinWith4Decimals(securityDeposit.get()));
+    private void setBuyerSecurityDepositToModel() {
+        if (buyerSecurityDeposit.get() != null && !buyerSecurityDeposit.get().isEmpty()) {
+            dataModel.setBuyerSecurityDeposit(formatter.parseToCoinWith4Decimals(buyerSecurityDeposit.get()));
         } else {
-            dataModel.setSecurityDeposit(null);
+            dataModel.setBuyerSecurityDeposit(null);
         }
     }
 
@@ -918,7 +920,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         boolean inputDataValid = isBtcInputValid(amount.get()).isValid &&
                 isBtcInputValid(minAmount.get()).isValid &&
                 isPriceInputValid(price.get()).isValid &&
-                securityDepositValidator.validate(securityDeposit.get()).isValid &&
+                securityDepositValidator.validate(buyerSecurityDeposit.get()).isValid &&
                 dataModel.price.get() != null &&
                 dataModel.price.get().getValue() != 0 &&
                 isVolumeInputValid(volume.get()).isValid &&

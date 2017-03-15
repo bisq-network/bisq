@@ -184,11 +184,43 @@ public class P2PDataStorageTest {
         NodeAddress nodeAddress2 = new NodeAddress("host1", 1001);
         NodeAddress nodeAddress3 = new NodeAddress("host2", 1002);
         NodeAddress nodeAddress4 = new NodeAddress("host3", 1002);
-        return new Offer("id", System.currentTimeMillis(), nodeAddress4, keyRing1.getPubKeyRing(), Offer.Direction.BUY, 1200, 1.5, true, 100,
-                50, "USD", Lists.newArrayList(nodeAddress, nodeAddress2, nodeAddress3), "SEPA", "accountid",
-                "feetxId", "BE", Lists.newArrayList("BE", "AU"), "bankid", Lists.newArrayList("BANK1", "BANK2"), null,
-                "version", 100, 100, 100, 100, 1000, 1000, false,
-                false, 1000, 1000, false, "hash", null);
+        return new Offer("id",
+                System.currentTimeMillis(),
+                nodeAddress4,
+                keyRing1.getPubKeyRing(),
+                Offer.Direction.BUY,
+                1200,
+                1.5,
+                true,
+                100,
+                50,
+                "USD",
+                Lists.newArrayList(nodeAddress,
+                        nodeAddress2,
+                        nodeAddress3),
+                "SEPA",
+                "accountid",
+                "feetxId",
+                "BE",
+                Lists.newArrayList("BE", "AU"),
+                "bankid",
+                Lists.newArrayList("BANK1", "BANK2"), null,
+                "version",
+                100,
+                100,
+                100,
+                100,
+                1000,
+                1000,
+                1000,
+                false,
+                false,
+
+                1000,
+                1000,
+                false,
+                "hash",
+                null);
     }
 
     @Test

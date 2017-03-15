@@ -556,12 +556,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     public String getSecurityDepositInfo() {
-        return formatter.formatCoinWithCode(dataModel.getSecurityDepositAsCoin()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDepositAsCoin(), dataModel.amountAsCoin.get(), formatter);
-    }
-
-    public String getSecurityDeposit() {
-        return formatter.formatCoin(dataModel.getSecurityDepositAsCoin());
+        return formatter.formatCoinWithCode(dataModel.getSecurityDeposit()) +
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.amountAsCoin.get(), formatter);
     }
 
     public String getTakerFee() {
@@ -601,5 +597,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public void resetErrorMessage() {
         offer.setErrorMessage(null);
+    }
+
+    public String getBuyerSecurityDeposit() {
+        return formatter.formatCoin(dataModel.getBuyerSecurityDeposit());
+    }
+
+    public String getSellerSecurityDeposit() {
+        return formatter.formatCoin(dataModel.getSellerSecurityDeposit());
     }
 }

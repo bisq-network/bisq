@@ -74,6 +74,7 @@ import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
+import static io.bisq.gui.util.FormBuilder.getNotEditableValueCurrencyBox;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 // TODO Implement other positioning method in InoutTextField to display it over the field instead of right side
@@ -95,9 +96,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             fundFromExternalWalletButton, takeOfferButton;
     private InputTextField amountTextField;
     private TextField paymentMethodTextField, currencyTextField, priceTextField, priceAsPercentageTextField,
-            volumeTextField, amountRangeTextField, securityDepositTextField;
+            volumeTextField, amountRangeTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel,
-            amountBtcLabel, priceCurrencyLabel, priceAsPercentageLabel, securityDepositBtcLabel,
+            amountBtcLabel, priceCurrencyLabel, priceAsPercentageLabel,
             volumeCurrencyLabel, amountRangeBtcLabel, priceDescriptionLabel, volumeDescriptionLabel,
             waitingForFundsLabel, offerAvailabilityLabel;
     private TextFieldWithCopyIcon totalToPayTextField;
@@ -123,6 +124,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     //  private MonadicBinding<Boolean> noSufficientFeeBinding;
     private Subscription cancelButton2StyleSubscription;
     private VBox priceAsPercentageInputBox;
+    private TextField buyerSecurityDepositTextField, sellerSecurityDepositTextField;
+    private Label buyerSecurityDepositBtcLabel, sellerSecurityDepositBtcLabel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -161,6 +164,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     protected void activate() {
         addBindings();
         addSubscriptions();
+
         amountTextField.focusedProperty().addListener(amountFocusedListener);
 
         if (offerAvailabilityBusyAnimation != null && !model.showPayFundsScreenDisplayed.get()) {
@@ -253,11 +257,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         directionLabel.setText(model.getDirectionLabel());
         amountDescriptionLabel.setText(model.getAmountDescription());
         amountRangeTextField.setText(model.getAmountRange());
-        securityDepositTextField.setText(model.getSecurityDeposit());
         priceTextField.setText(model.getPrice());
         priceAsPercentageTextField.setText(model.marketPriceMargin);
         addressTextField.setPaymentLabel(model.getPaymentLabel());
         addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
+
+        buyerSecurityDepositTextField.setText(model.getBuyerSecurityDeposit());
+        sellerSecurityDepositTextField.setText(model.getSellerSecurityDeposit());
 
         if (offer.getPrice() == null)
             new Popup().warning(Res.get("takeOffer.noPriceFeedAvailable"))
@@ -415,6 +421,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
+        buyerSecurityDepositBtcLabel.textProperty().bind(model.btcCode);
+        sellerSecurityDepositBtcLabel.textProperty().bind(model.btcCode);
         amountBtcLabel.textProperty().bind(model.btcCode);
         amountTextField.textProperty().bindBidirectional(model.amount);
         volumeTextField.textProperty().bindBidirectional(model.volume);
@@ -424,7 +432,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> model.dataModel.getCurrencyCode() + "/" + model.btcCode.get(), model.btcCode));
         priceAsPercentageLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         amountRangeBtcLabel.textProperty().bind(model.btcCode);
-        securityDepositBtcLabel.textProperty().bind(model.btcCode);
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
 
 
@@ -438,6 +445,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void removeBindings() {
+        buyerSecurityDepositBtcLabel.textProperty().unbind();
+        sellerSecurityDepositBtcLabel.textProperty().unbind();
         amountBtcLabel.textProperty().unbind();
         amountTextField.textProperty().unbindBidirectional(model.amount);
         volumeTextField.textProperty().unbindBidirectional(model.volume);
@@ -447,7 +456,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceCurrencyLabel.textProperty().unbind();
         priceAsPercentageLabel.prefWidthProperty().unbind();
         amountRangeBtcLabel.textProperty().unbind();
-        securityDepositBtcLabel.textProperty().unbind();
         nextButton.disableProperty().unbind();
 
         // funding
@@ -654,7 +662,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void addAmountPriceGroup() {
-        TitledGroupBg titledGroupBg = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("takeOffer.setAmountPrice"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = FormBuilder.addTitledGroupBg(gridPane, ++gridRow, 3,
+                Res.get("takeOffer.setAmountPrice"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 3);
 
         imageView = new ImageView();
@@ -673,6 +682,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         addAmountPriceFields();
         addSecondRow();
+        addThirdRow();
 
         HBox hBox = new HBox();
         hBox.setSpacing(10);
@@ -838,11 +848,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         xLabel.setPadding(new Insets(14, 3, 0, 3));
 
         // price
-        Tuple3<HBox, TextField, Label> priceValueCurrencyBoxTuple = getValueCurrencyBox();
+        Tuple3<HBox, TextField, Label> priceValueCurrencyBoxTuple = getNotEditableValueCurrencyBox();
         HBox priceValueCurrencyBox = priceValueCurrencyBoxTuple.first;
         priceTextField = priceValueCurrencyBoxTuple.second;
         priceCurrencyLabel = priceValueCurrencyBoxTuple.third;
-        Tuple2<Label, VBox> priceInputBoxTuple = getTradeInputBox(priceValueCurrencyBox, Res.get("takeOffer.amountPriceBox.priceDescription"));
+        Tuple2<Label, VBox> priceInputBoxTuple = getTradeInputBox(priceValueCurrencyBox,
+                Res.get("takeOffer.amountPriceBox.priceDescription"));
         priceDescriptionLabel = priceInputBoxTuple.first;
         VBox priceBox = priceInputBoxTuple.second;
 
@@ -852,7 +863,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         resultLabel.setPadding(new Insets(14, 2, 0, 2));
 
         // volume
-        Tuple3<HBox, TextField, Label> volumeValueCurrencyBoxTuple = getValueCurrencyBox();
+        Tuple3<HBox, TextField, Label> volumeValueCurrencyBoxTuple = getNotEditableValueCurrencyBox();
         HBox volumeValueCurrencyBox = volumeValueCurrencyBoxTuple.first;
         volumeTextField = volumeValueCurrencyBoxTuple.second;
         volumeCurrencyLabel = volumeValueCurrencyBoxTuple.third;
@@ -872,12 +883,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void addSecondRow() {
-        Tuple3<HBox, TextField, Label> priceAsPercentageTuple = getValueCurrencyBox();
+        Tuple3<HBox, TextField, Label> priceAsPercentageTuple = getNotEditableValueCurrencyBox();
         HBox priceAsPercentageValueCurrencyBox = priceAsPercentageTuple.first;
         priceAsPercentageTextField = priceAsPercentageTuple.second;
         priceAsPercentageLabel = priceAsPercentageTuple.third;
 
-        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox, Res.get("shared.distanceInPercent"));
+        Tuple2<Label, VBox> priceAsPercentageInputBoxTuple = getTradeInputBox(priceAsPercentageValueCurrencyBox,
+                Res.get("shared.distanceInPercent"));
         priceAsPercentageInputBoxTuple.first.setPrefWidth(220);
         priceAsPercentageInputBox = priceAsPercentageInputBoxTuple.second;
 
@@ -886,41 +898,64 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         priceAsPercentageLabel.setStyle("-fx-alignment: center;");
 
 
-        Tuple3<HBox, TextField, Label> amountValueCurrencyBoxTuple = getValueCurrencyBox();
+        Tuple3<HBox, TextField, Label> amountValueCurrencyBoxTuple = getNotEditableValueCurrencyBox();
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         amountRangeTextField = amountValueCurrencyBoxTuple.second;
         amountRangeBtcLabel = amountValueCurrencyBoxTuple.third;
 
-        Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox, Res.get("takeOffer.amountPriceBox.amountRangeDescription"));
+        Tuple2<Label, VBox> amountInputBoxTuple = getTradeInputBox(amountValueCurrencyBox,
+                Res.get("takeOffer.amountPriceBox.amountRangeDescription"));
 
         Label xLabel = new Label("x");
         xLabel.setFont(Font.font("Helvetica-Bold", 20));
         xLabel.setPadding(new Insets(14, 3, 0, 3));
         xLabel.setVisible(false); // we just use it to get the same layout as the upper row
 
-        // security deposit
-        Tuple3<HBox, TextField, Label> securityDepositValueCurrencyBoxTuple = getValueCurrencyBox();
-        HBox securityDepositValueCurrencyBox = securityDepositValueCurrencyBoxTuple.first;
-        securityDepositTextField = securityDepositValueCurrencyBoxTuple.second;
-        securityDepositBtcLabel = securityDepositValueCurrencyBoxTuple.third;
-        Tuple2<Label, VBox> securityDepositInputBoxTuple = getTradeInputBox(securityDepositValueCurrencyBox,
-                Res.get("takeOffer.securityDepositBox.description"));
-
-        Label resultLabel = new Label("=");
-        resultLabel.setFont(Font.font("Helvetica-Bold", 20));
-        resultLabel.setPadding(new Insets(14, 2, 0, 2));
-        resultLabel.setVisible(false); // we just use it to get the same layout as the upper row
-
         HBox hBox = new HBox();
         hBox.setSpacing(5);
         hBox.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(amountInputBoxTuple.second, xLabel, priceAsPercentageInputBox, resultLabel, securityDepositInputBoxTuple.second);
+        hBox.getChildren().addAll(amountInputBoxTuple.second, xLabel, priceAsPercentageInputBox);
 
         GridPane.setRowIndex(hBox, ++gridRow);
         GridPane.setColumnIndex(hBox, 1);
         GridPane.setMargin(hBox, new Insets(5, 10, 5, 0));
         GridPane.setColumnSpan(hBox, 2);
         gridPane.getChildren().add(hBox);
+    }
+
+    private void addThirdRow() {
+        // security deposit for buyer
+        Tuple3<HBox, TextField, Label> buyerSecurityDepositTuple = getNotEditableValueCurrencyBox();
+        HBox buyerSecurityDepositValueCurrencyBox = buyerSecurityDepositTuple.first;
+        buyerSecurityDepositTextField = buyerSecurityDepositTuple.second;
+        buyerSecurityDepositBtcLabel = buyerSecurityDepositTuple.third;
+        Tuple2<Label, VBox> buyerSecurityDepositInputBoxTuple = getTradeInputBox(buyerSecurityDepositValueCurrencyBox,
+                Res.get("shared.securityDepositBox.description", Res.get("shared.buyer")));
+        VBox buyerSecurityDepositBox = buyerSecurityDepositInputBoxTuple.second;
+
+        // security deposit for seller
+        Tuple3<HBox, TextField, Label> sellerSecurityDepositTuple = getNotEditableValueCurrencyBox();
+        HBox sellerSecurityDepositValueCurrencyBox = sellerSecurityDepositTuple.first;
+        sellerSecurityDepositTextField = sellerSecurityDepositTuple.second;
+        sellerSecurityDepositBtcLabel = sellerSecurityDepositTuple.third;
+        Tuple2<Label, VBox> sellerSecurityDepositInputBoxTuple = getTradeInputBox(sellerSecurityDepositValueCurrencyBox,
+                Res.get("shared.securityDepositBox.description", Res.get("shared.seller")));
+        VBox sellerSecurityDepositBox = sellerSecurityDepositInputBoxTuple.second;
+
+        Label xLabel = new Label("x");
+        xLabel.setFont(Font.font("Helvetica-Bold", 20));
+        xLabel.setPadding(new Insets(14, 3, 0, 3));
+        xLabel.setVisible(false); // we just use it to get the same layout as the upper row
+
+        HBox thirdRowHBox = new HBox();
+        thirdRowHBox.setSpacing(5);
+        thirdRowHBox.setAlignment(Pos.CENTER_LEFT);
+        thirdRowHBox.getChildren().addAll(buyerSecurityDepositBox, xLabel, sellerSecurityDepositBox);
+        GridPane.setRowIndex(thirdRowHBox, ++gridRow);
+        GridPane.setColumnIndex(thirdRowHBox, 1);
+        GridPane.setMargin(thirdRowHBox, new Insets(0, 10, 5, 0));
+        GridPane.setColumnSpan(thirdRowHBox, 2);
+        gridPane.getChildren().add(thirdRowHBox);
     }
 
 
@@ -952,23 +987,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         HBox box = new HBox();
         box.getChildren().addAll(input, currency);
         return new Tuple3<>(box, input, currency);
-    }
-
-    private Tuple3<HBox, TextField, Label> getValueCurrencyBox() {
-        TextField textField = new InputTextField();
-        textField.setPrefWidth(190);
-        textField.setAlignment(Pos.CENTER_RIGHT);
-        textField.setId("text-input-with-currency-text-field");
-        textField.setMouseTransparent(true);
-        textField.setEditable(false);
-        textField.setFocusTraversable(false);
-
-        Label currency = new Label();
-        currency.setId("currency-info-label-disabled");
-
-        HBox box = new HBox();
-        box.getChildren().addAll(textField, currency);
-        return new Tuple3<>(box, textField, currency);
     }
 
     private void setupTotalToPayInfoIconLabel() {

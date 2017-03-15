@@ -287,8 +287,14 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                 offer.getOffererNodeAddress().getFullAddress());
         addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.creationDate"),
                 formatter.formatDateTime(offer.getDate()));
-        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.securityDeposit"),
-                formatter.formatCoinWithCode(offer.getSecurityDeposit()));
+        String value = Res.getWithColAndCap("shared.buyer") +
+                " " +
+                formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +
+                " / " +
+                Res.getWithColAndCap("shared.seller") +
+                " " +
+                formatter.formatCoinWithCode(offer.getSellerSecurityDeposit());
+        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.securityDeposit"), value);
 
         if (paymentMethodCountryCode != null)
             addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),

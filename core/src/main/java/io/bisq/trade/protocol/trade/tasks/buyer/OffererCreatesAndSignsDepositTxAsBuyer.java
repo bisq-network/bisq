@@ -49,9 +49,12 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin securityDeposit = trade.getOffer().getSecurityDeposit();
-            @SuppressWarnings("UnnecessaryLocalVariable") Coin buyerInputAmount = securityDeposit;
-            Coin msOutputAmount = buyerInputAmount.add(trade.getTxFee()).add(securityDeposit).add(trade.getTradeAmount());
+
+            Coin buyerInputAmount = trade.getOffer().getBuyerSecurityDeposit();
+            Coin msOutputAmount = buyerInputAmount
+                    .add(trade.getTxFee())
+                    .add(trade.getOffer().getSellerSecurityDeposit())
+                    .add(trade.getTradeAmount());
 
             log.debug("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"

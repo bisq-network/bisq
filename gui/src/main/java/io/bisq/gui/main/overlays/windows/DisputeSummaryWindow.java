@@ -33,6 +33,7 @@ import io.bisq.gui.util.Transitions;
 import io.bisq.locale.Res;
 import io.bisq.messages.arbitration.Dispute;
 import io.bisq.messages.arbitration.DisputeResult;
+import io.bisq.messages.trade.offer.payload.Offer;
 import io.bisq.messages.trade.payload.Contract;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
@@ -370,23 +371,24 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
         Coin arbitratorAmount = formatter.parseToCoin(arbitratorPayoutAmountInputTextField.getText());
         Contract contract = dispute.getContract();
-        Coin securityDeposit = contract.offer.getSecurityDeposit();
         Coin tradeAmount = contract.getTradeAmount();
-        Coin available = tradeAmount.add(securityDeposit).add(securityDeposit);
+        Offer offer = contract.offer;
+        Coin available = tradeAmount
+                .add(offer.getBuyerSecurityDeposit())
+                .add(offer.getSellerSecurityDeposit());
         Coin totalAmount = buyerAmount.add(sellerAmount).add(arbitratorAmount);
         return (totalAmount.compareTo(available) == 0);
     }
 
     private void applyCustomAmounts(InputTextField inputTextField) {
         Contract contract = dispute.getContract();
-        Coin securityDeposit = contract.offer.getSecurityDeposit();
-        Coin tradeAmount = contract.getTradeAmount();
-
         Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
         Coin arbitratorAmount = formatter.parseToCoin(arbitratorPayoutAmountInputTextField.getText());
-
-        Coin available = tradeAmount.add(securityDeposit).add(securityDeposit);
+        Offer offer = contract.offer;
+        Coin available = contract.getTradeAmount().
+                add(offer.getBuyerSecurityDeposit())
+                .add(offer.getSellerSecurityDeposit());
         Coin totalAmount = buyerAmount.add(sellerAmount).add(arbitratorAmount);
 
         if (totalAmount.compareTo(available) > 0) {
@@ -677,27 +679,29 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
     }
 
+    //TODO
     private void calculatePayoutAmounts(DisputeResult.DisputeFeePolicy feePayment) {
         Contract contract = dispute.getContract();
-        Coin refund = contract.offer.getSecurityDeposit();
+        Coin buyerSecurityDeposit = contract.offer.getBuyerSecurityDeposit();
+        Coin sellerSecurityDeposit = contract.offer.getSellerSecurityDeposit();
         Coin winnerRefund;
         Coin loserRefund;
         switch (feePayment) {
             case SPLIT:
-                winnerRefund = refund.divide(2L);
+                winnerRefund = buyerSecurityDeposit.divide(2L);
                 loserRefund = winnerRefund;
-                arbitratorPayoutAmount = refund;
+                arbitratorPayoutAmount = buyerSecurityDeposit;
                 break;
             case WAIVE:
-                winnerRefund = refund;
-                loserRefund = refund;
+                winnerRefund = buyerSecurityDeposit;
+                loserRefund = buyerSecurityDeposit;
                 arbitratorPayoutAmount = Coin.ZERO;
                 break;
             case LOSER:
             default:
-                winnerRefund = refund;
+                winnerRefund = buyerSecurityDeposit;
                 loserRefund = Coin.ZERO;
-                arbitratorPayoutAmount = refund;
+                arbitratorPayoutAmount = buyerSecurityDeposit;
                 break;
         }
 

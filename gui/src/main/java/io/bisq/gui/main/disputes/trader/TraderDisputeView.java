@@ -996,7 +996,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getDateColumn() {
         TableColumn<Dispute, Dispute> column = new TableColumn<Dispute, Dispute>(Res.get("shared.date")) {
             {
-                setMinWidth(150);
+                setMinWidth(180);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));

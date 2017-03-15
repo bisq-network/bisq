@@ -184,10 +184,20 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 trade.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeDate"),
                 formatter.formatDateTime(trade.getDate()));
-        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.securityDeposit"),
-                formatter.formatCoinWithCode(offer.getSecurityDeposit()));
-        addLabelTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.txFee"),
-                formatter.formatCoinWithCode(trade.getTxFee()));
+        String securityDeposit = Res.getWithColAndCap("shared.buyer") +
+                " " +
+                formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +
+                " / " +
+                Res.getWithColAndCap("shared.seller") +
+                " " +
+                formatter.formatCoinWithCode(offer.getSellerSecurityDeposit());
+        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.securityDeposit"), securityDeposit);
+
+        String txFee = Res.get("shared.makerTxFee", formatter.formatCoinWithCode(offer.getTxFee())) +
+                " / " +
+                Res.get("shared.takerTxFee", formatter.formatCoinWithCode(offer.getTxFee().multiply(3L)));
+        addLabelTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.txFee"), txFee);
+        
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"),
                 trade.getArbitratorNodeAddress().getFullAddress());
 

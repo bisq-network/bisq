@@ -47,8 +47,9 @@ public class SignPayoutTx extends TradeTask {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
             checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
-            Coin sellerPayoutAmount = trade.getOffer().getSecurityDeposit();
-            Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
+            Coin sellerPayoutAmount = trade.getOffer().getSellerSecurityDeposit();
+            Coin buyerPayoutAmount = trade.getOffer().getBuyerSecurityDeposit()
+                    .add(trade.getTradeAmount());
 
             // We use the sellers LastBlockSeenHeight, which might be different to the buyers one.
             // If lock time is 0 we set lockTimeAsBlockHeight to 0 to mark it as "not set". 

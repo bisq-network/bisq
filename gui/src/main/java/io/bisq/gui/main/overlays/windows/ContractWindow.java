@@ -22,7 +22,6 @@ import io.bisq.arbitration.DisputeManager;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
 import io.bisq.messages.arbitration.Dispute;
@@ -48,6 +47,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
+
+import static io.bisq.gui.util.FormBuilder.*;
 
 public class ContractWindow extends Overlay<ContractWindow> {
     protected static final Logger log = LoggerFactory.getLogger(ContractWindow.class);
@@ -102,7 +103,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
         boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
 
-        int rows = 16;
+        int rows = 17;
         if (dispute.getDepositTxSerialized() != null)
             rows++;
         if (dispute.getPayoutTxSerialized() != null)
@@ -113,28 +114,43 @@ public class ContractWindow extends Overlay<ContractWindow> {
             rows++;
 
         PaymentAccountContractData sellerPaymentAccountContractData = contract.getSellerPaymentAccountContractData();
-        FormBuilder.addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("contractWindow.title"));
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.getWithCol("shared.offerId"), offer.getId(),
+        addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("contractWindow.title"));
+        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.getWithCol("shared.offerId"), offer.getId(),
                 Layout.FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.get("contractWindow.dates"), formatter.formatDateTime(offer.getDate()) + " / " + formatter.formatDateTime(dispute.getTradeDate()));
+        addLabelTextField(gridPane, ++rowIndex, Res.get("contractWindow.dates"),
+                formatter.formatDateTime(offer.getDate()) + " / " + formatter.formatDateTime(dispute.getTradeDate()));
         String currencyCode = offer.getCurrencyCode();
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.offerType"), formatter.getDirectionBothSides(offer.getDirection(), currencyCode));
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradePrice"), formatter.formatPrice(contract.getTradePrice()));
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeAmount"), formatter.formatCoinWithCode(contract.getTradeAmount()));
-        FormBuilder.addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode, ":"),
+        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.offerType"),
+                formatter.getDirectionBothSides(offer.getDirection(), currencyCode));
+        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradePrice"),
+                formatter.formatPrice(contract.getTradePrice()));
+        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeAmount"),
+                formatter.formatCoinWithCode(contract.getTradeAmount()));
+        addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode, ":"),
                 formatter.formatVolumeWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.btcAddresses"),
-                contract.getBuyerPayoutAddressString() + " / " + contract.getSellerPayoutAddressString()).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.onions"), contract.getBuyerNodeAddress().getFullAddress() + " / " + contract.getSellerNodeAddress().getFullAddress());
+        String securityDeposit = Res.getWithColAndCap("shared.buyer") +
+                " " +
+                formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +
+                " / " +
+                Res.getWithColAndCap("shared.seller") +
+                " " +
+                formatter.formatCoinWithCode(offer.getSellerSecurityDeposit());
+        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.securityDeposit"), securityDeposit);
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.btcAddresses"),
+                contract.getBuyerPayoutAddressString() + " / " +
+                        contract.getSellerPayoutAddressString()).second.setMouseTransparent(false);
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.onions"),
+                contract.getBuyerNodeAddress().getFullAddress() + " / " + contract.getSellerNodeAddress().getFullAddress());
 
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.numDisputes"), disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.numDisputes"),
+                disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
 
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
                 contract.getBuyerPaymentAccountContractData().getPaymentDetails()).second.setMouseTransparent(false);
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
                 sellerPaymentAccountContractData.getPaymentDetails()).second.setMouseTransparent(false);
 
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"), contract.arbitratorNodeAddress.getFullAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"), contract.arbitratorNodeAddress.getFullAddress());
 
         if (showAcceptedCountryCodes) {
             String countries;
@@ -145,34 +161,34 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 countries = CountryUtil.getCodesString(acceptedCountryCodes);
                 tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
             }
-            TextField acceptedCountries = FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.acceptedTakerCountries"), countries).second;
+            TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.acceptedTakerCountries"), countries).second;
             if (tooltip != null) acceptedCountries.setTooltip(new Tooltip());
         }
 
         if (showAcceptedBanks) {
             if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK)) {
-                FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.bankName"), acceptedBanks.get(0));
+                addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.bankName"), acceptedBanks.get(0));
             } else if (offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS)) {
                 String value = Joiner.on(", ").join(acceptedBanks);
                 Tooltip tooltip = new Tooltip(Res.getWithCol("shared.acceptedBanks") + value);
-                TextField acceptedBanksTextField = FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.acceptedBanks"), value).second;
+                TextField acceptedBanksTextField = addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.acceptedBanks"), value).second;
                 acceptedBanksTextField.setMouseTransparent(false);
                 acceptedBanksTextField.setTooltip(tooltip);
             }
         }
 
-        FormBuilder.addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxID());
-        FormBuilder.addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), contract.takeOfferFeeTxID);
+        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxID());
+        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), contract.takeOfferFeeTxID);
         if (dispute.getDepositTxSerialized() != null)
-            FormBuilder.addLabelTxIdTextField(gridPane, ++rowIndex, Res.getWithCol("shared.depositTransactionId"), dispute.getDepositTxId());
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.getWithCol("shared.depositTransactionId"), dispute.getDepositTxId());
         if (dispute.getPayoutTxSerialized() != null)
-            FormBuilder.addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"), dispute.getPayoutTxId());
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"), dispute.getPayoutTxId());
 
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.contractHash"),
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.contractHash"),
                 Utils.HEX.encode(dispute.getContractHash())).second.setMouseTransparent(false);
 
         if (contract != null) {
-            Button viewContractButton = FormBuilder.addLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),
+            Button viewContractButton = addLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),
                     Res.get("shared.viewContractAsJson"), 0).second;
             viewContractButton.setDefaultButton(false);
             viewContractButton.setOnAction(e -> {
@@ -202,7 +218,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
             });
         }
 
-        Button closeButton = FormBuilder.addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
+        Button closeButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
         //TODO app wide focus
         //closeButton.requestFocus();
         closeButton.setOnAction(e -> {

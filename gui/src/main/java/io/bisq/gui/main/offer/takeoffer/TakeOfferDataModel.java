@@ -69,7 +69,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private Coin takerFeeAsCoin;
     private Coin txFeeAsCoin;
     private Coin totalTxFeeAsCoin;
-    private Coin securityDepositAsCoin;
+    private Coin securityDeposit;
     // Coin feeFromFundingTx = Coin.NEGATIVE_SATOSHI;
 
     private Offer offer;
@@ -169,7 +169,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (DevEnv.DEV_MODE)
             amountAsCoin.set(offer.getAmount());
 
-        securityDepositAsCoin = offer.getSecurityDeposit();
+        securityDeposit = offer.getDirection() == Offer.Direction.SELL ?
+                getBuyerSecurityDeposit() :
+                getSellerSecurityDeposit();
 
         // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer 
         // and reserved his funds, so that would not work well with dynamic fees.
@@ -363,7 +365,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (offer != null && amountAsCoin.get() != null && takerFeeAsCoin != null) {
-            Coin value = takerFeeAsCoin.add(totalTxFeeAsCoin).add(securityDepositAsCoin);
+            Coin value = takerFeeAsCoin.add(totalTxFeeAsCoin).add(securityDeposit);
             if (getDirection() == Offer.Direction.SELL)
                 totalToPayAsCoin.set(value);
             else
@@ -458,10 +460,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return CurrencyUtil.getNameByCode(offer.getCurrencyCode());
     }
 
-    public Coin getSecurityDepositAsCoin() {
-        return securityDepositAsCoin;
-    }
-
     public Coin getTakerFeeAsCoin() {
         checkNotNull(totalTxFeeAsCoin, "totalTxFeeAsCoin must not be null");
         return takerFeeAsCoin;
@@ -485,5 +483,17 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     public Preferences getPreferences() {
         return preferences;
+    }
+
+    public Coin getSecurityDeposit() {
+        return securityDeposit;
+    }
+
+    public Coin getBuyerSecurityDeposit() {
+        return offer.getBuyerSecurityDeposit();
+    }
+
+    public Coin getSellerSecurityDeposit() {
+        return offer.getSellerSecurityDeposit();
     }
 }

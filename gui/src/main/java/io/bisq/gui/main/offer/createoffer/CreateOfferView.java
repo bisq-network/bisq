@@ -42,7 +42,6 @@ import io.bisq.gui.main.overlays.windows.QRCodeWindow;
 import io.bisq.gui.main.portfolio.PortfolioView;
 import io.bisq.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
@@ -112,7 +111,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ChangeListener<Boolean> minAmountFocusedListener;
     private ChangeListener<Boolean> priceFocusedListener, priceAsPercentageFocusedListener;
     private ChangeListener<Boolean> volumeFocusedListener;
-    private ChangeListener<Boolean> securityDepositFocusedListener;
+    private ChangeListener<Boolean> buyerSecurityDepositFocusedListener;
 
     private ChangeListener<String> errorMessageListener;
     private ChangeListener<Boolean> placeOfferCompletedListener;
@@ -138,10 +137,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private HBox firstRowHBox;
     private HBox toggleButtonsHBox;
     private ChangeListener<Number> marketPriceAvailableListener;
-    private InputTextField securityDepositTextField;
-    private Label securityDepositBtcLabel;
-    private Label securityDepositDescriptionLabel;
-    private HBox thirdRowHBox;
+    private InputTextField buyerSecurityDepositTextField;
+    private TextField sellerSecurityDepositTextField;
+    private Label buyerSecurityDepositBtcLabel, sellerSecurityDepositBtcLabel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -201,6 +199,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             addBindings();
             addListeners();
             addSubscriptions();
+
+            sellerSecurityDepositTextField.setText(model.sellerSecurityDeposit);
 
             if (waitingForFundsBusyAnimation != null)
                 waitingForFundsBusyAnimation.play();
@@ -447,7 +447,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void addBindings() {
         amountBtcLabel.textProperty().bind(model.btcCode);
-        securityDepositBtcLabel.textProperty().bind(model.btcCode);
+        buyerSecurityDepositBtcLabel.textProperty().bind(model.btcCode);
+        sellerSecurityDepositBtcLabel.textProperty().bind(model.btcCode);
         priceCurrencyLabel.textProperty().bind(createStringBinding(() -> formatter.getCounterCurrency(model.tradeCurrencyCode.get()), model.btcCode, model.tradeCurrencyCode));
 
         marketBasedPriceLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
@@ -473,14 +474,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.promptTextProperty().bind(model.volumePromptLabel);
         totalToPayTextField.textProperty().bind(model.totalToPay);
         addressTextField.amountAsCoinProperty().bind(model.dataModel.missingCoin);
-        securityDepositTextField.textProperty().bindBidirectional(model.securityDeposit);
+        buyerSecurityDepositTextField.textProperty().bindBidirectional(model.buyerSecurityDeposit);
 
         // Validation
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
         minAmountTextField.validationResultProperty().bind(model.minAmountValidationResult);
         fixedPriceTextField.validationResultProperty().bind(model.priceValidationResult);
         volumeTextField.validationResultProperty().bind(model.volumeValidationResult);
-        securityDepositTextField.validationResultProperty().bind(model.securityDepositValidationResult);
+        buyerSecurityDepositTextField.validationResultProperty().bind(model.buyerSecurityDepositValidationResult);
 
         // funding
         fundingHBox.visibleProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
@@ -504,7 +505,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void removeBindings() {
         amountBtcLabel.textProperty().unbind();
-        securityDepositBtcLabel.textProperty().unbind();
+        buyerSecurityDepositBtcLabel.textProperty().unbind();
+        sellerSecurityDepositBtcLabel.textProperty().unbind();
         priceCurrencyLabel.textProperty().unbind();
         fixedPriceTextField.disableProperty().unbind();
         priceCurrencyLabel.disableProperty().unbind();
@@ -524,14 +526,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.promptTextProperty().unbindBidirectional(model.volume);
         totalToPayTextField.textProperty().unbind();
         addressTextField.amountAsCoinProperty().unbind();
-        securityDepositTextField.textProperty().unbindBidirectional(model.securityDeposit);
+        buyerSecurityDepositTextField.textProperty().unbindBidirectional(model.buyerSecurityDeposit);
 
         // Validation
         amountTextField.validationResultProperty().unbind();
         minAmountTextField.validationResultProperty().unbind();
         fixedPriceTextField.validationResultProperty().unbind();
         volumeTextField.validationResultProperty().unbind();
-        securityDepositTextField.validationResultProperty().unbind();
+        buyerSecurityDepositTextField.validationResultProperty().unbind();
 
         // funding
         fundingHBox.visibleProperty().unbind();
@@ -593,10 +595,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             model.onFocusOutVolumeTextField(oldValue, newValue);
             volumeTextField.setText(model.volume.get());
         };
-        securityDepositFocusedListener = (o, oldValue, newValue) -> {
-            model.onFocusOutSecurityDepositTextField(oldValue, newValue);
-            securityDepositTextField.setText(model.securityDeposit.get());
+        buyerSecurityDepositFocusedListener = (o, oldValue, newValue) -> {
+            model.onFocusOutBuyerSecurityDepositTextField(oldValue, newValue);
+            buyerSecurityDepositTextField.setText(model.buyerSecurityDeposit.get());
         };
+
         errorMessageListener = (o, oldValue, newValue) -> {
             if (newValue != null)
                 UserThread.runAfter(() -> new Popup().error(Res.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()))
@@ -648,7 +651,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                                     .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
                                     .onAction(() -> {
                                         UserThread.runAfter(() ->
-                                                        navigation.navigateTo(MainView.class, PortfolioView.class, OpenOffersView.class),
+                                                        navigation.navigateTo(MainView.class, PortfolioView.class,
+                                                                OpenOffersView.class),
                                                 100, TimeUnit.MILLISECONDS);
                                         close();
                                     })
@@ -688,7 +692,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fixedPriceTextField.focusedProperty().addListener(priceFocusedListener);
         marketBasedPriceTextField.focusedProperty().addListener(priceAsPercentageFocusedListener);
         volumeTextField.focusedProperty().addListener(volumeFocusedListener);
-        securityDepositTextField.focusedProperty().addListener(securityDepositFocusedListener);
+        buyerSecurityDepositTextField.focusedProperty().addListener(buyerSecurityDepositFocusedListener);
 
         // warnings
         model.errorMessage.addListener(errorMessageListener);
@@ -711,7 +715,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fixedPriceTextField.focusedProperty().removeListener(priceFocusedListener);
         marketBasedPriceTextField.focusedProperty().removeListener(priceAsPercentageFocusedListener);
         volumeTextField.focusedProperty().removeListener(volumeFocusedListener);
-        securityDepositTextField.focusedProperty().removeListener(securityDepositFocusedListener);
+        buyerSecurityDepositTextField.focusedProperty().removeListener(buyerSecurityDepositFocusedListener);
 
         // warnings
         model.errorMessage.removeListener(errorMessageListener);
@@ -961,7 +965,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void addAmountPriceFields() {
         // amountBox
-        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(Res.get("createOffer.amount.prompt"));
+        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getEditableValueCurrencyBox(Res.get("createOffer.amount.prompt"));
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         amountTextField = amountValueCurrencyBoxTuple.second;
         editOfferElements.add(amountTextField);
@@ -980,7 +984,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         xLabel.setMaxWidth(14);
 
         // price as percent
-        Tuple3<HBox, InputTextField, Label> priceAsPercentageTuple = FormBuilder.getValueCurrencyBox(Res.get("createOffer.price.prompt"));
+        Tuple3<HBox, InputTextField, Label> priceAsPercentageTuple = getEditableValueCurrencyBox(Res.get("createOffer.price.prompt"));
         HBox priceAsPercentageValueCurrencyBox = priceAsPercentageTuple.first;
         marketBasedPriceTextField = priceAsPercentageTuple.second;
         editOfferElements.add(marketBasedPriceTextField);
@@ -1018,7 +1022,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         resultLabel.setPadding(new Insets(14, 2, 0, 2));
 
         // volume
-        Tuple3<HBox, InputTextField, Label> volumeValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(Res.get("createOffer.volume.prompt"));
+        Tuple3<HBox, InputTextField, Label> volumeValueCurrencyBoxTuple = getEditableValueCurrencyBox(Res.get("createOffer.volume.prompt"));
         HBox volumeValueCurrencyBox = volumeValueCurrencyBoxTuple.first;
         volumeTextField = volumeValueCurrencyBoxTuple.second;
         editOfferElements.add(volumeTextField);
@@ -1083,7 +1087,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void addSecondRow() {
         // price as fiat
-        Tuple3<HBox, InputTextField, Label> priceValueCurrencyBoxTuple = FormBuilder.getValueCurrencyBox(Res.get("createOffer.price.prompt"));
+        Tuple3<HBox, InputTextField, Label> priceValueCurrencyBoxTuple = getEditableValueCurrencyBox(
+                Res.get("createOffer.price.prompt"));
         HBox priceValueCurrencyBox = priceValueCurrencyBoxTuple.first;
         fixedPriceTextField = priceValueCurrencyBoxTuple.second;
         editOfferElements.add(fixedPriceTextField);
@@ -1098,7 +1103,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         marketBasedPriceLabel.setText("%");
         marketBasedPriceLabel.setStyle("-fx-alignment: center;");
 
-        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getValueCurrencyBox(Res.get("createOffer.amount.prompt"));
+        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getEditableValueCurrencyBox(
+                Res.get("createOffer.amount.prompt"));
         HBox amountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
         minAmountTextField = amountValueCurrencyBoxTuple.second;
         editOfferElements.add(minAmountTextField);
@@ -1125,24 +1131,38 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addThirdRow() {
-        // security deposit
-        Tuple3<HBox, InputTextField, Label> securityDepositTuple = FormBuilder.getValueCurrencyBox(
+        // security deposit for buyer
+        Tuple3<HBox, InputTextField, Label> buyerSecurityDepositTuple = getEditableValueCurrencyBox(
                 Res.get("createOffer.securityDeposit.prompt"));
-        HBox securityDepositValueCurrencyBox = securityDepositTuple.first;
-        securityDepositTextField = securityDepositTuple.second;
-        editOfferElements.add(securityDepositTextField);
-        securityDepositBtcLabel = securityDepositTuple.third;
-        editOfferElements.add(securityDepositBtcLabel);
-        Tuple2<Label, VBox> securityDepositInputBoxTuple = getTradeInputBox(securityDepositValueCurrencyBox,
-                Res.get("createOffer.securityDepositBox.description"));
-        securityDepositDescriptionLabel = securityDepositInputBoxTuple.first;
-        editOfferElements.add(securityDepositDescriptionLabel);
-        VBox securityDepositBox = securityDepositInputBoxTuple.second;
+        HBox buyerSecurityDepositValueCurrencyBox = buyerSecurityDepositTuple.first;
+        buyerSecurityDepositTextField = buyerSecurityDepositTuple.second;
+        editOfferElements.add(buyerSecurityDepositTextField);
+        buyerSecurityDepositBtcLabel = buyerSecurityDepositTuple.third;
+        editOfferElements.add(buyerSecurityDepositBtcLabel);
+        Tuple2<Label, VBox> buyerSecurityDepositInputBoxTuple = getTradeInputBox(buyerSecurityDepositValueCurrencyBox,
+                Res.get("shared.securityDepositBox.description", Res.get("shared.buyer")));
+        editOfferElements.add(buyerSecurityDepositInputBoxTuple.first);
+        VBox buyerSecurityDepositBox = buyerSecurityDepositInputBoxTuple.second;
 
-        thirdRowHBox = new HBox();
+        // security deposit for seller
+        Tuple3<HBox, TextField, Label> sellerSecurityDepositTuple = getNotEditableValueCurrencyBox();
+        HBox sellerSecurityDepositValueCurrencyBox = sellerSecurityDepositTuple.first;
+        sellerSecurityDepositTextField = sellerSecurityDepositTuple.second;
+        sellerSecurityDepositTextField.setPrefWidth(170);
+        sellerSecurityDepositBtcLabel = sellerSecurityDepositTuple.third;
+        Tuple2<Label, VBox> sellerSecurityDepositInputBoxTuple = getTradeInputBox(sellerSecurityDepositValueCurrencyBox,
+                Res.get("shared.securityDepositBox.description", Res.get("shared.seller")));
+        VBox sellerSecurityDepositBox = sellerSecurityDepositInputBoxTuple.second;
+
+        Label xLabel = new Label("x");
+        xLabel.setFont(Font.font("Helvetica-Bold", 20));
+        xLabel.setPadding(new Insets(14, 3, 0, 3));
+        xLabel.setVisible(false); // we just use it to get the same layout as the upper row
+
+        HBox thirdRowHBox = new HBox();
         thirdRowHBox.setSpacing(5);
         thirdRowHBox.setAlignment(Pos.CENTER_LEFT);
-        thirdRowHBox.getChildren().add(securityDepositBox);
+        thirdRowHBox.getChildren().addAll(buyerSecurityDepositBox, xLabel, sellerSecurityDepositBox);
         GridPane.setRowIndex(thirdRowHBox, ++gridRow);
         GridPane.setColumnIndex(thirdRowHBox, 1);
         GridPane.setMargin(thirdRowHBox, new Insets(0, 10, 5, 0));

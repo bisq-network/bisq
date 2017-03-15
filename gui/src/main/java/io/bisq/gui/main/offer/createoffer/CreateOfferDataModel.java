@@ -31,7 +31,6 @@ import io.bisq.gui.main.offer.createoffer.monetary.Volume;
 import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.locale.Res;
-import io.bisq.messages.arbitration.Arbitrator;
 import io.bisq.messages.btc.Restrictions;
 import io.bisq.messages.btc.provider.fee.FeeService;
 import io.bisq.messages.locale.CurrencyUtil;
@@ -52,7 +51,10 @@ import javafx.collections.SetChangeListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -100,7 +102,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     // If we would change the price representation in the domain we would not be backward compatible
     final ObjectProperty<Price> price = new SimpleObjectProperty<>();
     final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> securityDeposit = new SimpleObjectProperty<>();
+    final ObjectProperty<Coin> buyerSecurityDeposit = new SimpleObjectProperty<>();
+    final Coin sellerSecurityDeposit;
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
     final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
@@ -140,7 +143,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         addressEntry = walletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
 
         useMarketBasedPrice.set(preferences.getUsePercentageBasedPrice());
-        securityDeposit.set(preferences.getSecurityDepositAsCoin());
+        buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsCoin());
+        sellerSecurityDeposit = Restrictions.SELLER_SECURITY_DEPOSIT;
 
         balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
@@ -323,11 +327,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
 
-        Coin securityDepositAsCoin = securityDeposit.get();
-        checkArgument(securityDepositAsCoin.compareTo(Restrictions.MAX_SECURITY_DEPOSIT) <= 0, "securityDeposit must be not exceed " +
-                Restrictions.MAX_SECURITY_DEPOSIT.toFriendlyString());
-        checkArgument(securityDepositAsCoin.compareTo(Restrictions.MIN_SECURITY_DEPOSIT) >= 0, "securityDeposit must be not be less than " +
-                Restrictions.MIN_SECURITY_DEPOSIT.toFriendlyString());
+        Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
+        checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.MAX_BUYER_SECURITY_DEPOSIT) <= 0,
+                "securityDeposit must be not exceed " +
+                        Restrictions.MAX_BUYER_SECURITY_DEPOSIT.toFriendlyString());
+        checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.MIN_BUYER_SECURITY_DEPOSIT) >= 0,
+                "securityDeposit must be not be less than " +
+                        Restrictions.MIN_BUYER_SECURITY_DEPOSIT.toFriendlyString());
         return new Offer(offerId,
                 null,
                 p2PService.getAddress(),
@@ -353,7 +359,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 walletService.getLastBlockSeenHeight(),
                 txFeeAsCoin.value,
                 createOfferFeeAsCoin.value,
-                securityDepositAsCoin.value,
+                buyerSecurityDepositAsCoin.value,
+                sellerSecurityDeposit.value,
                 maxTradeLimit,
                 maxTradePeriod,
                 useAutoClose,
@@ -523,12 +530,20 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (direction != null && amount.get() != null && createOfferFeeAsCoin != null) {
-            Coin feeAndSecDeposit = createOfferFeeAsCoin.add(txFeeAsCoin).add(securityDeposit.get());
-            Coin required = direction == Offer.Direction.BUY ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
+            Coin feeAndSecDeposit = createOfferFeeAsCoin.add(txFeeAsCoin).add(getSecurityDeposit());
+            Coin required = isBuyOffer() ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
             totalToPayAsCoin.set(required);
             log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
             updateBalance();
         }
+    }
+
+    Coin getSecurityDeposit() {
+        return isBuyOffer() ? buyerSecurityDeposit.get() : sellerSecurityDeposit;
+    }
+
+    boolean isBuyOffer() {
+        return direction == Offer.Direction.BUY;
     }
 
     private void updateBalance() {
@@ -579,14 +594,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return txFeeAsCoin;
     }
 
-    public Coin getSecurityDeposit() {
-        return securityDeposit.get();
-    }
-
-    public List<Arbitrator> getArbitrators() {
-        return user.getAcceptedArbitrators();
-    }
-
     public Preferences getPreferences() {
         return preferences;
     }
@@ -614,9 +621,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.amount.set(amount);
     }
 
-    void setSecurityDeposit(Coin securityDeposit) {
-        this.securityDeposit.set(securityDeposit);
-        preferences.setSecurityDepositAsLong(securityDeposit.value);
+    void setBuyerSecurityDeposit(Coin buyerSecurityDeposit) {
+        this.buyerSecurityDeposit.set(buyerSecurityDeposit);
+        preferences.setBuyerSecurityDepositAsLong(buyerSecurityDeposit.value);
     }
 
     void updateTradeFee() {

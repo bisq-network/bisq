@@ -320,16 +320,17 @@ message Offer {
     int64 block_height_at_offer_creation = 23;
     int64 tx_fee = 24;
     int64 create_offer_fee = 25;
-    int64 security_deposit = 26;
-    int64 max_trade_limit = 27;
-    int64 max_trade_period = 28;
-    bool use_auto_close = 29;
-    bool use_re_open_after_auto_close = 30;
-    int64 lower_close_price = 31;
-    int64 upper_close_price = 32;
-    bool is_private_offer = 33;
-    string hash_of_challenge = 34;
-    map<string, string> extra_data_map = 35;
+    int64 buyer_security_deposit = 26;
+    int64 seller_security_deposit = 27;
+    int64 max_trade_limit = 28;
+    int64 max_trade_period = 29;
+    bool use_auto_close = 30;
+    bool use_re_open_after_auto_close = 31;
+    int64 lower_close_price = 32;
+    int64 upper_close_price = 33;
+    bool is_private_offer = 34;
+    string hash_of_challenge = 35;
+    map<string, string> extra_data_map = 36;
 }
 
 // stop storagepayloads
