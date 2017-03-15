@@ -68,7 +68,7 @@ public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
             Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             checkArgument(addressEntryOptional.isPresent(), "addressEntry must be set here.");
             AddressEntry sellerMultiSigAddressEntry = addressEntryOptional.get();
-            sellerMultiSigAddressEntry.setCoinLockedInMultiSig(sellerInputAmount.subtract(trade.getTxFee()));
+            sellerMultiSigAddressEntry.setCoinLockedInMultiSig(sellerInputAmount);
             byte[] sellerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(sellerMultiSigPubKey,
                             sellerMultiSigAddressEntry.getPubKey()),

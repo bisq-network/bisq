@@ -121,7 +121,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 ProcessPublishDepositTxRequest.class,
                 VerifyOffererAccount.class,
                 VerifyAndSignContract.class,
-                TakerSignAndPublishDepositTxAsBuyer.class,
+                SignAndPublishDepositTxAsBuyer.class,
                 SendDepositTxPublishedMessage.class,
                 PublishTradeStatistics.class
         );

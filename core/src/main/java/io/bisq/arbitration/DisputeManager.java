@@ -59,10 +59,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -580,8 +577,7 @@ public class DisputeManager {
                 }
 
                 if ((isBuyer && publisher == DisputeResult.Winner.BUYER)
-                        || (!isBuyer && publisher == DisputeResult.Winner.SELLER)
-                        || (isBuyer && publisher == DisputeResult.Winner.STALE_MATE)) {
+                        || (!isBuyer && publisher == DisputeResult.Winner.SELLER)) {
 
                     final Optional<Trade> tradeOptional = tradeManager.getTradeById(tradeId);
                     Transaction payoutTx = null;
@@ -605,10 +601,8 @@ public class DisputeManager {
                                         disputeResult.getArbitratorSignature(),
                                         disputeResult.getBuyerPayoutAmount(),
                                         disputeResult.getSellerPayoutAmount(),
-                                        disputeResult.getArbitratorPayoutAmount(),
                                         contract.getBuyerPayoutAddressString(),
                                         contract.getSellerPayoutAddressString(),
-                                        disputeResult.getArbitratorAddressAsString(),
                                         multiSigKeyPair,
                                         contract.getBuyerMultiSigPubKey(),
                                         contract.getSellerMultiSigPubKey(),
@@ -727,7 +721,8 @@ public class DisputeManager {
     }
 
     private boolean isArbitrator(DisputeResult disputeResult) {
-        return disputeResult.getArbitratorAddressAsString().equals(walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR).getAddressString());
+        return Arrays.equals(disputeResult.getArbitratorPubKey(),
+                walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR).getPubKey());
     }
 
     public String getNrOfDisputes(boolean isBuyer, Contract contract) {

@@ -387,7 +387,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
 
         checkArgument(getDate().getTime() > 0,
                 "Date must not be 0. date=" + getDate().toString());
-        
+
         checkNotNull(getArbitratorNodeAddresses(), "Arbitrator is null");
         checkNotNull(getCurrencyCode(), "Currency is null");
         checkNotNull(getDirection(), "Direction is null");
@@ -395,7 +395,7 @@ public final class Offer implements StoragePayload, RequiresOwnerIsOnlinePayload
         checkNotNull(getPubKeyRing(), "pubKeyRing is null");
         checkNotNull(getVersionNr(), "VersionNr is null");
         checkArgument(getMaxTradePeriod() > 0, "maxTradePeriod must be positive. maxTradePeriod=" + getMaxTradePeriod());
-       
+
         // TODO check upper and lower bounds for fiat
         // TODO check rest of new parameters
     }

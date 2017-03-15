@@ -36,7 +36,6 @@ import io.bisq.messages.arbitration.DisputeResult;
 import io.bisq.messages.trade.offer.payload.Offer;
 import io.bisq.messages.trade.payload.Contract;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
@@ -69,25 +68,23 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private final TradeWalletService tradeWalletService;
     private Dispute dispute;
     private Optional<Runnable> finalizeDisputeHandlerOptional = Optional.empty();
-    private ToggleGroup tradeAmountToggleGroup;
+    private ToggleGroup tradeAmountToggleGroup, reasonToggleGroup;
     private DisputeResult disputeResult;
-    private RadioButton buyerIsWinnerRadioButton, sellerIsWinnerRadioButton, shareRadioButton, customRadioButton, loserPaysFeeRadioButton, splitFeeRadioButton,
-            waiveFeeRadioButton, reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton, reasonProtocolViolationRadioButton, reasonNoReplyRadioButton, reasonWasScamRadioButton, reasonWasOtherRadioButton;
+    private RadioButton buyerGetsTradeAmountRadioButton, sellerGetsTradeAmountRadioButton,
+            buyerGetsAllRadioButton, sellerGetsAllRadioButton, customRadioButton;
+    private RadioButton reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton,
+            reasonProtocolViolationRadioButton, reasonNoReplyRadioButton, reasonWasScamRadioButton,
+            reasonWasOtherRadioButton, reasonWasBankRadioButton;
     private Optional<Dispute> peersDisputeOptional;
-    private Coin arbitratorPayoutAmount, winnerPayoutAmount, loserPayoutAmount, stalematePayoutAmount;
-    private ToggleGroup feeToggleGroup, reasonToggleGroup;
     private String role;
     private TextArea summaryNotesTextArea;
 
-    // keep a reference to not get GCed
-    private ObjectBinding<Tuple2<DisputeResult.DisputeFeePolicy, Toggle>> feePaymentPolicyChanged;
-
-    private ChangeListener<Tuple2<DisputeResult.DisputeFeePolicy, Toggle>> feePaymentPolicyListener;
-    private ChangeListener<Boolean> shareRadioButtonSelectedListener, customRadioButtonSelectedListener;
-    private ChangeListener<Toggle> feeToggleSelectionListener, reasonToggleSelectionListener;
-    private InputTextField buyerPayoutAmountInputTextField, sellerPayoutAmountInputTextField, arbitratorPayoutAmountInputTextField;
-    private ChangeListener<String> buyerPayoutAmountListener, sellerPayoutAmountListener, arbitratorPayoutAmountListener;
+    private ChangeListener<Boolean> customRadioButtonSelectedListener;
+    private ChangeListener<Toggle> reasonToggleSelectionListener;
+    private InputTextField buyerPayoutAmountInputTextField, sellerPayoutAmountInputTextField;
+    private ChangeListener<String> buyerPayoutAmountListener, sellerPayoutAmountListener;
     private CheckBox isLoserPublisherCheckBox;
+    private ChangeListener<Toggle> tradeAmountToggleGroupListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +105,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         this.dispute = dispute;
 
         rowIndex = -1;
-        width = 850;
+        width = 1050;
         createGridPane();
         addContent();
         display();
@@ -126,21 +123,15 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     @Override
     protected void cleanup() {
-        if (feePaymentPolicyChanged != null)
-            feePaymentPolicyChanged.removeListener(feePaymentPolicyListener);
-
-        if (shareRadioButton != null)
-            shareRadioButton.selectedProperty().removeListener(shareRadioButtonSelectedListener);
-
-        if (feeToggleGroup != null)
-            feeToggleGroup.selectedToggleProperty().removeListener(feeToggleSelectionListener);
-
         if (reasonToggleGroup != null)
             reasonToggleGroup.selectedToggleProperty().removeListener(reasonToggleSelectionListener);
 
         if (customRadioButton != null)
             customRadioButton.selectedProperty().removeListener(customRadioButtonSelectedListener);
 
+        if (tradeAmountToggleGroup != null)
+            tradeAmountToggleGroup.selectedToggleProperty().removeListener(tradeAmountToggleGroupListener);
+        
         removePayoutAmountListeners();
     }
 
@@ -183,7 +174,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             addCheckboxes();
 
         addTradeAmountPayoutControls();
-        addFeeControls();
         addPayoutAmountTextFields();
         addReasonControls();
 
@@ -193,8 +183,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             DisputeResult peersDisputeResult = peersDisputeOptional.get().disputeResultProperty().get();
             disputeResult.setBuyerPayoutAmount(peersDisputeResult.getBuyerPayoutAmount());
             disputeResult.setSellerPayoutAmount(peersDisputeResult.getSellerPayoutAmount());
-            disputeResult.setArbitratorPayoutAmount(peersDisputeResult.getArbitratorPayoutAmount());
-            disputeResult.setDisputeFeePolicy(peersDisputeResult.getDisputeFeePolicy());
             disputeResult.setWinner(peersDisputeResult.getWinner());
             disputeResult.setLoserIsPublisher(peersDisputeResult.isLoserPublisher());
             disputeResult.setReason(peersDisputeResult.getReason());
@@ -203,23 +191,18 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             if (disputeResult.getBuyerPayoutAmount() != null) {
                 log.debug("buyerPayoutAmount " + disputeResult.getBuyerPayoutAmount().toFriendlyString());
                 log.debug("sellerPayoutAmount " + disputeResult.getSellerPayoutAmount().toFriendlyString());
-                log.debug("arbitratorPayoutAmount " + disputeResult.getArbitratorPayoutAmount().toFriendlyString());
             }
 
-            buyerIsWinnerRadioButton.setDisable(true);
-            sellerIsWinnerRadioButton.setDisable(true);
-            shareRadioButton.setDisable(true);
+            buyerGetsTradeAmountRadioButton.setDisable(true);
+            buyerGetsAllRadioButton.setDisable(true);
+            sellerGetsTradeAmountRadioButton.setDisable(true);
+            sellerGetsAllRadioButton.setDisable(true);
             customRadioButton.setDisable(true);
-            loserPaysFeeRadioButton.setDisable(true);
-            splitFeeRadioButton.setDisable(true);
-            waiveFeeRadioButton.setDisable(true);
 
             buyerPayoutAmountInputTextField.setDisable(true);
             sellerPayoutAmountInputTextField.setDisable(true);
-            arbitratorPayoutAmountInputTextField.setDisable(true);
             buyerPayoutAmountInputTextField.setEditable(false);
             sellerPayoutAmountInputTextField.setEditable(false);
-            arbitratorPayoutAmountInputTextField.setEditable(false);
 
             reasonWasBugRadioButton.setDisable(true);
             reasonWasUsabilityIssueRadioButton.setDisable(true);
@@ -227,25 +210,17 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             reasonNoReplyRadioButton.setDisable(true);
             reasonWasScamRadioButton.setDisable(true);
             reasonWasOtherRadioButton.setDisable(true);
+            reasonWasBankRadioButton.setDisable(true);
 
             isLoserPublisherCheckBox.setDisable(true);
             isLoserPublisherCheckBox.setSelected(peersDisputeResult.isLoserPublisher());
 
-            calculatePayoutAmounts(disputeResult.getDisputeFeePolicy());
+            applyPayoutAmounts(tradeAmountToggleGroup.selectedToggleProperty().get());
             applyTradeAmountRadioButtonStates();
         } else {
-            applyPayoutAmounts(disputeResult.disputeFeePolicyProperty().get(), tradeAmountToggleGroup.selectedToggleProperty().get());
-            feePaymentPolicyChanged = Bindings.createObjectBinding(
-                    () -> new Tuple2<>(disputeResult.disputeFeePolicyProperty().get(), tradeAmountToggleGroup.selectedToggleProperty().get()),
-                    disputeResult.disputeFeePolicyProperty(),
-                    tradeAmountToggleGroup.selectedToggleProperty());
-            feePaymentPolicyListener = (observable, oldValue, newValue) -> applyPayoutAmounts(newValue.first, newValue.second);
-            feePaymentPolicyChanged.addListener(feePaymentPolicyListener);
-
             isLoserPublisherCheckBox.setSelected(false);
         }
 
-        setFeeRadioButtonState();
         setReasonRadioButtonState();
 
         addSummaryNotes();
@@ -299,55 +274,46 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Label distributionLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"), 10);
         GridPane.setValignment(distributionLabel, VPos.TOP);
 
-        buyerIsWinnerRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.buyerWinner"));
-        sellerIsWinnerRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.sellerWinner"));
-        shareRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.both"));
+        buyerGetsTradeAmountRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount",
+                Res.get("shared.buyer")));
+        buyerGetsAllRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.getsAll",
+                Res.get("shared.buyer")));
+        sellerGetsTradeAmountRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount",
+                Res.get("shared.seller")));
+        sellerGetsAllRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.getsAll",
+                Res.get("shared.seller")));
+
         customRadioButton = new RadioButton(Res.get("disputeSummaryWindow.payout.custom"));
         VBox radioButtonPane = new VBox();
         radioButtonPane.setSpacing(10);
-        radioButtonPane.getChildren().addAll(buyerIsWinnerRadioButton, sellerIsWinnerRadioButton, shareRadioButton, customRadioButton);
+        radioButtonPane.getChildren().addAll(buyerGetsTradeAmountRadioButton, buyerGetsAllRadioButton,
+                sellerGetsTradeAmountRadioButton, sellerGetsAllRadioButton,
+                customRadioButton);
         GridPane.setRowIndex(radioButtonPane, rowIndex);
         GridPane.setColumnIndex(radioButtonPane, 1);
         GridPane.setMargin(radioButtonPane, new Insets(10, 0, 0, 0));
         gridPane.getChildren().add(radioButtonPane);
 
         tradeAmountToggleGroup = new ToggleGroup();
-        buyerIsWinnerRadioButton.setToggleGroup(tradeAmountToggleGroup);
-        sellerIsWinnerRadioButton.setToggleGroup(tradeAmountToggleGroup);
-        shareRadioButton.setToggleGroup(tradeAmountToggleGroup);
+        buyerGetsTradeAmountRadioButton.setToggleGroup(tradeAmountToggleGroup);
+        buyerGetsAllRadioButton.setToggleGroup(tradeAmountToggleGroup);
+        sellerGetsTradeAmountRadioButton.setToggleGroup(tradeAmountToggleGroup);
+        sellerGetsAllRadioButton.setToggleGroup(tradeAmountToggleGroup);
         customRadioButton.setToggleGroup(tradeAmountToggleGroup);
-        shareRadioButtonSelectedListener = (observable, oldValue, newValue) -> {
-            if (newValue) {
-                loserPaysFeeRadioButton.setSelected(false);
 
-                if (splitFeeRadioButton != null && !dispute.isSupportTicket())
-                    splitFeeRadioButton.setSelected(true);
-
-                if (waiveFeeRadioButton != null && dispute.isSupportTicket())
-                    waiveFeeRadioButton.setSelected(true);
-            }
-
-            loserPaysFeeRadioButton.setDisable(newValue);
-        };
-        shareRadioButton.selectedProperty().addListener(shareRadioButtonSelectedListener);
+        tradeAmountToggleGroupListener = (observable, oldValue, newValue) -> applyPayoutAmounts(newValue);
+        tradeAmountToggleGroup.selectedToggleProperty().addListener(tradeAmountToggleGroupListener);
 
         buyerPayoutAmountListener = (observable1, oldValue1, newValue1) -> applyCustomAmounts(buyerPayoutAmountInputTextField);
         sellerPayoutAmountListener = (observable1, oldValue1, newValue1) -> applyCustomAmounts(sellerPayoutAmountInputTextField);
-        arbitratorPayoutAmountListener = (observable1, oldValue1, newValue1) -> applyCustomAmounts(arbitratorPayoutAmountInputTextField);
 
         customRadioButtonSelectedListener = (observable, oldValue, newValue) -> {
             buyerPayoutAmountInputTextField.setEditable(newValue);
             sellerPayoutAmountInputTextField.setEditable(newValue);
-            arbitratorPayoutAmountInputTextField.setEditable(newValue);
-
-            loserPaysFeeRadioButton.setDisable(newValue);
-            splitFeeRadioButton.setDisable(newValue);
-            waiveFeeRadioButton.setDisable(newValue);
 
             if (newValue) {
                 buyerPayoutAmountInputTextField.textProperty().addListener(buyerPayoutAmountListener);
                 sellerPayoutAmountInputTextField.textProperty().addListener(sellerPayoutAmountListener);
-                arbitratorPayoutAmountInputTextField.textProperty().addListener(arbitratorPayoutAmountListener);
             } else {
                 removePayoutAmountListeners();
             }
@@ -362,21 +328,18 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (sellerPayoutAmountInputTextField != null && sellerPayoutAmountListener != null)
             sellerPayoutAmountInputTextField.textProperty().removeListener(sellerPayoutAmountListener);
 
-        if (arbitratorPayoutAmountInputTextField != null && arbitratorPayoutAmountListener != null)
-            arbitratorPayoutAmountInputTextField.textProperty().removeListener(arbitratorPayoutAmountListener);
     }
 
     private boolean isPayoutAmountValid() {
         Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
-        Coin arbitratorAmount = formatter.parseToCoin(arbitratorPayoutAmountInputTextField.getText());
         Contract contract = dispute.getContract();
         Coin tradeAmount = contract.getTradeAmount();
         Offer offer = contract.offer;
         Coin available = tradeAmount
                 .add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());
-        Coin totalAmount = buyerAmount.add(sellerAmount).add(arbitratorAmount);
+        Coin totalAmount = buyerAmount.add(sellerAmount);
         return (totalAmount.compareTo(available) == 0);
     }
 
@@ -384,73 +347,32 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Contract contract = dispute.getContract();
         Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
-        Coin arbitratorAmount = formatter.parseToCoin(arbitratorPayoutAmountInputTextField.getText());
         Offer offer = contract.offer;
         Coin available = contract.getTradeAmount().
                 add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());
-        Coin totalAmount = buyerAmount.add(sellerAmount).add(arbitratorAmount);
+        Coin totalAmount = buyerAmount.add(sellerAmount);
 
         if (totalAmount.compareTo(available) > 0) {
             new Popup<>().warning(Res.get("disputeSummaryWindow.payout.adjustAmount", available.toFriendlyString()))
                     .show();
 
             if (inputTextField == buyerPayoutAmountInputTextField) {
-                buyerAmount = available.subtract(sellerAmount).subtract(arbitratorAmount);
+                buyerAmount = available.subtract(sellerAmount);
                 inputTextField.setText(formatter.formatCoin(buyerAmount));
             } else if (inputTextField == sellerPayoutAmountInputTextField) {
-                sellerAmount = available.subtract(buyerAmount).subtract(arbitratorAmount);
+                sellerAmount = available.subtract(buyerAmount);
                 inputTextField.setText(formatter.formatCoin(sellerAmount));
-            } else if (inputTextField == arbitratorPayoutAmountInputTextField) {
-                arbitratorAmount = available.subtract(sellerAmount).subtract(buyerAmount);
-                inputTextField.setText(formatter.formatCoin(arbitratorAmount));
             }
         }
 
         disputeResult.setBuyerPayoutAmount(buyerAmount);
         disputeResult.setSellerPayoutAmount(sellerAmount);
-        disputeResult.setArbitratorPayoutAmount(arbitratorAmount);
 
-        if (buyerAmount.compareTo(sellerAmount) == 0)
-            disputeResult.setWinner(DisputeResult.Winner.STALE_MATE);
-        else if (buyerAmount.compareTo(sellerAmount) > 0)
+        if (buyerAmount.compareTo(sellerAmount) > 0)
             disputeResult.setWinner(DisputeResult.Winner.BUYER);
         else
             disputeResult.setWinner(DisputeResult.Winner.SELLER);
-    }
-
-    private void addFeeControls() {
-        Label splitFeeLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.arbitrationFee"), 10);
-        GridPane.setValignment(splitFeeLabel, VPos.TOP);
-
-        loserPaysFeeRadioButton = new RadioButton(Res.get("disputeSummaryWindow.arbitrationFee.looserPay"));
-        splitFeeRadioButton = new RadioButton(Res.get("disputeSummaryWindow.split"));
-        waiveFeeRadioButton = new RadioButton(Res.get("disputeSummaryWindow.arbitrationFee.waive"));
-        HBox feeRadioButtonPane = new HBox();
-        feeRadioButtonPane.setSpacing(20);
-        feeRadioButtonPane.getChildren().addAll(loserPaysFeeRadioButton, splitFeeRadioButton, waiveFeeRadioButton);
-        GridPane.setRowIndex(feeRadioButtonPane, rowIndex);
-        GridPane.setColumnIndex(feeRadioButtonPane, 1);
-        GridPane.setMargin(feeRadioButtonPane, new Insets(10, 0, 10, 0));
-        gridPane.getChildren().add(feeRadioButtonPane);
-
-        feeToggleGroup = new ToggleGroup();
-        loserPaysFeeRadioButton.setToggleGroup(feeToggleGroup);
-        splitFeeRadioButton.setToggleGroup(feeToggleGroup);
-        waiveFeeRadioButton.setToggleGroup(feeToggleGroup);
-
-        feeToggleSelectionListener = (observable, oldValue, newValue) -> {
-            if (newValue == loserPaysFeeRadioButton)
-                disputeResult.setDisputeFeePolicy(DisputeResult.DisputeFeePolicy.LOSER);
-            else if (newValue == splitFeeRadioButton)
-                disputeResult.setDisputeFeePolicy(DisputeResult.DisputeFeePolicy.SPLIT);
-            else if (newValue == waiveFeeRadioButton)
-                disputeResult.setDisputeFeePolicy(DisputeResult.DisputeFeePolicy.WAIVE);
-        };
-        feeToggleGroup.selectedToggleProperty().addListener(feeToggleSelectionListener);
-
-        if (dispute.isSupportTicket())
-            feeToggleGroup.selectToggle(waiveFeeRadioButton);
     }
 
     private void addPayoutAmountTextFields() {
@@ -462,26 +384,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 Res.get("disputeSummaryWindow.payoutAmount.seller")).second;
         sellerPayoutAmountInputTextField.setEditable(false);
 
-        arbitratorPayoutAmountInputTextField = addLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("disputeSummaryWindow.payoutAmount.arbitrator")).second;
-        arbitratorPayoutAmountInputTextField.setEditable(false);
-
         isLoserPublisherCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("disputeSummaryWindow.payoutAmount.invert")).second;
-    }
-
-    private void setFeeRadioButtonState() {
-        switch (disputeResult.getDisputeFeePolicy()) {
-            case LOSER:
-                feeToggleGroup.selectToggle(loserPaysFeeRadioButton);
-                break;
-            case SPLIT:
-                feeToggleGroup.selectToggle(splitFeeRadioButton);
-                break;
-            case WAIVE:
-                feeToggleGroup.selectToggle(waiveFeeRadioButton);
-                break;
-        }
     }
 
     private void addReasonControls() {
@@ -492,6 +396,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         reasonProtocolViolationRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.protocolViolation"));
         reasonNoReplyRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.noReply"));
         reasonWasScamRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.scam"));
+        reasonWasBankRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.bank"));
         reasonWasOtherRadioButton = new RadioButton(Res.get("disputeSummaryWindow.reason.other"));
         //TODO add banks as reason
 
@@ -499,7 +404,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         feeRadioButtonPane.setSpacing(20);
         feeRadioButtonPane.getChildren().addAll(reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton,
                 reasonProtocolViolationRadioButton, reasonNoReplyRadioButton,
-                reasonWasScamRadioButton, reasonWasOtherRadioButton);
+                reasonWasBankRadioButton, reasonWasScamRadioButton, reasonWasOtherRadioButton);
         GridPane.setRowIndex(feeRadioButtonPane, rowIndex);
         GridPane.setColumnIndex(feeRadioButtonPane, 1);
         GridPane.setMargin(feeRadioButtonPane, new Insets(10, 0, 10, 0));
@@ -512,6 +417,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         reasonNoReplyRadioButton.setToggleGroup(reasonToggleGroup);
         reasonWasScamRadioButton.setToggleGroup(reasonToggleGroup);
         reasonWasOtherRadioButton.setToggleGroup(reasonToggleGroup);
+        reasonWasBankRadioButton.setToggleGroup(reasonToggleGroup);
 
         reasonToggleSelectionListener = (observable, oldValue, newValue) -> {
             if (newValue == reasonWasBugRadioButton)
@@ -524,6 +430,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 disputeResult.setReason(DisputeResult.Reason.NO_REPLY);
             else if (newValue == reasonWasScamRadioButton)
                 disputeResult.setReason(DisputeResult.Reason.SCAM);
+            else if (newValue == reasonWasBankRadioButton)
+                disputeResult.setReason(DisputeResult.Reason.BANK_PROBLEMS);
             else if (newValue == reasonWasOtherRadioButton)
                 disputeResult.setReason(DisputeResult.Reason.OTHER);
         };
@@ -547,6 +455,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     break;
                 case SCAM:
                     reasonToggleGroup.selectToggle(reasonWasScamRadioButton);
+                    break;
+                case BANK_PROBLEMS:
+                    reasonToggleGroup.selectToggle(reasonWasBankRadioButton);
                     break;
                 case OTHER:
                     reasonToggleGroup.selectToggle(reasonWasOtherRadioButton);
@@ -582,8 +493,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 tradeAmountToggleGroup.selectedToggleProperty(),
                 summaryNotesTextArea.textProperty(),
                 buyerPayoutAmountInputTextField.textProperty(),
-                sellerPayoutAmountInputTextField.textProperty(),
-                arbitratorPayoutAmountInputTextField.textProperty()));
+                sellerPayoutAmountInputTextField.textProperty()));
 
         Button cancelButton = tuple.second;
 
@@ -592,8 +502,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             if (dispute.getDepositTxSerialized() != null) {
                 try {
                     AddressEntry arbitratorAddressEntry = walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR);
-                    disputeResult.setArbitratorAddressAsString(arbitratorAddressEntry.getAddressString());
-                    disputeResult.setArbitratorPubKey(arbitratorAddressEntry.getPubKey());
+                    disputeResult.setArbitratorPubKey(walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR).getPubKey());
                     
                    /* byte[] depositTxSerialized,
                     Coin buyerPayoutAmount,
@@ -610,10 +519,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             dispute.getDepositTxSerialized(),
                             disputeResult.getBuyerPayoutAmount(),
                             disputeResult.getSellerPayoutAmount(),
-                            disputeResult.getArbitratorPayoutAmount(),
                             contract.getBuyerPayoutAddressString(),
                             contract.getSellerPayoutAddressString(),
-                            arbitratorAddressEntry.getAddressString(),
                             arbitratorAddressEntry.getKeyPair(),
                             contract.getBuyerMultiSigPubKey(),
                             contract.getSellerMultiSigPubKey(),
@@ -636,7 +543,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             formatter.booleanToYesNo(disputeResult.screenCastProperty().get()),
                             formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
                             formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
-                            formatter.formatCoinWithCode(disputeResult.getArbitratorPayoutAmount()),
                             disputeResult.summaryNotesProperty().get());
 
                     dispute.setIsClosed(true);
@@ -669,88 +575,68 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     // Controller
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyPayoutAmounts(DisputeResult.DisputeFeePolicy feePayment, Toggle selectedTradeAmountToggle) {
-        if (selectedTradeAmountToggle != customRadioButton) {
-            calculatePayoutAmounts(feePayment);
-            if (selectedTradeAmountToggle != null) {
-                applyPayoutAmountsToDisputeResult(selectedTradeAmountToggle);
-                applyTradeAmountRadioButtonStates();
-            }
+    private void applyPayoutAmounts(Toggle selectedTradeAmountToggle) {
+        if (selectedTradeAmountToggle != customRadioButton && selectedTradeAmountToggle != null) {
+            applyPayoutAmountsToDisputeResult(selectedTradeAmountToggle);
+            applyTradeAmountRadioButtonStates();
         }
-    }
-
-    //TODO
-    private void calculatePayoutAmounts(DisputeResult.DisputeFeePolicy feePayment) {
-        Contract contract = dispute.getContract();
-        Coin buyerSecurityDeposit = contract.offer.getBuyerSecurityDeposit();
-        Coin sellerSecurityDeposit = contract.offer.getSellerSecurityDeposit();
-        Coin winnerRefund;
-        Coin loserRefund;
-        switch (feePayment) {
-            case SPLIT:
-                winnerRefund = buyerSecurityDeposit.divide(2L);
-                loserRefund = winnerRefund;
-                arbitratorPayoutAmount = buyerSecurityDeposit;
-                break;
-            case WAIVE:
-                winnerRefund = buyerSecurityDeposit;
-                loserRefund = buyerSecurityDeposit;
-                arbitratorPayoutAmount = Coin.ZERO;
-                break;
-            case LOSER:
-            default:
-                winnerRefund = buyerSecurityDeposit;
-                loserRefund = Coin.ZERO;
-                arbitratorPayoutAmount = buyerSecurityDeposit;
-                break;
-        }
-
-        winnerPayoutAmount = contract.getTradeAmount().add(winnerRefund);
-        loserPayoutAmount = loserRefund;
-        stalematePayoutAmount = contract.getTradeAmount().divide(2L).add(winnerRefund);
     }
 
     private void applyPayoutAmountsToDisputeResult(Toggle selectedTradeAmountToggle) {
-        if (selectedTradeAmountToggle == buyerIsWinnerRadioButton) {
-            disputeResult.setBuyerPayoutAmount(winnerPayoutAmount);
-            disputeResult.setSellerPayoutAmount(loserPayoutAmount);
+        Contract contract = dispute.getContract();
+        Coin buyerSecurityDeposit = contract.offer.getBuyerSecurityDeposit();
+        Coin sellerSecurityDeposit = contract.offer.getSellerSecurityDeposit();
+        Coin tradeAmount = contract.getTradeAmount();
+        if (selectedTradeAmountToggle == buyerGetsTradeAmountRadioButton) {
+            disputeResult.setBuyerPayoutAmount(tradeAmount.add(buyerSecurityDeposit));
+            disputeResult.setSellerPayoutAmount(sellerSecurityDeposit);
             disputeResult.setWinner(DisputeResult.Winner.BUYER);
-
-            buyerPayoutAmountInputTextField.setText(formatter.formatCoin(winnerPayoutAmount));
-            sellerPayoutAmountInputTextField.setText(formatter.formatCoin(loserPayoutAmount));
-        } else if (selectedTradeAmountToggle == sellerIsWinnerRadioButton) {
-            disputeResult.setBuyerPayoutAmount(loserPayoutAmount);
-            disputeResult.setSellerPayoutAmount(winnerPayoutAmount);
+        } else if (selectedTradeAmountToggle == buyerGetsAllRadioButton) {
+            disputeResult.setBuyerPayoutAmount(tradeAmount
+                    .add(buyerSecurityDeposit)
+                    .add(sellerSecurityDeposit));
+            disputeResult.setSellerPayoutAmount(Coin.ZERO);
+            disputeResult.setWinner(DisputeResult.Winner.BUYER);
+        } else if (selectedTradeAmountToggle == sellerGetsTradeAmountRadioButton) {
+            disputeResult.setBuyerPayoutAmount(buyerSecurityDeposit);
+            disputeResult.setSellerPayoutAmount(tradeAmount.add(sellerSecurityDeposit));
             disputeResult.setWinner(DisputeResult.Winner.SELLER);
-
-            buyerPayoutAmountInputTextField.setText(formatter.formatCoin(loserPayoutAmount));
-            sellerPayoutAmountInputTextField.setText(formatter.formatCoin(winnerPayoutAmount));
-        } else if (selectedTradeAmountToggle == shareRadioButton) {
-            disputeResult.setBuyerPayoutAmount(stalematePayoutAmount);
-            disputeResult.setSellerPayoutAmount(stalematePayoutAmount);
-            disputeResult.setWinner(DisputeResult.Winner.STALE_MATE);
-
-            buyerPayoutAmountInputTextField.setText(formatter.formatCoin(stalematePayoutAmount));
-            sellerPayoutAmountInputTextField.setText(formatter.formatCoin(stalematePayoutAmount));
+        } else if (selectedTradeAmountToggle == sellerGetsAllRadioButton) {
+            disputeResult.setBuyerPayoutAmount(Coin.ZERO);
+            disputeResult.setSellerPayoutAmount(tradeAmount
+                    .add(sellerSecurityDeposit)
+                    .add(buyerSecurityDeposit));
+            disputeResult.setWinner(DisputeResult.Winner.SELLER);
         }
-        disputeResult.setArbitratorPayoutAmount(arbitratorPayoutAmount);
-        arbitratorPayoutAmountInputTextField.setText(formatter.formatCoin(arbitratorPayoutAmount));
+
+        buyerPayoutAmountInputTextField.setText(formatter.formatCoin(disputeResult.getBuyerPayoutAmount()));
+        sellerPayoutAmountInputTextField.setText(formatter.formatCoin(disputeResult.getSellerPayoutAmount()));
     }
 
     private void applyTradeAmountRadioButtonStates() {
+        Contract contract = dispute.getContract();
+        Coin buyerSecurityDeposit = contract.offer.getBuyerSecurityDeposit();
+        Coin sellerSecurityDeposit = contract.offer.getSellerSecurityDeposit();
+        Coin tradeAmount = contract.getTradeAmount();
+
         Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
         Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
 
         buyerPayoutAmountInputTextField.setText(formatter.formatCoin(buyerPayoutAmount));
         sellerPayoutAmountInputTextField.setText(formatter.formatCoin(sellerPayoutAmount));
-        arbitratorPayoutAmountInputTextField.setText(formatter.formatCoin(disputeResult.getArbitratorPayoutAmount()));
 
-        if (buyerPayoutAmount.equals(winnerPayoutAmount) && sellerPayoutAmount.equals(loserPayoutAmount)) {
-            buyerIsWinnerRadioButton.setSelected(true);
-        } else if (sellerPayoutAmount.equals(winnerPayoutAmount) && buyerPayoutAmount.equals(loserPayoutAmount)) {
-            sellerIsWinnerRadioButton.setSelected(true);
-        } else if (sellerPayoutAmount.equals(buyerPayoutAmount)) {
-            shareRadioButton.setSelected(true);
+        if (buyerPayoutAmount.equals(tradeAmount.add(buyerSecurityDeposit)) &&
+                sellerPayoutAmount.equals(sellerSecurityDeposit)) {
+            buyerGetsTradeAmountRadioButton.setSelected(true);
+        } else if (buyerPayoutAmount.equals(tradeAmount.add(buyerSecurityDeposit).add(sellerSecurityDeposit)) &&
+                sellerPayoutAmount.equals(Coin.ZERO)) {
+            buyerGetsAllRadioButton.setSelected(true);
+        } else if (sellerPayoutAmount.equals(tradeAmount.add(sellerSecurityDeposit))
+                && buyerPayoutAmount.equals(buyerSecurityDeposit)) {
+            sellerGetsTradeAmountRadioButton.setSelected(true);
+        } else if (sellerPayoutAmount.equals(tradeAmount.add(buyerSecurityDeposit).add(sellerSecurityDeposit))
+                && buyerPayoutAmount.equals(Coin.ZERO)) {
+            sellerGetsAllRadioButton.setSelected(true);
         } else {
             customRadioButton.setSelected(true);
         }
