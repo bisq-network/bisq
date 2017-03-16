@@ -25,7 +25,6 @@ import io.bisq.btc.wallet.BsqWalletService;
 import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.btc.wallet.ChangeBelowDustException;
 import io.bisq.common.UserThread;
-import io.bisq.common.util.Utilities;
 import io.bisq.dao.compensation.CompensationRequest;
 import io.bisq.dao.compensation.CompensationRequestManager;
 import io.bisq.dao.vote.*;
@@ -38,6 +37,7 @@ import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
 import io.bisq.provider.fee.FeeService;
+import io.bisq.util.CoinUtil;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
@@ -222,7 +222,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                 .confirmation(Res.get("dao.tx.summary",
                                         btcFormatter.formatCoinWithCode(votingTxFee),
                                         btcFormatter.formatCoinWithCode(miningFee),
-                                        Utilities.getFeePerByte(miningFee, txSize),
+                                        CoinUtil.getFeePerByte(miningFee, txSize),
                                         (txSize / 1000d)))
                                 .actionButtonText(Res.get("shared.yes"))
                                 .onAction(() -> {

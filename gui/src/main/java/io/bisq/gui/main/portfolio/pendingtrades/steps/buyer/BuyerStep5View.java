@@ -26,7 +26,6 @@ import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Tuple2;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.MainView;
@@ -40,6 +39,7 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
 import io.bisq.network_messages.btc.Restrictions;
+import io.bisq.util.CoinUtil;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -193,7 +193,7 @@ public class BuyerStep5View extends TradeStepView {
                         String key = "reviewWithdrawalAtTradeComplete";
                         if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
                             int txSize = feeEstimationTransaction.bitcoinSerialize().length;
-                            double feePerByte = MathUtils.roundDouble(((double) fee.value / (double) txSize), 2);
+                            double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
                             double kb = txSize / 1000d;
                             String recAmount = formatter.formatCoinWithCode(receiverAmount);
                             new Popup().headLine(Res.get("portfolio.pending.step5_buyer.confirmWithdrawal"))

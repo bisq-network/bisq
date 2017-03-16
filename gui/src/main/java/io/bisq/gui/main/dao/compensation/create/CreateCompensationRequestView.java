@@ -25,7 +25,6 @@ import io.bisq.btc.exceptions.WalletException;
 import io.bisq.btc.wallet.BsqWalletService;
 import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.btc.wallet.ChangeBelowDustException;
-import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.common.util.Utilities;
 import io.bisq.dao.compensation.CompensationRequestManager;
 import io.bisq.gui.common.view.ActivatableView;
@@ -34,10 +33,12 @@ import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.locale.Res;
-import io.bisq.provider.fee.FeeService;
-import io.bisq.network_messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.crypto.KeyRing;
+import io.bisq.network_messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.provider.fee.FeeService;
+import io.bisq.util.CoinUtil;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -164,7 +165,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                         .confirmation(Res.get("dao.tx.summary",
                                 btcFormatter.formatCoinWithCode(createCompensationRequestFee),
                                 btcFormatter.formatCoinWithCode(miningFee),
-                                Utilities.getFeePerByte(miningFee, txSize),
+                                CoinUtil.getFeePerByte(miningFee, txSize),
                                 (txSize / 1000d)))
                         .actionButtonText(Res.get("shared.yes"))
                         .onAction(() -> {

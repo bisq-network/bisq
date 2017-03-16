@@ -24,7 +24,6 @@ import io.bisq.btc.exceptions.TransactionVerificationException;
 import io.bisq.btc.exceptions.WalletException;
 import io.bisq.btc.wallet.BsqWalletService;
 import io.bisq.btc.wallet.BtcWalletService;
-import io.bisq.common.util.Utilities;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.InputTextField;
@@ -35,6 +34,7 @@ import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
 import io.bisq.provider.fee.FeeService;
+import io.bisq.util.CoinUtil;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -118,7 +118,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                                 bsqFormatter.formatCoinWithCode(receiverAmount),
                                 receiversAddressString,
                                 btcFormatter.formatCoinWithCode(miningFee),
-                                Utilities.getFeePerByte(miningFee, txSize),
+                                CoinUtil.getFeePerByte(miningFee, txSize),
                                 txSize / 1000d,
                                 bsqFormatter.formatCoinWithCode(receiverAmount.subtract(miningFee))))
                         .actionButtonText(Res.get("shared.yes"))

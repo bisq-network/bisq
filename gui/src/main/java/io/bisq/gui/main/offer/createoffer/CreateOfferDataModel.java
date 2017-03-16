@@ -33,7 +33,6 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.Res;
 import io.bisq.locale.TradeCurrency;
-import io.bisq.network_messages.arbitration.Arbitrator;
 import io.bisq.network_messages.btc.Restrictions;
 import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.network_messages.payment.payload.BankAccountContractData;
@@ -47,6 +46,7 @@ import io.bisq.trade.handlers.TransactionResultHandler;
 import io.bisq.trade.offer.OpenOfferManager;
 import io.bisq.user.Preferences;
 import io.bisq.user.User;
+import io.bisq.util.CoinUtil;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -633,10 +633,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
     void updateTradeFee() {
         Coin amount = this.amount.get();
         if (amount != null) {
-            createOfferFeeAsCoin = Utilities.getFeePerBtc(feeService.getCreateOfferFeeInBtcPerBtc(), amount);
+            createOfferFeeAsCoin = CoinUtil.getFeePerBtc(feeService.getCreateOfferFeeInBtcPerBtc(), amount);
             // We don't want too fractional btc values so we use only a divide by 10 instead of 100
             createOfferFeeAsCoin = createOfferFeeAsCoin.divide(10).multiply(Math.round(marketPriceMargin * 1_000));
-            createOfferFeeAsCoin = Utilities.maxCoin(createOfferFeeAsCoin, feeService.getMinCreateOfferFeeInBtc());
+            createOfferFeeAsCoin = CoinUtil.maxCoin(createOfferFeeAsCoin, feeService.getMinCreateOfferFeeInBtc());
         }
     }
 }

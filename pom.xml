@@ -94,9 +94,9 @@
 
     <dependencies>
         <!--bitcoinj
-            Needs local installation!
-            See doc/build.md for further info
-        -->
+           Needs local installation!
+           See doc/build.md for further info
+       -->
         <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
@@ -133,6 +133,13 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
             <version>1.53</version>
+        </dependency>
+
+        <!--http-->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.4.1</version>
         </dependency>
 
         <!--utils-->
@@ -182,12 +189,6 @@
             <artifactId>protobuf-java</artifactId>
             <version>3.2.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java-util</artifactId>
-            <version>3.2.0</version>
-            <scope>test</scope>
-        </dependency>
 
         <!--logging-->
         <dependency>
@@ -226,15 +227,16 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>3.2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <version>${spring.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>4.4.1</version>
         </dependency>
     </dependencies>
 

@@ -22,7 +22,6 @@ import io.bisq.app.DevEnv;
 import io.bisq.btc.AddressEntry;
 import io.bisq.btc.listeners.BalanceListener;
 import io.bisq.btc.wallet.BtcWalletService;
-import io.bisq.common.util.Utilities;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -41,6 +40,7 @@ import io.bisq.trade.TradeManager;
 import io.bisq.trade.handlers.TradeResultHandler;
 import io.bisq.user.Preferences;
 import io.bisq.user.User;
+import io.bisq.util.CoinUtil;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
@@ -355,8 +355,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void applyAmount(Coin amount) {
         amountAsCoin.set(amount);
 
-        takerFeeAsCoin = Utilities.getFeePerBtc(feeService.getTakeOfferFeeInBtcPerBtc(), amount);
-        takerFeeAsCoin = Utilities.maxCoin(takerFeeAsCoin, feeService.getMinTakeOfferFeeInBtc());
+        takerFeeAsCoin = CoinUtil.getFeePerBtc(feeService.getTakeOfferFeeInBtcPerBtc(), amount);
+        takerFeeAsCoin = CoinUtil.maxCoin(takerFeeAsCoin, feeService.getMinTakeOfferFeeInBtc());
 
         calculateTotalToPay();
     }

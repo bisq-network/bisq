@@ -26,7 +26,6 @@ import io.bisq.btc.InsufficientFundsException;
 import io.bisq.btc.listeners.BalanceListener;
 import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.common.UserThread;
-import io.bisq.common.util.MathUtils;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.HyperlinkWithIcon;
@@ -37,12 +36,13 @@ import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcAddressValidator;
 import io.bisq.locale.Res;
 import io.bisq.provider.fee.FeeService;
-import io.bisq.user.Preferences;
 import io.bisq.trade.Tradable;
 import io.bisq.trade.Trade;
 import io.bisq.trade.TradeManager;
 import io.bisq.trade.closed.ClosedTradableManager;
 import io.bisq.trade.failed.FailedTradesManager;
+import io.bisq.user.Preferences;
+import io.bisq.util.CoinUtil;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
@@ -248,7 +248,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         if (DevEnv.DEV_MODE) {
                             doWithdraw(amount, fee, callback);
                         } else {
-                            double feePerByte = MathUtils.roundDouble(((double) fee.value / (double) txSize), 2);
+                            double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
                             double kb = txSize / 1000d;
                             new Popup().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
                                     .confirmation(Res.get("shared.sendFundsDetailsWithFee",

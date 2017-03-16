@@ -28,7 +28,6 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -398,21 +397,6 @@ public class Utilities {
         Thread.currentThread().setName(name + "-" + new Random().nextInt(10000));
     }
 
-    public static Coin getFeePerBtc(Coin feePerBtc, Coin amount) {
-        double feePerBtcAsDouble = (double) feePerBtc.value;
-        double amountAsDouble = (double) amount.value;
-        double btcAsDouble = (double) Coin.COIN.value;
-        return Coin.valueOf(Math.round(feePerBtcAsDouble * (amountAsDouble / btcAsDouble)));
-    }
-
-    public static Coin minCoin(Coin a, Coin b) {
-        return a.compareTo(b) <= 0 ? a : b;
-    }
-
-    public static Coin maxCoin(Coin a, Coin b) {
-        return a.compareTo(b) >= 0 ? a : b;
-    }
-
     public static void overwriteWithRandomBytes(byte[] bytes) {
         Random random = new Random();
         for (int i = 0; i < bytes.length; i++) {
@@ -426,10 +410,6 @@ public class Utilities {
 
     public static String getSystemHomeDirectory() {
         return Utilities.isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home");
-    }
-
-    public static double getFeePerByte(Coin miningFee, int txSize) {
-        return Utilities.getFeePerByte(miningFee, txSize);
     }
 
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {

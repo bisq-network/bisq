@@ -20,7 +20,6 @@ package io.bisq.storage;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Utilities;
 import io.bisq.io.LookAheadObjectInputStream;
-import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -230,7 +229,7 @@ public class FileManager<T> {
     }
 
     private synchronized void renameTempFileToFile(File tempFile, File file) throws IOException {
-        if (Utils.isWindows()) {
+        if (Utilities.isWindows()) {
             // Work around an issue on Windows whereby you can't rename over existing files.
             final File canonical = file.getCanonicalFile();
             if (canonical.exists() && !canonical.delete()) {
