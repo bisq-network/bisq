@@ -87,7 +87,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
                 .setOffererMultiSigPubKey(ByteString.copyFrom(offererMultiSigPubKey))
                 .setOffererContractAsJson(offererContractAsJson)
                 .setOffererContractSignature(offererContractSignature)
-                .setOffererPayoutAddressstring(offererPayoutAddressString)
+                .setOffererPayoutAddressString(offererPayoutAddressString)
                 .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
                 .addAllOffererInputs(offererInputs.stream().map(rawTransactionInput -> rawTransactionInput.toProtoBuf()).collect(Collectors.toList()))).build();
     }

@@ -222,7 +222,7 @@ public class ProtoBufferUtilities {
                 publishDepositTxRequest.getOffererMultiSigPubKey().toByteArray(),
                 publishDepositTxRequest.getOffererContractAsJson(),
                 publishDepositTxRequest.getOffererContractSignature(),
-                publishDepositTxRequest.getOffererPayoutAddressstring(),
+                publishDepositTxRequest.getOffererPayoutAddressString(),
                 publishDepositTxRequest.getPreparedDepositTx().toByteArray(), rawTransactionInputs);
     }
 
@@ -289,7 +289,7 @@ public class ProtoBufferUtilities {
                 getNodeAddress(contract.getArbitratorNodeAddress()), contract.getIsBuyerOffererAndSellerTaker(), contract.getOffererAccountId(),
                 contract.getTakerAccountId(), getPaymentAccountContractData(contract.getOffererPaymentAccountContractData()),
                 getPaymentAccountContractData(contract.getTakerPaymentAccountContractData()), getPubKeyRing(contract.getOffererPubKeyRing()),
-                getPubKeyRing(contract.getTakerPubKeyRing()), contract.getOffererPayoutAddressstring(), contract.getTakerPayoutAddressstring(),
+                getPubKeyRing(contract.getTakerPubKeyRing()), contract.getOffererPayoutAddressString(), contract.getTakerPayoutAddressString(),
                 contract.getOffererBtcPubKey().toByteArray(), contract.getTakerBtcPubKey().toByteArray());
     }
 

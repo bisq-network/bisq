@@ -470,8 +470,8 @@ message Contract {
     PubKeyRing taker_pub_key_ring = 12;
     NodeAddress buyer_node_address = 13;
     NodeAddress seller_node_address = 14;
-    string offerer_payout_addressstring = 15;
-    string taker_payout_addressstring = 16;
+    string offerer_payout_address_string = 15;
+    string taker_payout_address_string = 16;
     bytes offerer_btc_pub_key = 17;
     bytes taker_btc_pub_key = 18;
 }
@@ -607,7 +607,7 @@ message PublishDepositTxRequest {
     string offerer_account_id = 4;
     string offerer_contract_as_json = 5;
     string offerer_contract_signature = 6;
-    string offerer_payout_addressstring = 7;
+    string offerer_payout_address_string = 7;
     bytes prepared_deposit_tx = 8;
     repeated RawTransactionInput offerer_inputs = 9;
     bytes offerer_multi_sig_pub_key = 10;
