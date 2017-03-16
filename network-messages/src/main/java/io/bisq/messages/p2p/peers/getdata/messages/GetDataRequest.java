@@ -1,4 +1,4 @@
-package io.bisq.p2p.peers.getdata.messages;
+package io.bisq.messages.p2p.peers.getdata.messages;
 
 import io.bisq.messages.Message;
 

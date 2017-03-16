@@ -62,7 +62,7 @@ import io.bisq.p2p.P2PServiceListener;
 import io.bisq.p2p.network.CloseConnectionReason;
 import io.bisq.p2p.network.Connection;
 import io.bisq.p2p.network.ConnectionListener;
-import io.bisq.p2p.peers.keepalive.messages.Ping;
+import io.bisq.messages.p2p.peers.keepalive.messages.Ping;
 import io.bisq.p2p.storage.P2PService;
 import io.bisq.payment.CryptoCurrencyAccount;
 import io.bisq.payment.OKPayAccount;

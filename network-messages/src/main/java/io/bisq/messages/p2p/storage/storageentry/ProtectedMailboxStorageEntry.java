@@ -1,13 +1,11 @@
-package io.bisq.p2p.storage.storageentry;
+package io.bisq.messages.p2p.storage.storageentry;
 
 import com.google.protobuf.ByteString;
 import io.bisq.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.wire.proto.Messages;
-import io.bisq.p2p.storage.P2PDataStorage;
 import io.bisq.payload.MailboxStoragePayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.security.KeyFactory;
@@ -17,11 +15,10 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 
+@Slf4j
 public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
-    private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
     public transient PublicKey receiversPubKey;
     private final byte[] receiversPubKeyBytes;

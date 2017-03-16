@@ -27,7 +27,7 @@ import io.bisq.messages.filter.payload.Filter;
 import io.bisq.messages.filter.payload.PaymentAccountFilter;
 import io.bisq.p2p.storage.P2PService;
 import io.bisq.p2p.storage.HashMapChangedListener;
-import io.bisq.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.messages.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bisq.user.User;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;

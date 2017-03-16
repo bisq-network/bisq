@@ -30,7 +30,7 @@ import io.bisq.p2p.BootstrapListener;
 import io.bisq.messages.NodeAddress;
 import io.bisq.p2p.storage.P2PService;
 import io.bisq.p2p.storage.HashMapChangedListener;
-import io.bisq.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.messages.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bisq.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;

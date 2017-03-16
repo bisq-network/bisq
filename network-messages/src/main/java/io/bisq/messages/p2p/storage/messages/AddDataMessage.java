@@ -1,10 +1,10 @@
-package io.bisq.p2p.storage.messages;
+package io.bisq.messages.p2p.storage.messages;
 
 import io.bisq.app.Version;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.messages.util.ProtoBufferUtils;
-import io.bisq.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
-import io.bisq.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.messages.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
+import io.bisq.messages.p2p.storage.storageentry.ProtectedStorageEntry;
 
 public final class AddDataMessage extends BroadcastMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.

@@ -27,7 +27,7 @@ import io.bisq.messages.NodeAddress;
 import io.bisq.messages.crypto.*;
 import io.bisq.messages.p2p.messaging.MailboxMessage;
 import io.bisq.messages.p2p.messaging.PrefixedSealedAndSignedMessage;
-import io.bisq.p2p.peers.keepalive.messages.Ping;
+import io.bisq.messages.p2p.peers.keepalive.messages.Ping;
 import io.bisq.storage.FileUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;

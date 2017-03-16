@@ -1,4 +1,4 @@
-package io.bisq.p2p.storage.storageentry;
+package io.bisq.messages.p2p.storage.storageentry;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;

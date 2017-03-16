@@ -27,7 +27,7 @@ import io.bisq.messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bisq.p2p.storage.P2PService;
 import io.bisq.p2p.storage.HashMapChangedListener;
 import io.bisq.payload.StoragePayload;
-import io.bisq.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.messages.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bisq.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

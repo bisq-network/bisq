@@ -1,4 +1,4 @@
-package io.bisq.p2p.peers.peerexchange;
+package io.bisq.messages.p2p.peers.peerexchange;
 
 import io.bisq.app.Version;
 import io.bisq.common.persistance.Persistable;

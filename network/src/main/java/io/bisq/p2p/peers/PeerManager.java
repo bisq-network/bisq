@@ -6,7 +6,7 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.messages.NodeAddress;
 import io.bisq.p2p.network.*;
-import io.bisq.p2p.peers.peerexchange.Peer;
+import io.bisq.messages.p2p.peers.peerexchange.Peer;
 import io.bisq.storage.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

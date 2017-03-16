@@ -10,7 +10,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.messages.NodeAddress;
 import io.bisq.p2p.network.Connection;
 import io.bisq.p2p.network.NetworkNode;
-import io.bisq.p2p.storage.messages.BroadcastMessage;
+import io.bisq.messages.p2p.storage.messages.BroadcastMessage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;

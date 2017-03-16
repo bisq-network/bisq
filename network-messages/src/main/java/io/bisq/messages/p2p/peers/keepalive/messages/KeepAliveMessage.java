@@ -1,4 +1,4 @@
-package io.bisq.p2p.peers.keepalive.messages;
+package io.bisq.messages.p2p.peers.keepalive.messages;
 
 import io.bisq.app.Version;
 import io.bisq.messages.Message;

@@ -1,31 +1,37 @@
-package io.bisq.p2p.peers.peerexchange.messages;
+package io.bisq.messages.p2p.peers.peerexchange.messages;
 
 import io.bisq.app.Capabilities;
 import io.bisq.app.Version;
 import io.bisq.common.wire.proto.Messages;
+import io.bisq.messages.NodeAddress;
+import io.bisq.messages.SendersNodeAddressMessage;
+import io.bisq.messages.ToProtoBuffer;
 import io.bisq.messages.p2p.messaging.SupportedCapabilitiesMessage;
-import io.bisq.p2p.peers.peerexchange.Peer;
+import io.bisq.messages.p2p.peers.peerexchange.Peer;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 
-public final class GetPeersResponse extends PeerExchangeMessage implements SupportedCapabilitiesMessage {
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public final class GetPeersRequest extends PeerExchangeMessage implements SendersNodeAddressMessage, SupportedCapabilitiesMessage, ToProtoBuffer {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public final int requestNonce;
+    private final NodeAddress senderNodeAddress;
+    public final int nonce;
     public final HashSet<Peer> reportedPeers;
-
     @Nullable
     private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
-    public GetPeersResponse(int requestNonce, HashSet<Peer> reportedPeers) {
-        this.requestNonce = requestNonce;
+    public GetPeersRequest(NodeAddress senderNodeAddress, int nonce, HashSet<Peer> reportedPeers) {
+        checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at GetPeersRequest");
+        this.senderNodeAddress = senderNodeAddress;
+        this.nonce = nonce;
         this.reportedPeers = reportedPeers;
     }
-
 
     @Override
     @Nullable
@@ -34,9 +40,15 @@ public final class GetPeersResponse extends PeerExchangeMessage implements Suppo
     }
 
     @Override
+    public NodeAddress getSenderNodeAddress() {
+        return senderNodeAddress;
+    }
+
+    @Override
     public String toString() {
-        return "GetPeersResponse{" +
-                "requestNonce=" + requestNonce +
+        return "GetPeersRequest{" +
+                "senderNodeAddress=" + senderNodeAddress +
+                ", nonce=" + nonce +
                 ", reportedPeers.size()=" + reportedPeers.size() +
                 ", supportedCapabilities=" + supportedCapabilities +
                 "} " + super.toString();
@@ -46,8 +58,14 @@ public final class GetPeersResponse extends PeerExchangeMessage implements Suppo
     public Messages.Envelope toProtoBuf() {
         Messages.Envelope.Builder envelopeBuilder = Messages.Envelope.newBuilder().setP2PNetworkVersion(Version.P2P_NETWORK_VERSION);
 
-        Messages.GetPeersResponse.Builder msgBuilder = Messages.GetPeersResponse.newBuilder();
-        msgBuilder.setRequestNonce(requestNonce);
+        Messages.GetPeersRequest.Builder msgBuilder = envelopeBuilder.getGetPeersRequestBuilder();
+        msgBuilder
+                .setNonce(nonce)
+                .setSenderNodeAddress(
+                        msgBuilder.getSenderNodeAddressBuilder()
+                                .setHostName(senderNodeAddress.getHostName())
+                                .setPort(senderNodeAddress.getPort()));
+        msgBuilder.addAllSupportedCapabilities(supportedCapabilities);
         msgBuilder.addAllReportedPeers(reportedPeers.stream()
                 .map(peer -> Messages.Peer.newBuilder()
                         .setDate(peer.date.getTime())
@@ -55,6 +73,6 @@ public final class GetPeersResponse extends PeerExchangeMessage implements Suppo
                                 .setHostName(peer.nodeAddress.getHostName())
                                 .setPort(peer.nodeAddress.getPort())).build())
                 .collect(Collectors.toList()));
-        return envelopeBuilder.setGetPeersResponse(msgBuilder).build();
+        return envelopeBuilder.setGetPeersRequest(msgBuilder).build();
     }
 }

@@ -1,4 +1,4 @@
-package io.bisq.p2p.storage.messages;
+package io.bisq.messages.p2p.storage.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.app.Version;
