@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +37,7 @@ public class PoloniexProvider {
         Map<String, PriceData> marketPriceMap = new HashMap<>();
         String response = httpClient.requestWithGET("?command=returnTicker", "User-Agent", "");
         LinkedTreeMap<String, Object> treeMap = new Gson().fromJson(response, LinkedTreeMap.class);
+        long epochSec = Instant.now().getEpochSecond();
         treeMap.entrySet().stream().forEach(e -> {
             Object value = e.getValue();
             String invertedCurrencyPair = e.getKey();
@@ -48,7 +50,12 @@ public class PoloniexProvider {
                         if (value instanceof LinkedTreeMap) {
                             LinkedTreeMap<String, Object> data = (LinkedTreeMap) value;
                             marketPriceMap.put(altcoinCurrency,
-                                    new PriceData(altcoinCurrency, parseDouble((String) data.get("lowestAsk")), parseDouble((String) data.get("highestBid")), parseDouble((String) data.get("last"))));
+                                    new PriceData(altcoinCurrency,
+                                            parseDouble((String) data.get("lowestAsk")),
+                                            parseDouble((String) data.get("highestBid")),
+                                            parseDouble((String) data.get("last")),
+                                            epochSec)
+                            );
                         }
                     }
                 } else {
