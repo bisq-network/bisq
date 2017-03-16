@@ -1,4 +1,4 @@
-package io.bisq.p2p.protocol.availability;
+package io.bisq.trade.offer;
 
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
@@ -14,6 +14,8 @@ import io.bisq.network_messages.trade.exceptions.TradePriceOutOfToleranceExcepti
 import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.provider.price.MarketPrice;
 import io.bisq.provider.price.PriceFeedService;
+import io.bisq.trade.protocol.availability.OfferAvailabilityModel;
+import io.bisq.trade.protocol.availability.OfferAvailabilityProtocol;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;

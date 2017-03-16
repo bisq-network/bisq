@@ -18,13 +18,13 @@
 package io.bisq.gui.util;
 
 import io.bisq.common.util.MathUtils;
-import io.bisq.locale.Res;
 import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.LanguageUtil;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
-import io.bisq.p2p.protocol.availability.Offer;
-import io.bisq.user.Preferences;
+import io.bisq.locale.Res;
 import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.trade.offer.Offer;
+import io.bisq.user.Preferences;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.bitcoinj.core.Coin;

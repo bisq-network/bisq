@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.p2p.protocol.availability;
+package io.bisq.trade.protocol.availability;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
@@ -28,8 +28,8 @@ import io.bisq.network_messages.availability.OfferAvailabilityResponse;
 import io.bisq.network_messages.availability.OfferMessage;
 import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.network_messages.util.Validator;
-import io.bisq.protocol.availability.tasks.ProcessOfferAvailabilityResponse;
-import io.bisq.protocol.availability.tasks.SendOfferAvailabilityRequest;
+import io.bisq.trade.protocol.availability.tasks.ProcessOfferAvailabilityResponse;
+import io.bisq.trade.protocol.availability.tasks.SendOfferAvailabilityRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

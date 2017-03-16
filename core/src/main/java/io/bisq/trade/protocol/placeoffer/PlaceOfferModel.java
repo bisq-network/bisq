@@ -20,7 +20,7 @@ package io.bisq.trade.protocol.placeoffer;
 import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.btc.wallet.TradeWalletService;
 import io.bisq.common.taskrunner.Model;
-import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.trade.offer.Offer;
 import io.bisq.trade.offer.OfferBookService;
 import io.bisq.user.User;
 import org.bitcoinj.core.Coin;

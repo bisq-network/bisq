@@ -23,7 +23,7 @@ import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.network_messages.NodeAddress;
 import io.bisq.network_messages.arbitration.Arbitrator;
-import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.trade.offer.Offer;
 import io.bisq.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bisq.trade.protocol.trade.ArbitrationSelectionRule;
 import org.bitcoinj.core.Address;

@@ -15,13 +15,14 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.p2p.protocol.availability;
+package io.bisq.trade.protocol.availability;
 
 import io.bisq.common.taskrunner.Model;
 import io.bisq.network_messages.NodeAddress;
 import io.bisq.network_messages.availability.OfferAvailabilityResponse;
 import io.bisq.network_messages.crypto.PubKeyRing;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.trade.offer.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -2,7 +2,7 @@ package io.bisq.payment;
 
 import io.bisq.locale.TradeCurrency;
 import io.bisq.network_messages.payment.PaymentMethod;
-import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.trade.offer.Offer;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;

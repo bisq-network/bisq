@@ -19,8 +19,8 @@ package io.bisq.gui.main.offer.offerbook;
 
 import io.bisq.app.Log;
 import io.bisq.network_messages.trade.offer.payload.OfferPayload;
-import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.trade.TradeManager;
+import io.bisq.trade.offer.Offer;
 import io.bisq.trade.offer.OfferBookService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

@@ -18,7 +18,6 @@
 package io.bisq.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
-import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.common.util.Tuple3;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.components.BusyAnimation;
@@ -30,14 +29,15 @@ import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.Res;
 import io.bisq.locale.BankUtil;
 import io.bisq.locale.CountryUtil;
+import io.bisq.locale.Res;
+import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.network_messages.payment.PaymentMethod;
 import io.bisq.network_messages.trade.offer.payload.OfferPayload;
-import io.bisq.p2p.protocol.availability.Offer;
-import io.bisq.user.Preferences;
 import io.bisq.payment.PaymentAccount;
+import io.bisq.trade.offer.Offer;
+import io.bisq.user.Preferences;
 import io.bisq.user.User;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;

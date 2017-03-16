@@ -20,7 +20,6 @@ package io.bisq.trade.offer;
 import io.bisq.app.Version;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.storage.Storage;
 import io.bisq.trade.Tradable;
 import io.bisq.trade.TradableList;
