@@ -4,9 +4,9 @@ import com.google.protobuf.ByteString;
 import io.bisq.app.Capabilities;
 import io.bisq.app.Version;
 import io.bisq.common.wire.proto.Messages;
+import io.bisq.messages.AnonymousMessage;
 import io.bisq.messages.ToProtoBuffer;
-import io.bisq.p2p.messaging.SupportedCapabilitiesMessage;
-import io.bisq.p2p.network.messages.AnonymousMessage;
+import io.bisq.messages.p2p.messaging.SupportedCapabilitiesMessage;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

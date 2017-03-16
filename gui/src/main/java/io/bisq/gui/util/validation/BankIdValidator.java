@@ -19,7 +19,7 @@ package io.bisq.gui.util.validation;
 
 
 import io.bisq.locale.Res;
-import io.bisq.messages.locale.BankUtil;
+import io.bisq.locale.BankUtil;
 
 public final class BankIdValidator extends BankValidator {
     public BankIdValidator(String countryCode) {

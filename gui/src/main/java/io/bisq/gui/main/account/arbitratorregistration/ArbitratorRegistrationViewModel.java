@@ -21,14 +21,15 @@ import com.google.inject.Inject;
 import io.bisq.arbitration.ArbitratorManager;
 import io.bisq.btc.AddressEntry;
 import io.bisq.btc.wallet.BtcWalletService;
-import io.bisq.common.crypto.KeyRing;
+import io.bisq.messages.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.messages.arbitration.Arbitrator;
-import io.bisq.messages.locale.LanguageUtil;
-import io.bisq.p2p.NodeAddress;
-import io.bisq.p2p.P2PService;
+import io.bisq.locale.LanguageUtil;
+import io.bisq.messages.NodeAddress;
+import io.bisq.p2p.storage.P2PService;
+import io.bisq.user.Preferences;
 import io.bisq.user.User;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -51,7 +52,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     final BooleanProperty revokeButtonDisabled = new SimpleBooleanProperty(true);
     final ObjectProperty<Arbitrator> myArbitratorProperty = new SimpleObjectProperty<>();
 
-    final ObservableList<String> languageCodes = FXCollections.observableArrayList(LanguageUtil.getDefaultLanguageLocaleAsCode());
+    final ObservableList<String> languageCodes = FXCollections.observableArrayList(LanguageUtil.getDefaultLanguageLocaleAsCode(Preferences.getDefaultLocale()));
     final ObservableList<String> allLanguageCodes = FXCollections.observableArrayList(LanguageUtil.getAllLanguageCodes());
     private boolean allDataValid;
     private final MapChangeListener<NodeAddress, Arbitrator> arbitratorMapChangeListener;

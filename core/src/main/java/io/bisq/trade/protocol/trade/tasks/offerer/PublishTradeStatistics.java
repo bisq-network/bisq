@@ -32,7 +32,7 @@ public class PublishTradeStatistics extends TradeTask {
         try {
             runInterceptHook();
             // Offerer is responsible for publishing. Only in case the offerer uses an old version the taker publishes.
-            TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
+            TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer().getOfferPayload(),
                     trade.getTradePrice(),
                     trade.getTradeAmount(),
                     trade.getDate(),

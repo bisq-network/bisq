@@ -25,24 +25,25 @@ import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.btc.wallet.TradeWalletService;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.common.crypto.KeyRing;
+import io.bisq.messages.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.crypto.DecryptedMsgWithPubKey;
+import io.bisq.messages.DecryptedMsgWithPubKey;
 import io.bisq.messages.Message;
 import io.bisq.messages.availability.AvailabilityResult;
 import io.bisq.messages.availability.OfferAvailabilityRequest;
 import io.bisq.messages.availability.OfferAvailabilityResponse;
-import io.bisq.messages.provider.price.PriceFeedService;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.provider.price.PriceFeedService;
 import io.bisq.messages.trade.exceptions.MarketPriceNotAvailableException;
 import io.bisq.messages.trade.exceptions.TradePriceOutOfToleranceException;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.messages.user.Preferences;
+import io.bisq.messages.trade.offer.payload.OfferPayload;
+import io.bisq.user.Preferences;
 import io.bisq.p2p.BootstrapListener;
-import io.bisq.p2p.NodeAddress;
-import io.bisq.p2p.P2PService;
-import io.bisq.p2p.messaging.DecryptedDirectMessageListener;
-import io.bisq.p2p.messaging.SendDirectMessageListener;
+import io.bisq.messages.NodeAddress;
+import io.bisq.p2p.storage.P2PService;
+import io.bisq.messages.DecryptedDirectMessageListener;
+import io.bisq.messages.p2p.messaging.SendDirectMessageListener;
 import io.bisq.p2p.peers.PeerManager;
 import io.bisq.storage.Storage;
 import io.bisq.trade.TradableList;
@@ -159,7 +160,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
         final int size = openOffers.size();
         if (offerBookService.isBootstrapped()) {
-            openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer()));
+            openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayload()));
             if (completeHandler != null)
                 UserThread.runAfter(completeHandler::run, size * 200 + 500, TimeUnit.MILLISECONDS);
         } else {
@@ -214,7 +215,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
         // We republish after a bit as it might be that our connected node still has the offer in the data map
         // but other peers have it already removed because of expired TTL.
-        // Those other not directly connected peers would not get the broadcast of the new offer, as the first 
+        // Those other not directly connected peers would not get the broadcast of the new offer, as the first
         // connected peer (seed node) does nto broadcast if it has the data in the map.
         // To update quickly to the whole network we repeat the republishOffers call after a few seconds when we 
         // are better connected to the network. There is no guarantee that all peers will receive it but we have
@@ -288,11 +289,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         if (openOfferOptional.isPresent()) {
             removeOpenOffer(openOfferOptional.get(), resultHandler, errorMessageHandler);
         } else {
-            log.warn("Offer was not found in our list of open offers. We still try to remove it from the offerbook.");
-            errorMessageHandler.handleErrorMessage("Offer was not found in our list of open offers. " +
+            log.warn("OfferPayload was not found in our list of open offers. We still try to remove it from the offerbook.");
+            errorMessageHandler.handleErrorMessage("OfferPayload was not found in our list of open offers. " +
                     "We still try to remove it from the offerbook.");
-            offerBookService.removeOffer(offer,
-                    () -> offer.setState(Offer.State.REMOVED),
+            offerBookService.removeOffer(offer.getOfferPayload(),
+                    () -> offer.setState(OfferPayload.State.REMOVED),
                     null);
         }
     }
@@ -300,9 +301,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     // Remove from my offers
     public void removeOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         Offer offer = openOffer.getOffer();
-        offerBookService.removeOffer(offer,
+        offerBookService.removeOffer(offer.getOfferPayload(),
                 () -> {
-                    offer.setState(Offer.State.REMOVED);
+                    offer.setState(OfferPayload.State.REMOVED);
                     openOffer.setState(OpenOffer.State.CANCELED);
                     openOffers.remove(openOffer);
                     closedTradableManager.add(openOffer);
@@ -314,11 +315,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     // Close openOffer after deposit published
-    public void closeOpenOffer(Offer offer) {
+    public void closeOpenOffer(OfferPayload offer) {
         findOpenOffer(offer.getId()).ifPresent(openOffer -> {
             openOffers.remove(openOffer);
             openOffer.setState(OpenOffer.State.CLOSED);
-            offerBookService.removeOffer(openOffer.getOffer(),
+            offerBookService.removeOffer(openOffer.getOffer().getOfferPayload(),
                     () -> log.trace("Successful removed offer"),
                     log::error);
         });
@@ -351,7 +352,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Offer Availability
+    // OfferPayload Availability
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handleOfferAvailabilityRequest(OfferAvailabilityRequest message, NodeAddress sender) {
@@ -454,7 +455,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         // The openOffer.getId().contains("_") check is because there was once a version 
                         // where we encoded the version nr in the offer id with a "_" as separator.
                         // That caused several issues and was reverted. So if there are still old offers out with that 
-                        // special offer ID format those must not be published as they cause failed taker attempts 
+                        // special offer ID format those must not be published as they cause failed taker attempts
                         // with lost taker fee.
                         String id = openOffer.getId();
                         if (id != null && !id.contains("_"))
@@ -550,7 +551,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void refreshOffer(OpenOffer openOffer) {
-        offerBookService.refreshTTL(openOffer.getOffer(),
+        offerBookService.refreshTTL(openOffer.getOffer().getOfferPayload(),
                 () -> log.debug("Successful refreshed TTL for offer"),
                 log::warn);
     }

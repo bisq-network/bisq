@@ -26,11 +26,12 @@ import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
 import io.bisq.messages.arbitration.Dispute;
-import io.bisq.messages.locale.CountryUtil;
+import io.bisq.locale.CountryUtil;
 import io.bisq.messages.payment.PaymentMethod;
 import io.bisq.messages.payment.payload.PaymentAccountContractData;
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.messages.trade.offer.payload.OfferPayload;
 import io.bisq.messages.trade.payload.Contract;
+import io.bisq.user.Preferences;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -95,7 +96,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
     private void addContent() {
         Contract contract = dispute.getContract();
-        Offer offer = contract.offer;
+        OfferPayload offer = contract.offer;
 
         List<String> acceptedBanks = offer.getAcceptedBankIds();
         boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
@@ -139,11 +140,11 @@ public class ContractWindow extends Overlay<ContractWindow> {
         if (showAcceptedCountryCodes) {
             String countries;
             Tooltip tooltip = null;
-            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes)) {
+            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes, Preferences.getDefaultLocale())) {
                 countries = Res.getWithCol("shared.allEuroCountries");
             } else {
                 countries = CountryUtil.getCodesString(acceptedCountryCodes);
-                tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
+                tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes, Preferences.getDefaultLocale()));
             }
             TextField acceptedCountries = FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.acceptedTakerCountries"), countries).second;
             if (tooltip != null) acceptedCountries.setTooltip(new Tooltip());

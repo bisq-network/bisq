@@ -19,7 +19,7 @@ package io.bisq.trade.protocol.trade;
 
 
 import io.bisq.messages.protocol.trade.TradeMessage;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.messages.NodeAddress;
 
 public interface OffererProtocol {
     void handleTakeOfferRequest(TradeMessage message, NodeAddress taker);

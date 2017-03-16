@@ -18,10 +18,11 @@
 package io.bisq.payment;
 
 import io.bisq.app.Version;
-import io.bisq.messages.locale.FiatCurrency;
+import io.bisq.locale.FiatCurrency;
 import io.bisq.messages.payment.PaymentMethod;
 import io.bisq.messages.payment.payload.PaymentAccountContractData;
 import io.bisq.messages.payment.payload.PerfectMoneyAccountContractData;
+import io.bisq.user.Preferences;
 
 public final class PerfectMoneyAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -29,7 +30,7 @@ public final class PerfectMoneyAccount extends PaymentAccount {
 
     public PerfectMoneyAccount() {
         super(PaymentMethod.PERFECT_MONEY);
-        setSingleTradeCurrency(new FiatCurrency("USD"));
+        setSingleTradeCurrency(new FiatCurrency("USD", Preferences.getDefaultLocale()));
     }
 
     @Override

@@ -44,7 +44,7 @@ public class PublishTradeStatistics extends TradeTask {
                     .filter(c -> c.getPeersNodeAddressOptional().isPresent() && c.getPeersNodeAddressOptional().get().equals(trade.getTradingPeerNodeAddress()))
                     .findAny()
                     .ifPresent(c -> {
-                        TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
+                        TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer().getOfferPayload(),
                                 trade.getTradePrice(),
                                 trade.getTradeAmount(),
                                 trade.getDate(),

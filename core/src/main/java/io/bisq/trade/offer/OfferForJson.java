@@ -1,9 +1,9 @@
 package io.bisq.trade.offer;
 
 import io.bisq.common.util.MathUtils;
-import io.bisq.messages.locale.CurrencyUtil;
+import io.bisq.locale.CurrencyUtil;
 import io.bisq.messages.payment.PaymentMethod;
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.messages.trade.offer.payload.OfferPayload;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
@@ -18,7 +18,7 @@ import java.util.Date;
 public class OfferForJson {
     private static final Logger log = LoggerFactory.getLogger(OfferForJson.class);
 
-    public final Offer.Direction direction;
+    public final OfferPayload.Direction direction;
     public final String currencyCode;
     public final long minAmount;
     public final long amount;
@@ -32,7 +32,7 @@ public class OfferForJson {
 
     // primaryMarket fields are based on industry standard where primaryMarket is always in the focus (in the app BTC is always in the focus - will be changed in a larger refactoring once)
     public String currencyPair;
-    public Offer.Direction primaryMarketDirection;
+    public OfferPayload.Direction primaryMarketDirection;
 
     public String priceDisplayString;
     public String primaryMarketAmountDisplayString;
@@ -47,7 +47,7 @@ public class OfferForJson {
     public long primaryMarketMinVolume;
 
 
-    public OfferForJson(Offer.Direction direction,
+    public OfferForJson(OfferPayload.Direction direction,
                         String currencyCode,
                         Coin minAmount,
                         Coin amount,
@@ -89,7 +89,7 @@ public class OfferForJson {
             MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
             final Fiat priceAsFiat = getPriceAsFiat();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                primaryMarketDirection = direction == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
+                primaryMarketDirection = direction == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
                 currencyPair = currencyCode + "/" + "BTC";
 
                 DecimalFormat decimalFormat = new DecimalFormat("#.#");

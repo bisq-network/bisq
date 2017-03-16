@@ -20,7 +20,7 @@ package io.bisq.gui.main.offer;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.common.view.ViewLoader;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 
 import javax.inject.Inject;
 

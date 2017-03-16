@@ -28,7 +28,7 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;

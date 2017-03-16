@@ -1,8 +1,8 @@
 package io.bisq.p2p.storage.messages;
 
 import io.bisq.app.Version;
-import io.bisq.common.util.ProtoBufferUtils;
 import io.bisq.common.wire.proto.Messages;
+import io.bisq.messages.util.ProtoBufferUtils;
 import io.bisq.p2p.storage.storageentry.ProtectedStorageEntry;
 
 public final class RemoveDataMessage extends BroadcastMessage {

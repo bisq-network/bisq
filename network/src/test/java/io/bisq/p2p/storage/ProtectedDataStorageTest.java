@@ -1,10 +1,13 @@
 package io.bisq.p2p.storage;
 
 import io.bisq.common.UserThread;
-import io.bisq.common.crypto.*;
+import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.Sig;
 import io.bisq.crypto.EncryptionService;
-import io.bisq.p2p.NodeAddress;
-import io.bisq.p2p.P2PService;
+import io.bisq.messages.NodeAddress;
+import io.bisq.messages.crypto.Hash;
+import io.bisq.messages.crypto.KeyRing;
+import io.bisq.messages.crypto.KeyStorage;
 import io.bisq.p2p.TestUtils;
 import io.bisq.p2p.network.NetworkNode;
 import io.bisq.p2p.peers.PeerManager;

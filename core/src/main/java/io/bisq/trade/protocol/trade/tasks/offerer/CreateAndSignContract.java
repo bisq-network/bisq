@@ -25,7 +25,7 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.common.util.Utilities;
 import io.bisq.messages.payment.payload.PaymentAccountContractData;
 import io.bisq.messages.trade.payload.Contract;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.messages.NodeAddress;
 import io.bisq.trade.BuyerAsOffererTrade;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.TradingPeer;
@@ -65,7 +65,7 @@ public class CreateAndSignContract extends TradeTask {
             AddressEntry offererAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] offererMultiSigPubKey = offererAddressEntry.getPubKey();
             Contract contract = new Contract(
-                    processModel.getOffer(),
+                    processModel.getOffer().getOfferPayload(),
                     trade.getTradeAmount(),
                     trade.getTradePrice(),
                     trade.getTakeOfferFeeTxId(),

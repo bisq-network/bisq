@@ -18,7 +18,7 @@
 package io.bisq.gui.util;
 
 import com.sun.javafx.tk.quantum.QuantumToolkit;
-import io.bisq.messages.locale.Country;
+import io.bisq.locale.Country;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import org.slf4j.Logger;

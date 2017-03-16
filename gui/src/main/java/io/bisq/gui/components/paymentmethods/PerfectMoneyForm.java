@@ -23,7 +23,7 @@ import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.gui.util.validation.PerfectMoneyValidator;
 import io.bisq.locale.Res;
-import io.bisq.messages.locale.FiatCurrency;
+import io.bisq.locale.FiatCurrency;
 import io.bisq.messages.payment.payload.PaymentAccountContractData;
 import io.bisq.messages.payment.payload.PerfectMoneyAccountContractData;
 import io.bisq.payment.PaymentAccount;

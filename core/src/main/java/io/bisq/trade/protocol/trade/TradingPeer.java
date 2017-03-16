@@ -18,7 +18,7 @@
 package io.bisq.trade.protocol.trade;
 
 import io.bisq.app.Version;
-import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.messages.crypto.PubKeyRing;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.messages.btc.data.RawTransactionInput;
 import io.bisq.messages.payment.payload.PaymentAccountContractData;

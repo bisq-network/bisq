@@ -29,12 +29,12 @@ import io.bisq.gui.util.validation.AccountNrValidator;
 import io.bisq.gui.util.validation.BankIdValidator;
 import io.bisq.gui.util.validation.BranchIdValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.locale.Res;
-import io.bisq.messages.locale.*;
+import io.bisq.locale.*;
 import io.bisq.messages.payment.payload.CashDepositAccountContractData;
 import io.bisq.messages.payment.payload.PaymentAccountContractData;
 import io.bisq.payment.CountryBasedPaymentAccount;
 import io.bisq.payment.PaymentAccount;
+import io.bisq.user.Preferences;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -83,9 +83,9 @@ public class CashDepositForm extends PaymentMethodForm {
 
         if (!showRequirements)
             FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.bank.country"),
-                    CountryUtil.getNameAndCode(countryCode));
+                    CountryUtil.getNameAndCode(countryCode, Preferences.getDefaultLocale()));
         else
-            requirements += "\n" + Res.get("payment.bank.country") + " " + CountryUtil.getNameAndCode(countryCode);
+            requirements += "\n" + Res.get("payment.bank.country") + " " + CountryUtil.getNameAndCode(countryCode, Preferences.getDefaultLocale());
 
         // We don't want to display more than 6 rows to avoid scrolling, so if we get too many fields we combine them horizontally
         int nrRows = 0;
@@ -313,7 +313,7 @@ public class CashDepositForm extends PaymentMethodForm {
             if (selectedItem != null) {
                 getCountryBasedPaymentAccount().setCountry(selectedItem);
                 String countryCode = selectedItem.code;
-                TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode);
+                TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode, Preferences.getDefaultLocale());
                 paymentAccount.setSingleTradeCurrency(currency);
                 currencyComboBox.setDisable(false);
                 currencyComboBox.getSelectionModel().select(currency);
@@ -421,10 +421,10 @@ public class CashDepositForm extends PaymentMethodForm {
 
         currencyComboBox = FormBuilder.addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency")).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
-        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
+        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies(Preferences.getDefaultLocale())));
         currencyComboBox.setOnAction(e -> {
             TradeCurrency selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
-            FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(countryComboBox.getSelectionModel().getSelectedItem().code);
+            FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(countryComboBox.getSelectionModel().getSelectedItem().code, Preferences.getDefaultLocale());
             if (!defaultCurrency.equals(selectedItem)) {
                 new Popup<>().warning(Res.get("payment.foreign.currency"))
                         .actionButtonText(Res.get("shared.yes"))

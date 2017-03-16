@@ -27,7 +27,7 @@ import io.bisq.gui.main.dao.voting.VotingView;
 import io.bisq.gui.main.dao.wallet.BsqWalletView;
 import io.bisq.gui.main.dao.wallet.dashboard.BsqDashboardView;
 import io.bisq.locale.Res;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;

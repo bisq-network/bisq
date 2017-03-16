@@ -5,7 +5,7 @@ import io.bisq.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.p2p.storage.P2PDataStorage;
-import io.bisq.p2p.storage.payload.MailboxStoragePayload;
+import io.bisq.payload.MailboxStoragePayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

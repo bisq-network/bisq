@@ -42,7 +42,7 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Transitions;
 import io.bisq.locale.Res;
-import io.bisq.messages.provider.price.PriceFeedService;
+import io.bisq.provider.price.PriceFeedService;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

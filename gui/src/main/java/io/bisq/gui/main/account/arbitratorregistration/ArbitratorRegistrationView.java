@@ -29,7 +29,8 @@ import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
 import io.bisq.messages.arbitration.Arbitrator;
-import io.bisq.messages.locale.LanguageUtil;
+import io.bisq.locale.LanguageUtil;
+import io.bisq.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.HPos;
@@ -214,7 +215,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
         if (languagesListView.getItems().size() == 0) {
             new Popup().warning(Res.get("account.arbitratorRegistration.warn.min1Language")).show();
-            model.onAddLanguage(LanguageUtil.getDefaultLanguageLocaleAsCode());
+            model.onAddLanguage(LanguageUtil.getDefaultLanguageLocaleAsCode(Preferences.getDefaultLocale()));
         }
     }
 

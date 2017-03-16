@@ -18,15 +18,15 @@
 package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.app.DevEnv;
-import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.messages.crypto.PubKeyRing;
 import io.bisq.common.util.Tuple2;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.locale.Res;
 import io.bisq.messages.alert.PrivateNotification;
-import io.bisq.p2p.NodeAddress;
-import io.bisq.p2p.messaging.SendMailboxMessageListener;
+import io.bisq.messages.NodeAddress;
+import io.bisq.messages.p2p.messaging.SendMailboxMessageListener;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;

@@ -17,6 +17,11 @@
             <artifactId>common</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.bisq</groupId>
+            <artifactId>network-messages</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.bisq</groupId>

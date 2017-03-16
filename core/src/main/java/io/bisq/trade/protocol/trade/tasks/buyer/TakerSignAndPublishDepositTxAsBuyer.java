@@ -20,7 +20,7 @@ package io.bisq.trade.protocol.trade.tasks.buyer;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.btc.AddressEntry;
 import io.bisq.btc.wallet.BtcWalletService;
-import io.bisq.common.crypto.Hash;
+import io.bisq.messages.crypto.Hash;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.messages.btc.data.RawTransactionInput;
 import io.bisq.trade.Trade;

@@ -26,7 +26,7 @@ import io.bisq.gui.main.account.content.fiataccounts.FiatAccountsView;
 import io.bisq.gui.main.account.settings.AccountSettingsView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.locale.Res;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;

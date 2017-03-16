@@ -2,7 +2,7 @@ package io.bisq.p2p.peers;
 
 import io.bisq.app.Log;
 import io.bisq.common.util.Utilities;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.messages.NodeAddress;
 import io.bisq.p2p.network.NetworkNode;
 import io.bisq.p2p.storage.messages.BroadcastMessage;
 import org.jetbrains.annotations.Nullable;

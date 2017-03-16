@@ -26,7 +26,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.util.Tuple2;
 import io.bisq.http.HttpClient;
-import io.bisq.messages.btc.provider.ProvidersRepository;
+import io.bisq.provider.ProvidersRepository;
 import org.bitcoinj.core.UTXO;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

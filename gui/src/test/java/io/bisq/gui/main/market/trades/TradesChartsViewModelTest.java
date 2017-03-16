@@ -1,7 +1,7 @@
 package io.bisq.gui.main.market.trades;
 
 import io.bisq.gui.main.market.trades.charts.CandleData;
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.messages.trade.offer.payload.OfferPayload;
 import io.bisq.messages.trade.statistics.payload.TradeStatistics;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -37,7 +37,7 @@ public class TradesChartsViewModelTest {
 
         Set<TradeStatistics> set = new HashSet<>();
         final Date now = new Date();
-        Offer offer = new Offer(null,
+        OfferPayload offer = new OfferPayload(null,
                 null,
                 null,
                 null,
@@ -56,8 +56,6 @@ public class TradesChartsViewModelTest {
                 null,
                 null,
                 null,
-                null,
-
                 null,
                 0,
                 0,

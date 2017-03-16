@@ -18,10 +18,11 @@
 package io.bisq.payment;
 
 import io.bisq.app.Version;
-import io.bisq.messages.locale.FiatCurrency;
+import io.bisq.locale.FiatCurrency;
 import io.bisq.messages.payment.PaymentMethod;
 import io.bisq.messages.payment.payload.AliPayAccountContractData;
 import io.bisq.messages.payment.payload.PaymentAccountContractData;
+import io.bisq.user.Preferences;
 
 public final class AliPayAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -29,7 +30,7 @@ public final class AliPayAccount extends PaymentAccount {
 
     public AliPayAccount() {
         super(PaymentMethod.ALI_PAY);
-        setSingleTradeCurrency(new FiatCurrency("CNY"));
+        setSingleTradeCurrency(new FiatCurrency("CNY", Preferences.getDefaultLocale()));
     }
 
     @Override

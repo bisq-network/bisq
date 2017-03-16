@@ -5,7 +5,7 @@ import io.bisq.app.BisqApp;
 import io.bisq.app.DevEnv;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.locale.Res;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

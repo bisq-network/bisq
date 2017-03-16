@@ -32,7 +32,7 @@ import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.messages.btc.BtcOptionKeys;
 import io.bisq.messages.btc.UserAgent;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 import io.bisq.network.DnsLookupTor;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.Socks5MultiDiscovery;

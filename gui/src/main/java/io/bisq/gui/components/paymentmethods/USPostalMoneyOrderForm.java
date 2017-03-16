@@ -23,7 +23,7 @@ import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.gui.util.validation.USPostalMoneyOrderValidator;
 import io.bisq.locale.Res;
-import io.bisq.messages.locale.TradeCurrency;
+import io.bisq.locale.TradeCurrency;
 import io.bisq.messages.payment.payload.PaymentAccountContractData;
 import io.bisq.messages.payment.payload.USPostalMoneyOrderAccountContractData;
 import io.bisq.payment.PaymentAccount;

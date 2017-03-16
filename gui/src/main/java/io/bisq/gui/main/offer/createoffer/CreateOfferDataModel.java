@@ -17,33 +17,35 @@
 
 package io.bisq.gui.main.offer.createoffer;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import io.bisq.app.DevEnv;
 import io.bisq.app.Version;
 import io.bisq.btc.AddressEntry;
 import io.bisq.btc.listeners.BalanceListener;
 import io.bisq.btc.wallet.BtcWalletService;
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.util.Utilities;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.main.offer.createoffer.monetary.Price;
 import io.bisq.gui.main.offer.createoffer.monetary.Volume;
 import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.Res;
+import io.bisq.locale.TradeCurrency;
 import io.bisq.messages.arbitration.Arbitrator;
 import io.bisq.messages.btc.Restrictions;
-import io.bisq.messages.btc.provider.fee.FeeService;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.locale.TradeCurrency;
+import io.bisq.messages.crypto.KeyRing;
 import io.bisq.messages.payment.payload.BankAccountContractData;
-import io.bisq.messages.provider.price.PriceFeedService;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.messages.user.Preferences;
-import io.bisq.p2p.P2PService;
+import io.bisq.messages.trade.offer.payload.OfferPayload;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.p2p.storage.P2PService;
 import io.bisq.payment.*;
+import io.bisq.provider.fee.FeeService;
+import io.bisq.provider.price.PriceFeedService;
 import io.bisq.trade.handlers.TransactionResultHandler;
 import io.bisq.trade.offer.OpenOfferManager;
+import io.bisq.user.Preferences;
 import io.bisq.user.User;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -81,7 +83,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final BalanceListener balanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
-    private Offer.Direction direction;
+    private OfferPayload.Direction direction;
 
     private TradeCurrency tradeCurrency;
 
@@ -216,7 +218,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // called before activate()
-    boolean initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
+    boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
 
         fillPaymentAccounts();
@@ -277,7 +279,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     Offer createAndGetOffer() {
         long priceAsLong = price.get() != null && !useMarketBasedPrice.get() ? price.get().getValue() : 0L;
-        // We use precision 8 in AltcoinPrice but in Offer we use Fiat with precision 4. Will be refactored once in a bigger update....
+        // We use precision 8 in AltcoinPrice but in OfferPayload we use Fiat with precision 4. Will be refactored once in a bigger update....
         // TODO use same precision for both in next release
         if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
             priceAsLong = priceAsLong / 10000;
@@ -328,7 +330,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 Restrictions.MAX_SECURITY_DEPOSIT.toFriendlyString());
         checkArgument(securityDepositAsCoin.compareTo(Restrictions.MIN_SECURITY_DEPOSIT) >= 0, "securityDeposit must be not be less than " +
                 Restrictions.MIN_SECURITY_DEPOSIT.toFriendlyString());
-        return new Offer(offerId,
+        OfferPayload offerPayload = new OfferPayload(offerId,
                 null,
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
@@ -339,7 +341,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 amount,
                 minAmount,
                 tradeCurrencyCode.get(),
-                new ArrayList<>(user.getAcceptedArbitratorAddresses()),
+                Lists.newArrayList(user.getAcceptedArbitratorAddresses()),
                 paymentAccount.getPaymentMethod().getId(),
                 paymentAccount.getId(),
                 null,
@@ -347,8 +349,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 acceptedCountryCodes,
                 bankId,
                 acceptedBanks,
-                priceFeedService,
-
                 Version.VERSION,
                 walletService.getLastBlockSeenHeight(),
                 txFeeAsCoin.value,
@@ -363,6 +363,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 isPrivateOffer,
                 hashOfChallenge,
                 extraDataMap);
+        return new Offer(offerPayload);
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
@@ -443,7 +444,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return true;
     }
 
-    Offer.Direction getDirection() {
+    OfferPayload.Direction getDirection() {
         return direction;
     }
 
@@ -524,7 +525,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (direction != null && amount.get() != null && createOfferFeeAsCoin != null) {
             Coin feeAndSecDeposit = createOfferFeeAsCoin.add(txFeeAsCoin).add(securityDeposit.get());
-            Coin required = direction == Offer.Direction.BUY ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
+            Coin required = direction == OfferPayload.Direction.BUY ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
             totalToPayAsCoin.set(required);
             log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
             updateBalance();

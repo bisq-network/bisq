@@ -18,14 +18,14 @@
 package io.bisq.user;
 
 import io.bisq.app.Version;
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.persistance.Persistable;
+import io.bisq.locale.LanguageUtil;
+import io.bisq.locale.TradeCurrency;
+import io.bisq.messages.NodeAddress;
 import io.bisq.messages.alert.Alert;
 import io.bisq.messages.arbitration.Arbitrator;
+import io.bisq.messages.crypto.KeyRing;
 import io.bisq.messages.filter.payload.Filter;
-import io.bisq.messages.locale.LanguageUtil;
-import io.bisq.messages.locale.TradeCurrency;
-import io.bisq.p2p.NodeAddress;
 import io.bisq.payment.PaymentAccount;
 import io.bisq.storage.Storage;
 import javafx.beans.property.ObjectProperty;
@@ -106,7 +106,7 @@ public final class User implements Persistable {
         } else {
             accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
 
-            acceptedLanguageLocaleCodes.add(LanguageUtil.getDefaultLanguageLocaleAsCode());
+            acceptedLanguageLocaleCodes.add(LanguageUtil.getDefaultLanguageLocaleAsCode(Preferences.getDefaultLocale()));
             String english = LanguageUtil.getEnglishLanguageLocaleCode();
             if (!acceptedLanguageLocaleCodes.contains(english))
                 acceptedLanguageLocaleCodes.add(english);

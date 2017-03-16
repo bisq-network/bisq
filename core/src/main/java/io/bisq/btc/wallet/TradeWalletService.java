@@ -31,7 +31,7 @@ import io.bisq.btc.exceptions.TransactionVerificationException;
 import io.bisq.btc.exceptions.WalletException;
 import io.bisq.common.util.Utilities;
 import io.bisq.messages.btc.data.RawTransactionInput;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
@@ -240,7 +240,7 @@ public class TradeWalletService {
 
         // Find the needed inputs to pay the output, optionally add 1 change output.
         // Normally only 1 input and no change output is used, but we support multiple inputs and 1 change output. 
-        // Our spending transaction output is from the create offer fee payment. 
+        // Our spending transaction output is from the create offer fee payment.
         addAvailableInputsAndChangeOutputs(dummyTX, takersAddress, takersChangeAddress, txFee);
 
         // The completeTx() call signs the input, but we don't want to pass over signed tx inputs so we remove the signature

@@ -18,7 +18,7 @@
 package io.bisq.payment;
 
 import io.bisq.app.Version;
-import io.bisq.messages.locale.Country;
+import io.bisq.locale.Country;
 import io.bisq.messages.payment.PaymentMethod;
 import io.bisq.messages.payment.payload.CountryBasedPaymentAccountContractData;
 import org.jetbrains.annotations.NotNull;

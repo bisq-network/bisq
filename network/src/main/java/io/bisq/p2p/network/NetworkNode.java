@@ -6,7 +6,7 @@ import io.bisq.app.Log;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Utilities;
 import io.bisq.messages.Message;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.messages.NodeAddress;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

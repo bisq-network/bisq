@@ -37,7 +37,7 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
-import io.bisq.messages.btc.provider.fee.FeeService;
+import io.bisq.provider.fee.FeeService;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;

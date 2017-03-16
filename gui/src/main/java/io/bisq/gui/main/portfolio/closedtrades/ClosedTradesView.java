@@ -27,7 +27,7 @@ import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.locale.Res;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.messages.NodeAddress;
 import io.bisq.trade.Tradable;
 import io.bisq.trade.Trade;
 import io.bisq.trade.offer.OpenOffer;
@@ -99,7 +99,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         tradeIdColumn.setComparator((o1, o2) -> o1.getTradable().getId().compareTo(o2.getTradable().getId()));
         dateColumn.setComparator((o1, o2) -> o1.getTradable().getDate().compareTo(o2.getTradable().getDate()));
-        directionColumn.setComparator((o1, o2) -> o1.getTradable().getOffer().getDirection().compareTo(o2.getTradable().getOffer().getDirection()));
+        directionColumn.setComparator((o1, o2) -> o1.getTradable().getOffer().getDirection()
+                .compareTo(o2.getTradable().getOffer().getDirection()));
         marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
 
         priceColumn.setComparator((o1, o2) -> {

@@ -28,7 +28,7 @@ import io.bisq.gui.main.portfolio.pendingtrades.TradeSubView;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
 import io.bisq.messages.arbitration.Dispute;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 import io.bisq.trade.Trade;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.ProgressBar;

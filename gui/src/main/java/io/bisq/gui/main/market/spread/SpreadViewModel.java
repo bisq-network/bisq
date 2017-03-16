@@ -22,10 +22,11 @@ import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.provider.price.MarketPrice;
-import io.bisq.messages.provider.price.PriceFeedService;
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.locale.CurrencyUtil;
+import io.bisq.messages.trade.offer.payload.OfferPayload;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.provider.price.MarketPrice;
+import io.bisq.provider.price.PriceFeedService;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -88,7 +89,7 @@ class SpreadViewModel extends ActivatableViewModel {
             List<Offer> offers = offersByCurrencyMap.get(currencyCode);
             List<Offer> buyOffers = offers
                     .stream()
-                    .filter(e -> e.getDirection().equals(Offer.Direction.BUY))
+                    .filter(e -> e.getDirection().equals(OfferPayload.Direction.BUY))
                     .sorted((o1, o2) -> {
                         long a = o1.getPrice() != null ? o1.getPrice().value : 0;
                         long b = o2.getPrice() != null ? o2.getPrice().value : 0;
@@ -100,7 +101,7 @@ class SpreadViewModel extends ActivatableViewModel {
 
             List<Offer> sellOffers = offers
                     .stream()
-                    .filter(e -> e.getDirection().equals(Offer.Direction.SELL))
+                    .filter(e -> e.getDirection().equals(OfferPayload.Direction.SELL))
                     .sorted((o1, o2) -> {
                         long a = o1.getPrice() != null ? o1.getPrice().value : 0;
                         long b = o2.getPrice() != null ? o2.getPrice().value : 0;

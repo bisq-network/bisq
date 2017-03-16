@@ -1,16 +1,16 @@
 package io.bisq.p2p.storage.messages;
 
 import io.bisq.common.crypto.CryptoException;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.KeyStorage;
-import io.bisq.common.crypto.SealedAndSigned;
 import io.bisq.common.wire.proto.Messages;
-import io.bisq.p2p.NodeAddress;
-import io.bisq.p2p.messaging.PrefixedSealedAndSignedMessage;
+import io.bisq.messages.NodeAddress;
+import io.bisq.messages.crypto.KeyRing;
+import io.bisq.messages.crypto.KeyStorage;
+import io.bisq.messages.crypto.SealedAndSigned;
+import io.bisq.messages.p2p.messaging.PrefixedSealedAndSignedMessage;
 import io.bisq.p2p.network.ProtoBufferUtilities;
-import io.bisq.p2p.storage.payload.MailboxStoragePayload;
 import io.bisq.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bisq.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.payload.MailboxStoragePayload;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;

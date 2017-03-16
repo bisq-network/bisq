@@ -3,7 +3,7 @@ package io.bisq.p2p.mocks;
 import io.bisq.app.Version;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.messages.Message;
-import io.bisq.p2p.storage.payload.ExpirablePayload;
+import io.bisq.payload.ExpirablePayload;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public final class MockPayload implements Message, ExpirablePayload {

@@ -11,7 +11,7 @@ import io.bisq.app.Log;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Utilities;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.messages.NodeAddress;
 import io.bisq.p2p.Utils;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.JavaTorNode;

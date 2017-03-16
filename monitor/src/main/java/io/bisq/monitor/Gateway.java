@@ -1,6 +1,6 @@
 package io.bisq.monitor;
 
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.trade.offer.OfferBookService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -469,7 +469,7 @@ textfield */
     -fx-text-fill: #333000;
 }
 
-/* Offer book */
+/* OfferPayload book */
 #num-offers {
     -fx-font-size: 12;
 }

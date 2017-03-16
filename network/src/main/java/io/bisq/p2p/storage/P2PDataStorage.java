@@ -6,22 +6,22 @@ import io.bisq.app.Version;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.crypto.CryptoException;
-import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.messages.Message;
+import io.bisq.messages.NodeAddress;
 import io.bisq.messages.ToProtoBuffer;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.messages.crypto.Hash;
 import io.bisq.p2p.network.*;
 import io.bisq.p2p.peers.BroadcastHandler;
 import io.bisq.p2p.peers.Broadcaster;
 import io.bisq.p2p.storage.messages.*;
-import io.bisq.p2p.storage.payload.*;
 import io.bisq.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bisq.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.payload.*;
 import io.bisq.storage.FileUtil;
 import io.bisq.storage.ResourceNotFoundException;
 import io.bisq.storage.Storage;
@@ -197,7 +197,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                 // We have a RequiresLiveOwnerData data object with the node address of the 
                                 // disconnected peer. We remove that data from our map.
 
-                                // Check if we have the data (e.g. Offer)
+                                // Check if we have the data (e.g. OfferPayload)
                                 ByteArray hashOfPayload = getHashAsByteArray(expirablePayload);
                                 boolean containsKey = map.containsKey(hashOfPayload);
                                 if (containsKey) {
@@ -549,7 +549,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                         payload.receiverPubKeyForRemoveOperation.equals(protectedStorageEntry.ownerPubKey);
         } else {
             // TODO We got sometimes a nullpointer at protectedStorageEntry.ownerPubKey
-            // Probably caused by an exception at deserialization:  Offer: Cannot be deserialized.null 
+            // Probably caused by an exception at deserialization:  OfferPayload: Cannot be deserialized.null
             result = protectedStorageEntry != null && protectedStorageEntry.ownerPubKey != null &&
                     protectedStorageEntry.getStoragePayload() != null &&
                     protectedStorageEntry.ownerPubKey.equals(protectedStorageEntry.getStoragePayload().getOwnerPubKey());

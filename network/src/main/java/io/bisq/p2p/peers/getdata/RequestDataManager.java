@@ -4,7 +4,7 @@ import io.bisq.app.Log;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.messages.Message;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.messages.NodeAddress;
 import io.bisq.p2p.network.*;
 import io.bisq.p2p.peers.PeerManager;
 import io.bisq.p2p.peers.getdata.messages.GetDataRequest;

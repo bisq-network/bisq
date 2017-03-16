@@ -24,7 +24,7 @@ import io.bisq.gui.util.validation.AccountNrValidator;
 import io.bisq.gui.util.validation.BranchIdValidator;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.locale.Res;
-import io.bisq.messages.locale.TradeCurrency;
+import io.bisq.locale.TradeCurrency;
 import io.bisq.messages.payment.payload.FasterPaymentsAccountContractData;
 import io.bisq.messages.payment.payload.PaymentAccountContractData;
 import io.bisq.payment.FasterPaymentsAccount;

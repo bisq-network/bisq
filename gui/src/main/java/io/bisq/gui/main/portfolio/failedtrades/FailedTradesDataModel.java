@@ -19,7 +19,8 @@ package io.bisq.gui.main.portfolio.failedtrades;
 
 import com.google.inject.Inject;
 import io.bisq.gui.common.model.ActivatableDataModel;
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.messages.trade.offer.payload.OfferPayload;
+import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.trade.Trade;
 import io.bisq.trade.failed.FailedTradesManager;
 import javafx.collections.FXCollections;
@@ -57,7 +58,7 @@ class FailedTradesDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public Offer.Direction getDirection(Offer offer) {
+    public OfferPayload.Direction getDirection(Offer offer) {
         return failedTradesManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 

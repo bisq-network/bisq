@@ -11,7 +11,7 @@ import io.bisq.gui.main.disputes.trader.TraderDisputeView;
 import io.bisq.gui.main.portfolio.PortfolioView;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bisq.locale.Res;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 import io.bisq.trade.Trade;
 import io.bisq.trade.TradeManager;
 import javafx.collections.ListChangeListener;

@@ -24,7 +24,7 @@ import io.bisq.messages.btc.BitcoinNetwork;
 import io.bisq.messages.btc.BtcOptionKeys;
 import io.bisq.messages.dao.blockchain.RpcOptionKeys;
 import io.bisq.network.NetworkOptionKeys;
-import io.bisq.p2p.P2PService;
+import io.bisq.p2p.storage.P2PService;
 import io.bisq.util.joptsimple.EnumValueConverter;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;

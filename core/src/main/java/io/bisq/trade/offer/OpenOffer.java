@@ -20,7 +20,7 @@ package io.bisq.trade.offer;
 import io.bisq.app.Version;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.storage.Storage;
 import io.bisq.trade.Tradable;
 import io.bisq.trade.TradableList;
@@ -36,7 +36,7 @@ public final class OpenOffer implements Tradable {
 
     private static final Logger log = LoggerFactory.getLogger(OpenOffer.class);
 
-    // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state. 
+    // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state.
     private static final long TIMEOUT_SEC = 30;
     transient private Timer timeoutTimer;
 
