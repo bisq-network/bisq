@@ -20,9 +20,9 @@ package io.bisq.app;
 import io.bisq.BisqException;
 import io.bisq.btc.RegTestHost;
 import io.bisq.common.CommonOptionKeys;
-import io.bisq.messages.btc.BitcoinNetwork;
-import io.bisq.messages.btc.BtcOptionKeys;
-import io.bisq.messages.dao.blockchain.RpcOptionKeys;
+import io.bisq.network_messages.btc.BitcoinNetwork;
+import io.bisq.network_messages.btc.BtcOptionKeys;
+import io.bisq.network_messages.dao.blockchain.RpcOptionKeys;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.p2p.storage.P2PService;
 import io.bisq.util.joptsimple.EnumValueConverter;
@@ -122,7 +122,7 @@ public abstract class BisqExecutable {
                 description("Application data directory", BisqEnvironment.DEFAULT_APP_DATA_DIR))
                 .withRequiredArg();
         parser.accepts(AppOptionKeys.IGNORE_DEV_MSG_KEY,
-                description("If set to true all signed messages from bisq developers are ignored " +
+                description("If set to true all signed network_messages from bisq developers are ignored " +
                         "(Global alert, Version update alert, Filters for offers, nodes or trading account data)", false))
                 .withRequiredArg()
                 .ofType(boolean.class);

@@ -30,7 +30,7 @@ public class UserPasswordAuthenticator extends ServerAuthenticatorBase {
         final OutputStream out = s.getOutputStream();
 
         if (in.read() != 5) {
-            return null; // Drop non version 5 messages.
+            return null; // Drop non version 5 network_messages.
         }
 
         if (!selectSocks5Authentication(in, out, METHOD_ID)) {

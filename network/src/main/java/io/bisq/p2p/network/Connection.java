@@ -9,22 +9,22 @@ import io.bisq.common.UserThread;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.common.wire.proto.Messages;
-import io.bisq.messages.CloseConnectionMessage;
-import io.bisq.messages.Message;
-import io.bisq.messages.NodeAddress;
-import io.bisq.messages.SendersNodeAddressMessage;
-import io.bisq.messages.p2p.messaging.PrefixedSealedAndSignedMessage;
-import io.bisq.messages.p2p.messaging.SupportedCapabilitiesMessage;
+import io.bisq.network_messages.CloseConnectionMessage;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.SendersNodeAddressMessage;
+import io.bisq.network_messages.p2p.messaging.PrefixedSealedAndSignedMessage;
+import io.bisq.network_messages.p2p.messaging.SupportedCapabilitiesMessage;
 import io.bisq.p2p.peers.BanList;
-import io.bisq.messages.p2p.peers.getdata.messages.GetDataRequest;
-import io.bisq.messages.p2p.peers.getdata.messages.GetDataResponse;
-import io.bisq.messages.p2p.peers.keepalive.messages.KeepAliveMessage;
-import io.bisq.messages.p2p.peers.keepalive.messages.Ping;
-import io.bisq.messages.p2p.peers.keepalive.messages.Pong;
-import io.bisq.messages.p2p.storage.messages.AddDataMessage;
-import io.bisq.messages.p2p.storage.messages.RefreshTTLMessage;
-import io.bisq.payload.CapabilityRequiringPayload;
-import io.bisq.payload.StoragePayload;
+import io.bisq.network_messages.p2p.peers.getdata.messages.GetDataRequest;
+import io.bisq.network_messages.p2p.peers.getdata.messages.GetDataResponse;
+import io.bisq.network_messages.p2p.peers.keepalive.messages.KeepAliveMessage;
+import io.bisq.network_messages.p2p.peers.keepalive.messages.Ping;
+import io.bisq.network_messages.p2p.peers.keepalive.messages.Pong;
+import io.bisq.network_messages.p2p.storage.messages.AddDataMessage;
+import io.bisq.network_messages.p2p.storage.messages.RefreshTTLMessage;
+import io.bisq.network_messages.payload.CapabilityRequiringPayload;
+import io.bisq.network_messages.payload.StoragePayload;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -180,7 +180,7 @@ public class Connection implements MessageListener {
                 try {
                     Log.traceCall();
 
-                    // Throttle outbound messages
+                    // Throttle outbound network_messages
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastSendTimeStamp;
                     if (elapsed < 20) {
@@ -324,7 +324,7 @@ public class Connection implements MessageListener {
         if (messageTimeStamps.size() >= MSG_THROTTLE_PER_SEC) {
             // check if we got more than 70 (MSG_THROTTLE_PER_SEC) msg per sec.
             long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_SEC).first;
-            // if duration < 1 sec we received too much messages
+            // if duration < 1 sec we received too much network_messages
             violated = now - compareValue < TimeUnit.SECONDS.toMillis(1);
             if (violated) {
                 log.error("violatesThrottleLimit MSG_THROTTLE_PER_SEC ");
@@ -339,7 +339,7 @@ public class Connection implements MessageListener {
             if (!violated) {
                 // check if we got more than 50 msg per 10 sec.
                 long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_10_SEC).first;
-                // if duration < 10 sec we received too much messages
+                // if duration < 10 sec we received too much network_messages
                 violated = now - compareValue < TimeUnit.SECONDS.toMillis(10);
 
                 if (violated) {
@@ -362,7 +362,7 @@ public class Connection implements MessageListener {
     // MessageListener implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Only receive non - CloseConnectionMessage messages
+    // Only receive non - CloseConnectionMessage network_messages
     @Override
     public void onMessage(Message message, Connection connection) {
         checkArgument(connection.equals(this));
@@ -737,13 +737,13 @@ public class Connection implements MessageListener {
                         }
 
                         Connection connection = sharedModel.connection;
-                        log.trace("InputHandler waiting for incoming messages.\n\tConnection=" + connection);
+                        log.trace("InputHandler waiting for incoming network_messages.\n\tConnection=" + connection);
 
-                        // Throttle inbound messages
+                        // Throttle inbound network_messages
                         long now = System.currentTimeMillis();
                         long elapsed = now - lastReadTimeStamp;
                         if (elapsed < 10) {
-                            log.debug("We got 2 messages received in less than 10 ms. We set the thread to sleep " +
+                            log.debug("We got 2 network_messages received in less than 10 ms. We set the thread to sleep " +
                                             "for 20 ms to avoid getting flooded by our peer. lastReadTimeStamp={}, now={}, elapsed={}",
                                     lastReadTimeStamp, now, elapsed);
                             Thread.sleep(20);
@@ -802,7 +802,7 @@ public class Connection implements MessageListener {
                                     Utilities.toTruncatedString(envelope.toString()),
                                     size);
                         } else if (message instanceof Message) {
-                            // We want to log all incoming messages (except Pong and RefreshTTLMessage)
+                            // We want to log all incoming network_messages (except Pong and RefreshTTLMessage)
                             // so we log before the data type checks
                             //log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
                             log.debug("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
@@ -824,7 +824,7 @@ public class Connection implements MessageListener {
                         // We want to track the size of each object even if it is invalid data
                         connection.statistic.addReceivedBytes(size);
 
-                        // We want to track the messages also before the checks, so do it early...
+                        // We want to track the network_messages also before the checks, so do it early...
                         if (message instanceof Message) {
                             connection.statistic.addReceivedMessage(message);
                         }
@@ -890,12 +890,12 @@ public class Connection implements MessageListener {
                             // First a seed node gets a message from a peer (PreliminaryDataRequest using
                             // AnonymousMessage interface) which does not have its hidden service
                             // published, so it does not know its address. As the IncomingConnection does not have the
-                            // peersNodeAddress set that connection cannot be used for outgoing messages until we
+                            // peersNodeAddress set that connection cannot be used for outgoing network_messages until we
                             // get the address set.
                             // At the data update message (DataRequest using SendersNodeAddressMessage interface)
                             // after the HS is published we get the peer's address set.
 
-                            // There are only those messages used for new connections to a peer:
+                            // There are only those network_messages used for new connections to a peer:
                             // 1. PreliminaryDataRequest
                             // 2. DataRequest (implements SendersNodeAddressMessage)
                             // 3. GetPeersRequest (implements SendersNodeAddressMessage)

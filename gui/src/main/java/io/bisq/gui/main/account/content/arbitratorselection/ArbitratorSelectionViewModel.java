@@ -19,13 +19,13 @@ package io.bisq.gui.main.account.content.arbitratorselection;
 
 import com.google.inject.Inject;
 import io.bisq.arbitration.ArbitratorManager;
-import io.bisq.messages.crypto.KeyRing;
+import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.messages.arbitration.Arbitrator;
+import io.bisq.network_messages.arbitration.Arbitrator;
 import io.bisq.locale.LanguageUtil;
 import io.bisq.user.Preferences;
-import io.bisq.messages.NodeAddress;
+import io.bisq.network_messages.NodeAddress;
 import io.bisq.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;

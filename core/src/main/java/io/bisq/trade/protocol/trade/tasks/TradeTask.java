@@ -19,8 +19,8 @@ package io.bisq.trade.protocol.trade.tasks;
 
 import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.messages.DecryptedMsgWithPubKey;
-import io.bisq.messages.p2p.messaging.MailboxMessage;
+import io.bisq.network_messages.DecryptedMsgWithPubKey;
+import io.bisq.network_messages.p2p.messaging.MailboxMessage;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.ProcessModel;
 import org.slf4j.Logger;

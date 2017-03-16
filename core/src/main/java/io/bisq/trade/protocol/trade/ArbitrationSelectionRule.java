@@ -17,8 +17,8 @@
 
 package io.bisq.trade.protocol.trade;
 
-import io.bisq.messages.trade.offer.payload.OfferPayload;
-import io.bisq.messages.NodeAddress;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.NodeAddress;
 import org.bitcoinj.core.Sha256Hash;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

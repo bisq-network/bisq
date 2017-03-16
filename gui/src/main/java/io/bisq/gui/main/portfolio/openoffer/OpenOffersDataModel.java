@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.gui.common.model.ActivatableDataModel;
-import io.bisq.messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.provider.price.PriceFeedService;
 import io.bisq.trade.offer.OpenOffer;

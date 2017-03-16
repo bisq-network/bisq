@@ -28,7 +28,7 @@ import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
-import io.bisq.messages.arbitration.Arbitrator;
+import io.bisq.network_messages.arbitration.Arbitrator;
 import io.bisq.locale.LanguageUtil;
 import io.bisq.user.Preferences;
 import javafx.beans.value.ChangeListener;

@@ -29,16 +29,16 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.filter.FilterManager;
-import io.bisq.messages.DecryptedDirectMessageListener;
-import io.bisq.messages.DecryptedMsgWithPubKey;
-import io.bisq.messages.Message;
-import io.bisq.messages.NodeAddress;
-import io.bisq.messages.crypto.KeyRing;
-import io.bisq.messages.p2p.messaging.DecryptedMailboxListener;
-import io.bisq.messages.protocol.trade.TradeMessage;
-import io.bisq.messages.trade.offer.payload.OfferPayload;
-import io.bisq.messages.trade.protocol.trade.messages.PayDepositRequest;
-import io.bisq.messages.trade.statistics.payload.TradeStatistics;
+import io.bisq.network_messages.DecryptedDirectMessageListener;
+import io.bisq.network_messages.DecryptedMsgWithPubKey;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.crypto.KeyRing;
+import io.bisq.network_messages.p2p.messaging.DecryptedMailboxListener;
+import io.bisq.network_messages.protocol.trade.TradeMessage;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.trade.protocol.trade.messages.PayDepositRequest;
+import io.bisq.network_messages.trade.statistics.payload.TradeStatistics;
 import io.bisq.p2p.BootstrapListener;
 import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.p2p.protocol.availability.OfferAvailabilityModel;
@@ -75,7 +75,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static io.bisq.messages.util.Validator.nonEmptyStringOf;
+import static io.bisq.network_messages.util.Validator.nonEmptyStringOf;
 
 public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
@@ -138,7 +138,7 @@ public class TradeManager {
             public void onDirectMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress peerNodeAddress) {
                 Message message = decryptedMsgWithPubKey.message;
 
-                // Handler for incoming initial messages from taker
+                // Handler for incoming initial network_messages from taker
                 if (message instanceof PayDepositRequest) {
                     log.trace("Received PayDepositRequest: " + message);
                     handleInitialTakeOfferRequest((PayDepositRequest) message, peerNodeAddress);

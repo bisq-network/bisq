@@ -19,7 +19,7 @@ package io.bisq.gui.main.disputes.arbitrator;
 
 import io.bisq.alert.PrivateNotificationManager;
 import io.bisq.arbitration.DisputeManager;
-import io.bisq.messages.crypto.KeyRing;
+import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.disputes.trader.TraderDisputeView;
 import io.bisq.gui.main.overlays.windows.ContractWindow;

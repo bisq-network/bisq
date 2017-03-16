@@ -19,9 +19,9 @@ package io.bisq.protocol.availability.tasks;
 
 import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.messages.availability.AvailabilityResult;
-import io.bisq.messages.availability.OfferAvailabilityResponse;
-import io.bisq.messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.availability.AvailabilityResult;
+import io.bisq.network_messages.availability.OfferAvailabilityResponse;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.p2p.protocol.availability.OfferAvailabilityModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

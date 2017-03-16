@@ -8,7 +8,7 @@ import io.bisq.common.Clock;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Utilities;
-import io.bisq.messages.NodeAddress;
+import io.bisq.network_messages.NodeAddress;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.p2p.peers.BanList;
 import io.bisq.p2p.seed.SeedNodesRepository;

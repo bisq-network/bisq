@@ -29,9 +29,9 @@ import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcValidator;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.locale.Res;
-import io.bisq.messages.arbitration.Arbitrator;
-import io.bisq.messages.payment.PaymentMethod;
-import io.bisq.messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.arbitration.Arbitrator;
+import io.bisq.network_messages.payment.PaymentMethod;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.p2p.network.CloseConnectionReason;
 import io.bisq.p2p.network.Connection;
 import io.bisq.p2p.network.ConnectionListener;
@@ -275,7 +275,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         // We have 2 situations handled here: 
         // 1. when clicking take offer in the offerbook screen, we do the availability check
         // 2. Before actually taking the offer in the take offer screen, we check again the availability as some time might have passed in the meantime
-        // So we use the takeOfferRequested flag to display different messages depending on the context.
+        // So we use the takeOfferRequested flag to display different network_messages depending on the context.
         switch (state) {
             case UNDEFINED:
                 break;

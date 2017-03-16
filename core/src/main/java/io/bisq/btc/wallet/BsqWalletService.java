@@ -25,7 +25,7 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.dao.blockchain.BsqBlockchainManager;
 import io.bisq.dao.blockchain.BsqUTXO;
-import io.bisq.messages.btc.Restrictions;
+import io.bisq.network_messages.btc.Restrictions;
 import io.bisq.provider.fee.FeeService;
 import io.bisq.user.Preferences;
 import org.bitcoinj.core.*;

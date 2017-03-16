@@ -37,7 +37,7 @@ public abstract class ProxyMessage {
     public String host = null;
 
     /**
-     * User field for SOCKS4 request messages
+     * User field for SOCKS4 request network_messages
      */
     public String user = null;
 

@@ -27,7 +27,7 @@ import io.bisq.dao.DaoPeriodService;
 import io.bisq.dao.compensation.CompensationRequest;
 import io.bisq.dao.compensation.CompensationRequestManager;
 import io.bisq.provider.fee.FeeService;
-import io.bisq.messages.dao.compensation.payload.CompensationRequestPayload;
+import io.bisq.network_messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bisq.storage.Storage;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Utils;

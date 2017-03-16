@@ -18,15 +18,15 @@
 package io.bisq.trade.protocol.trade.tasks.seller;
 
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.messages.trade.protocol.trade.messages.FiatTransferStartedMessage;
+import io.bisq.network_messages.trade.protocol.trade.messages.FiatTransferStartedMessage;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.tasks.TradeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bisq.messages.util.Validator.checkTradeId;
-import static io.bisq.messages.util.Validator.nonEmptyStringOf;
+import static io.bisq.network_messages.util.Validator.checkTradeId;
+import static io.bisq.network_messages.util.Validator.nonEmptyStringOf;
 
 public class ProcessFiatTransferStartedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessFiatTransferStartedMessage.class);

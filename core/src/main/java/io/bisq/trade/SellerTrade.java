@@ -20,7 +20,7 @@ package io.bisq.trade;
 import io.bisq.app.Version;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.messages.NodeAddress;
+import io.bisq.network_messages.NodeAddress;
 import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.storage.Storage;
 import io.bisq.trade.protocol.trade.SellerProtocol;

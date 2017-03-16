@@ -18,9 +18,9 @@
 package io.bisq.p2p.protocol.availability;
 
 import io.bisq.common.taskrunner.Model;
-import io.bisq.messages.NodeAddress;
-import io.bisq.messages.availability.OfferAvailabilityResponse;
-import io.bisq.messages.crypto.PubKeyRing;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.availability.OfferAvailabilityResponse;
+import io.bisq.network_messages.crypto.PubKeyRing;
 import io.bisq.p2p.storage.P2PService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

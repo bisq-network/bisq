@@ -2,8 +2,8 @@ package io.bisq.p2p;
 
 import io.bisq.common.Clock;
 import io.bisq.crypto.EncryptionService;
-import io.bisq.messages.NodeAddress;
-import io.bisq.messages.crypto.KeyRing;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.p2p.seed.SeedNodesRepository;
 import io.bisq.p2p.storage.P2PService;
 import org.slf4j.Logger;

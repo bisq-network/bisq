@@ -18,14 +18,14 @@
 package io.bisq.trade.protocol.trade.tasks.buyer;
 
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.messages.trade.protocol.trade.messages.FinalizePayoutTxRequest;
+import io.bisq.network_messages.trade.protocol.trade.messages.FinalizePayoutTxRequest;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.tasks.TradeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bisq.messages.util.Validator.*;
+import static io.bisq.network_messages.util.Validator.*;
 
 public class ProcessFinalizePayoutTxRequest extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessFinalizePayoutTxRequest.class);

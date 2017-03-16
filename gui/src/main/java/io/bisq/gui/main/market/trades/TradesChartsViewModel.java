@@ -33,7 +33,7 @@ import io.bisq.locale.CryptoCurrency;
 import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.TradeCurrency;
 import io.bisq.provider.price.PriceFeedService;
-import io.bisq.messages.trade.statistics.payload.TradeStatistics;
+import io.bisq.network_messages.trade.statistics.payload.TradeStatistics;
 import io.bisq.user.Preferences;
 import io.bisq.trade.statistics.TradeStatisticsManager;
 import javafx.beans.property.BooleanProperty;

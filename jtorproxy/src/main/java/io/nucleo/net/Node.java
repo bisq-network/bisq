@@ -304,7 +304,7 @@ public class Node {
                     // Here we go
                     log.debug("Incoming Connection ready!");
                     try {
-                        // TODO: listeners are only added afterwards, so messages can be lost!
+                        // TODO: listeners are only added afterwards, so network_messages can be lost!
                         IncomingConnection incomingConnection = new IncomingConnection(peer, socket, out, objectInputStream);
                         serverConnectListener.onConnect(incomingConnection);
                     } catch (IOException e) {

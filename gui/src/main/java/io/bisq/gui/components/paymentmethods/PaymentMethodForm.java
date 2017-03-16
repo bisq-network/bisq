@@ -24,7 +24,7 @@ import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.locale.Res;
 import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.TradeCurrency;
-import io.bisq.messages.payment.payload.PaymentAccountContractData;
+import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
 import io.bisq.payment.PaymentAccount;
 import io.bisq.user.Preferences;
 import javafx.beans.property.BooleanProperty;

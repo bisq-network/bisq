@@ -1,7 +1,7 @@
 package io.bisq.p2p.network;
 
 import io.bisq.common.wire.proto.Messages;
-import io.bisq.messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

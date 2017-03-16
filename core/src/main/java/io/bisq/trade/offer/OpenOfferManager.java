@@ -25,25 +25,25 @@ import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.btc.wallet.TradeWalletService;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.messages.crypto.KeyRing;
+import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.messages.DecryptedMsgWithPubKey;
-import io.bisq.messages.Message;
-import io.bisq.messages.availability.AvailabilityResult;
-import io.bisq.messages.availability.OfferAvailabilityRequest;
-import io.bisq.messages.availability.OfferAvailabilityResponse;
+import io.bisq.network_messages.DecryptedMsgWithPubKey;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.availability.AvailabilityResult;
+import io.bisq.network_messages.availability.OfferAvailabilityRequest;
+import io.bisq.network_messages.availability.OfferAvailabilityResponse;
 import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.provider.price.PriceFeedService;
-import io.bisq.messages.trade.exceptions.MarketPriceNotAvailableException;
-import io.bisq.messages.trade.exceptions.TradePriceOutOfToleranceException;
-import io.bisq.messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.trade.exceptions.MarketPriceNotAvailableException;
+import io.bisq.network_messages.trade.exceptions.TradePriceOutOfToleranceException;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.user.Preferences;
 import io.bisq.p2p.BootstrapListener;
-import io.bisq.messages.NodeAddress;
+import io.bisq.network_messages.NodeAddress;
 import io.bisq.p2p.storage.P2PService;
-import io.bisq.messages.DecryptedDirectMessageListener;
-import io.bisq.messages.p2p.messaging.SendDirectMessageListener;
+import io.bisq.network_messages.DecryptedDirectMessageListener;
+import io.bisq.network_messages.p2p.messaging.SendDirectMessageListener;
 import io.bisq.p2p.peers.PeerManager;
 import io.bisq.storage.Storage;
 import io.bisq.trade.TradableList;
@@ -66,7 +66,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.inject.internal.util.$Preconditions.checkNotNull;
-import static io.bisq.messages.util.Validator.nonEmptyStringOf;
+import static io.bisq.network_messages.util.Validator.nonEmptyStringOf;
 
 
 public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener {

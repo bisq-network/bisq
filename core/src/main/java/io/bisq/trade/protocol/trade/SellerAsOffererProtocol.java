@@ -20,14 +20,14 @@ package io.bisq.trade.protocol.trade;
 
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.messages.Message;
-import io.bisq.messages.protocol.trade.TradeMessage;
-import io.bisq.messages.trade.protocol.trade.messages.DepositTxPublishedMessage;
-import io.bisq.messages.trade.protocol.trade.messages.FiatTransferStartedMessage;
-import io.bisq.messages.trade.protocol.trade.messages.PayDepositRequest;
-import io.bisq.messages.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
-import io.bisq.messages.NodeAddress;
-import io.bisq.messages.p2p.messaging.MailboxMessage;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.protocol.trade.TradeMessage;
+import io.bisq.network_messages.trade.protocol.trade.messages.DepositTxPublishedMessage;
+import io.bisq.network_messages.trade.protocol.trade.messages.FiatTransferStartedMessage;
+import io.bisq.network_messages.trade.protocol.trade.messages.PayDepositRequest;
+import io.bisq.network_messages.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.p2p.messaging.MailboxMessage;
 import io.bisq.trade.SellerAsOffererTrade;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.tasks.offerer.*;
@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static io.bisq.messages.util.Validator.checkTradeId;
+import static io.bisq.network_messages.util.Validator.checkTradeId;
 
 public class SellerAsOffererProtocol extends TradeProtocol implements SellerProtocol, OffererProtocol {
     private static final Logger log = LoggerFactory.getLogger(SellerAsOffererProtocol.class);

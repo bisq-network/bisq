@@ -2,6 +2,7 @@ package io.bisq.messages.payment.payload;
 
 import com.google.protobuf.util.JsonFormat;
 import io.bisq.common.wire.proto.Messages;
+import io.bisq.network_messages.payment.payload.OKPayAccountContractData;
 import org.junit.Test;
 
 import java.io.IOException;

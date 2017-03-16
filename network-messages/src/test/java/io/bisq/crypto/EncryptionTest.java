@@ -1,8 +1,8 @@
 package io.bisq.crypto;
 
 import io.bisq.common.crypto.CryptoException;
-import io.bisq.messages.crypto.KeyRing;
-import io.bisq.messages.crypto.KeyStorage;
+import io.bisq.network_messages.crypto.KeyRing;
+import io.bisq.network_messages.crypto.KeyStorage;
 import io.bisq.storage.FileUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;

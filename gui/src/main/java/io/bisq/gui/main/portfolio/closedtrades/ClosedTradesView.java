@@ -27,7 +27,7 @@ import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.locale.Res;
-import io.bisq.messages.NodeAddress;
+import io.bisq.network_messages.NodeAddress;
 import io.bisq.trade.Tradable;
 import io.bisq.trade.Trade;
 import io.bisq.trade.offer.OpenOffer;

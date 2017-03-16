@@ -33,7 +33,7 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
-import io.bisq.messages.dao.blockchain.RpcOptionKeys;
+import io.bisq.network_messages.dao.blockchain.RpcOptionKeys;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;

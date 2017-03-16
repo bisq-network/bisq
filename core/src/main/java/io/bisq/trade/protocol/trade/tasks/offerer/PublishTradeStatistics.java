@@ -18,7 +18,7 @@
 package io.bisq.trade.protocol.trade.tasks.offerer;
 
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.messages.trade.statistics.payload.TradeStatistics;
+import io.bisq.network_messages.trade.statistics.payload.TradeStatistics;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.tasks.TradeTask;
 

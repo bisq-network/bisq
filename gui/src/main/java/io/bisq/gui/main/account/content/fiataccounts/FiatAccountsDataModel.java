@@ -23,7 +23,7 @@ import io.bisq.gui.util.GUIUtil;
 import io.bisq.locale.CryptoCurrency;
 import io.bisq.locale.FiatCurrency;
 import io.bisq.locale.TradeCurrency;
-import io.bisq.messages.payment.PaymentMethod;
+import io.bisq.network_messages.payment.PaymentMethod;
 import io.bisq.user.Preferences;
 import io.bisq.payment.CryptoCurrencyAccount;
 import io.bisq.payment.PaymentAccount;

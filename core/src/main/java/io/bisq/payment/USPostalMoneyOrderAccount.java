@@ -19,9 +19,9 @@ package io.bisq.payment;
 
 import io.bisq.app.Version;
 import io.bisq.locale.FiatCurrency;
-import io.bisq.messages.payment.PaymentMethod;
-import io.bisq.messages.payment.payload.PaymentAccountContractData;
-import io.bisq.messages.payment.payload.USPostalMoneyOrderAccountContractData;
+import io.bisq.network_messages.payment.PaymentMethod;
+import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
+import io.bisq.network_messages.payment.payload.USPostalMoneyOrderAccountContractData;
 import io.bisq.user.Preferences;
 
 public final class USPostalMoneyOrderAccount extends PaymentAccount {

@@ -18,7 +18,7 @@
 package io.bisq.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
-import io.bisq.messages.crypto.KeyRing;
+import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.common.util.Tuple3;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.components.BusyAnimation;
@@ -33,8 +33,8 @@ import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
 import io.bisq.locale.BankUtil;
 import io.bisq.locale.CountryUtil;
-import io.bisq.messages.payment.PaymentMethod;
-import io.bisq.messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.payment.PaymentMethod;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.user.Preferences;
 import io.bisq.payment.PaymentAccount;

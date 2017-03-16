@@ -18,8 +18,8 @@
 package io.bisq.trade.protocol.trade.tasks.buyer;
 
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.messages.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
-import io.bisq.messages.p2p.messaging.SendMailboxMessageListener;
+import io.bisq.network_messages.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
+import io.bisq.network_messages.p2p.messaging.SendMailboxMessageListener;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.tasks.TradeTask;
 import org.slf4j.Logger;

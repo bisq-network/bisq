@@ -17,6 +17,7 @@
 
 package io.bisq.messages.alert;
 
+import io.bisq.network_messages.alert.Alert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

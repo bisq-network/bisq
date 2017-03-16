@@ -21,16 +21,16 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.wire.proto.Messages;
-import io.bisq.messages.DecryptedMsgWithPubKey;
-import io.bisq.messages.Message;
-import io.bisq.messages.crypto.*;
+import io.bisq.network_messages.DecryptedMsgWithPubKey;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.crypto.*;
 import io.bisq.p2p.network.ProtoBufferUtilities;
 
 import javax.crypto.SecretKey;
 import javax.inject.Inject;
 import java.security.PrivateKey;
 
-import static io.bisq.messages.crypto.Encryption.decryptSecretKey;
+import static io.bisq.network_messages.crypto.Encryption.decryptSecretKey;
 
 public class EncryptionService {
     private final KeyRing keyRing;

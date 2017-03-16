@@ -20,7 +20,7 @@ package io.bisq.gui.main.dao.compensation;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
-import io.bisq.messages.dao.compensation.payload.CompensationRequestPayload;
+import io.bisq.network_messages.dao.compensation.payload.CompensationRequestPayload;
 import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -20,7 +20,7 @@ package io.bisq.trade.protocol.placeoffer.tasks;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.trade.protocol.placeoffer.PlaceOfferModel;
 import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;

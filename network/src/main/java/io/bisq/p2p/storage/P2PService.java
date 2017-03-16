@@ -13,13 +13,13 @@ import io.bisq.common.UserThread;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.util.Utilities;
 import io.bisq.crypto.EncryptionService;
-import io.bisq.messages.DecryptedDirectMessageListener;
-import io.bisq.messages.DecryptedMsgWithPubKey;
-import io.bisq.messages.Message;
-import io.bisq.messages.NodeAddress;
-import io.bisq.messages.crypto.KeyRing;
-import io.bisq.messages.crypto.PubKeyRing;
-import io.bisq.messages.p2p.messaging.*;
+import io.bisq.network_messages.DecryptedDirectMessageListener;
+import io.bisq.network_messages.DecryptedMsgWithPubKey;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.crypto.KeyRing;
+import io.bisq.network_messages.crypto.PubKeyRing;
+import io.bisq.network_messages.p2p.messaging.*;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.Socks5ProxyProvider;
 import io.bisq.p2p.P2PServiceListener;
@@ -32,13 +32,13 @@ import io.bisq.p2p.peers.getdata.RequestDataManager;
 import io.bisq.p2p.peers.keepalive.KeepAliveManager;
 import io.bisq.p2p.peers.peerexchange.PeerExchangeManager;
 import io.bisq.p2p.seed.SeedNodesRepository;
-import io.bisq.messages.p2p.storage.messages.AddDataMessage;
-import io.bisq.messages.p2p.storage.messages.BroadcastMessage;
-import io.bisq.messages.p2p.storage.messages.RefreshTTLMessage;
-import io.bisq.messages.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
-import io.bisq.messages.p2p.storage.storageentry.ProtectedStorageEntry;
-import io.bisq.payload.MailboxStoragePayload;
-import io.bisq.payload.StoragePayload;
+import io.bisq.network_messages.p2p.storage.messages.AddDataMessage;
+import io.bisq.network_messages.p2p.storage.messages.BroadcastMessage;
+import io.bisq.network_messages.p2p.storage.messages.RefreshTTLMessage;
+import io.bisq.network_messages.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
+import io.bisq.network_messages.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.network_messages.payload.MailboxStoragePayload;
+import io.bisq.network_messages.payload.StoragePayload;
 import io.bisq.storage.FileUtil;
 import io.bisq.storage.Storage;
 import javafx.beans.property.*;
@@ -532,7 +532,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private void processProtectedMailboxStorageEntry(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
         Log.traceCall();
         final NodeAddress nodeAddress = networkNode.getNodeAddress();
-        // Seed nodes don't receive mailbox messages
+        // Seed nodes don't receive mailbox network_messages
         if (optionalEncryptionService.isPresent() && nodeAddress != null && !seedNodesRepository.isSeedNode(nodeAddress)) {
             Log.traceCall();
             MailboxStoragePayload mailboxStoragePayload = protectedMailboxStorageEntry.getMailboxStoragePayload();
@@ -544,7 +544,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     if (decryptedMsgWithPubKey.message instanceof MailboxMessage) {
                         MailboxMessage mailboxMessage = (MailboxMessage) decryptedMsgWithPubKey.message;
                         NodeAddress senderNodeAddress = mailboxMessage.getSenderNodeAddress();
-                        checkNotNull(senderNodeAddress, "senderAddress must not be null for mailbox messages");
+                        checkNotNull(senderNodeAddress, "senderAddress must not be null for mailbox network_messages");
 
                         mailboxMap.put(mailboxMessage.getUID(), protectedMailboxStorageEntry);
                         log.trace("Decryption of SealedAndSignedMessage succeeded. senderAddress="
@@ -659,7 +659,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                 // does not arrive.
                                 // We could use onBroadcastCompleted instead but it might take too long if one peer
                                 // is very badly connected.
-                                // TODO We could check for a certain threshold of no. of incoming messages of the same msg 
+                                // TODO We could check for a certain threshold of no. of incoming network_messages of the same msg
                                 // to see how well it is propagated. BitcoinJ uses such an approach for tx propagation.
                                 UserThread.runAfter(() -> {
                                     log.info("Broadcasted to first peer (with 3 sec. delayed):  Message = {}", Utilities.toTruncatedString(message));
@@ -705,7 +705,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     public void removeEntryFromMailbox(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
         // We need to delay a bit to avoid that we remove our msg then get it from other peers again and reapply it again.
-        // If we delay the removal we have better chances that repeated messages we got from other peers are already filtered
+        // If we delay the removal we have better chances that repeated network_messages we got from other peers are already filtered
         // at the P2PService layer.
         // Though we have to check in the client classes to not apply the same message again as there is no guarantee 
         // when we would get a message again from the network.

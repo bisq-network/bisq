@@ -11,16 +11,17 @@ import io.bisq.common.persistance.Persistable;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.common.wire.proto.Messages;
-import io.bisq.messages.Message;
-import io.bisq.messages.NodeAddress;
-import io.bisq.messages.ToProtoBuffer;
-import io.bisq.messages.crypto.Hash;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.ToProtoBuffer;
+import io.bisq.network_messages.crypto.Hash;
+import io.bisq.network_messages.payload.*;
 import io.bisq.p2p.network.*;
 import io.bisq.p2p.peers.BroadcastHandler;
 import io.bisq.p2p.peers.Broadcaster;
-import io.bisq.messages.p2p.storage.messages.*;
-import io.bisq.messages.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
-import io.bisq.messages.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.network_messages.p2p.storage.messages.*;
+import io.bisq.network_messages.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
+import io.bisq.network_messages.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bisq.payload.*;
 import io.bisq.storage.FileUtil;
 import io.bisq.storage.ResourceNotFoundException;
@@ -125,7 +126,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         removeExpiredEntriesTimer = UserThread.runPeriodically(() -> {
             log.trace("removeExpiredEntries");
             // The moment when an object becomes expired will not be synchronous in the network and we could 
-            // get add messages after the object has expired. To avoid repeated additions of already expired 
+            // get add network_messages after the object has expired. To avoid repeated additions of already expired
             // object when we get it sent from new peers, we don’t remove the sequence number from the map. 
             // That way an ADD message for an already expired data will fail because the sequence number 
             // is equal and not larger as expected. 
@@ -497,7 +498,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 String msg;
                 if (newSequenceNumber == 0) {
                     msg = "Sequence number is equal to the stored one and both are 0." +
-                            "That is expected for messages which never got updated (mailbox msg).";
+                            "That is expected for network_messages which never got updated (mailbox msg).";
                 } else {
                     msg = "Sequence number is equal to the stored one. sequenceNumber = "
                             + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber;
@@ -536,7 +537,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     // Check that the pubkey of the storage entry matches the allowed pubkey for the addition or removal operation
-    // in the contained mailbox message, or the pubkey of other kinds of messages.
+    // in the contained mailbox message, or the pubkey of other kinds of network_messages.
     boolean checkPublicKeys(ProtectedStorageEntry protectedStorageEntry, boolean isAddOperation) {
         boolean result;
         if (protectedStorageEntry.getStoragePayload() instanceof MailboxStoragePayload) {

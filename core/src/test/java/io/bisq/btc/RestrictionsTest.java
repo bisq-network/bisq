@@ -17,7 +17,7 @@
 
 package io.bisq.btc;
 
-import io.bisq.messages.btc.Restrictions;
+import io.bisq.network_messages.btc.Restrictions;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.junit.Test;

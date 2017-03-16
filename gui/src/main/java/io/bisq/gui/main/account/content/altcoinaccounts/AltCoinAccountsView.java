@@ -35,7 +35,7 @@ import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.locale.Res;
 import io.bisq.locale.CryptoCurrency;
 import io.bisq.locale.TradeCurrency;
-import io.bisq.messages.payment.PaymentMethod;
+import io.bisq.network_messages.payment.PaymentMethod;
 import io.bisq.payment.PaymentAccount;
 import io.bisq.payment.PaymentAccountFactory;
 import javafx.beans.value.ChangeListener;

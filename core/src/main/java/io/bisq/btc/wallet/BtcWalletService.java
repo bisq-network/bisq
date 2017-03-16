@@ -27,7 +27,7 @@ import io.bisq.btc.InsufficientFundsException;
 import io.bisq.btc.exceptions.TransactionVerificationException;
 import io.bisq.btc.exceptions.WalletException;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.messages.btc.Restrictions;
+import io.bisq.network_messages.btc.Restrictions;
 import io.bisq.provider.fee.FeeService;
 import io.bisq.user.Preferences;
 import org.bitcoinj.core.*;
