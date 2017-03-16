@@ -47,7 +47,7 @@ import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
 import io.bisq.locale.TradeCurrency;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.payload.trade.offer.OfferPayload;
 import io.bisq.payment.PaymentAccount;
 import io.bisq.trade.offer.Offer;
 import io.bisq.user.Preferences;

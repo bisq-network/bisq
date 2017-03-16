@@ -18,6 +18,7 @@
 package io.bisq.gui.main.offer.createoffer;
 
 import io.bisq.app.DevEnv;
+import io.bisq.btc.Restrictions;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.MathUtils;
@@ -42,9 +43,8 @@ import io.bisq.gui.util.validation.SecurityDepositValidator;
 import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.Res;
 import io.bisq.locale.TradeCurrency;
-import io.bisq.network_messages.btc.Restrictions;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.trade.offer.OfferPayload;
 import io.bisq.payment.PaymentAccount;
 import io.bisq.provider.price.MarketPrice;
 import io.bisq.provider.price.PriceFeedService;

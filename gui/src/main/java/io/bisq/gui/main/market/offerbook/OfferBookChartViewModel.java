@@ -30,7 +30,7 @@ import io.bisq.gui.util.CurrencyListItem;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.TradeCurrency;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.payload.trade.offer.OfferPayload;
 import io.bisq.provider.price.PriceFeedService;
 import io.bisq.trade.offer.Offer;
 import io.bisq.user.Preferences;

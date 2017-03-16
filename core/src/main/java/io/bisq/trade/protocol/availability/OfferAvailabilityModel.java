@@ -17,11 +17,11 @@
 
 package io.bisq.trade.protocol.availability;
 
+import io.bisq.NodeAddress;
 import io.bisq.common.taskrunner.Model;
-import io.bisq.network_messages.NodeAddress;
-import io.bisq.network_messages.availability.OfferAvailabilityResponse;
-import io.bisq.network_messages.crypto.PubKeyRing;
+import io.bisq.message.offer.OfferAvailabilityResponse;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.crypto.PubKeyRing;
 import io.bisq.trade.offer.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

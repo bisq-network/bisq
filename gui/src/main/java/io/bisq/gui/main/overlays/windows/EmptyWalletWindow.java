@@ -18,6 +18,7 @@
 package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.app.DevEnv;
+import io.bisq.btc.Restrictions;
 import io.bisq.btc.wallet.WalletService;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Tuple2;
@@ -27,7 +28,6 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Transitions;
 import io.bisq.locale.Res;
-import io.bisq.network_messages.btc.Restrictions;
 import io.bisq.trade.offer.OpenOfferManager;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;

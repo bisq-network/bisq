@@ -23,7 +23,7 @@ import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.locale.CurrencyUtil;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.payload.trade.offer.OfferPayload;
 import io.bisq.provider.price.MarketPrice;
 import io.bisq.provider.price.PriceFeedService;
 import io.bisq.trade.offer.Offer;

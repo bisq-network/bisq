@@ -20,8 +20,8 @@ package io.bisq.payment;
 import io.bisq.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.locale.TradeCurrency;
-import io.bisq.network_messages.payment.PaymentMethod;
-import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
+import io.bisq.payload.payment.PaymentAccountContractData;
+import io.bisq.payload.payment.PaymentMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

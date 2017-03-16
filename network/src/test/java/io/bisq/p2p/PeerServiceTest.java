@@ -1,6 +1,6 @@
 package io.bisq.p2p;
 
-import io.bisq.network_messages.NodeAddress;
+import io.bisq.NodeAddress;
 import io.bisq.p2p.network.LocalhostNetworkNode;
 import io.bisq.p2p.storage.P2PService;
 import org.junit.After;

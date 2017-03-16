@@ -26,7 +26,6 @@ import io.bisq.dao.compensation.CompensationRequestManager;
 import io.bisq.dao.vote.VotingDefaultValues;
 import io.bisq.dao.vote.VotingManager;
 import io.bisq.dao.vote.VotingService;
-import io.bisq.network_messages.dao.blockchain.RpcOptionKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;

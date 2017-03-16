@@ -18,9 +18,9 @@
 package io.bisq.payment;
 
 import io.bisq.app.Version;
-import io.bisq.network_messages.payment.PaymentMethod;
-import io.bisq.network_messages.payment.payload.CashDepositAccountContractData;
-import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
+import io.bisq.payload.payment.CashDepositAccountContractData;
+import io.bisq.payload.payment.PaymentAccountContractData;
+import io.bisq.payload.payment.PaymentMethod;
 
 import javax.annotation.Nullable;
 

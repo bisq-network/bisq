@@ -18,6 +18,7 @@
 package io.bisq.gui.main.portfolio.closedtrades;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
+import io.bisq.NodeAddress;
 import io.bisq.alert.PrivateNotificationManager;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -27,7 +28,6 @@ import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.locale.Res;
-import io.bisq.network_messages.NodeAddress;
 import io.bisq.trade.Tradable;
 import io.bisq.trade.Trade;
 import io.bisq.trade.offer.OpenOffer;

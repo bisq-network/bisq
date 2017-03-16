@@ -18,9 +18,9 @@
 package io.bisq.trade.protocol.trade.tasks.taker;
 
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.network_messages.filter.payload.PaymentAccountFilter;
-import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
-import io.bisq.network_messages.trade.protocol.trade.messages.PublishDepositTxRequest;
+import io.bisq.message.trade.PublishDepositTxRequest;
+import io.bisq.payload.filter.PaymentAccountFilter;
+import io.bisq.payload.payment.PaymentAccountContractData;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.tasks.TradeTask;
 import org.slf4j.Logger;
@@ -28,8 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bisq.network_messages.util.Validator.checkTradeId;
-import static io.bisq.network_messages.util.Validator.nonEmptyStringOf;
+import static io.bisq.util.Validator.checkTradeId;
+import static io.bisq.util.Validator.nonEmptyStringOf;
 
 public class ProcessPublishDepositTxRequest extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessPublishDepositTxRequest.class);

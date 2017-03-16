@@ -18,11 +18,11 @@
 package io.bisq.app;
 
 import io.bisq.BisqException;
+import io.bisq.btc.BitcoinNetwork;
+import io.bisq.btc.BtcOptionKeys;
 import io.bisq.btc.RegTestHost;
 import io.bisq.common.CommonOptionKeys;
-import io.bisq.network_messages.btc.BitcoinNetwork;
-import io.bisq.network_messages.btc.BtcOptionKeys;
-import io.bisq.network_messages.dao.blockchain.RpcOptionKeys;
+import io.bisq.dao.RpcOptionKeys;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.p2p.storage.P2PService;
 import io.bisq.util.joptsimple.EnumValueConverter;

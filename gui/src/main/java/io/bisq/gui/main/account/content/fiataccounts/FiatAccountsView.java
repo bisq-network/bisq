@@ -31,7 +31,7 @@ import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.*;
 import io.bisq.locale.Res;
-import io.bisq.network_messages.payment.PaymentMethod;
+import io.bisq.payload.payment.PaymentMethod;
 import io.bisq.payment.PaymentAccount;
 import io.bisq.payment.PaymentAccountFactory;
 import javafx.beans.value.ChangeListener;

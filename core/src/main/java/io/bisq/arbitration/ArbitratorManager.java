@@ -18,19 +18,19 @@
 package io.bisq.arbitration;
 
 import com.google.inject.Inject;
+import io.bisq.NodeAddress;
 import io.bisq.app.DevEnv;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.network_messages.arbitration.Arbitrator;
-import io.bisq.user.Preferences;
+import io.bisq.crypto.KeyRing;
 import io.bisq.p2p.BootstrapListener;
-import io.bisq.network_messages.NodeAddress;
-import io.bisq.p2p.storage.P2PService;
 import io.bisq.p2p.storage.HashMapChangedListener;
-import io.bisq.network_messages.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.arbitration.Arbitrator;
+import io.bisq.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.user.Preferences;
 import io.bisq.user.User;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;

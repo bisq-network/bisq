@@ -30,7 +30,7 @@ import io.bisq.btc.exceptions.SigningException;
 import io.bisq.btc.exceptions.TransactionVerificationException;
 import io.bisq.btc.exceptions.WalletException;
 import io.bisq.common.util.Utilities;
-import io.bisq.network_messages.btc.data.RawTransactionInput;
+import io.bisq.payload.btc.RawTransactionInput;
 import io.bisq.user.Preferences;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;

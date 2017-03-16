@@ -18,6 +18,7 @@
 package io.bisq.trade;
 
 import com.google.common.util.concurrent.FutureCallback;
+import io.bisq.NodeAddress;
 import io.bisq.app.Log;
 import io.bisq.arbitration.ArbitratorManager;
 import io.bisq.btc.AddressEntry;
@@ -28,19 +29,18 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.crypto.KeyRing;
 import io.bisq.filter.FilterManager;
-import io.bisq.network_messages.DecryptedDirectMessageListener;
-import io.bisq.network_messages.DecryptedMsgWithPubKey;
-import io.bisq.network_messages.Message;
-import io.bisq.network_messages.NodeAddress;
-import io.bisq.network_messages.crypto.KeyRing;
-import io.bisq.network_messages.p2p.messaging.DecryptedMailboxListener;
-import io.bisq.network_messages.protocol.trade.TradeMessage;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
-import io.bisq.network_messages.trade.protocol.trade.messages.PayDepositRequest;
-import io.bisq.network_messages.trade.statistics.payload.TradeStatistics;
+import io.bisq.message.Message;
+import io.bisq.message.trade.PayDepositRequest;
+import io.bisq.message.trade.TradeMessage;
 import io.bisq.p2p.BootstrapListener;
+import io.bisq.p2p.DecryptedDirectMessageListener;
+import io.bisq.p2p.DecryptedMsgWithPubKey;
+import io.bisq.p2p.messaging.DecryptedMailboxListener;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.trade.statistics.TradeStatistics;
 import io.bisq.provider.price.PriceFeedService;
 import io.bisq.storage.Storage;
 import io.bisq.trade.closed.ClosedTradableManager;
@@ -75,7 +75,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static io.bisq.network_messages.util.Validator.nonEmptyStringOf;
+import static io.bisq.util.Validator.nonEmptyStringOf;
 
 public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);

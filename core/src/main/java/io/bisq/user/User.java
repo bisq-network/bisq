@@ -17,15 +17,15 @@
 
 package io.bisq.user;
 
+import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.common.persistance.Persistable;
+import io.bisq.crypto.KeyRing;
 import io.bisq.locale.LanguageUtil;
 import io.bisq.locale.TradeCurrency;
-import io.bisq.network_messages.NodeAddress;
-import io.bisq.network_messages.alert.Alert;
-import io.bisq.network_messages.arbitration.Arbitrator;
-import io.bisq.network_messages.crypto.KeyRing;
-import io.bisq.network_messages.filter.payload.Filter;
+import io.bisq.payload.alert.Alert;
+import io.bisq.payload.arbitration.Arbitrator;
+import io.bisq.payload.filter.Filter;
 import io.bisq.payment.PaymentAccount;
 import io.bisq.storage.Storage;
 import javafx.beans.property.ObjectProperty;

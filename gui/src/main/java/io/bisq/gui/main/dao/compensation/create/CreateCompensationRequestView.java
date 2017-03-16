@@ -18,6 +18,7 @@
 package io.bisq.gui.main.dao.compensation.create;
 
 import com.google.common.util.concurrent.FutureCallback;
+import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.btc.InsufficientFundsException;
 import io.bisq.btc.exceptions.TransactionVerificationException;
@@ -26,6 +27,7 @@ import io.bisq.btc.wallet.BsqWalletService;
 import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.btc.wallet.ChangeBelowDustException;
 import io.bisq.common.util.Utilities;
+import io.bisq.crypto.KeyRing;
 import io.bisq.dao.compensation.CompensationRequestManager;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -33,10 +35,8 @@ import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.locale.Res;
-import io.bisq.network_messages.NodeAddress;
-import io.bisq.network_messages.crypto.KeyRing;
-import io.bisq.network_messages.dao.compensation.payload.CompensationRequestPayload;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.dao.compensation.CompensationRequestPayload;
 import io.bisq.provider.fee.FeeService;
 import io.bisq.util.CoinUtil;
 import javafx.scene.control.Button;

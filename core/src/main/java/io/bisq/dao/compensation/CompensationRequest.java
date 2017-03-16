@@ -19,7 +19,7 @@ package io.bisq.dao.compensation;
 
 import io.bisq.app.Version;
 import io.bisq.common.persistance.Persistable;
-import io.bisq.network_messages.dao.compensation.payload.CompensationRequestPayload;
+import io.bisq.payload.dao.compensation.CompensationRequestPayload;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

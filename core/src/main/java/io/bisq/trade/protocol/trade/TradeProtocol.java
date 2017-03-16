@@ -17,14 +17,14 @@
 
 package io.bisq.trade.protocol.trade;
 
+import io.bisq.NodeAddress;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.network_messages.crypto.PubKeyRing;
-import io.bisq.network_messages.DecryptedMsgWithPubKey;
-import io.bisq.network_messages.Message;
-import io.bisq.network_messages.protocol.trade.TradeMessage;
-import io.bisq.network_messages.NodeAddress;
-import io.bisq.network_messages.DecryptedDirectMessageListener;
+import io.bisq.message.Message;
+import io.bisq.message.trade.TradeMessage;
+import io.bisq.p2p.DecryptedDirectMessageListener;
+import io.bisq.p2p.DecryptedMsgWithPubKey;
+import io.bisq.payload.crypto.PubKeyRing;
 import io.bisq.trade.OffererTrade;
 import io.bisq.trade.Trade;
 import io.bisq.trade.TradeManager;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
 
-import static io.bisq.network_messages.util.Validator.nonEmptyStringOf;
+import static io.bisq.util.Validator.nonEmptyStringOf;
 
 public abstract class TradeProtocol {
     private static final Logger log = LoggerFactory.getLogger(TradeProtocol.class);

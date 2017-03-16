@@ -1,6 +1,6 @@
 package io.bisq.p2p.routing;
 
-import io.bisq.network_messages.NodeAddress;
+import io.bisq.NodeAddress;
 import io.bisq.p2p.DummySeedNode;
 import io.bisq.p2p.P2PServiceListener;
 import io.bisq.p2p.network.LocalhostNetworkNode;

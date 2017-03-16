@@ -30,7 +30,7 @@ import io.bisq.gui.main.offer.takeoffer.TakeOfferView;
 import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.Res;
 import io.bisq.locale.TradeCurrency;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.payload.trade.offer.OfferPayload;
 import io.bisq.trade.offer.Offer;
 import io.bisq.user.Preferences;
 import javafx.beans.value.ChangeListener;

@@ -17,20 +17,20 @@
 
 package io.bisq.trade.protocol.trade;
 
+import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.arbitration.ArbitratorManager;
 import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.btc.wallet.TradeWalletService;
 import io.bisq.common.taskrunner.Model;
+import io.bisq.crypto.KeyRing;
 import io.bisq.filter.FilterManager;
-import io.bisq.network_messages.NodeAddress;
-import io.bisq.network_messages.btc.data.RawTransactionInput;
-import io.bisq.network_messages.crypto.KeyRing;
-import io.bisq.network_messages.crypto.PubKeyRing;
-import io.bisq.network_messages.filter.payload.PaymentAccountFilter;
-import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
-import io.bisq.network_messages.protocol.trade.TradeMessage;
+import io.bisq.message.trade.TradeMessage;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.btc.RawTransactionInput;
+import io.bisq.payload.crypto.PubKeyRing;
+import io.bisq.payload.filter.PaymentAccountFilter;
+import io.bisq.payload.payment.PaymentAccountContractData;
 import io.bisq.payment.PaymentAccount;
 import io.bisq.trade.OffererTrade;
 import io.bisq.trade.Trade;

@@ -1,15 +1,15 @@
 package io.bisq.trade.offer;
 
+import io.bisq.NodeAddress;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.common.util.MathUtils;
+import io.bisq.crypto.KeyRing;
 import io.bisq.locale.CurrencyUtil;
-import io.bisq.network_messages.NodeAddress;
-import io.bisq.network_messages.crypto.KeyRing;
-import io.bisq.network_messages.crypto.PubKeyRing;
-import io.bisq.network_messages.payment.PaymentMethod;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.payload.crypto.PubKeyRing;
+import io.bisq.payload.payment.PaymentMethod;
+import io.bisq.payload.trade.offer.OfferPayload;
 import io.bisq.provider.price.MarketPrice;
 import io.bisq.provider.price.PriceFeedService;
 import io.bisq.trade.exceptions.MarketPriceNotAvailableException;
@@ -25,6 +25,7 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.Date;
@@ -61,16 +62,27 @@ public class Offer implements Serializable {
     public Offer(OfferPayload offerPayload) {
         this.offerPayload = offerPayload;
         setState(OfferPayload.State.UNDEFINED);
-        init();
-    }
-
-    private void init() {
         stateProperty = new SimpleObjectProperty<>(OfferPayload.State.UNDEFINED);
 
         // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
         errorMessageProperty = new SimpleStringProperty();
         decimalFormat = new DecimalFormat("#.#");
         decimalFormat.setMaximumFractionDigits(Fiat.SMALLEST_UNIT_EXPONENT);
+    }
+
+    // TODO still needed as we get the offer from persiistance 9serialized)
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            in.defaultReadObject();
+            stateProperty = new SimpleObjectProperty<>(OfferPayload.State.UNDEFINED);
+
+            // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
+            errorMessageProperty = new SimpleStringProperty();
+            decimalFormat = new DecimalFormat("#.#");
+            decimalFormat.setMaximumFractionDigits(Fiat.SMALLEST_UNIT_EXPONENT);
+        } catch (Throwable t) {
+            log.warn("Cannot be deserialized." + t.getMessage());
+        }
     }
 
     public OfferPayload.State getState() {
@@ -172,7 +184,8 @@ public class Offer implements Serializable {
     }
 
     // TODO refactor those out of OfferPayload, offerPayload should be pure value object
-    public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException, MarketPriceNotAvailableException, IllegalArgumentException {
+    public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException,
+            MarketPriceNotAvailableException, IllegalArgumentException {
         checkArgument(takersTradePrice > 0, "takersTradePrice must be positive");
         Fiat tradePriceAsFiat = Fiat.valueOf(offerPayload.getCurrencyCode(), takersTradePrice);
         Fiat offerPriceAsFiat = getPrice();

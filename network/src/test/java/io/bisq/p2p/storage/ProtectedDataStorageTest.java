@@ -1,20 +1,20 @@
 package io.bisq.p2p.storage;
 
+import io.bisq.NodeAddress;
 import io.bisq.common.UserThread;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
 import io.bisq.crypto.EncryptionService;
-import io.bisq.network_messages.NodeAddress;
-import io.bisq.network_messages.crypto.Hash;
-import io.bisq.network_messages.crypto.KeyRing;
-import io.bisq.network_messages.crypto.KeyStorage;
+import io.bisq.crypto.Hash;
+import io.bisq.crypto.KeyRing;
+import io.bisq.crypto.KeyStorage;
+import io.bisq.message.p2p.storage.RefreshTTLMessage;
 import io.bisq.p2p.TestUtils;
 import io.bisq.p2p.network.NetworkNode;
 import io.bisq.p2p.peers.PeerManager;
-import io.bisq.network_messages.p2p.storage.messages.RefreshTTLMessage;
 import io.bisq.p2p.storage.mocks.MockData;
+import io.bisq.payload.p2p.storage.ProtectedStorageEntry;
 import io.bisq.storage.FileUtil;
-import io.bisq.network_messages.p2p.storage.storageentry.ProtectedStorageEntry;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.*;
 import org.slf4j.Logger;

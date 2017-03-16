@@ -23,7 +23,7 @@ import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.locale.Res;
-import io.bisq.network_messages.alert.Alert;
+import io.bisq.payload.alert.Alert;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;

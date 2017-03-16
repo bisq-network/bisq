@@ -2,8 +2,8 @@ package io.bisq.trade.offer;
 
 import io.bisq.common.util.MathUtils;
 import io.bisq.locale.CurrencyUtil;
-import io.bisq.network_messages.payment.PaymentMethod;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.payload.payment.PaymentMethod;
+import io.bisq.payload.trade.offer.OfferPayload;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;

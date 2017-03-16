@@ -2,13 +2,13 @@ package io.bisq.p2p;
 
 import ch.qos.logback.classic.Level;
 import com.google.common.annotations.VisibleForTesting;
+import io.bisq.NodeAddress;
 import io.bisq.app.Log;
 import io.bisq.app.Version;
 import io.bisq.common.Clock;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Utilities;
-import io.bisq.network_messages.NodeAddress;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.p2p.peers.BanList;
 import io.bisq.p2p.seed.SeedNodesRepository;

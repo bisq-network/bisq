@@ -19,9 +19,9 @@ package io.bisq.payment;
 
 import io.bisq.app.Version;
 import io.bisq.locale.FiatCurrency;
-import io.bisq.network_messages.payment.PaymentMethod;
-import io.bisq.network_messages.payment.payload.InteracETransferAccountContractData;
-import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
+import io.bisq.payload.payment.InteracETransferAccountContractData;
+import io.bisq.payload.payment.PaymentAccountContractData;
+import io.bisq.payload.payment.PaymentMethod;
 import io.bisq.user.Preferences;
 
 public final class InteracETransferAccount extends PaymentAccount {

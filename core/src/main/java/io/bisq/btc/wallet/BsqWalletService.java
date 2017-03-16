@@ -19,13 +19,13 @@ package io.bisq.btc.wallet;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import io.bisq.btc.Restrictions;
 import io.bisq.btc.exceptions.TransactionVerificationException;
 import io.bisq.btc.exceptions.WalletException;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.dao.blockchain.BsqBlockchainManager;
 import io.bisq.dao.blockchain.BsqUTXO;
-import io.bisq.network_messages.btc.Restrictions;
 import io.bisq.provider.fee.FeeService;
 import io.bisq.user.Preferences;
 import org.bitcoinj.core.*;

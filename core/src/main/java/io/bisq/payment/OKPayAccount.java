@@ -19,9 +19,9 @@ package io.bisq.payment;
 
 import io.bisq.app.Version;
 import io.bisq.locale.CurrencyUtil;
-import io.bisq.network_messages.payment.PaymentMethod;
-import io.bisq.network_messages.payment.payload.OKPayAccountContractData;
-import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
+import io.bisq.payload.payment.OKPayAccountContractData;
+import io.bisq.payload.payment.PaymentAccountContractData;
+import io.bisq.payload.payment.PaymentMethod;
 import io.bisq.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

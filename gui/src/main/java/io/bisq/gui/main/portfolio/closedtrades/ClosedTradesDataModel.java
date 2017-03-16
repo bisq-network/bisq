@@ -19,7 +19,7 @@ package io.bisq.gui.main.portfolio.closedtrades;
 
 import com.google.inject.Inject;
 import io.bisq.gui.common.model.ActivatableDataModel;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.payload.trade.offer.OfferPayload;
 import io.bisq.trade.Tradable;
 import io.bisq.trade.closed.ClosedTradableManager;
 import io.bisq.trade.offer.Offer;

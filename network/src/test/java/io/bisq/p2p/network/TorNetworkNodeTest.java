@@ -3,7 +3,7 @@ package io.bisq.p2p.network;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
-import io.bisq.network_messages.Message;
+import io.bisq.message.Message;
 import io.bisq.p2p.mocks.MockPayload;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;

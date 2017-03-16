@@ -18,6 +18,7 @@
 package io.bisq.trade.offer;
 
 import com.google.inject.Inject;
+import io.bisq.NodeAddress;
 import io.bisq.app.DevEnv;
 import io.bisq.app.Log;
 import io.bisq.btc.AddressEntry;
@@ -27,19 +28,18 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.network_messages.DecryptedDirectMessageListener;
-import io.bisq.network_messages.DecryptedMsgWithPubKey;
-import io.bisq.network_messages.Message;
-import io.bisq.network_messages.NodeAddress;
-import io.bisq.network_messages.availability.AvailabilityResult;
-import io.bisq.network_messages.availability.OfferAvailabilityRequest;
-import io.bisq.network_messages.availability.OfferAvailabilityResponse;
-import io.bisq.network_messages.crypto.KeyRing;
-import io.bisq.network_messages.p2p.messaging.SendDirectMessageListener;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.crypto.KeyRing;
+import io.bisq.message.Message;
+import io.bisq.message.offer.OfferAvailabilityRequest;
+import io.bisq.message.offer.OfferAvailabilityResponse;
 import io.bisq.p2p.BootstrapListener;
+import io.bisq.p2p.DecryptedDirectMessageListener;
+import io.bisq.p2p.DecryptedMsgWithPubKey;
+import io.bisq.p2p.SendDirectMessageListener;
 import io.bisq.p2p.peers.PeerManager;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.trade.offer.AvailabilityResult;
+import io.bisq.payload.trade.offer.OfferPayload;
 import io.bisq.provider.price.PriceFeedService;
 import io.bisq.storage.Storage;
 import io.bisq.trade.TradableList;
@@ -65,7 +65,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.inject.internal.util.$Preconditions.checkNotNull;
-import static io.bisq.network_messages.util.Validator.nonEmptyStringOf;
+import static io.bisq.util.Validator.nonEmptyStringOf;
 
 
 public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener {

@@ -17,14 +17,14 @@
 
 package io.bisq.trade.protocol.trade.tasks.taker;
 
+import io.bisq.NodeAddress;
 import io.bisq.btc.AddressEntry;
 import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.common.util.Utilities;
-import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
-import io.bisq.network_messages.trade.payload.Contract;
-import io.bisq.network_messages.NodeAddress;
+import io.bisq.payload.payment.PaymentAccountContractData;
+import io.bisq.payload.trade.Contract;
 import io.bisq.trade.SellerAsTakerTrade;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.TradingPeer;

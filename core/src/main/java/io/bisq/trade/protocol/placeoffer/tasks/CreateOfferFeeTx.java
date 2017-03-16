@@ -17,12 +17,12 @@
 
 package io.bisq.trade.protocol.placeoffer.tasks;
 
+import io.bisq.NodeAddress;
 import io.bisq.btc.AddressEntry;
 import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.network_messages.NodeAddress;
-import io.bisq.network_messages.arbitration.Arbitrator;
+import io.bisq.payload.arbitration.Arbitrator;
 import io.bisq.trade.offer.Offer;
 import io.bisq.trade.protocol.placeoffer.PlaceOfferModel;
 import io.bisq.trade.protocol.trade.ArbitrationSelectionRule;

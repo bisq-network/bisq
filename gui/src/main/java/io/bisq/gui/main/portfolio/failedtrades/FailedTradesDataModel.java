@@ -19,7 +19,7 @@ package io.bisq.gui.main.portfolio.failedtrades;
 
 import com.google.inject.Inject;
 import io.bisq.gui.common.model.ActivatableDataModel;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.payload.trade.offer.OfferPayload;
 import io.bisq.trade.Trade;
 import io.bisq.trade.failed.FailedTradesManager;
 import io.bisq.trade.offer.Offer;

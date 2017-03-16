@@ -18,17 +18,17 @@
 package io.bisq.gui.main.account.arbitratorregistration;
 
 import com.google.inject.Inject;
+import io.bisq.NodeAddress;
 import io.bisq.arbitration.ArbitratorManager;
 import io.bisq.btc.AddressEntry;
 import io.bisq.btc.wallet.BtcWalletService;
-import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.crypto.KeyRing;
 import io.bisq.gui.common.model.ActivatableViewModel;
-import io.bisq.network_messages.arbitration.Arbitrator;
 import io.bisq.locale.LanguageUtil;
-import io.bisq.network_messages.NodeAddress;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.arbitration.Arbitrator;
 import io.bisq.user.Preferences;
 import io.bisq.user.User;
 import javafx.beans.property.*;

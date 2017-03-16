@@ -26,8 +26,6 @@ import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.btc.wallet.TradeWalletService;
 import io.bisq.btc.wallet.WalletsSetup;
 import io.bisq.http.HttpClient;
-import io.bisq.network_messages.btc.BtcOptionKeys;
-import io.bisq.network_messages.btc.UserAgent;
 import io.bisq.provider.fee.FeeService;
 import io.bisq.provider.price.PriceFeedService;
 import org.slf4j.Logger;

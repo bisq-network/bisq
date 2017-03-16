@@ -17,7 +17,7 @@
 
 package io.bisq.payment;
 
-import io.bisq.network_messages.payment.PaymentMethod;
+import io.bisq.payload.payment.PaymentMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

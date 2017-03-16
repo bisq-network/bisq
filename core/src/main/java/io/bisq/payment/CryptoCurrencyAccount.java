@@ -18,9 +18,9 @@
 package io.bisq.payment;
 
 import io.bisq.app.Version;
-import io.bisq.network_messages.payment.PaymentMethod;
-import io.bisq.network_messages.payment.payload.CryptoCurrencyAccountContractData;
-import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
+import io.bisq.payload.payment.CryptoCurrencyAccountContractData;
+import io.bisq.payload.payment.PaymentAccountContractData;
+import io.bisq.payload.payment.PaymentMethod;
 
 public final class CryptoCurrencyAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
