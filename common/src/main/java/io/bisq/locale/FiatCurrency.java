@@ -18,7 +18,6 @@
 package io.bisq.locale;
 
 import io.bisq.app.Version;
-import io.bisq.user.Preferences;
 
 import java.util.Currency;
 import java.util.Locale;
@@ -30,10 +29,16 @@ public final class FiatCurrency extends TradeCurrency {
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "★ ";
 
+    private static Locale defaultLocale;
+
+    public static void setDefaultLocale(Locale defaultLocale) {
+        FiatCurrency.defaultLocale = defaultLocale;
+    }
+    
     private final Currency currency;
 
     public FiatCurrency(String currencyCode) {
-        this(currencyCode, Preferences.getDefaultLocale());
+        this(currencyCode, defaultLocale);
     }
 
     public FiatCurrency(String currencyCode, Locale locale) {
@@ -42,7 +47,7 @@ public final class FiatCurrency extends TradeCurrency {
 
     @SuppressWarnings("WeakerAccess")
     public FiatCurrency(Currency currency) {
-        this(currency, Preferences.getDefaultLocale());
+        this(currency, defaultLocale);
     }
 
     @SuppressWarnings("WeakerAccess")

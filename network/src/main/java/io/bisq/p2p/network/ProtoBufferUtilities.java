@@ -42,7 +42,6 @@ import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.network_messages.trade.payload.Contract;
 import io.bisq.network_messages.trade.protocol.trade.messages.*;
 import io.bisq.network_messages.trade.statistics.payload.TradeStatistics;
-import io.bisq.user.Preferences;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.WriterOutputStream;
 import org.bitcoinj.core.Coin;
@@ -345,7 +344,7 @@ public class ProtoBufferUtilities {
                         break;
                     case SEPA_ACCOUNT_CONTRACT_DATA:
                         SepaAccountContractData sepaAccountContractData = new SepaAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
-                                protoEntry.getMaxTradePeriod(), CountryUtil.getAllSepaCountries(Preferences.getDefaultLocale()));
+                                protoEntry.getMaxTradePeriod(), CountryUtil.getAllSepaCountries(CountryUtil.getDefaultLocale()));
                         fillInCountryBasedPaymentAccountContractData(protoEntry, sepaAccountContractData);
                         result = sepaAccountContractData;
                         break;

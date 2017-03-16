@@ -19,7 +19,6 @@ package io.bisq.locale;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
-import io.bisq.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +27,7 @@ import java.util.stream.Collectors;
 
 public class CountryUtil {
     private static final Logger log = LoggerFactory.getLogger(CountryUtil.class);
+    private static Locale defaultLocale;
 
     public static List<Country> getAllSepaEuroCountries(Locale locale) {
         List<Country> list = new ArrayList<>();
@@ -82,7 +82,7 @@ public class CountryUtil {
     }
 
     public static String getNameByCode(String countryCode) {
-        return getNameByCode(countryCode, Preferences.getDefaultLocale());
+        return new Locale(LanguageUtil.getDefaultLanguage(defaultLocale), countryCode).getDisplayCountry();
     }
 
     public static String getNameByCode(String countryCode, Locale locale) {
@@ -90,7 +90,7 @@ public class CountryUtil {
     }
 
     public static String getNameAndCode(String countryCode) {
-        return getNameByCode(countryCode, Preferences.getDefaultLocale());
+        return getNameByCode(countryCode, defaultLocale);
     }
 
     public static String getNameAndCode(String countryCode, Locale locale) {
@@ -216,5 +216,13 @@ public class CountryUtil {
     public static String getDefaultCountryCode(Locale locale) {
         // might be set later in pref or config, so not use Preferences.getDefaultLocale() anywhere in the code
         return locale.getCountry();
+    }
+
+    public static void setDefaultLocale(Locale defaultLocale) {
+        CountryUtil.defaultLocale = defaultLocale;
+    }
+
+    public static Locale getDefaultLocale() {
+        return defaultLocale;
     }
 }

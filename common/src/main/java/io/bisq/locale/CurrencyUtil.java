@@ -17,7 +17,6 @@
 
 package io.bisq.locale;
 
-import io.bisq.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +27,19 @@ public class CurrencyUtil {
     private static final Logger log = LoggerFactory.getLogger(CurrencyUtil.class);
 
     private static List<FiatCurrency> allSortedFiatCurrencies;
+    private static Locale defaultLocale;
+    private static FiatCurrency defaultTradeCurrency;
+
+    public static void setDefaultLocale(Locale defaultLocale) {
+        CurrencyUtil.defaultLocale = defaultLocale;
+    }
+
+    public static void setDefaultTradeCurrency(FiatCurrency defaultTradeCurrency) {
+        CurrencyUtil.defaultTradeCurrency = defaultTradeCurrency;
+    }
 
     private static List<FiatCurrency> createAllSortedFiatCurrenciesList() {
-        return createAllSortedFiatCurrenciesList(Preferences.getDefaultLocale());
+        return createAllSortedFiatCurrenciesList(defaultLocale);
     }
 
     private static List<FiatCurrency> createAllSortedFiatCurrenciesList(Locale locale) {
@@ -43,18 +52,18 @@ public class CurrencyUtil {
     }
 
     public static List<FiatCurrency> getAllSortedFiatCurrencies() {
-        return getAllSortedFiatCurrencies(Preferences.getDefaultLocale());
+        return getAllSortedFiatCurrencies(defaultLocale);
     }
 
     public static List<FiatCurrency> getAllSortedFiatCurrencies(Locale locale) {
-        if(Objects.isNull(allSortedFiatCurrencies)) {
+        if (Objects.isNull(allSortedFiatCurrencies)) {
             allSortedFiatCurrencies = createAllSortedFiatCurrenciesList(locale);
         }
         return allSortedFiatCurrencies;
     }
 
     public static List<FiatCurrency> getAllMainFiatCurrencies() {
-        return getAllMainFiatCurrencies(Preferences.getDefaultLocale(), Preferences.getDefaultTradeCurrency());
+        return getAllMainFiatCurrencies(defaultLocale, defaultTradeCurrency);
     }
 
     public static List<FiatCurrency> getAllMainFiatCurrencies(Locale locale, TradeCurrency defaultTradeCurrency) {
@@ -326,7 +335,7 @@ public class CurrencyUtil {
     }
 
     public static FiatCurrency getCurrencyByCountryCode(String countryCode) {
-        return getCurrencyByCountryCode(countryCode, Preferences.getDefaultLocale());
+        return getCurrencyByCountryCode(countryCode, defaultLocale);
     }
 
     public static FiatCurrency getCurrencyByCountryCode(String countryCode, Locale locale) {
@@ -335,7 +344,7 @@ public class CurrencyUtil {
 
 
     public static String getNameByCode(String currencyCode) {
-        return getNameAndCode(currencyCode, Preferences.getDefaultLocale());
+        return getNameAndCode(currencyCode, defaultLocale);
     }
 
     public static String getNameByCode(String currencyCode, Locale locale) {
@@ -351,7 +360,7 @@ public class CurrencyUtil {
     }
 
     public static String getNameAndCode(String currencyCode) {
-        return getNameAndCode(currencyCode, Preferences.getDefaultLocale());
+        return getNameAndCode(currencyCode, defaultLocale);
     }
 
     public static String getNameAndCode(String currencyCode, Locale locale) {

@@ -17,7 +17,6 @@
 
 package io.bisq.locale;
 
-import io.bisq.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,6 +79,7 @@ public class LanguageUtil {
             "mt"  // Maltese
             */
     );
+    private static Locale defaultLocale;
 
     public static List<String> getAllLanguageCodes() {
         List<Locale> allLocales = LocaleUtil.getAllLocales();
@@ -97,12 +97,12 @@ public class LanguageUtil {
     }
 
     public static String getDefaultLanguage(Locale locale) {
-        // might be set later in pref or config, so not use Preferences.getDefaultLocale() anywhere in the code
+        // might be set later in pref or config, so not use defaultLocale anywhere in the code
         return locale.getLanguage();
     }
 
     public static String getDefaultLanguageLocaleAsCode() {
-        return getDefaultLanguageLocaleAsCode(Preferences.getDefaultLocale());
+        return getDefaultLanguageLocaleAsCode(defaultLocale);
     }
 
     public static String getDefaultLanguageLocaleAsCode(Locale locale) {
@@ -120,5 +120,9 @@ public class LanguageUtil {
 
     public static List<String> getUserLanguageCodes() {
         return userLanguageCodes;
+    }
+
+    public static void setDefaultLocale(Locale defaultLocale) {
+        LanguageUtil.defaultLocale = defaultLocale;
     }
 }

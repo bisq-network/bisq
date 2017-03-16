@@ -50,10 +50,19 @@ public final class Preferences implements Persistable {
 
     public static Preferences INSTANCE;
 
-
     static {
-        defaultLocale = Locale.getDefault();
+        Locale locale = Locale.getDefault();
+        Preferences.defaultLocale = locale;
         Res.applyLocaleToResourceBundle(getDefaultLocale());
+
+        CountryUtil.setDefaultLocale(locale);
+        CurrencyUtil.setDefaultLocale(locale);
+        LanguageUtil.setDefaultLocale(locale);
+        FiatCurrency.setDefaultLocale(locale);
+
+        FiatCurrency currencyByCountryCode = CurrencyUtil.getCurrencyByCountryCode(CountryUtil.getDefaultCountryCode(locale), locale);
+        Preferences.defaultTradeCurrency = currencyByCountryCode;
+        CurrencyUtil.setDefaultTradeCurrency(currencyByCountryCode);
     }
 
 
@@ -94,7 +103,7 @@ public final class Preferences implements Persistable {
         return defaultLocale;
     }
 
-    private static TradeCurrency defaultTradeCurrency = CurrencyUtil.getCurrencyByCountryCode(CountryUtil.getDefaultCountryCode(defaultLocale), defaultLocale);
+    private static TradeCurrency defaultTradeCurrency;
 
     public static TradeCurrency getDefaultTradeCurrency() {
         return defaultTradeCurrency;
