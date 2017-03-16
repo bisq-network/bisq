@@ -341,7 +341,7 @@ public class WalletConfig extends AbstractIdleService {
         // TODO do we want that here?
         vBsqWallet.allowSpendingUnconfirmedTransactions();
 
-        if (params != RegTestParams.get())
+        if (!params.equals(RegTestParams.get()))
             peerGroup().setMaxConnections(11);
     }
 
@@ -454,7 +454,7 @@ public class WalletConfig extends AbstractIdleService {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
                 vPeerGroup.setMaxConnections(peerAddresses.length);
                 peerAddresses = null;
-            } else if (params.equals(RegTestParams.get())) {
+            } else if (!params.equals(RegTestParams.get())) {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
             }
             vChain.addWallet(vBtcWallet);
