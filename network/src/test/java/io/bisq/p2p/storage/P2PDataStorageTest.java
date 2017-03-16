@@ -207,7 +207,7 @@ public class P2PDataStorageTest {
                 Lists.newArrayList("BE", "AU"),
                 "bankid",
                 Lists.newArrayList("BANK1", "BANK2"),
-                null,
+                "versionNr",
                 100,
                 100,
                 100,

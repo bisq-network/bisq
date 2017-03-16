@@ -363,7 +363,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 isPrivateOffer,
                 hashOfChallenge,
                 extraDataMap);
-        return new Offer(offerPayload);
+        Offer offer = new Offer(offerPayload);
+        offer.setPriceFeedService(priceFeedService);
+        return offer;
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {

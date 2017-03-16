@@ -88,8 +88,11 @@ public class OfferBookService {
             @Override
             public void onRemoved(ProtectedStorageEntry data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.getStoragePayload() instanceof OfferPayload)
-                        listener.onRemoved(new Offer((OfferPayload) data.getStoragePayload()));
+                    if (data.getStoragePayload() instanceof OfferPayload) {
+                        Offer offer = new Offer((OfferPayload) data.getStoragePayload());
+                        offer.setPriceFeedService(priceFeedService);
+                        listener.onRemoved(offer);
+                    }
                 });
             }
         });

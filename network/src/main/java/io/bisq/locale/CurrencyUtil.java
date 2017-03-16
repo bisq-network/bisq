@@ -47,7 +47,7 @@ public class CurrencyUtil {
     }
 
     public static List<FiatCurrency> getAllSortedFiatCurrencies(Locale locale) {
-        if(Objects.isNull(allSortedCryptoCurrencies)) {
+        if(Objects.isNull(allSortedFiatCurrencies)) {
             allSortedFiatCurrencies = createAllSortedFiatCurrenciesList(locale);
         }
         return allSortedFiatCurrencies;
@@ -299,7 +299,7 @@ public class CurrencyUtil {
     }
 
     public static Optional<FiatCurrency> getFiatCurrency(String currencyCode) {
-        return allSortedFiatCurrencies.stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
+        return getAllSortedFiatCurrencies().stream().filter(e -> e.getCode().equals(currencyCode)).findAny();
     }
 
     @SuppressWarnings("WeakerAccess")

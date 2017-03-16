@@ -25,7 +25,7 @@ want it, that you can change the software or use pieces of it in new
 free programs, and that you know you can do these things.
 
   Developers that use our General Public Licenses protect your rights
-with two steps: (1) assert copyright on the software, and (2) offerPayload
+with two steps: (1) assert copyright on the software, and (2) offer
 you this License which gives you legal permission to copy, distribute
 and/or modify the software.
 
@@ -191,7 +191,7 @@ keep intact all notices of the absence of any warranty; and give all
 recipients a copy of this License along with the Program.
 
   You may charge any price or no price for each copy that you convey,
-and you may offerPayload support or warranty protection for a fee.
+and you may offer support or warranty protection for a fee.
 
   5. Conveying Modified Source Versions.
 
@@ -244,8 +244,8 @@ in one of these ways:
 
     b) Convey the object code in, or embodied in, a physical product
     (including a physical distribution medium), accompanied by a
-    written offerPayload, valid for at least three years and valid for as
-    long as you offerPayload spare parts or customer support for that product
+    written offer, valid for at least three years and valid for as
+    long as you offer spare parts or customer support for that product
     model, to give anyone who possesses the object code either (1) a
     copy of the Corresponding Source for all the software in the
     product that is covered by this License, on a durable physical
@@ -255,13 +255,13 @@ in one of these ways:
     Corresponding Source from a network server at no charge.
 
     c) Convey individual copies of the object code with a copy of the
-    written offerPayload to provide the Corresponding Source.  This
+    written offer to provide the Corresponding Source.  This
     alternative is allowed only occasionally and noncommercially, and
-    only if you received the object code with such an offerPayload, in accord
+    only if you received the object code with such an offer, in accord
     with subsection 6b.
 
     d) Convey the object code by offering access from a designated
-    place (gratis or for a charge), and offerPayload equivalent access to the
+    place (gratis or for a charge), and offer equivalent access to the
     Corresponding Source in the same way through the same place at no
     further charge.  You need not require recipients to copy the
     Corresponding Source along with the object code.  If the place to
@@ -474,7 +474,7 @@ this License.
 
   Each contributor grants you a non-exclusive, worldwide, royalty-free
 patent license under the contributor's essential patent claims, to
-make, use, sell, offerPayload for sale, import and otherwise run, modify and
+make, use, sell, offer for sale, import and otherwise run, modify and
 propagate the contents of its contributor version.
 
   In the following three paragraphs, a "patent license" is any express
@@ -540,7 +540,7 @@ License would be to refrain entirely from conveying the Program.
   13. Remote Network Interaction; Use with the GNU General Public License.
 
   Notwithstanding any other provision of this License, if you modify the
-Program, your modified version must prominently offerPayload all users
+Program, your modified version must prominently offer all users
 interacting with it remotely through a computer network (if your version
 supports such interaction) an opportunity to receive the Corresponding
 Source of your version by providing access to the Corresponding Source
@@ -651,7 +651,7 @@ Also add information on how to contact you by electronic and paper mail.
 network, you should also make sure that it provides a way for users to
 get its source.  For example, if your program is a web application, its
 interface could display a "Source" link that leads users to an archive
-of the code.  There are many ways you could offerPayload source, and different
+of the code.  There are many ways you could offer source, and different
 solutions will be better for different programs; see section 13 for the
 specific requirements.
 

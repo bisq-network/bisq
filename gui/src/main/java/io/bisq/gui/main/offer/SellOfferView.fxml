@@ -19,7 +19,7 @@
 
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.AnchorPane?>
-<TabPane fx:id="root" fx:controller="io.bisq.gui.main.offerPayload.SellOfferView"
+<TabPane fx:id="root" fx:controller="io.bisq.gui.main.offer.SellOfferView"
          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
          AnchorPane.topAnchor="0.0"
          xmlns:fx="http://javafx.com/fxml"/>

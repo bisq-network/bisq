@@ -23,6 +23,7 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.List;
@@ -31,7 +32,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class Offer {
+public class Offer implements Serializable {
 
     @Getter
     private OfferPayload offerPayload;

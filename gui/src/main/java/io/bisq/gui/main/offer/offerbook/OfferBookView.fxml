@@ -19,7 +19,7 @@
 
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
-<GridPane fx:id="root" fx:controller="io.bisq.gui.main.offerPayload.offerbook.OfferBookView"
+<GridPane fx:id="root" fx:controller="io.bisq.gui.main.offer.offerbook.OfferBookView"
           hgap="5.0" vgap="5"
           xmlns:fx="http://javafx.com/fxml">
 
