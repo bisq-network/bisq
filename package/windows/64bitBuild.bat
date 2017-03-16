@@ -23,8 +23,10 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -srcfiles %outdir%\bisq.jar ^
 -srcfiles "core/src/main/resources/bisq.policy" ^
 -outfile bisq ^
--Bruntime="%JAVA_HOME%\jre" ^
--BjvmOptions=-Djava.security.manager ^
--BjvmOptions=-Djava.security.debug=failure ^
--BjvmOptions=-Djava.security.policy=file:bisq.policy ^
--Bicon=package\windows\bisq.ico
+-Bicon=package\windows\bisq.ico ^
+-Bruntime="%JAVA_HOME%\jre"
+ 
+:: when we have support for security manager we use that 
+:: -BjvmOptions=-Djava.security.manager ^
+:: -BjvmOptions=-Djava.security.debug=failure ^
+:: -BjvmOptions=-Djava.security.policy=file:bisq.policy ^

@@ -29,10 +29,13 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles "core/src/main/resources/bisq.policy" \
     -srcfiles package/linux/LICENSE \
     -appclass io.bisq.app.BisqAppMain \
-    -outfile bisq \
-    -BjvmOptions=-Djava.security.manager \
-    -BjvmOptions=-Djava.security.debug=failure \
-    -BjvmOptions=-Djava.security.policy=file:bisq.policy \
+    -outfile bisq
+     
+# when we have support for security manager we use that     
+#     \
+#    -BjvmOptions=-Djava.security.manager \
+#    -BjvmOptions=-Djava.security.debug=failure \
+#    -BjvmOptions=-Djava.security.policy=file:bisq.policy
 
 
 # sudo alien -r -c -k gui/deploy/bundles/bisq-$version.deb
