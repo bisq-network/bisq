@@ -32,10 +32,13 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles "gui/deploy/bisq-$version.jar" \
     -srcfiles "core/src/main/resources/bisq.policy" \
     -appclass io.bisq.app.BisqAppMain \
-    -outfile bisq \
-    -BjvmOptions=-Djava.security.manager \
-    -BjvmOptions=-Djava.security.debug=failure \
-    -BjvmOptions=-Djava.security.policy=file:bisq.policy
+    -outfile bisq
+ 
+# when we have support for security manager we use that     
+#     \
+#    -BjvmOptions=-Djava.security.manager \
+#    -BjvmOptions=-Djava.security.debug=failure \
+#    -BjvmOptions=-Djava.security.policy=file:bisq.policy
 
 rm "gui/deploy/bisq.html"
 rm "gui/deploy/bisq.jnlp"
