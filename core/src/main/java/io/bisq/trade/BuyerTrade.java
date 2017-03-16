@@ -60,7 +60,7 @@ public abstract class BuyerTrade extends Trade {
     public Coin getPayoutAmount() {
         checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
 
-        return getOffer().getSecurityDeposit().add(getTradeAmount());
+        return getOffer().getBuyerSecurityDeposit().add(getTradeAmount());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

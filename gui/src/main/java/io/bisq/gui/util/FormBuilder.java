@@ -910,11 +910,7 @@ public class FormBuilder {
     // Trade: HBox, InputTextField, Label
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple3<HBox, InputTextField, Label> getValueCurrencyBox() {
-        return getValueCurrencyBox("");
-    }
-
-    public static Tuple3<HBox, InputTextField, Label> getValueCurrencyBox(String promptText) {
+    public static Tuple3<HBox, InputTextField, Label> getEditableValueCurrencyBox(String promptText) {
         InputTextField input = new InputTextField();
         input.setPrefWidth(170);
         input.setAlignment(Pos.CENTER_RIGHT);
@@ -928,6 +924,24 @@ public class FormBuilder {
         box.getChildren().addAll(input, currency);
         return new Tuple3<>(box, input, currency);
     }
+
+    public static Tuple3<HBox, TextField, Label> getNotEditableValueCurrencyBox() {
+        TextField textField = new InputTextField();
+        textField.setPrefWidth(190);
+        textField.setAlignment(Pos.CENTER_RIGHT);
+        textField.setId("text-input-with-currency-text-field");
+        textField.setMouseTransparent(true);
+        textField.setEditable(false);
+        textField.setFocusTraversable(false);
+
+        Label currency = new Label();
+        currency.setId("currency-info-label-disabled");
+
+        HBox box = new HBox();
+        box.getChildren().addAll(textField, currency);
+        return new Tuple3<>(box, textField, currency);
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Trade: Label, VBox

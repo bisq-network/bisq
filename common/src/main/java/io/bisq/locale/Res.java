@@ -17,6 +17,7 @@
 
 package io.bisq.locale;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +48,15 @@ public class Res {
 
     public static String getWithCol(String key) {
         return get(key) + ":";
+    }
+
+    public static String getWithColAndCap(String key) {
+        return StringUtils.capitalize(get(key)) + ":";
+    }
+
+    // Capitalize first character
+    public static String getWithCap(String key) {
+        return StringUtils.capitalize(get(key));
     }
 
     public static String getWithCol(String key, Object... arguments) {

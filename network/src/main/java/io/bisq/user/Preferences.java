@@ -144,7 +144,7 @@ public final class Preferences implements Persistable {
 
     private List<String> ignoreTradersList = new ArrayList<>();
     private String directoryChooserPath;
-    private long securityDepositAsLong = Restrictions.DEFAULT_SECURITY_DEPOSIT.value;
+    private long buyerSecurityDepositAsLong = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT.value;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -269,7 +269,10 @@ public final class Preferences implements Persistable {
             if (persisted.getDirectoryChooserPath() != null)
                 directoryChooserPath = persisted.getDirectoryChooserPath();
 
-            securityDepositAsLong = persisted.getSecurityDepositAsLong();
+            buyerSecurityDepositAsLong = Math.min(Restrictions.MAX_BUYER_SECURITY_DEPOSIT.value,
+                    Math.max(Restrictions.MIN_BUYER_SECURITY_DEPOSIT.value,
+                            persisted.getBuyerSecurityDepositAsLong())
+            );
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies(Preferences.getDefaultLocale(), Preferences.getDefaultTradeCurrency()));
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
@@ -493,8 +496,8 @@ public final class Preferences implements Persistable {
         withdrawalTxFeeInBytesProperty.set(withdrawalTxFeeInBytes);
     }
 
-    public void setSecurityDepositAsLong(long securityDepositAsLong) {
-        this.securityDepositAsLong = securityDepositAsLong;
+    public void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong) {
+        this.buyerSecurityDepositAsLong = buyerSecurityDepositAsLong;
         storage.queueUpForSave();
     }
 
@@ -665,12 +668,12 @@ public final class Preferences implements Persistable {
         return withdrawalTxFeeInBytesProperty.get();
     }
 
-    public long getSecurityDepositAsLong() {
-        return securityDepositAsLong;
+    public long getBuyerSecurityDepositAsLong() {
+        return buyerSecurityDepositAsLong;
     }
 
-    public Coin getSecurityDepositAsCoin() {
-        return Coin.valueOf(securityDepositAsLong);
+    public Coin getBuyerSecurityDepositAsCoin() {
+        return Coin.valueOf(buyerSecurityDepositAsLong);
     }
 
     public Country getUserCountry() {

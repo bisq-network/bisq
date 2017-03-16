@@ -212,6 +212,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return getOffer() != null && getOffer().getDirection() == OfferPayload.Direction.BUY;
     }
 
+    boolean isBuyer() {
+        return (isOfferer(getOffer()) && isBuyOffer())
+                || (!isOfferer(getOffer()) && !isBuyOffer());
+    }
+
     boolean isOfferer(Offer offer) {
         return tradeManager.isMyOffer(offer);
     }

@@ -251,17 +251,15 @@ public class ProtoBufferUtilities {
 
         Messages.DisputeResult disputeResultproto = disputeResultMessage.getDisputeResult();
         DisputeResult disputeResult = new DisputeResult(disputeResultproto.getTradeId(),
-                disputeResultproto.getTraderId(), DisputeResult.DisputeFeePolicy.valueOf(disputeResultproto.getDisputeFeePolicy().name()),
+                disputeResultproto.getTraderId(),
                 DisputeResult.Winner.valueOf(disputeResultproto.getWinner().name()), disputeResultproto.getReasonOrdinal(),
                 disputeResultproto.getTamperProofEvidence(), disputeResultproto.getIdVerification(), disputeResultproto.getScreenCast(),
                 disputeResultproto.getSummaryNotes(),
                 (DisputeCommunicationMessage) getDisputeCommunicationMessage(disputeResultproto.getDisputeCommunicationMessage()),
                 disputeResultproto.getArbitratorSignature().toByteArray(), disputeResultproto.getBuyerPayoutAmount(),
-                disputeResultproto.getSellerPayoutAmount(), disputeResultproto.getArbitratorPayoutAmount(),
-                disputeResultproto.getArbitratorAddressAsString(),
+                disputeResultproto.getSellerPayoutAmount(), 
                 disputeResultproto.getArbitratorPubKey().toByteArray(), disputeResultproto.getCloseDate(),
                 disputeResultproto.getIsLoserPublisher());
-        disputeResult.setArbitratorAddressAsString(disputeResultproto.getArbitratorAddressAsString());
         return new DisputeResultMessage(disputeResult, getNodeAddress(disputeResultMessage.getMyNodeAddress()));
     }
 
@@ -434,8 +432,11 @@ public class ProtoBufferUtilities {
         }
         return new OfferPayload(offer.getId(), offer.getDate(), getNodeAddress(offer.getOffererNodeAddress()), getPubKeyRing(offer.getPubKeyRing()), getDirection(offer.getDirection()),
                 offer.getFiatPrice(), offer.getMarketPriceMargin(), offer.getUseMarketBasedPrice(), offer.getAmount(), offer.getMinAmount(), offer.getCurrencyCode(), arbitratorNodeAddresses,
-                offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(), offer.getOfferFeePaymentTxID(), offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds,
-                offer.getVersionNr(), offer.getBlockHeightAtOfferCreation(), offer.getTxFee(), offer.getCreateOfferFee(), offer.getSecurityDeposit(), offer.getMaxTradeLimit(), offer.getMaxTradePeriod(), offer.getUseAutoClose(),
+                offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(), offer.getOfferFeePaymentTxID(), offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds, priceFeedService,
+                offer.getVersionNr(), offer.getBlockHeightAtOfferCreation(), offer.getTxFee(), offer.getCreateOfferFee(),
+                offer.getBuyerSecurityDeposit(),
+                offer.getSellerSecurityDeposit(),
+                offer.getMaxTradeLimit(), offer.getMaxTradePeriod(), offer.getUseAutoClose(),
                 offer.getUseReOpenAfterAutoClose(), offer.getLowerClosePrice(), offer.getUpperClosePrice(), offer.getIsPrivateOffer(), offer.getHashOfChallenge(), extraDataMapMap);
     }
 

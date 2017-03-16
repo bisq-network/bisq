@@ -293,6 +293,7 @@ public class OfferBookViewModelTest {
                 0,
                 0,
                 0,
+                0,
                 false,
                 false,
                 0,

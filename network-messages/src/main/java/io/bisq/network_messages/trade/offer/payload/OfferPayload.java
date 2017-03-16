@@ -151,7 +151,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final long blockHeightAtOfferCreation;
     private final long txFee;
     private final long createOfferFee;
-    private final long securityDeposit;
+    private final long buyerSecurityDeposit;
+    private final long sellerSecurityDeposit;
     private final long maxTradeLimit;
     @Getter
     private final long maxTradePeriod;
@@ -207,7 +208,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
      * @param blockHeightAtOfferCreation
      * @param txFee
      * @param createOfferFee
-     * @param securityDeposit
+     * @param buyerSecurityDeposit
+     * @param sellerSecurityDeposit
      * @param maxTradeLimit
      * @param maxTradePeriod
      * @param useAutoClose
@@ -219,38 +221,40 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
      * @param extraDataMap
      */
     public OfferPayload(String id,
-                        Long creationDate,
-                        NodeAddress offererNodeAddress,
-                        PubKeyRing pubKeyRing,
-                        Direction direction,
-                        long fiatPrice,
-                        double marketPriceMargin,
-                        boolean useMarketBasedPrice,
-                        long amount,
-                        long minAmount,
-                        String currencyCode,
-                        List<NodeAddress> arbitratorNodeAddresses,
-                        String paymentMethodName,
-                        String offererPaymentAccountId,
-                        @Nullable String offerFeePaymentTxID,
-                        @Nullable String countryCode,
-                        @Nullable List<String> acceptedCountryCodes,
-                        @Nullable String bankId,
-                        @Nullable List<String> acceptedBankIds,
-                        String versionNr,
-                        long blockHeightAtOfferCreation,
-                        long txFee,
-                        long createOfferFee,
-                        long securityDeposit,
-                        long maxTradeLimit,
-                        long maxTradePeriod,
-                        boolean useAutoClose,
-                        boolean useReOpenAfterAutoClose,
-                        long lowerClosePrice,
-                        long upperClosePrice,
-                        boolean isPrivateOffer,
-                        @Nullable String hashOfChallenge,
-                        @Nullable Map<String, String> extraDataMap) {
+                 Long creationDate,
+                 NodeAddress offererNodeAddress,
+                 PubKeyRing pubKeyRing,
+                 Direction direction,
+                 long fiatPrice,
+                 double marketPriceMargin,
+                 boolean useMarketBasedPrice,
+                 long amount,
+                 long minAmount,
+                 String currencyCode,
+                 List<NodeAddress> arbitratorNodeAddresses,
+                 String paymentMethodName,
+                 String offererPaymentAccountId,
+                 @Nullable String offerFeePaymentTxID,
+                 @Nullable String countryCode,
+                 @Nullable List<String> acceptedCountryCodes,
+                 @Nullable String bankId,
+                 @Nullable List<String> acceptedBankIds,
+                 PriceFeedService priceFeedService,
+                 String versionNr,
+                 long blockHeightAtOfferCreation,
+                 long txFee,
+                 long createOfferFee,
+                 long buyerSecurityDeposit,
+                 long sellerSecurityDeposit,
+                 long maxTradeLimit,
+                 long maxTradePeriod,
+                 boolean useAutoClose,
+                 boolean useReOpenAfterAutoClose,
+                 long lowerClosePrice,
+                 long upperClosePrice,
+                 boolean isPrivateOffer,
+                 @Nullable String hashOfChallenge,
+                 @Nullable Map<String, String> extraDataMap) {
 
         this.id = id;
         this.offererNodeAddress = offererNodeAddress;
@@ -274,7 +278,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.blockHeightAtOfferCreation = blockHeightAtOfferCreation;
         this.txFee = txFee;
         this.createOfferFee = createOfferFee;
-        this.securityDeposit = securityDeposit;
+        this.buyerSecurityDeposit = buyerSecurityDeposit;
+        this.sellerSecurityDeposit = sellerSecurityDeposit;
         this.maxTradeLimit = maxTradeLimit;
         this.maxTradePeriod = maxTradePeriod;
         this.useAutoClose = useAutoClose;
@@ -303,28 +308,76 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     }
 
     //TODO update with new properties
+    public void checkCoinNotNullOrZero(Coin value, String name) {
+        checkNotNull(value, name + " is null");
+        checkArgument(value.isPositive(),
+                name + " must be positive. " + name + "=" + value.toFriendlyString());
+    }
+
     public void validate() {
-        checkNotNull(getAmount(), "Amount is null");
+        // Coins
+        checkCoinNotNullOrZero(getAmount(), "Amount");
+        checkCoinNotNullOrZero(getMinAmount(), "MinAmount");
+        checkCoinNotNullOrZero(getCreateOfferFee(), "CreateOfferFee");
+        checkArgument(getCreateOfferFee().value >= FeeService.MIN_CREATE_OFFER_FEE_IN_BTC,
+                "createOfferFee must not be less than FeeService.MIN_CREATE_OFFER_FEE_IN_BTC. " +
+                        "createOfferFee=" + getCreateOfferFee().toFriendlyString());
+        checkArgument(getCreateOfferFee().value <= FeeService.MAX_CREATE_OFFER_FEE_IN_BTC,
+                "createOfferFee must not be larger than FeeService.MAX_CREATE_OFFER_FEE_IN_BTC. " +
+                        "createOfferFee=" + getCreateOfferFee().toFriendlyString());
+        checkCoinNotNullOrZero(getBuyerSecurityDeposit(), "buyerSecurityDeposit");
+        checkCoinNotNullOrZero(getSellerSecurityDeposit(), "sellerSecurityDeposit");
+        checkArgument(getBuyerSecurityDeposit().value >= Restrictions.MIN_BUYER_SECURITY_DEPOSIT.value,
+                "buyerSecurityDeposit must not be less than Restrictions.MIN_BUYER_SECURITY_DEPOSIT. " +
+                        "buyerSecurityDeposit=" + getBuyerSecurityDeposit().toFriendlyString());
+        checkArgument(getBuyerSecurityDeposit().value <= Restrictions.MAX_BUYER_SECURITY_DEPOSIT.value,
+                "buyerSecurityDeposit must not be larger than Restrictions.MAX_BUYER_SECURITY_DEPOSIT. " +
+                        "buyerSecurityDeposit=" + getBuyerSecurityDeposit().toFriendlyString());
+
+        checkArgument(getSellerSecurityDeposit().value == Restrictions.SELLER_SECURITY_DEPOSIT.value,
+                "sellerSecurityDeposit must be equal to Restrictions.SELLER_SECURITY_DEPOSIT. " +
+                        "sellerSecurityDeposit=" + getSellerSecurityDeposit().toFriendlyString());
+        checkCoinNotNullOrZero(getTxFee(), "txFee");
+        checkCoinNotNullOrZero(getMaxTradeLimit(), "MaxTradeLimit");
+
+        checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0,
+                "MinAmount is less then "
+                        + Restrictions.MIN_TRADE_AMOUNT.toFriendlyString());
+        checkArgument(getAmount().compareTo(getPaymentMethod().getMaxTradeLimit()) <= 0,
+                "Amount is larger then "
+                        + getPaymentMethod().getMaxTradeLimit().toFriendlyString());
+        checkArgument(getAmount().compareTo(getMinAmount()) >= 0, "MinAmount is larger then Amount");
+
+
+        //
+        checkNotNull(getPrice(), "Price is null");
+        checkArgument(getPrice().isPositive(),
+                "Price must be positive. price=" + getPrice().toFriendlyString());
+
+        checkArgument(getDate().getTime() > 0,
+                "Date must not be 0. date=" + getDate().toString());
+
         checkNotNull(getArbitratorNodeAddresses(), "Arbitrator is null");
-        checkNotNull(getDate(), "CreationDate is null");
         checkNotNull(getCurrencyCode(), "Currency is null");
         checkNotNull(getDirection(), "Direction is null");
         checkNotNull(getId(), "Id is null");
         checkNotNull(getPubKeyRing(), "pubKeyRing is null");
         checkNotNull(getMinAmount(), "MinAmount is null");
+        checkNotNull(getPrice(), "Price is null");
         checkNotNull(getTxFee(), "txFee is null");
         checkNotNull(getCreateOfferFee(), "CreateOfferFee is null");
         checkNotNull(getVersionNr(), "VersionNr is null");
-        checkNotNull(getSecurityDeposit(), "SecurityDeposit is null");
-        checkNotNull(getMaxTradeLimit(), "MaxTradeLimit is null");
-        checkArgument(getMaxTradePeriod() > 0, "maxTradePeriod is 0 or negative. maxTradePeriod=" + getMaxTradePeriod());
+        checkArgument(getMaxTradePeriod() > 0, "maxTradePeriod must be positive. maxTradePeriod=" + getMaxTradePeriod());
 
-        checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then "
+        Preconditions.checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then "
                 + Restrictions.MIN_TRADE_AMOUNT.toFriendlyString());
-        checkArgument(getAmount().compareTo(getPaymentMethod().getMaxTradeLimit()) <= 0, "Amount is larger then "
+        Preconditions.checkArgument(getAmount().compareTo(getPaymentMethod().getMaxTradeLimit()) <= 0, "Amount is larger then "
                 + getPaymentMethod().getMaxTradeLimit().toFriendlyString());
         checkArgument(getAmount().compareTo(getMinAmount()) >= 0, "MinAmount is larger then Amount");
+
+        checkArgument(getPrice().isPositive(), "Price is not a positive value");
         // TODO check upper and lower bounds for fiat
+        // TODO check rest of new parameters
     }
 
 
@@ -358,8 +411,12 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         return Coin.valueOf(createOfferFee);
     }
 
-    public Coin getSecurityDeposit() {
-        return Coin.valueOf(securityDeposit);
+    public Coin getBuyerSecurityDeposit() {
+        return Coin.valueOf(buyerSecurityDeposit);
+    }
+
+    public Coin getSellerSecurityDeposit() {
+        return Coin.valueOf(sellerSecurityDeposit);
     }
 
     public Coin getMaxTradeLimit() {
@@ -408,7 +465,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setBlockHeightAtOfferCreation(blockHeightAtOfferCreation)
                 .setTxFee(txFee)
                 .setCreateOfferFee(createOfferFee)
-                .setSecurityDeposit(securityDeposit)
+                .setBuyerSecurityDeposit(buyerSecurityDeposit)
+                .setSellerSecurityDeposit(sellerSecurityDeposit)
                 .setMaxTradeLimit(maxTradeLimit)
                 .setMaxTradePeriod(maxTradePeriod)
                 .setUseAutoClose(useAutoClose)

@@ -49,9 +49,12 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin securityDeposit = trade.getOffer().getSecurityDeposit();
-            @SuppressWarnings("UnnecessaryLocalVariable") Coin buyerInputAmount = securityDeposit;
-            Coin msOutputAmount = buyerInputAmount.add(trade.getTxFee()).add(securityDeposit).add(trade.getTradeAmount());
+
+            Coin buyerInputAmount = trade.getOffer().getBuyerSecurityDeposit();
+            Coin msOutputAmount = buyerInputAmount
+                    .add(trade.getTxFee())
+                    .add(trade.getOffer().getSellerSecurityDeposit())
+                    .add(trade.getTradeAmount());
 
             log.debug("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"
@@ -66,7 +69,7 @@ public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
             Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
             AddressEntry buyerMultiSigAddressEntry = addressEntryOptional.get();
-            buyerMultiSigAddressEntry.setCoinLockedInMultiSig(buyerInputAmount.subtract(trade.getTxFee()));
+            buyerMultiSigAddressEntry.setCoinLockedInMultiSig(buyerInputAmount);
             walletService.saveAddressEntryList();
             Address offererAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address offererChangeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();

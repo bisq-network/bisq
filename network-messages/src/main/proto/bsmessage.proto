@@ -320,16 +320,17 @@ message Offer {
     int64 block_height_at_offer_creation = 23;
     int64 tx_fee = 24;
     int64 create_offer_fee = 25;
-    int64 security_deposit = 26;
-    int64 max_trade_limit = 27;
-    int64 max_trade_period = 28;
-    bool use_auto_close = 29;
-    bool use_re_open_after_auto_close = 30;
-    int64 lower_close_price = 31;
-    int64 upper_close_price = 32;
-    bool is_private_offer = 33;
-    string hash_of_challenge = 34;
-    map<string, string> extra_data_map = 35;
+    int64 buyer_security_deposit = 26;
+    int64 seller_security_deposit = 27;
+    int64 max_trade_limit = 28;
+    int64 max_trade_period = 29;
+    bool use_auto_close = 30;
+    bool use_re_open_after_auto_close = 31;
+    int64 lower_close_price = 32;
+    int64 upper_close_price = 33;
+    bool is_private_offer = 34;
+    string hash_of_challenge = 35;
+    map<string, string> extra_data_map = 36;
 }
 
 // stop storagepayloads
@@ -384,16 +385,9 @@ message DisputeResultMessage {
 
 // payload
 message DisputeResult {
-    enum DisputeFeePolicy {
-        LOSER = 0;
-        SPLIT = 1;
-        WAIVE = 2;
-    }
-
     enum Winner {
         BUYER = 0;
         SELLER = 1;
-        STALE_MATE = 2;
     }
 
     // only append new values as we use the ordinal value
@@ -404,27 +398,25 @@ message DisputeResult {
         SCAM = 3;
         PROTOCOL_VIOLATION = 4;
         NO_REPLY = 5;
+        BANK_PROBLEMS = 6;
     }
 
     string trade_id = 1;
     int32 trader_id = 2;
-    DisputeFeePolicy dispute_fee_policy = 3;
-    Winner winner = 4;
-    int32 reason_ordinal = 5;
+    Winner winner = 3;
+    int32 reason_ordinal = 4;
 
-    bool tamper_proof_evidence = 6;
-    bool id_verification = 7;
-    bool screen_cast = 8;
-    string summary_notes = 9;
-    DisputeCommunicationMessage dispute_communication_message = 10;
-    bytes arbitrator_signature = 11;
-    int64 buyer_payout_amount = 12;
-    int64 seller_payout_amount = 13;
-    int64 arbitrator_payout_amount = 14;
-    string arbitrator_address_as_string = 15;
-    bytes arbitrator_pub_key = 16;
-    int64 close_date = 17;
-    bool is_loser_publisher = 18;
+    bool tamper_proof_evidence = 5;
+    bool id_verification = 6;
+    bool screen_cast = 7;
+    string summary_notes = 8;
+    DisputeCommunicationMessage dispute_communication_message = 9;
+    bytes arbitrator_signature = 10;
+    int64 buyer_payout_amount = 11;
+    int64 seller_payout_amount = 12;
+    bytes arbitrator_pub_key = 13;
+    int64 close_date = 14;
+    bool is_loser_publisher = 15;
 }
 message OpenNewDisputeMessage {
     Dispute dispute = 1;

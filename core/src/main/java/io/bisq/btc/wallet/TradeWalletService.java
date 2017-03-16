@@ -685,10 +685,8 @@ public class TradeWalletService {
      * @param depositTxSerialized     Serialized deposit tx
      * @param buyerPayoutAmount       The payout amount of the buyer.
      * @param sellerPayoutAmount      The payout amount of the seller.
-     * @param arbitratorPayoutAmount  The payout amount of the arbitrator.
      * @param buyerAddressString      The address of the buyer.
      * @param sellerAddressString     The address of the seller.
-     * @param arbitratorAddressString The address of the arbitrator.
      * @param arbitratorKeyPair       The keypair of the arbitrator.
      * @param buyerPubKey             The public key of the buyer.
      * @param sellerPubKey            The public key of the seller.
@@ -700,10 +698,8 @@ public class TradeWalletService {
     public byte[] arbitratorSignsDisputedPayoutTx(byte[] depositTxSerialized,
                                                   Coin buyerPayoutAmount,
                                                   Coin sellerPayoutAmount,
-                                                  Coin arbitratorPayoutAmount,
                                                   String buyerAddressString,
                                                   String sellerAddressString,
-                                                  String arbitratorAddressString,
                                                   DeterministicKey arbitratorKeyPair,
                                                   byte[] buyerPubKey,
                                                   byte[] sellerPubKey,
@@ -714,10 +710,8 @@ public class TradeWalletService {
         log.trace("depositTx " + depositTx.toString());
         log.trace("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
         log.trace("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
-        log.trace("arbitratorPayoutAmount " + arbitratorPayoutAmount.toFriendlyString());
         log.trace("buyerAddressString " + buyerAddressString);
         log.trace("sellerAddressString " + sellerAddressString);
-        log.trace("arbitratorAddressString " + arbitratorAddressString);
         log.trace("arbitratorKeyPair (not displayed for security reasons)");
         log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
         log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
@@ -731,8 +725,6 @@ public class TradeWalletService {
             preparedPayoutTx.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
         if (sellerPayoutAmount.isGreaterThan(Coin.ZERO))
             preparedPayoutTx.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
-        if (arbitratorPayoutAmount.isGreaterThan(Coin.ZERO) && arbitratorAddressString != null)
-            preparedPayoutTx.addOutput(arbitratorPayoutAmount, new Address(params, arbitratorAddressString));
 
         // take care of sorting!
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
@@ -757,10 +749,8 @@ public class TradeWalletService {
      * @param arbitratorSignature     DER encoded canonical signature of arbitrator
      * @param buyerPayoutAmount       Payout amount of the buyer
      * @param sellerPayoutAmount      Payout amount of the seller
-     * @param arbitratorPayoutAmount  Payout amount for arbitrator
      * @param buyerAddressString      The address of the buyer.
      * @param sellerAddressString     The address of the seller.
-     * @param arbitratorAddressString The address of the arbitrator.
      * @param tradersMultiSigKeyPair  The keypair for the MultiSig of the trader who calls that method
      * @param buyerPubKey             The public key of the buyer.
      * @param sellerPubKey            The public key of the seller.
@@ -774,10 +764,8 @@ public class TradeWalletService {
                                                              byte[] arbitratorSignature,
                                                              Coin buyerPayoutAmount,
                                                              Coin sellerPayoutAmount,
-                                                             Coin arbitratorPayoutAmount,
                                                              String buyerAddressString,
                                                              String sellerAddressString,
-                                                             String arbitratorAddressString,
                                                              DeterministicKey tradersMultiSigKeyPair,
                                                              byte[] buyerPubKey,
                                                              byte[] sellerPubKey,
@@ -791,10 +779,8 @@ public class TradeWalletService {
         log.trace("arbitratorSignature s " + ECKey.ECDSASignature.decodeFromDER(arbitratorSignature).s.toString());
         log.trace("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
         log.trace("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
-        log.trace("arbitratorPayoutAmount " + arbitratorPayoutAmount.toFriendlyString());
         log.trace("buyerAddressString " + buyerAddressString);
         log.trace("sellerAddressString " + sellerAddressString);
-        log.trace("arbitratorAddressString " + arbitratorAddressString);
         log.trace("tradersMultiSigKeyPair (not displayed for security reasons)");
         log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
         log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
@@ -808,8 +794,6 @@ public class TradeWalletService {
             payoutTx.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
         if (sellerPayoutAmount.isGreaterThan(Coin.ZERO))
             payoutTx.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
-        if (arbitratorPayoutAmount.isGreaterThan(Coin.ZERO))
-            payoutTx.addOutput(arbitratorPayoutAmount, new Address(params, arbitratorAddressString));
 
         // take care of sorting!
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
@@ -843,6 +827,7 @@ public class TradeWalletService {
 
     // Emergency payout tool. Used only in cased when the payput from the arbitrator does not work because some data
     // in the trade/dispute are messed up.
+    // We keep here arbitratorPayoutAmount just in case (requires cooperation from peer anyway)
     public Transaction emergencySignAndPublishPayoutTx(String depositTxHex,
                                                        Coin buyerPayoutAmount,
                                                        Coin sellerPayoutAmount,

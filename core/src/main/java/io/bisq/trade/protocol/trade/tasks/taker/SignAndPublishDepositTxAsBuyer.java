@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.trade.protocol.trade.tasks.buyer;
+package io.bisq.trade.protocol.trade.tasks.taker;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.btc.AddressEntry;
@@ -38,11 +38,11 @@ import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class TakerSignAndPublishDepositTxAsBuyer extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(TakerSignAndPublishDepositTxAsBuyer.class);
+public class SignAndPublishDepositTxAsBuyer extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SignAndPublishDepositTxAsBuyer.class);
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public TakerSignAndPublishDepositTxAsBuyer(TaskRunner taskHandler, Trade trade) {
+    public SignAndPublishDepositTxAsBuyer(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -67,7 +67,7 @@ public class TakerSignAndPublishDepositTxAsBuyer extends TradeTask {
             checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
             AddressEntry buyerMultiSigAddressEntry = addressEntryOptional.get();
             Coin buyerInput = Coin.valueOf(buyerInputs.stream().mapToLong(input -> input.value).sum());
-            buyerMultiSigAddressEntry.setCoinLockedInMultiSig(buyerInput.subtract(trade.getTxFee()));
+            buyerMultiSigAddressEntry.setCoinLockedInMultiSig(buyerInput.subtract(trade.getTxFee().multiply(2)));
             TradingPeer tradingPeer = processModel.tradingPeer;
             byte[] buyerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(buyerMultiSigPubKey, buyerMultiSigAddressEntry.getPubKey()),

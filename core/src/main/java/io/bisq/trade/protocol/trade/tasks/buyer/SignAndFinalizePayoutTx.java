@@ -20,6 +20,7 @@ package io.bisq.trade.protocol.trade.tasks.buyer;
 import io.bisq.btc.AddressEntry;
 import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.common.taskrunner.TaskRunner;
+import io.bisq.messages.trade.offer.payload.Offer;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.TradingPeer;
 import io.bisq.trade.protocol.trade.tasks.TradeTask;
@@ -45,9 +46,9 @@ public class SignAndFinalizePayoutTx extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin sellerPayoutAmount = trade.getOffer().getSecurityDeposit();
-            Coin buyerPayoutAmount = sellerPayoutAmount.add(trade.getTradeAmount());
-
+            Offer offer = trade.getOffer();
+            Coin sellerPayoutAmount = offer.getSellerSecurityDeposit();
+            Coin buyerPayoutAmount = offer.getBuyerSecurityDeposit().add(trade.getTradeAmount());
             BtcWalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
             String buyerPayoutAddressString = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).getAddressString();
