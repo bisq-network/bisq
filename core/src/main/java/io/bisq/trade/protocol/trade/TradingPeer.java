@@ -18,10 +18,10 @@
 package io.bisq.trade.protocol.trade;
 
 import io.bisq.app.Version;
-import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.network_messages.crypto.PubKeyRing;
 import io.bisq.common.persistance.Persistable;
-import io.bisq.messages.btc.data.RawTransactionInput;
-import io.bisq.messages.payment.payload.PaymentAccountContractData;
+import io.bisq.network_messages.btc.data.RawTransactionInput;
+import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

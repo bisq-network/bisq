@@ -29,13 +29,14 @@ import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcValidator;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.locale.Res;
-import io.bisq.messages.arbitration.Arbitrator;
-import io.bisq.messages.payment.PaymentMethod;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.p2p.P2PService;
+import io.bisq.network_messages.arbitration.Arbitrator;
+import io.bisq.network_messages.payment.PaymentMethod;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.p2p.network.CloseConnectionReason;
 import io.bisq.p2p.network.Connection;
 import io.bisq.p2p.network.ConnectionListener;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.p2p.storage.P2PService;
 import io.bisq.payment.PaymentAccount;
 import io.bisq.trade.Trade;
 import javafx.beans.property.*;
@@ -90,7 +91,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ChangeListener<Boolean> isWalletFundedListener;
     private ChangeListener<Trade.State> tradeStateListener;
     private ChangeListener<String> tradeErrorListener;
-    private ChangeListener<Offer.State> offerStateListener;
+    private ChangeListener<OfferPayload.State> offerStateListener;
     private ChangeListener<String> offerErrorListener;
     private ConnectionListener connectionListener;
     //  private Subscription isFeeSufficientSubscription;
@@ -152,7 +153,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.initWithData(offer);
         this.offer = offer;
 
-        if (offer.getDirection() == Offer.Direction.BUY) {
+        if (offer.getDirection() == OfferPayload.Direction.BUY) {
             directionLabel = Res.get("shared.sellBitcoin");
             amountDescription = Res.get("takeOffer.amountPriceBox.buy.amountDescription");
         } else {
@@ -267,14 +268,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     // States
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyOfferState(Offer.State state) {
+    private void applyOfferState(OfferPayload.State state) {
         log.debug("applyOfferState state = " + state);
         offerWarning.set(null);
 
         // We have 2 situations handled here: 
         // 1. when clicking take offer in the offerbook screen, we do the availability check
         // 2. Before actually taking the offer in the take offer screen, we check again the availability as some time might have passed in the meantime
-        // So we use the takeOfferRequested flag to display different messages depending on the context.
+        // So we use the takeOfferRequested flag to display different network_messages depending on the context.
         switch (state) {
             case UNDEFINED:
                 break;
@@ -388,7 +389,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void addBindings() {
         volume.bind(createStringBinding(() -> formatter.formatVolume(dataModel.volumeAsFiat.get()), dataModel.volumeAsFiat));
 
-        if (dataModel.getDirection() == Offer.Direction.SELL) {
+        if (dataModel.getDirection() == OfferPayload.Direction.SELL) {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
         } else {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));
@@ -520,7 +521,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     boolean isSeller() {
-        return dataModel.getDirection() == Offer.Direction.BUY;
+        return dataModel.getDirection() == OfferPayload.Direction.BUY;
     }
 
     private InputValidator.ValidationResult isBtcInputValid(String input) {

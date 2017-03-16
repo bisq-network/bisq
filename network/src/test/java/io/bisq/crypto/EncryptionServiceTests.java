@@ -19,13 +19,15 @@ package io.bisq.crypto;
 
 
 import io.bisq.app.Version;
-import io.bisq.common.crypto.*;
+import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.wire.proto.Messages;
-import io.bisq.messages.Message;
-import io.bisq.p2p.NodeAddress;
-import io.bisq.p2p.messaging.MailboxMessage;
-import io.bisq.p2p.messaging.PrefixedSealedAndSignedMessage;
-import io.bisq.p2p.peers.keepalive.messages.Ping;
+import io.bisq.network_messages.DecryptedMsgWithPubKey;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.crypto.*;
+import io.bisq.network_messages.p2p.messaging.MailboxMessage;
+import io.bisq.network_messages.p2p.messaging.PrefixedSealedAndSignedMessage;
+import io.bisq.network_messages.p2p.peers.keepalive.messages.Ping;
 import io.bisq.storage.FileUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;

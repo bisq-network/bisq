@@ -29,12 +29,12 @@ import io.bisq.gui.main.settings.preferences.PreferencesView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.CurrencyListItem;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.messages.locale.CryptoCurrency;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.locale.TradeCurrency;
-import io.bisq.messages.provider.price.PriceFeedService;
-import io.bisq.messages.trade.statistics.payload.TradeStatistics;
-import io.bisq.messages.user.Preferences;
+import io.bisq.locale.CryptoCurrency;
+import io.bisq.locale.CurrencyUtil;
+import io.bisq.locale.TradeCurrency;
+import io.bisq.provider.price.PriceFeedService;
+import io.bisq.network_messages.trade.statistics.payload.TradeStatistics;
+import io.bisq.user.Preferences;
 import io.bisq.trade.statistics.TradeStatisticsManager;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -113,7 +113,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         if (tradeCurrencyOptional.isPresent())
             selectedTradeCurrencyProperty.set(tradeCurrencyOptional.get());
         else
-            selectedTradeCurrencyProperty.set(CurrencyUtil.getDefaultTradeCurrency());
+            selectedTradeCurrencyProperty.set(Preferences.getDefaultTradeCurrency());
 
         tickUnit = TickUnit.values()[preferences.getTradeStatisticsTickUnitIndex()];
     }
@@ -180,7 +180,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
                 if (!preferences.getUseStickyMarketPrice()) {
                     if (showAllEntry)
-                        priceFeedService.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
+                        priceFeedService.setCurrencyCode(Preferences.getDefaultTradeCurrency().getCode());
                     else
                         priceFeedService.setCurrencyCode(code);
                 }
@@ -225,7 +225,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private void setMarketPriceFeedCurrency() {
         if (!preferences.getUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX) {
             if (showAllTradeCurrenciesProperty.get())
-                priceFeedService.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
+                priceFeedService.setCurrencyCode(Preferences.getDefaultTradeCurrency().getCode());
             else
                 priceFeedService.setCurrencyCode(getCurrencyCode());
         }

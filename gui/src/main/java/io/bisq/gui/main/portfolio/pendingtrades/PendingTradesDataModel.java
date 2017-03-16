@@ -23,7 +23,6 @@ import io.bisq.arbitration.DisputeAlreadyOpenException;
 import io.bisq.arbitration.DisputeManager;
 import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.btc.wallet.TradeWalletService;
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
@@ -36,17 +35,19 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.SelectDepositTxWindow;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.locale.Res;
-import io.bisq.messages.arbitration.Arbitrator;
-import io.bisq.messages.arbitration.Dispute;
-import io.bisq.messages.btc.provider.fee.FeeService;
-import io.bisq.messages.payment.payload.PaymentAccountContractData;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.messages.user.Preferences;
-import io.bisq.p2p.P2PService;
+import io.bisq.network_messages.arbitration.Arbitrator;
+import io.bisq.network_messages.arbitration.Dispute;
+import io.bisq.network_messages.crypto.KeyRing;
+import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.p2p.storage.P2PService;
+import io.bisq.provider.fee.FeeService;
 import io.bisq.trade.BuyerTrade;
 import io.bisq.trade.SellerTrade;
 import io.bisq.trade.Trade;
 import io.bisq.trade.TradeManager;
+import io.bisq.user.Preferences;
 import io.bisq.user.User;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -208,7 +209,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     boolean isBuyOffer() {
-        return getOffer() != null && getOffer().getDirection() == Offer.Direction.BUY;
+        return getOffer() != null && getOffer().getDirection() == OfferPayload.Direction.BUY;
     }
 
     boolean isOfferer(Offer offer) {
@@ -238,7 +239,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return getOffer() != null ? getOffer().getCurrencyCode() : "";
     }
 
-    public Offer.Direction getDirection(Offer offer) {
+    public OfferPayload.Direction getDirection(Offer offer) {
         isOfferer = tradeManager.isMyOffer(offer);
         return isOfferer ? offer.getDirection() : offer.getMirroredDirection();
     }
@@ -380,7 +381,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
-                    trade.getOffer().getDirection() == Offer.Direction.BUY ? isOfferer : !isOfferer,
+                    trade.getOffer().getDirection() == OfferPayload.Direction.BUY ? isOfferer : !isOfferer,
                     isOfferer,
                     keyRing.getPubKeyRing(),
                     trade.getDate(),

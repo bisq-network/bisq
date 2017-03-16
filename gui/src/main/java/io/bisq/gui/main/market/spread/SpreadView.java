@@ -21,7 +21,7 @@ import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.locale.Res;
-import io.bisq.messages.locale.CurrencyUtil;
+import io.bisq.locale.CurrencyUtil;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;

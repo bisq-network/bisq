@@ -1,6 +1,6 @@
 package io.bisq.gui.main.offer.createoffer.monetary;
 
-import io.bisq.messages.locale.CurrencyUtil;
+import io.bisq.locale.CurrencyUtil;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;

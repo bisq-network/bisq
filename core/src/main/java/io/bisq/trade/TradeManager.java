@@ -25,24 +25,25 @@ import io.bisq.btc.AddressEntryException;
 import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.btc.wallet.TradeWalletService;
 import io.bisq.common.UserThread;
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.crypto.DecryptedMsgWithPubKey;
 import io.bisq.filter.FilterManager;
-import io.bisq.messages.Message;
-import io.bisq.messages.protocol.availability.OfferAvailabilityModel;
-import io.bisq.messages.protocol.trade.TradeMessage;
-import io.bisq.messages.provider.price.PriceFeedService;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.messages.trade.protocol.trade.messages.PayDepositRequest;
-import io.bisq.messages.trade.statistics.payload.TradeStatistics;
+import io.bisq.network_messages.DecryptedDirectMessageListener;
+import io.bisq.network_messages.DecryptedMsgWithPubKey;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.crypto.KeyRing;
+import io.bisq.network_messages.p2p.messaging.DecryptedMailboxListener;
+import io.bisq.network_messages.protocol.trade.TradeMessage;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.trade.protocol.trade.messages.PayDepositRequest;
+import io.bisq.network_messages.trade.statistics.payload.TradeStatistics;
 import io.bisq.p2p.BootstrapListener;
-import io.bisq.p2p.NodeAddress;
-import io.bisq.p2p.P2PService;
-import io.bisq.p2p.messaging.DecryptedDirectMessageListener;
-import io.bisq.p2p.messaging.DecryptedMailboxListener;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.p2p.protocol.availability.OfferAvailabilityModel;
+import io.bisq.p2p.storage.P2PService;
+import io.bisq.provider.price.PriceFeedService;
 import io.bisq.storage.Storage;
 import io.bisq.trade.closed.ClosedTradableManager;
 import io.bisq.trade.failed.FailedTradesManager;
@@ -74,7 +75,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static io.bisq.messages.util.Validator.nonEmptyStringOf;
+import static io.bisq.network_messages.util.Validator.nonEmptyStringOf;
 
 public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
@@ -137,7 +138,7 @@ public class TradeManager {
             public void onDirectMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress peerNodeAddress) {
                 Message message = decryptedMsgWithPubKey.message;
 
-                // Handler for incoming initial messages from taker
+                // Handler for incoming initial network_messages from taker
                 if (message instanceof PayDepositRequest) {
                     log.trace("Received PayDepositRequest: " + message);
                     handleInitialTakeOfferRequest((PayDepositRequest) message, peerNodeAddress);
@@ -234,7 +235,7 @@ public class TradeManager {
     private void publishTradeStatistics(List<Trade> trades) {
         for (int i = 0; i < trades.size(); i++) {
             Trade trade = trades.get(i);
-            TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer(),
+            TradeStatistics tradeStatistics = new TradeStatistics(trade.getOffer().getOfferPayload(),
                     trade.getTradePrice(),
                     trade.getTradeAmount(),
                     trade.getDate(),
@@ -275,7 +276,7 @@ public class TradeManager {
             checkArgument(message instanceof PayDepositRequest, "message must be PayDepositRequest");
             PayDepositRequest payDepositRequest = (PayDepositRequest) message;
             Trade trade;
-            if (offer.getDirection() == Offer.Direction.BUY)
+            if (offer.getDirection() == OfferPayload.Direction.BUY)
                 trade = new BuyerAsOffererTrade(offer, payDepositRequest.txFee, payDepositRequest.takeOfferFee, tradableListStorage);
             else
                 trade = new SellerAsOffererTrade(offer, payDepositRequest.txFee, payDepositRequest.takeOfferFee, tradableListStorage);
@@ -344,7 +345,7 @@ public class TradeManager {
         final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
         offer.checkOfferAvailability(model,
                 () -> {
-                    if (offer.getState() == Offer.State.AVAILABLE)
+                    if (offer.getState() == OfferPayload.State.AVAILABLE)
                         createTrade(amount, txFee, takeOfferFee, tradePrice, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
                 },
                 errorMessageHandler::handleErrorMessage);
@@ -361,7 +362,7 @@ public class TradeManager {
                              OfferAvailabilityModel model,
                              TradeResultHandler tradeResultHandler) {
         Trade trade;
-        if (offer.getDirection() == Offer.Direction.BUY)
+        if (offer.getDirection() == OfferPayload.Direction.BUY)
             trade = new SellerAsTakerTrade(offer, amount, txFee, takeOfferFee, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
         else
             trade = new BuyerAsTakerTrade(offer, amount, txFee, takeOfferFee, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
@@ -474,9 +475,9 @@ public class TradeManager {
     public boolean isBuyer(Offer offer) {
         // If I am the offerer, we use the offer direction, otherwise the mirrored direction
         if (isMyOffer(offer))
-            return offer.getDirection() == Offer.Direction.BUY;
+            return offer.getDirection() == OfferPayload.Direction.BUY;
         else
-            return offer.getDirection() == Offer.Direction.SELL;
+            return offer.getDirection() == OfferPayload.Direction.SELL;
     }
 
     public Optional<Trade> getTradeById(String tradeId) {

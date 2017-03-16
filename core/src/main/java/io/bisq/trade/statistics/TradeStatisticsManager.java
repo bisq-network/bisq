@@ -5,14 +5,15 @@ import com.google.inject.name.Named;
 import io.bisq.app.AppOptionKeys;
 import io.bisq.common.util.Utilities;
 import io.bisq.locale.CurrencyTuple;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.trade.statistics.payload.TradeStatistics;
-import io.bisq.p2p.P2PService;
+import io.bisq.locale.CurrencyUtil;
+import io.bisq.network_messages.trade.statistics.payload.TradeStatistics;
+import io.bisq.p2p.storage.P2PService;
 import io.bisq.p2p.storage.HashMapChangedListener;
-import io.bisq.p2p.storage.payload.StoragePayload;
-import io.bisq.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.network_messages.payload.StoragePayload;
+import io.bisq.network_messages.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bisq.storage.PlainTextWrapper;
 import io.bisq.storage.Storage;
+import io.bisq.user.Preferences;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import org.slf4j.Logger;
@@ -55,7 +56,7 @@ public class TradeStatisticsManager {
             this.statisticsJsonStorage.initWithFileName("trade_statistics.json");
 
             this.fiatCurrencyListJsonStorage.initWithFileName("fiat_currency_list.json");
-            ArrayList<CurrencyTuple> fiatCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies().stream()
+            ArrayList<CurrencyTuple> fiatCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies(Preferences.getDefaultLocale()).stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
                     .collect(Collectors.toList()));
             fiatCurrencyListJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(fiatCurrencyList)), 2000);

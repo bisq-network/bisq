@@ -20,7 +20,7 @@ package io.bisq.trade.protocol.trade.tasks.buyer;
 import io.bisq.btc.AddressEntry;
 import io.bisq.btc.data.PreparedDepositTxAndOffererInputs;
 import io.bisq.btc.wallet.BtcWalletService;
-import io.bisq.common.crypto.Hash;
+import io.bisq.network_messages.crypto.Hash;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.TradingPeer;

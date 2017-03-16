@@ -39,7 +39,7 @@ public class VerifyArbitrationSelection extends TradeTask {
             runInterceptHook();
 
             if (trade.getArbitratorNodeAddress().equals(ArbitrationSelectionRule.select(processModel.getTakerAcceptedArbitratorNodeAddresses(),
-                    processModel.getOffer())))
+                    processModel.getOffer().getOfferPayload())))
                 complete();
             else
                 failed("Arbitrator selection verification failed");

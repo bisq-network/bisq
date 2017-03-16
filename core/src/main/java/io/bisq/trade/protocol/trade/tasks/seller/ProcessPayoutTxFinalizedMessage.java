@@ -19,7 +19,7 @@ package io.bisq.trade.protocol.trade.tasks.seller;
 
 import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.messages.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
+import io.bisq.network_messages.trade.protocol.trade.messages.PayoutTxFinalizedMessage;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.tasks.TradeTask;
 import org.bitcoinj.core.Transaction;
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static io.bisq.messages.util.Validator.checkTradeId;
+import static io.bisq.network_messages.util.Validator.checkTradeId;
 
 public class ProcessPayoutTxFinalizedMessage extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(ProcessPayoutTxFinalizedMessage.class);

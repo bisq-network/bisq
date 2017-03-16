@@ -27,11 +27,12 @@ import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.offer.createoffer.CreateOfferView;
 import io.bisq.gui.main.offer.offerbook.OfferBookView;
 import io.bisq.gui.main.offer.takeoffer.TakeOfferView;
+import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.Res;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.locale.TradeCurrency;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.messages.user.Preferences;
+import io.bisq.locale.TradeCurrency;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.Tab;
@@ -53,7 +54,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final Preferences preferences;
-    private final Offer.Direction direction;
+    private final OfferPayload.Direction direction;
 
     private Offer offer;
     private TradeCurrency tradeCurrency;
@@ -66,7 +67,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
-        this.direction = (this instanceof BuyOfferView) ? Offer.Direction.BUY : Offer.Direction.SELL;
+        this.direction = (this instanceof BuyOfferView) ? OfferPayload.Direction.BUY : OfferPayload.Direction.SELL;
     }
 
     @Override
@@ -116,7 +117,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         if (tradeCurrencyOptional.isPresent())
             tradeCurrency = tradeCurrencyOptional.get();
         else {
-            tradeCurrency = CurrencyUtil.getDefaultTradeCurrency();
+            tradeCurrency = Preferences.getDefaultTradeCurrency();
         }
 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
@@ -143,7 +144,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private void loadView(Class<? extends View> viewClass) {
         TabPane tabPane = root;
         View view;
-        boolean isBuy = direction == Offer.Direction.BUY;
+        boolean isBuy = direction == OfferPayload.Direction.BUY;
 
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);

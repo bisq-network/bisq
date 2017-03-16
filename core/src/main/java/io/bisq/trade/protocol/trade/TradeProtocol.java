@@ -19,12 +19,12 @@ package io.bisq.trade.protocol.trade;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.crypto.DecryptedMsgWithPubKey;
-import io.bisq.messages.Message;
-import io.bisq.messages.protocol.trade.TradeMessage;
-import io.bisq.p2p.NodeAddress;
-import io.bisq.p2p.messaging.DecryptedDirectMessageListener;
+import io.bisq.network_messages.crypto.PubKeyRing;
+import io.bisq.network_messages.DecryptedMsgWithPubKey;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.protocol.trade.TradeMessage;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.DecryptedDirectMessageListener;
 import io.bisq.trade.OffererTrade;
 import io.bisq.trade.Trade;
 import io.bisq.trade.TradeManager;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
 
-import static io.bisq.messages.util.Validator.nonEmptyStringOf;
+import static io.bisq.network_messages.util.Validator.nonEmptyStringOf;
 
 public abstract class TradeProtocol {
     private static final Logger log = LoggerFactory.getLogger(TradeProtocol.class);
@@ -139,7 +139,7 @@ public abstract class TradeProtocol {
         log.debug("cleanupTradable tradeState=" + tradeState);
         boolean isOffererTrade = trade instanceof OffererTrade;
         if (isOffererTrade && (tradeState == Trade.State.OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST || tradeState == Trade.State.DEPOSIT_SEEN_IN_NETWORK))
-            processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
+            processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer().getOfferPayload());
 
         //boolean isTakerTrade = trade instanceof TakerTrade;
 

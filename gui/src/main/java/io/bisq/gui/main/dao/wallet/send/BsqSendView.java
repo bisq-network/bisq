@@ -34,7 +34,7 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
-import io.bisq.messages.btc.provider.fee.FeeService;
+import io.bisq.provider.fee.FeeService;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;

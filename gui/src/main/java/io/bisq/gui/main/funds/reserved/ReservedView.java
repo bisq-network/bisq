@@ -29,7 +29,7 @@ import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.locale.Res;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 import io.bisq.trade.Tradable;
 import io.bisq.trade.Trade;
 import io.bisq.trade.TradeManager;

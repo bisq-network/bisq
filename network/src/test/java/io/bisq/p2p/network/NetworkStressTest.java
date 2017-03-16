@@ -3,16 +3,21 @@ package io.bisq.p2p.network;
 import io.bisq.app.Version;
 import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.KeyStorage;
-import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.wire.proto.Messages;
-import io.bisq.crypto.DecryptedMsgWithPubKey;
 import io.bisq.crypto.EncryptionService;
-import io.bisq.p2p.*;
-import io.bisq.p2p.messaging.*;
+import io.bisq.network_messages.DecryptedDirectMessageListener;
+import io.bisq.network_messages.DecryptedMsgWithPubKey;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.crypto.KeyRing;
+import io.bisq.network_messages.crypto.KeyStorage;
+import io.bisq.network_messages.crypto.PubKeyRing;
+import io.bisq.network_messages.p2p.messaging.*;
+import io.bisq.p2p.DummySeedNode;
+import io.bisq.p2p.P2PServiceListener;
+import io.bisq.p2p.Utils;
 import io.bisq.p2p.seed.SeedNodesRepository;
+import io.bisq.p2p.storage.P2PService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -55,7 +60,7 @@ public class NetworkStressTest {
     // Test parameters
 
     /**
-     * Whether to log messages less important than warnings.
+     * Whether to log network_messages less important than warnings.
      */
     private static final boolean USE_DETAILED_LOGGING = false;
 
@@ -70,11 +75,11 @@ public class NetworkStressTest {
      */
     private static final String TEST_DIR_ENVVAR = "STRESS_TEST_DIR";
     /**
-     * Environment variable to specify the number of direct messages sent per peer.
+     * Environment variable to specify the number of direct network_messages sent per peer.
      */
     private static final String DIRECT_COUNT_ENVVAR = "STRESS_TEST_NDIRECT";
     /**
-     * Environment variable to specify the number of mailbox messages sent per peer.
+     * Environment variable to specify the number of mailbox network_messages sent per peer.
      */
     private static final String MAILBOX_COUNT_ENVVAR = "STRESS_TEST_NMAILBOX";
 
@@ -88,15 +93,15 @@ public class NetworkStressTest {
      */
     private static final int NPEERS_DEFAULT = 4;
     /**
-     * Minimum number of peers for the test to work (2 for direct messages, 3 for mailbox messages).
+     * Minimum number of peers for the test to work (2 for direct network_messages, 3 for mailbox network_messages).
      */
     private static final int NPEERS_MIN = 3;
     /**
-     * Default number of direct messages to be sent by each peer.
+     * Default number of direct network_messages to be sent by each peer.
      */
     private static final int DIRECT_COUNT_DEFAULT = 100;
     /**
-     * Default number of mailbox messages to be sent by each peer.
+     * Default number of mailbox network_messages to be sent by each peer.
      */
     private static final int MAILBOX_COUNT_DEFAULT = 100;
 
@@ -113,11 +118,11 @@ public class NetworkStressTest {
      */
     private static long MAX_SHUTDOWN_DELAY_SECS = 2;
     /**
-     * Minimum delay between direct messages in milliseconds, 25% larger than throttle limit.
+     * Minimum delay between direct network_messages in milliseconds, 25% larger than throttle limit.
      */
     private static long MIN_DIRECT_DELAY_MILLIS = Math.round(1.25 * (1.0 / Connection.MSG_THROTTLE_PER_SEC) * 1000);
     /**
-     * Maximum delay between direct messages in milliseconds, 10 times larger than minimum.
+     * Maximum delay between direct network_messages in milliseconds, 10 times larger than minimum.
      */
     private static long MAX_DIRECT_DELAY_MILLIS = 10 * MIN_DIRECT_DELAY_MILLIS;
     /**
@@ -161,11 +166,11 @@ public class NetworkStressTest {
     private List<PubKeyRing> peerPKRings = new ArrayList<>();
 
     /**
-     * Number of direct messages to be sent by each peer.
+     * Number of direct network_messages to be sent by each peer.
      */
     private int directCount = DIRECT_COUNT_DEFAULT;
     /**
-     * Number of mailbox messages to be sent by each peer.
+     * Number of mailbox network_messages to be sent by each peer.
      */
     private int mailboxCount = MAILBOX_COUNT_DEFAULT;
 
@@ -554,7 +559,7 @@ public class NetworkStressTest {
         for (final P2PService srcPeer : peerNodes) {
             final NodeAddress srcPeerAddress = srcPeer.getAddress();
 
-            // Make the peer ready for receiving direct messages.
+            // Make the peer ready for receiving direct network_messages.
             srcPeer.addDecryptedDirectMessageListener((decryptedMsgWithPubKey, peerNodeAddress) -> {
                 if (!(decryptedMsgWithPubKey.message instanceof StressTestDirectMessage))
                     return;
@@ -601,23 +606,23 @@ public class NetworkStressTest {
                 );
             }
         }
-        print("%d direct messages scheduled to be sent by each of %d peers", directCount, nPeers);
+        print("%d direct network_messages scheduled to be sent by each of %d peers", directCount, nPeers);
         // Since receiving is completed before sending is reported to be complete,
         // all receiving checks should end before all sending checks to avoid deadlocking.
-        /** Time to transmit all messages in the worst random case, and with no computation delays. */
+        /** Time to transmit all network_messages in the worst random case, and with no computation delays. */
         final long idealMaxDirectDelay = MAX_DIRECT_DELAY_MILLIS * directCount;
         // Wait for peers to complete receiving.  We are generous here.
-        assertLatch("timed out while receiving direct messages",
+        assertLatch("timed out while receiving direct network_messages",
                 receivedDirectLatch, 25 * idealMaxDirectDelay, TimeUnit.MILLISECONDS);
         final long recvMillis = System.currentTimeMillis() - sendStartMillis;
-        print("receiving %d direct messages per peer took %ss (%.2f x ideal max)",
+        print("receiving %d direct network_messages per peer took %ss (%.2f x ideal max)",
                 directCount, recvMillis / 1000.0, recvMillis / (float) idealMaxDirectDelay);
         // Wait for peers to complete sending.
         // This should be nearly instantaneous after waiting for reception is completed.
-        assertLatch("timed out while sending direct messages",
+        assertLatch("timed out while sending direct network_messages",
                 sentDirectLatch, idealMaxDirectDelay / 10, TimeUnit.MILLISECONDS);
         Tuple3<Long, Long, Long> mma = minMaxAvg(sentDelays);
-        print("sending %d direct messages per peer took %ss (min/max/avg %s/%s/%s ms)",
+        print("sending %d direct network_messages per peer took %ss (min/max/avg %s/%s/%s ms)",
                 directCount, (System.currentTimeMillis() - sendStartMillis) / 1000.0,
                 mma.first, mma.second, mma.third);
         org.junit.Assert.assertFalse("some peer(s) failed to send a direct message", sentDirectFailed.get());
@@ -627,16 +632,16 @@ public class NetworkStressTest {
     // # DIRECT + MAILBOX SENDING AND RECEIVING
 
     /**
-     * Test sending and receiving mailbox messages.
+     * Test sending and receiving mailbox network_messages.
      */
     @Test
     public void test_mailbox() throws InterruptedException {
         // We start by putting the first half of peers online and the second one offline.
-        // Then the first online peer sends a number of messages to random peers (regardless of their state),
-        // so that some messages are delivered directly and others into a mailbox.
+        // Then the first online peer sends a number of network_messages to random peers (regardless of their state),
+        // so that some network_messages are delivered directly and others into a mailbox.
         // Then the first online peer is put offline and the last offline peer is put online
-        // (so it can get its mailbox messages),
-        // and the new first online node sends messages.
+        // (so it can get its mailbox network_messages),
+        // and the new first online node sends network_messages.
         // This is repeated until all nodes have been online and offline.
 
         final int nPeers = peerNodes.size();
@@ -644,7 +649,7 @@ public class NetworkStressTest {
         // depending on whether the message goes direct or via mailbox.
         final CountDownLatch receivedMailboxLatch = new CountDownLatch(mailboxCount * nPeers);
 
-        // Configure the first half of peers to receive messages...
+        // Configure the first half of peers to receive network_messages...
         int firstPeerDown = (int) Math.ceil(nPeers / 2.0);
         for (P2PService peer : peerNodes.subList(0, firstPeerDown)) {
             addMailboxListeners(peer, receivedMailboxLatch);
@@ -660,13 +665,13 @@ public class NetworkStressTest {
 
         // Cycle through peers sending to others, stopping the peer
         // and starting one of the stopped peers.
-        print("%d mailbox messages to be sent by each of %d peers", mailboxCount, nPeers);
+        print("%d mailbox network_messages to be sent by each of %d peers", mailboxCount, nPeers);
         BooleanProperty sentMailboxFailed = new SimpleBooleanProperty(false);
         final long sendStartMillis = System.currentTimeMillis();
         for (int firstOnline = 0, firstOffline = firstPeerDown;
              firstOnline < nPeers;
              firstOnline++, firstOffline = ++firstOffline % nPeers) {
-            // The first online peer sends messages to random other peers.
+            // The first online peer sends network_messages to random other peers.
             final P2PService onlinePeer = peerNodes.get(firstOnline);
             final NodeAddress onlinePeerAddress = onlinePeer.getAddress();
             final CountDownLatch sendLatch = new CountDownLatch(mailboxCount);
@@ -724,12 +729,12 @@ public class NetworkStressTest {
                     TimeUnit.SECONDS);
             //print("put peer %d online", firstOffline);
         }
-        /** Time to transmit all messages with the estimated per-message delay, with no computation delays. */
+        /** Time to transmit all network_messages with the estimated per-message delay, with no computation delays. */
         final long idealMaxMailboxDelay = 2 * MAILBOX_DELAY_SECS * 1000 * nPeers * mailboxCount;
-        assertLatch("timed out while receiving mailbox messages",
+        assertLatch("timed out while receiving mailbox network_messages",
                 receivedMailboxLatch, idealMaxMailboxDelay, TimeUnit.MILLISECONDS);
         final long recvMillis = System.currentTimeMillis() - sendStartMillis;
-        print("receiving %d mailbox messages per peer took %ss (%.2f x ideal max)",
+        print("receiving %d mailbox network_messages per peer took %ss (%.2f x ideal max)",
                 mailboxCount, recvMillis / 1000.0, recvMillis / (float) idealMaxMailboxDelay);
         org.junit.Assert.assertFalse("some peer(s) failed to send a message", sentMailboxFailed.get());
     }

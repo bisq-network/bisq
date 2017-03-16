@@ -28,11 +28,12 @@ import io.bisq.gui.main.settings.SettingsView;
 import io.bisq.gui.main.settings.preferences.PreferencesView;
 import io.bisq.gui.util.CurrencyListItem;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.locale.TradeCurrency;
-import io.bisq.messages.provider.price.PriceFeedService;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.messages.user.Preferences;
+import io.bisq.locale.CurrencyUtil;
+import io.bisq.locale.TradeCurrency;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.provider.price.PriceFeedService;
+import io.bisq.user.Preferences;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -88,7 +89,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         if (tradeCurrencyOptional.isPresent())
             selectedTradeCurrencyProperty.set(tradeCurrencyOptional.get());
         else {
-            selectedTradeCurrencyProperty.set(CurrencyUtil.getDefaultTradeCurrency());
+            selectedTradeCurrencyProperty.set(Preferences.getDefaultTradeCurrency());
         }
 
         offerBookListItems = offerBook.getOfferBookListItems();
@@ -99,7 +100,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 list.addAll(c.getAddedSubList());
                 if (list.stream()
                         .map(OfferBookListItem::getOffer)
-                        .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode()))
+                        .filter(e -> e.getOfferPayload().getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode()))
                         .findAny()
                         .isPresent())
                     updateChartData();
@@ -124,7 +125,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         // Don't use a set as we need all entries
         List<TradeCurrency> tradeCurrencyList = offerBookListItems.stream()
                 .map(e -> {
-                    Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(e.getOffer().getCurrencyCode());
+                    Optional<TradeCurrency> tradeCurrencyOptional =
+                            CurrencyUtil.getTradeCurrency(e.getOffer().getCurrencyCode());
                     if (tradeCurrencyOptional.isPresent())
                         return tradeCurrencyOptional.get();
                     else
@@ -239,8 +241,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private void updateChartData() {
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
-                .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getDirection().equals(Offer.Direction.BUY))
+                .filter(e -> e.getOfferPayload().getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
+                        && e.getOfferPayload().getDirection().equals(OfferPayload.Direction.BUY))
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().value : 0;
                     long b = o2.getPrice() != null ? o2.getPrice().value : 0;
@@ -251,12 +253,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         allBuyOffers = filterOffersWithRelevantPrices(allBuyOffers);
-        buildChartAndTableEntries(allBuyOffers, Offer.Direction.BUY, buyData, topBuyOfferList);
+        buildChartAndTableEntries(allBuyOffers, OfferPayload.Direction.BUY, buyData, topBuyOfferList);
 
         List<Offer> allSellOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
-                .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getDirection().equals(Offer.Direction.SELL))
+                .filter(e -> e.getOfferPayload().getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
+                        && e.getOfferPayload().getDirection().equals(OfferPayload.Direction.SELL))
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().value : 0;
                     long b = o2.getPrice() != null ? o2.getPrice().value : 0;
@@ -267,7 +269,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         allSellOffers = filterOffersWithRelevantPrices(allSellOffers);
-        buildChartAndTableEntries(allSellOffers, Offer.Direction.SELL, sellData, topSellOfferList);
+        buildChartAndTableEntries(allSellOffers, OfferPayload.Direction.SELL, sellData, topSellOfferList);
     }
 
     // If there are more then 3 offers we ignore the offers which are further than 30% from the best price
@@ -290,7 +292,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         return offers;
     }
 
-    private void buildChartAndTableEntries(List<Offer> sortedList, Offer.Direction direction, List<XYChart.Data> data, ObservableList<OfferListItem> offerTableList) {
+    private void buildChartAndTableEntries(List<Offer> sortedList, OfferPayload.Direction direction, List<XYChart.Data> data, ObservableList<OfferListItem> offerTableList) {
         data.clear();
         double accumulatedAmount = 0;
         List<OfferListItem> offerTableListTemp = new ArrayList<>();
@@ -304,12 +306,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 double price = (double) priceAsFiat.value / LongMath.pow(10, priceAsFiat.smallestUnitExponent());
                 if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
                     price = price != 0 ? 1d / price : 0;
-                    if (direction.equals(Offer.Direction.SELL))
+                    if (direction.equals(OfferPayload.Direction.SELL))
                         data.add(0, new XYChart.Data<>(price, accumulatedAmount));
                     else
                         data.add(new XYChart.Data<>(price, accumulatedAmount));
                 } else {
-                    if (direction.equals(Offer.Direction.BUY))
+                    if (direction.equals(OfferPayload.Direction.BUY))
                         data.add(0, new XYChart.Data<>(price, accumulatedAmount));
                     else
                         data.add(new XYChart.Data<>(price, accumulatedAmount));

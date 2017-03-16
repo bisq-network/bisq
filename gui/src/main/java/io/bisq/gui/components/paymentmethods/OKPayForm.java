@@ -23,11 +23,12 @@ import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.gui.util.validation.OKPayValidator;
 import io.bisq.locale.Res;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.payment.payload.OKPayAccountContractData;
-import io.bisq.messages.payment.payload.PaymentAccountContractData;
+import io.bisq.locale.CurrencyUtil;
+import io.bisq.network_messages.payment.payload.OKPayAccountContractData;
+import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
 import io.bisq.payment.OKPayAccount;
 import io.bisq.payment.PaymentAccount;
+import io.bisq.user.Preferences;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.CheckBox;
@@ -92,7 +93,7 @@ public class OKPayForm extends PaymentMethodForm {
         else
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
-        CurrencyUtil.getAllOKPayCurrencies().stream().forEach(e ->
+        CurrencyUtil.getAllOKPayCurrencies(Preferences.getDefaultLocale()).stream().forEach(e ->
         {
             CheckBox checkBox = new CheckBox(e.getCode());
             checkBox.setMouseTransparent(!isEditable);

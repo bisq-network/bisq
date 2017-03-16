@@ -4,11 +4,12 @@ import com.google.common.base.Preconditions;
 import io.bisq.app.Log;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.messages.Message;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.p2p.peers.peerexchange.Peer;
 import io.bisq.p2p.network.*;
 import io.bisq.p2p.peers.PeerManager;
-import io.bisq.p2p.peers.peerexchange.messages.GetPeersRequest;
+import io.bisq.network_messages.p2p.peers.peerexchange.messages.GetPeersRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

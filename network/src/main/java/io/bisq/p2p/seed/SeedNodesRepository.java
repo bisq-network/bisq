@@ -2,7 +2,7 @@ package io.bisq.p2p.seed;
 
 import com.google.common.collect.Sets;
 import io.bisq.app.DevEnv;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.network_messages.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

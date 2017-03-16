@@ -18,10 +18,11 @@
 package io.bisq.payment;
 
 import io.bisq.app.Version;
-import io.bisq.messages.locale.FiatCurrency;
-import io.bisq.messages.payment.PaymentMethod;
-import io.bisq.messages.payment.payload.FasterPaymentsAccountContractData;
-import io.bisq.messages.payment.payload.PaymentAccountContractData;
+import io.bisq.locale.FiatCurrency;
+import io.bisq.network_messages.payment.PaymentMethod;
+import io.bisq.network_messages.payment.payload.FasterPaymentsAccountContractData;
+import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
+import io.bisq.user.Preferences;
 
 public final class FasterPaymentsAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -29,7 +30,7 @@ public final class FasterPaymentsAccount extends PaymentAccount {
 
     public FasterPaymentsAccount() {
         super(PaymentMethod.FASTER_PAYMENTS);
-        setSingleTradeCurrency(new FiatCurrency("GBP"));
+        setSingleTradeCurrency(new FiatCurrency("GBP", Preferences.getDefaultLocale()));
     }
 
     @Override

@@ -18,9 +18,9 @@
 package io.bisq.trade;
 
 import io.bisq.app.Version;
-import io.bisq.messages.protocol.trade.TradeMessage;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.protocol.trade.TradeMessage;
+import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.storage.Storage;
 import io.bisq.trade.protocol.trade.OffererProtocol;
 import io.bisq.trade.protocol.trade.SellerAsOffererProtocol;

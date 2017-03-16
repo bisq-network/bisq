@@ -24,8 +24,8 @@ import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.locale.Res;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.p2p.P2PService;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.p2p.storage.P2PService;
 import io.bisq.trade.offer.OpenOffer;
 import javafx.collections.ObservableList;
 import org.bitcoinj.utils.Fiat;
@@ -67,7 +67,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         Fiat price = offer.getPrice();
         if (price != null) {
             String postFix = "";
-            if (offer.getUseMarketBasedPrice())
+            if (offer.isUseMarketBasedPrice())
                 postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
             return formatter.formatPrice(price) + postFix;
         } else {

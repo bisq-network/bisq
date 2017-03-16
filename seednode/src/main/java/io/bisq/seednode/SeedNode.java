@@ -17,7 +17,7 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.LimitedKeyStrengthException;
 import io.bisq.common.util.Utilities;
 import io.bisq.p2p.BootstrapListener;
-import io.bisq.p2p.P2PService;
+import io.bisq.p2p.storage.P2PService;
 import io.bisq.trade.offer.OpenOfferManager;
 import io.bisq.trade.statistics.TradeStatisticsManager;
 import org.apache.commons.lang3.exception.ExceptionUtils;

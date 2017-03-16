@@ -27,14 +27,15 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bisq.gui.util.Layout;
+import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.Res;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.payment.PaymentMethod;
-import io.bisq.messages.payment.payload.CashDepositAccountContractData;
-import io.bisq.messages.payment.payload.CryptoCurrencyAccountContractData;
-import io.bisq.messages.payment.payload.PaymentAccountContractData;
-import io.bisq.messages.payment.payload.USPostalMoneyOrderAccountContractData;
+import io.bisq.network_messages.payment.PaymentMethod;
+import io.bisq.network_messages.payment.payload.CashDepositAccountContractData;
+import io.bisq.network_messages.payment.payload.CryptoCurrencyAccountContractData;
+import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
+import io.bisq.network_messages.payment.payload.USPostalMoneyOrderAccountContractData;
 import io.bisq.trade.Trade;
+import io.bisq.user.Preferences;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -82,7 +83,7 @@ public class BuyerStep2View extends TradeStepView {
                         String amount = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
                         if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData)
                             message += Res.get("portfolio.pending.step2_buyer.altcoin",
-                                    CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),
+                                    CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale()),
                                     amount) +
                                     accountDetails +
                                     paymentDetailsForTradePopup + ".\n\n" +
@@ -206,7 +207,8 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = CashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
-                String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress", CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));
+                String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress", CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(),
+                        Preferences.getDefaultLocale()));
                 gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData, labelTitle);
                 break;
             default:
@@ -287,7 +289,8 @@ public class BuyerStep2View extends TradeStepView {
         if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
             Popup popup = new Popup();
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
-                    .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg", CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode())))
+                    .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg", CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(),
+                            Preferences.getDefaultLocale())))
                     .width(700)
                     .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.yes"))
                     .onAction(this::confirmPaymentStarted)

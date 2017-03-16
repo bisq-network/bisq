@@ -20,7 +20,7 @@ package io.bisq.trade.protocol.placeoffer.tasks;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.trade.protocol.placeoffer.PlaceOfferModel;
 import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
@@ -48,7 +48,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                     log.debug("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
 
                     if (model.getTransaction().getHashAsString().equals(transaction.getHashAsString())) {
-                        model.offer.setState(Offer.State.OFFER_FEE_PAID);
+                        model.offer.setState(OfferPayload.State.OFFER_FEE_PAID);
                         // No tx malleability happened after broadcast (still not in blockchain)
                         complete();
                     } else {
@@ -56,7 +56,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                         // Tx malleability happened after broadcast. We first remove the malleable offer.
                         // Then we publish the changed offer to the P2P network again after setting the new TxId.
                         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
-                        model.offerBookService.removeOffer(model.offer,
+                        model.offerBookService.removeOffer(model.offer.getOfferPayload(),
                                 () -> {
                                     log.debug("We store now the changed txID to the offer and add that again.");
                                     // We store now the changed txID to the offer and add that again.
@@ -106,8 +106,8 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
     private void updateStateOnFault() {
         if (!removeOfferFailed && !addOfferFailed) {
             // If broadcast fails we need to remove offer from offerbook
-            model.offerBookService.removeOffer(model.offer,
-                    () -> log.debug("Offer removed from offerbook because broadcast failed."),
+            model.offerBookService.removeOffer(model.offer.getOfferPayload(),
+                    () -> log.debug("OfferPayload removed from offerbook because broadcast failed."),
                     errorMessage -> log.error("removeOffer failed. " + errorMessage));
         }
     }

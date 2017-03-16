@@ -18,9 +18,9 @@
 package io.bisq.trade.failed;
 
 import com.google.inject.Inject;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.messages.provider.price.PriceFeedService;
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.network_messages.crypto.KeyRing;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.provider.price.PriceFeedService;
 import io.bisq.storage.Storage;
 import io.bisq.trade.TradableList;
 import io.bisq.trade.Trade;

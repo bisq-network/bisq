@@ -23,12 +23,13 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Utilities;
-import io.bisq.messages.provider.price.PriceFeedService;
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.p2p.BootstrapListener;
-import io.bisq.p2p.P2PService;
+import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.p2p.storage.HashMapChangedListener;
-import io.bisq.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.p2p.storage.P2PService;
+import io.bisq.network_messages.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.provider.price.PriceFeedService;
 import io.bisq.storage.PlainTextWrapper;
 import io.bisq.storage.Storage;
 import org.slf4j.Logger;
@@ -76,8 +77,8 @@ public class OfferBookService {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.getStoragePayload() instanceof Offer) {
-                        Offer offer = (Offer) data.getStoragePayload();
+                    if (data.getStoragePayload() instanceof OfferPayload) {
+                        Offer offer = new Offer((OfferPayload) data.getStoragePayload());
                         offer.setPriceFeedService(priceFeedService);
                         listener.onAdded(offer);
                     }
@@ -87,8 +88,11 @@ public class OfferBookService {
             @Override
             public void onRemoved(ProtectedStorageEntry data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
-                    if (data.getStoragePayload() instanceof Offer)
-                        listener.onRemoved((Offer) data.getStoragePayload());
+                    if (data.getStoragePayload() instanceof OfferPayload) {
+                        Offer offer = new Offer((OfferPayload) data.getStoragePayload());
+                        offer.setPriceFeedService(priceFeedService);
+                        listener.onRemoved(offer);
+                    }
                 });
             }
         });
@@ -122,28 +126,28 @@ public class OfferBookService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        boolean result = p2PService.addData(offer, true);
+        boolean result = p2PService.addData(offer.getOfferPayload(), true);
         if (result) {
-            log.trace("Add offer to network was successful. Offer ID = " + offer.getId());
+            log.trace("Add offer to network was successful. OfferPayload ID = " + offer.getId());
             resultHandler.handleResult();
         } else {
             errorMessageHandler.handleErrorMessage("Add offer failed");
         }
     }
 
-    public void refreshTTL(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void refreshTTL(OfferPayload offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         boolean result = p2PService.refreshTTL(offer, true);
         if (result) {
-            log.trace("Refresh TTL was successful. Offer ID = " + offer.getId());
+            log.trace("Refresh TTL was successful. OfferPayload ID = " + offer.getId());
             resultHandler.handleResult();
         } else {
             errorMessageHandler.handleErrorMessage("Refresh TTL failed.");
         }
     }
 
-    public void removeOffer(Offer offer, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
+    public void removeOffer(OfferPayload offer, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
         if (p2PService.removeData(offer, true)) {
-            log.trace("Remove offer from network was successful. Offer ID = " + offer.getId());
+            log.trace("Remove offer from network was successful. OfferPayload ID = " + offer.getId());
             if (resultHandler != null)
                 resultHandler.handleResult();
         } else {
@@ -154,16 +158,16 @@ public class OfferBookService {
 
     public List<Offer> getOffers() {
         return p2PService.getDataMap().values().stream()
-                .filter(data -> data.getStoragePayload() instanceof Offer)
+                .filter(data -> data.getStoragePayload() instanceof OfferPayload)
                 .map(data -> {
-                    Offer offer = (Offer) data.getStoragePayload();
+                    Offer offer = new Offer((OfferPayload) data.getStoragePayload());
                     offer.setPriceFeedService(priceFeedService);
                     return offer;
                 })
                 .collect(Collectors.toList());
     }
 
-    public void removeOfferAtShutDown(Offer offer) {
+    public void removeOfferAtShutDown(OfferPayload offer) {
         log.debug("removeOfferAtShutDown " + offer);
         removeOffer(offer, null, null);
     }
@@ -185,7 +189,7 @@ public class OfferBookService {
         // We filter the case that it is a MarketBasedPrice but the price is not available
         // That should only be possible if the price feed provider is not available
         final List<OfferForJson> offerForJsonList = getOffers().stream()
-                .filter(offer -> !offer.getUseMarketBasedPrice() || priceFeedService.getMarketPrice(offer.getCurrencyCode()) != null)
+                .filter(offer -> !offer.isUseMarketBasedPrice() || priceFeedService.getMarketPrice(offer.getCurrencyCode()) != null)
                 .map(offer -> {
                     try {
                         return new OfferForJson(offer.getDirection(),
@@ -195,7 +199,7 @@ public class OfferBookService {
                                 offer.getPrice(),
                                 offer.getDate(),
                                 offer.getId(),
-                                offer.getUseMarketBasedPrice(),
+                                offer.isUseMarketBasedPrice(),
                                 offer.getMarketPriceMargin(),
                                 offer.getPaymentMethod(),
                                 offer.getOfferFeePaymentTxID()

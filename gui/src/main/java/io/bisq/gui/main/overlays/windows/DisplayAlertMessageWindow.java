@@ -21,7 +21,7 @@ import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.locale.Res;
-import io.bisq.messages.alert.Alert;
+import io.bisq.network_messages.alert.Alert;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;

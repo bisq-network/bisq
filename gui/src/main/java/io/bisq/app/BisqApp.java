@@ -43,7 +43,7 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.*;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.locale.Res;
-import io.bisq.p2p.P2PService;
+import io.bisq.p2p.storage.P2PService;
 import io.bisq.storage.Storage;
 import io.bisq.trade.TradeManager;
 import io.bisq.trade.offer.OpenOfferManager;

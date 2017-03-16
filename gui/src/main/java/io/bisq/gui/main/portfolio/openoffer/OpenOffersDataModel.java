@@ -21,8 +21,9 @@ import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.gui.common.model.ActivatableDataModel;
-import io.bisq.messages.provider.price.PriceFeedService;
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.provider.price.PriceFeedService;
 import io.bisq.trade.offer.OpenOffer;
 import io.bisq.trade.offer.OpenOfferManager;
 import javafx.beans.value.ChangeListener;
@@ -71,7 +72,7 @@ class OpenOffersDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public Offer.Direction getDirection(Offer offer) {
+    public OfferPayload.Direction getDirection(Offer offer) {
         return openOfferManager.isMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 

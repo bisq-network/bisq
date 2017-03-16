@@ -27,7 +27,7 @@ import io.bisq.gui.main.funds.withdrawal.WithdrawalView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.locale.Res;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 import io.bisq.trade.offer.OpenOffer;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;

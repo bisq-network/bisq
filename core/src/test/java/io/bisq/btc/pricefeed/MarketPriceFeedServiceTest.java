@@ -1,6 +1,6 @@
 package io.bisq.btc.pricefeed;
 
-import io.bisq.messages.provider.price.PriceFeedService;
+import io.bisq.provider.price.PriceFeedService;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;

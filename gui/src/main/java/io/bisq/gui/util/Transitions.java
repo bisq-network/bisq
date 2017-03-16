@@ -18,7 +18,7 @@
 package io.bisq.gui.util;
 
 import io.bisq.common.UserThread;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 import javafx.animation.*;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;

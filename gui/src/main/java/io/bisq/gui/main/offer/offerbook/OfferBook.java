@@ -18,7 +18,8 @@
 package io.bisq.gui.main.offer.offerbook;
 
 import io.bisq.app.Log;
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.trade.TradeManager;
 import io.bisq.trade.offer.OfferBookService;
 import javafx.collections.FXCollections;
@@ -59,14 +60,14 @@ public class OfferBook {
                 if (!offerBookListItems.contains(offerBookListItem)) {
                     offerBookListItems.add(offerBookListItem);
 
-                    Log.logIfStressTests("Offer added: No. of offers = " + offerBookListItems.size());
+                    Log.logIfStressTests("OfferPayload added: No. of offers = " + offerBookListItems.size());
                 }
             }
 
             @Override
             public void onRemoved(Offer offer) {
                 // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
-                offer.setState(Offer.State.REMOVED);
+                offer.setState(OfferPayload.State.REMOVED);
 
                 // clean up possible references in openOfferManager 
                 tradeManager.onOfferRemovedFromRemoteOfferBook(offer);
@@ -77,7 +78,7 @@ public class OfferBook {
                     OfferBookListItem item = candidate.get();
                     if (offerBookListItems.contains(item)) {
                         offerBookListItems.remove(item);
-                        Log.logIfStressTests("Offer removed: No. of offers = " + offerBookListItems.size());
+                        Log.logIfStressTests("OfferPayload removed: No. of offers = " + offerBookListItems.size());
                     }
                 }
             }
@@ -99,7 +100,7 @@ public class OfferBook {
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
 
-            Log.logIfStressTests("Offer filled: No. of offers = " + offerBookListItems.size());
+            Log.logIfStressTests("OfferPayload filled: No. of offers = " + offerBookListItems.size());
 
             log.debug("offerBookListItems " + offerBookListItems.size());
         } catch (Throwable t) {

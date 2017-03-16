@@ -3,7 +3,7 @@ package io.bisq.btc.provider.squ;
 import io.bisq.common.util.Tuple2;
 import io.bisq.http.HttpClient;
 import io.bisq.http.HttpException;
-import io.bisq.messages.btc.provider.HttpClientProvider;
+import io.bisq.provider.HttpClientProvider;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.UTXO;

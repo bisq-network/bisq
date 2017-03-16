@@ -27,20 +27,20 @@ import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.btc.wallet.TradeWalletService;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.network_messages.crypto.KeyRing;
+import io.bisq.network_messages.crypto.PubKeyRing;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.crypto.DecryptedMsgWithPubKey;
+import io.bisq.network_messages.DecryptedMsgWithPubKey;
 import io.bisq.locale.Res;
-import io.bisq.messages.Message;
-import io.bisq.messages.arbitration.*;
-import io.bisq.messages.arbitration.payload.Attachment;
-import io.bisq.messages.trade.payload.Contract;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.arbitration.*;
+import io.bisq.network_messages.arbitration.payload.Attachment;
+import io.bisq.network_messages.trade.payload.Contract;
 import io.bisq.p2p.BootstrapListener;
-import io.bisq.p2p.NodeAddress;
-import io.bisq.p2p.P2PService;
-import io.bisq.p2p.messaging.SendMailboxMessageListener;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.p2p.storage.P2PService;
+import io.bisq.network_messages.p2p.messaging.SendMailboxMessageListener;
 import io.bisq.storage.Storage;
 import io.bisq.trade.Tradable;
 import io.bisq.trade.Trade;
@@ -632,7 +632,7 @@ public class DisputeManager {
                                         else {
                                             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(dispute.getTradeId());
                                             if (openOfferOptional.isPresent())
-                                                openOfferManager.closeOpenOffer(openOfferOptional.get().getOffer());
+                                                openOfferManager.closeOpenOffer(openOfferOptional.get().getOffer().getOfferPayload());
                                         }
                                     }
 

@@ -20,12 +20,12 @@ package io.bisq.trade.protocol.trade;
 
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.messages.Message;
-import io.bisq.messages.protocol.trade.TradeMessage;
-import io.bisq.messages.trade.protocol.trade.messages.FinalizePayoutTxRequest;
-import io.bisq.messages.trade.protocol.trade.messages.PublishDepositTxRequest;
-import io.bisq.p2p.NodeAddress;
-import io.bisq.p2p.messaging.MailboxMessage;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.protocol.trade.TradeMessage;
+import io.bisq.network_messages.trade.protocol.trade.messages.FinalizePayoutTxRequest;
+import io.bisq.network_messages.trade.protocol.trade.messages.PublishDepositTxRequest;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.p2p.messaging.MailboxMessage;
 import io.bisq.trade.BuyerAsTakerTrade;
 import io.bisq.trade.Trade;
 import io.bisq.trade.protocol.trade.tasks.buyer.*;

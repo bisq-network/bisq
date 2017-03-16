@@ -17,7 +17,7 @@
 
 package io.bisq.btc.data;
 
-import io.bisq.messages.btc.data.RawTransactionInput;
+import io.bisq.network_messages.btc.data.RawTransactionInput;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
 package io.bisq.p2p.network;
 
-import io.bisq.p2p.NodeAddress;
+import io.bisq.network_messages.NodeAddress;
 
 import java.net.Socket;
 

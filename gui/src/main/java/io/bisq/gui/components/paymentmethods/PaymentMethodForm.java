@@ -22,10 +22,11 @@ import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.locale.Res;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.locale.TradeCurrency;
-import io.bisq.messages.payment.payload.PaymentAccountContractData;
+import io.bisq.locale.CurrencyUtil;
+import io.bisq.locale.TradeCurrency;
+import io.bisq.network_messages.payment.payload.PaymentAccountContractData;
 import io.bisq.payment.PaymentAccount;
+import io.bisq.user.Preferences;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -67,7 +68,7 @@ public abstract class PaymentMethodForm {
     protected void addTradeCurrencyComboBox() {
         currencyComboBox = addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency")).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
-        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllMainFiatCurrencies()));
+        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllMainFiatCurrencies(Preferences.getDefaultLocale(), Preferences.getDefaultTradeCurrency())));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {

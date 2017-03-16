@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.portfolio.openoffer;
 
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.trade.offer.OpenOffer;
 
 /**

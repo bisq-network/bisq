@@ -27,18 +27,19 @@ import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.Res;
-import io.bisq.messages.arbitration.Arbitrator;
-import io.bisq.messages.btc.provider.fee.FeeService;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.payment.PaymentMethod;
-import io.bisq.messages.provider.price.PriceFeedService;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.messages.user.Preferences;
+import io.bisq.network_messages.arbitration.Arbitrator;
+import io.bisq.network_messages.payment.PaymentMethod;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.payment.PaymentAccount;
 import io.bisq.payment.PaymentAccountUtil;
+import io.bisq.provider.fee.FeeService;
+import io.bisq.provider.price.PriceFeedService;
 import io.bisq.trade.TradeManager;
 import io.bisq.trade.handlers.TradeResultHandler;
+import io.bisq.user.Preferences;
 import io.bisq.user.User;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
@@ -118,14 +119,14 @@ class TakeOfferDataModel extends ActivatableDataModel {
     @Override
     protected void activate() {
         // when leaving screen we reset state
-        offer.setState(Offer.State.UNDEFINED);
+        offer.setState(OfferPayload.State.UNDEFINED);
 
         addBindings();
         addListeners();
 
         updateBalance();
 
-        // TODO In case that we have funded but restarted, or canceled but took again the offer we would need to 
+        // TODO In case that we have funded but restarted, or canceled but took again the offer we would need to
         // store locally the result when we received the funding tx(s).
         // For now we just ignore that rare case and bypass the check by setting a sufficient value
         // if (isWalletFunded.get())
@@ -171,7 +172,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         securityDepositAsCoin = offer.getSecurityDeposit();
 
-        // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer 
+        // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the takeOfferFee and not visible to the trader
 
@@ -297,7 +298,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Offer.Direction getDirection() {
+    OfferPayload.Direction getDirection() {
         return offer.getDirection();
     }
 
@@ -359,12 +360,12 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     void calculateTotalToPay() {
-        // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer 
+        // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (offer != null && amountAsCoin.get() != null && takerFeeAsCoin != null) {
             Coin value = takerFeeAsCoin.add(totalTxFeeAsCoin).add(securityDepositAsCoin);
-            if (getDirection() == Offer.Direction.SELL)
+            if (getDirection() == OfferPayload.Direction.SELL)
                 totalToPayAsCoin.set(value);
             else
                 totalToPayAsCoin.set(value.add(amountAsCoin.get()));

@@ -44,6 +44,7 @@
         <module>jsocks</module>
         <module>jtorctl</module>
         <module>jtorproxy</module>
+        <module>network-messages</module>
         <module>network</module>
         <module>gui</module>
         <module>headless</module>
@@ -230,6 +231,11 @@
             <version>${spring.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.4.1</version>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -252,14 +258,14 @@
                                 <configuration>
                                     <tasks>
                                         <path id="proto.path">
-                                            <fileset dir="common/src/main/proto">
+                                            <fileset dir="network-messages/src/main/proto">
                                                 <include name="**/*.proto"/>
                                             </fileset>
                                         </path>
                                         <pathconvert pathsep=" " property="proto.files" refid="proto.path"/>
                                         <exec executable="protoc" failonerror="true">
-                                            <arg value="--java_out=./common/src/main/java"/>
-                                            <arg value="-Icommon/src/main/proto"/>
+                                            <arg value="--java_out=./network-messages/src/main/java"/>
+                                            <arg value="-Inetwork-messages/src/main/proto"/>
                                             <arg line="${proto.files}"/>
                                         </exec>
                                     </tasks>

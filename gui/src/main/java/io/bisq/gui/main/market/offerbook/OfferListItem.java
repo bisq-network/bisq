@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.market.offerbook;
 
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.p2p.protocol.availability.Offer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

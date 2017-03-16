@@ -19,11 +19,12 @@ package io.bisq.gui.util;
 
 import io.bisq.common.util.MathUtils;
 import io.bisq.locale.Res;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.locale.LanguageUtil;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.messages.user.Preferences;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.locale.CurrencyUtil;
+import io.bisq.locale.LanguageUtil;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.user.Preferences;
+import io.bisq.network_messages.NodeAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.bitcoinj.core.Coin;
@@ -277,7 +278,7 @@ public class BSFormatter {
 
     public String formatVolumeLabel(String currencyCode, String postFix) {
         return Res.get("formatter.formatVolumeLabel",
-                CurrencyUtil.getNameByCode(currencyCode),
+                CurrencyUtil.getNameByCode(currencyCode, Preferences.getDefaultLocale()),
                 postFix);
     }
 
@@ -349,18 +350,18 @@ public class BSFormatter {
         return decimalFormat.format(MathUtils.roundDouble(value, precision)).replace(",", ".");
     }
 
-    public String getDirectionWithCode(Offer.Direction direction, String currencyCode) {
+    public String getDirectionWithCode(OfferPayload.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == Offer.Direction.BUY) ? Res.get("shared.buyCurrency", "BTC") : Res.get("shared.sellCurrency", "BTC");
+            return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyCurrency", "BTC") : Res.get("shared.sellCurrency", "BTC");
         else
-            return (direction == Offer.Direction.SELL) ? Res.get("shared.buyCurrency", currencyCode) : Res.get("shared.sellCurrency", currencyCode);
+            return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyCurrency", currencyCode) : Res.get("shared.sellCurrency", currencyCode);
     }
 
-    public String getDirectionWithCodeDetailed(Offer.Direction direction, String currencyCode) {
+    public String getDirectionWithCodeDetailed(OfferPayload.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == Offer.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
+            return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
         else
-            return (direction == Offer.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
+            return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
     }
 
     public String arbitratorAddressesToString(List<NodeAddress> nodeAddresses) {
@@ -526,15 +527,15 @@ public class BSFormatter {
         return value ? Res.get("shared.yes") : Res.get("shared.no");
     }
 
-    public String getDirectionBothSides(Offer.Direction direction, String currencyCode) {
+    public String getDirectionBothSides(OfferPayload.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             currencyCode = "BTC";
-            return direction == Offer.Direction.BUY ?
+            return direction == OfferPayload.Direction.BUY ?
                     Res.get("formatter.makerTaker", currencyCode, Res.get("shared.buyer"), currencyCode, Res.get("shared.seller")) :
                     Res.get("formatter.makerTaker", currencyCode, Res.get("shared.seller"), currencyCode, Res.get("shared.buyer"));
         } else {
             String code = currencyCode;
-            return direction == Offer.Direction.SELL ?
+            return direction == OfferPayload.Direction.SELL ?
                     Res.get("formatter.makerTaker", code, Res.get("shared.buyer"), code, Res.get("shared.seller")) :
                     Res.get("formatter.makerTaker", code, Res.get("shared.seller"), code, Res.get("shared.buyer"));
         }
@@ -568,29 +569,29 @@ public class BSFormatter {
         }
     }
 
-    public String getDirectionForTakeOffer(Offer.Direction direction, String currencyCode) {
+    public String getDirectionForTakeOffer(OfferPayload.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String btc = "BTC";
-            return direction == Offer.Direction.BUY ?
+            return direction == OfferPayload.Direction.BUY ?
                     Res.get("formatter.youAre", Res.get("shared.selling"), btc, Res.get("shared.buying"), currencyCode) :
                     Res.get("formatter.youAre", Res.get("shared.buying"), btc, Res.get("shared.selling"), currencyCode);
         } else {
             String btc = "BTC";
-            return direction == Offer.Direction.SELL ?
+            return direction == OfferPayload.Direction.SELL ?
                     Res.get("formatter.youAre", Res.get("shared.selling"), currencyCode, Res.get("shared.buying"), btc) :
                     Res.get("formatter.youAre", Res.get("shared.buying"), currencyCode, Res.get("shared.selling"), btc);
         }
     }
 
-    public String getOfferDirectionForCreateOffer(Offer.Direction direction, String currencyCode) {
+    public String getOfferDirectionForCreateOffer(OfferPayload.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String btc = "BTC";
-            return direction == Offer.Direction.BUY ?
+            return direction == OfferPayload.Direction.BUY ?
                     Res.get("formatter.youAreCreatingAnOffer.fiat", Res.get("shared.buy"), btc) :
                     Res.get("formatter.youAreCreatingAnOffer.fiat", Res.get("shared.sell"), btc);
         } else {
             String btc = "BTC";
-            return direction == Offer.Direction.SELL ?
+            return direction == OfferPayload.Direction.SELL ?
                     Res.get("formatter.youAreCreatingAnOffer.altcoin", Res.get("shared.buy"), currencyCode, Res.get("shared.selling"), btc) :
                     Res.get("formatter.youAreCreatingAnOffer.altcoin", Res.get("shared.sell"), currencyCode, Res.get("shared.buying"), btc);
         }
@@ -659,7 +660,7 @@ public class BSFormatter {
     }
 
     public String getCurrencyNameAndCurrencyPair(String currencyCode) {
-        return CurrencyUtil.getNameByCode(currencyCode) + " (" + getCurrencyPair(currencyCode) + ")";
+        return CurrencyUtil.getNameByCode(currencyCode, Preferences.getDefaultLocale()) + " (" + getCurrencyPair(currencyCode) + ")";
     }
 
     public String getPriceWithCurrencyCode(String currencyCode) {

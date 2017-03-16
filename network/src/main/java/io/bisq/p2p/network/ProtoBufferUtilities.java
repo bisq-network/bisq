@@ -1,47 +1,48 @@
 package io.bisq.p2p.network;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.crypto.SealedAndSigned;
 import io.bisq.common.wire.proto.Messages;
-import io.bisq.messages.Message;
-import io.bisq.messages.alert.Alert;
-import io.bisq.messages.alert.PrivateNotification;
-import io.bisq.messages.alert.PrivateNotificationMessage;
-import io.bisq.messages.arbitration.*;
-import io.bisq.messages.arbitration.payload.Attachment;
-import io.bisq.messages.availability.AvailabilityResult;
-import io.bisq.messages.availability.OfferAvailabilityRequest;
-import io.bisq.messages.availability.OfferAvailabilityResponse;
-import io.bisq.messages.btc.data.RawTransactionInput;
-import io.bisq.messages.dao.compensation.payload.CompensationRequestPayload;
-import io.bisq.messages.filter.payload.Filter;
-import io.bisq.messages.filter.payload.PaymentAccountFilter;
-import io.bisq.messages.payment.payload.*;
-import io.bisq.messages.provider.price.PriceFeedService;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.messages.trade.payload.Contract;
-import io.bisq.messages.trade.protocol.trade.messages.*;
-import io.bisq.messages.trade.statistics.payload.TradeStatistics;
-import io.bisq.p2p.NodeAddress;
-import io.bisq.p2p.messaging.PrefixedSealedAndSignedMessage;
-import io.bisq.p2p.network.messages.CloseConnectionMessage;
-import io.bisq.p2p.peers.getdata.messages.GetDataResponse;
-import io.bisq.p2p.peers.getdata.messages.GetUpdatedDataRequest;
-import io.bisq.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
-import io.bisq.p2p.peers.keepalive.messages.Ping;
-import io.bisq.p2p.peers.keepalive.messages.Pong;
-import io.bisq.p2p.peers.peerexchange.Peer;
-import io.bisq.p2p.peers.peerexchange.messages.GetPeersRequest;
-import io.bisq.p2p.peers.peerexchange.messages.GetPeersResponse;
-import io.bisq.p2p.storage.messages.AddDataMessage;
-import io.bisq.p2p.storage.messages.RefreshTTLMessage;
-import io.bisq.p2p.storage.messages.RemoveDataMessage;
-import io.bisq.p2p.storage.messages.RemoveMailboxDataMessage;
-import io.bisq.p2p.storage.payload.MailboxStoragePayload;
-import io.bisq.p2p.storage.payload.StoragePayload;
-import io.bisq.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
-import io.bisq.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.locale.CountryUtil;
+import io.bisq.network_messages.CloseConnectionMessage;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.alert.Alert;
+import io.bisq.network_messages.alert.PrivateNotification;
+import io.bisq.network_messages.alert.PrivateNotificationMessage;
+import io.bisq.network_messages.arbitration.*;
+import io.bisq.network_messages.arbitration.payload.Attachment;
+import io.bisq.network_messages.availability.AvailabilityResult;
+import io.bisq.network_messages.availability.OfferAvailabilityRequest;
+import io.bisq.network_messages.availability.OfferAvailabilityResponse;
+import io.bisq.network_messages.btc.data.RawTransactionInput;
+import io.bisq.network_messages.crypto.PubKeyRing;
+import io.bisq.network_messages.crypto.SealedAndSigned;
+import io.bisq.network_messages.dao.compensation.payload.CompensationRequestPayload;
+import io.bisq.network_messages.filter.payload.Filter;
+import io.bisq.network_messages.filter.payload.PaymentAccountFilter;
+import io.bisq.network_messages.p2p.messaging.PrefixedSealedAndSignedMessage;
+import io.bisq.network_messages.payment.payload.*;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.trade.payload.Contract;
+import io.bisq.network_messages.trade.protocol.trade.messages.*;
+import io.bisq.network_messages.trade.statistics.payload.TradeStatistics;
+import io.bisq.network_messages.p2p.peers.getdata.messages.GetDataResponse;
+import io.bisq.network_messages.p2p.peers.getdata.messages.GetUpdatedDataRequest;
+import io.bisq.network_messages.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
+import io.bisq.network_messages.p2p.peers.keepalive.messages.Ping;
+import io.bisq.network_messages.p2p.peers.keepalive.messages.Pong;
+import io.bisq.network_messages.p2p.peers.peerexchange.Peer;
+import io.bisq.network_messages.p2p.peers.peerexchange.messages.GetPeersRequest;
+import io.bisq.network_messages.p2p.peers.peerexchange.messages.GetPeersResponse;
+import io.bisq.network_messages.p2p.storage.messages.AddDataMessage;
+import io.bisq.network_messages.p2p.storage.messages.RefreshTTLMessage;
+import io.bisq.network_messages.p2p.storage.messages.RemoveDataMessage;
+import io.bisq.network_messages.p2p.storage.messages.RemoveMailboxDataMessage;
+import io.bisq.network_messages.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
+import io.bisq.network_messages.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.network_messages.payload.MailboxStoragePayload;
+import io.bisq.network_messages.payload.StoragePayload;
+import io.bisq.user.Preferences;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.WriterOutputStream;
 import org.bitcoinj.core.Coin;
@@ -346,7 +347,7 @@ public class ProtoBufferUtilities {
                         break;
                     case SEPA_ACCOUNT_CONTRACT_DATA:
                         SepaAccountContractData sepaAccountContractData = new SepaAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
-                                protoEntry.getMaxTradePeriod());
+                                protoEntry.getMaxTradePeriod(), CountryUtil.getAllSepaCountries(Preferences.getDefaultLocale()));
                         fillInCountryBasedPaymentAccountContractData(protoEntry, sepaAccountContractData);
                         result = sepaAccountContractData;
                         break;
@@ -418,9 +419,8 @@ public class ProtoBufferUtilities {
         return Fiat.valueOf(currencyCode, tradePrice);
     }
 
-    public static Offer getOffer(Messages.Offer offer) {
+    public static OfferPayload getOffer(Messages.Offer offer) {
         List<NodeAddress> arbitratorNodeAddresses = offer.getArbitratorNodeAddressesList().stream().map(nodeAddress -> getNodeAddress(nodeAddress)).collect(Collectors.toList());
-        PriceFeedService priceFeedService = null; // TODO refactor Offer, this should not be passed in the constructor, or we need to inject it in ProtoBufferUtilities
         // convert these lists because otherwise when they're empty they are lazyStringArrayList objects and NOT serializable,
         // which is needed for the P2PStorage getHash() operation
         List<String> acceptedCountryCodes = offer.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
@@ -432,9 +432,9 @@ public class ProtoBufferUtilities {
         } else {
             extraDataMapMap = offer.getExtraDataMapMap();
         }
-        return new Offer(offer.getId(), offer.getDate(), getNodeAddress(offer.getOffererNodeAddress()), getPubKeyRing(offer.getPubKeyRing()), getDirection(offer.getDirection()),
+        return new OfferPayload(offer.getId(), offer.getDate(), getNodeAddress(offer.getOffererNodeAddress()), getPubKeyRing(offer.getPubKeyRing()), getDirection(offer.getDirection()),
                 offer.getFiatPrice(), offer.getMarketPriceMargin(), offer.getUseMarketBasedPrice(), offer.getAmount(), offer.getMinAmount(), offer.getCurrencyCode(), arbitratorNodeAddresses,
-                offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(), offer.getOfferFeePaymentTxID(), offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds, priceFeedService,
+                offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(), offer.getOfferFeePaymentTxID(), offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds,
                 offer.getVersionNr(), offer.getBlockHeightAtOfferCreation(), offer.getTxFee(), offer.getCreateOfferFee(), offer.getSecurityDeposit(), offer.getMaxTradeLimit(), offer.getMaxTradePeriod(), offer.getUseAutoClose(),
                 offer.getUseReOpenAfterAutoClose(), offer.getLowerClosePrice(), offer.getUpperClosePrice(), offer.getIsPrivateOffer(), offer.getHashOfChallenge(), extraDataMapMap);
     }
@@ -571,8 +571,8 @@ public class ProtoBufferUtilities {
     }
 
     @NotNull
-    public static Offer.Direction getDirection(Messages.Offer.Direction direction) {
-        return Offer.Direction.valueOf(direction.name());
+    public static OfferPayload.Direction getDirection(Messages.Offer.Direction direction) {
+        return OfferPayload.Direction.valueOf(direction.name());
     }
 
     @NotNull
@@ -708,4 +708,5 @@ public class ProtoBufferUtilities {
                         .stream()
                         .map(ByteString::toByteArray).collect(Collectors.toList()));
     }
+
 }

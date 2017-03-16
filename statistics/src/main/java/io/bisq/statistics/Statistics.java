@@ -16,13 +16,13 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.LimitedKeyStrengthException;
 import io.bisq.common.util.Utilities;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.provider.price.PriceFeedService;
 import io.bisq.p2p.BootstrapListener;
-import io.bisq.p2p.P2PService;
+import io.bisq.p2p.storage.P2PService;
+import io.bisq.provider.price.PriceFeedService;
 import io.bisq.trade.offer.OfferBookService;
 import io.bisq.trade.offer.OpenOfferManager;
 import io.bisq.trade.statistics.TradeStatisticsManager;
+import io.bisq.user.Preferences;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -99,7 +99,7 @@ public class Statistics {
         priceFeedService = injector.getInstance(PriceFeedService.class);
 
         // We need the price feed for market based offers
-        priceFeedService.setCurrencyCode(CurrencyUtil.getDefaultTradeCurrency().getCode());
+        priceFeedService.setCurrencyCode(Preferences.getDefaultTradeCurrency().getCode());
         priceFeedService.setType(PriceFeedService.Type.LAST);
         priceFeedService.init(price -> log.debug("price " + price),
                 (errorMessage, throwable) -> log.warn(throwable.getMessage()));

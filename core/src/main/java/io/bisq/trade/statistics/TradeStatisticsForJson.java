@@ -1,9 +1,9 @@
 package io.bisq.trade.statistics;
 
 import io.bisq.common.util.MathUtils;
-import io.bisq.messages.locale.CurrencyUtil;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.messages.trade.statistics.payload.TradeStatistics;
+import io.bisq.locale.CurrencyUtil;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.trade.statistics.payload.TradeStatistics;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
@@ -19,7 +19,7 @@ public final class TradeStatisticsForJson {
     private static final Logger log = LoggerFactory.getLogger(TradeStatisticsForJson.class);
 
     public final String currency;
-    public final Offer.Direction direction;
+    public final OfferPayload.Direction direction;
     public final long tradePrice;
     public final long tradeAmount;
     public final long tradeDate;
@@ -34,7 +34,7 @@ public final class TradeStatisticsForJson {
 
     // primaryMarket fields are based on industry standard where primaryMarket is always in the focus (in the app BTC is always in the focus - will be changed in a larger refactoring once)
     public String currencyPair;
-    public Offer.Direction primaryMarketDirection;
+    public OfferPayload.Direction primaryMarketDirection;
 
     public String tradePriceDisplayString;
 
@@ -67,7 +67,7 @@ public final class TradeStatisticsForJson {
             MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
             final Fiat tradePriceAsFiat = getTradePrice();
             if (CurrencyUtil.isCryptoCurrency(currency)) {
-                primaryMarketDirection = direction == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
+                primaryMarketDirection = direction == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
                 final double value = tradePriceAsFiat.value != 0 ? 10000D / tradePriceAsFiat.value : 0;
                 DecimalFormat decimalFormat = new DecimalFormat("#.#");
                 decimalFormat.setMaximumFractionDigits(8);

@@ -1,14 +1,15 @@
 package io.bisq.gui.main.offer.offerbook;
 
-import io.bisq.messages.locale.Country;
-import io.bisq.messages.locale.CryptoCurrency;
-import io.bisq.messages.locale.FiatCurrency;
-import io.bisq.messages.payment.PaymentMethod;
-import io.bisq.messages.payment.payload.NationalBankAccountContractData;
-import io.bisq.messages.payment.payload.SameBankAccountContractData;
-import io.bisq.messages.payment.payload.SepaAccountContractData;
-import io.bisq.messages.payment.payload.SpecificBanksAccountContractData;
-import io.bisq.messages.trade.offer.payload.Offer;
+import io.bisq.locale.Country;
+import io.bisq.locale.CryptoCurrency;
+import io.bisq.locale.FiatCurrency;
+import io.bisq.network_messages.payment.PaymentMethod;
+import io.bisq.network_messages.payment.payload.NationalBankAccountContractData;
+import io.bisq.network_messages.payment.payload.SameBankAccountContractData;
+import io.bisq.network_messages.payment.payload.SepaAccountContractData;
+import io.bisq.network_messages.payment.payload.SpecificBanksAccountContractData;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.p2p.protocol.availability.Offer;
 import io.bisq.payment.*;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -266,7 +267,7 @@ public class OfferBookViewModelTest {
 
 
     private Offer getOffer(String tradeCurrencyCode, String paymentMethodId, String countryCode, ArrayList<String> acceptedCountryCodes, String bankId, ArrayList<String> acceptedBanks) {
-        return new Offer(null,
+        return new Offer( new OfferPayload(null,
                 null,
                 null,
                 null,
@@ -286,8 +287,6 @@ public class OfferBookViewModelTest {
                 bankId,
                 acceptedBanks,
                 null,
-
-                null,
                 0,
                 0,
                 0,
@@ -300,6 +299,6 @@ public class OfferBookViewModelTest {
                 0,
                 false,
                 null,
-                null);
+                null));
     }
 }

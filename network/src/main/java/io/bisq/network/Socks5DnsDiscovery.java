@@ -77,7 +77,7 @@ public class Socks5DnsDiscovery extends MultiplexingDiscovery {
         for (String seed : seeds) {
             if ("dnsseed.bluematt.me".equals(seed)) {
                 // this dns is known to fail with tor-resolve because it returns too many addrs.
-                // we avoid adding it in order to prevent ugly log messages.
+                // we avoid adding it in order to prevent ugly log network_messages.
                 continue;
             }
             discoveries.add(new Socks5DnsSeedDiscovery(proxy, params, seed));

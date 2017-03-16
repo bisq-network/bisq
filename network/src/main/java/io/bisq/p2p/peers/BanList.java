@@ -1,6 +1,6 @@
 package io.bisq.p2p.peers;
 
-import io.bisq.p2p.NodeAddress;
+import io.bisq.network_messages.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import io.bisq.http.HttpClient;
 import io.bisq.http.HttpException;
-import io.bisq.messages.btc.provider.fee.FeeService;
+import io.bisq.provider.fee.FeeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

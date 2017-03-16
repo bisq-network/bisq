@@ -59,10 +59,10 @@ public class PlaceOfferProtocol {
                     log.error(errorMessage);
 
                     if (model.offerAddedToOfferBook) {
-                        model.offerBookService.removeOffer(model.offer,
+                        model.offerBookService.removeOffer(model.offer.getOfferPayload(),
                                 () -> {
                                     model.offerAddedToOfferBook = false;
-                                    log.debug("Offer removed from offer book.");
+                                    log.debug("OfferPayload removed from offer book.");
                                 },
                                 log::error);
                     }

@@ -18,17 +18,19 @@
 package io.bisq.crypto;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import io.bisq.common.crypto.*;
+import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.Sig;
 import io.bisq.common.wire.proto.Messages;
-import io.bisq.messages.Message;
+import io.bisq.network_messages.DecryptedMsgWithPubKey;
+import io.bisq.network_messages.Message;
+import io.bisq.network_messages.crypto.*;
 import io.bisq.p2p.network.ProtoBufferUtilities;
 
 import javax.crypto.SecretKey;
 import javax.inject.Inject;
 import java.security.PrivateKey;
 
-import static io.bisq.common.crypto.Encryption.decryptPayloadWithHmac;
-import static io.bisq.common.crypto.Encryption.decryptSecretKey;
+import static io.bisq.network_messages.crypto.Encryption.decryptSecretKey;
 
 public class EncryptionService {
     private final KeyRing keyRing;
@@ -59,7 +61,7 @@ public class EncryptionService {
         Message decryptedPayload = null;
         try {
             decryptedPayload = ProtoBufferUtilities
-                    .fromProtoBuf(Messages.Envelope.parseFrom(decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey))).get();
+                    .fromProtoBuf(Messages.Envelope.parseFrom(Encryption.decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey))).get();
         } catch (InvalidProtocolBufferException e) {
             throw new CryptoException("Unable to parse protobuffer message.", e);
         }

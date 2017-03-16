@@ -26,7 +26,7 @@ import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Transitions;
 import io.bisq.locale.Res;
-import io.bisq.messages.user.Preferences;
+import io.bisq.user.Preferences;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;

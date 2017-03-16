@@ -3,21 +3,25 @@ package io.bisq.p2p.storage;
 import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
-import io.bisq.common.crypto.*;
+import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.Sig;
 import io.bisq.common.util.Utilities;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.crypto.EncryptionService;
-import io.bisq.messages.alert.Alert;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.p2p.NodeAddress;
+import io.bisq.network_messages.NodeAddress;
+import io.bisq.network_messages.alert.Alert;
+import io.bisq.network_messages.crypto.Hash;
+import io.bisq.network_messages.crypto.KeyRing;
+import io.bisq.network_messages.crypto.KeyStorage;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.p2p.TestUtils;
 import io.bisq.p2p.network.NetworkNode;
 import io.bisq.p2p.network.ProtoBufferUtilities;
 import io.bisq.p2p.peers.Broadcaster;
 import io.bisq.p2p.storage.mocks.MockData;
-import io.bisq.p2p.storage.payload.StoragePayload;
-import io.bisq.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bisq.storage.FileUtil;
+import io.bisq.network_messages.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.network_messages.payload.StoragePayload;
 import lombok.extern.slf4j.Slf4j;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -129,10 +133,10 @@ public class P2PDataStorageTest {
 
     @Test
     public void testOfferRoundtrip() throws InvalidProtocolBufferException {
-        Offer offer1 = getDummyOffer();
+        OfferPayload offer1 = getDummyOffer();
         byte[] serialize = Utilities.serialize(offer1);
         byte[] serialize2 = Utilities.serialize(offer1);
-        Offer offer1des = Utilities.deserialize(serialize);
+        OfferPayload offer1des = Utilities.deserialize(serialize);
         assertTrue(Arrays.equals(serialize, serialize2));
         assertTrue(Arrays.equals(Utilities.serialize(offer1des), serialize));
 
@@ -141,7 +145,7 @@ public class P2PDataStorageTest {
             JsonFormat.Parser parser = JsonFormat.parser();
             Messages.Offer.Builder builder = Messages.Offer.newBuilder();
             parser.merge(buffer, builder);
-            Offer offer2 = ProtoBufferUtilities.getOffer(builder.build());
+            OfferPayload offer2 = ProtoBufferUtilities.getOffer(builder.build());
             assertEquals(offer1, offer2);
             for (int i = 0; i < offer1.getArbitratorNodeAddresses().size(); i++) {
                 if (!offer1.getArbitratorNodeAddresses().get(i).equals(offer2.getArbitratorNodeAddresses().get(i)))
@@ -179,22 +183,50 @@ public class P2PDataStorageTest {
     }
 
     @NotNull
-    private Offer getDummyOffer() {
+    private OfferPayload getDummyOffer() {
         NodeAddress nodeAddress = new NodeAddress("host", 1000);
         NodeAddress nodeAddress2 = new NodeAddress("host1", 1001);
         NodeAddress nodeAddress3 = new NodeAddress("host2", 1002);
         NodeAddress nodeAddress4 = new NodeAddress("host3", 1002);
-        return new Offer("id", System.currentTimeMillis(), nodeAddress4, keyRing1.getPubKeyRing(), Offer.Direction.BUY, 1200, 1.5, true, 100,
-                50, "USD", Lists.newArrayList(nodeAddress, nodeAddress2, nodeAddress3), "SEPA", "accountid",
-                "feetxId", "BE", Lists.newArrayList("BE", "AU"), "bankid", Lists.newArrayList("BANK1", "BANK2"), null,
-                "version", 100, 100, 100, 100, 1000, 1000, false,
-                false, 1000, 1000, false, "hash", null);
+        return new OfferPayload("id",
+                System.currentTimeMillis(),
+                nodeAddress4,
+                keyRing1.getPubKeyRing(),
+                OfferPayload.Direction.BUY,
+                1200L,
+                1.5,
+                true,
+                100,
+                50,
+                "USD",
+                Lists.newArrayList(nodeAddress, nodeAddress2, nodeAddress3),
+                "SEPA",
+                "accountid",
+                "feetxId",
+                "BE",
+                Lists.newArrayList("BE", "AU"),
+                "bankid",
+                Lists.newArrayList("BANK1", "BANK2"),
+                "versionNr",
+                100,
+                100,
+                100,
+                100,
+                100,
+                1000,
+                true,
+                true,
+                1000,
+                10000,
+                false,
+                "hash",
+                null);
     }
 
     @Test
     public void testProtectedStorageEntryRoundtrip() throws InvalidProtocolBufferException {
         NodeAddress nodeAddress = new NodeAddress("host", 1000);
-        Offer offer = getDummyOffer();
+        OfferPayload offer = getDummyOffer();
         try {
             String buffer = JsonFormat.printer().print(offer.toProtoBuf().getOffer());
             JsonFormat.Parser parser = JsonFormat.parser();

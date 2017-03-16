@@ -16,7 +16,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.LimitedKeyStrengthException;
 import io.bisq.common.util.Utilities;
-import io.bisq.p2p.P2PService;
+import io.bisq.p2p.storage.P2PService;
 import io.bisq.p2p.P2PServiceListener;
 import io.bisq.trade.offer.OfferBookService;
 import io.bisq.trade.offer.OpenOfferManager;

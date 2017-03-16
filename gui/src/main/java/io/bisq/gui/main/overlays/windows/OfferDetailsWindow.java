@@ -18,7 +18,7 @@
 package io.bisq.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
-import io.bisq.common.crypto.KeyRing;
+import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.common.util.Tuple3;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.components.BusyAnimation;
@@ -31,11 +31,12 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
-import io.bisq.messages.locale.BankUtil;
-import io.bisq.messages.locale.CountryUtil;
-import io.bisq.messages.payment.PaymentMethod;
-import io.bisq.messages.trade.offer.payload.Offer;
-import io.bisq.messages.user.Preferences;
+import io.bisq.locale.BankUtil;
+import io.bisq.locale.CountryUtil;
+import io.bisq.network_messages.payment.PaymentMethod;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.p2p.protocol.availability.Offer;
+import io.bisq.user.Preferences;
 import io.bisq.payment.PaymentAccount;
 import io.bisq.user.User;
 import javafx.geometry.Insets;
@@ -157,7 +158,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         String fiatDirectionInfo = ":";
         String btcDirectionInfo = ":";
-        Offer.Direction direction = offer.getDirection();
+        OfferPayload.Direction direction = offer.getDirection();
         String currencyCode = offer.getCurrencyCode();
         String offerTypeLabel = Res.getWithCol("shared.offerType");
         String toReceive = " " + Res.get("shared.toReceive");
@@ -166,13 +167,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == Offer.Direction.BUY ? toReceive : toSpend;
-            btcDirectionInfo = direction == Offer.Direction.SELL ? toReceive : toSpend;
+            fiatDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
+            btcDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
         } else if (placeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == Offer.Direction.SELL ? toReceive : toSpend;
-            btcDirectionInfo = direction == Offer.Direction.BUY ? toReceive : toSpend;
+            fiatDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
+            btcDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
         } else {
             addLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getDirectionBothSides(direction, currencyCode), firstRowDistance);
@@ -201,7 +202,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addLabelTextField(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(tradePrice));
         } else {
             Fiat price = offer.getPrice();
-            if (offer.getUseMarketBasedPrice()) {
+            if (offer.isUseMarketBasedPrice()) {
                 addLabelTextField(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(price) +
                         " " + Res.get("offerDetailsWindow.distance",
                         formatter.formatPercentagePrice(offer.getMarketPriceMargin())));
@@ -254,15 +255,15 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (showAcceptedCountryCodes) {
             String countries;
             Tooltip tooltip = null;
-            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes)) {
+            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes, Preferences.getDefaultLocale())) {
                 countries = Res.getWithCol("shared.allEuroCountries");
             } else {
                 if (acceptedCountryCodes.size() == 1) {
-                    countries = CountryUtil.getNameAndCode(acceptedCountryCodes.get(0));
+                    countries = CountryUtil.getNameAndCode(acceptedCountryCodes.get(0), Preferences.getDefaultLocale());
                     tooltip = new Tooltip(countries);
                 } else {
                     countries = CountryUtil.getCodesString(acceptedCountryCodes);
-                    tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
+                    tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes, Preferences.getDefaultLocale()));
                 }
             }
             TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex,
@@ -292,7 +293,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         if (paymentMethodCountryCode != null)
             addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),
-                    CountryUtil.getNameAndCode(paymentMethodCountryCode));
+                    CountryUtil.getNameAndCode(paymentMethodCountryCode, Preferences.getDefaultLocale()));
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.acceptedArbitrators"),
                 formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
@@ -301,13 +302,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         if (placeOfferHandlerOptional.isPresent()) {
             addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("offerDetailsWindow.commitment"), Layout.GROUP_DISTANCE);
-            addLabelTextField(gridPane, rowIndex, Res.get("offerDetailsWindow.agree"), Offer.TAC_OFFERER,
+            addLabelTextField(gridPane, rowIndex, Res.get("offerDetailsWindow.agree"),  Res.get("createOffer.tac"),
                     Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
             addConfirmAndCancelButtons(true);
         } else if (takeOfferHandlerOptional.isPresent()) {
             addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("shared.contract"), Layout.GROUP_DISTANCE);
-            addLabelTextField(gridPane, rowIndex, Res.get("offerDetailsWindow.tac"), Offer.TAC_TAKER,
+            addLabelTextField(gridPane, rowIndex, Res.get("offerDetailsWindow.tac"), Res.get("takeOffer.tac"),
                     Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
             addConfirmAndCancelButtons(false);
@@ -321,7 +322,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     }
 
     private void addConfirmAndCancelButtons(boolean isPlaceOffer) {
-        boolean isBuyOffer = offer.getDirection() == Offer.Direction.BUY;
+        boolean isBuyOffer = offer.getDirection() == OfferPayload.Direction.BUY;
         boolean isBuyerRole = isPlaceOffer ? isBuyOffer : !isBuyOffer;
         String placeOfferButtonText = isBuyerRole ?
                 Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.buy")) :
