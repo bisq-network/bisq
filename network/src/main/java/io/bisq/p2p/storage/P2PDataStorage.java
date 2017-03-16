@@ -22,7 +22,6 @@ import io.bisq.p2p.peers.Broadcaster;
 import io.bisq.network_messages.p2p.storage.messages.*;
 import io.bisq.network_messages.p2p.storage.storageentry.ProtectedMailboxStorageEntry;
 import io.bisq.network_messages.p2p.storage.storageentry.ProtectedStorageEntry;
-import io.bisq.payload.*;
 import io.bisq.storage.FileUtil;
 import io.bisq.storage.ResourceNotFoundException;
 import io.bisq.storage.Storage;

@@ -15,9 +15,8 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.messages.alert;
+package io.bisq.network_messages.alert;
 
-import io.bisq.network_messages.alert.Alert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
