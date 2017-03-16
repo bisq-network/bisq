@@ -221,7 +221,7 @@ public class Offer implements Serializable {
     public boolean isMyOffer(KeyRing keyRing) {
         return getPubKeyRing().equals(keyRing.getPubKeyRing());
     }
-    
+
     /////////////////////////////////// Decorator methods ///////////////////////////////////////////
 
     public String getShortId() {
@@ -292,8 +292,12 @@ public class Offer implements Serializable {
         offerPayload.setOfferFeePaymentTxID(offerFeePaymentTxID);
     }
 
-    public Coin getSecurityDeposit() {
-        return offerPayload.getSecurityDeposit();
+    public Coin getBuyerSecurityDeposit() {
+        return offerPayload.getBuyerSecurityDeposit();
+    }
+
+    public Coin getSellerSecurityDeposit() {
+        return offerPayload.getSellerSecurityDeposit();
     }
 
     public NodeAddress getOwnerNodeAddress() {

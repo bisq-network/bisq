@@ -29,11 +29,12 @@ public class ProvidersRepository {
                 // providers = "http://95.85.11.205:8080/";
 
                 // Use localhost for using a locally running priceprovider
-                providers = "http://localhost:8080/, http://51.15.47.83:8080/";
-                //providers = "http://localhost:8080/";
+                // providers = "http://localhost:8080/, http://51.15.47.83:8080/";
+                providers = "http://localhost:8080/";
             } else {
                 // TODO atm we dont have it running as HS...
-                providers = "http://localhost:8080/, http://51.15.47.83:8080/";
+                // providers = "http://localhost:8080/, http://51.15.47.83:8080/";
+                providers = "http://localhost:8080/";
                 //providers = "http://t4wlzy7l6k4hnolg.onion/, http://g27szt7aw2vrtowe.onion/";
             }
         }

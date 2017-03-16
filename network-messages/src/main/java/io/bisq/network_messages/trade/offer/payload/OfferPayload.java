@@ -27,9 +27,9 @@ import io.bisq.common.wire.proto.Messages;
 import io.bisq.network_messages.NodeAddress;
 import io.bisq.network_messages.btc.Restrictions;
 import io.bisq.network_messages.crypto.PubKeyRing;
-import io.bisq.network_messages.payment.PaymentMethod;
 import io.bisq.network_messages.payload.RequiresOwnerIsOnlinePayload;
 import io.bisq.network_messages.payload.StoragePayload;
+import io.bisq.network_messages.payment.PaymentMethod;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -239,7 +239,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                  @Nullable List<String> acceptedCountryCodes,
                  @Nullable String bankId,
                  @Nullable List<String> acceptedBankIds,
-                 PriceFeedService priceFeedService,
                  String versionNr,
                  long blockHeightAtOfferCreation,
                  long txFee,
@@ -319,12 +318,14 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         checkCoinNotNullOrZero(getAmount(), "Amount");
         checkCoinNotNullOrZero(getMinAmount(), "MinAmount");
         checkCoinNotNullOrZero(getCreateOfferFee(), "CreateOfferFee");
-        checkArgument(getCreateOfferFee().value >= FeeService.MIN_CREATE_OFFER_FEE_IN_BTC,
+        
+        /*checkArgument(getCreateOfferFee().value >= FeeService.MIN_CREATE_OFFER_FEE_IN_BTC,
                 "createOfferFee must not be less than FeeService.MIN_CREATE_OFFER_FEE_IN_BTC. " +
                         "createOfferFee=" + getCreateOfferFee().toFriendlyString());
         checkArgument(getCreateOfferFee().value <= FeeService.MAX_CREATE_OFFER_FEE_IN_BTC,
                 "createOfferFee must not be larger than FeeService.MAX_CREATE_OFFER_FEE_IN_BTC. " +
-                        "createOfferFee=" + getCreateOfferFee().toFriendlyString());
+                        "createOfferFee=" + getCreateOfferFee().toFriendlyString());*/
+        
         checkCoinNotNullOrZero(getBuyerSecurityDeposit(), "buyerSecurityDeposit");
         checkCoinNotNullOrZero(getSellerSecurityDeposit(), "sellerSecurityDeposit");
         checkArgument(getBuyerSecurityDeposit().value >= Restrictions.MIN_BUYER_SECURITY_DEPOSIT.value,
@@ -350,9 +351,9 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
 
         //
-        checkNotNull(getPrice(), "Price is null");
+       /* checkNotNull(getPrice(), "Price is null");
         checkArgument(getPrice().isPositive(),
-                "Price must be positive. price=" + getPrice().toFriendlyString());
+                "Price must be positive. price=" + getPrice().toFriendlyString());*/
 
         checkArgument(getDate().getTime() > 0,
                 "Date must not be 0. date=" + getDate().toString());
@@ -363,19 +364,11 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         checkNotNull(getId(), "Id is null");
         checkNotNull(getPubKeyRing(), "pubKeyRing is null");
         checkNotNull(getMinAmount(), "MinAmount is null");
-        checkNotNull(getPrice(), "Price is null");
+        //  checkNotNull(getPrice(), "Price is null");
         checkNotNull(getTxFee(), "txFee is null");
         checkNotNull(getCreateOfferFee(), "CreateOfferFee is null");
         checkNotNull(getVersionNr(), "VersionNr is null");
         checkArgument(getMaxTradePeriod() > 0, "maxTradePeriod must be positive. maxTradePeriod=" + getMaxTradePeriod());
-
-        Preconditions.checkArgument(getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0, "MinAmount is less then "
-                + Restrictions.MIN_TRADE_AMOUNT.toFriendlyString());
-        Preconditions.checkArgument(getAmount().compareTo(getPaymentMethod().getMaxTradeLimit()) <= 0, "Amount is larger then "
-                + getPaymentMethod().getMaxTradeLimit().toFriendlyString());
-        checkArgument(getAmount().compareTo(getMinAmount()) >= 0, "MinAmount is larger then Amount");
-
-        checkArgument(getPrice().isPositive(), "Price is not a positive value");
         // TODO check upper and lower bounds for fiat
         // TODO check rest of new parameters
     }

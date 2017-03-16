@@ -13,6 +13,8 @@ import io.bisq.network_messages.alert.Alert;
 import io.bisq.network_messages.crypto.Hash;
 import io.bisq.network_messages.crypto.KeyRing;
 import io.bisq.network_messages.crypto.KeyStorage;
+import io.bisq.network_messages.p2p.storage.storageentry.ProtectedStorageEntry;
+import io.bisq.network_messages.payload.StoragePayload;
 import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.p2p.TestUtils;
 import io.bisq.p2p.network.NetworkNode;
@@ -20,8 +22,6 @@ import io.bisq.p2p.network.ProtoBufferUtilities;
 import io.bisq.p2p.peers.Broadcaster;
 import io.bisq.p2p.storage.mocks.MockData;
 import io.bisq.storage.FileUtil;
-import io.bisq.network_messages.p2p.storage.storageentry.ProtectedStorageEntry;
-import io.bisq.network_messages.payload.StoragePayload;
 import lombok.extern.slf4j.Slf4j;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -192,7 +192,7 @@ public class P2PDataStorageTest {
                 System.currentTimeMillis(),
                 nodeAddress4,
                 keyRing1.getPubKeyRing(),
-                Offer.Direction.BUY,
+                OfferPayload.Direction.BUY,
                 1200,
                 1.5,
                 true,
@@ -208,7 +208,7 @@ public class P2PDataStorageTest {
                 "BE",
                 Lists.newArrayList("BE", "AU"),
                 "bankid",
-                Lists.newArrayList("BANK1", "BANK2"), null,
+                Lists.newArrayList("BANK1", "BANK2"), 
                 "version",
                 100,
                 100,

@@ -21,11 +21,6 @@ import io.bisq.network_messages.dao.compensation.payload.CompensationRequestPayl
 import io.bisq.network_messages.filter.payload.Filter;
 import io.bisq.network_messages.filter.payload.PaymentAccountFilter;
 import io.bisq.network_messages.p2p.messaging.PrefixedSealedAndSignedMessage;
-import io.bisq.network_messages.payment.payload.*;
-import io.bisq.network_messages.trade.offer.payload.OfferPayload;
-import io.bisq.network_messages.trade.payload.Contract;
-import io.bisq.network_messages.trade.protocol.trade.messages.*;
-import io.bisq.network_messages.trade.statistics.payload.TradeStatistics;
 import io.bisq.network_messages.p2p.peers.getdata.messages.GetDataResponse;
 import io.bisq.network_messages.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bisq.network_messages.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
@@ -42,6 +37,11 @@ import io.bisq.network_messages.p2p.storage.storageentry.ProtectedMailboxStorage
 import io.bisq.network_messages.p2p.storage.storageentry.ProtectedStorageEntry;
 import io.bisq.network_messages.payload.MailboxStoragePayload;
 import io.bisq.network_messages.payload.StoragePayload;
+import io.bisq.network_messages.payment.payload.*;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
+import io.bisq.network_messages.trade.payload.Contract;
+import io.bisq.network_messages.trade.protocol.trade.messages.*;
+import io.bisq.network_messages.trade.statistics.payload.TradeStatistics;
 import io.bisq.user.Preferences;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.WriterOutputStream;
@@ -432,7 +432,7 @@ public class ProtoBufferUtilities {
         }
         return new OfferPayload(offer.getId(), offer.getDate(), getNodeAddress(offer.getOffererNodeAddress()), getPubKeyRing(offer.getPubKeyRing()), getDirection(offer.getDirection()),
                 offer.getFiatPrice(), offer.getMarketPriceMargin(), offer.getUseMarketBasedPrice(), offer.getAmount(), offer.getMinAmount(), offer.getCurrencyCode(), arbitratorNodeAddresses,
-                offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(), offer.getOfferFeePaymentTxID(), offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds, priceFeedService,
+                offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(), offer.getOfferFeePaymentTxID(), offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds,
                 offer.getVersionNr(), offer.getBlockHeightAtOfferCreation(), offer.getTxFee(), offer.getCreateOfferFee(),
                 offer.getBuyerSecurityDeposit(),
                 offer.getSellerSecurityDeposit(),

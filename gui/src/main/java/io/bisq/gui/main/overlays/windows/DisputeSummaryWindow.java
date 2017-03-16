@@ -33,6 +33,7 @@ import io.bisq.gui.util.Transitions;
 import io.bisq.locale.Res;
 import io.bisq.network_messages.arbitration.Dispute;
 import io.bisq.network_messages.arbitration.DisputeResult;
+import io.bisq.network_messages.trade.offer.payload.OfferPayload;
 import io.bisq.network_messages.trade.payload.Contract;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -334,7 +335,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
         Contract contract = dispute.getContract();
         Coin tradeAmount = contract.getTradeAmount();
-        Offer offer = contract.offer;
+        OfferPayload offer = contract.offer;
         Coin available = tradeAmount
                 .add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());
@@ -346,7 +347,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Contract contract = dispute.getContract();
         Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
-        Offer offer = contract.offer;
+        OfferPayload offer = contract.offer;
         Coin available = contract.getTradeAmount().
                 add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());

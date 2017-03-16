@@ -170,7 +170,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (DevEnv.DEV_MODE)
             amountAsCoin.set(offer.getAmount());
 
-        securityDeposit = offer.getDirection() == Offer.Direction.SELL ?
+        securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
                 getBuyerSecurityDeposit() :
                 getSellerSecurityDeposit();
 
