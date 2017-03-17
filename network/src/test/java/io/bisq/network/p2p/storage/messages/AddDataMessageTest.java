@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateException;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @Slf4j
 public class AddDataMessageTest {
@@ -49,7 +49,10 @@ public class AddDataMessageTest {
         AddDataMessage dataMessage1 = new AddDataMessage(protectedStorageEntry);
         Messages.Envelope envelope = dataMessage1.toProtoBuf();
         AddDataMessage dataMessage2 = (AddDataMessage) ProtoBufferUtilities.getAddDataMessage(envelope);
-        assertEquals(dataMessage1, dataMessage2);
+
+        assertTrue(dataMessage1.protectedStorageEntry.getStoragePayload().equals(dataMessage2.protectedStorageEntry.getStoragePayload()));
+        assertTrue(dataMessage1.protectedStorageEntry.equals(dataMessage2.protectedStorageEntry));
+        assertTrue(dataMessage1.equals(dataMessage2));
     }
 
 }

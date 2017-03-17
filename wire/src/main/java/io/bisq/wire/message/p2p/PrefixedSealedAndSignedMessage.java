@@ -6,12 +6,14 @@ import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.message.SendersNodeAddressMessage;
 import io.bisq.wire.payload.crypto.SealedAndSigned;
 import io.bisq.wire.payload.p2p.NodeAddress;
+import lombok.EqualsAndHashCode;
 
 import java.util.Arrays;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@EqualsAndHashCode
 public final class PrefixedSealedAndSignedMessage implements MailboxMessage, SendersNodeAddressMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;

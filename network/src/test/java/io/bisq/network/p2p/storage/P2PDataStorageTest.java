@@ -6,14 +6,12 @@ import com.google.protobuf.util.JsonFormat;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
-import io.bisq.common.util.Utilities;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.network.ProtoBufferUtilities;
 import io.bisq.network.p2p.peers.Broadcaster;
-import io.bisq.network.p2p.storage.mocks.MockData;
 import io.bisq.wire.crypto.Hash;
 import io.bisq.wire.crypto.KeyRing;
 import io.bisq.wire.crypto.KeyStorage;
@@ -31,9 +29,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import sun.security.provider.DSAPublicKeyImpl;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
@@ -52,7 +52,6 @@ public class P2PDataStorageTest {
     private P2PDataStorage dataStorage1;
     private KeyPair storageSignatureKeyPair1, storageSignatureKeyPair2;
     private KeyRing keyRing1, keyRing2;
-    private MockData mockData;
     private StoragePayload storagePayload;
     private File dir1;
     private File dir2;
@@ -73,7 +72,6 @@ public class P2PDataStorageTest {
         dir2.mkdir();
 
         keyRing1 = new KeyRing(new KeyStorage(dir1));
-
         storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
         encryptionService1 = new EncryptionService(keyRing1);
 
@@ -82,8 +80,6 @@ public class P2PDataStorageTest {
         storageSignatureKeyPair2 = keyRing2.getSignatureKeyPair();
         encryptionService2 = new EncryptionService(keyRing2);
         dataStorage1 = new P2PDataStorage(broadcaster, networkNode, dir1);
-
-
     }
 
     @After
@@ -96,9 +92,8 @@ public class P2PDataStorageTest {
     }
 
     @Test
-    public void testAddAndRemove() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        //mockData = new MockData("mockData", keyRing1.getSignatureKeyPair().getPublic());
-        storagePayload = new Alert("alert", false, "version", storageSignatureKeyPair2.getPublic().getEncoded(),
+    public void testProtectedStorageEntryAddAndRemove() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
+        storagePayload = new Alert("alert", false, "version", storageSignatureKeyPair1.getPublic().getEncoded(),
                 "sig");
 
         ProtectedStorageEntry data = dataStorage1.getProtectedData(storagePayload, storageSignatureKeyPair1);
@@ -114,7 +109,7 @@ public class P2PDataStorageTest {
     }
 
     @Test
-    public void testAddAndRemove2() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
+    public void testProtectedStorageEntryRoundtrip() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
         //mockData = new MockData("mockData", keyRing1.getSignatureKeyPair().getPublic());
         storagePayload = getDummyOffer();
 
@@ -123,63 +118,27 @@ public class P2PDataStorageTest {
         assertTrue(checkSignature(data));
 
         ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-        ((Messages.ProtectedStorageEntry) data.toProtoBuf()).writeTo(byteOutputStream);
+        data.toProtoBuf().writeTo(byteOutputStream);
         ProtectedStorageEntry protectedStorageEntry = ProtoBufferUtilities.getProtectedStorageEntry(Messages.ProtectedStorageEntry.parseFrom(new ByteArrayInputStream(byteOutputStream.toByteArray())));
-        data.equals(protectedStorageEntry);
-        assertEquals(Hash.getHash(data.getStoragePayload()), Hash.getHash(protectedStorageEntry.getStoragePayload()));
-        assertEquals(data, protectedStorageEntry);
+
+        assertTrue(Arrays.equals(Hash.getHash(data.getStoragePayload()), Hash.getHash(protectedStorageEntry.getStoragePayload())));
+        assertTrue(data.equals(protectedStorageEntry));
         assertTrue(checkSignature(protectedStorageEntry));
     }
 
     @Test
     public void testOfferRoundtrip() throws InvalidProtocolBufferException {
-        OfferPayload offer1 = getDummyOffer();
-        byte[] serialize = Utilities.serialize(offer1);
-        byte[] serialize2 = Utilities.serialize(offer1);
-        OfferPayload offer1des = Utilities.deserialize(serialize);
-        assertTrue(Arrays.equals(serialize, serialize2));
-        assertTrue(Arrays.equals(Utilities.serialize(offer1des), serialize));
-
+        OfferPayload offer = getDummyOffer();
         try {
-            String buffer = JsonFormat.printer().print(offer1.toProtoBuf().getOffer());
+            String buffer = JsonFormat.printer().print(offer.toProtoBuf().getOffer());
             JsonFormat.Parser parser = JsonFormat.parser();
             Messages.Offer.Builder builder = Messages.Offer.newBuilder();
             parser.merge(buffer, builder);
-            OfferPayload offer2 = ProtoBufferUtilities.getOffer(builder.build());
-            assertEquals(offer1, offer2);
-            for (int i = 0; i < offer1.getArbitratorNodeAddresses().size(); i++) {
-                if (!offer1.getArbitratorNodeAddresses().get(i).equals(offer2.getArbitratorNodeAddresses().get(i)))
-                    fail();
-            }
-            byte[] offerserNode1 = Utilities.serialize((Serializable) offer1.getArbitratorNodeAddresses());
-            byte[] offerserNode2 = Utilities.serialize((Serializable) offer2.getArbitratorNodeAddresses());
-            writeSer(offerserNode1, "out_arbit_1.bin");
-            writeSer(offerserNode2, "out_arbit_2.bin");
-
-            byte[] offerser1 = Utilities.serialize(offer1);
-            byte[] offerser2 = Utilities.serialize(offer2);
-            byte[] offerser3 = Utilities.serialize(offer2);
-            byte[] offerProto = offer1.toProtoBuf().toByteString().toByteArray();
-            byte[] offerProto1 = offer2.toProtoBuf().toByteString().toByteArray();
-
-            writeSer(offerser1, "out1.bin");
-            writeSer(offerser2, "out2.bin");
-
-            assertTrue(Arrays.equals(offerserNode1, offerserNode2));
-            assertTrue(Arrays.equals(offerProto, offerProto1));
-            assertTrue(Arrays.equals(offerser2, offerser3));
-            assertTrue(Arrays.equals(offerser1, offerser2));
-            assertTrue(Arrays.equals(Hash.getHash(offer1), Hash.getHash(offer2)));
+            assertEquals(offer, ProtoBufferUtilities.getOffer(builder.build()));
         } catch (IOException e) {
             e.printStackTrace();
             fail();
         }
-    }
-
-    private void writeSer(byte[] ser, String file) throws IOException {
-        FileOutputStream fos = new FileOutputStream(file);
-        fos.write(ser);
-        fos.close();
     }
 
     @NotNull
@@ -227,22 +186,6 @@ public class P2PDataStorageTest {
                 null);
     }
 
-    @Test
-    public void testProtectedStorageEntryRoundtrip() throws InvalidProtocolBufferException {
-        NodeAddress nodeAddress = new NodeAddress("host", 1000);
-        OfferPayload offer = getDummyOffer();
-        try {
-            String buffer = JsonFormat.printer().print(offer.toProtoBuf().getOffer());
-            JsonFormat.Parser parser = JsonFormat.parser();
-            Messages.Offer.Builder builder = Messages.Offer.newBuilder();
-            parser.merge(buffer, builder);
-            assertEquals(offer, ProtoBufferUtilities.getOffer(builder.build()));
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail();
-        }
-    }
-
     private void setSignature(ProtectedStorageEntry entry) throws CryptoException {
         int newSequenceNumber = entry.sequenceNumber;
         byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), newSequenceNumber));
@@ -254,32 +197,4 @@ public class P2PDataStorageTest {
         byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), entry.sequenceNumber));
         return dataStorage1.checkSignature(entry.ownerPubKey, hashOfDataAndSeqNr, entry.signature);
     }
-
-
-    public void testProtoAndBack() {
-        P2PDataStorage p2PDataStorage = new P2PDataStorage(null, null, null);
-
-        //p2PDataStorage.add();
-        byte[] bytes = new byte[10];
-        try {
-            boolean result = p2PDataStorage.checkSignature(new DSAPublicKeyImpl(bytes), bytes, bytes);
-            assertFalse(result);
-
-/*
-            ProtectedDataStorageTest
-
-
-
-            byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(protectedStorageEntry.getStoragePayload(), protectedStorageEntry.sequenceNumber));
-            return checkSignature(protectedStorageEntry.ownerPubKey, hashOfDataAndSeqNr, protectedStorageEntry.signature);
-
-*/
-
-
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        }
-
-    }
-
 }
