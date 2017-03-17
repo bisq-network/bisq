@@ -152,7 +152,13 @@ public class WalletsSetup {
                 //We are here in the btcj thread Thread[ STARTING,5,main] 
                 super.onSetupCompleted();
 
-                walletConfig.peerGroup().addEventListener(new PeerEventListener() {
+                final PeerGroup peerGroup = walletConfig.peerGroup();
+
+                // We don't want to get our node white list polluted with nodes from AddressMessage calls.
+                if (preferences.getBitcoinNodes() != null && !preferences.getBitcoinNodes().isEmpty())
+                    peerGroup.setAddPeersFromAddressMessage(false);
+
+                peerGroup.addEventListener(new PeerEventListener() {
                     @Override
                     public void onPeersDiscovered(Set<PeerAddress> peerAddresses) {
                     }
@@ -169,14 +175,14 @@ public class WalletsSetup {
                     public void onPeerConnected(Peer peer, int peerCount) {
                         // We get called here on our user thread
                         numPeers.set(peerCount);
-                        connectedPeers.set(walletConfig.peerGroup().getConnectedPeers());
+                        connectedPeers.set(peerGroup.getConnectedPeers());
                     }
 
                     @Override
                     public void onPeerDisconnected(Peer peer, int peerCount) {
                         // We get called here on our user thread
                         numPeers.set(peerCount);
-                        connectedPeers.set(walletConfig.peerGroup().getConnectedPeers());
+                        connectedPeers.set(peerGroup.getConnectedPeers());
                     }
 
                     @Override
