@@ -17,8 +17,9 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades;
 
-import io.bisq.alert.PrivateNotificationManager;
 import io.bisq.common.UserThread;
+import io.bisq.common.locale.Res;
+import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.HyperlinkWithIcon;
@@ -26,7 +27,6 @@ import io.bisq.gui.components.PeerInfoIcon;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.locale.Res;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;

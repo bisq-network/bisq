@@ -17,6 +17,10 @@
 
 package io.bisq.gui.main.offer.takeoffer;
 
+import io.bisq.common.locale.Res;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.trade.Trade;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
@@ -28,17 +32,13 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.locale.Res;
-import io.bisq.offer.Offer;
-import io.bisq.p2p.network.CloseConnectionReason;
-import io.bisq.p2p.network.Connection;
-import io.bisq.p2p.network.ConnectionListener;
-import io.bisq.p2p.storage.P2PService;
-import io.bisq.payload.arbitration.Arbitrator;
-import io.bisq.payload.offer.OfferPayload;
-import io.bisq.payload.payment.PaymentMethod;
-import io.bisq.payment.PaymentAccount;
-import io.bisq.trade.Trade;
+import io.bisq.network.p2p.network.CloseConnectionReason;
+import io.bisq.network.p2p.network.Connection;
+import io.bisq.network.p2p.network.ConnectionListener;
+import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.wire.payload.arbitration.Arbitrator;
+import io.bisq.wire.payload.offer.OfferPayload;
+import io.bisq.wire.payload.payment.PaymentMethod;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;

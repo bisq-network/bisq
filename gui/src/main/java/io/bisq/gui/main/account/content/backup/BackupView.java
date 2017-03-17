@@ -17,18 +17,18 @@
 
 package io.bisq.gui.main.account.content.backup;
 
-import io.bisq.app.AppOptionKeys;
-import io.bisq.app.BisqEnvironment;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.app.AppOptionKeys;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.Res;
-import io.bisq.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

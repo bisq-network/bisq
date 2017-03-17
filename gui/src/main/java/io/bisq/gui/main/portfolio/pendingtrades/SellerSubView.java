@@ -17,10 +17,10 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades;
 
-import io.bisq.app.Log;
+import io.bisq.common.app.Log;
+import io.bisq.common.locale.Res;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.seller.*;
-import io.bisq.locale.Res;
 import org.fxmisc.easybind.EasyBind;
 
 public class SellerSubView extends TradeSubView {

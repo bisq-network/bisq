@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.portfolio.closedtrades;
 
-import io.bisq.trade.Tradable;
+import io.bisq.core.trade.Tradable;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.

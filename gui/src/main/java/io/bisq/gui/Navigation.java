@@ -18,13 +18,13 @@
 package io.bisq.gui;
 
 import com.google.inject.Inject;
-import io.bisq.app.Version;
+import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
+import io.bisq.common.storage.Storage;
 import io.bisq.gui.common.view.View;
 import io.bisq.gui.common.view.ViewPath;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.market.MarketView;
-import io.bisq.storage.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

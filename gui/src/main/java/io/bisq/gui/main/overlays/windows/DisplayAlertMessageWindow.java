@@ -17,11 +17,11 @@
 
 package io.bisq.gui.main.overlays.windows;
 
+import io.bisq.common.locale.Res;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.FormBuilder;
-import io.bisq.locale.Res;
-import io.bisq.payload.alert.Alert;
+import io.bisq.wire.payload.alert.Alert;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;

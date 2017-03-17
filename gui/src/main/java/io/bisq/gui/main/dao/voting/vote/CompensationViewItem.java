@@ -18,14 +18,14 @@
 package io.bisq.gui.main.dao.voting.vote;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.dao.compensation.CompensationRequest;
-import io.bisq.dao.vote.CompensationRequestVoteItem;
+import io.bisq.common.locale.Res;
+import io.bisq.core.dao.compensation.CompensationRequest;
+import io.bisq.core.dao.vote.CompensationRequestVoteItem;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.Res;
-import io.bisq.payload.dao.compensation.CompensationRequestPayload;
+import io.bisq.wire.payload.dao.compensation.CompensationRequestPayload;
 import javafx.beans.property.DoubleProperty;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;

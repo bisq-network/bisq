@@ -17,12 +17,12 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades;
 
+import io.bisq.common.locale.Res;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

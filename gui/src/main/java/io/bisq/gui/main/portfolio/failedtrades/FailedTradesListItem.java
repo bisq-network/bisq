@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.portfolio.failedtrades;
 
-import io.bisq.trade.Trade;
+import io.bisq.core.trade.Trade;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.

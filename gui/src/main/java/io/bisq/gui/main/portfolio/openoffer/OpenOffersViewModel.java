@@ -20,13 +20,13 @@ package io.bisq.gui.main.portfolio.openoffer;
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.locale.Res;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OpenOffer;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.locale.Res;
-import io.bisq.offer.Offer;
-import io.bisq.offer.OpenOffer;
-import io.bisq.p2p.storage.P2PService;
+import io.bisq.network.p2p.storage.P2PService;
 import javafx.collections.ObservableList;
 import org.bitcoinj.utils.Fiat;
 

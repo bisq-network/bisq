@@ -10,8 +10,8 @@
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
-    <logger name="io.bisq.storage.Storage" level="WARN"/>
-    <logger name="io.bisq.storage.FileManager" level="WARN"/>
+    <logger name="io.bisq.common.storage.Storage" level="WARN"/>
+    <logger name="io.bisq.common.storage.FileManager" level="WARN"/>
     <logger name="io.bisq.locale.BSResources" level="ERROR"/>
 
     <!-- <logger name="io.bisq.p2p.peers.PeerGroup" level="TRACE"/>

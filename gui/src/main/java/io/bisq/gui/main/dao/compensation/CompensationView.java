@@ -19,6 +19,7 @@ package io.bisq.gui.main.dao.compensation;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.common.locale.Res;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.main.MainView;
@@ -27,7 +28,6 @@ import io.bisq.gui.main.dao.compensation.active.ActiveCompensationRequestView;
 import io.bisq.gui.main.dao.compensation.create.CreateCompensationRequestView;
 import io.bisq.gui.main.dao.compensation.past.PastCompensationRequestView;
 import io.bisq.gui.util.Colors;
-import io.bisq.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;

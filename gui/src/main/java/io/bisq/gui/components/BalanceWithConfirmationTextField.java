@@ -17,9 +17,9 @@
 
 package io.bisq.gui.components;
 
-import io.bisq.btc.listeners.AddressConfidenceListener;
-import io.bisq.btc.listeners.BalanceListener;
-import io.bisq.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.listeners.AddressConfidenceListener;
+import io.bisq.core.btc.listeners.BalanceListener;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;

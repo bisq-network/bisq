@@ -17,12 +17,12 @@
 
 package io.bisq.gui;
 
-import io.bisq.BisqException;
 import io.bisq.common.UserThread;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.exceptions.BisqException;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.ImageUtil;
-import io.bisq.locale.Res;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.slf4j.Logger;

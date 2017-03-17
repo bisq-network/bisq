@@ -18,7 +18,8 @@
 package io.bisq.provider.fee;
 
 import io.bisq.common.util.Utilities;
-import io.bisq.http.HttpException;
+import io.bisq.core.provider.fee.FeeService;
+import io.bisq.network.http.HttpException;
 import io.bisq.provider.fee.providers.BtcFeesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

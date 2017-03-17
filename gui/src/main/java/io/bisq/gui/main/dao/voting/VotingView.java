@@ -19,6 +19,7 @@ package io.bisq.gui.main.dao.voting;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.common.locale.Res;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.main.MainView;
@@ -27,7 +28,6 @@ import io.bisq.gui.main.dao.voting.dashboard.VotingDashboardView;
 import io.bisq.gui.main.dao.voting.history.VotingHistoryView;
 import io.bisq.gui.main.dao.voting.vote.VoteView;
 import io.bisq.gui.util.Colors;
-import io.bisq.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;

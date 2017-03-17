@@ -17,9 +17,9 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades.steps.buyer;
 
+import io.bisq.common.locale.Res;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeStepView;
-import io.bisq.locale.Res;
 
 public class BuyerStep1View extends TradeStepView {
 

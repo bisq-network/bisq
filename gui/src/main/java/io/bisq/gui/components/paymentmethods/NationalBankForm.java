@@ -17,10 +17,10 @@
 
 package io.bisq.gui.components.paymentmethods;
 
+import io.bisq.core.payment.PaymentAccount;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.payload.payment.PaymentAccountContractData;
-import io.bisq.payment.PaymentAccount;
+import io.bisq.wire.payload.payment.PaymentAccountContractData;
 import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

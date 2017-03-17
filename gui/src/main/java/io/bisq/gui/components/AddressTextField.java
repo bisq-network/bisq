@@ -19,10 +19,10 @@ package io.bisq.gui.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.locale.Res;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;

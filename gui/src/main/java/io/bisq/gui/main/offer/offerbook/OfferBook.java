@@ -17,11 +17,11 @@
 
 package io.bisq.gui.main.offer.offerbook;
 
-import io.bisq.app.Log;
-import io.bisq.offer.Offer;
-import io.bisq.offer.OfferBookService;
-import io.bisq.payload.offer.OfferPayload;
-import io.bisq.trade.TradeManager;
+import io.bisq.common.app.Log;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferBookService;
+import io.bisq.core.trade.TradeManager;
+import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;

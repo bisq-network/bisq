@@ -17,8 +17,12 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades.steps.buyer;
 
-import io.bisq.app.DevEnv;
+import io.bisq.common.app.DevEnv;
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple3;
+import io.bisq.core.trade.Trade;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
 import io.bisq.gui.components.TitledGroupBg;
@@ -27,11 +31,7 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.CurrencyUtil;
-import io.bisq.locale.Res;
-import io.bisq.payload.payment.*;
-import io.bisq.trade.Trade;
-import io.bisq.user.Preferences;
+import io.bisq.wire.payload.payment.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;

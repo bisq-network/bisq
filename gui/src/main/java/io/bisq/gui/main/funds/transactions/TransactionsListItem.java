@@ -17,16 +17,16 @@
 
 package io.bisq.gui.main.funds.transactions;
 
-import io.bisq.btc.listeners.TxConfidenceListener;
-import io.bisq.btc.wallet.BtcWalletService;
+import io.bisq.common.locale.Res;
+import io.bisq.core.btc.listeners.TxConfidenceListener;
+import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OpenOffer;
+import io.bisq.core.trade.Tradable;
+import io.bisq.core.trade.Trade;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.locale.Res;
-import io.bisq.offer.Offer;
-import io.bisq.offer.OpenOffer;
-import io.bisq.trade.Tradable;
-import io.bisq.trade.Trade;
 import javafx.scene.control.Tooltip;
 import org.bitcoinj.core.*;
 import org.slf4j.Logger;

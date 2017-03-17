@@ -19,8 +19,8 @@ package io.bisq.provider.price.providers;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
-import io.bisq.http.HttpClient;
-import io.bisq.http.HttpException;
+import io.bisq.network.http.HttpClient;
+import io.bisq.network.http.HttpException;
 import io.bisq.provider.price.PriceData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

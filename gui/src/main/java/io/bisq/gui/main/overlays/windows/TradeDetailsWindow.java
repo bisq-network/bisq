@@ -17,18 +17,18 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.arbitration.DisputeManager;
+import io.bisq.common.locale.Res;
+import io.bisq.core.arbitration.DisputeManager;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.trade.Trade;
+import io.bisq.core.trade.TradeManager;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.Res;
-import io.bisq.offer.Offer;
-import io.bisq.payload.payment.PaymentAccountContractData;
-import io.bisq.payload.trade.Contract;
-import io.bisq.trade.Trade;
-import io.bisq.trade.TradeManager;
+import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.trade.Contract;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;

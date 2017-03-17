@@ -18,12 +18,12 @@
 package io.bisq.statistics;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.bisq.app.AppOptionKeys;
-import io.bisq.app.BisqEnvironment;
-import io.bisq.app.BisqExecutable;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Profiler;
 import io.bisq.common.util.RestartUtil;
+import io.bisq.core.app.AppOptionKeys;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.app.BisqExecutable;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -36,8 +36,8 @@ import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import static io.bisq.app.BisqEnvironment.DEFAULT_APP_NAME;
-import static io.bisq.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
+import static io.bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
+import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class StatisticsMain extends BisqExecutable {
     private static final Logger log = LoggerFactory.getLogger(StatisticsMain.class);

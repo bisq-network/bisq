@@ -18,11 +18,11 @@
 package io.bisq.gui.main.settings.network;
 
 import io.bisq.common.Clock;
+import io.bisq.common.locale.Res;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.locale.Res;
-import io.bisq.p2p.network.Connection;
-import io.bisq.p2p.network.OutboundConnection;
-import io.bisq.p2p.network.Statistic;
+import io.bisq.network.p2p.network.Connection;
+import io.bisq.network.p2p.network.OutboundConnection;
+import io.bisq.network.p2p.network.Statistic;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import org.apache.commons.lang3.time.DurationFormatUtils;

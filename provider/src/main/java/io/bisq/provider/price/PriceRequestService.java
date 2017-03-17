@@ -18,7 +18,7 @@
 package io.bisq.provider.price;
 
 import io.bisq.common.util.Utilities;
-import io.bisq.http.HttpException;
+import io.bisq.network.http.HttpException;
 import io.bisq.provider.price.providers.BtcAverageProvider;
 import io.bisq.provider.price.providers.CoinmarketcapProvider;
 import io.bisq.provider.price.providers.PoloniexProvider;

@@ -17,14 +17,16 @@
 
 package io.bisq.gui.main;
 
-import io.bisq.BisqException;
-import io.bisq.app.AppOptionKeys;
-import io.bisq.app.BisqEnvironment;
-import io.bisq.app.DevEnv;
-import io.bisq.app.Version;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
+import io.bisq.common.app.Version;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
+import io.bisq.core.app.AppOptionKeys;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.exceptions.BisqException;
+import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.components.BusyAnimation;
@@ -41,8 +43,6 @@ import io.bisq.gui.main.settings.SettingsView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Transitions;
-import io.bisq.locale.Res;
-import io.bisq.provider.price.PriceFeedService;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

@@ -17,11 +17,11 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.btc.wallet.WalletsManager;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.gui.main.overlays.Overlay;
-import io.bisq.locale.Res;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;

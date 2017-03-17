@@ -17,10 +17,12 @@
 
 package io.bisq.gui.main.settings.network;
 
-import io.bisq.app.BisqApp;
-import io.bisq.btc.wallet.WalletsSetup;
 import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
+import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.WalletsSetup;
+import io.bisq.core.user.Preferences;
+import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -28,10 +30,8 @@ import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.locale.Res;
-import io.bisq.p2p.network.Statistic;
-import io.bisq.p2p.storage.P2PService;
-import io.bisq.user.Preferences;
+import io.bisq.network.p2p.network.Statistic;
+import io.bisq.network.p2p.storage.P2PService;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

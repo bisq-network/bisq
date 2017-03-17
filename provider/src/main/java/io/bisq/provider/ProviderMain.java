@@ -18,8 +18,8 @@
 package io.bisq.provider;
 
 import ch.qos.logback.classic.Level;
-import io.bisq.app.Log;
-import io.bisq.http.HttpException;
+import io.bisq.common.app.Log;
+import io.bisq.network.http.HttpException;
 import io.bisq.provider.fee.FeeRequestService;
 import io.bisq.provider.price.PriceRequestService;
 import org.slf4j.Logger;

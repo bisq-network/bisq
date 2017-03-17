@@ -17,9 +17,12 @@
 
 package io.bisq.gui.components.paymentmethods;
 
+import io.bisq.common.locale.*;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Tuple4;
+import io.bisq.core.payment.CountryBasedPaymentAccount;
+import io.bisq.core.payment.PaymentAccount;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
@@ -28,11 +31,8 @@ import io.bisq.gui.util.validation.AccountNrValidator;
 import io.bisq.gui.util.validation.BankIdValidator;
 import io.bisq.gui.util.validation.BranchIdValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.locale.*;
-import io.bisq.payload.payment.BankAccountContractData;
-import io.bisq.payload.payment.PaymentAccountContractData;
-import io.bisq.payment.CountryBasedPaymentAccount;
-import io.bisq.payment.PaymentAccount;
+import io.bisq.wire.payload.payment.BankAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountContractData;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;

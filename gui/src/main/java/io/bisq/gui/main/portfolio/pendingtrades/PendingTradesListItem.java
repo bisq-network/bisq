@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades;
 
-import io.bisq.trade.Trade;
+import io.bisq.core.trade.Trade;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;

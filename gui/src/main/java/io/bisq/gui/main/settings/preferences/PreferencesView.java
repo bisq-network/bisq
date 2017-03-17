@@ -18,8 +18,12 @@
 package io.bisq.gui.main.settings.preferences;
 
 import io.bisq.common.UserThread;
+import io.bisq.common.locale.*;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
+import io.bisq.core.provider.fee.FeeService;
+import io.bisq.core.user.BlockChainExplorer;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -29,10 +33,6 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.*;
-import io.bisq.provider.fee.FeeService;
-import io.bisq.user.BlockChainExplorer;
-import io.bisq.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

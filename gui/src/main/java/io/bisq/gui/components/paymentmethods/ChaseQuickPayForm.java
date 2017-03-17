@@ -17,18 +17,18 @@
 
 package io.bisq.gui.components.paymentmethods;
 
+import io.bisq.common.locale.Res;
+import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.payment.ChaseQuickPayAccount;
+import io.bisq.core.payment.PaymentAccount;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.ChaseQuickPayValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.locale.Res;
-import io.bisq.locale.TradeCurrency;
-import io.bisq.payload.payment.ChaseQuickPayAccountContractData;
-import io.bisq.payload.payment.PaymentAccountContractData;
-import io.bisq.payment.ChaseQuickPayAccount;
-import io.bisq.payment.PaymentAccount;
+import io.bisq.wire.payload.payment.ChaseQuickPayAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountContractData;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;

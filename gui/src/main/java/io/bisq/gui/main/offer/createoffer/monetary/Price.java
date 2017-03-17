@@ -1,7 +1,7 @@
 package io.bisq.gui.main.offer.createoffer.monetary;
 
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.util.MathUtils;
-import io.bisq.locale.CurrencyUtil;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.ExchangeRate;

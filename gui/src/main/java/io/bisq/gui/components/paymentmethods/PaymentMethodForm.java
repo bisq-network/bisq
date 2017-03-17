@@ -17,16 +17,16 @@
 
 package io.bisq.gui.components.paymentmethods;
 
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
+import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple3;
+import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.locale.CurrencyUtil;
-import io.bisq.locale.Res;
-import io.bisq.locale.TradeCurrency;
-import io.bisq.payload.payment.PaymentAccountContractData;
-import io.bisq.payment.PaymentAccount;
-import io.bisq.user.Preferences;
+import io.bisq.wire.payload.payment.PaymentAccountContractData;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;

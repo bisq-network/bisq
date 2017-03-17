@@ -31,9 +31,9 @@
  */
 package io.bisq.gui.main.market.trades.charts.price;
 
+import io.bisq.common.locale.Res;
 import io.bisq.gui.main.market.trades.charts.CandleData;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.Res;
 import javafx.geometry.HPos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.ColumnConstraints;

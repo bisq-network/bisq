@@ -17,7 +17,11 @@
 
 package io.bisq.gui.main.offer.offerbook;
 
-import io.bisq.alert.PrivateNotificationManager;
+import io.bisq.common.locale.FiatCurrency;
+import io.bisq.common.locale.Res;
+import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.offer.Offer;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -36,12 +40,8 @@ import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.FiatCurrency;
-import io.bisq.locale.Res;
-import io.bisq.locale.TradeCurrency;
-import io.bisq.offer.Offer;
-import io.bisq.payload.offer.OfferPayload;
-import io.bisq.payload.payment.PaymentMethod;
+import io.bisq.wire.payload.offer.OfferPayload;
+import io.bisq.wire.payload.payment.PaymentMethod;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;

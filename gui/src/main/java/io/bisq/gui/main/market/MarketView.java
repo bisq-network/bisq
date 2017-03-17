@@ -17,6 +17,7 @@
 
 package io.bisq.gui.main.market;
 
+import io.bisq.common.locale.Res;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.*;
@@ -24,7 +25,6 @@ import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.market.offerbook.OfferBookChartView;
 import io.bisq.gui.main.market.spread.SpreadView;
 import io.bisq.gui.main.market.trades.TradesChartsView;
-import io.bisq.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.ScrollPane;

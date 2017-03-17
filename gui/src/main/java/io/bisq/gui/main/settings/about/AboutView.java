@@ -17,14 +17,14 @@
 
 package io.bisq.gui.main.settings.about;
 
-import io.bisq.app.Version;
+import io.bisq.common.app.Version;
+import io.bisq.common.locale.Res;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.TitledGroupBg;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.Res;
 import javafx.geometry.HPos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;

@@ -19,8 +19,9 @@ package io.bisq.gui;
 
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
-import io.bisq.app.AppModule;
-import io.bisq.app.AppOptionKeys;
+import io.bisq.common.app.AppModule;
+import io.bisq.common.locale.Res;
+import io.bisq.core.app.AppOptionKeys;
 import io.bisq.gui.common.fxml.FxmlViewLoader;
 import io.bisq.gui.common.view.CachingViewLoader;
 import io.bisq.gui.common.view.ViewFactory;
@@ -31,7 +32,6 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.Transitions;
 import io.bisq.gui.util.validation.*;
-import io.bisq.locale.Res;
 import javafx.stage.Stage;
 import org.springframework.core.env.Environment;
 

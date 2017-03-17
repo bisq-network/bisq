@@ -17,14 +17,14 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.app.DevEnv;
-import io.bisq.filter.FilterManager;
+import io.bisq.common.app.DevEnv;
+import io.bisq.common.locale.Res;
+import io.bisq.core.filter.FilterManager;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.locale.Res;
-import io.bisq.payload.filter.Filter;
-import io.bisq.payload.filter.PaymentAccountFilter;
+import io.bisq.wire.payload.filter.Filter;
+import io.bisq.wire.payload.filter.PaymentAccountFilter;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;

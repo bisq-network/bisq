@@ -19,6 +19,7 @@ package io.bisq.gui.main.dao.wallet;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import io.bisq.common.locale.Res;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.main.MainView;
@@ -28,7 +29,6 @@ import io.bisq.gui.main.dao.wallet.receive.BsqReceiveView;
 import io.bisq.gui.main.dao.wallet.send.BsqSendView;
 import io.bisq.gui.main.dao.wallet.tx.BsqTransactionsView;
 import io.bisq.gui.util.Colors;
-import io.bisq.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;

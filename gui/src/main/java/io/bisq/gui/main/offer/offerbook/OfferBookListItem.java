@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.offer.offerbook;
 
-import io.bisq.offer.Offer;
+import io.bisq.core.offer.Offer;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode

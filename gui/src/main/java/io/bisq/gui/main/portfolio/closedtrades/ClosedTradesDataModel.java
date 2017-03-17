@@ -18,11 +18,11 @@
 package io.bisq.gui.main.portfolio.closedtrades;
 
 import com.google.inject.Inject;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.trade.Tradable;
+import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.gui.common.model.ActivatableDataModel;
-import io.bisq.offer.Offer;
-import io.bisq.payload.offer.OfferPayload;
-import io.bisq.trade.Tradable;
-import io.bisq.trade.closed.ClosedTradableManager;
+import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;

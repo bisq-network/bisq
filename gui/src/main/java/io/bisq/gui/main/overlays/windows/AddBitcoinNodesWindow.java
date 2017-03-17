@@ -19,11 +19,11 @@ package io.bisq.gui.main.overlays.windows;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.user.Preferences;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;

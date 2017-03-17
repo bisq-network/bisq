@@ -18,8 +18,13 @@
 package io.bisq.gui.main.account.content.altcoinaccounts;
 
 import io.bisq.common.UserThread;
+import io.bisq.common.locale.CryptoCurrency;
+import io.bisq.common.locale.Res;
+import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
+import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.TitledGroupBg;
@@ -32,12 +37,7 @@ import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.AltCoinAddressValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.locale.CryptoCurrency;
-import io.bisq.locale.Res;
-import io.bisq.locale.TradeCurrency;
-import io.bisq.payload.payment.PaymentMethod;
-import io.bisq.payment.PaymentAccount;
-import io.bisq.payment.PaymentAccountFactory;
+import io.bisq.wire.payload.payment.PaymentMethod;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.VPos;
 import javafx.scene.control.Button;

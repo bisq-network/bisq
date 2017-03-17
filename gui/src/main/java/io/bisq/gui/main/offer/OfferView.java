@@ -18,6 +18,11 @@
 package io.bisq.gui.main.offer;
 
 import io.bisq.common.UserThread;
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
+import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.View;
@@ -27,12 +32,7 @@ import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.offer.createoffer.CreateOfferView;
 import io.bisq.gui.main.offer.offerbook.OfferBookView;
 import io.bisq.gui.main.offer.takeoffer.TakeOfferView;
-import io.bisq.locale.CurrencyUtil;
-import io.bisq.locale.Res;
-import io.bisq.locale.TradeCurrency;
-import io.bisq.offer.Offer;
-import io.bisq.payload.offer.OfferPayload;
-import io.bisq.user.Preferences;
+import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.Tab;

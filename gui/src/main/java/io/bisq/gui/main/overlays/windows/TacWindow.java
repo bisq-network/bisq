@@ -1,11 +1,11 @@
 package io.bisq.gui.main.overlays.windows;
 
 import com.google.inject.Inject;
-import io.bisq.app.BisqApp;
-import io.bisq.app.DevEnv;
+import io.bisq.common.app.DevEnv;
+import io.bisq.common.locale.Res;
+import io.bisq.core.user.Preferences;
+import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.main.overlays.Overlay;
-import io.bisq.locale.Res;
-import io.bisq.user.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

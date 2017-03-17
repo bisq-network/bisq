@@ -17,9 +17,10 @@
 
 package io.bisq.gui.main.dao.wallet.receive;
 
-import io.bisq.app.DevEnv;
-import io.bisq.btc.wallet.BsqWalletService;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
+import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressTextField;
@@ -29,7 +30,6 @@ import io.bisq.gui.main.overlays.windows.QRCodeWindow;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.Res;
 import javafx.geometry.Insets;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;

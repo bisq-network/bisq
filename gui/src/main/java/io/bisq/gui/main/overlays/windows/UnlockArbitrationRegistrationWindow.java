@@ -17,11 +17,11 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.app.DevEnv;
+import io.bisq.common.app.DevEnv;
+import io.bisq.common.locale.Res;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;

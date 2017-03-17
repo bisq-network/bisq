@@ -17,17 +17,17 @@
 
 package io.bisq.gui.main.disputes.arbitrator;
 
-import io.bisq.alert.PrivateNotificationManager;
-import io.bisq.arbitration.DisputeManager;
-import io.bisq.crypto.KeyRing;
+import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.arbitration.DisputeManager;
+import io.bisq.core.trade.TradeManager;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.disputes.trader.TraderDisputeView;
 import io.bisq.gui.main.overlays.windows.ContractWindow;
 import io.bisq.gui.main.overlays.windows.DisputeSummaryWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.p2p.storage.P2PService;
-import io.bisq.trade.TradeManager;
+import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.wire.crypto.KeyRing;
 import javafx.stage.Stage;
 
 import javax.inject.Inject;

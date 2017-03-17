@@ -18,10 +18,10 @@
 package io.bisq.gui.main.dao.voting.vote;
 
 import io.bisq.common.UserThread;
-import io.bisq.dao.vote.VoteItem;
-import io.bisq.dao.vote.VotingDefaultValues;
+import io.bisq.common.locale.Res;
+import io.bisq.core.dao.vote.VoteItem;
+import io.bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.gui.components.InputTextField;
-import io.bisq.locale.Res;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;

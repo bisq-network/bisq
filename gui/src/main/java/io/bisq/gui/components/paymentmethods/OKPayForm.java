@@ -17,18 +17,18 @@
 
 package io.bisq.gui.components.paymentmethods;
 
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
+import io.bisq.core.payment.OKPayAccount;
+import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.gui.util.validation.OKPayValidator;
-import io.bisq.locale.CurrencyUtil;
-import io.bisq.locale.Res;
-import io.bisq.payload.payment.OKPayAccountContractData;
-import io.bisq.payload.payment.PaymentAccountContractData;
-import io.bisq.payment.OKPayAccount;
-import io.bisq.payment.PaymentAccount;
-import io.bisq.user.Preferences;
+import io.bisq.wire.payload.payment.OKPayAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountContractData;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.CheckBox;

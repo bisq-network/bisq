@@ -17,11 +17,11 @@
 
 package io.bisq.gui.main.portfolio.failedtrades;
 
+import io.bisq.common.locale.Res;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
-import io.bisq.locale.Res;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;

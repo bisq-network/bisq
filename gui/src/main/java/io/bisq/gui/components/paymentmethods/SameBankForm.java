@@ -17,15 +17,15 @@
 
 package io.bisq.gui.components.paymentmethods;
 
+import io.bisq.common.locale.BankUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.payment.CountryBasedPaymentAccount;
+import io.bisq.core.payment.PaymentAccount;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.locale.BankUtil;
-import io.bisq.locale.Res;
-import io.bisq.payload.payment.PaymentAccountContractData;
-import io.bisq.payment.CountryBasedPaymentAccount;
-import io.bisq.payment.PaymentAccount;
+import io.bisq.wire.payload.payment.PaymentAccountContractData;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;

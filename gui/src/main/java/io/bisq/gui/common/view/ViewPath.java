@@ -17,7 +17,7 @@
 
 package io.bisq.gui.common.view;
 
-import io.bisq.app.Version;
+import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
 
 import java.util.ArrayList;

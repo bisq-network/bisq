@@ -17,8 +17,8 @@
 
 package io.bisq.gui.util.validation;
 
+import io.bisq.common.locale.Res;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.locale.Res;
 import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;

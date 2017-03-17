@@ -18,7 +18,11 @@
 package io.bisq.gui.main.portfolio.closedtrades;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
-import io.bisq.alert.PrivateNotificationManager;
+import io.bisq.common.locale.Res;
+import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.offer.OpenOffer;
+import io.bisq.core.trade.Tradable;
+import io.bisq.core.trade.Trade;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.HyperlinkWithIcon;
@@ -26,11 +30,7 @@ import io.bisq.gui.components.PeerInfoIcon;
 import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.locale.Res;
-import io.bisq.offer.OpenOffer;
-import io.bisq.payload.NodeAddress;
-import io.bisq.trade.Tradable;
-import io.bisq.trade.Trade;
+import io.bisq.wire.payload.p2p.NodeAddress;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;

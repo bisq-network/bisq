@@ -17,11 +17,11 @@
 
 package io.bisq.gui.main.funds.withdrawal;
 
-import io.bisq.btc.AddressEntry;
-import io.bisq.btc.listeners.BalanceListener;
-import io.bisq.btc.wallet.BtcWalletService;
+import io.bisq.common.locale.Res;
+import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.listeners.BalanceListener;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.locale.Res;
 import javafx.scene.control.Label;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;

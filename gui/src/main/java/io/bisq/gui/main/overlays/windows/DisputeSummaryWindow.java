@@ -17,24 +17,24 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.arbitration.DisputeManager;
-import io.bisq.btc.AddressEntry;
-import io.bisq.btc.exceptions.TransactionVerificationException;
-import io.bisq.btc.wallet.BtcWalletService;
-import io.bisq.btc.wallet.TradeWalletService;
 import io.bisq.common.UserThread;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.arbitration.DisputeManager;
+import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.exceptions.TransactionVerificationException;
+import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.Transitions;
-import io.bisq.locale.Res;
-import io.bisq.payload.arbitration.Dispute;
-import io.bisq.payload.arbitration.DisputeResult;
-import io.bisq.payload.offer.OfferPayload;
-import io.bisq.payload.trade.Contract;
+import io.bisq.wire.payload.arbitration.Dispute;
+import io.bisq.wire.payload.arbitration.DisputeResult;
+import io.bisq.wire.payload.offer.OfferPayload;
+import io.bisq.wire.payload.trade.Contract;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;

@@ -18,6 +18,8 @@
 package io.bisq.gui.main.market.trades;
 
 import io.bisq.common.UserThread;
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.MathUtils;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -26,9 +28,7 @@ import io.bisq.gui.main.market.trades.charts.volume.VolumeChart;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.CurrencyListItem;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.locale.CurrencyUtil;
-import io.bisq.locale.Res;
-import io.bisq.payload.trade.statistics.TradeStatistics;
+import io.bisq.wire.payload.trade.statistics.TradeStatistics;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

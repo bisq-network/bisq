@@ -17,7 +17,7 @@
 
 package io.bisq.gui.main.dao.wallet;
 
-import io.bisq.btc.wallet.BsqWalletService;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BsqFormatter;
 import javafx.scene.control.TextField;

@@ -2,9 +2,9 @@ package io.bisq.provider.fee.providers;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
-import io.bisq.http.HttpClient;
-import io.bisq.http.HttpException;
-import io.bisq.provider.fee.FeeService;
+import io.bisq.core.provider.fee.FeeService;
+import io.bisq.network.http.HttpClient;
+import io.bisq.network.http.HttpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

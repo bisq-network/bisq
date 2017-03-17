@@ -18,6 +18,8 @@
 package io.bisq.gui.main.account.content.arbitratorselection;
 
 import io.bisq.common.UserThread;
+import io.bisq.common.locale.LanguageUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -25,8 +27,6 @@ import io.bisq.gui.components.TableGroupHeadline;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.LanguageUtil;
-import io.bisq.locale.Res;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;

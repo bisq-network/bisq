@@ -18,15 +18,15 @@
 package io.bisq.gui.main.market.spread;
 
 import com.google.inject.Inject;
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.provider.price.MarketPrice;
+import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.locale.CurrencyUtil;
-import io.bisq.offer.Offer;
-import io.bisq.payload.offer.OfferPayload;
-import io.bisq.provider.price.MarketPrice;
-import io.bisq.provider.price.PriceFeedService;
+import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;

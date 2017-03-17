@@ -16,9 +16,9 @@
     <logger name="io.bisq.btc.AddressBasedCoinSelector" level="OFF"/>
 
     <logger name="io.bisq.gui.util.Profiler" level="ERROR"/>
-    <logger name="io.bisq.locale.Res" level="ERROR"/>
+    <logger name="io.bisq.common.locale.Res" level="ERROR"/>
     <logger name="io.bisq.temp.storage.RemoteStorage" level="WARN"/>
-    <logger name="io.bisq.storage.FileManager" level="WARN"/>
+    <logger name="io.bisq.common.storage.FileManager" level="WARN"/>
 
     <logger name="org.bitcoinj" level="WARN"/>
 

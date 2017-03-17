@@ -17,8 +17,8 @@
 
 package io.bisq.gui.util.validation;
 
-import io.bisq.locale.Res;
-import io.bisq.user.Preferences;
+import io.bisq.common.locale.Res;
+import io.bisq.core.user.Preferences;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 

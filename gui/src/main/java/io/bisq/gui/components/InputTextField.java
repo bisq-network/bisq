@@ -17,8 +17,8 @@
 
 package io.bisq.gui.components;
 
+import io.bisq.common.locale.Res;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.locale.Res;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;

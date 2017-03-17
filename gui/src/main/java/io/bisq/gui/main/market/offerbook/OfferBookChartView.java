@@ -18,7 +18,10 @@
 package io.bisq.gui.main.market.offerbook;
 
 import io.bisq.common.UserThread;
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple4;
+import io.bisq.core.offer.Offer;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -29,10 +32,7 @@ import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.CurrencyListItem;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.locale.CurrencyUtil;
-import io.bisq.locale.Res;
-import io.bisq.offer.Offer;
-import io.bisq.payload.offer.OfferPayload;
+import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

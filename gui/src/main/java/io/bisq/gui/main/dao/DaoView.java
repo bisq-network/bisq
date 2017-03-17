@@ -17,7 +17,9 @@
 
 package io.bisq.gui.main.dao;
 
-import io.bisq.btc.wallet.BsqWalletService;
+import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.BsqWalletService;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.*;
@@ -26,8 +28,6 @@ import io.bisq.gui.main.dao.compensation.CompensationView;
 import io.bisq.gui.main.dao.voting.VotingView;
 import io.bisq.gui.main.dao.wallet.BsqWalletView;
 import io.bisq.gui.main.dao.wallet.dashboard.BsqDashboardView;
-import io.bisq.locale.Res;
-import io.bisq.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;

@@ -1,12 +1,12 @@
 package io.bisq.gui.main.offer.offerbook;
 
-import io.bisq.locale.Country;
-import io.bisq.locale.CryptoCurrency;
-import io.bisq.locale.FiatCurrency;
-import io.bisq.offer.Offer;
-import io.bisq.payload.offer.OfferPayload;
-import io.bisq.payload.payment.*;
-import io.bisq.payment.*;
+import io.bisq.common.locale.Country;
+import io.bisq.common.locale.CryptoCurrency;
+import io.bisq.common.locale.FiatCurrency;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.payment.*;
+import io.bisq.wire.payload.offer.OfferPayload;
+import io.bisq.wire.payload.payment.*;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

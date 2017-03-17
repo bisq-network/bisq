@@ -19,13 +19,13 @@ package io.bisq.gui.components;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import io.bisq.btc.listeners.TxConfidenceListener;
-import io.bisq.btc.wallet.BtcWalletService;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.btc.listeners.TxConfidenceListener;
+import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.locale.Res;
-import io.bisq.user.Preferences;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;

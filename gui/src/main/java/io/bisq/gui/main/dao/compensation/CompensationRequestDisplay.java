@@ -17,10 +17,10 @@
 
 package io.bisq.gui.main.dao.compensation;
 
+import io.bisq.common.locale.Res;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.Res;
-import io.bisq.payload.dao.compensation.CompensationRequestPayload;
+import io.bisq.wire.payload.dao.compensation.CompensationRequestPayload;
 import javafx.scene.layout.GridPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

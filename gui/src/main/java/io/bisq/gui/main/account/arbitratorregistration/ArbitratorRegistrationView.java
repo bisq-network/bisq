@@ -19,7 +19,10 @@ package io.bisq.gui.main.account.arbitratorregistration;
 
 
 import io.bisq.common.UserThread;
+import io.bisq.common.locale.LanguageUtil;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -27,10 +30,7 @@ import io.bisq.gui.main.overlays.windows.UnlockArbitrationRegistrationWindow;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.LanguageUtil;
-import io.bisq.locale.Res;
-import io.bisq.payload.arbitration.Arbitrator;
-import io.bisq.user.Preferences;
+import io.bisq.wire.payload.arbitration.Arbitrator;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.HPos;

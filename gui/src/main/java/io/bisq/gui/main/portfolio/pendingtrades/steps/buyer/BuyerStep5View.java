@@ -17,17 +17,19 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades.steps.buyer;
 
-import io.bisq.app.DevEnv;
-import io.bisq.app.Log;
-import io.bisq.btc.AddressEntry;
-import io.bisq.btc.AddressEntryException;
-import io.bisq.btc.InsufficientFundsException;
-import io.bisq.btc.Restrictions;
-import io.bisq.btc.wallet.BtcWalletService;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
+import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.AddressEntryException;
+import io.bisq.core.btc.InsufficientFundsException;
+import io.bisq.core.btc.Restrictions;
+import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.funds.FundsView;
@@ -38,8 +40,6 @@ import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.Res;
-import io.bisq.util.CoinUtil;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;

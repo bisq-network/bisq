@@ -1,7 +1,7 @@
 package io.bisq.gui.main.overlays.windows;
 
+import io.bisq.common.locale.Res;
 import io.bisq.gui.main.overlays.Overlay;
-import io.bisq.locale.Res;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;

@@ -17,7 +17,9 @@
 
 package io.bisq.gui.main.account;
 
-import io.bisq.app.DevEnv;
+import io.bisq.common.app.DevEnv;
+import io.bisq.common.locale.Res;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.main.MainView;
@@ -25,8 +27,6 @@ import io.bisq.gui.main.account.arbitratorregistration.ArbitratorRegistrationVie
 import io.bisq.gui.main.account.content.fiataccounts.FiatAccountsView;
 import io.bisq.gui.main.account.settings.AccountSettingsView;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.locale.Res;
-import io.bisq.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;

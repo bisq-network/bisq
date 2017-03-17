@@ -1,19 +1,19 @@
 package io.bisq.gui.main.overlays.notifications;
 
 import com.google.inject.Inject;
-import io.bisq.app.Log;
-import io.bisq.arbitration.DisputeManager;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.Log;
+import io.bisq.common.locale.Res;
+import io.bisq.core.arbitration.DisputeManager;
+import io.bisq.core.trade.Trade;
+import io.bisq.core.trade.TradeManager;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.disputes.DisputesView;
 import io.bisq.gui.main.disputes.trader.TraderDisputeView;
 import io.bisq.gui.main.portfolio.PortfolioView;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesView;
-import io.bisq.locale.Res;
-import io.bisq.trade.Trade;
-import io.bisq.trade.TradeManager;
-import io.bisq.user.Preferences;
 import javafx.collections.ListChangeListener;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;

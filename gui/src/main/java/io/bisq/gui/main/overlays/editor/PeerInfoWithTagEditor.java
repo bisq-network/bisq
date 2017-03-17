@@ -1,13 +1,13 @@
 package io.bisq.gui.main.overlays.editor;
 
-import io.bisq.alert.PrivateNotificationManager;
+import io.bisq.common.locale.Res;
+import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.windows.SendPrivateNotificationWindow;
 import io.bisq.gui.util.FormBuilder;
-import io.bisq.locale.Res;
-import io.bisq.offer.Offer;
-import io.bisq.user.Preferences;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;

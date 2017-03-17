@@ -17,10 +17,11 @@
 
 package io.bisq.gui.main.account.content.password;
 
-import io.bisq.btc.wallet.WalletsManager;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
-import io.bisq.crypto.ScryptUtil;
+import io.bisq.core.btc.wallet.WalletsManager;
+import io.bisq.core.crypto.ScryptUtil;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.BusyAnimation;
@@ -31,7 +32,6 @@ import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.gui.util.validation.PasswordValidator;
-import io.bisq.locale.Res;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

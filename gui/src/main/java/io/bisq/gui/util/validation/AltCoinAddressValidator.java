@@ -18,10 +18,10 @@
 package io.bisq.gui.util.validation;
 
 
+import io.bisq.common.locale.Res;
 import io.bisq.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bisq.gui.util.validation.params.IOPParams;
 import io.bisq.gui.util.validation.params.PivxParams;
-import io.bisq.locale.Res;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.params.MainNetParams;

@@ -17,6 +17,9 @@
 
 package io.bisq.gui.main.portfolio;
 
+import io.bisq.common.locale.Res;
+import io.bisq.core.trade.Trade;
+import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.*;
@@ -25,9 +28,6 @@ import io.bisq.gui.main.portfolio.closedtrades.ClosedTradesView;
 import io.bisq.gui.main.portfolio.failedtrades.FailedTradesView;
 import io.bisq.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesView;
-import io.bisq.locale.Res;
-import io.bisq.trade.Trade;
-import io.bisq.trade.failed.FailedTradesManager;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;

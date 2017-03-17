@@ -17,14 +17,14 @@
 
 package io.bisq.gui.main.dao.wallet.dashboard;
 
-import io.bisq.btc.wallet.BsqWalletService;
+import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.dao.wallet.BalanceUtil;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
-import io.bisq.locale.Res;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 

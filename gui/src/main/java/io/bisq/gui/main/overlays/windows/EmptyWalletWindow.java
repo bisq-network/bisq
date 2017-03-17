@@ -17,18 +17,18 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.app.DevEnv;
-import io.bisq.btc.Restrictions;
-import io.bisq.btc.wallet.WalletService;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.btc.Restrictions;
+import io.bisq.core.btc.wallet.WalletService;
+import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Transitions;
-import io.bisq.locale.Res;
-import io.bisq.offer.OpenOfferManager;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;

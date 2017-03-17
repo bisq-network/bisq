@@ -17,16 +17,16 @@
 
 package io.bisq.gui.main.overlays;
 
-import io.bisq.app.BisqApp;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
+import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.user.Preferences;
+import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Transitions;
-import io.bisq.locale.Res;
-import io.bisq.user.Preferences;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;

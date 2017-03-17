@@ -18,13 +18,13 @@
 package io.bisq.gui.main.portfolio.closedtrades;
 
 import com.google.inject.Inject;
+import io.bisq.common.locale.Res;
+import io.bisq.core.offer.OpenOffer;
+import io.bisq.core.trade.Tradable;
+import io.bisq.core.trade.Trade;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.locale.Res;
-import io.bisq.offer.OpenOffer;
-import io.bisq.trade.Tradable;
-import io.bisq.trade.Trade;
 import javafx.collections.ObservableList;
 
 import java.util.stream.Collectors;

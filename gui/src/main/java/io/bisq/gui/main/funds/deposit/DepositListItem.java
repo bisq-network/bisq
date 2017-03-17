@@ -17,14 +17,14 @@
 
 package io.bisq.gui.main.funds.deposit;
 
-import io.bisq.btc.AddressEntry;
-import io.bisq.btc.listeners.BalanceListener;
-import io.bisq.btc.listeners.TxConfidenceListener;
-import io.bisq.btc.wallet.BtcWalletService;
+import io.bisq.common.locale.Res;
+import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.listeners.BalanceListener;
+import io.bisq.core.btc.listeners.TxConfidenceListener;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.locale.Res;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.Tooltip;
