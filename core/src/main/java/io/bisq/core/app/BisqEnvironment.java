@@ -118,10 +118,12 @@ public class BisqEnvironment extends StandardEnvironment {
     }
 
     public BisqEnvironment(PropertySource commandLineProperties) {
+        //CommonOptionKeys
         logLevel = commandLineProperties.containsProperty(CommonOptionKeys.LOG_LEVEL_KEY) ?
                 (String) commandLineProperties.getProperty(CommonOptionKeys.LOG_LEVEL_KEY) :
                 LOG_LEVEL_DEFAULT;
 
+        //AppOptionKeys
         userDataDir = commandLineProperties.containsProperty(AppOptionKeys.USER_DATA_DIR_KEY) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.USER_DATA_DIR_KEY) :
                 DEFAULT_USER_DATA_DIR;
@@ -146,23 +148,9 @@ public class BisqEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(AppOptionKeys.PROVIDERS) :
                 "";
 
+        //NetworkOptionKeys
         seedNodes = commandLineProperties.containsProperty(NetworkOptionKeys.SEED_NODES_KEY) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SEED_NODES_KEY) :
-                "";
-        rpcUser = commandLineProperties.containsProperty(RpcOptionKeys.RPC_USER) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_USER) :
-                "";
-        rpcPassword = commandLineProperties.containsProperty(RpcOptionKeys.RPC_PASSWORD) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_PASSWORD) :
-                "";
-        rpcPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_PORT) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_PORT) :
-                "";
-        rpcBlockPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_BLOCK_PORT) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_BLOCK_PORT) :
-                "";
-        rpcWalletPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_WALLET_PORT) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_WALLET_PORT) :
                 "";
 
         myAddress = commandLineProperties.containsProperty(NetworkOptionKeys.MY_ADDRESS) ?
@@ -178,6 +166,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) :
                 "";
 
+        //BtcOptionKeys
         btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_NODES) :
                 "";
@@ -189,7 +178,8 @@ public class BisqEnvironment extends StandardEnvironment {
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
-            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BtcOptionKeys.BTC_NETWORK, BitcoinNetwork.DEFAULT.name()).toUpperCase());
+            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BtcOptionKeys.BTC_NETWORK,
+                    BitcoinNetwork.DEFAULT.name()).toUpperCase());
             btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())
@@ -200,6 +190,23 @@ public class BisqEnvironment extends StandardEnvironment {
         } catch (Exception ex) {
             throw new BisqException(ex);
         }
+
+        //RpcOptionKeys
+        rpcUser = commandLineProperties.containsProperty(RpcOptionKeys.RPC_USER) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_USER) :
+                "";
+        rpcPassword = commandLineProperties.containsProperty(RpcOptionKeys.RPC_PASSWORD) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_PASSWORD) :
+                "";
+        rpcPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_PORT) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_PORT) :
+                "";
+        rpcBlockPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_BLOCK_PORT) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_BLOCK_PORT) :
+                "";
+        rpcWalletPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_WALLET_PORT) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_WALLET_PORT) :
+                "";
     }
 
     private Resource getAppDirPropertiesResource() {

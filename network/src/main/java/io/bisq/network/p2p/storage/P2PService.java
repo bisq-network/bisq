@@ -110,7 +110,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public P2PService(SeedNodesRepository seedNodesRepository,
                       @Named(NetworkOptionKeys.PORT_KEY) int port,
                       @Named(NetworkOptionKeys.TOR_DIR) File torDir,
-                      @Named(NetworkOptionKeys.USE_LOCALHOST) boolean useLocalhost,
+                      @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
                       @Named(NetworkOptionKeys.NETWORK_ID) int networkId,
                       @Named(NetworkOptionKeys.MAX_CONNECTIONS) int maxConnections,
                       @Named(Storage.DIR_KEY) File storageDir,
@@ -126,7 +126,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 port,
                 maxConnections,
                 torDir,
-                useLocalhost,
+                useLocalhostForP2P,
                 networkId,
                 storageDir,
                 seedNodes,
@@ -143,7 +143,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     public P2PService(SeedNodesRepository seedNodesRepository,
                       int port, int maxConnections,
                       File torDir,
-                      boolean useLocalhost,
+                      boolean useLocalhostForP2P,
                       int networkId,
                       File storageDir,
                       String seedNodes,
@@ -163,7 +163,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         optionalEncryptionService = Optional.ofNullable(encryptionService);
         optionalKeyRing = Optional.ofNullable(keyRing);
 
-        init(useLocalhost,
+        init(useLocalhostForP2P,
                 networkId,
                 storageDir,
                 seedNodes,
@@ -171,13 +171,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 banList);
     }
 
-    private void init(boolean useLocalhost,
+    private void init(boolean useLocalhostForP2P,
                       int networkId,
                       File storageDir,
                       String seedNodes,
                       String myAddress,
                       String banList) {
-        if (!useLocalhost)
+        if (!useLocalhostForP2P)
             FileUtil.rollingBackup(new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString()), "private_key", 20);
 
         if (banList != null && !banList.isEmpty())
@@ -185,7 +185,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (myAddress != null && !myAddress.isEmpty())
             seedNodesRepository.setNodeAddressToExclude(new NodeAddress(myAddress));
 
-        networkNode = useLocalhost ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);
+        networkNode = useLocalhostForP2P ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);
         networkNode.addConnectionListener(this);
         networkNode.addMessageListener(this);
 
@@ -193,7 +193,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (seedNodes != null && !seedNodes.isEmpty())
             seedNodeAddresses = Arrays.asList(seedNodes.replace(" ", "").split(",")).stream().map(NodeAddress::new).collect(Collectors.toSet());
         else
-            seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhost, networkId);
+            seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhostForP2P, networkId);
 
         peerManager = new PeerManager(networkNode, maxConnections, seedNodeAddresses, storageDir, clock);
 

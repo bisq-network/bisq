@@ -43,8 +43,8 @@ public class P2PModule extends AppModule {
         bind(P2PService.class).in(Singleton.class);
         bind(Socks5ProxyProvider.class).in(Singleton.class);
 
-        Boolean useLocalhost = env.getProperty(NetworkOptionKeys.USE_LOCALHOST, boolean.class, false);
-        bind(boolean.class).annotatedWith(Names.named(NetworkOptionKeys.USE_LOCALHOST)).toInstance(useLocalhost);
+        Boolean useLocalhostForP2P = env.getProperty(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P, boolean.class, false);
+        bind(boolean.class).annotatedWith(Names.named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P)).toInstance(useLocalhostForP2P);
 
         File torDir = new File(env.getRequiredProperty(NetworkOptionKeys.TOR_DIR));
         bind(File.class).annotatedWith(named(NetworkOptionKeys.TOR_DIR)).toInstance(torDir);
@@ -55,9 +55,6 @@ public class P2PModule extends AppModule {
 
         Integer maxConnections = env.getProperty(NetworkOptionKeys.MAX_CONNECTIONS, int.class, P2PService.MAX_CONNECTIONS_DEFAULT);
         bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.MAX_CONNECTIONS)).toInstance(maxConnections);
-
-        String socks5DiscoverMode = env.getProperty(NetworkOptionKeys.SOCKS5_DISCOVER_MODE, String.class, "ALL");
-        bind(String.class).annotatedWith(Names.named(NetworkOptionKeys.SOCKS5_DISCOVER_MODE)).toInstance(socks5DiscoverMode);
 
         Integer networkId = env.getProperty(NetworkOptionKeys.NETWORK_ID, int.class, 1);
         bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.NETWORK_ID)).toInstance(networkId);

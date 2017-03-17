@@ -22,9 +22,9 @@ public class ProvidersRepository {
 
     @Inject
     public ProvidersRepository(@Named(AppOptionKeys.PROVIDERS) String providers,
-                               @Named(NetworkOptionKeys.USE_LOCALHOST) boolean useLocalhost) {
+                               @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P) {
         if (providers.isEmpty()) {
-            if (useLocalhost) {
+            if (useLocalhostForP2P) {
                 // If we run in localhost mode we don't have the tor node running, so we need a clearnet host
                 // providers = "http://95.85.11.205:8080/";
 
