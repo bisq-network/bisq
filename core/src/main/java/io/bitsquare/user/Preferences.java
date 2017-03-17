@@ -578,7 +578,13 @@ public final class Preferences implements Persistable {
     }
 
     public boolean getUseTorForBitcoinJ() {
-        return useTorForBitcoinJ;
+        // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
+        // Atm we don't support onion addresses there
+        // This check includes localhost, so we also override useTorForBitcoinJ
+        if (bitcoinNodes != null && !bitcoinNodes.isEmpty())
+            return false;
+        else
+            return useTorForBitcoinJ;
     }
 
     public boolean getShowOwnOffersInOfferBook() {

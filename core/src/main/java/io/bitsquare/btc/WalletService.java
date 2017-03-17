@@ -190,16 +190,21 @@ public class WalletService {
                 // Don't make the user wait for confirmations for now, as the intention is they're sending it
                 // their own money!
                 walletAppKit.wallet().allowSpendingUnconfirmedTransactions();
+                final PeerGroup peerGroup = walletAppKit.peerGroup();
+                
                 if (params != RegTestParams.get())
-                    walletAppKit.peerGroup().setMaxConnections(11);
+                    peerGroup.setMaxConnections(11);
+
+                // We don't want to get our node white list polluted with nodes from AddressMessage calls.
+                if (preferences.getBitcoinNodes() != null && !preferences.getBitcoinNodes().isEmpty())
+                    peerGroup.setAddPeersFromAddressMessage(false);
 
                 wallet = walletAppKit.wallet();
                 wallet.addEventListener(walletEventListener);
 
                 addressEntryList.onWalletReady(wallet);
 
-
-                walletAppKit.peerGroup().addEventListener(new PeerEventListener() {
+                peerGroup.addEventListener(new PeerEventListener() {
                     @Override
                     public void onPeersDiscovered(Set<PeerAddress> peerAddresses) {
                     }
@@ -215,13 +220,13 @@ public class WalletService {
                     @Override
                     public void onPeerConnected(Peer peer, int peerCount) {
                         numPeers.set(peerCount);
-                        connectedPeers.set(walletAppKit.peerGroup().getConnectedPeers());
+                        connectedPeers.set(peerGroup.getConnectedPeers());
                     }
 
                     @Override
                     public void onPeerDisconnected(Peer peer, int peerCount) {
                         numPeers.set(peerCount);
-                        connectedPeers.set(walletAppKit.peerGroup().getConnectedPeers());
+                        connectedPeers.set(peerGroup.getConnectedPeers());
                     }
 
                     @Override
@@ -291,7 +296,6 @@ public class WalletService {
 
         // Pass custom seed nodes if set in options
         if (!btcNodes.isEmpty()) {
-
             String[] nodes = StringUtils.deleteWhitespace(btcNodes).split(",");
             List<PeerAddress> peerAddressList = new ArrayList<>();
             for (String node : nodes) {
