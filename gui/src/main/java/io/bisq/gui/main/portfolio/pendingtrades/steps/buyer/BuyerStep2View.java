@@ -64,9 +64,9 @@ public class BuyerStep2View extends TradeStepView {
             tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
                 if (state == Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN) {
 
-                    PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
-                    if (paymentAccountContractData != null) {
-                        String paymentDetailsForTradePopup = paymentAccountContractData.getPaymentDetailsForTradePopup();
+                    PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+                    if (paymentAccountPayload != null) {
+                        String paymentDetailsForTradePopup = paymentAccountPayload.getPaymentDetailsForTradePopup();
                         String key = "startPayment" + trade.getId();
                         String message = Res.get("portfolio.pending.step2.confReached");
                         String copyPaste = Res.get("portfolio.pending.step2_buyer.copyPaste");
@@ -77,14 +77,14 @@ public class BuyerStep2View extends TradeStepView {
                         String fees = Res.get("portfolio.pending.step2_buyer.fees");
                         String id = trade.getShortId();
                         String amount = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
-                        if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData)
+                        if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload)
                             message += Res.get("portfolio.pending.step2_buyer.altcoin",
                                     CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale()),
                                     amount) +
                                     accountDetails +
                                     paymentDetailsForTradePopup + ".\n\n" +
                                     copyPaste;
-                        else if (paymentAccountContractData instanceof CashDepositAccountContractData)
+                        else if (paymentAccountPayload instanceof CashDepositAccountPayload)
                             message += Res.get("portfolio.pending.step2_buyer.cash",
                                     amount) +
                                     accountDetails +
@@ -95,7 +95,7 @@ public class BuyerStep2View extends TradeStepView {
                                     refTextWarn + "\n\n" +
                                     fees + "\n\n" +
                                     Res.get("portfolio.pending.step2_buyer.cash.extra");
-                        else if (paymentAccountContractData instanceof USPostalMoneyOrderAccountContractData)
+                        else if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
                             message += Res.get("portfolio.pending.step2_buyer.postal", amount) +
                                     accountDetails +
                                     paymentDetailsForTradePopup + ".\n" +
@@ -149,8 +149,8 @@ public class BuyerStep2View extends TradeStepView {
     protected void addContent() {
         addTradeInfoBlock();
 
-        PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
-        String paymentMethodId = paymentAccountContractData != null ? paymentAccountContractData.getPaymentMethodId() : "";
+        PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+        String paymentMethodId = paymentAccountPayload != null ? paymentAccountPayload.getPaymentMethodId() : "";
         TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
                 Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodId)),
                 Layout.GROUP_DISTANCE);
@@ -161,57 +161,57 @@ public class BuyerStep2View extends TradeStepView {
 
         switch (paymentMethodId) {
             case PaymentMethod.OK_PAY_ID:
-                gridRow = OKPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = OKPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.PERFECT_MONEY_ID:
-                gridRow = PerfectMoneyForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = PerfectMoneyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.SEPA_ID:
-                gridRow = SepaForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = SepaForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.FASTER_PAYMENTS_ID:
-                gridRow = FasterPaymentsForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = FasterPaymentsForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.NATIONAL_BANK_ID:
-                gridRow = NationalBankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = NationalBankForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.SAME_BANK_ID:
-                gridRow = SameBankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = SameBankForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.SPECIFIC_BANKS_ID:
-                gridRow = SpecificBankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = SpecificBankForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.SWISH_ID:
-                gridRow = SwishForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = SwishForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.ALI_PAY_ID:
-                gridRow = AliPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = AliPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.CLEAR_X_CHANGE_ID:
-                gridRow = ClearXchangeForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = ClearXchangeForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.CHASE_QUICK_PAY_ID:
-                gridRow = ChaseQuickPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = ChaseQuickPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.INTERAC_E_TRANSFER_ID:
-                gridRow = InteracETransferForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = InteracETransferForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
-                gridRow = USPostalMoneyOrderForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = USPostalMoneyOrderForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.CASH_DEPOSIT_ID:
-                gridRow = CashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+                gridRow = CashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
                 String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress", CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(),
                         Preferences.getDefaultLocale()));
-                gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData, labelTitle);
+                gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);
                 break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodId);
         }
 
-        if (!(paymentAccountContractData instanceof CryptoCurrencyAccountContractData))
+        if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload))
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
 
         GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
@@ -258,7 +258,7 @@ public class BuyerStep2View extends TradeStepView {
 
     private void onPaymentStarted() {
         if (model.p2PService.isBootstrapped()) {
-            if (model.dataModel.getSellersPaymentAccountContractData() instanceof CashDepositAccountContractData) {
+            if (model.dataModel.getSellersPaymentAccountPayload() instanceof CashDepositAccountPayload) {
                 String key = "confirmPaperReceiptSent";
                 if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
                     Popup popup = new Popup();

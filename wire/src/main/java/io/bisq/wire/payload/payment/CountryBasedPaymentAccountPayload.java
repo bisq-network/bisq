@@ -22,7 +22,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Locale;
 
-public abstract class CountryBasedPaymentAccountContractData extends PaymentAccountContractData {
+public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -33,7 +33,7 @@ public abstract class CountryBasedPaymentAccountContractData extends PaymentAcco
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    CountryBasedPaymentAccountContractData(String paymentMethodName, String id, long maxTradePeriod) {
+    CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod) {
         super(paymentMethodName, id, maxTradePeriod);
     }
 
@@ -71,10 +71,10 @@ public abstract class CountryBasedPaymentAccountContractData extends PaymentAcco
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CountryBasedPaymentAccountContractData)) return false;
+        if (!(o instanceof CountryBasedPaymentAccountPayload)) return false;
         if (!super.equals(o)) return false;
 
-        CountryBasedPaymentAccountContractData that = (CountryBasedPaymentAccountContractData) o;
+        CountryBasedPaymentAccountPayload that = (CountryBasedPaymentAccountPayload) o;
 
         return countryCode.equals(that.countryCode);
 
@@ -89,7 +89,7 @@ public abstract class CountryBasedPaymentAccountContractData extends PaymentAcco
 
     @Override
     public String toString() {
-        return "CountryBasedPaymentAccountContractData{" +
+        return "CountryBasedPaymentAccountPayload{" +
                 "countryCode='" + countryCode + '\'' +
                 "} " + super.toString();
     }

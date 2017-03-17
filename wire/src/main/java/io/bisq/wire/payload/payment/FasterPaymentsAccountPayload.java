@@ -20,19 +20,22 @@ package io.bisq.wire.payload.payment;
 import io.bisq.common.app.Version;
 import io.bisq.wire.proto.Messages;
 
-public final class AliPayAccountContractData extends PaymentAccountContractData {
+public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
+    private String sortCode;
     private String accountNr;
 
-    public AliPayAccountContractData(String paymentMethod, String id, long maxTradePeriod, String accountNr) {
-        this(paymentMethod, id, maxTradePeriod);
-        setAccountNr(accountNr);
+    public FasterPaymentsAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
+        super(paymentMethod, id, maxTradePeriod);
     }
 
-    public AliPayAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public FasterPaymentsAccountPayload(String paymentMethod, String id, long maxTradePeriod,
+                                        String sortCode, String accountNr) {
         super(paymentMethod, id, maxTradePeriod);
+        this.sortCode = sortCode;
+        this.accountNr = accountNr;
     }
 
     public void setAccountNr(String accountNr) {
@@ -43,33 +46,37 @@ public final class AliPayAccountContractData extends PaymentAccountContractData 
         return accountNr;
     }
 
+    public String getSortCode() {
+        return sortCode;
+    }
+
+    public void setSortCode(String sortCode) {
+        this.sortCode = sortCode;
+    }
+
     @Override
     public String getPaymentDetails() {
-        return "AliPay - Account no.: " + accountNr;
+        return "FasterPayments - UK Sort code: " + sortCode + ", Account number: " + accountNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return getPaymentDetails();
+        return "UK Sort code: " + sortCode + "\n" +
+                "Account number: " + accountNr;
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.AliPayAccountContractData.Builder thisClass =
-                Messages.AliPayAccountContractData.newBuilder().setAccountNr(accountNr);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.FasterPaymentsAccountPayload.Builder thisClass =
+                Messages.FasterPaymentsAccountPayload.newBuilder()
+                        .setSortCode(sortCode)
+                        .setAccountNr(accountNr);
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
                         .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setAliPayAccountContractData(thisClass);
-        return paymentAccountContractData.build();
-    }
-
-    @Override
-    public String toString() {
-        return "AliPayAccountContractData{" +
-                "accountNr='" + accountNr + '\'' +
-                '}';
+                        .setFasterPaymentsAccountPayload(thisClass);
+        return paymentAccountPayload.build();
     }
 }

@@ -168,8 +168,8 @@ public class OfferBookViewModelTest {
         CountryBasedPaymentAccount paymentAccount = new SepaAccount();
         paymentAccount.setSingleTradeCurrency(new FiatCurrency(currencyCode));
         paymentAccount.setCountry(new Country(countryCode, null, null));
-        ((SepaAccountContractData) paymentAccount.getContractData()).setBic(bic);
-        countryCodes.forEach(((SepaAccountContractData) paymentAccount.getContractData())::addAcceptedCountry);
+        ((SepaAccountPayload) paymentAccount.getPaymentAccountPayload()).setBic(bic);
+        countryCodes.forEach(((SepaAccountPayload) paymentAccount.getPaymentAccountPayload())::addAcceptedCountry);
         return paymentAccount;
     }
 
@@ -177,7 +177,7 @@ public class OfferBookViewModelTest {
         CountryBasedPaymentAccount paymentAccount = new NationalBankAccount();
         paymentAccount.setSingleTradeCurrency(new FiatCurrency(currencyCode));
         paymentAccount.setCountry(new Country(countryCode, null, null));
-        ((NationalBankAccountContractData) paymentAccount.getContractData()).setBankId(bankId);
+        ((NationalBankAccountPayload) paymentAccount.getPaymentAccountPayload()).setBankId(bankId);
         return paymentAccount;
     }
 
@@ -185,7 +185,7 @@ public class OfferBookViewModelTest {
         SameBankAccount paymentAccount = new SameBankAccount();
         paymentAccount.setSingleTradeCurrency(new FiatCurrency(currencyCode));
         paymentAccount.setCountry(new Country(countryCode, null, null));
-        ((SameBankAccountContractData) paymentAccount.getContractData()).setBankId(bankId);
+        ((SameBankAccountPayload) paymentAccount.getPaymentAccountPayload()).setBankId(bankId);
         return paymentAccount;
     }
 
@@ -193,8 +193,8 @@ public class OfferBookViewModelTest {
         SpecificBanksAccount paymentAccount = new SpecificBanksAccount();
         paymentAccount.setSingleTradeCurrency(new FiatCurrency(currencyCode));
         paymentAccount.setCountry(new Country(countryCode, null, null));
-        ((SpecificBanksAccountContractData) paymentAccount.getContractData()).setBankId(bankId);
-        bankIds.forEach(((SpecificBanksAccountContractData) paymentAccount.getContractData())::addAcceptedBank);
+        ((SpecificBanksAccountPayload) paymentAccount.getPaymentAccountPayload()).setBankId(bankId);
+        bankIds.forEach(((SpecificBanksAccountPayload) paymentAccount.getPaymentAccountPayload())::addAcceptedBank);
         return paymentAccount;
     }
 

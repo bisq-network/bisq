@@ -36,7 +36,7 @@ public final class Arbitrator implements StoragePayload {
 
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
 
-    // Persisted fields
+    // Payload
     private final byte[] btcPubKey;
     private final PubKeyRing pubKeyRing;
     private final NodeAddress arbitratorNodeAddress;

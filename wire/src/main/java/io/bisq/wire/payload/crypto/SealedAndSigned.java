@@ -39,11 +39,14 @@ public final class SealedAndSigned implements Payload {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(SealedAndSigned.class);
 
+    // Payload
     public final byte[] encryptedSecretKey;
     public final byte[] encryptedPayloadWithHmac;
     public final byte[] signature;
-    public transient PublicKey sigPublicKey;
     private final byte[] sigPublicKeyBytes;
+
+    // Domain
+    public transient PublicKey sigPublicKey;
 
     public SealedAndSigned(byte[] encryptedSecretKey, byte[] encryptedPayloadWithHmac, byte[] signature, PublicKey sigPublicKey) {
         this.encryptedSecretKey = encryptedSecretKey;

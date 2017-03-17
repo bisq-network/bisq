@@ -28,13 +28,16 @@ public class ProtectedStorageEntry implements Payload {
 
     private static final Logger log = LoggerFactory.getLogger(ProtectedStorageEntry.class);
 
+    // Payload
     protected final StoragePayload storagePayload;
     private final byte[] ownerPubKeyBytes;
-    public transient PublicKey ownerPubKey;
     public int sequenceNumber;
     public byte[] signature;
     @VisibleForTesting
     public long creationTimeStamp;
+
+    // Domain
+    public transient PublicKey ownerPubKey;
 
     public ProtectedStorageEntry(StoragePayload storagePayload, PublicKey ownerPubKey, int sequenceNumber, byte[] signature) {
         this.storagePayload = storagePayload;

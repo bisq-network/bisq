@@ -28,8 +28,8 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.AltCoinAddressValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.CryptoCurrencyAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.CryptoCurrencyAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -55,9 +55,9 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
     private Label addressLabel;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
-                                      PaymentAccountContractData paymentAccountContractData, String labelTitle) {
+                                      PaymentAccountPayload paymentAccountPayload, String labelTitle) {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, labelTitle,
-                ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress());
+                ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress());
         return gridRow;
     }
 

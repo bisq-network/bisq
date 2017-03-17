@@ -20,7 +20,7 @@ package io.bisq.wire.payload.payment;
 import io.bisq.common.app.Version;
 import io.bisq.wire.payload.Payload;
 
-public abstract class PaymentAccountContractData implements Payload {
+public abstract class PaymentAccountPayload implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -33,7 +33,7 @@ public abstract class PaymentAccountContractData implements Payload {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    PaymentAccountContractData(String paymentMethodId, String id, long maxTradePeriod) {
+    PaymentAccountPayload(String paymentMethodId, String id, long maxTradePeriod) {
         this.paymentMethodId = paymentMethodId;
         this.id = id;
         this.maxTradePeriod = maxTradePeriod;
@@ -62,9 +62,9 @@ public abstract class PaymentAccountContractData implements Payload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PaymentAccountContractData)) return false;
+        if (!(o instanceof PaymentAccountPayload)) return false;
 
-        PaymentAccountContractData that = (PaymentAccountContractData) o;
+        PaymentAccountPayload that = (PaymentAccountPayload) o;
 
         if (maxTradePeriod != that.maxTradePeriod) return false;
         if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null)
@@ -83,7 +83,7 @@ public abstract class PaymentAccountContractData implements Payload {
 
     @Override
     public String toString() {
-        return "PaymentAccountContractData{" +
+        return "PaymentAccountPayload{" +
                 "paymentMethodName='" + paymentMethodId + '\'' +
                 ", id='" + id + '\'' +
                 ", maxTradePeriod=" + maxTradePeriod +

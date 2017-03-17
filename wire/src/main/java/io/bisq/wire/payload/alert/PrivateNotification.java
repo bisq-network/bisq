@@ -39,10 +39,13 @@ public final class PrivateNotification implements Payload {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(PrivateNotification.class);
 
+    // Payload
     public final String message;
     private String signatureAsBase64;
-    private transient PublicKey publicKey;
     private byte[] publicKeyBytes;
+
+    // Domain
+    private transient PublicKey publicKey;
 
     public PrivateNotification(String message) {
         this.message = message;

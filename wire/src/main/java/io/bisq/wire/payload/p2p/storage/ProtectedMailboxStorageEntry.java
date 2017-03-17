@@ -20,8 +20,11 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public transient PublicKey receiversPubKey;
+    // Payload
     private final byte[] receiversPubKeyBytes;
+
+    // Domain
+    public transient PublicKey receiversPubKey;
 
     public MailboxStoragePayload getMailboxStoragePayload() {
         return (MailboxStoragePayload) storagePayload;

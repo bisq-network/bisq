@@ -28,6 +28,7 @@ public final class RawTransactionInput implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
+    // Payload
     public final long index;
     public final byte[] parentTransaction;
     public final long value;

@@ -20,8 +20,8 @@ package io.bisq.core.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.user.Preferences;
-import io.bisq.wire.payload.payment.ChaseQuickPayAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.ChaseQuickPayAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 
 public final class ChaseQuickPayAccount extends PaymentAccount {
@@ -34,23 +34,23 @@ public final class ChaseQuickPayAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountContractData setContractData() {
-        return new ChaseQuickPayAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload setPayload() {
+        return new ChaseQuickPayAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setEmail(String email) {
-        ((ChaseQuickPayAccountContractData) contractData).setEmail(email);
+        ((ChaseQuickPayAccountPayload) paymentAccountPayload).setEmail(email);
     }
 
     public String getEmail() {
-        return ((ChaseQuickPayAccountContractData) contractData).getEmail();
+        return ((ChaseQuickPayAccountPayload) paymentAccountPayload).getEmail();
     }
 
     public void setHolderName(String holderName) {
-        ((ChaseQuickPayAccountContractData) contractData).setHolderName(holderName);
+        ((ChaseQuickPayAccountPayload) paymentAccountPayload).setHolderName(holderName);
     }
 
     public String getHolderName() {
-        return ((ChaseQuickPayAccountContractData) contractData).getHolderName();
+        return ((ChaseQuickPayAccountPayload) paymentAccountPayload).getHolderName();
     }
 }

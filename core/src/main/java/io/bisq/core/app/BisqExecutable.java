@@ -93,7 +93,7 @@ public abstract class BisqExecutable {
                 .withRequiredArg()
                 .ofType(int.class);
         parser.accepts(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P,
-                description("Use localhost network for development", false))
+                description("Use localhost P2P network for development", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
         parser.accepts(NetworkOptionKeys.MAX_CONNECTIONS,

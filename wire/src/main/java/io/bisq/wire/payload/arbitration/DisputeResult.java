@@ -58,12 +58,11 @@ public final class DisputeResult implements Payload {
         BANK_PROBLEMS
     }
 
+    // Payload
     public final String tradeId;
     public final int traderId;
     private Winner winner;
-
     private int reasonOrdinal = Reason.OTHER.ordinal();
-
     private boolean tamperProofEvidence;
     private boolean idVerification;
     private boolean screenCast;
@@ -76,6 +75,7 @@ public final class DisputeResult implements Payload {
     private long closeDate;
     private boolean isLoserPublisher;
 
+    // Domain
     transient private BooleanProperty tamperProofEvidenceProperty = new SimpleBooleanProperty();
     transient private BooleanProperty idVerificationProperty = new SimpleBooleanProperty();
     transient private BooleanProperty screenCastProperty = new SimpleBooleanProperty();

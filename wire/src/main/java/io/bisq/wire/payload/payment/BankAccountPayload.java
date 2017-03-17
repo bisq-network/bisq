@@ -25,11 +25,11 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.util.Locale;
 
-public abstract class BankAccountContractData extends CountryBasedPaymentAccountContractData {
+public abstract class BankAccountPayload extends CountryBasedPaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(BankAccountContractData.class);
+    private static final Logger log = LoggerFactory.getLogger(BankAccountPayload.class);
 
     protected String holderName;
     protected String bankName;
@@ -37,11 +37,10 @@ public abstract class BankAccountContractData extends CountryBasedPaymentAccount
     protected String branchId;
     protected String accountNr;
     protected String accountType;
-
     @Nullable
     protected String holderTaxId;
 
-    public BankAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public BankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 

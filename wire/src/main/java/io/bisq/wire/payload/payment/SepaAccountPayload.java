@@ -29,12 +29,12 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-// TODO refactor with BankAccountContractData
-public final class SepaAccountContractData extends CountryBasedPaymentAccountContractData {
+// TODO refactor with BankAccountPayload
+public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(SepaAccountContractData.class);
+    private static final Logger log = LoggerFactory.getLogger(SepaAccountPayload.class);
 
     private String holderName;
     private String iban;
@@ -42,7 +42,7 @@ public final class SepaAccountContractData extends CountryBasedPaymentAccountCon
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private final List<String> acceptedCountryCodes;
 
-    public SepaAccountContractData(String paymentMethod, String id, long maxTradePeriod, List<Country> acceptedCountries) {
+    public SepaAccountPayload(String paymentMethod, String id, long maxTradePeriod, List<Country> acceptedCountries) {
         super(paymentMethod, id, maxTradePeriod);
         Set<String> acceptedCountryCodesAsSet = acceptedCountries.stream()
                 .map(e -> e.code).collect(Collectors.toSet());
@@ -107,24 +107,24 @@ public final class SepaAccountContractData extends CountryBasedPaymentAccountCon
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.SepaAccountContractData.Builder sepaAccountContractData =
-                Messages.SepaAccountContractData.newBuilder()
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.SepaAccountPayload.Builder sepaAccountPayload =
+                Messages.SepaAccountPayload.newBuilder()
                         .setHolderName(holderName)
                         .setIban(iban)
                         .setBic(bic)
                         .addAllAcceptedCountryCodes(acceptedCountryCodes);
-        Messages.CountryBasedPaymentAccountContractData.Builder countryBasedPaymentAccountContractData =
-                Messages.CountryBasedPaymentAccountContractData.newBuilder()
+        Messages.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload =
+                Messages.CountryBasedPaymentAccountPayload.newBuilder()
                         .setCountryCode(countryCode)
-                        .setSepaAccountContractData(sepaAccountContractData);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+                        .setSepaAccountPayload(sepaAccountPayload);
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
                         .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
+                        .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayload);
 
-        return paymentAccountContractData.build();
+        return paymentAccountPayload.build();
     }
 }

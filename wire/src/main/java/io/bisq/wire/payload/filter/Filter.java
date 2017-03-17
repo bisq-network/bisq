@@ -43,12 +43,14 @@ public final class Filter implements StoragePayload {
     private static final Logger log = LoggerFactory.getLogger(Filter.class);
     private static final long TTL = TimeUnit.DAYS.toMillis(21);
 
+    // Payload
     public final List<String> bannedNodeAddress;
     public final List<String> bannedOfferIds;
     public final List<PaymentAccountFilter> bannedPaymentAccounts;
     private String signatureAsBase64;
     private byte[] publicKeyBytes;
 
+    // Domain
     private transient PublicKey publicKey;
 
     public Filter(List<String> bannedOfferIds, List<String> bannedNodeAddress, List<PaymentAccountFilter> bannedPaymentAccounts) {

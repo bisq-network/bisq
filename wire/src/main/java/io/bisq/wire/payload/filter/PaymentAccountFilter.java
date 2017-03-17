@@ -12,6 +12,7 @@ public class PaymentAccountFilter implements Serializable {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(PaymentAccountFilter.class);
 
+    // Payload
     public final String paymentMethodId;
     public final String getMethodName;
     public final String value;

@@ -20,9 +20,9 @@ package io.bisq.core.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.user.Preferences;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
-import io.bisq.wire.payload.payment.PerfectMoneyAccountContractData;
+import io.bisq.wire.payload.payment.PerfectMoneyAccountPayload;
 
 public final class PerfectMoneyAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -34,16 +34,16 @@ public final class PerfectMoneyAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountContractData setContractData() {
-        return new PerfectMoneyAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload setPayload() {
+        return new PerfectMoneyAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setAccountNr(String accountNr) {
-        ((PerfectMoneyAccountContractData) contractData).setAccountNr(accountNr);
+        ((PerfectMoneyAccountPayload) paymentAccountPayload).setAccountNr(accountNr);
     }
 
     public String getAccountNr() {
-        return ((PerfectMoneyAccountContractData) contractData).getAccountNr();
+        return ((PerfectMoneyAccountPayload) paymentAccountPayload).getAccountNr();
     }
 
 

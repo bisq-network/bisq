@@ -20,19 +20,19 @@ package io.bisq.wire.payload.payment;
 import io.bisq.common.app.Version;
 import io.bisq.wire.proto.Messages;
 
-public final class ClearXchangeAccountContractData extends PaymentAccountContractData {
+public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private String holderName;
     private String emailOrMobileNr;
 
-    public ClearXchangeAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public ClearXchangeAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public ClearXchangeAccountContractData(String paymentMethod, String id, long maxTradePeriod, String holderName,
-                                           String emailOrMobileNr) {
+    public ClearXchangeAccountPayload(String paymentMethod, String id, long maxTradePeriod, String holderName,
+                                      String emailOrMobileNr) {
         this(paymentMethod, id, maxTradePeriod);
         setHolderName(holderName);
         setEmailOrMobileNr(emailOrMobileNr);
@@ -66,17 +66,17 @@ public final class ClearXchangeAccountContractData extends PaymentAccountContrac
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.ClearXchangeAccountContractData.Builder thisClass =
-                Messages.ClearXchangeAccountContractData.newBuilder()
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.ClearXchangeAccountPayload.Builder thisClass =
+                Messages.ClearXchangeAccountPayload.newBuilder()
                         .setHolderName(holderName)
                         .setEmailOrMobileNr(emailOrMobileNr);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
                         .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setClearXchangeAccountContractData(thisClass);
-        return paymentAccountContractData.build();
+                        .setClearXchangeAccountPayload(thisClass);
+        return paymentAccountPayload.build();
     }
 }

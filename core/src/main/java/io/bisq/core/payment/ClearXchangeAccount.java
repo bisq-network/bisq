@@ -20,8 +20,8 @@ package io.bisq.core.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.user.Preferences;
-import io.bisq.wire.payload.payment.ClearXchangeAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.ClearXchangeAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 
 public final class ClearXchangeAccount extends PaymentAccount {
@@ -34,23 +34,23 @@ public final class ClearXchangeAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountContractData setContractData() {
-        return new ClearXchangeAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload setPayload() {
+        return new ClearXchangeAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setEmailOrMobileNr(String mobileNr) {
-        ((ClearXchangeAccountContractData) contractData).setEmailOrMobileNr(mobileNr);
+        ((ClearXchangeAccountPayload) paymentAccountPayload).setEmailOrMobileNr(mobileNr);
     }
 
     public String getEmailOrMobileNr() {
-        return ((ClearXchangeAccountContractData) contractData).getEmailOrMobileNr();
+        return ((ClearXchangeAccountPayload) paymentAccountPayload).getEmailOrMobileNr();
     }
 
     public void setHolderName(String holderName) {
-        ((ClearXchangeAccountContractData) contractData).setHolderName(holderName);
+        ((ClearXchangeAccountPayload) paymentAccountPayload).setHolderName(holderName);
     }
 
     public String getHolderName() {
-        return ((ClearXchangeAccountContractData) contractData).getHolderName();
+        return ((ClearXchangeAccountPayload) paymentAccountPayload).getHolderName();
     }
 }

@@ -21,7 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.network.p2p.network.ProtoBufferUtilities;
+import io.bisq.wire.ProtoBufferUtilities;
 import io.bisq.wire.crypto.DecryptedDataTuple;
 import io.bisq.wire.crypto.Encryption;
 import io.bisq.wire.crypto.Hash;

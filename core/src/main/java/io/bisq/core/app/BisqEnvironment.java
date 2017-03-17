@@ -26,7 +26,6 @@ import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.UserAgent;
 import io.bisq.core.dao.RpcOptionKeys;
-import io.bisq.core.exceptions.BisqException;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.wire.crypto.KeyStorage;
 import joptsimple.OptionSet;
@@ -166,31 +165,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) :
                 "";
 
-        //BtcOptionKeys
-        btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
-                (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_NODES) :
-                "";
-
-        useTorForBtc = commandLineProperties.containsProperty(BtcOptionKeys.USE_TOR_FOR_BTC) ?
-                (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
-                "";
-
-        MutablePropertySources propertySources = this.getPropertySources();
-        propertySources.addFirst(commandLineProperties);
-        try {
-            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BtcOptionKeys.BTC_NETWORK,
-                    BitcoinNetwork.DEFAULT.name()).toUpperCase());
-            btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
-            File btcNetworkDirFile = new File(btcNetworkDir);
-            if (!btcNetworkDirFile.exists())
-                btcNetworkDirFile.mkdir();
-
-            // btcNetworkDir used in defaultProperties
-            propertySources.addLast(defaultProperties());
-        } catch (Exception ex) {
-            throw new BisqException(ex);
-        }
-
         //RpcOptionKeys
         rpcUser = commandLineProperties.containsProperty(RpcOptionKeys.RPC_USER) ?
                 (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_USER) :
@@ -207,6 +181,27 @@ public class BisqEnvironment extends StandardEnvironment {
         rpcWalletPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_WALLET_PORT) ?
                 (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_WALLET_PORT) :
                 "";
+
+        //BtcOptionKeys
+        btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
+                (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_NODES) :
+                "";
+
+        useTorForBtc = commandLineProperties.containsProperty(BtcOptionKeys.USE_TOR_FOR_BTC) ?
+                (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
+                "";
+        bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BtcOptionKeys.BTC_NETWORK,
+                BitcoinNetwork.DEFAULT.name()).toUpperCase());
+
+        // btcNetworkDir used in defaultProperties
+        btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
+        File btcNetworkDirFile = new File(btcNetworkDir);
+        if (!btcNetworkDirFile.exists())
+            btcNetworkDirFile.mkdir();
+
+        MutablePropertySources propertySources = this.getPropertySources();
+        propertySources.addFirst(commandLineProperties);
+        propertySources.addLast(defaultProperties());
     }
 
     private Resource getAppDirPropertiesResource() {
@@ -262,10 +257,11 @@ public class BisqEnvironment extends StandardEnvironment {
 
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
+                setProperty(BtcOptionKeys.WALLET_DIR, btcNetworkDir);
 
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);
-                setProperty(BtcOptionKeys.WALLET_DIR, btcNetworkDir);
+
                 setProperty(Storage.DIR_KEY, Paths.get(btcNetworkDir, "db").toString());
                 setProperty(KeyStorage.DIR_KEY, Paths.get(btcNetworkDir, "keys").toString());
             }

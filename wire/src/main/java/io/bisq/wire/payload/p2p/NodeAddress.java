@@ -13,10 +13,13 @@ public final class NodeAddress implements Persistable, Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
+    // Payload
     @Getter
     public final String hostName;
     @Getter
     public final int port;
+
+    // Domain
     transient private byte[] addressPrefixHash;
 
     public NodeAddress(String hostName, int port) {

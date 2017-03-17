@@ -22,7 +22,7 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.wire.message.trade.PublishDepositTxRequest;
 import io.bisq.wire.payload.filter.PaymentAccountFilter;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,16 +48,16 @@ public class ProcessPublishDepositTxRequest extends TradeTask {
             checkTradeId(processModel.getId(), publishDepositTxRequest);
             checkNotNull(publishDepositTxRequest);
 
-            PaymentAccountContractData paymentAccountContractData = checkNotNull(publishDepositTxRequest.offererPaymentAccountContractData);
+            PaymentAccountPayload paymentAccountPayload = checkNotNull(publishDepositTxRequest.offererPaymentAccountPayload);
             final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
-            if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountContractData, appliedPaymentAccountFilter)) {
+            if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
                 failed("Other trader is banned by his trading account data.\n" +
-                        "paymentAccountContractData=" + paymentAccountContractData.getPaymentDetails() + "\n" +
+                        "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails() + "\n" +
                         "banFilter=" + appliedPaymentAccountFilter[0].toString());
                 return;
             }
 
-            processModel.tradingPeer.setPaymentAccountContractData(paymentAccountContractData);
+            processModel.tradingPeer.setPaymentAccountPayload(paymentAccountPayload);
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(publishDepositTxRequest.offererAccountId));
             processModel.tradingPeer.setMultiSigPubKey(checkNotNull(publishDepositTxRequest.offererMultiSigPubKey));
             processModel.tradingPeer.setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.offererContractAsJson));

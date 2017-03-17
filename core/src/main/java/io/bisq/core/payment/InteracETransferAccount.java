@@ -20,8 +20,8 @@ package io.bisq.core.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.user.Preferences;
-import io.bisq.wire.payload.payment.InteracETransferAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.InteracETransferAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 
 public final class InteracETransferAccount extends PaymentAccount {
@@ -34,39 +34,39 @@ public final class InteracETransferAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountContractData setContractData() {
-        return new InteracETransferAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload setPayload() {
+        return new InteracETransferAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setEmail(String email) {
-        ((InteracETransferAccountContractData) contractData).setEmail(email);
+        ((InteracETransferAccountPayload) paymentAccountPayload).setEmail(email);
     }
 
     public String getEmail() {
-        return ((InteracETransferAccountContractData) contractData).getEmail();
+        return ((InteracETransferAccountPayload) paymentAccountPayload).getEmail();
     }
 
     public void setAnswer(String answer) {
-        ((InteracETransferAccountContractData) contractData).setAnswer(answer);
+        ((InteracETransferAccountPayload) paymentAccountPayload).setAnswer(answer);
     }
 
     public String getAnswer() {
-        return ((InteracETransferAccountContractData) contractData).getAnswer();
+        return ((InteracETransferAccountPayload) paymentAccountPayload).getAnswer();
     }
 
     public void setQuestion(String question) {
-        ((InteracETransferAccountContractData) contractData).setQuestion(question);
+        ((InteracETransferAccountPayload) paymentAccountPayload).setQuestion(question);
     }
 
     public String getQuestion() {
-        return ((InteracETransferAccountContractData) contractData).getQuestion();
+        return ((InteracETransferAccountPayload) paymentAccountPayload).getQuestion();
     }
 
     public void setHolderName(String holderName) {
-        ((InteracETransferAccountContractData) contractData).setHolderName(holderName);
+        ((InteracETransferAccountPayload) paymentAccountPayload).setHolderName(holderName);
     }
 
     public String getHolderName() {
-        return ((InteracETransferAccountContractData) contractData).getHolderName();
+        return ((InteracETransferAccountPayload) paymentAccountPayload).getHolderName();
     }
 }

@@ -19,7 +19,7 @@ package io.bisq.core.payment;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Country;
-import io.bisq.wire.payload.payment.CountryBasedPaymentAccountContractData;
+import io.bisq.wire.payload.payment.CountryBasedPaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -59,7 +59,7 @@ public abstract class CountryBasedPaymentAccount extends PaymentAccount {
 
     public void setCountry(@NotNull Country country) {
         this.country = country;
-        ((CountryBasedPaymentAccountContractData) contractData).setCountryCode(country.code);
+        ((CountryBasedPaymentAccountPayload) paymentAccountPayload).setCountryCode(country.code);
     }
 
     @Override

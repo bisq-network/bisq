@@ -21,7 +21,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.wire.payload.btc.RawTransactionInput;
 import io.bisq.wire.payload.crypto.PubKeyRing;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,7 @@ public final class TradingPeer implements Persistable {
 
     // Mutable
     private String accountId;
-    private PaymentAccountContractData paymentAccountContractData;
+    private PaymentAccountPayload paymentAccountPayload;
     // private Coin payoutAmount;
     private String payoutAddressString;
     // private byte[] signature;
@@ -89,12 +89,12 @@ public final class TradingPeer implements Persistable {
         this.multiSigPubKey = multiSigPubKey;
     }
 
-    public PaymentAccountContractData getPaymentAccountContractData() {
-        return paymentAccountContractData;
+    public PaymentAccountPayload getPaymentAccountPayload() {
+        return paymentAccountPayload;
     }
 
-    public void setPaymentAccountContractData(PaymentAccountContractData paymentAccountContractData) {
-        this.paymentAccountContractData = paymentAccountContractData;
+    public void setPaymentAccountPayload(PaymentAccountPayload paymentAccountPayload) {
+        this.paymentAccountPayload = paymentAccountPayload;
     }
 
 

@@ -9,6 +9,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.network.p2p.peers.BanList;
+import io.bisq.wire.ProtoBufferUtilities;
 import io.bisq.wire.message.Message;
 import io.bisq.wire.message.SendersNodeAddressMessage;
 import io.bisq.wire.message.p2p.CloseConnectionMessage;

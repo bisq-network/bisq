@@ -68,7 +68,7 @@ public class SendPayDepositRequest extends TradeTask {
                     takerMultiSigPubKey,
                     takerPayoutAddressString,
                     processModel.getPubKeyRing(),
-                    processModel.getPaymentAccountContractData(trade),
+                    processModel.getPaymentAccountPayload(trade),
                     processModel.getAccountId(),
                     trade.getTakeOfferFeeTxId(),
                     new ArrayList<>(processModel.getUser().getAcceptedArbitratorAddresses()),

@@ -20,17 +20,17 @@ package io.bisq.wire.payload.payment;
 import io.bisq.common.app.Version;
 import io.bisq.wire.proto.Messages;
 
-public final class PerfectMoneyAccountContractData extends PaymentAccountContractData {
+public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private String accountNr;
 
-    public PerfectMoneyAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public PerfectMoneyAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public PerfectMoneyAccountContractData(String paymentMethodName, String id, long maxTradePeriod, String accountNr) {
+    public PerfectMoneyAccountPayload(String paymentMethodName, String id, long maxTradePeriod, String accountNr) {
         super(paymentMethodName, id, maxTradePeriod);
         this.accountNr = accountNr;
     }
@@ -54,15 +54,15 @@ public final class PerfectMoneyAccountContractData extends PaymentAccountContrac
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.PerfectMoneyAccountContractData.Builder thisClass =
-                Messages.PerfectMoneyAccountContractData.newBuilder().setAccountNr(accountNr);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.PerfectMoneyAccountPayload.Builder thisClass =
+                Messages.PerfectMoneyAccountPayload.newBuilder().setAccountNr(accountNr);
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
                         .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setPerfectMoneyAccountContractData(thisClass);
-        return paymentAccountContractData.build();
+                        .setPerfectMoneyAccountPayload(thisClass);
+        return paymentAccountPayload.build();
     }
 }

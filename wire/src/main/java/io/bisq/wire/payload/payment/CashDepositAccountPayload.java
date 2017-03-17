@@ -26,11 +26,11 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.util.Locale;
 
-public class CashDepositAccountContractData extends CountryBasedPaymentAccountContractData {
+public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(CashDepositAccountContractData.class);
+    private static final Logger log = LoggerFactory.getLogger(CashDepositAccountPayload.class);
 
     protected String holderName;
     protected String holderEmail;
@@ -44,7 +44,7 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
     @Nullable
     protected String holderTaxId;
 
-    public CashDepositAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public CashDepositAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
@@ -76,9 +76,9 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.CashDepositAccountContractData.Builder cashDepositAccountContractData =
-                Messages.CashDepositAccountContractData.newBuilder()
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.CashDepositAccountPayload.Builder cashDepositAccountPayload =
+                Messages.CashDepositAccountPayload.newBuilder()
                         .setHolderName(holderName)
                         .setHolderEmail(holderEmail)
                         .setBankName(bankName)
@@ -87,17 +87,17 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
                         .setAccountNr(accountNr)
                         .setRequirements(requirements)
                         .setHolderTaxId(holderTaxId);
-        Messages.CountryBasedPaymentAccountContractData.Builder countryBasedPaymentAccountContractData =
-                Messages.CountryBasedPaymentAccountContractData.newBuilder()
+        Messages.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload =
+                Messages.CountryBasedPaymentAccountPayload.newBuilder()
                         .setCountryCode(countryCode)
-                        .setCashDepositAccountContractData(cashDepositAccountContractData);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+                        .setCashDepositAccountPayload(cashDepositAccountPayload);
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
                         .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
-        return paymentAccountContractData.build();
+                        .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayload);
+        return paymentAccountPayload.build();
     }
 
 

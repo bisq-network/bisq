@@ -20,21 +20,18 @@ package io.bisq.wire.payload.payment;
 import io.bisq.common.app.Version;
 import io.bisq.wire.proto.Messages;
 
-public final class FasterPaymentsAccountContractData extends PaymentAccountContractData {
+public final class OKPayAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private String sortCode;
     private String accountNr;
 
-    public FasterPaymentsAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public OKPayAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public FasterPaymentsAccountContractData(String paymentMethod, String id, long maxTradePeriod,
-                                             String sortCode, String accountNr) {
-        super(paymentMethod, id, maxTradePeriod);
-        this.sortCode = sortCode;
+    public OKPayAccountPayload(String paymentMethodName, String id, long maxTradePeriod, String accountNr) {
+        super(paymentMethodName, id, maxTradePeriod);
         this.accountNr = accountNr;
     }
 
@@ -46,37 +43,27 @@ public final class FasterPaymentsAccountContractData extends PaymentAccountContr
         return accountNr;
     }
 
-    public String getSortCode() {
-        return sortCode;
-    }
-
-    public void setSortCode(String sortCode) {
-        this.sortCode = sortCode;
-    }
-
     @Override
     public String getPaymentDetails() {
-        return "FasterPayments - UK Sort code: " + sortCode + ", Account number: " + accountNr;
+        return "OKPay - Account no.: " + accountNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return "UK Sort code: " + sortCode + "\n" +
-                "Account number: " + accountNr;
+        return getPaymentDetails();
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.FasterPaymentsAccountContractData.Builder thisClass =
-                Messages.FasterPaymentsAccountContractData.newBuilder()
-                        .setSortCode(sortCode)
-                        .setAccountNr(accountNr);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.OKPayAccountPayload.Builder builder = Messages.OKPayAccountPayload.newBuilder();
+        Messages.OKPayAccountPayload.Builder thisClass =
+                builder.setAccountNr(accountNr);
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
                         .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setFasterPaymentsAccountContractData(thisClass);
-        return paymentAccountContractData.build();
+                        .setOKPayAccountPayload(thisClass);
+        return paymentAccountPayload.build();
     }
 }

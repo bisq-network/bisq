@@ -28,7 +28,7 @@ import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.wire.payload.arbitration.Dispute;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 import io.bisq.wire.payload.trade.Contract;
 import javafx.geometry.Insets;
@@ -112,7 +112,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         if (showAcceptedBanks)
             rows++;
 
-        PaymentAccountContractData sellerPaymentAccountContractData = contract.getSellerPaymentAccountContractData();
+        PaymentAccountPayload sellerPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("contractWindow.title"));
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.getWithCol("shared.offerId"), offer.getId(),
                 Layout.FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
@@ -145,9 +145,9 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
-                contract.getBuyerPaymentAccountContractData().getPaymentDetails()).second.setMouseTransparent(false);
+                contract.getBuyerPaymentAccountPayload().getPaymentDetails()).second.setMouseTransparent(false);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
-                sellerPaymentAccountContractData.getPaymentDetails()).second.setMouseTransparent(false);
+                sellerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"), contract.arbitratorNodeAddress.getFullAddress());
 

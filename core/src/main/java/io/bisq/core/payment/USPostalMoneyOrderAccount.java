@@ -20,9 +20,9 @@ package io.bisq.core.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.user.Preferences;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
-import io.bisq.wire.payload.payment.USPostalMoneyOrderAccountContractData;
+import io.bisq.wire.payload.payment.USPostalMoneyOrderAccountPayload;
 
 public final class USPostalMoneyOrderAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -34,23 +34,23 @@ public final class USPostalMoneyOrderAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountContractData setContractData() {
-        return new USPostalMoneyOrderAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload setPayload() {
+        return new USPostalMoneyOrderAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setPostalAddress(String postalAddress) {
-        ((USPostalMoneyOrderAccountContractData) contractData).setPostalAddress(postalAddress);
+        ((USPostalMoneyOrderAccountPayload) paymentAccountPayload).setPostalAddress(postalAddress);
     }
 
     public String getPostalAddress() {
-        return ((USPostalMoneyOrderAccountContractData) contractData).getPostalAddress();
+        return ((USPostalMoneyOrderAccountPayload) paymentAccountPayload).getPostalAddress();
     }
 
     public void setHolderName(String holderName) {
-        ((USPostalMoneyOrderAccountContractData) contractData).setHolderName(holderName);
+        ((USPostalMoneyOrderAccountPayload) paymentAccountPayload).setHolderName(holderName);
     }
 
     public String getHolderName() {
-        return ((USPostalMoneyOrderAccountContractData) contractData).getHolderName();
+        return ((USPostalMoneyOrderAccountPayload) paymentAccountPayload).getHolderName();
     }
 }

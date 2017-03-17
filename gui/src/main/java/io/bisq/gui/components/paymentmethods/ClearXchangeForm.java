@@ -26,8 +26,8 @@ import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.ClearXchangeValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.ClearXchangeAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.ClearXchangeAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -41,11 +41,11 @@ public class ClearXchangeForm extends PaymentMethodForm {
     private final ClearXchangeValidator clearXchangeValidator;
     private InputTextField mobileNrInputTextField;
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
+    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
-                ((ClearXchangeAccountContractData) paymentAccountContractData).getHolderName());
+                ((ClearXchangeAccountPayload) paymentAccountPayload).getHolderName());
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email.mobile"),
-                ((ClearXchangeAccountContractData) paymentAccountContractData).getEmailOrMobileNr());
+                ((ClearXchangeAccountPayload) paymentAccountPayload).getEmailOrMobileNr());
         return gridRow;
     }
 

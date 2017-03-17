@@ -31,6 +31,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     @JsonExclude
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
+    // Payload
     public final String currency;
     public final OfferPayload.Direction direction;
     public final long tradePrice;

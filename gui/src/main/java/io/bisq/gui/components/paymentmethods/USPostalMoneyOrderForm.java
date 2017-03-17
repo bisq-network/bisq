@@ -26,8 +26,8 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.gui.util.validation.USPostalMoneyOrderValidator;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
-import io.bisq.wire.payload.payment.USPostalMoneyOrderAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.wire.payload.payment.USPostalMoneyOrderAccountPayload;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -44,14 +44,14 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
     private TextArea postalAddressTextArea;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
-                                      PaymentAccountContractData paymentAccountContractData) {
+                                      PaymentAccountPayload paymentAccountPayload) {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
-                ((USPostalMoneyOrderAccountContractData) paymentAccountContractData).getHolderName());
+                ((USPostalMoneyOrderAccountPayload) paymentAccountPayload).getHolderName());
         TextArea textArea = addLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
         textArea.setPrefHeight(60);
         textArea.setEditable(false);
         textArea.setId("text-area-disabled");
-        textArea.setText(((USPostalMoneyOrderAccountContractData) paymentAccountContractData).getPostalAddress());
+        textArea.setText(((USPostalMoneyOrderAccountPayload) paymentAccountPayload).getPostalAddress());
         return gridRow;
     }
 

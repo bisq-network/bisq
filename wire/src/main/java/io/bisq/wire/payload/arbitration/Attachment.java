@@ -14,6 +14,7 @@ public final class Attachment implements Payload {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(Attachment.class);
 
+    // Payload
     private final byte[] bytes;
     private final String fileName;
 

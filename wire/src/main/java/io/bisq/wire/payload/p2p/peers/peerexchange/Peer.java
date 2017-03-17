@@ -13,8 +13,11 @@ public final class Peer implements Payload, Persistable {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final int MAX_FAILED_CONNECTION_ATTEMPTS = 5;
 
+    // Payload
     public final NodeAddress nodeAddress;
     public final Date date;
+
+    // Domain
     transient private int failedConnectionAttempts = 0;
 
     public Peer(NodeAddress nodeAddress) {

@@ -47,7 +47,7 @@ import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.wire.crypto.KeyRing;
 import io.bisq.wire.payload.arbitration.Arbitrator;
 import io.bisq.wire.payload.arbitration.Dispute;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -265,9 +265,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     @Nullable
-    public PaymentAccountContractData getSellersPaymentAccountContractData() {
+    public PaymentAccountPayload getSellersPaymentAccountPayload() {
         if (getTrade() != null && getTrade().getContract() != null)
-            return getTrade().getContract().getSellerPaymentAccountContractData();
+            return getTrade().getContract().getSellerPaymentAccountPayload();
         else
             return null;
     }

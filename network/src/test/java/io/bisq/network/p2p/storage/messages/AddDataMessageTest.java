@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.storage.messages;
 
 import io.bisq.common.crypto.CryptoException;
-import io.bisq.network.p2p.network.ProtoBufferUtilities;
+import io.bisq.wire.ProtoBufferUtilities;
 import io.bisq.wire.crypto.KeyRing;
 import io.bisq.wire.crypto.KeyStorage;
 import io.bisq.wire.message.p2p.PrefixedSealedAndSignedMessage;

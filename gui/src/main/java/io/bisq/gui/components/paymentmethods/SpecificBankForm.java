@@ -24,8 +24,8 @@ import io.bisq.core.payment.PaymentAccount;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
-import io.bisq.wire.payload.payment.SpecificBanksAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.wire.payload.payment.SpecificBanksAccountPayload;
 import javafx.beans.binding.Bindings;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -40,18 +40,18 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class SpecificBankForm extends BankForm {
     private static final Logger log = LoggerFactory.getLogger(SpecificBankForm.class);
 
-    private final SpecificBanksAccountContractData specificBanksAccountContractData;
+    private final SpecificBanksAccountPayload specificBanksAccountPayload;
     private TextField acceptedBanksTextField;
     private Tooltip acceptedBanksTooltip;
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        return BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
+        return BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
     }
 
     public SpecificBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
                             GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter, closeHandler);
-        this.specificBanksAccountContractData = (SpecificBanksAccountContractData) paymentAccount.contractData;
+        this.specificBanksAccountPayload = (SpecificBanksAccountPayload) paymentAccount.paymentAccountPayload;
     }
 
     @Override
@@ -75,9 +75,9 @@ public class SpecificBankForm extends BankForm {
         clearButton.setDefaultButton(false);
         clearButton.disableProperty().bind(Bindings.createBooleanBinding(() -> acceptedBanksTextField.getText().isEmpty(), acceptedBanksTextField.textProperty()));
         addButton.setOnAction(e -> {
-            specificBanksAccountContractData.addAcceptedBank(addBankInputTextField.getText());
+            specificBanksAccountPayload.addAcceptedBank(addBankInputTextField.getText());
             addBankInputTextField.setText("");
-            String value = Joiner.on(", ").join(specificBanksAccountContractData.getAcceptedBanks());
+            String value = Joiner.on(", ").join(specificBanksAccountPayload.getAcceptedBanks());
             acceptedBanksTextField.setText(value);
             acceptedBanksTooltip.setText(value);
             updateAllInputsValid();
@@ -87,7 +87,7 @@ public class SpecificBankForm extends BankForm {
     }
 
     private void resetAcceptedBanks() {
-        specificBanksAccountContractData.clearAcceptedBanks();
+        specificBanksAccountPayload.clearAcceptedBanks();
         acceptedBanksTextField.setText("");
         acceptedBanksTooltip.setText("");
         updateAllInputsValid();
@@ -101,7 +101,7 @@ public class SpecificBankForm extends BankForm {
     @Override
     public void addAcceptedBanksForDisplayAccount() {
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.accepted.banks"),
-                Joiner.on(", ").join(specificBanksAccountContractData.getAcceptedBanks())).second.setMouseTransparent(false);
+                Joiner.on(", ").join(specificBanksAccountPayload.getAcceptedBanks())).second.setMouseTransparent(false);
     }
 
     @Override

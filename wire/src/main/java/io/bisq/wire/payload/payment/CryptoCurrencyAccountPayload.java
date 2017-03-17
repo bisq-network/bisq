@@ -20,32 +20,32 @@ package io.bisq.wire.payload.payment;
 import io.bisq.common.app.Version;
 import io.bisq.wire.proto.Messages;
 
-public final class OKPayAccountContractData extends PaymentAccountContractData {
+public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private String accountNr;
+    private String address;
 
-    public OKPayAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public CryptoCurrencyAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public OKPayAccountContractData(String paymentMethodName, String id, long maxTradePeriod, String accountNr) {
-        super(paymentMethodName, id, maxTradePeriod);
-        this.accountNr = accountNr;
+    public CryptoCurrencyAccountPayload(String paymentMethod, String id, long maxTradePeriod, String address) {
+        super(paymentMethod, id, maxTradePeriod);
+        this.address = address;
     }
 
-    public void setAccountNr(String accountNr) {
-        this.accountNr = accountNr;
+    public void setAddress(String address) {
+        this.address = address;
     }
 
-    public String getAccountNr() {
-        return accountNr;
+    public String getAddress() {
+        return address;
     }
 
     @Override
     public String getPaymentDetails() {
-        return "OKPay - Account no.: " + accountNr;
+        return "Receivers altcoin address: " + address;
     }
 
     @Override
@@ -54,16 +54,15 @@ public final class OKPayAccountContractData extends PaymentAccountContractData {
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.OKPayAccountContractData.Builder builder = Messages.OKPayAccountContractData.newBuilder();
-        Messages.OKPayAccountContractData.Builder thisClass =
-                builder.setAccountNr(accountNr);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.CryptoCurrencyAccountPayload.Builder cryptoCurrencyAccountPayload =
+                Messages.CryptoCurrencyAccountPayload.newBuilder().setAddress(address);
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
                         .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setOKPayAccountContractData(thisClass);
-        return paymentAccountContractData.build();
+                        .setCryptoCurrencyAccountPayload(cryptoCurrencyAccountPayload);
+        return paymentAccountPayload.build();
     }
 }

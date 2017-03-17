@@ -17,6 +17,7 @@
 
 package io.bisq.network.p2p.network;
 
+import io.bisq.wire.ProtoBufferUtilities;
 import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.proto.Messages;
 import org.junit.Test;

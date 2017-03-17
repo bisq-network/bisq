@@ -46,7 +46,7 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.wire.crypto.KeyRing;
 import io.bisq.wire.payload.offer.OfferPayload;
-import io.bisq.wire.payload.payment.BankAccountContractData;
+import io.bisq.wire.payload.payment.BankAccountPayload;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -612,7 +612,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     private boolean isNotUSBankAccount(PaymentAccount paymentAccount) {
         //noinspection SimplifiableIfStatement
-        if (paymentAccount instanceof SameCountryRestrictedBankAccount && paymentAccount.getContractData() instanceof BankAccountContractData)
+        if (paymentAccount instanceof SameCountryRestrictedBankAccount && paymentAccount.getPaymentAccountPayload() instanceof BankAccountPayload)
             return !((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
         else
             return true;

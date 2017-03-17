@@ -26,7 +26,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -109,10 +109,10 @@ public abstract class PaymentMethodForm {
     }
 
     public static void addAllowedPeriod(GridPane gridPane, int gridRow,
-                                        @Nullable PaymentAccountContractData paymentAccountContractData,
+                                        @Nullable PaymentAccountPayload paymentAccountPayload,
                                         String dateFromBlocks) {
-        if (paymentAccountContractData != null) {
-            long hours = paymentAccountContractData.getMaxTradePeriod() / 3600_000;
+        if (paymentAccountPayload != null) {
+            long hours = paymentAccountPayload.getMaxTradePeriod() / 3600_000;
             addLabelTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
                     getTimeText(hours) + " / " + dateFromBlocks);
         }

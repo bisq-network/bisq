@@ -26,17 +26,17 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Locale;
 
-public final class SpecificBanksAccountContractData extends BankAccountContractData {
+public final class SpecificBanksAccountPayload extends BankAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(SpecificBanksAccountContractData.class);
+    private static final Logger log = LoggerFactory.getLogger(SpecificBanksAccountPayload.class);
 
 
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private ArrayList<String> acceptedBanks;
 
-    public SpecificBanksAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public SpecificBanksAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
         acceptedBanks = new ArrayList<>();
     }
@@ -72,11 +72,11 @@ public final class SpecificBanksAccountContractData extends BankAccountContractD
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.SpecificBanksAccountContractData.Builder specificBanksAccountContractData =
-                Messages.SpecificBanksAccountContractData.newBuilder().addAllAcceptedBanks(acceptedBanks);
-        Messages.BankAccountContractData.Builder bankAccountContractData =
-                Messages.BankAccountContractData.newBuilder()
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.SpecificBanksAccountPayload.Builder specificBanksAccountPayload =
+                Messages.SpecificBanksAccountPayload.newBuilder().addAllAcceptedBanks(acceptedBanks);
+        Messages.BankAccountPayload.Builder bankAccountPayload =
+                Messages.BankAccountPayload.newBuilder()
                         .setHolderName(holderName)
                         .setBankName(bankName)
                         .setBankId(bankId)
@@ -84,18 +84,18 @@ public final class SpecificBanksAccountContractData extends BankAccountContractD
                         .setAccountNr(accountNr)
                         .setAccountType(accountType)
                         .setHolderTaxId(holderTaxId)
-                        .setSpecificBanksAccountContractData(specificBanksAccountContractData);
-        Messages.CountryBasedPaymentAccountContractData.Builder countryBasedPaymentAccountContractData =
-                Messages.CountryBasedPaymentAccountContractData.newBuilder()
+                        .setSpecificBanksAccountPayload(specificBanksAccountPayload);
+        Messages.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload =
+                Messages.CountryBasedPaymentAccountPayload.newBuilder()
                         .setCountryCode(countryCode)
-                        .setBankAccountContractData(bankAccountContractData);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+                        .setBankAccountPayload(bankAccountPayload);
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
                         .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
+                        .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayload);
 
-        return paymentAccountContractData.build();
+        return paymentAccountPayload.build();
     }
 }

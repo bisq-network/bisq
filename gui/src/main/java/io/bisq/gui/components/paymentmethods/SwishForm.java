@@ -26,8 +26,8 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.gui.util.validation.SwishValidator;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
-import io.bisq.wire.payload.payment.SwishAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.wire.payload.payment.SwishAccountPayload;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -45,11 +45,11 @@ public class SwishForm extends PaymentMethodForm {
     private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
-                                      PaymentAccountContractData paymentAccountContractData) {
+                                      PaymentAccountPayload paymentAccountPayload) {
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
-                ((SwishAccountContractData) paymentAccountContractData).getHolderName());
+                ((SwishAccountPayload) paymentAccountPayload).getHolderName());
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"),
-                ((SwishAccountContractData) paymentAccountContractData).getMobileNr());
+                ((SwishAccountPayload) paymentAccountPayload).getMobileNr());
         return gridRow;
     }
 

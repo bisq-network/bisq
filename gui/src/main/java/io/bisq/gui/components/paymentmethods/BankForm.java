@@ -31,8 +31,8 @@ import io.bisq.gui.util.validation.AccountNrValidator;
 import io.bisq.gui.util.validation.BankIdValidator;
 import io.bisq.gui.util.validation.BranchIdValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.BankAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.BankAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -48,7 +48,7 @@ import static io.bisq.gui.util.FormBuilder.*;
 abstract class BankForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(BankForm.class);
 
-    protected final BankAccountContractData bankAccountContractData;
+    protected final BankAccountPayload bankAccountPayload;
     private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
     private Label holderIdLabel;
     protected InputTextField holderNameInputTextField;
@@ -67,9 +67,9 @@ abstract class BankForm extends PaymentMethodForm {
     private final Runnable closeHandler;
     private ComboBox<TradeCurrency> currencyComboBox;
 
-    static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        BankAccountContractData data = (BankAccountContractData) paymentAccountContractData;
-        String countryCode = ((BankAccountContractData) paymentAccountContractData).getCountryCode();
+    static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
+        BankAccountPayload data = (BankAccountPayload) paymentAccountPayload;
+        String countryCode = ((BankAccountPayload) paymentAccountPayload).getCountryCode();
 
         if (data.getHolderTaxId() != null)
             addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
@@ -204,13 +204,13 @@ abstract class BankForm extends PaymentMethodForm {
              GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.closeHandler = closeHandler;
-        this.bankAccountContractData = (BankAccountContractData) paymentAccount.contractData;
+        this.bankAccountPayload = (BankAccountPayload) paymentAccount.paymentAccountPayload;
     }
 
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        String countryCode = bankAccountContractData.getCountryCode();
+        String countryCode = bankAccountPayload.getCountryCode();
 
         addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
@@ -226,23 +226,23 @@ abstract class BankForm extends PaymentMethodForm {
 
         if (BankUtil.isBankNameRequired(countryCode))
             addLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.name"),
-                    bankAccountContractData.getBankName()).second.setMouseTransparent(false);
+                    bankAccountPayload.getBankName()).second.setMouseTransparent(false);
 
         if (BankUtil.isBankIdRequired(countryCode))
             addLabelTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(countryCode),
-                    bankAccountContractData.getBankId()).second.setMouseTransparent(false);
+                    bankAccountPayload.getBankId()).second.setMouseTransparent(false);
 
         if (BankUtil.isBranchIdRequired(countryCode))
             addLabelTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(countryCode),
-                    bankAccountContractData.getBranchId()).second.setMouseTransparent(false);
+                    bankAccountPayload.getBranchId()).second.setMouseTransparent(false);
 
         if (BankUtil.isAccountNrRequired(countryCode))
             addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(countryCode),
-                    bankAccountContractData.getAccountNr()).second.setMouseTransparent(false);
+                    bankAccountPayload.getAccountNr()).second.setMouseTransparent(false);
 
         if (BankUtil.isAccountTypeRequired(countryCode))
             addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountTypeLabel(countryCode),
-                    bankAccountContractData.getAccountType()).second.setMouseTransparent(false);
+                    bankAccountPayload.getAccountType()).second.setMouseTransparent(false);
 
         addAllowedPeriod();
     }
@@ -443,7 +443,7 @@ abstract class BankForm extends PaymentMethodForm {
         bankNameInputTextField = bankNameTuple.second;
 
         bankNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountContractData.setBankName(newValue);
+            bankAccountPayload.setBankName(newValue);
             updateFromInputs();
 
         });
@@ -452,7 +452,7 @@ abstract class BankForm extends PaymentMethodForm {
         bankIdLabel = bankIdTuple.first;
         bankIdInputTextField = bankIdTuple.second;
         bankIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountContractData.setBankId(newValue);
+            bankAccountPayload.setBankId(newValue);
             updateFromInputs();
 
         });
@@ -461,7 +461,7 @@ abstract class BankForm extends PaymentMethodForm {
         branchIdLabel = branchIdTuple.first;
         branchIdInputTextField = branchIdTuple.second;
         branchIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountContractData.setBranchId(newValue);
+            bankAccountPayload.setBranchId(newValue);
             updateFromInputs();
 
         });
@@ -470,7 +470,7 @@ abstract class BankForm extends PaymentMethodForm {
         accountNrLabel = accountNrTuple.first;
         accountNrInputTextField = accountNrTuple.second;
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountContractData.setAccountNr(newValue);
+            bankAccountPayload.setAccountNr(newValue);
             updateFromInputs();
 
         });
@@ -480,8 +480,8 @@ abstract class BankForm extends PaymentMethodForm {
         accountTypeComboBox = accountTypeTuple.second;
         accountTypeComboBox.setPromptText(Res.get("payment.select.account"));
         accountTypeComboBox.setOnAction(e -> {
-            if (BankUtil.isAccountTypeRequired(bankAccountContractData.getCountryCode())) {
-                bankAccountContractData.setAccountType(accountTypeComboBox.getSelectionModel().getSelectedItem());
+            if (BankUtil.isAccountTypeRequired(bankAccountPayload.getCountryCode())) {
+                bankAccountPayload.setAccountType(accountTypeComboBox.getSelectionModel().getSelectedItem());
                 updateFromInputs();
             }
         });
@@ -505,7 +505,7 @@ abstract class BankForm extends PaymentMethodForm {
         holderNameInputTextField = tuple.second;
         holderNameInputTextField.setMinWidth(300);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountContractData.setHolderName(newValue);
+            bankAccountPayload.setHolderName(newValue);
             updateFromInputs();
         });
         holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
@@ -520,7 +520,7 @@ abstract class BankForm extends PaymentMethodForm {
         holderIdInputTextField.setVisible(false);
         holderIdInputTextField.setManaged(false);
         holderIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountContractData.setHolderTaxId(newValue);
+            bankAccountPayload.setHolderTaxId(newValue);
             updateFromInputs();
         });
     }
@@ -529,7 +529,7 @@ abstract class BankForm extends PaymentMethodForm {
     protected void autoFillNameTextField() {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String bankId = null;
-            String countryCode = bankAccountContractData.getCountryCode();
+            String countryCode = bankAccountPayload.getCountryCode();
             if (countryCode == null)
                 countryCode = "";
             if (BankUtil.isBankIdRequired(countryCode)) {
@@ -563,42 +563,42 @@ abstract class BankForm extends PaymentMethodForm {
         boolean result = isAccountNameValid()
                 && paymentAccount.getSingleTradeCurrency() != null
                 && getCountryBasedPaymentAccount().getCountry() != null
-                && holderNameInputTextField.getValidator().validate(bankAccountContractData.getHolderName()).isValid;
+                && holderNameInputTextField.getValidator().validate(bankAccountPayload.getHolderName()).isValid;
 
-        String countryCode = bankAccountContractData.getCountryCode();
+        String countryCode = bankAccountPayload.getCountryCode();
         if (validatorsApplied && BankUtil.useValidation(countryCode)) {
             if (BankUtil.isBankNameRequired(countryCode))
-                result &= bankNameInputTextField.getValidator().validate(bankAccountContractData.getBankName()).isValid;
+                result &= bankNameInputTextField.getValidator().validate(bankAccountPayload.getBankName()).isValid;
 
             if (BankUtil.isBankIdRequired(countryCode))
-                result &= bankIdInputTextField.getValidator().validate(bankAccountContractData.getBankId()).isValid;
+                result &= bankIdInputTextField.getValidator().validate(bankAccountPayload.getBankId()).isValid;
 
             if (BankUtil.isBranchIdRequired(countryCode))
-                result &= branchIdInputTextField.getValidator().validate(bankAccountContractData.getBranchId()).isValid;
+                result &= branchIdInputTextField.getValidator().validate(bankAccountPayload.getBranchId()).isValid;
 
             if (BankUtil.isAccountNrRequired(countryCode))
-                result &= accountNrInputTextField.getValidator().validate(bankAccountContractData.getAccountNr()).isValid;
+                result &= accountNrInputTextField.getValidator().validate(bankAccountPayload.getAccountNr()).isValid;
 
             if (BankUtil.isAccountTypeRequired(countryCode))
-                result &= bankAccountContractData.getAccountType() != null;
+                result &= bankAccountPayload.getAccountType() != null;
 
             if (useHolderID && BankUtil.isHolderIdRequired(countryCode))
-                result &= holderIdInputTextField.getValidator().validate(bankAccountContractData.getHolderTaxId()).isValid;
+                result &= holderIdInputTextField.getValidator().validate(bankAccountPayload.getHolderTaxId()).isValid;
         }
         allInputsValid.set(result);
     }
 
     protected void addHolderNameAndIdForDisplayAccount() {
-        String countryCode = bankAccountContractData.getCountryCode();
+        String countryCode = bankAccountPayload.getCountryCode();
         if (BankUtil.isHolderIdRequired(countryCode)) {
             Tuple4<Label, TextField, Label, TextField> tuple = addLabelTextFieldLabelTextField(gridPane, ++gridRow,
                     Res.getWithCol("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
             TextField holderNameTextField = tuple.second;
-            holderNameTextField.setText(bankAccountContractData.getHolderName());
+            holderNameTextField.setText(bankAccountPayload.getHolderName());
             holderNameTextField.setMinWidth(300);
-            tuple.forth.setText(bankAccountContractData.getHolderTaxId());
+            tuple.forth.setText(bankAccountPayload.getHolderTaxId());
         } else {
-            addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"), bankAccountContractData.getHolderName());
+            addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"), bankAccountPayload.getHolderName());
         }
     }
 
