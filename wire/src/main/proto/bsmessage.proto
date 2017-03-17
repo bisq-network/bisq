@@ -183,7 +183,7 @@ message Payload {
 
 message DataAndSeqNrPair {
     StoragePayload payload = 1;
-    int32 sequence_number =2;
+    int32 sequence_number = 2;
 }
 
 // start storagepayloads
@@ -736,3 +736,143 @@ message ProtectedMailboxStorageEntry {
     ProtectedStorageEntry entry = 1;
     bytes receivers_pub_key_bytes = 2;
 }
+
+////////// Persistable //////////////////
+
+message DiskEnvelope {
+    int64 local_db_version = 1;
+    oneof message {
+        AddressEntryList address_entry_list = 2;
+        Navigation navigation = 3;
+        PersistedPeers persisted_peers = 4;
+        Preferences preferences = 5;
+        User user = 6;
+    }
+}
+
+message AddressEntry {
+    enum Context {
+        MISSING = 0;
+        ARBITRATOR = 1;
+        AVAILABLE = 2;
+        OFFER_FUNDING = 3;
+        RESERVED_FOR_TRADE = 4;
+        MULTI_SIG = 5;
+        TRADE_PAYOUT = 6;
+    }
+
+    string offerId = 7;
+    Context context = 8;
+    bytes pubkey = 9;
+    bytes pubKeyHash = 10;
+    string paramId = 11;
+    Coin coinLockedInMultiSig = 12;
+}
+
+message AddressEntryList {
+}
+message BlockChainExplorer {
+}
+// needed?
+message ByteArray {
+}
+message CompensationRequest {
+}
+message CompensationRequestVoteItem {
+}
+message CompensationRequestVoteItemCollection {
+}
+message Country {
+}
+message DecryptedMsgWithPubKey {
+}
+message DisputeList {
+}
+message MapValue {
+}
+message Navigation {
+}
+message NodeAddress {
+}
+message PaymentAccount {
+}
+message AliPayAccount {
+}
+message ChaseQuickPayAccount {
+}
+message ClearXchangeAccount {
+}
+message CountryBasedPaymentAccount {
+}
+message CashDepositAccount {
+}
+message NationalBankAccount {
+}
+message SameBankAccount {
+}
+message SepaAccount {
+}
+message SpecificBanksAccount {
+}
+message CryptoCurrencyAccount {
+}
+message FasterPaymentsAccount {
+}
+message InteracETransferAccount {
+}
+message OKPayAccount {
+}
+message PerfectMoneyAccount {
+}
+message SwishAccount {
+}
+message USPostalMoneyOrderAccount {
+}
+message PaymentMethod {
+}
+//message Peer {
+//}
+message Preferences {
+}
+message Region {
+}
+message Tradable {
+}
+message OpenOffer {
+}
+message Trade {
+}
+message BuyerTrade {
+}
+message BuyerAsOffererTrade {
+}
+message BuyerAsTakerTrade {
+}
+message SellerTrade {
+}
+message SellerAsOffererTrade {
+}
+message SellerAsTakerTrade {
+}
+message TradableList {
+}
+message TradeCurrency {
+}
+message CryptoCurrency {
+}
+message FiatCurrency {
+}
+message TradingPeer {
+}
+message User {
+}
+message ViewPath {
+}
+message VoteItem {
+}
+//message CompensationRequestVoteItemCollection {
+//}
+message VoteItemsList {
+}
+
+

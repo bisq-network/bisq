@@ -25,6 +25,7 @@ import io.bisq.wire.payload.*;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.payload.p2p.storage.ProtectedMailboxStorageEntry;
 import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -733,6 +734,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     /**
      * Used as value in map
      */
+    @EqualsAndHashCode
     private static final class MapValue implements Persistable {
         // That object is saved to disc. We need to take care of changes to not break deserialization.
         private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -743,25 +745,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         public MapValue(int sequenceNr, long timeStamp) {
             this.sequenceNr = sequenceNr;
             this.timeStamp = timeStamp;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof MapValue)) return false;
-
-            MapValue mapValue = (MapValue) o;
-
-            if (sequenceNr != mapValue.sequenceNr) return false;
-            return timeStamp == mapValue.timeStamp;
-
-        }
-
-        @Override
-        public int hashCode() {
-            int result = sequenceNr;
-            result = 31 * result + (int) (timeStamp ^ (timeStamp >>> 32));
-            return result;
         }
 
         @Override
