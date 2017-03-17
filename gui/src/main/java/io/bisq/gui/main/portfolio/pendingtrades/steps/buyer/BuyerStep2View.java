@@ -150,16 +150,16 @@ public class BuyerStep2View extends TradeStepView {
         addTradeInfoBlock();
 
         PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
-        String paymentMethodName = paymentAccountContractData != null ? paymentAccountContractData.getPaymentMethodName() : "";
+        String paymentMethodId = paymentAccountContractData != null ? paymentAccountContractData.getPaymentMethodId() : "";
         TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
-                Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodName)),
+                Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodId)),
                 Layout.GROUP_DISTANCE);
         TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
                 model.getFiatVolume(),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
-        switch (paymentMethodName) {
+        switch (paymentMethodId) {
             case PaymentMethod.OK_PAY_ID:
                 gridRow = OKPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
                 break;
@@ -208,7 +208,7 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData, labelTitle);
                 break;
             default:
-                log.error("Not supported PaymentMethod: " + paymentMethodName);
+                log.error("Not supported PaymentMethod: " + paymentMethodId);
         }
 
         if (!(paymentAccountContractData instanceof CryptoCurrencyAccountContractData))

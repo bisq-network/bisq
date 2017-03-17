@@ -121,7 +121,7 @@ public final class SepaAccountContractData extends CountryBasedPaymentAccountCon
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
 

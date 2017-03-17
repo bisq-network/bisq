@@ -49,7 +49,7 @@ public final class TradeStatisticsForJson {
     public TradeStatisticsForJson(TradeStatistics tradeStatistics) {
         this.direction = tradeStatistics.direction;
         this.currency = tradeStatistics.currency;
-        this.paymentMethod = tradeStatistics.paymentMethod;
+        this.paymentMethod = tradeStatistics.paymentMethodId;
         this.offerDate = tradeStatistics.offerDate;
         this.useMarketBasedPrice = tradeStatistics.useMarketBasedPrice;
         this.marketPriceMargin = tradeStatistics.marketPriceMargin;

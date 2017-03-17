@@ -76,7 +76,7 @@ public final class USPostalMoneyOrderAccountContractData extends PaymentAccountC
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setUSPostalMoneyOrderAccountContractData(thisClass);
         return paymentAccountContractData.build();

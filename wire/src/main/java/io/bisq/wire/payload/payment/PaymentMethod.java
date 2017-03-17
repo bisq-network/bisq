@@ -144,8 +144,8 @@ public final class PaymentMethod implements Persistable, Comparable {
         }
     }
 
-    public static PaymentMethod getPaymentMethodById(String name) {
-        Optional<PaymentMethod> paymentMethodOptional = ALL_VALUES.stream().filter(e -> e.getId().equals(name)).findFirst();
+    public static PaymentMethod getPaymentMethodById(String id) {
+        Optional<PaymentMethod> paymentMethodOptional = ALL_VALUES.stream().filter(e -> e.getId().equals(id)).findFirst();
         if (paymentMethodOptional.isPresent())
             return paymentMethodOptional.get();
         else

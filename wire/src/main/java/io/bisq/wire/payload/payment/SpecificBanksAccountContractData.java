@@ -92,7 +92,7 @@ public final class SpecificBanksAccountContractData extends BankAccountContractD
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
 

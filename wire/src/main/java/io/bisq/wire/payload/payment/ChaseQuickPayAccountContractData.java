@@ -74,7 +74,7 @@ public final class ChaseQuickPayAccountContractData extends PaymentAccountContra
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setChaseQuickPayAccountContractData(chaseQuickPayAccountContractData);
         return paymentAccountContractData.build();

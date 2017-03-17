@@ -131,7 +131,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         if (tradeAmountToggleGroup != null)
             tradeAmountToggleGroup.selectedToggleProperty().removeListener(tradeAmountToggleGroupListener);
-        
+
         removePayoutAmountListeners();
     }
 
@@ -335,10 +335,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
         Contract contract = dispute.getContract();
         Coin tradeAmount = contract.getTradeAmount();
-        OfferPayload offer = contract.offer;
+        OfferPayload offerPayload = contract.offerPayload;
         Coin available = tradeAmount
-                .add(offer.getBuyerSecurityDeposit())
-                .add(offer.getSellerSecurityDeposit());
+                .add(Coin.valueOf(offerPayload.getBuyerSecurityDeposit()))
+                .add(Coin.valueOf(offerPayload.getSellerSecurityDeposit()));
         Coin totalAmount = buyerAmount.add(sellerAmount);
         return (totalAmount.compareTo(available) == 0);
     }
@@ -347,10 +347,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Contract contract = dispute.getContract();
         Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
-        OfferPayload offer = contract.offer;
+        OfferPayload offerPayload = contract.offerPayload;
         Coin available = contract.getTradeAmount().
-                add(offer.getBuyerSecurityDeposit())
-                .add(offer.getSellerSecurityDeposit());
+                add(Coin.valueOf(offerPayload.getBuyerSecurityDeposit()))
+                .add(Coin.valueOf(offerPayload.getSellerSecurityDeposit()));
         Coin totalAmount = buyerAmount.add(sellerAmount);
 
         if (totalAmount.compareTo(available) > 0) {
@@ -584,8 +584,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void applyPayoutAmountsToDisputeResult(Toggle selectedTradeAmountToggle) {
         Contract contract = dispute.getContract();
-        Coin buyerSecurityDeposit = contract.offer.getBuyerSecurityDeposit();
-        Coin sellerSecurityDeposit = contract.offer.getSellerSecurityDeposit();
+        Coin buyerSecurityDeposit = Coin.valueOf(contract.offerPayload.getBuyerSecurityDeposit());
+        Coin sellerSecurityDeposit = Coin.valueOf(contract.offerPayload.getSellerSecurityDeposit());
         Coin tradeAmount = contract.getTradeAmount();
         if (selectedTradeAmountToggle == buyerGetsTradeAmountRadioButton) {
             disputeResult.setBuyerPayoutAmount(tradeAmount.add(buyerSecurityDeposit));
@@ -615,8 +615,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void applyTradeAmountRadioButtonStates() {
         Contract contract = dispute.getContract();
-        Coin buyerSecurityDeposit = contract.offer.getBuyerSecurityDeposit();
-        Coin sellerSecurityDeposit = contract.offer.getSellerSecurityDeposit();
+        Coin buyerSecurityDeposit = Coin.valueOf(contract.offerPayload.getBuyerSecurityDeposit());
+        Coin sellerSecurityDeposit = Coin.valueOf(contract.offerPayload.getSellerSecurityDeposit());
         Coin tradeAmount = contract.getTradeAmount();
 
         Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();

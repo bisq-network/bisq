@@ -59,7 +59,7 @@ public final class SameBankAccountContractData extends BankAccountContractData {
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
 

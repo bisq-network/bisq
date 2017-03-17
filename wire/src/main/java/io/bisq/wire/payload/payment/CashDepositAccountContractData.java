@@ -94,7 +94,7 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
         return paymentAccountContractData.build();

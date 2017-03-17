@@ -61,7 +61,7 @@ public final class OKPayAccountContractData extends PaymentAccountContractData {
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setOKPayAccountContractData(thisClass);
         return paymentAccountContractData.build();

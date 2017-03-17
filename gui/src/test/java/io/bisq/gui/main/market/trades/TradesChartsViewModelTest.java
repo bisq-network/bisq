@@ -38,7 +38,7 @@ public class TradesChartsViewModelTest {
         Set<TradeStatistics> set = new HashSet<>();
         final Date now = new Date();
         OfferPayload offer = new OfferPayload(null,
-                null,
+                0,
                 null,
                 null,
                 null,

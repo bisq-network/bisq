@@ -5,17 +5,20 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.common.util.MathUtils;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.exceptions.TradePriceOutOfToleranceException;
 import io.bisq.core.offer.availability.OfferAvailabilityModel;
 import io.bisq.core.offer.availability.OfferAvailabilityProtocol;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.wire.crypto.KeyRing;
+import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.offer.OfferPayload;
+import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.wire.payload.payment.PaymentMethod;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -24,7 +27,11 @@ import org.bitcoinj.utils.Fiat;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.PublicKey;
 import java.text.DecimalFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -33,8 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Offer implements Serializable {
 
     @Getter
-    @Delegate
-    private OfferPayload offerPayload;
+    private final OfferPayload offerPayload;
     @JsonExclude
     transient private OfferPayload.State state = OfferPayload.State.UNDEFINED;
     // Those state properties are transient and only used at runtime!
@@ -49,24 +55,27 @@ public class Offer implements Serializable {
     @Getter
     transient private StringProperty errorMessageProperty = new SimpleStringProperty();
     @JsonExclude
-    @Getter
     @Setter
+    @Nullable
     transient private PriceFeedService priceFeedService;
     @JsonExclude
     transient private DecimalFormat decimalFormat;
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public Offer(OfferPayload offerPayload) {
         this.offerPayload = offerPayload;
-        setState(OfferPayload.State.UNDEFINED);
-        stateProperty = new SimpleObjectProperty<>(OfferPayload.State.UNDEFINED);
 
         // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
-        errorMessageProperty = new SimpleStringProperty();
         decimalFormat = new DecimalFormat("#.#");
         decimalFormat.setMaximumFractionDigits(Fiat.SMALLEST_UNIT_EXPONENT);
     }
 
-    // TODO still needed as we get the offer from persiistance 9serialized)
+    // TODO still needed as we get the offer from persistence serialized
+    // can be removed once we have full PB support
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
@@ -81,37 +90,11 @@ public class Offer implements Serializable {
         }
     }
 
-    public OfferPayload.State getState() {
-        return state;
-    }
-
-    public void setState(OfferPayload.State state) {
-        this.state = state;
-        stateProperty().set(state);
-    }
-
-    public ObjectProperty<OfferPayload.State> stateProperty() {
-        return stateProperty;
-    }
-
-    public void resetState() {
-        setState(OfferPayload.State.UNDEFINED);
-    }
-
-    public ReadOnlyStringProperty errorMessageProperty() {
-        return errorMessageProperty;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessageProperty.set(errorMessage);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Availability
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO refactor those out of OfferPayload, offerPayload should be pure value object
     public void checkOfferAvailability(OfferAvailabilityModel model, ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
         availabilityProtocol = new OfferAvailabilityProtocol(model,
@@ -128,35 +111,40 @@ public class Offer implements Serializable {
         availabilityProtocol.sendOfferAvailabilityRequest();
     }
 
-    // TODO refactor those out of OfferPayload, offerPayload should be pure value object
     public void cancelAvailabilityRequest() {
         if (availabilityProtocol != null)
             availabilityProtocol.cancel();
     }
 
-    // TODO refactor those out of OfferPayload, offerPayload should be pure value object
     @Nullable
     public Fiat getPrice() {
+        String currencyCode = getCurrencyCode();
         if (offerPayload.isUseMarketBasedPrice()) {
             checkNotNull(priceFeedService, "priceFeed must not be null");
-            MarketPrice marketPrice = priceFeedService.getMarketPrice(offerPayload.getCurrencyCode());
+            MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             if (marketPrice != null) {
                 PriceFeedService.Type priceFeedType;
                 double factor;
-                if (CurrencyUtil.isCryptoCurrency(offerPayload.getCurrencyCode())) {
-                    priceFeedType = offerPayload.getDirection() == OfferPayload.Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
-                    factor = offerPayload.getDirection() == OfferPayload.Direction.SELL ? 1 - offerPayload.getMarketPriceMargin() : 1 + offerPayload.getMarketPriceMargin();
+                double marketPriceMargin = offerPayload.getMarketPriceMargin();
+                if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                    priceFeedType = getDirection() == OfferPayload.Direction.BUY ?
+                            PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
+                    factor = getDirection() == OfferPayload.Direction.SELL ?
+                            1 - marketPriceMargin : 1 + marketPriceMargin;
                 } else {
-                    priceFeedType = offerPayload.getDirection() == OfferPayload.Direction.SELL ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
-                    factor = offerPayload.getDirection() == OfferPayload.Direction.BUY ? 1 - offerPayload.getMarketPriceMargin() : 1 + offerPayload.getMarketPriceMargin();
+                    priceFeedType = getDirection() == OfferPayload.Direction.SELL ?
+                            PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
+                    factor = getDirection() == OfferPayload.Direction.BUY ?
+                            1 - marketPriceMargin : 1 + marketPriceMargin;
                 }
                 double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
                 double targetPrice = marketPriceAsDouble * factor;
-                if (CurrencyUtil.isCryptoCurrency(offerPayload.getCurrencyCode()))
+                if (CurrencyUtil.isCryptoCurrency(currencyCode))
                     targetPrice = targetPrice != 0 ? 1d / targetPrice : 0;
                 try {
                     final double rounded = MathUtils.roundDouble(targetPrice, Fiat.SMALLEST_UNIT_EXPONENT);
-                    return Fiat.parseFiat(offerPayload.getCurrencyCode(), decimalFormat.format(rounded).replace(",", "."));
+                    return Fiat.parseFiat(currencyCode,
+                            decimalFormat.format(rounded).replace(",", "."));
                 } catch (Exception e) {
                     log.error("Exception at getPrice / parseToFiat: " + e.toString() + "\n" +
                             "That case should never happen.");
@@ -168,7 +156,7 @@ public class Offer implements Serializable {
                 return null;
             }
         } else {
-            return Fiat.valueOf(offerPayload.getCurrencyCode(), offerPayload.getFiatPrice());
+            return Fiat.valueOf(currencyCode, offerPayload.getFiatPrice());
         }
     }
 
@@ -176,7 +164,7 @@ public class Offer implements Serializable {
     public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException,
             MarketPriceNotAvailableException, IllegalArgumentException {
         checkArgument(takersTradePrice > 0, "takersTradePrice must be positive");
-        Fiat tradePriceAsFiat = Fiat.valueOf(offerPayload.getCurrencyCode(), takersTradePrice);
+        Fiat tradePriceAsFiat = Fiat.valueOf(getCurrencyCode(), takersTradePrice);
         Fiat offerPriceAsFiat = getPrice();
 
         if (offerPriceAsFiat == null)
@@ -212,17 +200,219 @@ public class Offer implements Serializable {
         }
     }
 
+    public void resetState() {
+        setState(OfferPayload.State.UNDEFINED);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setter
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setState(OfferPayload.State state) {
+        this.state = state;
+        stateProperty().set(state);
+    }
+
+    public ObjectProperty<OfferPayload.State> stateProperty() {
+        return stateProperty;
+    }
+
+    public void setOfferFeePaymentTxID(String offerFeePaymentTxID) {
+        offerPayload.setOfferFeePaymentTxID(offerFeePaymentTxID);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getter
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean isMyOffer(KeyRing keyRing) {
+        return getPubKeyRing().equals(keyRing.getPubKeyRing());
+    }
+
     @Nullable
     public Fiat getOfferVolume() {
-        return getVolumeByAmount(offerPayload.getAmount());
+        return getVolumeByAmount(getAmount());
     }
 
     @Nullable
     public Fiat getMinOfferVolume() {
-        return getVolumeByAmount(offerPayload.getMinAmount());
+        return getVolumeByAmount(getMinAmount());
     }
 
-    public boolean isMyOffer(KeyRing keyRing) {
-        return getPubKeyRing().equals(keyRing.getPubKeyRing());
+    public OfferPayload.State getState() {
+        return state;
+    }
+
+    public ReadOnlyStringProperty errorMessageProperty() {
+        return errorMessageProperty;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessageProperty.set(errorMessage);
+    }
+
+    public Coin getTxFee() {
+        return Coin.valueOf(offerPayload.getTxFee());
+    }
+
+    public Coin getCreateOfferFee() {
+        return Coin.valueOf(offerPayload.getCreateOfferFee());
+    }
+
+    public Coin getBuyerSecurityDeposit() {
+        return Coin.valueOf(offerPayload.getBuyerSecurityDeposit());
+    }
+
+    public Coin getSellerSecurityDeposit() {
+        return Coin.valueOf(offerPayload.getSellerSecurityDeposit());
+    }
+
+    public Coin getMaxTradeLimit() {
+        return Coin.valueOf(offerPayload.getMaxTradeLimit());
+    }
+
+    public Coin getAmount() {
+        return Coin.valueOf(offerPayload.getAmount());
+    }
+
+    public Coin getMinAmount() {
+        return Coin.valueOf(offerPayload.getMinAmount());
+    }
+
+    public Date getDate() {
+        return new Date(offerPayload.getDate());
+    }
+
+    public String getShortId() {
+        return Utilities.getShortId(offerPayload.getId());
+    }
+
+    public PaymentMethod getPaymentMethod() {
+        return PaymentMethod.getPaymentMethodById(offerPayload.getPaymentMethodId());
+    }
+
+    public OfferPayload.Direction getMirroredDirection() {
+        return getDirection() == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Delegate Getter (boilerplate code generated via IntelliJ generate delegte feature)
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public OfferPayload.Direction getDirection() {
+        return offerPayload.getDirection();
+    }
+
+    @Nullable
+    public Map<String, String> getExtraDataMap() {
+        return offerPayload.getExtraDataMap();
+    }
+
+    @Nullable
+    public String getHashOfChallenge() {
+        return offerPayload.getHashOfChallenge();
+    }
+
+    public boolean isPrivateOffer() {
+        return offerPayload.isPrivateOffer();
+    }
+
+    public long getUpperClosePrice() {
+        return offerPayload.getUpperClosePrice();
+    }
+
+    public long getLowerClosePrice() {
+        return offerPayload.getLowerClosePrice();
+    }
+
+    public boolean isUseReOpenAfterAutoClose() {
+        return offerPayload.isUseReOpenAfterAutoClose();
+    }
+
+    public String getId() {
+        return offerPayload.getId();
+    }
+
+    public List<NodeAddress> getArbitratorNodeAddresses() {
+        return offerPayload.getArbitratorNodeAddresses();
+    }
+
+    @Nullable
+    public List<String> getAcceptedBankIds() {
+        return offerPayload.getAcceptedBankIds();
+    }
+
+    @Nullable
+    public String getBankId() {
+        return offerPayload.getBankId();
+    }
+
+    @Nullable
+    public List<String> getAcceptedCountryCodes() {
+        return offerPayload.getAcceptedCountryCodes();
+    }
+
+    @Nullable
+    public String getCountryCode() {
+        return offerPayload.getCountryCode();
+    }
+
+    public String getCurrencyCode() {
+        return offerPayload.getCurrencyCode();
+    }
+
+    public long getProtocolVersion() {
+        return offerPayload.getProtocolVersion();
+    }
+
+    public boolean isUseMarketBasedPrice() {
+        return offerPayload.isUseMarketBasedPrice();
+    }
+
+    public double getMarketPriceMargin() {
+        return offerPayload.getMarketPriceMargin();
+    }
+
+    public NodeAddress getOffererNodeAddress() {
+        return offerPayload.getOffererNodeAddress();
+    }
+
+    public PubKeyRing getPubKeyRing() {
+        return offerPayload.getPubKeyRing();
+    }
+
+    public String getOffererPaymentAccountId() {
+        return offerPayload.getOffererPaymentAccountId();
+    }
+
+    public String getOfferFeePaymentTxID() {
+        return offerPayload.getOfferFeePaymentTxID();
+    }
+
+    public String getVersionNr() {
+        return offerPayload.getVersionNr();
+    }
+
+    public long getBlockHeightAtOfferCreation() {
+        return offerPayload.getBlockHeightAtOfferCreation();
+    }
+
+    public long getMaxTradePeriod() {
+        return offerPayload.getMaxTradePeriod();
+    }
+
+    public boolean isUseAutoClose() {
+        return offerPayload.isUseAutoClose();
+    }
+
+    public NodeAddress getOwnerNodeAddress() {
+        return offerPayload.getOwnerNodeAddress();
+    }
+
+    public PublicKey getOwnerPubKey() {
+        return offerPayload.getOwnerPubKey();
     }
 }

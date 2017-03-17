@@ -60,7 +60,7 @@ public final class CryptoCurrencyAccountContractData extends PaymentAccountContr
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setCryptoCurrencyAccountContractData(cryptoCurrencyAccountContractData);
         return paymentAccountContractData.build();

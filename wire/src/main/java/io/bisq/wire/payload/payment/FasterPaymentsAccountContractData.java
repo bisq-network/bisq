@@ -74,7 +74,7 @@ public final class FasterPaymentsAccountContractData extends PaymentAccountContr
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setFasterPaymentsAccountContractData(thisClass);
         return paymentAccountContractData.build();

@@ -338,7 +338,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 "securityDeposit must be not be less than " +
                         Restrictions.MIN_BUYER_SECURITY_DEPOSIT.toFriendlyString());
         OfferPayload offerPayload = new OfferPayload(offerId,
-                null,
+                0,
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
                 direction,

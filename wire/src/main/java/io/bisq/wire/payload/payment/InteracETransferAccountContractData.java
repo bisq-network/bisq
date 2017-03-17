@@ -98,7 +98,7 @@ public final class InteracETransferAccountContractData extends PaymentAccountCon
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setInteracETransferAccountContractData(interacETransferAccountContractData);
         return paymentAccountContractData.build();

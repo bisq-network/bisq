@@ -299,16 +299,16 @@ public class ProtoBufferUtilities {
         PaymentAccountContractData result = null;
         switch (protoEntry.getMessageCase()) {
             case ALI_PAY_ACCOUNT_CONTRACT_DATA:
-                result = new AliPayAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                result = new AliPayAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                         protoEntry.getMaxTradePeriod(), protoEntry.getAliPayAccountContractData().getAccountNr());
                 break;
             case CHASE_QUICK_PAY_ACCOUNT_CONTRACT_DATA:
-                result = new ChaseQuickPayAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                result = new ChaseQuickPayAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                         protoEntry.getMaxTradePeriod(), protoEntry.getChaseQuickPayAccountContractData().getEmail(),
                         protoEntry.getChaseQuickPayAccountContractData().getHolderName());
                 break;
             case CLEAR_XCHANGE_ACCOUNT_CONTRACT_DATA:
-                result = new ClearXchangeAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                result = new ClearXchangeAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                         protoEntry.getMaxTradePeriod(), protoEntry.getClearXchangeAccountContractData().getHolderName(),
                         protoEntry.getClearXchangeAccountContractDataOrBuilder().getEmailOrMobileNr());
                 break;
@@ -317,21 +317,21 @@ public class ProtoBufferUtilities {
                     case BANK_ACCOUNT_CONTRACT_DATA:
                         switch (protoEntry.getCountryBasedPaymentAccountContractData().getBankAccountContractData().getMessageCase()) {
                             case NATIONAL_BANK_ACCOUNT_CONTRACT_DATA:
-                                NationalBankAccountContractData nationalBankAccountContractData = new NationalBankAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                                NationalBankAccountContractData nationalBankAccountContractData = new NationalBankAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                                         protoEntry.getMaxTradePeriod());
                                 fillInBankAccountContractData(protoEntry, nationalBankAccountContractData);
                                 fillInCountryBasedPaymentAccountContractData(protoEntry, nationalBankAccountContractData);
                                 result = nationalBankAccountContractData;
                                 break;
                             case SAME_BANK_ACCONT_CONTRACT_DATA:
-                                SameBankAccountContractData sameBankAccountContractData = new SameBankAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                                SameBankAccountContractData sameBankAccountContractData = new SameBankAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                                         protoEntry.getMaxTradePeriod());
                                 fillInBankAccountContractData(protoEntry, sameBankAccountContractData);
                                 fillInCountryBasedPaymentAccountContractData(protoEntry, sameBankAccountContractData);
                                 result = sameBankAccountContractData;
                                 break;
                             case SPECIFIC_BANKS_ACCOUNT_CONTRACT_DATA:
-                                SpecificBanksAccountContractData specificBanksAccountContractData = new SpecificBanksAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                                SpecificBanksAccountContractData specificBanksAccountContractData = new SpecificBanksAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                                         protoEntry.getMaxTradePeriod());
                                 fillInBankAccountContractData(protoEntry, specificBanksAccountContractData);
                                 fillInCountryBasedPaymentAccountContractData(protoEntry, specificBanksAccountContractData);
@@ -340,13 +340,13 @@ public class ProtoBufferUtilities {
                         }
                         break;
                     case CASH_DEPOSIT_ACCOUNT_CONTRACT_DATA:
-                        CashDepositAccountContractData cashDepositAccountContractData = new CashDepositAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                        CashDepositAccountContractData cashDepositAccountContractData = new CashDepositAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                                 protoEntry.getMaxTradePeriod());
                         fillInCountryBasedPaymentAccountContractData(protoEntry, cashDepositAccountContractData);
                         result = cashDepositAccountContractData;
                         break;
                     case SEPA_ACCOUNT_CONTRACT_DATA:
-                        SepaAccountContractData sepaAccountContractData = new SepaAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                        SepaAccountContractData sepaAccountContractData = new SepaAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                                 protoEntry.getMaxTradePeriod(), CountryUtil.getAllSepaCountries(CountryUtil.getDefaultLocale()));
                         fillInCountryBasedPaymentAccountContractData(protoEntry, sepaAccountContractData);
                         result = sepaAccountContractData;
@@ -354,18 +354,18 @@ public class ProtoBufferUtilities {
                 }
                 break;
             case CRYPTO_CURRENCY_ACCOUNT_CONTRACT_DATA:
-                result = new CryptoCurrencyAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                result = new CryptoCurrencyAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                         protoEntry.getMaxTradePeriod(), protoEntry.getCryptoCurrencyAccountContractData().getAddress());
                 break;
             case FASTER_PAYMENTS_ACCOUNT_CONTRACT_DATA:
-                result = new FasterPaymentsAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                result = new FasterPaymentsAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                         protoEntry.getMaxTradePeriod(), protoEntry.getFasterPaymentsAccountContractData().getSortCode(),
                         protoEntry.getFasterPaymentsAccountContractData().getAccountNr());
                 break;
             case INTERAC_E_TRANSFER_ACCOUNT_CONTRACT_DATA:
                 Messages.InteracETransferAccountContractData interacETransferAccountContractData =
                         protoEntry.getInteracETransferAccountContractData();
-                result = new InteracETransferAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                result = new InteracETransferAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                         protoEntry.getMaxTradePeriod(), interacETransferAccountContractData.getEmail(),
                         interacETransferAccountContractData.getHolderName(),
                         interacETransferAccountContractData.getQuestion(),
@@ -375,16 +375,16 @@ public class ProtoBufferUtilities {
                 result = getOkPayAccountContractData(protoEntry);
                 break;
             case PERFECT_MONEY_ACCOUNT_CONTRACT_DATA:
-                result = new PerfectMoneyAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                result = new PerfectMoneyAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                         protoEntry.getMaxTradePeriod(), protoEntry.getPerfectMoneyAccountContractData().getAccountNr());
                 break;
             case SWISH_ACCOUNT_CONTRACT_DATA:
-                result = new SwishAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                result = new SwishAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                         protoEntry.getMaxTradePeriod(), protoEntry.getSwishAccountContractData().getMobileNr(),
                         protoEntry.getSwishAccountContractData().getHolderName());
                 break;
             case U_S_POSTAL_MONEY_ORDER_ACCOUNT_CONTRACT_DATA:
-                result = new USPostalMoneyOrderAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+                result = new USPostalMoneyOrderAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                         protoEntry.getMaxTradePeriod(), protoEntry.getUSPostalMoneyOrderAccountContractData().getPostalAddress(),
                         protoEntry.getUSPostalMoneyOrderAccountContractData().getHolderName());
                 break;
@@ -396,7 +396,7 @@ public class ProtoBufferUtilities {
 
     @NotNull
     public static OKPayAccountContractData getOkPayAccountContractData(Messages.PaymentAccountContractData protoEntry) {
-        return new OKPayAccountContractData(protoEntry.getPaymentMethodName(), protoEntry.getId(),
+        return new OKPayAccountContractData(protoEntry.getPaymentMethodId(), protoEntry.getId(),
                 protoEntry.getMaxTradePeriod(), protoEntry.getOKPayAccountContractData().getAccountNr());
     }
 
@@ -434,7 +434,7 @@ public class ProtoBufferUtilities {
         }
         return new OfferPayload(offer.getId(), offer.getDate(), getNodeAddress(offer.getOffererNodeAddress()), getPubKeyRing(offer.getPubKeyRing()), getDirection(offer.getDirection()),
                 offer.getFiatPrice(), offer.getMarketPriceMargin(), offer.getUseMarketBasedPrice(), offer.getAmount(), offer.getMinAmount(), offer.getCurrencyCode(), arbitratorNodeAddresses,
-                offer.getPaymentMethodName(), offer.getOffererPaymentAccountId(), offer.getOfferFeePaymentTxID(), offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds,
+                offer.getPaymentMethodId(), offer.getOffererPaymentAccountId(), offer.getOfferFeePaymentTxID(), offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds,
                 offer.getVersionNr(), offer.getBlockHeightAtOfferCreation(), offer.getTxFee(), offer.getCreateOfferFee(),
                 offer.getBuyerSecurityDeposit(),
                 offer.getSellerSecurityDeposit(),
@@ -550,7 +550,7 @@ public class ProtoBufferUtilities {
                 break;
             case TRADE_STATISTICS:
                 Messages.TradeStatistics protoTrade = protoEntry.getTradeStatistics();
-                storagePayload = new TradeStatistics(getDirection(protoTrade.getDirection()), protoTrade.getCurrency(), protoTrade.getPaymentMethod(),
+                storagePayload = new TradeStatistics(getDirection(protoTrade.getDirection()), protoTrade.getCurrency(), protoTrade.getPaymentMethodId(),
                         protoTrade.getOfferDate(), protoTrade.getUseMarketBasedPrice(), protoTrade.getMarketPriceMargin(),
                         protoTrade.getOfferAmount(), protoTrade.getOfferMinAmount(), protoTrade.getOfferId(),
                         protoTrade.getTradePrice(), protoTrade.getTradeAmount(), protoTrade.getTradeDate(),

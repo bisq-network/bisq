@@ -60,7 +60,7 @@ public final class PerfectMoneyAccountContractData extends PaymentAccountContrac
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setPerfectMoneyAccountContractData(thisClass);
         return paymentAccountContractData.build();

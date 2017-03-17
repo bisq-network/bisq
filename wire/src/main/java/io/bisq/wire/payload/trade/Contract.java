@@ -41,7 +41,7 @@ public final class Contract implements Payload {
     @JsonExclude
     public static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public final OfferPayload offer;
+    public final OfferPayload offerPayload;
     private final long tradeAmount;
     private final long tradePrice;
     public final String takeOfferFeeTxID;
@@ -66,7 +66,7 @@ public final class Contract implements Payload {
     @JsonExclude
     private final byte[] takerMultiSigPubKey;
 
-    public Contract(OfferPayload offer,
+    public Contract(OfferPayload offerPayload,
                     Coin tradeAmount,
                     Fiat tradePrice,
                     String takeOfferFeeTxID,
@@ -84,7 +84,7 @@ public final class Contract implements Payload {
                     String takerPayoutAddressString,
                     byte[] offererMultiSigPubKey,
                     byte[] takerMultiSigPubKey) {
-        this.offer = offer;
+        this.offerPayload = offerPayload;
         this.tradePrice = tradePrice.value;
         this.buyerNodeAddress = buyerNodeAddress;
         this.sellerNodeAddress = sellerNodeAddress;
@@ -149,11 +149,11 @@ public final class Contract implements Payload {
         return isBuyerOffererAndSellerTaker ? takerPaymentAccountContractData : offererPaymentAccountContractData;
     }
 
-    public String getPaymentMethodName() {
+    public String getPaymentMethodId() {
         // PaymentMethod need to be the same
-        Preconditions.checkArgument(offererPaymentAccountContractData.getPaymentMethodName().equals(takerPaymentAccountContractData.getPaymentMethodName()),
+        Preconditions.checkArgument(offererPaymentAccountContractData.getPaymentMethodId().equals(takerPaymentAccountContractData.getPaymentMethodId()),
                 "NOT offererPaymentAccountContractData.getPaymentMethodName().equals(takerPaymentAccountContractData.getPaymentMethodName())");
-        return offererPaymentAccountContractData.getPaymentMethodName();
+        return offererPaymentAccountContractData.getPaymentMethodId();
     }
 
     public Coin getTradeAmount() {
@@ -161,7 +161,7 @@ public final class Contract implements Payload {
     }
 
     public Fiat getTradePrice() {
-        return Fiat.valueOf(offer.getCurrencyCode(), tradePrice);
+        return Fiat.valueOf(offerPayload.getCurrencyCode(), tradePrice);
     }
 
     public NodeAddress getBuyerNodeAddress() {
@@ -183,7 +183,8 @@ public final class Contract implements Payload {
         if (tradeAmount != contract.tradeAmount) return false;
         if (tradePrice != contract.tradePrice) return false;
         if (isBuyerOffererAndSellerTaker != contract.isBuyerOffererAndSellerTaker) return false;
-        if (offer != null ? !offer.equals(contract.offer) : contract.offer != null) return false;
+        if (offerPayload != null ? !offerPayload.equals(contract.offerPayload) : contract.offerPayload != null)
+            return false;
         if (takeOfferFeeTxID != null ? !takeOfferFeeTxID.equals(contract.takeOfferFeeTxID) : contract.takeOfferFeeTxID != null)
             return false;
         if (arbitratorNodeAddress != null ? !arbitratorNodeAddress.equals(contract.arbitratorNodeAddress) : contract.arbitratorNodeAddress != null)
@@ -215,7 +216,7 @@ public final class Contract implements Payload {
 
     @Override
     public int hashCode() {
-        int result = offer != null ? offer.hashCode() : 0;
+        int result = offerPayload != null ? offerPayload.hashCode() : 0;
         result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
         result = 31 * result + (int) (tradePrice ^ (tradePrice >>> 32));
         result = 31 * result + (takeOfferFeeTxID != null ? takeOfferFeeTxID.hashCode() : 0);
@@ -239,7 +240,7 @@ public final class Contract implements Payload {
     @Override
     public String toString() {
         return "Contract{" +
-                "\n\toffer=" + offer +
+                "\n\toffer=" + offerPayload +
                 "\n\ttradeAmount=" + tradeAmount +
                 "\n\ttradePrice=" + tradePrice +
                 "\n\ttakeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
@@ -265,7 +266,7 @@ public final class Contract implements Payload {
     @Override
     public Messages.Contract toProtoBuf() {
         return Messages.Contract.newBuilder()
-                .setOffer(offer.toProtoBuf().getOffer())
+                .setOffer(offerPayload.toProtoBuf().getOffer())
                 .setTradeAmount(tradeAmount)
                 .setTradePrice(tradePrice)
                 .setTakeOfferFeeTxId(takeOfferFeeTxID)

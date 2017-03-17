@@ -220,7 +220,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             }
             if (buyerPaymentAccountContractData == null && sellerPaymentAccountContractData == null)
                 addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.paymentMethod"),
-                        Res.get(contract.getPaymentMethodName()));
+                        Res.get(contract.getPaymentMethodId()));
         }
 
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxID());

@@ -628,6 +628,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @NotNull
     private String getPaymentMethodLabel(TradeStatistics item) {
-        return Res.get(item.paymentMethod);
+        return Res.get(item.paymentMethodId);
     }
 }

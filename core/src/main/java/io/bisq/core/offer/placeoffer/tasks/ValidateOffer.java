@@ -25,7 +25,6 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.placeoffer.PlaceOfferModel;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.wire.message.trade.TradeMessage;
-import io.bisq.wire.payload.offer.OfferPayload;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +45,6 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
     @Override
     protected void run() {
         Offer offer = model.offer;
-        OfferPayload offerPayload = offer.getOfferPayload();
         try {
             runInterceptHook();
 
@@ -75,7 +73,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
                     "sellerSecurityDeposit must be equal to Restrictions.SELLER_SECURITY_DEPOSIT. " +
                             "sellerSecurityDeposit=" + offer.getSellerSecurityDeposit().toFriendlyString());
             checkCoinNotNullOrZero(offer.getTxFee(), "txFee");
-            checkCoinNotNullOrZero(offerPayload.getMaxTradeLimit(), "MaxTradeLimit");
+            checkCoinNotNullOrZero(offer.getMaxTradeLimit(), "MaxTradeLimit");
 
             checkArgument(offer.getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0,
                     "MinAmount is less then "
@@ -103,9 +101,9 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkNotNull(offer.getPrice(), "Price is null");
             checkNotNull(offer.getTxFee(), "txFee is null");
             checkNotNull(offer.getCreateOfferFee(), "CreateOfferFee is null");
-            checkNotNull(offerPayload.getVersionNr(), "VersionNr is null");
-            checkArgument(offerPayload.getMaxTradePeriod() > 0,
-                    "maxTradePeriod must be positive. maxTradePeriod=" + offerPayload.getMaxTradePeriod());
+            checkNotNull(offer.getVersionNr(), "VersionNr is null");
+            checkArgument(offer.getMaxTradePeriod() > 0,
+                    "maxTradePeriod must be positive. maxTradePeriod=" + offer.getMaxTradePeriod());
             // TODO check upper and lower bounds for fiat
             // TODO check rest of new parameters
 

@@ -58,7 +58,7 @@ public final class NationalBankAccountContractData extends BankAccountContractDa
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
         return paymentAccountContractData.build();

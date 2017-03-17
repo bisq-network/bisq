@@ -215,7 +215,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         dateColumn.setComparator((o1, o2) -> o1.getOpeningDate().compareTo(o2.getOpeningDate()));
         buyerOnionAddressColumn.setComparator((o1, o2) -> getBuyerOnionAddressColumnLabel(o1).compareTo(getBuyerOnionAddressColumnLabel(o2)));
         sellerOnionAddressColumn.setComparator((o1, o2) -> getSellerOnionAddressColumnLabel(o1).compareTo(getSellerOnionAddressColumnLabel(o2)));
-        marketColumn.setComparator((o1, o2) -> formatter.getCurrencyPair(o1.getContract().offer.getCurrencyCode()).compareTo(o2.getContract().offer.getCurrencyCode()));
+        marketColumn.setComparator((o1, o2) -> formatter.getCurrencyPair(o1.getContract().offerPayload.getCurrencyCode()).compareTo(o2.getContract().offerPayload.getCurrencyCode()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -473,7 +473,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private void onCloseDispute(Dispute dispute) {
-        long protocolVersion = dispute.getContract().offer.getProtocolVersion();
+        long protocolVersion = dispute.getContract().offerPayload.getProtocolVersion();
         if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
             disputeSummaryWindow.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
                     .show(dispute);
@@ -1155,7 +1155,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.getCurrencyPair(item.getContract().offer.getCurrencyCode()));
+                                    setText(formatter.getCurrencyPair(item.getContract().offerPayload.getCurrencyCode()));
                                 else
                                     setText("");
                             }

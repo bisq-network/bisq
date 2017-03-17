@@ -302,7 +302,7 @@ public class ProcessModel implements Model, Serializable {
         return filterManager.getFilter() != null &&
                 filterManager.getFilter().bannedPaymentAccounts.stream()
                         .filter(paymentAccountFilter -> {
-                            final boolean samePaymentMethodId = paymentAccountFilter.paymentMethodId.equals(paymentAccountContractData.getPaymentMethodName());
+                            final boolean samePaymentMethodId = paymentAccountFilter.paymentMethodId.equals(paymentAccountContractData.getPaymentMethodId());
                             if (samePaymentMethodId) {
                                 try {
                                     Method method = paymentAccountContractData.getClass().getMethod(paymentAccountFilter.getMethodName);

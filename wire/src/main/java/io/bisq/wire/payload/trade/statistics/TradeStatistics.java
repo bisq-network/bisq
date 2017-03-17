@@ -36,7 +36,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     public final long tradePrice;
     public final long tradeAmount;
     public final long tradeDate;
-    public final String paymentMethod;
+    public final String paymentMethodId;
     public final long offerDate;
     public final boolean useMarketBasedPrice;
     public final double marketPriceMargin;
@@ -47,21 +47,39 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     @JsonExclude
     public final PubKeyRing pubKeyRing;
 
-    public TradeStatistics(OfferPayload offer, Fiat tradePrice, Coin tradeAmount, Date tradeDate, String depositTxId, PubKeyRing pubKeyRing) {
-        this(offer.getDirection(), offer.getCurrencyCode(), offer.getPaymentMethod().getId(), offer.getDate().getTime()
-                , offer.isUseMarketBasedPrice(), offer.getMarketPriceMargin(), offer.getAmount().value,
-                offer.getMinAmount().value, offer.getId(), tradePrice.longValue(), tradeAmount.value,
-                tradeDate.getTime(), depositTxId, pubKeyRing);
+    public TradeStatistics(OfferPayload offerPayload, Fiat tradePrice, Coin tradeAmount, Date tradeDate, String depositTxId, PubKeyRing pubKeyRing) {
+        this(offerPayload.getDirection(),
+                offerPayload.getCurrencyCode(),
+                offerPayload.getPaymentMethodId(),
+                offerPayload.getDate(),
+                offerPayload.isUseMarketBasedPrice(),
+                offerPayload.getMarketPriceMargin(),
+                offerPayload.getAmount(),
+                offerPayload.getMinAmount(),
+                offerPayload.getId(),
+                tradePrice.longValue(),
+                tradeAmount.value,
+                tradeDate.getTime(),
+                depositTxId,
+                pubKeyRing);
     }
 
-    public TradeStatistics(OfferPayload.Direction direction, String offerCurrency, String offerPaymentMethod,
-                           long offerDate, boolean offerUseMarketBasedPrice, double offerMarketPriceMargin,
-                           long offerAmount, long offerMinAmount, String offerId, long tradePrice, long tradeAmount,
+    public TradeStatistics(OfferPayload.Direction direction, String offerCurrency,
+                           String offerPaymentMethod,
+                           long offerDate,
+                           boolean offerUseMarketBasedPrice,
+                           double offerMarketPriceMargin,
+                           long offerAmount,
+                           long offerMinAmount,
+                           String offerId,
+                           long tradePrice,
+                           long tradeAmount,
                            long tradeDate,
-                           String depositTxId, PubKeyRing pubKeyRing) {
+                           String depositTxId,
+                           PubKeyRing pubKeyRing) {
         this.direction = direction;
         this.currency = offerCurrency;
-        this.paymentMethod = offerPaymentMethod;
+        this.paymentMethodId = offerPaymentMethod;
         this.offerDate = offerDate;
         this.useMarketBasedPrice = offerUseMarketBasedPrice;
         this.marketPriceMargin = offerMarketPriceMargin;
@@ -123,7 +141,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                 .setTradePrice(tradePrice)
                 .setTradeAmount(tradeAmount)
                 .setTradeDate(tradeDate)
-                .setPaymentMethod(paymentMethod)
+                .setPaymentMethodId(paymentMethodId)
                 .setOfferDate(offerDate)
                 .setUseMarketBasedPrice(useMarketBasedPrice)
                 .setMarketPriceMargin(marketPriceMargin)
@@ -159,7 +177,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         else if ((direction == null && that.direction != null) || (direction != null && that.direction == null))
             return false;
 
-        if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null)
             return false;
         if (getOfferId() != null ? !getOfferId().equals(that.getOfferId()) : that.getOfferId() != null) return false;
         return !(depositTxId != null ? !depositTxId.equals(that.depositTxId) : that.depositTxId != null);
@@ -173,7 +191,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         result = 31 * result + (direction != null ? direction.ordinal() : 0);
         result = 31 * result + (int) (tradePrice ^ (tradePrice >>> 32));
         result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
-        result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
+        result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
         result = 31 * result + (int) (offerDate ^ (offerDate >>> 32));
         result = 31 * result + (useMarketBasedPrice ? 1 : 0);
         temp = Double.doubleToLongBits(marketPriceMargin);
@@ -193,7 +211,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                 ", tradePrice=" + tradePrice +
                 ", tradeAmount=" + tradeAmount +
                 ", tradeDate=" + tradeDate +
-                ", paymentMethod='" + paymentMethod + '\'' +
+                ", paymentMethod='" + paymentMethodId + '\'' +
                 ", offerDate=" + offerDate +
                 ", useMarketBasedPrice=" + useMarketBasedPrice +
                 ", marketPriceMargin=" + marketPriceMargin +

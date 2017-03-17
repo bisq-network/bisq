@@ -263,7 +263,7 @@ message TradeStatistics {
     int64 trade_price = 4;
     int64 trade_amount = 5;
     int64 trade_date = 6;
-    string payment_method = 7;
+    string payment_method_id = 7;
     int64 offer_date = 8;
     bool use_market_based_price = 9;
     double market_price_margin = 10;
@@ -298,7 +298,7 @@ message Offer {
     int64 TTL = 1;
     Direction direction = 2;
     string currency_code = 3;
-    string payment_method_name = 4;
+    string payment_method_id = 4;
     string country_code = 5;
     repeated string accepted_country_codes = 6;
     string bank_id = 7;
@@ -615,7 +615,7 @@ message PublishDepositTxRequest {
 
 message PaymentAccountContractData {
     string id = 1;
-    string payment_method_name = 2;
+    string payment_method_id = 2;
     int64 max_trade_period = 3;
     oneof message {
         AliPayAccountContractData ali_pay_account_contract_data = 4;

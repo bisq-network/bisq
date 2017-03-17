@@ -74,7 +74,7 @@ public final class ClearXchangeAccountContractData extends PaymentAccountContrac
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setClearXchangeAccountContractData(thisClass);
         return paymentAccountContractData.build();

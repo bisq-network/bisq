@@ -60,7 +60,7 @@ public final class AliPayAccountContractData extends PaymentAccountContractData 
         Messages.PaymentAccountContractData.Builder paymentAccountContractData =
                 Messages.PaymentAccountContractData.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
                         .setAliPayAccountContractData(thisClass);
         return paymentAccountContractData.build();
