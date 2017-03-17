@@ -49,7 +49,6 @@ import io.bisq.wire.message.Message;
 import io.bisq.wire.message.offer.OfferAvailabilityRequest;
 import io.bisq.wire.message.offer.OfferAvailabilityResponse;
 import io.bisq.wire.payload.offer.AvailabilityResult;
-import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
@@ -287,11 +286,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         if (openOfferOptional.isPresent()) {
             removeOpenOffer(openOfferOptional.get(), resultHandler, errorMessageHandler);
         } else {
-            log.warn("OfferPayload was not found in our list of open offers. We still try to remove it from the offerbook.");
-            errorMessageHandler.handleErrorMessage("OfferPayload was not found in our list of open offers. " +
+            log.warn("Offer was not found in our list of open offers. We still try to remove it from the offerbook.");
+            errorMessageHandler.handleErrorMessage("Offer was not found in our list of open offers. " +
                     "We still try to remove it from the offerbook.");
             offerBookService.removeOffer(offer.getOfferPayload(),
-                    () -> offer.setState(OfferPayload.State.REMOVED),
+                    () -> offer.setState(Offer.State.REMOVED),
                     null);
         }
     }
@@ -301,7 +300,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         Offer offer = openOffer.getOffer();
         offerBookService.removeOffer(offer.getOfferPayload(),
                 () -> {
-                    offer.setState(OfferPayload.State.REMOVED);
+                    offer.setState(Offer.State.REMOVED);
                     openOffer.setState(OpenOffer.State.CANCELED);
                     openOffers.remove(openOffer);
                     closedTradableManager.add(openOffer);
@@ -313,7 +312,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     // Close openOffer after deposit published
-    public void closeOpenOffer(OfferPayload offer) {
+    public void closeOpenOffer(Offer offer) {
         findOpenOffer(offer.getId()).ifPresent(openOffer -> {
             openOffers.remove(openOffer);
             openOffer.setState(OpenOffer.State.CLOSED);

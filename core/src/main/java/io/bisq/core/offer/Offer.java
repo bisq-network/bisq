@@ -39,15 +39,35 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class Offer implements Serializable {
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enums
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public enum Direction {BUY, SELL}
+
+    public enum State {
+        UNDEFINED,
+        OFFER_FEE_PAID,
+        AVAILABLE,
+        NOT_AVAILABLE,
+        REMOVED,
+        OFFERER_OFFLINE
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Instance fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Getter
     private final OfferPayload offerPayload;
     @JsonExclude
-    transient private OfferPayload.State state = OfferPayload.State.UNDEFINED;
+    transient private Offer.State state = Offer.State.UNDEFINED;
     // Those state properties are transient and only used at runtime!
     // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
     @JsonExclude
     @Getter
-    transient private ObjectProperty<OfferPayload.State> stateProperty = new SimpleObjectProperty<>(state);
+    transient private ObjectProperty<Offer.State> stateProperty = new SimpleObjectProperty<>(state);
     @JsonExclude
     @Nullable
     transient private OfferAvailabilityProtocol availabilityProtocol;
@@ -79,7 +99,7 @@ public class Offer implements Serializable {
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         try {
             in.defaultReadObject();
-            stateProperty = new SimpleObjectProperty<>(OfferPayload.State.UNDEFINED);
+            stateProperty = new SimpleObjectProperty<>(Offer.State.UNDEFINED);
 
             // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
             errorMessageProperty = new SimpleStringProperty();
@@ -127,14 +147,14 @@ public class Offer implements Serializable {
                 double factor;
                 double marketPriceMargin = offerPayload.getMarketPriceMargin();
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                    priceFeedType = getDirection() == OfferPayload.Direction.BUY ?
+                    priceFeedType = getDirection() == Offer.Direction.BUY ?
                             PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
-                    factor = getDirection() == OfferPayload.Direction.SELL ?
+                    factor = getDirection() == Offer.Direction.SELL ?
                             1 - marketPriceMargin : 1 + marketPriceMargin;
                 } else {
-                    priceFeedType = getDirection() == OfferPayload.Direction.SELL ?
+                    priceFeedType = getDirection() == Offer.Direction.SELL ?
                             PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
-                    factor = getDirection() == OfferPayload.Direction.BUY ?
+                    factor = getDirection() == Offer.Direction.BUY ?
                             1 - marketPriceMargin : 1 + marketPriceMargin;
                 }
                 double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
@@ -201,7 +221,7 @@ public class Offer implements Serializable {
     }
 
     public void resetState() {
-        setState(OfferPayload.State.UNDEFINED);
+        setState(Offer.State.UNDEFINED);
     }
 
 
@@ -209,12 +229,12 @@ public class Offer implements Serializable {
     // Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setState(OfferPayload.State state) {
+    public void setState(Offer.State state) {
         this.state = state;
         stateProperty().set(state);
     }
 
-    public ObjectProperty<OfferPayload.State> stateProperty() {
+    public ObjectProperty<Offer.State> stateProperty() {
         return stateProperty;
     }
 
@@ -231,6 +251,10 @@ public class Offer implements Serializable {
         return getPubKeyRing().equals(keyRing.getPubKeyRing());
     }
 
+    public boolean isBuyOffer() {
+        return getDirection() == Offer.Direction.BUY;
+    }
+
     @Nullable
     public Fiat getOfferVolume() {
         return getVolumeByAmount(getAmount());
@@ -241,7 +265,7 @@ public class Offer implements Serializable {
         return getVolumeByAmount(getMinAmount());
     }
 
-    public OfferPayload.State getState() {
+    public Offer.State getState() {
         return state;
     }
 
@@ -293,8 +317,8 @@ public class Offer implements Serializable {
         return PaymentMethod.getPaymentMethodById(offerPayload.getPaymentMethodId());
     }
 
-    public OfferPayload.Direction getMirroredDirection() {
-        return getDirection() == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
+    public Offer.Direction getMirroredDirection() {
+        return getDirection() == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
     }
 
 
@@ -302,8 +326,8 @@ public class Offer implements Serializable {
     // Delegate Getter (boilerplate code generated via IntelliJ generate delegte feature)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OfferPayload.Direction getDirection() {
-        return offerPayload.getDirection();
+    public Offer.Direction getDirection() {
+        return Offer.Direction.valueOf(offerPayload.getDirection().name());
     }
 
     @Nullable

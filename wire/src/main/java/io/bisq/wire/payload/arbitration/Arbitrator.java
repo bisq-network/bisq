@@ -19,10 +19,10 @@ package io.bisq.wire.payload.arbitration;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.payload.StoragePayload;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.wire.proto.Messages;
 
 import java.security.PublicKey;
 import java.util.Arrays;

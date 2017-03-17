@@ -18,10 +18,10 @@
 package io.bisq.wire.message.trade;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.message.ToProtoBuffer;
 import io.bisq.wire.message.p2p.MailboxMessage;
 import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.wire.proto.Messages;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.UUID;

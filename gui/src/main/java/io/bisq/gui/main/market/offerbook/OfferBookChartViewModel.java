@@ -33,7 +33,6 @@ import io.bisq.gui.main.settings.SettingsView;
 import io.bisq.gui.main.settings.preferences.PreferencesView;
 import io.bisq.gui.util.CurrencyListItem;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -242,7 +241,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getOfferPayload().getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getOfferPayload().getDirection().equals(OfferPayload.Direction.BUY))
+                        && e.getOfferPayload().getDirection().equals(Offer.Direction.BUY))
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().value : 0;
                     long b = o2.getPrice() != null ? o2.getPrice().value : 0;
@@ -253,12 +252,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         allBuyOffers = filterOffersWithRelevantPrices(allBuyOffers);
-        buildChartAndTableEntries(allBuyOffers, OfferPayload.Direction.BUY, buyData, topBuyOfferList);
+        buildChartAndTableEntries(allBuyOffers, Offer.Direction.BUY, buyData, topBuyOfferList);
 
         List<Offer> allSellOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getOfferPayload().getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getOfferPayload().getDirection().equals(OfferPayload.Direction.SELL))
+                        && e.getOfferPayload().getDirection().equals(Offer.Direction.SELL))
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().value : 0;
                     long b = o2.getPrice() != null ? o2.getPrice().value : 0;
@@ -269,7 +268,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         allSellOffers = filterOffersWithRelevantPrices(allSellOffers);
-        buildChartAndTableEntries(allSellOffers, OfferPayload.Direction.SELL, sellData, topSellOfferList);
+        buildChartAndTableEntries(allSellOffers, Offer.Direction.SELL, sellData, topSellOfferList);
     }
 
     // If there are more then 3 offers we ignore the offers which are further than 30% from the best price
@@ -292,7 +291,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         return offers;
     }
 
-    private void buildChartAndTableEntries(List<Offer> sortedList, OfferPayload.Direction direction, List<XYChart.Data> data, ObservableList<OfferListItem> offerTableList) {
+    private void buildChartAndTableEntries(List<Offer> sortedList, Offer.Direction direction, List<XYChart.Data> data, ObservableList<OfferListItem> offerTableList) {
         data.clear();
         double accumulatedAmount = 0;
         List<OfferListItem> offerTableListTemp = new ArrayList<>();
@@ -306,12 +305,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 double price = (double) priceAsFiat.value / LongMath.pow(10, priceAsFiat.smallestUnitExponent());
                 if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
                     price = price != 0 ? 1d / price : 0;
-                    if (direction.equals(OfferPayload.Direction.SELL))
+                    if (direction.equals(Offer.Direction.SELL))
                         data.add(0, new XYChart.Data<>(price, accumulatedAmount));
                     else
                         data.add(new XYChart.Data<>(price, accumulatedAmount));
                 } else {
-                    if (direction.equals(OfferPayload.Direction.BUY))
+                    if (direction.equals(Offer.Direction.BUY))
                         data.add(0, new XYChart.Data<>(price, accumulatedAmount));
                     else
                         data.add(new XYChart.Data<>(price, accumulatedAmount));

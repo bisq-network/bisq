@@ -629,7 +629,7 @@ public class DisputeManager {
                                         else {
                                             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(dispute.getTradeId());
                                             if (openOfferOptional.isPresent())
-                                                openOfferManager.closeOpenOffer(openOfferOptional.get().getOffer().getOfferPayload());
+                                                openOfferManager.closeOpenOffer(openOfferOptional.get().getOffer());
                                         }
                                     }
 

@@ -20,10 +20,10 @@ package io.bisq.wire.message.trade;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.util.Utilities;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.message.ToProtoBuffer;
 import io.bisq.wire.payload.btc.RawTransactionInput;
 import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

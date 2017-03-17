@@ -91,7 +91,7 @@ public class SetupDepositBalanceListener extends TradeTask {
         Trade.State tradeState = trade.getState();
         if (balance.compareTo(Coin.ZERO) == 0) {
             if (trade instanceof OffererTrade) {
-                processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer().getOfferPayload());
+                processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
 
                 if (tradeState == Trade.State.OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST) {
                     trade.setState(Trade.State.DEPOSIT_SEEN_IN_NETWORK);

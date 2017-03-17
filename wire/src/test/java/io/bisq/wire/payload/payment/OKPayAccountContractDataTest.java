@@ -18,7 +18,7 @@
 package io.bisq.wire.payload.payment;
 
 import com.google.protobuf.util.JsonFormat;
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.wire.proto.Messages;
 import org.junit.Test;
 
 import java.io.IOException;

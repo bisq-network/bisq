@@ -49,7 +49,6 @@ import io.bisq.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
-import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -253,7 +252,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         model.dataModel.onTabSelected(isSelected);
     }
 
-    public void initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    public void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         boolean result = model.initWithData(direction, tradeCurrency);
 
         if (!result) {
@@ -266,7 +265,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     }).show();
         }
 
-        if (direction == OfferPayload.Direction.BUY) {
+        if (direction == Offer.Direction.BUY) {
             imageView.setId("image-buy-large");
 
             placeOfferButton.setId("buy-button-big");

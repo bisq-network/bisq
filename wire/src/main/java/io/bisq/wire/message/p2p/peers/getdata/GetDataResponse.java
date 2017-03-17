@@ -2,10 +2,10 @@ package io.bisq.wire.message.p2p.peers.getdata;
 
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.message.p2p.SupportedCapabilitiesMessage;
 import io.bisq.wire.payload.p2p.storage.ProtectedMailboxStorageEntry;
 import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.wire.proto.Messages;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

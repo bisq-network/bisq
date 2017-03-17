@@ -5,7 +5,7 @@ package io.bisq.proto;
 // A simple protocol for describing signed sets of IP addresses. Intended to be distributed via HTTP[S] or in files.
 //
 
-option java_package = "io.bisq.common.wire.proto";
+option java_package = "io.bisq.wire.proto";
 option java_outer_classname = "Messages";
 
 message Envelope {
@@ -284,15 +284,6 @@ message Offer {
     enum Direction {
         BUY = 0;
         SELL = 1;
-    }
-
-    enum State {
-        UNDEFINED = 0;
-        OFFER_FEE_PAID = 1;
-        AVAILABLE = 2;
-        NOT_AVAILABLE = 3;
-        REMOVED = 4;
-        OFFERER_OFFLINE = 5;
     }
 
     int64 TTL = 1;

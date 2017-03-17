@@ -1,11 +1,11 @@
 package io.bisq.wire.message.alert;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.message.ToProtoBuffer;
 import io.bisq.wire.message.p2p.MailboxMessage;
 import io.bisq.wire.payload.alert.PrivateNotification;
 import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -2,10 +2,10 @@ package io.bisq.wire.message.p2p;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.message.SendersNodeAddressMessage;
 import io.bisq.wire.payload.crypto.SealedAndSigned;
 import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.wire.proto.Messages;
 import lombok.EqualsAndHashCode;
 
 import java.util.Arrays;

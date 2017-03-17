@@ -20,7 +20,6 @@ package io.bisq.network.crypto;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.network.ProtoBufferUtilities;
 import io.bisq.wire.crypto.DecryptedDataTuple;
@@ -30,6 +29,7 @@ import io.bisq.wire.crypto.KeyRing;
 import io.bisq.wire.message.Message;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.crypto.SealedAndSigned;
+import io.bisq.wire.proto.Messages;
 
 import javax.crypto.SecretKey;
 import javax.inject.Inject;

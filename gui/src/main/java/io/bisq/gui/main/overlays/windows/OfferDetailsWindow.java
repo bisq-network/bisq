@@ -37,7 +37,6 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -158,7 +157,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         String fiatDirectionInfo = ":";
         String btcDirectionInfo = ":";
-        OfferPayload.Direction direction = offer.getDirection();
+        Offer.Direction direction = offer.getDirection();
         String currencyCode = offer.getCurrencyCode();
         String offerTypeLabel = Res.getWithCol("shared.offerType");
         String toReceive = " " + Res.get("shared.toReceive");
@@ -167,13 +166,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
-            btcDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
+            fiatDirectionInfo = direction == Offer.Direction.BUY ? toReceive : toSpend;
+            btcDirectionInfo = direction == Offer.Direction.SELL ? toReceive : toSpend;
         } else if (placeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
-            btcDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
+            fiatDirectionInfo = direction == Offer.Direction.SELL ? toReceive : toSpend;
+            btcDirectionInfo = direction == Offer.Direction.BUY ? toReceive : toSpend;
         } else {
             addLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getDirectionBothSides(direction, currencyCode), firstRowDistance);
@@ -328,7 +327,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     }
 
     private void addConfirmAndCancelButtons(boolean isPlaceOffer) {
-        boolean isBuyOffer = offer.getDirection() == OfferPayload.Direction.BUY;
+        boolean isBuyOffer = offer.isBuyOffer();
         boolean isBuyerRole = isPlaceOffer ? isBuyOffer : !isBuyOffer;
         String placeOfferButtonText = isBuyerRole ?
                 Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.buy")) :

@@ -50,7 +50,6 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
-import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.*;
@@ -227,7 +226,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         model.initWithData(offer);
         priceAsPercentageInputBox.setVisible(offer.isUseMarketBasedPrice());
 
-        if (model.getOffer().getDirection() == OfferPayload.Direction.SELL) {
+        if (model.getOffer().getDirection() == Offer.Direction.SELL) {
             imageView.setId("image-buy-large");
             directionLabel.setId("direction-icon-label-buy");
 

@@ -3,10 +3,10 @@ package io.bisq.wire.message.p2p.peers.getdata;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.message.AnonymousMessage;
 import io.bisq.wire.message.ToProtoBuffer;
 import io.bisq.wire.message.p2p.SupportedCapabilitiesMessage;
+import io.bisq.wire.proto.Messages;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

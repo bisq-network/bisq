@@ -21,13 +21,13 @@ import com.google.common.base.Joiner;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.core.arbitration.DisputeManager;
+import io.bisq.core.offer.Offer;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.wire.payload.arbitration.Dispute;
-import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.payment.PaymentAccountContractData;
 import io.bisq.wire.payload.payment.PaymentMethod;
 import io.bisq.wire.payload.trade.Contract;
@@ -42,12 +42,10 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
 import org.bitcoinj.utils.ExchangeRate;
 
 import javax.inject.Inject;
-import java.util.Date;
 import java.util.List;
 
 import static io.bisq.gui.util.FormBuilder.*;
@@ -97,11 +95,11 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
     private void addContent() {
         Contract contract = dispute.getContract();
-        OfferPayload offerPayload = contract.offerPayload;
+        Offer offer = new Offer(contract.offerPayload);
 
-        List<String> acceptedBanks = offerPayload.getAcceptedBankIds();
+        List<String> acceptedBanks = offer.getAcceptedBankIds();
         boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
-        List<String> acceptedCountryCodes = offerPayload.getAcceptedCountryCodes();
+        List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
         boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
 
         int rows = 17;
@@ -116,13 +114,13 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
         PaymentAccountContractData sellerPaymentAccountContractData = contract.getSellerPaymentAccountContractData();
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("contractWindow.title"));
-        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.getWithCol("shared.offerId"), offerPayload.getId(),
+        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.getWithCol("shared.offerId"), offer.getId(),
                 Layout.FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
         addLabelTextField(gridPane, ++rowIndex, Res.get("contractWindow.dates"),
-                formatter.formatDateTime(new Date(offerPayload.getDate())) + " / " + formatter.formatDateTime(dispute.getTradeDate()));
-        String currencyCode = offerPayload.getCurrencyCode();
+                formatter.formatDateTime(offer.getDate()) + " / " + formatter.formatDateTime(dispute.getTradeDate()));
+        String currencyCode = offer.getCurrencyCode();
         addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.offerType"),
-                formatter.getDirectionBothSides(offerPayload.getDirection(), currencyCode));
+                formatter.getDirectionBothSides(offer.getDirection(), currencyCode));
         addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradePrice"),
                 formatter.formatPrice(contract.getTradePrice()));
         addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeAmount"),
@@ -131,11 +129,11 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 formatter.formatVolumeWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
         String securityDeposit = Res.getWithColAndCap("shared.buyer") +
                 " " +
-                formatter.formatCoinWithCode(Coin.valueOf(offerPayload.getBuyerSecurityDeposit())) +
+                formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +
                 " / " +
                 Res.getWithColAndCap("shared.seller") +
                 " " +
-                formatter.formatCoinWithCode(Coin.valueOf(offerPayload.getSellerSecurityDeposit()));
+                formatter.formatCoinWithCode(offer.getSellerSecurityDeposit());
         addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.securityDeposit"), securityDeposit);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.btcAddresses"),
                 contract.getBuyerPayoutAddressString() + " / " +
@@ -167,9 +165,9 @@ public class ContractWindow extends Overlay<ContractWindow> {
         }
 
         if (showAcceptedBanks) {
-            if (offerPayload.getPaymentMethodId().equals(PaymentMethod.SAME_BANK.getId())) {
+            if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK)) {
                 addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.bankName"), acceptedBanks.get(0));
-            } else if (offerPayload.getPaymentMethodId().equals(PaymentMethod.SPECIFIC_BANKS.getId())) {
+            } else if (offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS)) {
                 String value = Joiner.on(", ").join(acceptedBanks);
                 Tooltip tooltip = new Tooltip(Res.getWithCol("shared.acceptedBanks") + value);
                 TextField acceptedBanksTextField = addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.acceptedBanks"), value).second;
@@ -178,7 +176,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
             }
         }
 
-        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offerPayload.getOfferFeePaymentTxID());
+        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxID());
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), contract.takeOfferFeeTxID);
         if (dispute.getDepositTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.getWithCol("shared.depositTransactionId"), dispute.getDepositTxId());

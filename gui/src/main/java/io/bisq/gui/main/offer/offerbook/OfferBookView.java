@@ -40,7 +40,6 @@ import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
-import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -247,7 +246,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
 
         tableView.setItems(model.getOfferList());
-        priceColumn.setSortType((model.getDirection() == OfferPayload.Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
+        priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
 
         model.getOfferList().addListener(offerListListener);
         nrOfOffersLabel.setText(Res.get("offerbook.nrOffers", model.getOfferList().size()));
@@ -276,13 +275,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         createOfferButton.setDisable(false);
     }
 
-    public void setDirection(OfferPayload.Direction direction) {
+    public void setDirection(Offer.Direction direction) {
         model.initWithDirection(direction);
         ImageView iconView = new ImageView();
 
         createOfferButton.setGraphic(iconView);
-        iconView.setId(direction == OfferPayload.Direction.SELL ? "image-sell-white" : "image-buy-white");
-        createOfferButton.setId(direction == OfferPayload.Direction.SELL ? "sell-button-big" : "buy-button-big");
+        iconView.setId(direction == Offer.Direction.SELL ? "image-sell-white" : "image-buy-white");
+        createOfferButton.setId(direction == Offer.Direction.SELL ? "sell-button-big" : "buy-button-big");
 
         setDirectionTitles();
     }
@@ -290,15 +289,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void setDirectionTitles() {
         TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
         if (selectedTradeCurrency != null) {
-            OfferPayload.Direction direction = model.getDirection();
-            String directionText = direction == OfferPayload.Direction.BUY ? Res.get("shared.buy") : Res.get("shared.sell");
-            String mirroredDirectionText = direction == OfferPayload.Direction.SELL ? Res.get("shared.buy") : Res.get("shared.sell");
+            Offer.Direction direction = model.getDirection();
+            String directionText = direction == Offer.Direction.BUY ? Res.get("shared.buy") : Res.get("shared.sell");
+            String mirroredDirectionText = direction == Offer.Direction.SELL ? Res.get("shared.buy") : Res.get("shared.sell");
             String code = selectedTradeCurrency.getCode();
             if (model.showAllTradeCurrenciesProperty.get())
                 createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC"));
             else if (selectedTradeCurrency instanceof FiatCurrency)
                 createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC") +
-                        (direction == OfferPayload.Direction.BUY ?
+                        (direction == Offer.Direction.BUY ?
                                 Res.get("offerbook.buyWithOtherCurrency", code) :
                                 Res.get("offerbook.sellForOtherCurrency", code)));
             else
@@ -657,15 +656,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 TableRow tableRow = getTableRow();
                                 if (newItem != null && !empty) {
                                     final Offer offer = newItem.getOffer();
-                                    final OfferPayload offerPayload = offer.getOfferPayload();
                                     boolean myOffer = model.isMyOffer(offer);
                                     if (tableRow != null) {
                                         isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
-                                        hasMatchingArbitrator = model.hasMatchingArbitrator(offerPayload);
-                                        hasSameProtocolVersion = model.hasSameProtocolVersion(offerPayload);
-                                        isIgnored = model.isIgnored(offerPayload);
-                                        isOfferBanned = model.isOfferBanned(offerPayload);
-                                        isNodeBanned = model.isNodeBanned(offerPayload);
+                                        hasMatchingArbitrator = model.hasMatchingArbitrator(offer);
+                                        hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
+                                        isIgnored = model.isIgnored(offer);
+                                        isOfferBanned = model.isOfferBanned(offer);
+                                        isNodeBanned = model.isNodeBanned(offer);
                                         isTradable = isPaymentAccountValidForOffer && hasMatchingArbitrator &&
                                                 hasSameProtocolVersion &&
                                                 !isIgnored &&
@@ -700,7 +698,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setStyle("-fx-text-fill: #444;"); // does not take the font colors sometimes from the style
                                         button.setOnAction(e -> onRemoveOpenOffer(offer));
                                     } else {
-                                        boolean isSellOffer = offerPayload.getDirection() == OfferPayload.Direction.SELL;
+                                        boolean isSellOffer = offer.getDirection() == Offer.Direction.SELL;
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
                                         button.setStyle("-fx-text-fill: white;"); // does not take the font colors sometimes from the style
@@ -754,7 +752,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                 if (newItem != null && !empty) {
                                     String hostName = newItem.getOffer().getOwnerNodeAddress().hostName;
-                                    int numPastTrades = model.getNumPastTrades(newItem.getOffer().getOfferPayload());
+                                    int numPastTrades = model.getNumPastTrades(newItem.getOffer());
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ?
                                             Res.get("peerInfoIcon.tooltip.offer.traded", hostName, numPastTrades) :

@@ -19,9 +19,9 @@ package io.bisq.wire.payload.arbitration;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.message.arbitration.DisputeCommunicationMessage;
 import io.bisq.wire.payload.Payload;
+import io.bisq.wire.proto.Messages;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;

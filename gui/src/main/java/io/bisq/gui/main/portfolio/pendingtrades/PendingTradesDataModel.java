@@ -47,7 +47,6 @@ import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.wire.crypto.KeyRing;
 import io.bisq.wire.payload.arbitration.Arbitrator;
 import io.bisq.wire.payload.arbitration.Dispute;
-import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.payment.PaymentAccountContractData;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -209,7 +208,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     boolean isBuyOffer() {
-        return getOffer() != null && getOffer().getDirection() == OfferPayload.Direction.BUY;
+        return getOffer() != null && getOffer().getDirection() == Offer.Direction.BUY;
     }
 
     boolean isBuyer() {
@@ -244,7 +243,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return getOffer() != null ? getOffer().getCurrencyCode() : "";
     }
 
-    public OfferPayload.Direction getDirection(Offer offer) {
+    public Offer.Direction getDirection(Offer offer) {
         isOfferer = tradeManager.isMyOffer(offer);
         return isOfferer ? offer.getDirection() : offer.getMirroredDirection();
     }
@@ -386,7 +385,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
-                    trade.getOffer().getDirection() == OfferPayload.Direction.BUY ? isOfferer : !isOfferer,
+                    trade.getOffer().getDirection() == Offer.Direction.BUY ? isOfferer : !isOfferer,
                     isOfferer,
                     keyRing.getPubKeyRing(),
                     trade.getDate(),

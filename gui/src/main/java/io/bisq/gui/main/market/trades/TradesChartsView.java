@@ -21,6 +21,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.MathUtils;
+import io.bisq.core.offer.Offer;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.market.trades.charts.price.CandleStickChart;
@@ -623,7 +624,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @NotNull
     private String getDirectionLabel(TradeStatistics item) {
-        return formatter.getDirectionWithCode(item.direction, item.currency);
+        return formatter.getDirectionWithCode(Offer.Direction.valueOf(item.direction.name()), item.currency);
     }
 
     @NotNull

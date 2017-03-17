@@ -40,7 +40,6 @@ import io.bisq.gui.main.settings.preferences.PreferencesView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.payload.payment.PaymentMethod;
 import javafx.beans.property.BooleanProperty;
@@ -83,7 +82,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private TradeCurrency selectedTradeCurrency;
     private final ObservableList<TradeCurrency> allTradeCurrencies = FXCollections.observableArrayList();
 
-    private OfferPayload.Direction direction;
+    private Offer.Direction direction;
 
     private final StringProperty btcCode = new SimpleStringProperty();
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
@@ -135,7 +134,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     protected void activate() {
         tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream().map(e -> e.getCode()).collect(Collectors.toSet());
 
-        String code = direction == OfferPayload.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
         if (code != null && !code.equals(GUIUtil.SHOW_ALL_FLAG) && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
             showAllTradeCurrenciesProperty.set(false);
             selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
@@ -166,7 +165,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void initWithDirection(OfferPayload.Direction direction) {
+    void initWithDirection(Offer.Direction direction) {
         this.direction = direction;
     }
 
@@ -196,7 +195,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             setMarketPriceFeedCurrency();
             applyFilterPredicate();
 
-            if (direction == OfferPayload.Direction.BUY)
+            if (direction == Offer.Direction.BUY)
                 preferences.setBuyScreenCurrencyCode(code);
             else
                 preferences.setSellScreenCurrencyCode(code);
@@ -228,7 +227,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         return openOfferManager.isMyOffer(offer);
     }
 
-    OfferPayload.Direction getDirection() {
+    Offer.Direction getDirection() {
         return direction;
     }
 
@@ -372,9 +371,9 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     private void setPriceFeedType() {
         if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
-            priceFeedService.setType(direction == OfferPayload.Direction.SELL ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);
+            priceFeedService.setType(direction == Offer.Direction.SELL ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);
         else
-            priceFeedService.setType(direction == OfferPayload.Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);
+            priceFeedService.setType(direction == Offer.Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);
     }
 
     private void fillAllTradeCurrencies() {
@@ -428,7 +427,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         });
     }
 
-    boolean hasMatchingArbitrator(OfferPayload offer) {
+    boolean hasMatchingArbitrator(Offer offer) {
         for (NodeAddress offerArbitratorNodeAddress : offer.getArbitratorNodeAddresses()) {
             for (NodeAddress acceptedArbitratorNodeAddress : user.getAcceptedArbitratorAddresses()) {
                 if (offerArbitratorNodeAddress.equals(acceptedArbitratorNodeAddress))
@@ -438,11 +437,11 @@ class OfferBookViewModel extends ActivatableViewModel {
         return false;
     }
 
-    boolean isIgnored(OfferPayload offer) {
+    boolean isIgnored(Offer offer) {
         return preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent();
     }
 
-    boolean isOfferBanned(OfferPayload offer) {
+    boolean isOfferBanned(Offer offer) {
         return filterManager.getFilter() != null &&
                 filterManager.getFilter().bannedOfferIds.stream()
                         .filter(e -> e.equals(offer.getId()))
@@ -450,7 +449,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                         .isPresent();
     }
 
-    boolean isNodeBanned(OfferPayload offer) {
+    boolean isNodeBanned(Offer offer) {
         return filterManager.getFilter() != null &&
                 filterManager.getFilter().bannedNodeAddress.stream()
                         .filter(e -> e.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix()))
@@ -458,7 +457,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                         .isPresent();
     }
 
-    boolean hasSameProtocolVersion(OfferPayload offer) {
+    boolean hasSameProtocolVersion(Offer offer) {
         return offer.getProtocolVersion() == Version.TRADE_PROTOCOL_VERSION;
     }
 
@@ -470,7 +469,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         return id.equals(GUIUtil.EDIT_FLAG);
     }
 
-    int getNumPastTrades(OfferPayload offer) {
+    int getNumPastTrades(Offer offer) {
         return closedTradableManager.getClosedTrades().stream()
                 .filter(e -> {
                     final NodeAddress tradingPeerNodeAddress = e instanceof Trade ? ((Trade) e).getTradingPeerNodeAddress() : null;

@@ -26,7 +26,6 @@ import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -89,7 +88,7 @@ class SpreadViewModel extends ActivatableViewModel {
             List<Offer> offers = offersByCurrencyMap.get(currencyCode);
             List<Offer> buyOffers = offers
                     .stream()
-                    .filter(e -> e.getDirection().equals(OfferPayload.Direction.BUY))
+                    .filter(e -> e.getDirection().equals(Offer.Direction.BUY))
                     .sorted((o1, o2) -> {
                         long a = o1.getPrice() != null ? o1.getPrice().value : 0;
                         long b = o2.getPrice() != null ? o2.getPrice().value : 0;
@@ -101,7 +100,7 @@ class SpreadViewModel extends ActivatableViewModel {
 
             List<Offer> sellOffers = offers
                     .stream()
-                    .filter(e -> e.getDirection().equals(OfferPayload.Direction.SELL))
+                    .filter(e -> e.getDirection().equals(Offer.Direction.SELL))
                     .sorted((o1, o2) -> {
                         long a = o1.getPrice() != null ? o1.getPrice().value : 0;
                         long b = o2.getPrice() != null ? o2.getPrice().value : 0;

@@ -2,7 +2,7 @@ package io.bisq.core.trade.statistics;
 
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.util.MathUtils;
-import io.bisq.wire.payload.offer.OfferPayload;
+import io.bisq.core.offer.Offer;
 import io.bisq.wire.payload.trade.statistics.TradeStatistics;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -19,7 +19,7 @@ public final class TradeStatisticsForJson {
     private static final Logger log = LoggerFactory.getLogger(TradeStatisticsForJson.class);
 
     public final String currency;
-    public final OfferPayload.Direction direction;
+    public final Offer.Direction direction;
     public final long tradePrice;
     public final long tradeAmount;
     public final long tradeDate;
@@ -34,7 +34,7 @@ public final class TradeStatisticsForJson {
 
     // primaryMarket fields are based on industry standard where primaryMarket is always in the focus (in the app BTC is always in the focus - will be changed in a larger refactoring once)
     public String currencyPair;
-    public OfferPayload.Direction primaryMarketDirection;
+    public Offer.Direction primaryMarketDirection;
 
     public String tradePriceDisplayString;
 
@@ -47,7 +47,7 @@ public final class TradeStatisticsForJson {
 
 
     public TradeStatisticsForJson(TradeStatistics tradeStatistics) {
-        this.direction = tradeStatistics.direction;
+        this.direction = Offer.Direction.valueOf(tradeStatistics.direction.name());
         this.currency = tradeStatistics.currency;
         this.paymentMethod = tradeStatistics.paymentMethodId;
         this.offerDate = tradeStatistics.offerDate;
@@ -67,7 +67,7 @@ public final class TradeStatisticsForJson {
             MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
             final Fiat tradePriceAsFiat = getTradePrice();
             if (CurrencyUtil.isCryptoCurrency(currency)) {
-                primaryMarketDirection = direction == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
+                primaryMarketDirection = direction == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
                 final double value = tradePriceAsFiat.value != 0 ? 10000D / tradePriceAsFiat.value : 0;
                 DecimalFormat decimalFormat = new DecimalFormat("#.#");
                 decimalFormat.setMaximumFractionDigits(8);

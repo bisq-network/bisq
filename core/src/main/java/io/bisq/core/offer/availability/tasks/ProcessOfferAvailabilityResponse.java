@@ -19,10 +19,10 @@ package io.bisq.core.offer.availability.tasks;
 
 import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
+import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.availability.OfferAvailabilityModel;
 import io.bisq.wire.message.offer.OfferAvailabilityResponse;
 import io.bisq.wire.payload.offer.AvailabilityResult;
-import io.bisq.wire.payload.offer.OfferPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +39,12 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
             runInterceptHook();
             OfferAvailabilityResponse offerAvailabilityResponse = model.getMessage();
 
-            if (model.offer.getState() != OfferPayload.State.REMOVED) {
+            if (model.offer.getState() != Offer.State.REMOVED) {
                 // TODO: isAvailable is kept for backward compatibility. Can be removed once everyone is on v0.4.9
                 if (offerAvailabilityResponse.isAvailable || offerAvailabilityResponse.availabilityResult == AvailabilityResult.AVAILABLE) {
-                    model.offer.setState(OfferPayload.State.AVAILABLE);
+                    model.offer.setState(Offer.State.AVAILABLE);
                 } else {
-                    model.offer.setState(OfferPayload.State.NOT_AVAILABLE);
+                    model.offer.setState(Offer.State.NOT_AVAILABLE);
                     failed("Take offer attempt rejected because of: " + offerAvailabilityResponse.availabilityResult);
                 }
             }

@@ -54,10 +54,7 @@ import javafx.collections.SetChangeListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -86,7 +83,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final BalanceListener balanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
-    private OfferPayload.Direction direction;
+    private Offer.Direction direction;
 
     private TradeCurrency tradeCurrency;
 
@@ -223,7 +220,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // called before activate()
-    boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    boolean initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
 
         fillPaymentAccounts();
@@ -338,10 +335,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 "securityDeposit must be not be less than " +
                         Restrictions.MIN_BUYER_SECURITY_DEPOSIT.toFriendlyString());
         OfferPayload offerPayload = new OfferPayload(offerId,
-                0,
+                new Date().getTime(),
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
-                direction,
+                OfferPayload.Direction.valueOf(direction.name()),
                 priceAsLong,
                 marketPriceMarginParam,
                 useMarketBasedPrice.get(),
@@ -454,7 +451,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return true;
     }
 
-    OfferPayload.Direction getDirection() {
+    Offer.Direction getDirection() {
         return direction;
     }
 
@@ -547,7 +544,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     boolean isBuyOffer() {
-        return direction == OfferPayload.Direction.BUY;
+        return direction == Offer.Direction.BUY;
     }
 
     private void updateBalance() {

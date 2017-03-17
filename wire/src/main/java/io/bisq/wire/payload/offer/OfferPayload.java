@@ -22,11 +22,11 @@ import com.google.common.collect.Maps;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.util.JsonExclude;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.payload.RequiresOwnerIsOnlinePayload;
 import io.bisq.wire.payload.StoragePayload;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.wire.proto.Messages;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,7 +35,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -62,15 +65,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public enum Direction {BUY, SELL}
-
-    public enum State {
-        UNDEFINED,
-        OFFER_FEE_PAID,
-        AVAILABLE,
-        NOT_AVAILABLE,
-        REMOVED,
-        OFFERER_OFFLINE
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +152,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
      * meaning it's null here and "" there => not good
      *
      * @param id
-     * @param date               date of OfferPayload creation, can be null in which case the current date/time will be used.
+     * @param date                       date of OfferPayload creation, can be null in which case the current date/time will be used.
      * @param offererNodeAddress
      * @param pubKeyRing
      * @param direction
@@ -229,6 +223,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                         @Nullable Map<String, String> extraDataMap) {
 
         this.id = id;
+        this.date = date;
         this.offererNodeAddress = offererNodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.direction = direction;
@@ -261,9 +256,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.isPrivateOffer = isPrivateOffer;
         this.hashOfChallenge = Optional.ofNullable(hashOfChallenge).orElse("");
         this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
-
-        // TODO why can date be null? might be relict from java serial.
-        this.date = Optional.ofNullable(date).orElse(new Date().getTime());
         this.protocolVersion = Version.TRADE_PROTOCOL_VERSION;
     }
 
