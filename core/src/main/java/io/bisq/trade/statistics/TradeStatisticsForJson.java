@@ -2,7 +2,7 @@ package io.bisq.trade.statistics;
 
 import io.bisq.common.util.MathUtils;
 import io.bisq.locale.CurrencyUtil;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.OfferPayload;
 import io.bisq.payload.trade.statistics.TradeStatistics;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;

@@ -28,7 +28,7 @@ import io.bisq.message.offer.OfferMessage;
 import io.bisq.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bisq.offer.availability.tasks.SendOfferAvailabilityRequest;
 import io.bisq.p2p.DecryptedDirectMessageListener;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.OfferPayload;
 import io.bisq.util.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -24,7 +24,7 @@ import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.offer.Offer;
 import io.bisq.offer.OpenOffer;
 import io.bisq.offer.OpenOfferManager;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.OfferPayload;
 import io.bisq.provider.price.PriceFeedService;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;

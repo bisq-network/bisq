@@ -43,7 +43,7 @@ import io.bisq.p2p.DecryptedMsgWithPubKey;
 import io.bisq.p2p.messaging.DecryptedMailboxListener;
 import io.bisq.p2p.storage.P2PService;
 import io.bisq.payload.NodeAddress;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.OfferPayload;
 import io.bisq.payload.trade.statistics.TradeStatistics;
 import io.bisq.provider.price.PriceFeedService;
 import io.bisq.storage.Storage;

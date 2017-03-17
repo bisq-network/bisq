@@ -24,7 +24,7 @@ import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.locale.CurrencyUtil;
 import io.bisq.offer.Offer;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.OfferPayload;
 import io.bisq.provider.price.MarketPrice;
 import io.bisq.provider.price.PriceFeedService;
 import javafx.collections.FXCollections;

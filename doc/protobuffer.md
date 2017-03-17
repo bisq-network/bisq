@@ -16,7 +16,7 @@ There are a number of reasons why protobuffer was chosen, here are some of them:
 
 ## Where are the protobuffer related files? 
 
-The protobuffer schema file(s), generated classes and domain classes are in the 'network-messages' module.
+The protobuffer schema file(s), generated classes and domain classes are in the 'wire' module.
 
 ## How is serialisation done (Java -> Protobuffer)
 

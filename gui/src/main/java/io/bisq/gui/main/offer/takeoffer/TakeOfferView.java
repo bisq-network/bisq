@@ -48,7 +48,7 @@ import io.bisq.gui.util.Layout;
 import io.bisq.locale.Res;
 import io.bisq.locale.TradeCurrency;
 import io.bisq.offer.Offer;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.OfferPayload;
 import io.bisq.payment.PaymentAccount;
 import io.bisq.user.Preferences;
 import javafx.beans.property.SimpleBooleanProperty;

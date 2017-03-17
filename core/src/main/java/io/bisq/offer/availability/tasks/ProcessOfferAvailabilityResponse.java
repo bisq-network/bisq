@@ -21,8 +21,8 @@ import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.message.offer.OfferAvailabilityResponse;
 import io.bisq.offer.availability.OfferAvailabilityModel;
-import io.bisq.payload.trade.offer.AvailabilityResult;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.AvailabilityResult;
+import io.bisq.payload.offer.OfferPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

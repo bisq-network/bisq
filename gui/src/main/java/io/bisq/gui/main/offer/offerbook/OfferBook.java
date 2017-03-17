@@ -20,7 +20,7 @@ package io.bisq.gui.main.offer.offerbook;
 import io.bisq.app.Log;
 import io.bisq.offer.Offer;
 import io.bisq.offer.OfferBookService;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.OfferPayload;
 import io.bisq.trade.TradeManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>io.bisq</groupId>
-            <artifactId>network-messages</artifactId>
+            <artifactId>wire</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 

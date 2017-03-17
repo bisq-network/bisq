@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class VerifyAndSignContract extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(VerifyAndSignContract.class);

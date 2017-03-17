@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SendPayDepositRequest extends TradeTask {
     private static final Logger log = LoggerFactory.getLogger(SendPayDepositRequest.class);

@@ -32,7 +32,7 @@ import io.bisq.gui.util.GUIUtil;
 import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.Res;
 import io.bisq.offer.Offer;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.OfferPayload;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;

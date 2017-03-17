@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SignPayoutTx extends TradeTask {
     @SuppressWarnings("unused")

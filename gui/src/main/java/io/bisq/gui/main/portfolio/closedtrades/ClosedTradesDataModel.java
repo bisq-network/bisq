@@ -20,7 +20,7 @@ package io.bisq.gui.main.portfolio.closedtrades;
 import com.google.inject.Inject;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.offer.Offer;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.OfferPayload;
 import io.bisq.trade.Tradable;
 import io.bisq.trade.closed.ClosedTradableManager;
 import javafx.collections.FXCollections;

@@ -1,7 +1,7 @@
 package io.bisq.gui.main.market.trades;
 
 import io.bisq.gui.main.market.trades.charts.CandleData;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.OfferPayload;
 import io.bisq.payload.trade.statistics.TradeStatistics;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;

@@ -31,7 +31,7 @@ import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.Res;
 import io.bisq.locale.TradeCurrency;
 import io.bisq.offer.Offer;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.OfferPayload;
 import io.bisq.user.Preferences;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;

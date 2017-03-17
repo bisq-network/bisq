@@ -24,7 +24,7 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.message.trade.TradeMessage;
 import io.bisq.offer.Offer;
 import io.bisq.offer.placeoffer.PlaceOfferModel;
-import io.bisq.payload.trade.offer.OfferPayload;
+import io.bisq.payload.offer.OfferPayload;
 import io.bisq.provider.fee.FeeService;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
