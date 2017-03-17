@@ -1,9 +1,9 @@
 package io.bisq.payload.p2p.peers.peerexchange;
 
-import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.wire.proto.Messages;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.Payload;
 
 import java.util.Date;

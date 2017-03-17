@@ -17,11 +17,11 @@
 
 package io.bisq.arbitration;
 
-import io.bisq.NodeAddress;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.p2p.storage.HashMapChangedListener;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.arbitration.Arbitrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

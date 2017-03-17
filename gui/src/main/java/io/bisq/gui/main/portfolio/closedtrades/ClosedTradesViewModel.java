@@ -22,9 +22,9 @@ import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.locale.Res;
+import io.bisq.offer.OpenOffer;
 import io.bisq.trade.Tradable;
 import io.bisq.trade.Trade;
-import io.bisq.trade.offer.OpenOffer;
 import javafx.collections.ObservableList;
 
 import java.util.stream.Collectors;

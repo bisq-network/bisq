@@ -17,11 +17,11 @@
 
 package io.bisq.message.arbitration;
 
-import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.common.wire.proto.Messages;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.arbitration.Attachment;
-import io.bisq.util.ProtoBufferUtils;
+import io.bisq.proto.ProtoBufferUtils;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.slf4j.Logger;

@@ -19,11 +19,11 @@ package io.bisq.trade.failed;
 
 import com.google.inject.Inject;
 import io.bisq.crypto.KeyRing;
+import io.bisq.offer.Offer;
 import io.bisq.provider.price.PriceFeedService;
 import io.bisq.storage.Storage;
 import io.bisq.trade.TradableList;
 import io.bisq.trade.Trade;
-import io.bisq.trade.offer.Offer;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

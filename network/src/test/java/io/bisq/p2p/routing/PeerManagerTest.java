@@ -1,10 +1,10 @@
 package io.bisq.p2p.routing;
 
-import io.bisq.NodeAddress;
 import io.bisq.p2p.DummySeedNode;
 import io.bisq.p2p.P2PServiceListener;
 import io.bisq.p2p.network.LocalhostNetworkNode;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.NodeAddress;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;

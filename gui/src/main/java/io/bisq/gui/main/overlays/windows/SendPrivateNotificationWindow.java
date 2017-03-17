@@ -17,7 +17,6 @@
 
 package io.bisq.gui.main.overlays.windows;
 
-import io.bisq.NodeAddress;
 import io.bisq.app.DevEnv;
 import io.bisq.common.util.Tuple2;
 import io.bisq.gui.components.InputTextField;
@@ -25,6 +24,7 @@ import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.locale.Res;
 import io.bisq.p2p.SendMailboxMessageListener;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.alert.PrivateNotification;
 import io.bisq.payload.crypto.PubKeyRing;
 import javafx.geometry.Insets;

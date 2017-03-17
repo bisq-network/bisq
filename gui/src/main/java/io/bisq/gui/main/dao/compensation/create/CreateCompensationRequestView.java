@@ -18,7 +18,6 @@
 package io.bisq.gui.main.dao.compensation.create;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.btc.InsufficientFundsException;
 import io.bisq.btc.exceptions.TransactionVerificationException;
@@ -36,6 +35,7 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.locale.Res;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.dao.compensation.CompensationRequestPayload;
 import io.bisq.provider.fee.FeeService;
 import io.bisq.util.CoinUtil;

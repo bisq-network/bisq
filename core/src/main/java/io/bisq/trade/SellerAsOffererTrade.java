@@ -17,13 +17,13 @@
 
 package io.bisq.trade;
 
-import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.message.trade.TradeMessage;
+import io.bisq.offer.Offer;
+import io.bisq.payload.NodeAddress;
 import io.bisq.storage.Storage;
-import io.bisq.trade.offer.Offer;
-import io.bisq.trade.protocol.trade.OffererProtocol;
-import io.bisq.trade.protocol.trade.SellerAsOffererProtocol;
+import io.bisq.trade.protocol.OffererProtocol;
+import io.bisq.trade.protocol.SellerAsOffererProtocol;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

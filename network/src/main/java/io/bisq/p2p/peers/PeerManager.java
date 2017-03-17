@@ -1,11 +1,11 @@
 package io.bisq.p2p.peers;
 
-import io.bisq.NodeAddress;
 import io.bisq.app.Log;
 import io.bisq.common.Clock;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.p2p.network.*;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.p2p.peers.peerexchange.Peer;
 import io.bisq.storage.Storage;
 import org.slf4j.Logger;

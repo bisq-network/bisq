@@ -1,6 +1,5 @@
 package io.bisq.p2p.peers.getdata;
 
-import io.bisq.NodeAddress;
 import io.bisq.app.Log;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
@@ -9,6 +8,7 @@ import io.bisq.message.p2p.peers.getdata.GetDataRequest;
 import io.bisq.p2p.network.*;
 import io.bisq.p2p.peers.PeerManager;
 import io.bisq.p2p.storage.P2PDataStorage;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.p2p.peers.peerexchange.Peer;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;

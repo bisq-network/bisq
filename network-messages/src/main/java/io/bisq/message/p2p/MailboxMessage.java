@@ -18,7 +18,7 @@
 package io.bisq.message.p2p;
 
 
-import io.bisq.NodeAddress;
+import io.bisq.payload.NodeAddress;
 
 public interface MailboxMessage extends DirectMessage {
     NodeAddress getSenderNodeAddress();

@@ -2,7 +2,6 @@ package io.bisq.p2p;
 
 import ch.qos.logback.classic.Level;
 import com.google.common.annotations.VisibleForTesting;
-import io.bisq.NodeAddress;
 import io.bisq.app.Log;
 import io.bisq.app.Version;
 import io.bisq.common.Clock;
@@ -13,6 +12,7 @@ import io.bisq.network.NetworkOptionKeys;
 import io.bisq.p2p.peers.BanList;
 import io.bisq.p2p.seed.SeedNodesRepository;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.NodeAddress;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -2,11 +2,11 @@ package io.bisq.p2p.network;
 
 import com.google.common.util.concurrent.*;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-import io.bisq.NodeAddress;
 import io.bisq.app.Log;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Utilities;
 import io.bisq.message.Message;
+import io.bisq.payload.NodeAddress;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

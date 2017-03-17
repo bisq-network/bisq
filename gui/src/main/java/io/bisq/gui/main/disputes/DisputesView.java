@@ -17,7 +17,6 @@
 
 package io.bisq.gui.main.disputes;
 
-import io.bisq.NodeAddress;
 import io.bisq.app.DevEnv;
 import io.bisq.arbitration.ArbitratorManager;
 import io.bisq.arbitration.DisputeManager;
@@ -32,6 +31,7 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.portfolio.PortfolioView;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesView;
 import io.bisq.locale.Res;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.arbitration.Arbitrator;
 import io.bisq.user.Preferences;
 import javafx.beans.value.ChangeListener;

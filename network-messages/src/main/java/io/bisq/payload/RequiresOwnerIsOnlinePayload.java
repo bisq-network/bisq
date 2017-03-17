@@ -1,7 +1,5 @@
 package io.bisq.payload;
 
-import io.bisq.NodeAddress;
-
 /**
  * Used for network_messages which require that the data owner is online.
  * <p>

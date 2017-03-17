@@ -17,13 +17,13 @@
 
 package io.bisq.gui.util;
 
-import io.bisq.NodeAddress;
 import io.bisq.common.util.MathUtils;
 import io.bisq.locale.CurrencyUtil;
 import io.bisq.locale.LanguageUtil;
 import io.bisq.locale.Res;
+import io.bisq.offer.Offer;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.trade.offer.OfferPayload;
-import io.bisq.trade.offer.Offer;
 import io.bisq.user.Preferences;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;

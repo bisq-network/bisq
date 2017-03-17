@@ -24,9 +24,9 @@ import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.locale.Res;
+import io.bisq.offer.Offer;
+import io.bisq.offer.OpenOffer;
 import io.bisq.p2p.storage.P2PService;
-import io.bisq.trade.offer.Offer;
-import io.bisq.trade.offer.OpenOffer;
 import javafx.collections.ObservableList;
 import org.bitcoinj.utils.Fiat;
 

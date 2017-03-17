@@ -18,7 +18,6 @@
 package io.bisq.arbitration;
 
 import com.google.inject.Inject;
-import io.bisq.NodeAddress;
 import io.bisq.app.DevEnv;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
@@ -28,6 +27,7 @@ import io.bisq.crypto.KeyRing;
 import io.bisq.p2p.BootstrapListener;
 import io.bisq.p2p.storage.HashMapChangedListener;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.arbitration.Arbitrator;
 import io.bisq.payload.p2p.storage.ProtectedStorageEntry;
 import io.bisq.user.Preferences;

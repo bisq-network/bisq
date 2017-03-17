@@ -18,10 +18,10 @@
 package io.bisq.message.arbitration;
 
 import com.google.protobuf.ByteString;
-import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.common.wire.proto.Messages;
-import io.bisq.util.ProtoBufferUtils;
+import io.bisq.payload.NodeAddress;
+import io.bisq.proto.ProtoBufferUtils;
 
 import java.util.Arrays;
 

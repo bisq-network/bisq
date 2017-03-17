@@ -1,7 +1,6 @@
 package io.bisq.p2p.network;
 
 import com.google.protobuf.ByteString;
-import io.bisq.NodeAddress;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.locale.CountryUtil;
 import io.bisq.message.Message;
@@ -24,6 +23,7 @@ import io.bisq.message.p2p.storage.RemoveDataMessage;
 import io.bisq.message.p2p.storage.RemoveMailboxDataMessage;
 import io.bisq.message.trade.*;
 import io.bisq.payload.MailboxStoragePayload;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.StoragePayload;
 import io.bisq.payload.alert.Alert;
 import io.bisq.payload.alert.PrivateNotification;

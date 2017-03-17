@@ -19,10 +19,10 @@ package io.bisq.payload.trade;
 
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
-import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.common.wire.proto.Messages;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.Payload;
 import io.bisq.payload.crypto.PubKeyRing;
 import io.bisq.payload.payment.PaymentAccountContractData;

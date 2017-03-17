@@ -1,6 +1,5 @@
 package io.bisq.p2p.storage;
 
-import io.bisq.NodeAddress;
 import io.bisq.common.UserThread;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
@@ -13,6 +12,7 @@ import io.bisq.p2p.TestUtils;
 import io.bisq.p2p.network.NetworkNode;
 import io.bisq.p2p.peers.PeerManager;
 import io.bisq.p2p.storage.mocks.MockData;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.p2p.storage.ProtectedStorageEntry;
 import io.bisq.storage.FileUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;

@@ -3,7 +3,7 @@ package io.bisq.message.p2p.storage;
 import io.bisq.app.Version;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.payload.p2p.storage.ProtectedStorageEntry;
-import io.bisq.util.ProtoBufferUtils;
+import io.bisq.proto.ProtoBufferUtils;
 
 public final class RemoveDataMessage extends BroadcastMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.

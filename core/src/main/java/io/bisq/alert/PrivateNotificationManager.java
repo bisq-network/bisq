@@ -19,7 +19,6 @@ package io.bisq.alert;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import io.bisq.NodeAddress;
 import io.bisq.app.AppOptionKeys;
 import io.bisq.app.DevEnv;
 import io.bisq.crypto.KeyRing;
@@ -28,6 +27,7 @@ import io.bisq.message.alert.PrivateNotificationMessage;
 import io.bisq.p2p.DecryptedMsgWithPubKey;
 import io.bisq.p2p.SendMailboxMessageListener;
 import io.bisq.p2p.storage.P2PService;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.alert.PrivateNotification;
 import io.bisq.payload.crypto.PubKeyRing;
 import javafx.beans.property.ObjectProperty;

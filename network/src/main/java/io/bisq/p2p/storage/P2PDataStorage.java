@@ -1,7 +1,6 @@
 package io.bisq.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
-import io.bisq.NodeAddress;
 import io.bisq.app.Log;
 import io.bisq.app.Version;
 import io.bisq.common.Timer;

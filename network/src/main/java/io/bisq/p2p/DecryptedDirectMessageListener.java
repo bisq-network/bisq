@@ -1,6 +1,6 @@
 package io.bisq.p2p;
 
-import io.bisq.NodeAddress;
+import io.bisq.payload.NodeAddress;
 
 public interface DecryptedDirectMessageListener {
 

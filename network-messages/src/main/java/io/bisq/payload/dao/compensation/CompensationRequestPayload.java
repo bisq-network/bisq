@@ -17,12 +17,12 @@
 
 package io.bisq.payload.dao.compensation;
 
-import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.payload.LazyProcessedStoragePayload;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.PersistedStoragePayload;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;

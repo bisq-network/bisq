@@ -18,10 +18,10 @@
 package io.bisq.gui.main.offer.offerbook;
 
 import io.bisq.app.Log;
+import io.bisq.offer.Offer;
+import io.bisq.offer.OfferBookService;
 import io.bisq.payload.trade.offer.OfferPayload;
 import io.bisq.trade.TradeManager;
-import io.bisq.trade.offer.Offer;
-import io.bisq.trade.offer.OfferBookService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;

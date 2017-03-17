@@ -1,6 +1,5 @@
 package io.bisq.p2p.storage.messages;
 
-import io.bisq.NodeAddress;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.crypto.KeyRing;
@@ -9,6 +8,7 @@ import io.bisq.message.p2p.PrefixedSealedAndSignedMessage;
 import io.bisq.message.p2p.storage.AddDataMessage;
 import io.bisq.p2p.network.ProtoBufferUtilities;
 import io.bisq.payload.MailboxStoragePayload;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.crypto.SealedAndSigned;
 import io.bisq.payload.p2p.storage.ProtectedMailboxStorageEntry;
 import io.bisq.payload.p2p.storage.ProtectedStorageEntry;

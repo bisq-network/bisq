@@ -23,7 +23,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.payload.btc.RawTransactionInput;
 import io.bisq.payload.payment.PaymentAccountContractData;
-import io.bisq.util.ProtoBufferUtils;
+import io.bisq.proto.ProtoBufferUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

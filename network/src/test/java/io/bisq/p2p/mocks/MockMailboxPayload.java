@@ -1,10 +1,10 @@
 package io.bisq.p2p.mocks;
 
-import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.message.p2p.MailboxMessage;
 import io.bisq.payload.ExpirablePayload;
+import io.bisq.payload.NodeAddress;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.UUID;

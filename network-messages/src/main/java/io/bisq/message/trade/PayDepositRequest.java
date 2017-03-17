@@ -18,14 +18,14 @@
 package io.bisq.message.trade;
 
 import com.google.protobuf.ByteString;
-import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.message.p2p.MailboxMessage;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.btc.RawTransactionInput;
 import io.bisq.payload.crypto.PubKeyRing;
 import io.bisq.payload.payment.PaymentAccountContractData;
-import io.bisq.util.ProtoBufferUtils;
+import io.bisq.proto.ProtoBufferUtils;
 import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;

@@ -1,7 +1,7 @@
 package io.bisq.monitor;
 
-import io.bisq.trade.offer.Offer;
-import io.bisq.trade.offer.OfferBookService;
+import io.bisq.offer.Offer;
+import io.bisq.offer.OfferBookService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import py4j.GatewayServer;

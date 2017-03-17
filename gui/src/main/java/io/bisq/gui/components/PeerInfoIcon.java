@@ -3,7 +3,7 @@ package io.bisq.gui.components;
 import io.bisq.alert.PrivateNotificationManager;
 import io.bisq.gui.main.overlays.editor.PeerInfoWithTagEditor;
 import io.bisq.locale.Res;
-import io.bisq.trade.offer.Offer;
+import io.bisq.offer.Offer;
 import io.bisq.user.Preferences;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;

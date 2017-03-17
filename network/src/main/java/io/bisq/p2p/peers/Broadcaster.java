@@ -1,10 +1,10 @@
 package io.bisq.p2p.peers;
 
-import io.bisq.NodeAddress;
 import io.bisq.app.Log;
 import io.bisq.common.util.Utilities;
 import io.bisq.message.p2p.storage.BroadcastMessage;
 import io.bisq.p2p.network.NetworkNode;
+import io.bisq.payload.NodeAddress;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -19,10 +19,10 @@ package io.bisq.gui.main.portfolio.failedtrades;
 
 import com.google.inject.Inject;
 import io.bisq.gui.common.model.ActivatableDataModel;
+import io.bisq.offer.Offer;
 import io.bisq.payload.trade.offer.OfferPayload;
 import io.bisq.trade.Trade;
 import io.bisq.trade.failed.FailedTradesManager;
-import io.bisq.trade.offer.Offer;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;

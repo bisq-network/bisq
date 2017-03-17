@@ -6,7 +6,7 @@ import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.windows.SendPrivateNotificationWindow;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.locale.Res;
-import io.bisq.trade.offer.Offer;
+import io.bisq.offer.Offer;
 import io.bisq.user.Preferences;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;

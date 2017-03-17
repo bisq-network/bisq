@@ -17,11 +17,11 @@
 
 package io.bisq.message.arbitration;
 
-import io.bisq.NodeAddress;
 import io.bisq.app.Version;
 import io.bisq.common.wire.proto.Messages;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.arbitration.Dispute;
-import io.bisq.util.ProtoBufferUtils;
+import io.bisq.proto.ProtoBufferUtils;
 
 public final class PeerOpenedDisputeMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.

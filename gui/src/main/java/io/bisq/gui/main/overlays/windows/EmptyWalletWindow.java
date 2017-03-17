@@ -28,7 +28,7 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Transitions;
 import io.bisq.locale.Res;
-import io.bisq.trade.offer.OpenOfferManager;
+import io.bisq.offer.OpenOfferManager;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;

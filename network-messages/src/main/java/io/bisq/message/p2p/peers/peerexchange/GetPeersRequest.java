@@ -1,12 +1,12 @@
 package io.bisq.message.p2p.peers.peerexchange;
 
-import io.bisq.NodeAddress;
 import io.bisq.app.Capabilities;
 import io.bisq.app.Version;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.message.SendersNodeAddressMessage;
 import io.bisq.message.ToProtoBuffer;
 import io.bisq.message.p2p.SupportedCapabilitiesMessage;
+import io.bisq.payload.NodeAddress;
 import io.bisq.payload.p2p.peers.peerexchange.Peer;
 
 import javax.annotation.Nullable;

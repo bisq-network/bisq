@@ -23,7 +23,7 @@ import io.bisq.app.Version;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.message.p2p.SupportedCapabilitiesMessage;
 import io.bisq.payload.trade.offer.AvailabilityResult;
-import io.bisq.util.ProtoBufferUtils;
+import io.bisq.proto.ProtoBufferUtils;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
