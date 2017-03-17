@@ -286,7 +286,7 @@ public class ProtoBufferUtilities {
     }
 
     private static Contract getContract(Messages.Contract contract) {
-        return new Contract(getOffer(contract.getOffer()), Coin.valueOf(contract.getTradeAmount()), getFiat(contract.getOffer().getCurrencyCode(), contract.getTradePrice()),
+        return new Contract(getOfferPayload(contract.getPbOffer()), Coin.valueOf(contract.getTradeAmount()), getFiat(contract.getPbOffer().getCurrencyCode(), contract.getTradePrice()),
                 contract.getTakeOfferFeeTxId(), getNodeAddress(contract.getBuyerNodeAddress()), getNodeAddress(contract.getSellerNodeAddress()),
                 getNodeAddress(contract.getArbitratorNodeAddress()), contract.getIsBuyerOffererAndSellerTaker(), contract.getOffererAccountId(),
                 contract.getTakerAccountId(), getPaymentAccountContractData(contract.getOffererPaymentAccountContractData()),
@@ -419,40 +419,49 @@ public class ProtoBufferUtilities {
         return Fiat.valueOf(currencyCode, tradePrice);
     }
 
-    public static OfferPayload getOffer(Messages.Offer offer) {
-        List<NodeAddress> arbitratorNodeAddresses = offer.getArbitratorNodeAddressesList().stream().map(nodeAddress -> getNodeAddress(nodeAddress)).collect(Collectors.toList());
+    public static OfferPayload getOfferPayload(Messages.PB_Offer pbOffer) {
+        List<NodeAddress> arbitratorNodeAddresses = pbOffer.getArbitratorNodeAddressesList().stream()
+                .map(ProtoBufferUtilities::getNodeAddress).collect(Collectors.toList());
         // convert these lists because otherwise when they're empty they are lazyStringArrayList objects and NOT serializable,
         // which is needed for the P2PStorage getHash() operation
-        List<String> acceptedCountryCodes = offer.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
-        List<String> acceptedBankIds = offer.getAcceptedBankIdsList().stream().collect(Collectors.toList());
+        List<String> acceptedCountryCodes = pbOffer.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
+        List<String> acceptedBankIds = pbOffer.getAcceptedBankIdsList().stream().collect(Collectors.toList());
         // TODO PriceFeedService not yet passed in due to not used in the real code.
         Map<String, String> extraDataMapMap;
-        if (CollectionUtils.isEmpty(offer.getExtraDataMapMap())) {
+        if (CollectionUtils.isEmpty(pbOffer.getExtraDataMapMap())) {
             extraDataMapMap = null;
         } else {
-            extraDataMapMap = offer.getExtraDataMapMap();
+            extraDataMapMap = pbOffer.getExtraDataMapMap();
         }
-        return new OfferPayload(offer.getId(), offer.getDate(), getNodeAddress(offer.getOffererNodeAddress()), getPubKeyRing(offer.getPubKeyRing()), getDirection(offer.getDirection()),
-                offer.getFiatPrice(), offer.getMarketPriceMargin(), offer.getUseMarketBasedPrice(), offer.getAmount(), offer.getMinAmount(), offer.getCurrencyCode(), arbitratorNodeAddresses,
-                offer.getPaymentMethodId(), offer.getOffererPaymentAccountId(), offer.getOfferFeePaymentTxID(), offer.getCountryCode(), acceptedCountryCodes, offer.getBankId(), acceptedBankIds,
-                offer.getVersionNr(), offer.getBlockHeightAtOfferCreation(), offer.getTxFee(), offer.getCreateOfferFee(),
-                offer.getBuyerSecurityDeposit(),
-                offer.getSellerSecurityDeposit(),
-                offer.getMaxTradeLimit(), offer.getMaxTradePeriod(), offer.getUseAutoClose(),
-                offer.getUseReOpenAfterAutoClose(), offer.getLowerClosePrice(), offer.getUpperClosePrice(), offer.getIsPrivateOffer(), offer.getHashOfChallenge(), extraDataMapMap);
+        return new OfferPayload(pbOffer.getId(), pbOffer.getDate(), getNodeAddress(pbOffer.getOffererNodeAddress()),
+                getPubKeyRing(pbOffer.getPubKeyRing()), getDirection(pbOffer.getDirection()),
+                pbOffer.getFiatPrice(), pbOffer.getMarketPriceMargin(), pbOffer.getUseMarketBasedPrice(),
+                pbOffer.getAmount(), pbOffer.getMinAmount(), pbOffer.getCurrencyCode(), arbitratorNodeAddresses,
+                pbOffer.getPaymentMethodId(), pbOffer.getOffererPaymentAccountId(), pbOffer.getOfferFeePaymentTxId(),
+                pbOffer.getCountryCode(), acceptedCountryCodes, pbOffer.getBankId(), acceptedBankIds,
+                pbOffer.getVersionNr(), pbOffer.getBlockHeightAtOfferCreation(), pbOffer.getTxFee(),
+                pbOffer.getCreateOfferFee(),
+                pbOffer.getBuyerSecurityDeposit(),
+                pbOffer.getSellerSecurityDeposit(),
+                pbOffer.getMaxTradeLimit(), pbOffer.getMaxTradePeriod(), pbOffer.getUseAutoClose(),
+                pbOffer.getUseReOpenAfterAutoClose(), pbOffer.getLowerClosePrice(), pbOffer.getUpperClosePrice(),
+                pbOffer.getIsPrivateOffer(), pbOffer.getHashOfChallenge(), extraDataMapMap);
     }
 
     private static Message getDisputeCommunicationMessage(Messages.DisputeCommunicationMessage disputeCommunicationMessage) {
-        return new DisputeCommunicationMessage(disputeCommunicationMessage.getTradeId(), disputeCommunicationMessage.getTraderId(),
+        return new DisputeCommunicationMessage(disputeCommunicationMessage.getTradeId(),
+                disputeCommunicationMessage.getTraderId(),
                 disputeCommunicationMessage.getSenderIsTrader(), disputeCommunicationMessage.getMessage(),
                 disputeCommunicationMessage.getAttachmentsList().stream()
-                        .map(attachment -> new Attachment(attachment.getFileName(), attachment.getBytes().toByteArray())).collect(Collectors.toList()),
+                        .map(attachment -> new Attachment(attachment.getFileName(), attachment.getBytes().toByteArray()))
+                        .collect(Collectors.toList()),
                 getNodeAddress(disputeCommunicationMessage.getMyNodeAddress()), disputeCommunicationMessage.getDate(),
                 disputeCommunicationMessage.getArrived(), disputeCommunicationMessage.getStoredInMailbox());
     }
 
     private static Message getFinalizePayoutTxRequest(Messages.FinalizePayoutTxRequest finalizePayoutTxRequest) {
-        return new FinalizePayoutTxRequest(finalizePayoutTxRequest.getTradeId(), finalizePayoutTxRequest.getSellerSignature().toByteArray(),
+        return new FinalizePayoutTxRequest(finalizePayoutTxRequest.getTradeId(),
+                finalizePayoutTxRequest.getSellerSignature().toByteArray(),
                 finalizePayoutTxRequest.getSellerPayoutAddress(), finalizePayoutTxRequest.getLockTimeAsBlockHeight(),
                 getNodeAddress(finalizePayoutTxRequest.getSenderNodeAddress()));
     }
@@ -564,8 +573,8 @@ public class ProtoBufferUtilities {
                         mbox.getSenderPubKeyForAddOperationBytes().toByteArray(),
                         mbox.getReceiverPubKeyForRemoveOperationBytes().toByteArray());
                 break;
-            case OFFER:
-                storagePayload = getOffer(protoEntry.getOffer());
+            case PB_OFFER:
+                storagePayload = getOfferPayload(protoEntry.getPbOffer());
                 break;
             default:
                 log.error("Unknown storagepayload:{}", protoEntry.getMessageCase());
@@ -574,7 +583,7 @@ public class ProtoBufferUtilities {
     }
 
     @NotNull
-    public static OfferPayload.Direction getDirection(Messages.Offer.Direction direction) {
+    public static OfferPayload.Direction getDirection(Messages.PB_Offer.Direction direction) {
         return OfferPayload.Direction.valueOf(direction.name());
     }
 

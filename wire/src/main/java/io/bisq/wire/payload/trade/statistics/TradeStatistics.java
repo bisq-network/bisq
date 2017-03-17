@@ -137,7 +137,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         return Messages.StoragePayload.newBuilder().setTradeStatistics(Messages.TradeStatistics.newBuilder()
                 .setTTL(TTL)
                 .setCurrency(currency)
-                .setDirection(Messages.Offer.Direction.forNumber(direction.ordinal()))
+                .setDirection(Messages.PB_Offer.Direction.forNumber(direction.ordinal()))
                 .setTradePrice(tradePrice)
                 .setTradeAmount(tradeAmount)
                 .setTradeDate(tradeDate)

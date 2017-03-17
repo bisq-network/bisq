@@ -267,12 +267,12 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                             .filter(tradable -> {
                                 String txId = transaction.getHashAsString();
                                 if (tradable instanceof OpenOffer)
-                                    return tradable.getOffer().getOfferFeePaymentTxID().equals(txId);
+                                    return tradable.getOffer().getOfferFeePaymentTxId().equals(txId);
                                 else if (tradable instanceof Trade) {
                                     Trade trade = (Trade) tradable;
                                     boolean isTakeOfferFeeTx = txId.equals(trade.getTakeOfferFeeTxId());
                                     boolean isOfferFeeTx = trade.getOffer() != null &&
-                                            txId.equals(trade.getOffer().getOfferFeePaymentTxID());
+                                            txId.equals(trade.getOffer().getOfferFeePaymentTxId());
                                     boolean isDepositTx = trade.getDepositTx() != null &&
                                             trade.getDepositTx().getHashAsString().equals(txId);
                                     boolean isPayoutTx = trade.getPayoutTx() != null &&

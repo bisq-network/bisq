@@ -238,8 +238,8 @@ public class Offer implements Serializable {
         return stateProperty;
     }
 
-    public void setOfferFeePaymentTxID(String offerFeePaymentTxID) {
-        offerPayload.setOfferFeePaymentTxID(offerFeePaymentTxID);
+    public void setOfferFeePaymentTxId(String offerFeePaymentTxID) {
+        offerPayload.setOfferFeePaymentTxId(offerFeePaymentTxID);
     }
 
 
@@ -412,8 +412,8 @@ public class Offer implements Serializable {
         return offerPayload.getOffererPaymentAccountId();
     }
 
-    public String getOfferFeePaymentTxID() {
-        return offerPayload.getOfferFeePaymentTxID();
+    public String getOfferFeePaymentTxId() {
+        return offerPayload.getOfferFeePaymentTxId();
     }
 
     public String getVersionNr() {

@@ -25,6 +25,7 @@ import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
+import io.bisq.core.offer.Offer;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -33,7 +34,6 @@ import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.Transitions;
 import io.bisq.wire.payload.arbitration.Dispute;
 import io.bisq.wire.payload.arbitration.DisputeResult;
-import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.trade.Contract;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -335,10 +335,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
         Contract contract = dispute.getContract();
         Coin tradeAmount = contract.getTradeAmount();
-        OfferPayload offerPayload = contract.offerPayload;
+        Offer offer = new Offer(contract.offerPayload);
         Coin available = tradeAmount
-                .add(Coin.valueOf(offerPayload.getBuyerSecurityDeposit()))
-                .add(Coin.valueOf(offerPayload.getSellerSecurityDeposit()));
+                .add(offer.getBuyerSecurityDeposit())
+                .add(offer.getSellerSecurityDeposit());
         Coin totalAmount = buyerAmount.add(sellerAmount);
         return (totalAmount.compareTo(available) == 0);
     }
@@ -347,10 +347,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Contract contract = dispute.getContract();
         Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
-        OfferPayload offerPayload = contract.offerPayload;
+        Offer offer = new Offer(contract.offerPayload);
         Coin available = contract.getTradeAmount().
-                add(Coin.valueOf(offerPayload.getBuyerSecurityDeposit()))
-                .add(Coin.valueOf(offerPayload.getSellerSecurityDeposit()));
+                add(offer.getBuyerSecurityDeposit())
+                .add(offer.getSellerSecurityDeposit());
         Coin totalAmount = buyerAmount.add(sellerAmount);
 
         if (totalAmount.compareTo(available) > 0) {
@@ -584,8 +584,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void applyPayoutAmountsToDisputeResult(Toggle selectedTradeAmountToggle) {
         Contract contract = dispute.getContract();
-        Coin buyerSecurityDeposit = Coin.valueOf(contract.offerPayload.getBuyerSecurityDeposit());
-        Coin sellerSecurityDeposit = Coin.valueOf(contract.offerPayload.getSellerSecurityDeposit());
+        Offer offer = new Offer(contract.offerPayload);
+        Coin buyerSecurityDeposit = offer.getBuyerSecurityDeposit();
+        Coin sellerSecurityDeposit = offer.getSellerSecurityDeposit();
         Coin tradeAmount = contract.getTradeAmount();
         if (selectedTradeAmountToggle == buyerGetsTradeAmountRadioButton) {
             disputeResult.setBuyerPayoutAmount(tradeAmount.add(buyerSecurityDeposit));
@@ -615,8 +616,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void applyTradeAmountRadioButtonStates() {
         Contract contract = dispute.getContract();
-        Coin buyerSecurityDeposit = Coin.valueOf(contract.offerPayload.getBuyerSecurityDeposit());
-        Coin sellerSecurityDeposit = Coin.valueOf(contract.offerPayload.getSellerSecurityDeposit());
+        Offer offer = new Offer(contract.offerPayload);
+        Coin buyerSecurityDeposit = offer.getBuyerSecurityDeposit();
+        Coin sellerSecurityDeposit = offer.getSellerSecurityDeposit();
         Coin tradeAmount = contract.getTradeAmount();
 
         Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();

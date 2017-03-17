@@ -60,7 +60,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                                 () -> {
                                     log.debug("We store now the changed txID to the offer and add that again.");
                                     // We store now the changed txID to the offer and add that again.
-                                    model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
+                                    model.offer.setOfferFeePaymentTxId(transaction.getHashAsString());
                                     model.setTransaction(transaction);
                                     model.offerBookService.addOffer(model.offer,
                                             BroadcastCreateOfferFeeTx.this::complete,

@@ -266,7 +266,7 @@ public final class Contract implements Payload {
     @Override
     public Messages.Contract toProtoBuf() {
         return Messages.Contract.newBuilder()
-                .setOffer(offerPayload.toProtoBuf().getOffer())
+                .setPbOffer(offerPayload.toProtoBuf().getPbOffer())
                 .setTradeAmount(tradeAmount)
                 .setTradePrice(tradePrice)
                 .setTakeOfferFeeTxId(takeOfferFeeTxID)

@@ -223,7 +223,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                         Res.get(contract.getPaymentMethodId()));
         }
 
-        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxID());
+        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
         if (trade.getTakeOfferFeeTxId() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), trade.getTakeOfferFeeTxId());
 

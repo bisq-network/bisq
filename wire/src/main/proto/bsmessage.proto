@@ -176,7 +176,7 @@ message Payload {
         ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 12;
         PubKeyRing pub_key_ring = 13;
         RawTransactionInput raw_transaction_input = 14;
-        Offer offer = 15;
+        PB_Offer pb_offer = 15;
         SealedAndSigned SealedAndSigned = 16;
     }
 }
@@ -195,7 +195,7 @@ message StoragePayload {
         CompensationRequestPayload compensation_request_payload = 4;
         TradeStatistics trade_statistics = 5;
         MailboxStoragePayload mailbox_storage_payload = 6;
-        Offer offer = 7;
+        PB_Offer pb_offer = 7;
     }
 }
 
@@ -259,7 +259,7 @@ message CompensationRequestPayload {
 message TradeStatistics {
     int64 TTL = 1;
     string currency = 2;
-    Offer.Direction direction = 3;
+    PB_Offer.Direction direction = 3;
     int64 trade_price = 4;
     int64 trade_amount = 5;
     int64 trade_date = 6;
@@ -280,7 +280,7 @@ message MailboxStoragePayload {
     bytes receiverPubKeyForRemoveOperationBytes = 4;
 }
 
-message Offer {
+message PB_Offer {
     enum Direction {
         BUY = 0;
         SELL = 1;
@@ -306,7 +306,7 @@ message Offer {
     NodeAddress offerer_node_address = 18;
     PubKeyRing pub_key_ring = 19;
     string offerer_payment_account_id = 20;
-    string offer_fee_payment_tx_i_d = 21;
+    string offer_fee_payment_tx_id = 21;
     string version_nr = 22;
     int64 block_height_at_offer_creation = 23;
     int64 tx_fee = 24;
@@ -447,7 +447,7 @@ message PubKeyRing {
 }
 
 message Contract {
-    Offer offer = 1;
+    PB_Offer pb_offer = 1;
     int64 trade_amount = 2;
     int64 trade_price = 3;
     string take_offer_fee_tx_id = 4;

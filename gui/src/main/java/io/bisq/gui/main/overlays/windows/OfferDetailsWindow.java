@@ -277,7 +277,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         String paymentMethodCountryCode = offer.getCountryCode();
         if (paymentMethodCountryCode != null)
             rows++;
-        if (offer.getOfferFeePaymentTxID() != null)
+        if (offer.getOfferFeePaymentTxId() != null)
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.details"), Layout.GROUP_DISTANCE);
@@ -302,8 +302,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.acceptedArbitrators"),
                 formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
-        if (offer.getOfferFeePaymentTxID() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxID());
+        if (offer.getOfferFeePaymentTxId() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
 
         if (placeOfferHandlerOptional.isPresent()) {
             addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("offerDetailsWindow.commitment"), Layout.GROUP_DISTANCE);

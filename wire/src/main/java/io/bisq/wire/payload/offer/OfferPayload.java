@@ -111,7 +111,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
     // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
     @Setter
-    private String offerFeePaymentTxID;
+    private String offerFeePaymentTxId;
 
     // New properties from v. 0.5.0.0
     private final String versionNr;
@@ -165,7 +165,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
      * @param arbitratorNodeAddresses
      * @param paymentMethodId
      * @param offererPaymentAccountId
-     * @param offerFeePaymentTxID
+     * @param offerFeePaymentTxId
      * @param countryCode
      * @param acceptedCountryCodes
      * @param bankId
@@ -201,7 +201,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                         List<NodeAddress> arbitratorNodeAddresses,
                         String paymentMethodId,
                         String offererPaymentAccountId,
-                        @Nullable String offerFeePaymentTxID,
+                        @Nullable String offerFeePaymentTxId,
                         @Nullable String countryCode,
                         @Nullable List<String> acceptedCountryCodes,
                         @Nullable String bankId,
@@ -236,7 +236,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.arbitratorNodeAddresses = arbitratorNodeAddresses;
         this.paymentMethodId = paymentMethodId;
         this.offererPaymentAccountId = offererPaymentAccountId;
-        this.offerFeePaymentTxID = Optional.ofNullable(offerFeePaymentTxID).orElse("");
+        this.offerFeePaymentTxId = Optional.ofNullable(offerFeePaymentTxId).orElse("");
         this.countryCode = Optional.ofNullable(countryCode).orElse("");
         this.acceptedCountryCodes = Optional.ofNullable(acceptedCountryCodes).orElse(Lists.newArrayList());
         this.bankId = Optional.ofNullable(bankId).orElse("");
@@ -284,7 +284,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         List<Messages.NodeAddress> arbitratorNodeAddresses = this.arbitratorNodeAddresses.stream()
                 .map(NodeAddress::toProtoBuf)
                 .collect(Collectors.toList());
-        Messages.Offer.Builder offerBuilder = Messages.Offer.newBuilder()
+        Messages.PB_Offer.Builder offerBuilder = Messages.PB_Offer.newBuilder()
                 .setTTL(TTL)
                 .setDirectionValue(direction.ordinal())
                 .setCurrencyCode(currencyCode)
@@ -315,8 +315,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setUpperClosePrice(upperClosePrice)
                 .setIsPrivateOffer(isPrivateOffer);
 
-        if (Objects.nonNull(offerFeePaymentTxID)) {
-            offerBuilder.setOfferFeePaymentTxID(offerFeePaymentTxID);
+        if (Objects.nonNull(offerFeePaymentTxId)) {
+            offerBuilder.setOfferFeePaymentTxId(offerFeePaymentTxId);
         } else {
             throw new RuntimeException("OfferPayload is in invalid state: offerFeePaymentTxID is not set when adding to P2P network.");
         }
@@ -327,6 +327,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         Optional.ofNullable(hashOfChallenge).ifPresent(offerBuilder::setHashOfChallenge);
         Optional.ofNullable(extraDataMap).ifPresent(offerBuilder::putAllExtraDataMap);
 
-        return Messages.StoragePayload.newBuilder().setOffer(offerBuilder).build();
+        return Messages.StoragePayload.newBuilder().setPbOffer(offerBuilder).build();
     }
 }
