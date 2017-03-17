@@ -47,9 +47,7 @@
         <module>network-messages</module>
         <module>network</module>
         <module>gui</module>
-        <module>headless</module>
         <module>seednode</module>
-        <module>monitor</module>
         <module>statistics</module>
         <module>provider</module>
     </modules>
