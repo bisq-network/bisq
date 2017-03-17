@@ -1,4 +1,4 @@
-<img src="https://bisq.io/images/logo.png" width="240"/>
+<img src="https://bitsquare.io/images/logo.png" width="240"/>
 
 
 What is bisq?
