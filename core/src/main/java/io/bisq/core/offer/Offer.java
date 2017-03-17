@@ -11,13 +11,11 @@ import io.bisq.core.offer.availability.OfferAvailabilityProtocol;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.offer.OfferPayload;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.payment.PaymentMethod;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
@@ -27,8 +25,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.DecimalFormat;
-import java.util.Date;
-import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -37,6 +33,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Offer implements Serializable {
 
     @Getter
+    @Delegate
     private OfferPayload offerPayload;
     @JsonExclude
     transient private OfferPayload.State state = OfferPayload.State.UNDEFINED;
@@ -227,115 +224,5 @@ public class Offer implements Serializable {
 
     public boolean isMyOffer(KeyRing keyRing) {
         return getPubKeyRing().equals(keyRing.getPubKeyRing());
-    }
-
-    /////////////////////////////////// Decorator methods ///////////////////////////////////////////
-
-    public String getShortId() {
-        return offerPayload.getShortId();
-    }
-
-    public String getId() {
-        return offerPayload.getId();
-    }
-
-    public OfferPayload.Direction getDirection() {
-        return offerPayload.getDirection();
-    }
-
-    public String getCurrencyCode() {
-        return offerPayload.getCurrencyCode();
-    }
-
-    public Coin getMinAmount() {
-        return offerPayload.getMinAmount();
-    }
-
-    public Coin getAmount() {
-        return offerPayload.getAmount();
-    }
-
-    public boolean isUseMarketBasedPrice() {
-        return offerPayload.isUseMarketBasedPrice();
-    }
-
-    public Date getDate() {
-        return offerPayload.getDate();
-    }
-
-    public double getMarketPriceMargin() {
-        return offerPayload.getMarketPriceMargin();
-    }
-
-    public PaymentMethod getPaymentMethod() {
-        return offerPayload.getPaymentMethod();
-    }
-
-    public String getOfferFeePaymentTxID() {
-        return offerPayload.getOfferFeePaymentTxID();
-    }
-
-    public PubKeyRing getPubKeyRing() {
-        return offerPayload.getPubKeyRing();
-    }
-
-    public NodeAddress getOffererNodeAddress() {
-        return offerPayload.getOffererNodeAddress();
-    }
-
-    public String getOffererPaymentAccountId() {
-        return offerPayload.getOffererPaymentAccountId();
-    }
-
-    public Coin getCreateOfferFee() {
-        return offerPayload.getCreateOfferFee();
-    }
-
-    public Coin getTxFee() {
-        return offerPayload.getTxFee();
-    }
-
-    public void setOfferFeePaymentTxID(String offerFeePaymentTxID) {
-        offerPayload.setOfferFeePaymentTxID(offerFeePaymentTxID);
-    }
-
-    public Coin getBuyerSecurityDeposit() {
-        return offerPayload.getBuyerSecurityDeposit();
-    }
-
-    public Coin getSellerSecurityDeposit() {
-        return offerPayload.getSellerSecurityDeposit();
-    }
-
-    public NodeAddress getOwnerNodeAddress() {
-        return offerPayload.getOwnerNodeAddress();
-    }
-
-    public String getCountryCode() {
-        return offerPayload.getCountryCode();
-    }
-
-    public String getBankId() {
-        return offerPayload.getBankId();
-    }
-
-    public List<String> getAcceptedCountryCodes() {
-        return offerPayload.getAcceptedCountryCodes();
-    }
-
-    public List<String> getAcceptedBankIds() {
-        return offerPayload.getAcceptedBankIds();
-    }
-
-    public List<NodeAddress> getArbitratorNodeAddresses() {
-        return offerPayload.getArbitratorNodeAddresses();
-    }
-
-    public OfferPayload.Direction getMirroredDirection() {
-        return offerPayload.getMirroredDirection();
-    }
-
-    public long getProtocolVersion() {
-        return offerPayload.getProtocolVersion();
     }
 }
