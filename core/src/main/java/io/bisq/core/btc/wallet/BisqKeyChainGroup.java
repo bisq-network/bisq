@@ -25,7 +25,7 @@ import java.security.SecureRandom;
 
 class BisqKeyChainGroup extends KeyChainGroup {
     private final boolean useBitcoinDeterministicKeyChain;
-    private int lookaheadSize;
+    private final int lookaheadSize;
 
     public boolean isUseBitcoinDeterministicKeyChain() {
         return useBitcoinDeterministicKeyChain;

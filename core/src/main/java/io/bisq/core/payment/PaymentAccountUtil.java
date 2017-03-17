@@ -29,10 +29,9 @@ public class PaymentAccountUtil {
 
     public static ObservableList<PaymentAccount> getPossiblePaymentAccounts(Offer offer, Set<PaymentAccount> paymentAccounts) {
         ObservableList<PaymentAccount> result = FXCollections.observableArrayList();
-        for (PaymentAccount paymentAccount : paymentAccounts) {
-            if (isPaymentAccountValidForOffer(offer, paymentAccount))
-                result.add(paymentAccount);
-        }
+        result.addAll(paymentAccounts.stream()
+                .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
+                .collect(Collectors.toList()));
         return result;
     }
 

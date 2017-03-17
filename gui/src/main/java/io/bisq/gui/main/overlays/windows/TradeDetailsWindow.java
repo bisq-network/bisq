@@ -54,7 +54,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
 
     private final BSFormatter formatter;
     private final DisputeManager disputeManager;
-    private TradeManager tradeManager;
+    private final TradeManager tradeManager;
     private Trade trade;
     private ChangeListener<Number> changeListener;
     private TextArea textArea;

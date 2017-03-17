@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -48,7 +49,7 @@ public class BsqWallet extends Wallet {
         UTXOProvider utxoProvider = checkNotNull(vUTXOProvider, "No UTXO provider has been set");
         // We might get duplicate outputs from the provider and from our pending tx outputs
         // To avoid duplicate entries we use a set.
-        Set<TransactionOutput> candidates = new HashSet<TransactionOutput>();
+        Set<TransactionOutput> candidates = new HashSet<>();
         try {
             int chainHeight = utxoProvider.getChainHeadHeight();
             for (UTXO output : getStoredOutputsFromUTXOProvider()) {
@@ -76,13 +77,11 @@ public class BsqWallet extends Wallet {
             // We might get outputs from pending tx which we already got form the UTXP provider. 
             // As we use a set it will not lead to duplicate entries.
             if (!excludeImmatureCoinbases || tx.isMature()) {
-                for (TransactionOutput output : tx.getOutputs()) {
-                    if (output.isAvailableForSpending() && output.isMine(this)) {
-                        candidates.add(output);
-                    }
-                }
+                candidates.addAll(tx.getOutputs().stream()
+                        .filter(output -> output.isAvailableForSpending() && output.isMine(this))
+                        .collect(Collectors.toList()));
             }
         }
-        return new ArrayList<TransactionOutput>(candidates);
+        return new ArrayList<>(candidates);
     }
 }

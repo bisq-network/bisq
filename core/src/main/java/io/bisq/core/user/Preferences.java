@@ -67,6 +67,7 @@ public final class Preferences implements Persistable {
 
 
     // Deactivate mBit for now as most screens are not supporting it yet
+    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
     private static final List<String> BTC_DENOMINATIONS = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
 
     transient static final private ArrayList<BlockChainExplorer> blockChainExplorersTestNet = new ArrayList<>(Arrays.asList(

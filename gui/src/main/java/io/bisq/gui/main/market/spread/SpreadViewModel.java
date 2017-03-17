@@ -42,8 +42,8 @@ import java.util.stream.Collectors;
 class SpreadViewModel extends ActivatableViewModel {
 
     private final OfferBook offerBook;
-    private PriceFeedService priceFeedService;
-    private BSFormatter formatter;
+    private final PriceFeedService priceFeedService;
+    private final BSFormatter formatter;
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
     final ObservableList<SpreadItem> spreadItems = FXCollections.observableArrayList();

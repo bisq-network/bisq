@@ -46,8 +46,8 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private Preferences preferences;
-    private BsqWalletService bsqWalletService;
+    private final Preferences preferences;
+    private final BsqWalletService bsqWalletService;
     private Tab selectedTab;
     private BsqWalletView bsqWalletView;
 

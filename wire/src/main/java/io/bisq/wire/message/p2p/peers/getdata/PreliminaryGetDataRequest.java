@@ -21,7 +21,7 @@ public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDat
     private final int nonce;
     private final Set<byte[]> excludedKeys;
     @Nullable
-    private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
+    private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public PreliminaryGetDataRequest(int nonce, Set<byte[]> excludedKeys) {
         this.nonce = nonce;

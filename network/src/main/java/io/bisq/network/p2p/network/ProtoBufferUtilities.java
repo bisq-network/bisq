@@ -618,7 +618,7 @@ public class ProtoBufferUtilities {
 
     @NotNull
     private static Message getGetDataResponse(Messages.Envelope envelope) {
-        HashSet<ProtectedStorageEntry> set = new HashSet<ProtectedStorageEntry>(
+        HashSet<ProtectedStorageEntry> set = new HashSet<>(
                 envelope.getGetDataResponse().getDataSetList()
                         .stream()
                         .map(protectedStorageEntry ->

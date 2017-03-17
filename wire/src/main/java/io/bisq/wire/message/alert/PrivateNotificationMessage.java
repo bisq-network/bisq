@@ -15,8 +15,8 @@ public class PrivateNotificationMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(PrivateNotificationMessage.class);
-    private NodeAddress myNodeAddress;
-    public PrivateNotification privateNotification;
+    private final NodeAddress myNodeAddress;
+    public final PrivateNotification privateNotification;
     private final String uid = UUID.randomUUID().toString();
     private final int messageVersion = Version.getP2PMessageVersion();
 

@@ -19,7 +19,7 @@ import java.io.ByteArrayInputStream;
 public class QRCodeWindow extends Overlay<QRCodeWindow> {
     private static final Logger log = LoggerFactory.getLogger(QRCodeWindow.class);
     private final ImageView qrCodeImageView;
-    private String bitcoinURI;
+    private final String bitcoinURI;
 
     public QRCodeWindow(String bitcoinURI) {
         this.bitcoinURI = bitcoinURI;

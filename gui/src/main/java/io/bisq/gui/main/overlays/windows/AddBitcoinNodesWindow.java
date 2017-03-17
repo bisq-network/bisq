@@ -42,7 +42,7 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
     private static final Logger log = LoggerFactory.getLogger(AddBitcoinNodesWindow.class);
     private Button saveButton;
-    private Preferences preferences;
+    private final Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

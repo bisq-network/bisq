@@ -38,7 +38,7 @@ public class DnsLookupTor {
     private static final Map<Byte, String> torStatusErrors = DnsLookupTor.createMap();
 
     private static Map<Byte, String> createMap() {
-        HashMap<Byte, String> map = new HashMap<Byte, String>();
+        HashMap<Byte, String> map = new HashMap<>();
         map.put(b('\u0000'), "tor succeeded");
         map.put(b('\u0001'), "tor general error");
         map.put(b('\u0002'), "tor not allowed");

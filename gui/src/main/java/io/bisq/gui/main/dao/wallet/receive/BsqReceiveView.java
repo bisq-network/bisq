@@ -59,7 +59,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter formatter;
-    private BalanceUtil balanceUtil;
+    private final BalanceUtil balanceUtil;
 
     private int gridRow = 0;
     private final String paymentLabelString;

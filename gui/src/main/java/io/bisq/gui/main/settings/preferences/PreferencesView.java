@@ -68,8 +68,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField;
     private ChangeListener<Boolean> transactionFeeFocusedListener;
     private final Preferences preferences;
-    private FeeService feeService;
-    private BSFormatter formatter;
+    private final FeeService feeService;
+    private final BSFormatter formatter;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
     private ComboBox<FiatCurrency> fiatCurrenciesComboBox;

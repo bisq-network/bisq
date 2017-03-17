@@ -82,13 +82,13 @@ class TradesChartsViewModel extends ActivatableViewModel {
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(false);
     private final ObservableList<CurrencyListItem> currencyListItems = FXCollections.observableArrayList();
-    private CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG), -1);
+    private final CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, GUIUtil.SHOW_ALL_FLAG), -1);
     final ObservableList<TradeStatistics> tradeStatisticsByCurrency = FXCollections.observableArrayList();
-    ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
-    ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
+    final ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
+    final ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
 
     TickUnit tickUnit = TickUnit.DAY;
-    int maxTicks = 30;
+    final int maxTicks = 30;
     private int selectedTabIndex;
 
 
@@ -96,6 +96,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public TradesChartsViewModel(TradeStatisticsManager tradeStatisticsManager, Preferences preferences, PriceFeedService priceFeedService, Navigation navigation, BSFormatter formatter) {
         this.tradeStatisticsManager = tradeStatisticsManager;
@@ -265,10 +266,12 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
         candleDataList.sort((o1, o2) -> (o1.tick < o2.tick ? -1 : (o1.tick == o2.tick ? 0 : 1)));
 
+        //noinspection Convert2Diamond
         priceItems.setAll(candleDataList.stream()
                 .map(e -> new XYChart.Data<Number, Number>(e.tick, e.open, e))
                 .collect(Collectors.toList()));
 
+        //noinspection Convert2Diamond
         volumeItems.setAll(candleDataList.stream()
                 .map(e -> new XYChart.Data<Number, Number>(e.tick, e.accumulatedAmount, e))
                 .collect(Collectors.toList()));
@@ -324,7 +327,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         }
     }
 
-    long getInvertedPrice(long price) {
+    private long getInvertedPrice(long price) {
         final double value = price != 0 ? 1000000000000D / price : 0;
         return MathUtils.roundDoubleToLong(value);
     }
@@ -350,7 +353,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         }
     }
 
-    long getTimeFromTick(long tick, TickUnit tickUnit) {
+    private long getTimeFromTick(long tick, TickUnit tickUnit) {
         switch (tickUnit) {
             case YEAR:
                 return TimeUnit.DAYS.toMillis(tick) * 365;

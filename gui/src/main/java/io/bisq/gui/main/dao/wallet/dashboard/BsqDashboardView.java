@@ -37,7 +37,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> {
 
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter formatter;
-    private BalanceUtil balanceUtil;
+    private final BalanceUtil balanceUtil;
 
     private final int gridRow = 0;
 

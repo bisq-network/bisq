@@ -51,12 +51,12 @@ public class VotingManager {
 
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
-    private FeeService feeService;
+    private final FeeService feeService;
     private final Storage<ArrayList<VoteItemsList>> voteItemCollectionsStorage;
-    private CompensationRequestManager compensationRequestManager;
-    private DaoPeriodService daoPeriodService;
-    private VotingDefaultValues votingDefaultValues;
-    private ArrayList<VoteItemsList> voteItemsLists = new ArrayList<>();
+    private final CompensationRequestManager compensationRequestManager;
+    private final DaoPeriodService daoPeriodService;
+    private final VotingDefaultValues votingDefaultValues;
+    private final ArrayList<VoteItemsList> voteItemsLists = new ArrayList<>();
     private VoteItemsList activeVoteItemsList;
 
     @Inject

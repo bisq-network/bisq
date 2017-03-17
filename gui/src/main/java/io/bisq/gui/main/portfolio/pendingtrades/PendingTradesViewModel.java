@@ -75,7 +75,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public final P2PService p2PService;
     public final User user;
-    private ClosedTradableManager closedTradableManager;
+    private final ClosedTradableManager closedTradableManager;
     public final Clock clock;
 
     private final ObjectProperty<BuyerState> buyerState = new SimpleObjectProperty<>();

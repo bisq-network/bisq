@@ -54,7 +54,7 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class ContractWindow extends Overlay<ContractWindow> {
     protected static final Logger log = LoggerFactory.getLogger(ContractWindow.class);
 
-    private DisputeManager disputeManager;
+    private final DisputeManager disputeManager;
     private final BSFormatter formatter;
     private Dispute dispute;
 

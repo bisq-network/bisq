@@ -73,6 +73,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -220,10 +221,9 @@ public class TradeManager {
         for (Trade trade : removePreparedTradeList)
             removePreparedTrade(trade);
 
-        for (Tradable tradable : closedTradableManager.getClosedTrades()) {
-            if (tradable instanceof Trade)
-                tradesForStatistics.add((Trade) tradable);
-        }
+        tradesForStatistics.addAll(closedTradableManager.getClosedTrades().stream()
+                .filter(tradable -> tradable instanceof Trade).map(tradable -> (Trade) tradable)
+                .collect(Collectors.toList()));
 
         // We start later to have better connectivity to the network
         UserThread.runAfter(() -> publishTradeStatistics(tradesForStatistics),

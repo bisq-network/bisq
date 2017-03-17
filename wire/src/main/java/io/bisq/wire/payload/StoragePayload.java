@@ -1,7 +1,5 @@
 package io.bisq.wire.payload;
 
-import io.bisq.wire.payload.p2p.NodeAddress;
-
 import java.security.PublicKey;
 
 /**
@@ -19,9 +17,6 @@ public interface StoragePayload extends ExpirablePayload {
      * OwnerPubKey has to be equal to the ownerPubKey of the ProtectedData
      *
      * @return The public key of the data owner.
-     * @see ProtectedStorageEntry#ownerPubKey
-     * @see P2PDataStorage#add(ProtectedStorageEntry, NodeAddress)
-     * @see P2PDataStorage#remove(ProtectedStorageEntry, NodeAddress)
      */
     PublicKey getOwnerPubKey();
 }

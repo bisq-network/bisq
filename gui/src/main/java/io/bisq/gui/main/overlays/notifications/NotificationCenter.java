@@ -51,7 +51,7 @@ public class NotificationCenter {
 
     private final TradeManager tradeManager;
     private final DisputeManager disputeManager;
-    private Preferences preferences;
+    private final Preferences preferences;
     private final Navigation navigation;
 
     private final Map<String, Subscription> disputeStateSubscriptionsMap = new HashMap<>();

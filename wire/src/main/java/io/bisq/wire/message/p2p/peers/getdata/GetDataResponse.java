@@ -22,7 +22,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage {
     public final boolean isGetUpdatedDataResponse;
 
     @Nullable
-    private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
+    private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public GetDataResponse(HashSet<ProtectedStorageEntry> dataSet, int requestNonce, boolean isGetUpdatedDataResponse) {
         this.dataSet = dataSet;

@@ -106,27 +106,27 @@ public class NetworkStressTest {
     /**
      * Maximum delay in seconds for a node to receive preliminary data.
      */
-    private static long MAX_PRELIMINARY_DELAY_SECS = 5;
+    private static final long MAX_PRELIMINARY_DELAY_SECS = 5;
     /**
      * Maximum delay in seconds for a node to bootstrap after receiving preliminary data.
      */
-    private static long MAX_BOOTSTRAP_DELAY_SECS = 5;
+    private static final long MAX_BOOTSTRAP_DELAY_SECS = 5;
     /**
      * Maximum delay in seconds for a node to shutdown.
      */
-    private static long MAX_SHUTDOWN_DELAY_SECS = 2;
+    private static final long MAX_SHUTDOWN_DELAY_SECS = 2;
     /**
      * Minimum delay between direct network_messages in milliseconds, 25% larger than throttle limit.
      */
-    private static long MIN_DIRECT_DELAY_MILLIS = Math.round(1.25 * (1.0 / Connection.MSG_THROTTLE_PER_SEC) * 1000);
+    private static final long MIN_DIRECT_DELAY_MILLIS = Math.round(1.25 * (1.0 / Connection.MSG_THROTTLE_PER_SEC) * 1000);
     /**
      * Maximum delay between direct network_messages in milliseconds, 10 times larger than minimum.
      */
-    private static long MAX_DIRECT_DELAY_MILLIS = 10 * MIN_DIRECT_DELAY_MILLIS;
+    private static final long MAX_DIRECT_DELAY_MILLIS = 10 * MIN_DIRECT_DELAY_MILLIS;
     /**
      * Estimated delay in seconds to send or receive a mailbox message.
      */
-    private static long MAILBOX_DELAY_SECS = 2;
+    private static final long MAILBOX_DELAY_SECS = 2;
 
     // Instance fields
 
@@ -149,19 +149,19 @@ public class NetworkStressTest {
     /**
      * The repository of seed nodes used in the test.
      */
-    private SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
+    private final SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
     /**
      * A list of peer nodes represented as P2P services.
      */
-    private List<P2PService> peerNodes = new ArrayList<>();
+    private final List<P2PService> peerNodes = new ArrayList<>();
     /**
      * A list of peer node's service ports.
      */
-    private List<Integer> peerPorts = new ArrayList<>();
+    private final List<Integer> peerPorts = new ArrayList<>();
     /**
      * A list of peer node's public key rings.
      */
-    private List<PubKeyRing> peerPKRings = new ArrayList<>();
+    private final List<PubKeyRing> peerPKRings = new ArrayList<>();
 
     /**
      * Number of direct network_messages to be sent by each peer.
@@ -813,7 +813,7 @@ final class StressTestDirectMessage implements DirectMessage {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private final int messageVersion = Version.getP2PMessageVersion();
 
-    private String data;
+    private final String data;
 
     StressTestDirectMessage(String data) {
         this.data = data;
@@ -839,8 +839,8 @@ final class StressTestMailboxMessage implements MailboxMessage {
     private final int messageVersion = Version.getP2PMessageVersion();
 
     private final String uid = UUID.randomUUID().toString();
-    private NodeAddress senderNodeAddress;
-    private String data;
+    private final NodeAddress senderNodeAddress;
+    private final String data;
 
     StressTestMailboxMessage(NodeAddress sender, String data) {
         this.senderNodeAddress = sender;

@@ -26,7 +26,7 @@ public class FiatValidator extends NumberValidator {
     public static final double MAX_VALUE = 1000000000000D;
 
     public double minValue = MIN_FIAT_VALUE;
-    public double maxValue = MAX_VALUE;
+    public final double maxValue = MAX_VALUE;
 
     @Inject
     public FiatValidator() {

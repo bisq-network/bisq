@@ -69,7 +69,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final int port;
     private final int maxConnections;
     private final File torDir;
-    private Clock clock;
+    private final Clock clock;
     //TODO optional can be removed as seednode are created with those objects now
     private final Optional<EncryptionService> optionalEncryptionService;
     private final Optional<KeyRing> optionalKeyRing;
@@ -98,7 +98,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private Subscription networkReadySubscription;
     private boolean isBootstrapped;
     private KeepAliveManager keepAliveManager;
-    private Socks5ProxyProvider socks5ProxyProvider;
+    private final Socks5ProxyProvider socks5ProxyProvider;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.Immutable;
 import java.security.PublicKey;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -89,7 +89,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
 
     @Override
     public List<Integer> getRequiredCapabilities() {
-        return Arrays.asList(
+        return Collections.singletonList(
                 Capabilities.Capability.TRADE_STATISTICS.ordinal()
         );
     }

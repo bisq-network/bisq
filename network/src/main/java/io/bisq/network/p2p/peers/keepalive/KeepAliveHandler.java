@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 class KeepAliveHandler implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(KeepAliveHandler.class);
 
-    private static int DELAY_MS = 10_000;
+    private static final int DELAY_MS = 10_000;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

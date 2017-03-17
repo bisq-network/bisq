@@ -12,6 +12,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.network.http.HttpClient;
 import javafx.beans.property.*;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -226,7 +227,7 @@ public class PriceFeedService {
             }
 
             @Override
-            public void onFailure(Throwable throwable) {
+            public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> faultHandler.handleFault("Could not load marketPrices", throwable));
             }
         });

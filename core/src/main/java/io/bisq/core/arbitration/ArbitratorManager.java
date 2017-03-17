@@ -89,7 +89,7 @@ public class ArbitratorManager {
     private final KeyRing keyRing;
     private final ArbitratorService arbitratorService;
     private final User user;
-    private Preferences preferences;
+    private final Preferences preferences;
     private final ObservableMap<NodeAddress, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
     private final List<Arbitrator> persistedAcceptedArbitrators;
     private Timer republishArbitratorTimer, retryRepublishArbitratorTimer;

@@ -17,7 +17,7 @@ public class FrameRateTimer implements Timer, Runnable {
     private Runnable runnable;
     private long startTs;
     private boolean isPeriodically;
-    private String uid = UUID.randomUUID().toString();
+    private final String uid = UUID.randomUUID().toString();
     private volatile boolean stopped;
 
     public FrameRateTimer() {

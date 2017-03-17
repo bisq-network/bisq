@@ -42,10 +42,10 @@ import java.util.stream.Collectors;
 class AltCoinAccountsDataModel extends ActivatableDataModel {
 
     private final User user;
-    private Preferences preferences;
+    private final Preferences preferences;
     private final OpenOfferManager openOfferManager;
     private final TradeManager tradeManager;
-    private Stage stage;
+    private final Stage stage;
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
     private final SetChangeListener<PaymentAccount> setChangeListener;
     private final String accountsFileName = "AltcoinPaymentAccounts";

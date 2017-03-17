@@ -40,7 +40,7 @@ class BsqCoinSelector extends BisqDefaultCoinSelector {
 
     private final boolean permitForeignPendingTx;
 
-    private Map<Script, Set<BsqUTXO>> utxoSetByScriptMap = new HashMap<>();
+    private final Map<Script, Set<BsqUTXO>> utxoSetByScriptMap = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

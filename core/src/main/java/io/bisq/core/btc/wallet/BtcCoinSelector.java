@@ -32,7 +32,7 @@ import java.util.Set;
 class BtcCoinSelector extends BisqDefaultCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(BtcCoinSelector.class);
 
-    private NetworkParameters params;
+    private final NetworkParameters params;
     private final Set<Address> addresses;
     private final boolean permitForeignPendingTx;
 

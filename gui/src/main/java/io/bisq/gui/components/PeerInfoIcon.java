@@ -27,8 +27,8 @@ public class PeerInfoIcon extends Group {
     private final String hostName;
     private final String tooltipText;
     private final int numTrades;
-    private PrivateNotificationManager privateNotificationManager;
-    private Offer offer;
+    private final PrivateNotificationManager privateNotificationManager;
+    private final Offer offer;
     private final Map<String, String> peerTagMap;
     private final Label numTradesLabel;
     private final double SIZE = 26;

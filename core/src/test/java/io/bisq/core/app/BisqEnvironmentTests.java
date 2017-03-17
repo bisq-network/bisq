@@ -15,9 +15,8 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.gui.app;
+package io.bisq.core.app;
 
-import io.bisq.core.app.BisqEnvironment;
 import org.junit.Test;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MutablePropertySources;

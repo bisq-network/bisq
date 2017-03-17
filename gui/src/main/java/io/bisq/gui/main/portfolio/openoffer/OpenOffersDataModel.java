@@ -35,11 +35,11 @@ import java.util.stream.Collectors;
 
 class OpenOffersDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
-    private PriceFeedService priceFeedService;
+    private final PriceFeedService priceFeedService;
 
     private final ObservableList<OpenOfferListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<OpenOffer> tradesListChangeListener;
-    private ChangeListener<Number> currenciesUpdateFlagPropertyListener;
+    private final ChangeListener<Number> currenciesUpdateFlagPropertyListener;
 
     @Inject
     public OpenOffersDataModel(OpenOfferManager openOfferManager, PriceFeedService priceFeedService) {

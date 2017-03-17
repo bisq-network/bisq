@@ -30,7 +30,7 @@ public final class CompensationRequestVoteItemCollection extends VoteItem implem
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestVoteItemCollection.class);
 
-    private List<CompensationRequestVoteItem> compensationRequestVoteItems = new ArrayList<>();
+    private final List<CompensationRequestVoteItem> compensationRequestVoteItems = new ArrayList<>();
 
     public List<CompensationRequestVoteItem> getCompensationRequestVoteItems() {
         return compensationRequestVoteItems;

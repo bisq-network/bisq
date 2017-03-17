@@ -39,10 +39,10 @@ public class RestartUtil {
             // program main is a jar
             if (mainCommand[0].endsWith(".jar")) {
                 // if it's a jar, add -jar mainJar
-                cmd.append("-jar " + new File(mainCommand[0]).getPath());
+                cmd.append("-jar ").append(new File(mainCommand[0]).getPath());
             } else {
                 // else it's a .class, add the classpath and mainClass
-                cmd.append("-cp \"" + System.getProperty("java.class.path") + "\" " + mainCommand[0]);
+                cmd.append("-cp \"").append(System.getProperty("java.class.path")).append("\" ").append(mainCommand[0]);
             }
             // finally add program arguments
             for (int i = 1; i < mainCommand.length; i++) {

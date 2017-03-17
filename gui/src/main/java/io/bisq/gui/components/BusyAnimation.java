@@ -16,7 +16,7 @@ public class BusyAnimation extends ImageView {
     private Timer timer;
     private final int increment = 36;
     private int rotation;
-    private BooleanProperty isRunningProperty = new SimpleBooleanProperty();
+    private final BooleanProperty isRunningProperty = new SimpleBooleanProperty();
 
     public BusyAnimation() {
         this(true);

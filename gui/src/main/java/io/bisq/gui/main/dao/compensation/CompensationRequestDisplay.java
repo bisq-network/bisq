@@ -33,7 +33,7 @@ import static io.bisq.gui.util.FormBuilder.addTitledGroupBg;
 public class CompensationRequestDisplay {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestDisplay.class);
 
-    private GridPane gridPane;
+    private final GridPane gridPane;
     public InputTextField uidTextField, nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
             startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
     private int gridRow = 0;

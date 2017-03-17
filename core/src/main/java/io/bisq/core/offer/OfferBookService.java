@@ -54,7 +54,7 @@ public class OfferBookService {
     }
 
     private final P2PService p2PService;
-    private PriceFeedService priceFeedService;
+    private final PriceFeedService priceFeedService;
     private final Storage<PlainTextWrapper> offersJsonStorage;
     private final List<OfferBookChangedListener> offerBookChangedListeners = new LinkedList<>();
 

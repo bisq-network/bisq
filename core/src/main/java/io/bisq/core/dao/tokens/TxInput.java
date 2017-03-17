@@ -21,7 +21,7 @@ import java.util.UUID;
 
 public class TxInput {
     public final String id;
-    public TxOutput output;
+    public final TxOutput output;
     public Tx tx;
     public long value;
     public int index;

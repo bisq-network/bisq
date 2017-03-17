@@ -33,10 +33,9 @@ public class PeerServiceTest {
     private CountDownLatch latch;
     private int sleepTime;
     private DummySeedNode seedNode1, seedNode2, seedNode3;
-    private Set<NodeAddress> seedNodeAddresses = new HashSet<>();
-    private List<DummySeedNode> seedNodes = new ArrayList<>();
-    private String test_dummy_dir = "test_dummy_dir";
-    ;
+    private final Set<NodeAddress> seedNodeAddresses = new HashSet<>();
+    private final List<DummySeedNode> seedNodes = new ArrayList<>();
+    private final String test_dummy_dir = "test_dummy_dir";
 
     @Before
     public void setup() throws InterruptedException {

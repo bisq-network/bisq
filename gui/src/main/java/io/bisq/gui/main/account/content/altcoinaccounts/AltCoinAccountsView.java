@@ -61,7 +61,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
     private final InputValidator inputValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
-    private BSFormatter formatter;
+    private final BSFormatter formatter;
 
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;

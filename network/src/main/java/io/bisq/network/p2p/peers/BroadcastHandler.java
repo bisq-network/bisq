@@ -56,7 +56,7 @@ public class BroadcastHandler implements PeerManager.Listener {
 
     private final NetworkNode networkNode;
     public final String uid;
-    private PeerManager peerManager;
+    private final PeerManager peerManager;
     private boolean stopped = false;
     private int numOfCompletedBroadcasts = 0;
     private int numOfFailedBroadcasts = 0;

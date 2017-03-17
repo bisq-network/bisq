@@ -64,7 +64,7 @@ abstract class BankForm extends PaymentMethodForm {
     private ComboBox<String> accountTypeComboBox;
     private boolean validatorsApplied;
     private boolean useHolderID;
-    private Runnable closeHandler;
+    private final Runnable closeHandler;
     private ComboBox<TradeCurrency> currencyComboBox;
 
     static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {

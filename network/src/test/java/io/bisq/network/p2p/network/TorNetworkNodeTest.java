@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import io.bisq.network.p2p.mocks.MockPayload;
-import io.bisq.wire.message.Message;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -79,12 +78,9 @@ public class TorNetworkNodeTest {
 
 
         latch = new CountDownLatch(2);
-        node1.addMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message message, Connection connection) {
-                log.debug("onMessage node1 " + message);
-                latch.countDown();
-            }
+        node1.addMessageListener((message, connection) -> {
+            log.debug("onMessage node1 " + message);
+            latch.countDown();
         });
         SettableFuture<Connection> future = node2.sendMessage(node1.getNodeAddress(), new MockPayload("msg1"));
         Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -157,12 +153,9 @@ public class TorNetworkNodeTest {
         latch.await();
 
         latch = new CountDownLatch(2);
-        node2.addMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message message, Connection connection) {
-                log.debug("onMessage node2 " + message);
-                latch.countDown();
-            }
+        node2.addMessageListener((message, connection) -> {
+            log.debug("onMessage node2 " + message);
+            latch.countDown();
         });
         SettableFuture<Connection> future = node1.sendMessage(node2.getNodeAddress(), new MockPayload("msg1"));
         Futures.addCallback(future, new FutureCallback<Connection>() {

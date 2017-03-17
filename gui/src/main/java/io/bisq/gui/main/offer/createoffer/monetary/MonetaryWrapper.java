@@ -40,9 +40,7 @@ public abstract class MonetaryWrapper {
         if (o == null || o.getClass() != getClass())
             return false;
         final Monetary otherMonetary = ((MonetaryWrapper) o).getMonetary();
-        if (monetary.getValue() != otherMonetary.getValue())
-            return false;
-        return true;
+        return monetary.getValue() == otherMonetary.getValue();
     }
 
     @Override

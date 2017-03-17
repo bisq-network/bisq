@@ -60,7 +60,7 @@ public class BSFormatter {
 
     // format is like: 1,00  never more then 2 decimals
     protected final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0);
-    protected DecimalFormat decimalFormat = new DecimalFormat("#.#");
+    protected final DecimalFormat decimalFormat = new DecimalFormat("#.#");
 
 
     @Inject
@@ -426,25 +426,17 @@ public class BSFormatter {
     }
 
     public double parseNumberStringToDouble(String percentString) throws NumberFormatException {
-        try {
-            String input = percentString.replace(",", ".");
-            input = input.replace(" ", "");
-            return Double.parseDouble(input);
-        } catch (NumberFormatException e) {
-            throw e;
-        }
+        String input = percentString.replace(",", ".");
+        input = input.replace(" ", "");
+        return Double.parseDouble(input);
     }
 
     public double parsePercentStringToDouble(String percentString) throws NumberFormatException {
-        try {
-            String input = percentString.replace("%", "");
-            input = input.replace(",", ".");
-            input = input.replace(" ", "");
-            double value = Double.parseDouble(input);
-            return value / 100d;
-        } catch (NumberFormatException e) {
-            throw e;
-        }
+        String input = percentString.replace("%", "");
+        input = input.replace(",", ".");
+        input = input.replace(" ", "");
+        double value = Double.parseDouble(input);
+        return value / 100d;
     }
 
     protected String cleanInput(String input) {

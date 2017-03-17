@@ -24,8 +24,8 @@ public class TxOutput {
     public Tx tx;
     public TxInput inputOfSpendingTx;
     public boolean isSpent;
-    public String address;
-    public long value;
+    public final String address;
+    public final long value;
     public int index;
     public boolean isToken;
 

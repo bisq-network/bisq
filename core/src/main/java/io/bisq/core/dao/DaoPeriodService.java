@@ -53,7 +53,7 @@ public class DaoPeriodService {
     private final VotingDefaultValues votingDefaultValues;
     private final VotingService votingService;
 
-    private Phase phase = Phase.UNDEFINED;
+    private final Phase phase = Phase.UNDEFINED;
     private int bestChainHeight;
 
 

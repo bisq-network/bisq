@@ -88,8 +88,6 @@ public class FileUtil {
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 fileOutputStream.write(buffer, 0, bytesRead);
             }
-        } catch (IOException e) {
-            throw e;
         }
     }
 }

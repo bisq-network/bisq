@@ -37,9 +37,9 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     public final AvailabilityResult availabilityResult;
 
     // TODO keep for backward compatibility. Can be removed once everyone is on v0.4.9
-    public boolean isAvailable;
+    public final boolean isAvailable;
     @Nullable
-    private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
+    private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult) {
         super(offerId);

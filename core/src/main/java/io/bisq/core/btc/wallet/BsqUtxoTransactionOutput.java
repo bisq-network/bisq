@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 
 public class BsqUtxoTransactionOutput extends TransactionOutput {
     private static final Logger log = LoggerFactory.getLogger(BsqUtxoTransactionOutput.class);
-    private UTXO output;
-    private int chainHeight;
+    private final UTXO output;
+    private final int chainHeight;
 
     /**
      * Construct a free standing Transaction Output.

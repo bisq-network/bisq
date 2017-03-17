@@ -120,7 +120,7 @@ public class EncryptionServiceTests {
     }
 
     private static class MockMessage implements Message {
-        public int nonce;
+        public final int nonce;
 
         public MockMessage(int nonce) {
             this.nonce = nonce;
@@ -141,7 +141,7 @@ public class EncryptionServiceTests {
 final class TestMessage implements MailboxMessage {
     public String data = "test";
     private final int messageVersion = Version.getP2PMessageVersion();
-    private String uid;
+    private final String uid;
 
     public TestMessage(String data) {
         this.data = data;

@@ -102,10 +102,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final Stage stage;
     protected final BSFormatter formatter;
     private final DisputeSummaryWindow disputeSummaryWindow;
-    private PrivateNotificationManager privateNotificationManager;
+    private final PrivateNotificationManager privateNotificationManager;
     private final ContractWindow contractWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
-    private P2PService p2PService;
+    private final P2PService p2PService;
 
     private final List<Attachment> tempAttachments = new ArrayList<>();
 
@@ -253,7 +253,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 StringBuilder stringBuilder = new StringBuilder();
 
                 // We don't translate that as it is not intended for the public
-                stringBuilder.append("Summary of all disputes (No. of disputes: " + disputeGroups.size() + ")\n\n");
+                stringBuilder.append("Summary of all disputes (No. of disputes: ").append(disputeGroups.size()).append(")\n\n");
                 disputeGroups.stream().forEach(disputeGroup -> {
                     Dispute dispute0 = disputeGroup.get(0);
                     stringBuilder.append("##########################################################################################/\n")

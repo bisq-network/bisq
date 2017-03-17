@@ -51,7 +51,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private Preferences preferences;
+    private final Preferences preferences;
     private Tab selectedTab;
     Tab arbitratorRegistrationTab;
     private ArbitratorRegistrationView arbitratorRegistrationView;

@@ -46,8 +46,8 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private String hostName;
     private int numTrades;
     private ChangeListener<Boolean> focusListener;
-    private PrivateNotificationManager privateNotificationManager;
-    private Offer offer;
+    private final PrivateNotificationManager privateNotificationManager;
+    private final Offer offer;
     private EventHandler<KeyEvent> keyEventEventHandler;
 
 

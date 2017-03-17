@@ -28,8 +28,8 @@ import java.util.Set;
 public class TransactionParser {
     private static final Logger log = LoggerFactory.getLogger(TransactionParser.class);
 
-    private String genesisTxId;
-    private TxService txService;
+    private final String genesisTxId;
+    private final TxService txService;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

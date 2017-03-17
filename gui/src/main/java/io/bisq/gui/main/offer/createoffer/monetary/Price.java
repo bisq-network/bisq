@@ -18,7 +18,7 @@ import java.text.DecimalFormat;
 public class Price extends MonetaryWrapper {
     private static final Logger log = LoggerFactory.getLogger(Price.class);
 
-    private DecimalFormat decimalFormat = new DecimalFormat("#.#");
+    private final DecimalFormat decimalFormat = new DecimalFormat("#.#");
 
     public Price(Monetary monetary) {
         super(monetary);

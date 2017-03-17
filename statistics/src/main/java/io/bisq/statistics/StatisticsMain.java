@@ -41,7 +41,7 @@ import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class StatisticsMain extends BisqExecutable {
     private static final Logger log = LoggerFactory.getLogger(StatisticsMain.class);
-    private static long MAX_MEMORY_MB_DEFAULT = 400;
+    private static final long MAX_MEMORY_MB_DEFAULT = 400;
     private static final long CHECK_MEMORY_PERIOD_SEC = 3 * 60;
     private Statistics statistics;
     private volatile boolean stopped;

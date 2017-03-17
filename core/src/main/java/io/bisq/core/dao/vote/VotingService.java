@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 public class VotingService {
     private static final Logger log = LoggerFactory.getLogger(VotingService.class);
-    private VotingDefaultValues votingDefaultValues;
+    private final VotingDefaultValues votingDefaultValues;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

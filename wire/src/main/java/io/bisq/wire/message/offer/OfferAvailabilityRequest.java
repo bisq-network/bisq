@@ -35,7 +35,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     private final PubKeyRing pubKeyRing;
     public final long takersTradePrice;
     @Nullable
-    private ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
+    private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public OfferAvailabilityRequest(String offerId, PubKeyRing pubKeyRing, long takersTradePrice) {
         super(offerId);

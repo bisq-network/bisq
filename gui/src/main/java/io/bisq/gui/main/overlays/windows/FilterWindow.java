@@ -47,7 +47,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
     private Button sendButton;
     private SendFilterMessageHandler sendFilterMessageHandler;
     private RemoveFilterMessageHandler removeFilterMessageHandler;
-    private FilterManager filterManager;
+    private final FilterManager filterManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -18,7 +18,7 @@ public class TestUtils {
     private static final Logger log = LoggerFactory.getLogger(TestUtils.class);
 
     public static int sleepTime;
-    public static String test_dummy_dir = "test_dummy_dir";
+    public static final String test_dummy_dir = "test_dummy_dir";
 
     public static KeyPair generateKeyPair() throws NoSuchAlgorithmException {
         long ts = System.currentTimeMillis();

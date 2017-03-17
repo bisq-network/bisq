@@ -39,7 +39,6 @@ import io.bisq.gui.main.settings.SettingsView;
 import io.bisq.gui.main.settings.preferences.PreferencesView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.locale.*;
 import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.p2p.NodeAddress;
@@ -73,9 +72,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final P2PService p2PService;
     final PriceFeedService priceFeedService;
     private Set<String> tradeCurrencyCodes = new HashSet<>();
-    private ClosedTradableManager closedTradableManager;
-    private FilterManager filterManager;
-    private Navigation navigation;
+    private final ClosedTradableManager closedTradableManager;
+    private final FilterManager filterManager;
+    private final Navigation navigation;
     final BSFormatter formatter;
 
     private final FilteredList<OfferBookListItem> filteredItems;

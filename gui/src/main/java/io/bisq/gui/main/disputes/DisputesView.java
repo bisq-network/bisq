@@ -53,9 +53,9 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     private final Navigation navigation;
     private final ArbitratorManager arbitratorManager;
-    private DisputeManager disputeManager;
+    private final DisputeManager disputeManager;
     private final KeyRing keyRing;
-    private Preferences preferences;
+    private final Preferences preferences;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;

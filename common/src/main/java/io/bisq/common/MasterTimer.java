@@ -23,7 +23,7 @@ public class MasterTimer {
         }, FRAME_INTERVAL_MS, FRAME_INTERVAL_MS);
     }
 
-    private static Set<Runnable> listeners = new CopyOnWriteArraySet<>();
+    private static final Set<Runnable> listeners = new CopyOnWriteArraySet<>();
 
     public static void addListener(Runnable runnable) {
         listeners.add(runnable);

@@ -46,11 +46,11 @@ import java.util.List;
 public class CompensationViewItem {
     private static final Logger log = LoggerFactory.getLogger(CompensationViewItem.class);
 
-    private static List<CompensationViewItem> instances = new ArrayList<>();
+    private static final List<CompensationViewItem> instances = new ArrayList<>();
 
     private final Button removeButton;
     private final CheckBox acceptCheckBox, declineCheckBox;
-    public CompensationRequestVoteItem compensationRequestVoteItem;
+    public final CompensationRequestVoteItem compensationRequestVoteItem;
     private Pane owner;
 
     public static void attach(CompensationRequestVoteItem compensationRequestVoteItem, VBox vBox, DoubleProperty labelWidth, Runnable removeHandler) {

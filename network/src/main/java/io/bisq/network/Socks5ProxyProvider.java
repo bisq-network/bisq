@@ -28,11 +28,11 @@ public class Socks5ProxyProvider {
 
     // proxy used for btc network
     @Nullable
-    private Socks5Proxy socks5ProxyBtc;
+    private final Socks5Proxy socks5ProxyBtc;
 
     // if defined proxy used for http requests
     @Nullable
-    private Socks5Proxy socks5ProxyHttp;
+    private final Socks5Proxy socks5ProxyHttp;
 
     @Inject
     public Socks5ProxyProvider(@Named(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) String socks5ProxyBtcAddress,

@@ -28,12 +28,12 @@ public class TradeStatisticsManager {
     private static final Logger log = LoggerFactory.getLogger(TradeStatisticsManager.class);
 
     private final Storage<HashSet<TradeStatistics>> statisticsStorage;
-    private Storage<PlainTextWrapper> fiatCurrencyListJsonStorage;
-    private Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage;
-    private Storage<PlainTextWrapper> statisticsJsonStorage;
-    private boolean dumpStatistics;
-    private ObservableSet<TradeStatistics> observableTradeStatisticsSet = FXCollections.observableSet();
-    private HashSet<TradeStatistics> tradeStatisticsSet = new HashSet<>();
+    private final Storage<PlainTextWrapper> fiatCurrencyListJsonStorage;
+    private final Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage;
+    private final Storage<PlainTextWrapper> statisticsJsonStorage;
+    private final boolean dumpStatistics;
+    private final ObservableSet<TradeStatistics> observableTradeStatisticsSet = FXCollections.observableSet();
+    private final HashSet<TradeStatistics> tradeStatisticsSet = new HashSet<>();
 
     @Inject
     public TradeStatisticsManager(Storage<HashSet<TradeStatistics>> statisticsStorage,

@@ -58,8 +58,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     Button exportButton;
     private final OfferDetailsWindow offerDetailsWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
-    private PrivateNotificationManager privateNotificationManager;
-    private Stage stage;
+    private final PrivateNotificationManager privateNotificationManager;
+    private final Stage stage;
     private SortedList<ClosedTradableListItem> sortedList;
 
     @Inject

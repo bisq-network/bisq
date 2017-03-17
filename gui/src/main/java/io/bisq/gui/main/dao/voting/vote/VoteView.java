@@ -71,21 +71,21 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     private ComboBox<CompensationRequestVoteItem> compensationRequestsComboBox;
 
     private int gridRow = 0;
-    private CompensationRequestManager compensationRequestManager;
-    private BsqWalletService bsqWalletService;
-    private BtcWalletService btcWalletService;
-    private FeeService feeService;
-    private BsqFormatter bsqFormatter;
-    private BSFormatter btcFormatter;
-    private VotingManager voteManager;
+    private final CompensationRequestManager compensationRequestManager;
+    private final BsqWalletService bsqWalletService;
+    private final BtcWalletService btcWalletService;
+    private final FeeService feeService;
+    private final BsqFormatter bsqFormatter;
+    private final BSFormatter btcFormatter;
+    private final VotingManager voteManager;
     private Button voteButton;
     private List<CompensationRequest> compensationRequests;
     private TitledGroupBg compensationRequestsTitledGroupBg, parametersTitledGroupBg;
     private VoteItemsList voteItemsList;
     private CompensationRequestVoteItemCollection compensationRequestVoteItemCollection;
     private VBox parametersVBox, compensationRequestsVBox;
-    private DoubleProperty parametersLabelWidth = new SimpleDoubleProperty();
-    private DoubleProperty compensationRequestsLabelWidth = new SimpleDoubleProperty();
+    private final DoubleProperty parametersLabelWidth = new SimpleDoubleProperty();
+    private final DoubleProperty compensationRequestsLabelWidth = new SimpleDoubleProperty();
     private ChangeListener<Number> numberChangeListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -36,7 +36,7 @@ import java.util.List;
 class BtcCompensationRequestFeeCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(BtcCompensationRequestFeeCoinSelector.class);
 
-    private Wallet wallet;
+    private final Wallet wallet;
 
     public BtcCompensationRequestFeeCoinSelector(Wallet wallet) {
         this.wallet = wallet;

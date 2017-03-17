@@ -99,8 +99,8 @@ public abstract class Overlay<T extends Overlay> {
         Warning(AnimationType.ScaleDownToCenter, ChangeBackgroundType.BlurLight),
         Error(AnimationType.ScaleDownToCenter, ChangeBackgroundType.BlurLight);
 
-        public AnimationType animationType;
-        public ChangeBackgroundType changeBackgroundType;
+        public final AnimationType animationType;
+        public final ChangeBackgroundType changeBackgroundType;
 
         Type(AnimationType animationType, ChangeBackgroundType changeBackgroundType) {
             this.animationType = animationType;

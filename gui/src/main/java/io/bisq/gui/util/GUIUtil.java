@@ -181,15 +181,16 @@ public class GUIUtil {
             public String toString(CurrencyListItem item) {
                 TradeCurrency tradeCurrency = item.tradeCurrency;
                 String code = tradeCurrency.getCode();
-                if (code.equals(GUIUtil.SHOW_ALL_FLAG))
-                    return "▶ " + Res.get("list.currency.showAll");
-                else if (code.equals(GUIUtil.EDIT_FLAG))
-                    return "▼ " + Res.get("list.currency.editList");
-                else {
-                    String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
-                    if (preferences.getSortMarketCurrenciesNumerically())
-                        displayString += " - " + item.numTrades + " " + postFix;
-                    return tradeCurrency.getDisplayPrefix() + displayString;
+                switch (code) {
+                    case GUIUtil.SHOW_ALL_FLAG:
+                        return "▶ " + Res.get("list.currency.showAll");
+                    case GUIUtil.EDIT_FLAG:
+                        return "▼ " + Res.get("list.currency.editList");
+                    default:
+                        String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
+                        if (preferences.getSortMarketCurrenciesNumerically())
+                            displayString += " - " + item.numTrades + " " + postFix;
+                        return tradeCurrency.getDisplayPrefix() + displayString;
                 }
             }
 

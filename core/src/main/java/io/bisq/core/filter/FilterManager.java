@@ -47,7 +47,7 @@ import static org.bitcoinj.core.Utils.HEX;
 public class FilterManager {
     private static final Logger log = LoggerFactory.getLogger(FilterManager.class);
 
-    private P2PService p2PService;
+    private final P2PService p2PService;
     private final KeyRing keyRing;
     private final User user;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();

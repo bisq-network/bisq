@@ -16,8 +16,8 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     private static final Logger log = LoggerFactory.getLogger(Broadcaster.class);
 
     private final NetworkNode networkNode;
-    private PeerManager peerManager;
-    private Set<BroadcastHandler> broadcastHandlers = new CopyOnWriteArraySet<>();
+    private final PeerManager peerManager;
+    private final Set<BroadcastHandler> broadcastHandlers = new CopyOnWriteArraySet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

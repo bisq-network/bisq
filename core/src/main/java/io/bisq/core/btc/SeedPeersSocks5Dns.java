@@ -34,8 +34,8 @@ import java.util.concurrent.TimeUnit;
  * SeedPeersSocks5Dns resolves peers via Proxy (Socks5) remote DNS.
  */
 public class SeedPeersSocks5Dns implements PeerDiscovery {
-    private Socks5Proxy proxy;
-    private NetworkParameters params;
+    private final Socks5Proxy proxy;
+    private final NetworkParameters params;
     private InetSocketAddress[] seedAddrs;
     private InetSocketAddress[] seedAddrsIP;
     private int pnseedIndex;
@@ -47,8 +47,6 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
     /**
      * Supports finding peers by hostname over a socks5 proxy.
      *
-     * @param Socks5Proxy       proxy the socks5 proxy to connect over.
-     * @param NetworkParameters param to be used for seed and port information.
      */
     public SeedPeersSocks5Dns(Socks5Proxy proxy, NetworkParameters params) {
 
@@ -56,20 +54,20 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
         this.params = params;
         this.seedAddrs = convertAddrsString(params.getDnsSeeds(), params.getPort());
 
-        if (false) {
-            // This is an example of how .onion servers could be used.  Unfortunately there is presently no way
-            // to hand the onion address (or a connected socket) back to bitcoinj without it crashing in PeerAddress.
-            // note:  the onion addresses should be added into bitcoinj NetworkParameters classes, eg for mainnet, testnet
-            //        not here!
-            this.seedAddrs = new InetSocketAddress[]{InetSocketAddress.createUnresolved("cajrifqkvalh2ooa.onion", 8333),
-                    InetSocketAddress.createUnresolved("bk7yp6epnmcllq72.onion", 8333)
-            };
-        }
+        /*
+        // This is an example of how .onion servers could be used.  Unfortunately there is presently no way
+        // to hand the onion address (or a connected socket) back to bitcoinj without it crashing in PeerAddress.
+        // note:  the onion addresses should be added into bitcoinj NetworkParameters classes, eg for mainnet, testnet
+        //        not here!
+        this.seedAddrs = new InetSocketAddress[]{InetSocketAddress.createUnresolved("cajrifqkvalh2ooa.onion", 8333),
+                InetSocketAddress.createUnresolved("bk7yp6epnmcllq72.onion", 8333)
+        };
+        */
 
+        //TODO seedAddrsIP is never written; not used method...
         seedAddrsResolved = new InetSocketAddress[seedAddrs.length];
-        for (int idx = seedAddrs.length; idx < seedAddrsResolved.length; idx++) {
-            seedAddrsResolved[idx] = seedAddrsIP[idx - seedAddrs.length];
-        }
+        System.arraycopy(seedAddrsIP, seedAddrs.length - seedAddrs.length, seedAddrsResolved,
+                seedAddrs.length, seedAddrsResolved.length - seedAddrs.length);
     }
 
     /**

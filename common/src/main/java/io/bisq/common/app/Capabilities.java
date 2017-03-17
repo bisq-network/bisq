@@ -22,6 +22,7 @@ public class Capabilities {
         Capabilities.capabilities = capabilities;
     }
 
+    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
     private static ArrayList<Integer> capabilities = new ArrayList<>(Arrays.asList(
             Capability.TRADE_STATISTICS.ordinal()
     ));

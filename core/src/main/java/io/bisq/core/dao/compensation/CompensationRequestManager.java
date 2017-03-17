@@ -50,7 +50,7 @@ public class CompensationRequestManager {
     private final VotingDefaultValues votingDefaultValues;
     private final Storage<ArrayList<CompensationRequest>> compensationRequestsStorage;
 
-    private ObservableList<CompensationRequest> observableCompensationRequestsList = FXCollections.observableArrayList();
+    private final ObservableList<CompensationRequest> observableCompensationRequestsList = FXCollections.observableArrayList();
     private CompensationRequest selectedCompensationRequest;
     private int bestChainHeight = -1;
 

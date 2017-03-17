@@ -31,7 +31,7 @@ public class Tx {
         this.outputs = outputs;
     }
 
-    public String id;
+    public final String id;
     public List<TxInput> inputs = new ArrayList<>();
     public List<TxOutput> outputs = new ArrayList<>();
 

@@ -41,7 +41,7 @@ import java.util.List;
 public class ParameterViewItem {
     private static final Logger log = LoggerFactory.getLogger(ParameterViewItem.class);
 
-    private static List<ParameterViewItem> instances = new ArrayList<>();
+    private static final List<ParameterViewItem> instances = new ArrayList<>();
 
     private final long originalValue;
     private final ChangeListener<String> inputTextFieldChangeListener;
@@ -52,7 +52,7 @@ public class ParameterViewItem {
     private final Button resetButton, removeButton;
     private final Label label;
     private ChangeListener<Number> numberChangeListener;
-    public VoteItem voteItem;
+    public final VoteItem voteItem;
 
     public static void attach(VoteItem voteItem, VBox vBox, DoubleProperty labelWidth, VotingDefaultValues votingDefaultValues, Runnable removeHandler) {
         instances.add(new ParameterViewItem(voteItem, vBox, labelWidth, votingDefaultValues, removeHandler));

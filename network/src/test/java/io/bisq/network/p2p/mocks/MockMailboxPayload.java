@@ -14,7 +14,7 @@ public final class MockMailboxPayload implements MailboxMessage, ExpirablePayloa
     public final String msg;
     public final NodeAddress senderNodeAddress;
     public long ttl;
-    private String uid;
+    private final String uid;
 
     public MockMailboxPayload(String msg, NodeAddress senderNodeAddress) {
         this.msg = msg;

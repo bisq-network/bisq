@@ -50,7 +50,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             marketColumn, directionColumn, dateColumn, offerIdColumn, removeItemColumn;
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
-    private Preferences preferences;
+    private final Preferences preferences;
     private SortedList<OpenOfferListItem> sortedList;
 
     @Inject

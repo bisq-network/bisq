@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class LanguageUtil {
     private static final Logger log = LoggerFactory.getLogger(LanguageUtil.class);
 
-    private static List<String> userLanguageCodes = Arrays.asList(
+    private static final List<String> userLanguageCodes = Arrays.asList(
             "en", // English
             "de" // German
             

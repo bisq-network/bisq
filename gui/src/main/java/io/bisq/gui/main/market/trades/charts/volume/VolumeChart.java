@@ -36,7 +36,7 @@ import java.util.List;
 public class VolumeChart extends XYChart<Number, Number> {
     private static final Logger log = LoggerFactory.getLogger(CandleStickChart.class);
 
-    private StringConverter<Number> toolTipStringConverter;
+    private final StringConverter<Number> toolTipStringConverter;
 
     public VolumeChart(Axis<Number> xAxis, Axis<Number> yAxis, StringConverter<Number> toolTipStringConverter) {
         super(xAxis, yAxis);

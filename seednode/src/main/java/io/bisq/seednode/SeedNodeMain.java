@@ -41,7 +41,7 @@ import static io.bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
 
 public class SeedNodeMain extends BisqExecutable {
     private static final Logger log = LoggerFactory.getLogger(SeedNodeMain.class);
-    private static long MAX_MEMORY_MB_DEFAULT = 500;
+    private static final long MAX_MEMORY_MB_DEFAULT = 500;
     private static final long CHECK_MEMORY_PERIOD_SEC = 5 * 60;
     private SeedNode seedNode;
     private volatile boolean stopped;

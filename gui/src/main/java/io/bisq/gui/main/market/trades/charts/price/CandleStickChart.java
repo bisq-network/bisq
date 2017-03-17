@@ -60,7 +60,7 @@ import java.util.List;
 public class CandleStickChart extends XYChart<Number, Number> {
     private static final Logger log = LoggerFactory.getLogger(CandleStickChart.class);
 
-    private StringConverter<Number> priceStringConverter;
+    private final StringConverter<Number> priceStringConverter;
 
     // -------------- CONSTRUCTORS ----------------------------------------------
 

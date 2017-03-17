@@ -63,7 +63,7 @@ public abstract class TradeStepView extends AnchorPane {
     protected TradeSubView.NotificationGroup notificationGroup;
     private Subscription txIdSubscription;
     private Clock.Listener clockListener;
-    private ChangeListener<String> errorMessageListener;
+    private final ChangeListener<String> errorMessageListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

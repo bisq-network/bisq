@@ -30,7 +30,7 @@ public class BsqBlock {
     public final int blockHeight;
     public final List<String> txIds;
 
-    private Map<String, BsqTransaction> bsqTransactions = new HashMap<>();
+    private final Map<String, BsqTransaction> bsqTransactions = new HashMap<>();
 
     public BsqBlock(List<String> txIds, int blockHeight) {
         this.txIds = txIds;

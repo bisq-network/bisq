@@ -5,7 +5,6 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.message.p2p.PrefixedSealedAndSignedMessage;
-import io.bisq.wire.payload.p2p.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +41,6 @@ public final class MailboxStoragePayload implements StoragePayload {
      * Used for check if the add operation is permitted.
      * senderStoragePublicKey has to be equal to the ownerPubKey of the ProtectedData
      *
-     * @see ProtectedStorageEntry#ownerPubKey
-     * @see P2PDataStorage#add(ProtectedStorageEntry, NodeAddress, BroadcastHandler.Listener, boolean)
      */
     public transient PublicKey senderPubKeyForAddOperation;
     private final byte[] senderPubKeyForAddOperationBytes;
@@ -51,8 +48,6 @@ public final class MailboxStoragePayload implements StoragePayload {
      * Used for check if the remove operation is permitted.
      * senderStoragePublicKey has to be equal to the ownerPubKey of the ProtectedData
      *
-     * @see ProtectedStorageEntry#ownerPubKey
-     * @see P2PDataStorage#remove(ProtectedStorageEntry, NodeAddress, boolean)
      */
     public transient PublicKey receiverPubKeyForRemoveOperation;
     private final byte[] receiverPubKeyForRemoveOperationBytes;

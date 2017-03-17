@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 public class AwesomeFontDemo extends Application {
@@ -45,12 +44,7 @@ public class AwesomeFontDemo extends Application {
     public void start(Stage primaryStage) {
         Pane root = new FlowPane();
         List<AwesomeIcon> values = new ArrayList<>(Arrays.asList(AwesomeIcon.values()));
-        values.sort(new Comparator<AwesomeIcon>() {
-            @Override
-            public int compare(AwesomeIcon o1, AwesomeIcon o2) {
-                return o1.name().compareTo(o2.name());
-            }
-        });
+        values.sort((o1, o2) -> o1.name().compareTo(o2.name()));
         for (AwesomeIcon icon : values) {
             Label label = new Label();
             Button button = new Button(icon.name(), label);

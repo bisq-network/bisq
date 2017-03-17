@@ -28,7 +28,7 @@ public enum CloseConnectionReason {
     INVALID_CLASS_RECEIVED(false, false);
 
     public final boolean sendCloseMessage;
-    public boolean isIntended;
+    public final boolean isIntended;
 
     CloseConnectionReason(boolean sendCloseMessage, boolean isIntended) {
         this.sendCloseMessage = sendCloseMessage;

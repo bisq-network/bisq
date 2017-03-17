@@ -33,8 +33,8 @@ import java.util.concurrent.TimeUnit;
  * These are nodes running as hidden services on the Tor network.
  */
 public class Socks5SeedOnionDiscovery implements PeerDiscovery {
-    private Socks5Proxy proxy;
-    private NetworkParameters params;
+    private final Socks5Proxy proxy;
+    private final NetworkParameters params;
     private InetSocketAddress[] seedAddrs;
 
     /**

@@ -233,7 +233,7 @@ public class BsqBlockchainServiceTest {
         rawOutput.setN(index);
         rawOutput.setValue(BigDecimal.valueOf((long) (value * 100000000), 8));
         PubKeyScript scriptPubKey = new PubKeyScript();
-        scriptPubKey.setAddresses(Arrays.asList(address));
+        scriptPubKey.setAddresses(Collections.singletonList(address));
         rawOutput.setScriptPubKey(scriptPubKey);
         return rawOutput;
     }
@@ -264,9 +264,9 @@ class MockBsqBlockchainService extends BsqBlockchainRpcService {
     private int chainHeadHeight;
     private String genesisTxId;
     private int genesisBlockHeight;
-    private Map<String, RawTransaction> txsByIsMap = new HashMap<>();
-    private Map<Integer, List<RawTransaction>> txsInBlockMap = new HashMap<>();
-    private Map<Integer, List<String>> txIdsInBlockMap = new HashMap<>();
+    private final Map<String, RawTransaction> txsByIsMap = new HashMap<>();
+    private final Map<Integer, List<RawTransaction>> txsInBlockMap = new HashMap<>();
+    private final Map<Integer, List<String>> txIdsInBlockMap = new HashMap<>();
 
     public MockBsqBlockchainService() {
         super(null, null, null, null, null);

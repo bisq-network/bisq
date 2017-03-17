@@ -141,6 +141,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
         this.requestedBtc = requestedBtc.value;
         this.btcAddress = btcAddress;
         this.nodeAddress = nodeAddress.getFullAddress();
+        //TODO p2pStorageSignaturePubKeynot in constr.
         this.p2pStorageSignaturePubKey = p2pStorageSignaturePubKey;
         this.p2pStorageSignaturePubKeyBytes = p2pStorageSignaturePubKeyBytes;
         init();

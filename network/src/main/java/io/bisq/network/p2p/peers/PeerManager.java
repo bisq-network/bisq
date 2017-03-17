@@ -70,7 +70,7 @@ public class PeerManager implements ConnectionListener {
 
 
     private final NetworkNode networkNode;
-    private Clock clock;
+    private final Clock clock;
     private final Set<NodeAddress> seedNodeAddresses;
     private final Storage<HashSet<Peer>> dbStorage;
 

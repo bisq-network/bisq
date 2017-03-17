@@ -49,7 +49,7 @@ public class GetDataRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
-    private P2PDataStorage dataStorage;
+    private final P2PDataStorage dataStorage;
     private final Listener listener;
     private Timer timeoutTimer;
     private boolean stopped;

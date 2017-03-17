@@ -59,8 +59,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     private final BtcWalletService btcWalletService;
     private final FeeService feeService;
     private final BSFormatter bsqFormatter;
-    private BSFormatter btcFormatter;
-    private BalanceUtil balanceUtil;
+    private final BSFormatter btcFormatter;
+    private final BalanceUtil balanceUtil;
 
     private int gridRow = 0;
     private InputTextField amountInputTextField;

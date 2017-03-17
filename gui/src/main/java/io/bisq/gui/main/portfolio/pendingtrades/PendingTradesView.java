@@ -52,7 +52,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private final TradeDetailsWindow tradeDetailsWindow;
     private final BSFormatter formatter;
-    private PrivateNotificationManager privateNotificationManager;
+    private final PrivateNotificationManager privateNotificationManager;
     @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML

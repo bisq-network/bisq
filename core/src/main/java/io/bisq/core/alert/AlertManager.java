@@ -43,7 +43,7 @@ import static org.bitcoinj.core.Utils.HEX;
 public class AlertManager {
     private static final Logger log = LoggerFactory.getLogger(AlertManager.class);
 
-    private P2PService p2PService;
+    private final P2PService p2PService;
     private final KeyRing keyRing;
     private final User user;
     private final ObjectProperty<Alert> alertMessageProperty = new SimpleObjectProperty<>();

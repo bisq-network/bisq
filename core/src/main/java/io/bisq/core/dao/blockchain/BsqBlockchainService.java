@@ -278,6 +278,7 @@ abstract public class BsqBlockchainService {
     }
 
     void printUtxoMap(Map<String, Map<Integer, BsqUTXO>> utxoByTxIdMap) {
+        /*
         StringBuilder sb = new StringBuilder("utxoByTxIdMap:\n");
         utxoByTxIdMap.entrySet().stream().forEach(e -> {
             sb.append("TxId: ").append(e.getKey()).append("\n");
@@ -286,6 +287,7 @@ abstract public class BsqBlockchainService {
                         .append(a.getValue().toString()).append("}\n");
             });
         });
-        //log.info(sb.toString());
+        log.info(sb.toString());
+        */
     }
 }

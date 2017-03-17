@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Socks5DnsDiscovery extends MultiplexingDiscovery {
 
-    private Socks5Proxy proxy;
+    private final Socks5Proxy proxy;
 
     /**
      * Supports finding peers through DNS A records. Community run DNS entry points will be used.
@@ -73,7 +73,7 @@ public class Socks5DnsDiscovery extends MultiplexingDiscovery {
     }
 
     private static List<PeerDiscovery> buildDiscoveries(Socks5Proxy proxy, NetworkParameters params, String[] seeds) {
-        List<PeerDiscovery> discoveries = new ArrayList<PeerDiscovery>(seeds.length);
+        List<PeerDiscovery> discoveries = new ArrayList<>(seeds.length);
         for (String seed : seeds) {
             if ("dnsseed.bluematt.me".equals(seed)) {
                 // this dns is known to fail with tor-resolve because it returns too many addrs.

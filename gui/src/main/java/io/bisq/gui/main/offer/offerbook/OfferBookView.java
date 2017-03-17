@@ -71,8 +71,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
-    private BSFormatter formatter;
-    private PrivateNotificationManager privateNotificationManager;
+    private final BSFormatter formatter;
+    private final PrivateNotificationManager privateNotificationManager;
 
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
@@ -504,7 +504,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
                             private OfferBookListItem offerBookListItem;
-                            ChangeListener<Number> listener = new ChangeListener<Number>() {
+                            final ChangeListener<Number> listener = new ChangeListener<Number>() {
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getPrice() != null) {
@@ -554,7 +554,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<OfferBookListItem, OfferBookListItem>() {
                             private OfferBookListItem offerBookListItem;
-                            ChangeListener<Number> listener = new ChangeListener<Number>() {
+                            final ChangeListener<Number> listener = new ChangeListener<Number>() {
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getOfferVolume() != null) {

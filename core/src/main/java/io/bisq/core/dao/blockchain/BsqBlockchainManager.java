@@ -23,6 +23,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Tuple2;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ public class BsqBlockchainManager {
     public static final int GENESIS_BLOCK_HEIGHT = 103;
 
     protected Map<String, Map<Integer, BsqUTXO>> utxoByTxIdMap;
-    private List<UtxoListener> utxoListeners = new ArrayList<>();
+    private final List<UtxoListener> utxoListeners = new ArrayList<>();
     private boolean isUtxoAvailable;
     protected int chainHeadHeight;
 
@@ -119,7 +120,7 @@ public class BsqBlockchainManager {
             }
 
             @Override
-            public void onFailure(Throwable throwable) {
+            public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> log.error("syncFromGenesis failed" + throwable.toString()));
             }
         });

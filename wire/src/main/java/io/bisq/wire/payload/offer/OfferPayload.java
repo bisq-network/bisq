@@ -108,7 +108,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
     @Getter
     private final String id;
-    @Getter
     private final long date;
     @Getter
     private final long protocolVersion;

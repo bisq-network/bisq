@@ -66,9 +66,9 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
 
     private final CompensationRequestManager compensationRequestManger;
     private final BSFormatter formatter;
-    private Navigation navigation;
-    private FundCompensationRequestWindow fundCompensationRequestWindow;
-    private BSFormatter btcFormatter;
+    private final Navigation navigation;
+    private final FundCompensationRequestWindow fundCompensationRequestWindow;
+    private final BSFormatter btcFormatter;
     private SortedList<CompensationRequest> sortedList;
     private Subscription selectedCompensationRequestSubscription;
     private CompensationRequestDisplay compensationRequestDisplay;
