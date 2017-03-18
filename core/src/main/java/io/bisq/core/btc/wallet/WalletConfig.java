@@ -392,7 +392,7 @@ public class WalletConfig extends AbstractIdleService {
                 keyChainGroup = new BisqKeyChainGroup(params, new BtcDeterministicKeyChain(seed), true, btcWalletLookaheadSize);
             else
                 keyChainGroup = new BisqKeyChainGroup(params, true, btcWalletLookaheadSize);
-            vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayWallet, seed, keyChainGroup, false);
+            vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayWallet, keyChainGroup, false);
 
             // BSQ walelt
             vBsqWalletFile = new File(directory, bsqWalletFilePrefix + ".wallet");
@@ -400,7 +400,7 @@ public class WalletConfig extends AbstractIdleService {
                 keyChainGroup = new BisqKeyChainGroup(params, new BsqDeterministicKeyChain(seed), false, bsqWalletLookaheadSize);
             else
                 keyChainGroup = new BisqKeyChainGroup(params, new BsqDeterministicKeyChain(vBtcWallet.getKeyChainSeed()), false, bsqWalletLookaheadSize);
-            vBsqWallet = createOrLoadWallet(vBsqWalletFile, shouldReplayWallet, seed, keyChainGroup, true);
+            vBsqWallet = createOrLoadWallet(vBsqWalletFile, shouldReplayWallet, keyChainGroup, true);
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
             vStore = provideBlockStore(chainFile);
@@ -492,14 +492,10 @@ public class WalletConfig extends AbstractIdleService {
         }
     }
 
-    private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet, @Nullable DeterministicSeed seed,
+    private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet,
                                       BisqKeyChainGroup keyChainGroup, boolean isBsqWallet)
             throws Exception {
         Wallet wallet;
-
-        if (seed != null)
-            maybeMoveOldWalletOutOfTheWay(walletFile, seed);
-
         if (walletFile.exists()) {
             wallet = loadWallet(walletFile, shouldReplayWallet, keyChainGroup.isUseBitcoinDeterministicKeyChain());
         } else {
@@ -540,23 +536,6 @@ public class WalletConfig extends AbstractIdleService {
         checkNotNull(walletFactory, "walletFactory must not be null");
         return walletFactory.create(params, keyChainGroup, isBsqWallet);
     }
-
-    private void maybeMoveOldWalletOutOfTheWay(File walletFile, DeterministicSeed restoreFromSeed) {
-        if (restoreFromSeed == null) return;
-        if (!walletFile.exists()) return;
-        int counter = 1;
-        File newName;
-        do {
-            newName = new File(walletFile.getParent(), "Backup " + counter + " for " + walletFile.getName());
-            counter++;
-        } while (newName.exists());
-        log.info("Renaming old wallet file {} to {}", walletFile, newName);
-        if (!walletFile.renameTo(newName)) {
-            // This should not happen unless something is really messed up.
-            throw new RuntimeException("Failed to rename wallet for restore");
-        }
-    }
-
 
     private void installShutdownHook() {
         if (autoStop) Runtime.getRuntime().addShutdownHook(new Thread() {

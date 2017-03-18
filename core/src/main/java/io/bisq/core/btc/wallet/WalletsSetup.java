@@ -421,6 +421,9 @@ public class WalletsSetup {
 
     public void restoreSeedWords(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         checkNotNull(seed, "Seed must be not be null.");
+
+        backupWallets();
+        
         Context ctx = Context.get();
         new Thread(() -> {
             try {
