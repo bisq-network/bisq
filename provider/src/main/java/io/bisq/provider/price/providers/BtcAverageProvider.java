@@ -67,7 +67,7 @@ public class BtcAverageProvider {
     private Map<String, PriceData> getMap(String json) {
         Map<String, PriceData> marketPriceMap = new HashMap<>();
         LinkedTreeMap<String, Object> treeMap = new Gson().<LinkedTreeMap<String, Object>>fromJson(json, LinkedTreeMap.class);
-        long epochSec = Instant.now().getEpochSecond();
+        long ts = Instant.now().getEpochSecond();
         treeMap.entrySet().stream().forEach(e -> {
             Object value = e.getValue();
             // We need to check the type as we get an unexpected "timestamp" object at the end: 
@@ -79,7 +79,7 @@ public class BtcAverageProvider {
                                 (double) data.get("ask"),
                                 (double) data.get("bid"),
                                 (double) data.get("last"),
-                                epochSec));
+                                ts));
             }
         });
         return marketPriceMap;

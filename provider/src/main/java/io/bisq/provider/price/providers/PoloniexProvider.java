@@ -37,7 +37,7 @@ public class PoloniexProvider {
         Map<String, PriceData> marketPriceMap = new HashMap<>();
         String response = httpClient.requestWithGET("?command=returnTicker", "User-Agent", "");
         LinkedTreeMap<String, Object> treeMap = new Gson().fromJson(response, LinkedTreeMap.class);
-        long epochSec = Instant.now().getEpochSecond();
+        long ts = Instant.now().getEpochSecond();
         treeMap.entrySet().stream().forEach(e -> {
             Object value = e.getValue();
             String invertedCurrencyPair = e.getKey();
@@ -54,7 +54,7 @@ public class PoloniexProvider {
                                             parseDouble((String) data.get("lowestAsk")),
                                             parseDouble((String) data.get("highestBid")),
                                             parseDouble((String) data.get("last")),
-                                            epochSec)
+                                            ts)
                             );
                         }
                     }
