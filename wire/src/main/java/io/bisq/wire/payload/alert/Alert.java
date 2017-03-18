@@ -40,7 +40,7 @@ public final class Alert implements StoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(Alert.class);
-    private static final long TTL = TimeUnit.DAYS.toMillis(21);
+    private static final long TTL = TimeUnit.DAYS.toMillis(30);
 
     // Payload
     public final String message;
