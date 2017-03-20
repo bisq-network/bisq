@@ -22,7 +22,6 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
-import io.bisq.common.util.Tuple3;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.exceptions.BisqException;
@@ -145,7 +144,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         }};
 
 
-        Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> marketPriceBox = getMarketPriceBox();
+        Tuple2<ComboBox<PriceFeedComboBoxItem>, VBox> marketPriceBox = getMarketPriceBox();
         ComboBox<PriceFeedComboBoxItem> priceComboBox = marketPriceBox.first;
 
         priceComboBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -159,7 +158,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.selectedPriceFeedComboBoxItemProperty.addListener(selectedPriceFeedItemListener);
         priceComboBox.setItems(model.priceFeedComboBoxItems);
 
-        HBox.setMargin(marketPriceBox.third, new Insets(0, 0, 0, 0));
+        HBox.setMargin(marketPriceBox.second, new Insets(0, 0, 0, 0));
 
 
         Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox(Res.get("mainView.balance.available"));
@@ -171,7 +170,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Tuple2<TextField, VBox> lockedBalanceBox = getBalanceBox(Res.get("mainView.balance.locked"));
         lockedBalanceBox.first.textProperty().bind(model.lockedBalance);
 
-        HBox rightNavPane = new HBox(marketPriceBox.third, availableBalanceBox.second, reservedBalanceBox.second, lockedBalanceBox.second,
+        HBox rightNavPane = new HBox(marketPriceBox.second, availableBalanceBox.second,
+                reservedBalanceBox.second, lockedBalanceBox.second,
                 settingsButton, accountButton, daoButton) {{
             setRightAnchor(this, 10d);
             setTopAnchor(this, 0d);
@@ -287,7 +287,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         };
     }
 
-    private Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> getMarketPriceBox() {
+    private Tuple2<ComboBox<PriceFeedComboBoxItem>, VBox> getMarketPriceBox() {
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new ComboBox<>();
         priceComboBox.setVisibleRowCount(20);
         priceComboBox.setMaxWidth(220);
@@ -298,10 +298,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         ListCell<PriceFeedComboBoxItem> buttonCell = getPriceFeedComboBoxListCell();
         buttonCell.setId("price-feed-combo");
         priceComboBox.setButtonCell(buttonCell);
-
-        Label label = new Label();
-        label.setId("nav-balance-label");
-        label.setPadding(new Insets(0, 0, 0, 2));
 
         final ImageView btcAverageIcon = new ImageView();
         btcAverageIcon.setId("btcaverage");
@@ -332,7 +328,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.setPadding(new Insets(-3, 0, -3, 0));
         poloniexIconButton.setFocusTraversable(false);
         poloniexIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(poloniexIconButton, new Insets(1, 3, 0, 0));
+        HBox.setMargin(poloniexIconButton, new Insets(2, 3, 0, 0));
         poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
         poloniexIconButton.setVisible(model.isCryptoCurrencyPriceFeedSelected.get());
         poloniexIconButton.setManaged(model.isCryptoCurrencyPriceFeedSelected.get());
@@ -348,17 +344,19 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                     new Tooltip(res)
             );
         });
-        Pane spacer = new Pane();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Label label = new Label(Res.get("mainView.marketPrice.provider"));
+        label.setId("nav-balance-label");
+        label.setPadding(new Insets(0, 5, 0, 2));
 
         HBox hBox2 = new HBox();
-        hBox2.getChildren().setAll(label, spacer, btcAverageIconButton, poloniexIconButton);
+        hBox2.getChildren().setAll(label, btcAverageIconButton, poloniexIconButton);
 
         VBox vBox = new VBox();
         vBox.setSpacing(3);
         vBox.setPadding(new Insets(11, 0, 0, 0));
         vBox.getChildren().addAll(priceComboBox, hBox2);
-        return new Tuple3<>(priceComboBox, label, vBox);
+        return new Tuple2<>(priceComboBox, vBox);
     }
 
     public void setPersistedFilesCorrupted(List<String> persistedFilesCorrupted) {
