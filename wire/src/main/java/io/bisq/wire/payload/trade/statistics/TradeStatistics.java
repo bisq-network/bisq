@@ -1,5 +1,6 @@
 package io.bisq.wire.payload.trade.statistics;
 
+import com.google.common.collect.Maps;
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.CurrencyUtil;
@@ -20,11 +21,10 @@ import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.security.PublicKey;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Immutable
@@ -53,7 +53,13 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     public final String depositTxId;
     @JsonExclude
     public final PubKeyRing pubKeyRing;
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // field in a class would break that hash and therefore break the storage mechanism.
+    @Nullable
+    private Map<String, String> extraDataMap;
 
+    // Called from domain
     public TradeStatistics(OfferPayload offerPayload,
                            Price tradePrice,
                            Coin tradeAmount,
@@ -74,9 +80,11 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                 tradeAmount.value,
                 tradeDate.getTime(),
                 depositTxId,
-                pubKeyRing);
+                pubKeyRing,
+                null);
     }
 
+    // Called from PB
     public TradeStatistics(OfferPayload.Direction direction,
                            String baseCurrency,
                            String counterCurrency,
@@ -91,7 +99,8 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                            long tradeAmount,
                            long tradeDate,
                            String depositTxId,
-                           PubKeyRing pubKeyRing) {
+                           PubKeyRing pubKeyRing,
+                           @Nullable Map<String, String> extraDataMap) {
         this.direction = direction;
         this.baseCurrency = baseCurrency;
         this.counterCurrency = counterCurrency;
@@ -102,12 +111,12 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         this.offerAmount = offerAmount;
         this.offerMinAmount = offerMinAmount;
         this.offerId = offerId;
-
         this.tradePrice = tradePrice;
         this.tradeAmount = tradeAmount;
         this.tradeDate = tradeDate;
         this.depositTxId = depositTxId;
         this.pubKeyRing = pubKeyRing;
+        this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
     }
 
 
@@ -127,6 +136,13 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                 Capabilities.Capability.TRADE_STATISTICS.ordinal()
         );
     }
+
+    @Nullable
+    @Override
+    public Map<String, String> getExtraDataMap() {
+        return extraDataMap;
+    }
+
 
     public Date getTradeDate() {
         return new Date(tradeDate);
@@ -157,7 +173,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
 
     @Override
     public Messages.StoragePayload toProtoBuf() {
-        return Messages.StoragePayload.newBuilder().setTradeStatistics(Messages.TradeStatistics.newBuilder()
+        final Messages.TradeStatistics.Builder builder = Messages.TradeStatistics.newBuilder()
                 .setTTL(TTL)
                 .setBaseCurrency(baseCurrency)
                 .setCounterCurrency(counterCurrency)
@@ -173,7 +189,9 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                 .setOfferMinAmount(offerMinAmount)
                 .setOfferId(offerId)
                 .setDepositTxId(depositTxId)
-                .setPubKeyRing((Messages.PubKeyRing) pubKeyRing.toProtoBuf())).build();
+                .setPubKeyRing(pubKeyRing.toProtoBuf());
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
+        return Messages.StoragePayload.newBuilder().setTradeStatistics(builder).build();
     }
 
 

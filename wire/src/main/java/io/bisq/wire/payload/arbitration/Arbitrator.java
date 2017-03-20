@@ -17,6 +17,7 @@
 
 package io.bisq.wire.payload.arbitration;
 
+import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.wire.payload.StoragePayload;
@@ -24,10 +25,9 @@ import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.proto.Messages;
 
+import javax.annotation.Nullable;
 import java.security.PublicKey;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public final class Arbitrator implements StoragePayload {
@@ -45,7 +45,13 @@ public final class Arbitrator implements StoragePayload {
     private final long registrationDate;
     private final String registrationSignature;
     private final byte[] registrationPubKey;
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // field in a class would break that hash and therefore break the storage mechanism.
+    @Nullable
+    private Map<String, String> extraDataMap;
 
+    // Called from domain and PB
     public Arbitrator(NodeAddress arbitratorNodeAddress,
                       byte[] btcPubKey,
                       String btcAddress,
@@ -53,7 +59,8 @@ public final class Arbitrator implements StoragePayload {
                       List<String> languageCodes,
                       Date registrationDate,
                       byte[] registrationPubKey,
-                      String registrationSignature) {
+                      String registrationSignature,
+                      @Nullable Map<String, String> extraDataMap) {
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.btcPubKey = btcPubKey;
         this.btcAddress = btcAddress;
@@ -62,7 +69,9 @@ public final class Arbitrator implements StoragePayload {
         this.registrationDate = registrationDate.getTime();
         this.registrationPubKey = registrationPubKey;
         this.registrationSignature = registrationSignature;
+        this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
     }
+
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -78,6 +87,13 @@ public final class Arbitrator implements StoragePayload {
     public PublicKey getOwnerPubKey() {
         return pubKeyRing.getSignaturePubKey();
     }
+
+    @Nullable
+    @Override
+    public Map<String, String> getExtraDataMap() {
+        return extraDataMap;
+    }
+
 
     public byte[] getBtcPubKey() {
         return btcPubKey;
@@ -114,7 +130,7 @@ public final class Arbitrator implements StoragePayload {
 
     @Override
     public Messages.StoragePayload toProtoBuf() {
-        return Messages.StoragePayload.newBuilder().setArbitrator(Messages.Arbitrator.newBuilder()
+        final Messages.Arbitrator.Builder builder = Messages.Arbitrator.newBuilder()
                 .setTTL(TTL)
                 .setBtcPubKey(ByteString.copyFrom(btcPubKey))
                 .setPubKeyRing((Messages.PubKeyRing) pubKeyRing.toProtoBuf())
@@ -123,7 +139,9 @@ public final class Arbitrator implements StoragePayload {
                 .setBtcAddress(btcAddress)
                 .setRegistrationDate(registrationDate)
                 .setRegistrationSignature(registrationSignature)
-                .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey))).build();
+                .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey));
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
+        return Messages.StoragePayload.newBuilder().setArbitrator(builder).build();
     }
 
 

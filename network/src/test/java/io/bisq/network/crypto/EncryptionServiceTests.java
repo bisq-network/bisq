@@ -24,9 +24,11 @@ import io.bisq.common.storage.FileUtil;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.wire.crypto.*;
 import io.bisq.wire.message.Message;
+import io.bisq.wire.message.alert.PrivateNotificationMessage;
 import io.bisq.wire.message.p2p.MailboxMessage;
 import io.bisq.wire.message.p2p.PrefixedSealedAndSignedMessage;
 import io.bisq.wire.message.p2p.peers.keepalive.Ping;
+import io.bisq.wire.payload.alert.PrivateNotification;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.crypto.SealedAndSigned;
 import io.bisq.wire.payload.p2p.NodeAddress;
@@ -83,12 +85,17 @@ public class EncryptionServiceTests {
     @Test
     public void testDecryptAndVerifyMessage() throws CryptoException {
         EncryptionService encryptionService = new EncryptionService(keyRing);
-        TestMessage data = new TestMessage("test");
-        PrefixedSealedAndSignedMessage encrypted = new PrefixedSealedAndSignedMessage(null,
+        final PrivateNotification privateNotification = new PrivateNotification("test");
+        privateNotification.setSigAndPubKey("", pubKeyRing.getSignaturePubKey());
+        final NodeAddress nodeAddress = new NodeAddress("localhost", 2222);
+        PrivateNotificationMessage data = new PrivateNotificationMessage(privateNotification,
+                nodeAddress);
+        PrefixedSealedAndSignedMessage encrypted = new PrefixedSealedAndSignedMessage(nodeAddress,
                 encryptionService.encryptAndSign(pubKeyRing, data),
-                Hash.getHash("aa"));
+                Hash.getHash("localhost"));
         DecryptedMsgWithPubKey decrypted = encryptionService.decryptAndVerify(encrypted.sealedAndSigned);
-        assertEquals(data.data, ((TestMessage) decrypted.message).data);
+        assertEquals(data.privateNotification.message,
+                ((PrivateNotificationMessage) decrypted.message).privateNotification.message);
     }
 
 

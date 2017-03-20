@@ -206,6 +206,7 @@ message Alert {
     bool is_update_info = 4;
     string signature_as_base64 = 5;
     bytes storage_public_key_bytes = 6;
+    map<string, string> extra_data_map = 7;
 }
 
 message Arbitrator {
@@ -218,6 +219,7 @@ message Arbitrator {
     int64 registrationDate = 7;
     string registrationSignature = 8;
     bytes registrationPubKey = 9;
+    map<string, string> extra_data_map = 10;
 }
 
 message Filter {
@@ -227,6 +229,7 @@ message Filter {
     repeated PaymentAccountFilter bannedPaymentAccounts = 4;
     string signatureAsBase64 = 5;
     bytes publicKeyBytes = 6;
+    map<string, string> extra_data_map = 7;
 }
 
 message PaymentAccountFilter {
@@ -254,6 +257,7 @@ message CompensationRequestPayload {
     string p2pStorageSignaturePubKeyAsHex = 16;
     string signature = 17;
     string feeTxId = 18;
+    map<string, string> extra_data_map = 19;
 }
 
 message TradeStatistics {
@@ -273,12 +277,14 @@ message TradeStatistics {
     string offer_id = 14;
     string deposit_tx_id = 15;
     PubKeyRing pub_key_ring = 16;
+    map<string, string> extra_data_map = 17;
 }
 message MailboxStoragePayload {
     int64 TTL = 1;
     PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = 2;
     bytes senderPubKeyForAddOperationBytes = 3;
     bytes receiverPubKeyForRemoveOperationBytes = 4;
+    map<string, string> extra_data_map = 5;
 }
 
 message OfferPayload {

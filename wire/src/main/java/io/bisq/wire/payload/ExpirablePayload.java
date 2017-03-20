@@ -1,6 +1,8 @@
 package io.bisq.wire.payload;
 
 
+import io.bisq.wire.payload.p2p.storage.MailboxStoragePayload;
+
 /**
  * Messages which support a time to live
  * <p>

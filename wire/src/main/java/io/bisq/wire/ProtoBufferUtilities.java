@@ -23,7 +23,6 @@ import io.bisq.wire.message.p2p.storage.RefreshTTLMessage;
 import io.bisq.wire.message.p2p.storage.RemoveDataMessage;
 import io.bisq.wire.message.p2p.storage.RemoveMailboxDataMessage;
 import io.bisq.wire.message.trade.*;
-import io.bisq.wire.payload.MailboxStoragePayload;
 import io.bisq.wire.payload.StoragePayload;
 import io.bisq.wire.payload.alert.Alert;
 import io.bisq.wire.payload.alert.PrivateNotification;
@@ -41,6 +40,7 @@ import io.bisq.wire.payload.offer.AvailabilityResult;
 import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.payload.p2p.peers.peerexchange.Peer;
+import io.bisq.wire.payload.p2p.storage.MailboxStoragePayload;
 import io.bisq.wire.payload.p2p.storage.ProtectedMailboxStorageEntry;
 import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
 import io.bisq.wire.payload.payment.*;
@@ -443,7 +443,6 @@ public class ProtoBufferUtilities {
         // which is needed for the P2PStorage getHash() operation
         List<String> acceptedCountryCodes = pbOffer.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
         List<String> acceptedBankIds = pbOffer.getAcceptedBankIdsList().stream().collect(Collectors.toList());
-        // TODO PriceFeedService not yet passed in due to not used in the real code.
         Map<String, String> extraDataMapMap;
         if (CollectionUtils.isEmpty(pbOffer.getExtraDataMapMap())) {
             extraDataMapMap = null;
@@ -559,45 +558,70 @@ public class ProtoBufferUtilities {
     @Nullable
     private static StoragePayload getStoragePayload(Messages.StoragePayload protoEntry) {
         StoragePayload storagePayload = null;
+        Map<String, String> extraDataMapMap;
         switch (protoEntry.getMessageCase()) {
             case ALERT:
                 Messages.Alert protoAlert = protoEntry.getAlert();
-                storagePayload = new Alert(protoAlert.getMessage(), protoAlert.getIsUpdateInfo(),
-                        protoAlert.getVersion(), protoAlert.getStoragePublicKeyBytes().toByteArray(),
-                        protoAlert.getSignatureAsBase64());
+                extraDataMapMap = CollectionUtils.isEmpty(protoAlert.getExtraDataMapMap()) ?
+                        null : protoAlert.getExtraDataMapMap();
+                storagePayload = new Alert(protoAlert.getMessage(),
+                        protoAlert.getIsUpdateInfo(),
+                        protoAlert.getVersion(),
+                        protoAlert.getStoragePublicKeyBytes().toByteArray(),
+                        protoAlert.getSignatureAsBase64(),
+                        extraDataMapMap);
                 break;
             case ARBITRATOR:
                 Messages.Arbitrator arbitrator = protoEntry.getArbitrator();
-                NodeAddress nodeAddress = new NodeAddress(arbitrator.getArbitratorNodeAddress().getHostName(),
-                        arbitrator.getArbitratorNodeAddress().getPort());
+                extraDataMapMap = CollectionUtils.isEmpty(arbitrator.getExtraDataMapMap()) ?
+                        null : arbitrator.getExtraDataMapMap();
                 List<String> strings = arbitrator.getLanguageCodesList().stream().collect(Collectors.toList());
                 Date date = new Date(arbitrator.getRegistrationDate());
                 storagePayload = new Arbitrator(getNodeAddress(arbitrator.getArbitratorNodeAddress()),
                         arbitrator.getBtcPubKey().toByteArray(),
-                        arbitrator.getBtcAddress(), getPubKeyRing(arbitrator.getPubKeyRing()), strings, date,
-                        arbitrator.getRegistrationPubKey().toByteArray(), arbitrator.getRegistrationSignature());
+                        arbitrator.getBtcAddress(),
+                        getPubKeyRing(arbitrator.getPubKeyRing()),
+                        strings,
+                        date,
+                        arbitrator.getRegistrationPubKey().toByteArray(),
+                        arbitrator.getRegistrationSignature(),
+                        extraDataMapMap);
                 break;
             case FILTER:
                 Messages.Filter filter = protoEntry.getFilter();
+                extraDataMapMap = CollectionUtils.isEmpty(filter.getExtraDataMapMap()) ?
+                        null : filter.getExtraDataMapMap();
                 List<PaymentAccountFilter> paymentAccountFilters = filter.getBannedPaymentAccountsList()
                         .stream().map(accountFilter -> getPaymentAccountFilter(accountFilter)).collect(Collectors.toList());
                 storagePayload = new Filter(filter.getBannedOfferIdsList().stream().collect(Collectors.toList()),
-                        filter.getBannedNodeAddressList().stream().collect(Collectors.toList()), paymentAccountFilters,
-                        filter.getSignatureAsBase64(), filter.getPublicKeyBytes().toByteArray());
+                        filter.getBannedNodeAddressList().stream().collect(Collectors.toList()),
+                        paymentAccountFilters,
+                        filter.getSignatureAsBase64(),
+                        filter.getPublicKeyBytes().toByteArray(),
+                        extraDataMapMap);
                 break;
             case COMPENSATION_REQUEST_PAYLOAD:
                 Messages.CompensationRequestPayload compensationRequestPayload = protoEntry.getCompensationRequestPayload();
+                extraDataMapMap = CollectionUtils.isEmpty(compensationRequestPayload.getExtraDataMapMap()) ?
+                        null : compensationRequestPayload.getExtraDataMapMap();
                 storagePayload = new CompensationRequestPayload(compensationRequestPayload.getUid(),
-                        compensationRequestPayload.getName(), compensationRequestPayload.getTitle(),
-                        compensationRequestPayload.getCategory(), compensationRequestPayload.getDescription(),
-                        compensationRequestPayload.getLink(), new Date(compensationRequestPayload.getStartDate()),
+                        compensationRequestPayload.getName(),
+                        compensationRequestPayload.getTitle(),
+                        compensationRequestPayload.getCategory(),
+                        compensationRequestPayload.getDescription(),
+                        compensationRequestPayload.getLink(),
+                        new Date(compensationRequestPayload.getStartDate()),
                         new Date(compensationRequestPayload.getEndDate()),
-                        Coin.valueOf(compensationRequestPayload.getRequestedBtc()), compensationRequestPayload.getBtcAddress(),
+                        Coin.valueOf(compensationRequestPayload.getRequestedBtc()),
+                        compensationRequestPayload.getBtcAddress(),
                         new NodeAddress(compensationRequestPayload.getNodeAddress()),
-                        compensationRequestPayload.getP2PStorageSignaturePubKeyBytes().toByteArray());
+                        compensationRequestPayload.getP2PStorageSignaturePubKeyBytes().toByteArray(),
+                        extraDataMapMap);
                 break;
             case TRADE_STATISTICS:
                 Messages.TradeStatistics protoTrade = protoEntry.getTradeStatistics();
+                extraDataMapMap = CollectionUtils.isEmpty(protoTrade.getExtraDataMapMap()) ?
+                        null : protoTrade.getExtraDataMapMap();
                 storagePayload = new TradeStatistics(getDirection(protoTrade.getDirection()),
                         protoTrade.getBaseCurrency(),
                         protoTrade.getCounterCurrency(),
@@ -613,14 +637,18 @@ public class ProtoBufferUtilities {
                         protoTrade.getTradeDate(),
                         protoTrade.getDepositTxId(),
                         new PubKeyRing(protoTrade.getPubKeyRing().getSignaturePubKeyBytes().toByteArray(),
-                                protoTrade.getPubKeyRing().getEncryptionPubKeyBytes().toByteArray()));
+                                protoTrade.getPubKeyRing().getEncryptionPubKeyBytes().toByteArray()),
+                        extraDataMapMap);
                 break;
             case MAILBOX_STORAGE_PAYLOAD:
                 Messages.MailboxStoragePayload mbox = protoEntry.getMailboxStoragePayload();
+                extraDataMapMap = CollectionUtils.isEmpty(mbox.getExtraDataMapMap()) ?
+                        null : mbox.getExtraDataMapMap();
                 storagePayload = new MailboxStoragePayload(
                         getPrefixedSealedAndSignedMessage(mbox.getPrefixedSealedAndSignedMessage()),
                         mbox.getSenderPubKeyForAddOperationBytes().toByteArray(),
-                        mbox.getReceiverPubKeyForRemoveOperationBytes().toByteArray());
+                        mbox.getReceiverPubKeyForRemoveOperationBytes().toByteArray(),
+                        extraDataMapMap);
                 break;
             case OFFER_PAYLOAD:
                 storagePayload = getOfferPayload(protoEntry.getOfferPayload());

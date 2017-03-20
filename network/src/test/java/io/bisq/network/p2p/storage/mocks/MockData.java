@@ -4,12 +4,17 @@ import io.bisq.wire.payload.StoragePayload;
 import io.bisq.wire.proto.Messages;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import javax.annotation.Nullable;
 import java.security.PublicKey;
+import java.util.Map;
 
 public class MockData implements StoragePayload {
     public final String msg;
     public final PublicKey publicKey;
     public long ttl;
+
+    @Nullable
+    private Map<String, String> extraDataMap;
 
     public MockData(String msg, PublicKey publicKey) {
         this.msg = msg;
@@ -37,6 +42,12 @@ public class MockData implements StoragePayload {
         return "MockData{" +
                 "msg='" + msg + '\'' +
                 '}';
+    }
+
+    @Nullable
+    @Override
+    public Map<String, String> getExtraDataMap() {
+        return extraDataMap;
     }
 
     @Override

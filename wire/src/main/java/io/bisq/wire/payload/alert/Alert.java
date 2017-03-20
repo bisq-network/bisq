@@ -18,6 +18,7 @@
 package io.bisq.wire.payload.alert;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
@@ -26,6 +27,7 @@ import io.bisq.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -34,6 +36,8 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public final class Alert implements StoragePayload {
@@ -48,21 +52,37 @@ public final class Alert implements StoragePayload {
     public final boolean isUpdateInfo;
     private String signatureAsBase64;
     private byte[] storagePublicKeyBytes;
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // field in a class would break that hash and therefore break the storage mechanism.
+    @Nullable
+    private Map<String, String> extraDataMap;
 
     // Domain
     private transient PublicKey storagePublicKey;
 
-    public Alert(String message, boolean isUpdateInfo, String version) {
+    // Called from domain
+    public Alert(String message,
+                 boolean isUpdateInfo,
+                 String version) {
         this.message = message;
         this.isUpdateInfo = isUpdateInfo;
         this.version = version;
+        this.extraDataMap = Maps.newHashMap();
     }
 
-    public Alert(String message, boolean isUpdateInfo, String version, byte[] storagePublicKeyBytes,
-                 String signatureAsBase64) {
+    // Called from PB
+    public Alert(String message,
+                 boolean isUpdateInfo,
+                 String version,
+                 byte[] storagePublicKeyBytes,
+                 String signatureAsBase64,
+                 @Nullable Map<String, String> extraDataMap) {
         this(message, isUpdateInfo, version);
         this.storagePublicKeyBytes = storagePublicKeyBytes;
         this.signatureAsBase64 = signatureAsBase64;
+        this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
+
         init();
     }
 
@@ -124,14 +144,23 @@ public final class Alert implements StoragePayload {
         return storagePublicKey;
     }
 
+    @Nullable
+    @Override
+    public Map<String, String> getExtraDataMap() {
+        return extraDataMap;
+    }
+
     @Override
     public Messages.StoragePayload toProtoBuf() {
-        return Messages.StoragePayload.newBuilder().setAlert(Messages.Alert.newBuilder().setTTL(TTL)
+        final Messages.Alert.Builder builder = Messages.Alert.newBuilder()
+                .setTTL(TTL)
                 .setMessage(message)
                 .setVersion(version)
                 .setIsUpdateInfo(isUpdateInfo)
                 .setSignatureAsBase64(signatureAsBase64)
-                .setStoragePublicKeyBytes(ByteString.copyFrom(storagePublicKeyBytes))).build();
+                .setStoragePublicKeyBytes(ByteString.copyFrom(storagePublicKeyBytes));
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
+        return Messages.StoragePayload.newBuilder().setAlert(builder).build();
     }
 
     @Override

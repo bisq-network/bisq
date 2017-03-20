@@ -93,8 +93,12 @@ public class P2PDataStorageTest {
 
     @Test
     public void testProtectedStorageEntryAddAndRemove() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        storagePayload = new Alert("alert", false, "version", storageSignatureKeyPair1.getPublic().getEncoded(),
-                "sig");
+        storagePayload = new Alert("alert",
+                false,
+                "version",
+                storageSignatureKeyPair1.getPublic().getEncoded(),
+                "sig",
+                null);
 
         ProtectedStorageEntry data = dataStorage1.getProtectedData(storagePayload, storageSignatureKeyPair1);
         assertTrue(dataStorage1.add(data, null, null, true));

@@ -17,6 +17,7 @@
 
 package io.bisq.wire.payload.filter;
 
+import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
@@ -25,6 +26,7 @@ import io.bisq.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -34,6 +36,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -49,19 +53,37 @@ public final class Filter implements StoragePayload {
     public final List<PaymentAccountFilter> bannedPaymentAccounts;
     private String signatureAsBase64;
     private byte[] publicKeyBytes;
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // field in a class would break that hash and therefore break the storage mechanism.
+    @Nullable
+    private Map<String, String> extraDataMap;
 
     // Domain
     private transient PublicKey publicKey;
 
-    public Filter(List<String> bannedOfferIds, List<String> bannedNodeAddress, List<PaymentAccountFilter> bannedPaymentAccounts) {
+    // Called from domain
+    public Filter(List<String> bannedOfferIds,
+                  List<String> bannedNodeAddress,
+                  List<PaymentAccountFilter> bannedPaymentAccounts) {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
+        this.extraDataMap = Maps.newHashMap();
     }
 
-    public Filter(List<String> bannedOfferIds, List<String> bannedNodeAddress, List<PaymentAccountFilter> bannedPaymentAccounts,
-                  String signatureAsBase64, byte[] publicKeyBytes) {
+    // Called from PB
+    public Filter(List<String> bannedOfferIds,
+                  List<String> bannedNodeAddress,
+                  List<PaymentAccountFilter> bannedPaymentAccounts,
+                  String signatureAsBase64,
+                  byte[] publicKeyBytes,
+                  @Nullable Map<String, String> extraDataMap) {
         this(bannedOfferIds, bannedNodeAddress, bannedPaymentAccounts);
+        this.signatureAsBase64 = signatureAsBase64;
+        this.publicKeyBytes = publicKeyBytes;
+        this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
+        
         init();
     }
 
@@ -102,21 +124,28 @@ public final class Filter implements StoragePayload {
         return publicKey;
     }
 
+    @Nullable
+    @Override
+    public Map<String, String> getExtraDataMap() {
+        return extraDataMap;
+    }
+
 
     @Override
     public Messages.StoragePayload toProtoBuf() {
         List<Messages.PaymentAccountFilter> paymentAccountFilterList;
         paymentAccountFilterList = bannedPaymentAccounts.stream()
-                .map(paymentAccountFilter -> paymentAccountFilter.toProtoBuf()).collect(Collectors.toList());
-        return Messages.StoragePayload.newBuilder().setFilter(Messages.Filter.newBuilder()
+                .map(PaymentAccountFilter::toProtoBuf).collect(Collectors.toList());
+        final Messages.Filter.Builder builder = Messages.Filter.newBuilder()
                 .setTTL(TTL)
                 .addAllBannedNodeAddress(bannedNodeAddress)
                 .addAllBannedOfferIds(bannedOfferIds)
                 .addAllBannedPaymentAccounts(paymentAccountFilterList)
                 .setSignatureAsBase64(signatureAsBase64)
-                .setPublicKeyBytes(ByteString.copyFrom(publicKeyBytes))).build();
+                .setPublicKeyBytes(ByteString.copyFrom(publicKeyBytes));
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
+        return Messages.StoragePayload.newBuilder().setFilter(builder).build();
     }
-
 
     @Override
     public boolean equals(Object o) {
