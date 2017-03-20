@@ -1,7 +1,7 @@
 package io.bisq.gui.main.market.spread;
 
+import io.bisq.common.monetary.Price;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,16 +14,16 @@ public class SpreadItem {
     public final int numberOfSellOffers;
     public final int numberOfOffers;
     @Nullable
-    public final Fiat spread;
+    public final Price priceSpread;
     public final String percentage;
     public final Coin totalAmount;
 
-    public SpreadItem(String currencyCode, int numberOfBuyOffers, int numberOfSellOffers, int numberOfOffers, @Nullable Fiat spread, String percentage, Coin totalAmount) {
+    public SpreadItem(String currencyCode, int numberOfBuyOffers, int numberOfSellOffers, int numberOfOffers, @Nullable Price priceSpread, String percentage, Coin totalAmount) {
         this.currencyCode = currencyCode;
         this.numberOfBuyOffers = numberOfBuyOffers;
         this.numberOfSellOffers = numberOfSellOffers;
         this.numberOfOffers = numberOfOffers;
-        this.spread = spread;
+        this.priceSpread = priceSpread;
         this.percentage = percentage;
         this.totalAmount = totalAmount;
     }

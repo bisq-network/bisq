@@ -20,10 +20,10 @@ package io.bisq.wire.payload.dao.compensation;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.util.JsonExclude;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.payload.LazyProcessedStoragePayload;
 import io.bisq.wire.payload.PersistedStoragePayload;
 import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.wire.proto.Messages;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
@@ -49,9 +49,9 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
 
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
+    // Payload
     public final byte version;
     private final long creationDate;
-
     public final String uid;
     public final String name;
     public final String title;
@@ -63,23 +63,22 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     private final long requestedBtc;
     public final String btcAddress;
     private final String nodeAddress;
-
-    @JsonExclude
-    private transient PublicKey p2pStorageSignaturePubKey;
     @JsonExclude
     private final byte[] p2pStorageSignaturePubKeyBytes;
-
     // used for json
     private final String p2pStorageSignaturePubKeyAsHex;
-
     // Signature of the JSON data of this object excluding the signature and feeTxId fields using the standard Bitcoin
     // messaging signing format as a base64 encoded string.
     @JsonExclude
     public String signature;
-
     // Set after we signed and set the hash. The hash is used in the OP_RETURN of the fee tx
     @JsonExclude
     public String feeTxId;
+
+
+    // Domain
+    @JsonExclude
+    private transient PublicKey p2pStorageSignaturePubKey;
 
     public CompensationRequestPayload(String uid,
                                       String name,

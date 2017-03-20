@@ -57,7 +57,7 @@ public class ProcessDepositTxPublishedMessage extends TradeTask {
             BtcWalletService.printTx("depositTx received from peer", walletTx);
 
             if (trade instanceof OffererTrade)
-                processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer().getOfferPayload());
+                processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

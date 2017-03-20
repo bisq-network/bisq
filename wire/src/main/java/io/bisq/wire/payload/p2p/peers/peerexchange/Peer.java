@@ -2,9 +2,9 @@ package io.bisq.wire.payload.p2p.peers.peerexchange;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.payload.Payload;
 import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.wire.proto.Messages;
 
 import java.util.Date;
 
@@ -13,8 +13,11 @@ public final class Peer implements Payload, Persistable {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final int MAX_FAILED_CONNECTION_ATTEMPTS = 5;
 
+    // Payload
     public final NodeAddress nodeAddress;
     public final Date date;
+
+    // Domain
     transient private int failedConnectionAttempts = 0;
 
     public Peer(NodeAddress nodeAddress) {

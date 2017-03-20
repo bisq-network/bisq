@@ -18,6 +18,7 @@
 package io.bisq.core.btc;
 
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 import io.bisq.common.app.AppModule;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.btc.provider.squ.BsqUtxoFeedService;
@@ -56,6 +57,8 @@ public class BitcoinModule extends AppModule {
 
         bindConstant().annotatedWith(named(BtcOptionKeys.BTC_NODES)).to(env.getRequiredProperty(BtcOptionKeys.BTC_NODES));
         bindConstant().annotatedWith(named(BtcOptionKeys.USE_TOR_FOR_BTC)).to(env.getRequiredProperty(BtcOptionKeys.USE_TOR_FOR_BTC));
+        String socks5DiscoverMode = env.getProperty(BtcOptionKeys.SOCKS5_DISCOVER_MODE, String.class, "ALL");
+        bind(String.class).annotatedWith(Names.named(BtcOptionKeys.SOCKS5_DISCOVER_MODE)).toInstance(socks5DiscoverMode);
         bindConstant().annotatedWith(named(AppOptionKeys.PROVIDERS)).to(env.getRequiredProperty(AppOptionKeys.PROVIDERS));
 
         bind(AddressEntryList.class).in(Singleton.class);

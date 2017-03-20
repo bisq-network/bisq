@@ -61,14 +61,14 @@ public class SeedNodesRepository {
     );
     private NodeAddress nodeAddressToExclude;
 
-    public Set<NodeAddress> getSeedNodeAddresses(boolean useLocalhost, int networkId) {
+    public Set<NodeAddress> getSeedNodeAddresses(boolean useLocalhostForP2P, int networkId) {
         String networkIdAsString = String.valueOf(networkId);
-        Set<NodeAddress> nodeAddresses = useLocalhost ? localhostSeedNodeAddresses : torSeedNodeAddresses;
+        Set<NodeAddress> nodeAddresses = useLocalhostForP2P ? localhostSeedNodeAddresses : torSeedNodeAddresses;
         Set<NodeAddress> filtered = nodeAddresses.stream()
                 .filter(e -> String.valueOf(e.port).endsWith(networkIdAsString))
                 .filter(e -> !e.equals(nodeAddressToExclude))
                 .collect(Collectors.toSet());
-        log.debug("SeedNodeAddresses (useLocalhost={}) for networkId {}:\nnetworkId={}", useLocalhost, networkId, filtered);
+        log.debug("SeedNodeAddresses (useLocalhostForP2P={}) for networkId {}:\nnetworkId={}", useLocalhostForP2P, networkId, filtered);
         return filtered;
     }
 

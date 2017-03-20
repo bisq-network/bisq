@@ -5,7 +5,7 @@ package io.bisq.proto;
 // A simple protocol for describing signed sets of IP addresses. Intended to be distributed via HTTP[S] or in files.
 //
 
-option java_package = "io.bisq.common.wire.proto";
+option java_package = "io.bisq.wire.proto";
 option java_outer_classname = "Messages";
 
 message Envelope {
@@ -169,14 +169,14 @@ message Payload {
         DisputeResult dispute_result = 5;
         StoragePayload storage_payload = 6;
         NodeAddress node_address = 7;
-        PaymentAccountContractData payment_account_contract_data = 8;
+        PaymentAccountPayload payment_account_payload = 8;
         Peer peer = 9;
         PrivateNotification private_notification = 10;
         ProtectedStorageEntry protected_storage_entry = 11;
         ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 12;
         PubKeyRing pub_key_ring = 13;
         RawTransactionInput raw_transaction_input = 14;
-        Offer offer = 15;
+        PB_Offer pb_offer = 15;
         SealedAndSigned SealedAndSigned = 16;
     }
 }
@@ -195,7 +195,7 @@ message StoragePayload {
         CompensationRequestPayload compensation_request_payload = 4;
         TradeStatistics trade_statistics = 5;
         MailboxStoragePayload mailbox_storage_payload = 6;
-        Offer offer = 7;
+        PB_Offer pb_offer = 7;
     }
 }
 
@@ -258,20 +258,21 @@ message CompensationRequestPayload {
 
 message TradeStatistics {
     int64 TTL = 1;
-    string currency = 2;
-    Offer.Direction direction = 3;
-    int64 trade_price = 4;
-    int64 trade_amount = 5;
-    int64 trade_date = 6;
-    string payment_method = 7;
-    int64 offer_date = 8;
-    bool use_market_based_price = 9;
-    double market_price_margin = 10;
-    int64 offer_amount = 11;
-    int64 offer_min_amount = 12;
-    string offer_id = 13;
-    string deposit_tx_id = 14;
-    PubKeyRing pub_key_ring = 15;
+    string baseCurrency = 2;
+    string counterCurrency = 3;
+    PB_Offer.Direction direction = 4;
+    int64 trade_price = 5;
+    int64 trade_amount = 6;
+    int64 trade_date = 7;
+    string payment_method_id = 8;
+    int64 offer_date = 9;
+    bool use_market_based_price = 10;
+    double market_price_margin = 11;
+    int64 offer_amount = 12;
+    int64 offer_min_amount = 13;
+    string offer_id = 14;
+    string deposit_tx_id = 15;
+    PubKeyRing pub_key_ring = 16;
 }
 message MailboxStoragePayload {
     int64 TTL = 1;
@@ -280,57 +281,49 @@ message MailboxStoragePayload {
     bytes receiverPubKeyForRemoveOperationBytes = 4;
 }
 
-message Offer {
+message PB_Offer {
     enum Direction {
         BUY = 0;
         SELL = 1;
     }
 
-    enum State {
-        UNDEFINED = 0;
-        OFFER_FEE_PAID = 1;
-        AVAILABLE = 2;
-        NOT_AVAILABLE = 3;
-        REMOVED = 4;
-        OFFERER_OFFLINE = 5;
-    }
-
     int64 TTL = 1;
     Direction direction = 2;
-    string currency_code = 3;
-    string payment_method_name = 4;
-    string country_code = 5;
-    repeated string accepted_country_codes = 6;
-    string bank_id = 7;
-    repeated string accepted_bank_ids = 8;
-    repeated NodeAddress arbitrator_node_addresses = 9;
-    string id = 10;
-    int64 date = 11;
-    int64 protocol_version = 12;
-    bool use_market_based_price = 13;
-    int64 fiat_price = 14;
-    double market_price_margin = 15;
-    int64 amount = 16;
-    int64 min_amount = 17;
-    NodeAddress offerer_node_address = 18;
-    PubKeyRing pub_key_ring = 19;
-    string offerer_payment_account_id = 20;
-    string offer_fee_payment_tx_i_d = 21;
-    string version_nr = 22;
-    int64 block_height_at_offer_creation = 23;
-    int64 tx_fee = 24;
-    int64 create_offer_fee = 25;
-    int64 buyer_security_deposit = 26;
-    int64 seller_security_deposit = 27;
-    int64 max_trade_limit = 28;
-    int64 max_trade_period = 29;
-    bool use_auto_close = 30;
-    bool use_re_open_after_auto_close = 31;
-    int64 lower_close_price = 32;
-    int64 upper_close_price = 33;
-    bool is_private_offer = 34;
-    string hash_of_challenge = 35;
-    map<string, string> extra_data_map = 36;
+    string base_currency_code = 3;
+    string counter_currency_code = 4;
+    string payment_method_id = 5;
+    string country_code = 6;
+    repeated string accepted_country_codes = 7;
+    string bank_id = 8;
+    repeated string accepted_bank_ids = 9;
+    repeated NodeAddress arbitrator_node_addresses = 10;
+    string id = 11;
+    int64 date = 12;
+    int64 protocol_version = 13;
+    bool use_market_based_price = 14;
+    int64 price = 15;
+    double market_price_margin = 16;
+    int64 amount = 17;
+    int64 min_amount = 18;
+    NodeAddress offerer_node_address = 19;
+    PubKeyRing pub_key_ring = 20;
+    string offerer_payment_account_id = 21;
+    string offer_fee_payment_tx_id = 22;
+    string version_nr = 23;
+    int64 block_height_at_offer_creation = 24;
+    int64 tx_fee = 25;
+    int64 create_offer_fee = 26;
+    int64 buyer_security_deposit = 27;
+    int64 seller_security_deposit = 28;
+    int64 max_trade_limit = 29;
+    int64 max_trade_period = 30;
+    bool use_auto_close = 31;
+    bool use_re_open_after_auto_close = 32;
+    int64 lower_close_price = 33;
+    int64 upper_close_price = 34;
+    bool is_private_offer = 35;
+    string hash_of_challenge = 36;
+    map<string, string> extra_data_map = 37;
 }
 
 // stop storagepayloads
@@ -456,7 +449,7 @@ message PubKeyRing {
 }
 
 message Contract {
-    Offer offer = 1;
+    PB_Offer pb_offer = 1;
     int64 trade_amount = 2;
     int64 trade_price = 3;
     string take_offer_fee_tx_id = 4;
@@ -464,8 +457,8 @@ message Contract {
     bool is_buyer_offerer_and_seller_taker = 6;
     string offerer_account_id = 7;
     string taker_account_id = 8;
-    PaymentAccountContractData offerer_payment_account_contract_data = 9;
-    PaymentAccountContractData taker_payment_account_contract_data = 10;
+    PaymentAccountPayload offerer_payment_account_payload = 9;
+    PaymentAccountPayload taker_payment_account_payload = 10;
     PubKeyRing offerer_pub_key_ring = 11;
     PubKeyRing taker_pub_key_ring = 12;
     NodeAddress buyer_node_address = 13;
@@ -515,7 +508,7 @@ message PayDepositRequest {
     string change_output_address = 9;
     string taker_payout_address_string = 10;
     PubKeyRing taker_pub_key_ring = 11;
-    PaymentAccountContractData taker_payment_account_contract_data = 12;
+    PaymentAccountPayload taker_payment_account_payload = 12;
     string taker_account_id = 13;
     string take_offer_fee_tx_id = 14;
     repeated NodeAddress accepted_arbitrator_node_addresses = 15;
@@ -603,7 +596,7 @@ message FinalizePayoutTxRequest {
 message PublishDepositTxRequest {
     int32 message_version = 1;
     string trade_id = 2;
-    PaymentAccountContractData offerer_payment_account_contract_data = 3;
+    PaymentAccountPayload offerer_payment_account_payload = 3;
     string offerer_account_id = 4;
     string offerer_contract_as_json = 5;
     string offerer_contract_signature = 6;
@@ -613,49 +606,49 @@ message PublishDepositTxRequest {
     bytes offerer_multi_sig_pub_key = 10;
 }
 
-message PaymentAccountContractData {
+message PaymentAccountPayload {
     string id = 1;
-    string payment_method_name = 2;
+    string payment_method_id = 2;
     int64 max_trade_period = 3;
     oneof message {
-        AliPayAccountContractData ali_pay_account_contract_data = 4;
-        ChaseQuickPayAccountContractData chase_quick_pay_account_contract_data = 5;
-        ClearXchangeAccountContractData clear_xchange_account_contract_data = 6;
-        CountryBasedPaymentAccountContractData country_based_payment_account_contract_data = 7;
-        CryptoCurrencyAccountContractData crypto_currency_account_contract_data = 8;
-        FasterPaymentsAccountContractData faster_payments_account_contract_data = 9;
-        InteracETransferAccountContractData interac_e_transfer_account_contract_data = 10;
-        OKPayAccountContractData o_k_pay_account_contract_data = 11;
-        PerfectMoneyAccountContractData perfect_money_account_contract_data = 12;
-        SwishAccountContractData swish_account_contract_data = 13;
-        USPostalMoneyOrderAccountContractData u_s_postal_money_order_account_contract_data = 14;
+        AliPayAccountPayload ali_pay_account_payload = 4;
+        ChaseQuickPayAccountPayload chase_quick_pay_account_payload = 5;
+        ClearXchangeAccountPayload clear_xchange_account_payload = 6;
+        CountryBasedPaymentAccountPayload country_based_payment_account_payload = 7;
+        CryptoCurrencyAccountPayload crypto_currency_account_payload = 8;
+        FasterPaymentsAccountPayload faster_payments_account_payload = 9;
+        InteracETransferAccountPayload interac_e_transfer_account_payload = 10;
+        OKPayAccountPayload o_k_pay_account_payload = 11;
+        PerfectMoneyAccountPayload perfect_money_account_payload = 12;
+        SwishAccountPayload swish_account_payload = 13;
+        USPostalMoneyOrderAccountPayload u_s_postal_money_order_account_payload = 14;
     }
 }
 
-message AliPayAccountContractData {
+message AliPayAccountPayload {
     string account_nr = 1;
 }
 
-message ChaseQuickPayAccountContractData {
+message ChaseQuickPayAccountPayload {
     string email = 1;
     string holder_name = 2;
 }
 
-message ClearXchangeAccountContractData {
+message ClearXchangeAccountPayload {
     string holder_name = 1;
     string email_or_mobile_nr = 2;
 }
 
-message CountryBasedPaymentAccountContractData {
+message CountryBasedPaymentAccountPayload {
     string countryCode = 1;
     oneof message {
-        BankAccountContractData bank_account_contract_data = 2;
-        CashDepositAccountContractData cash_deposit_account_contract_data = 3;
-        SepaAccountContractData sepa_account_contract_data = 4;
+        BankAccountPayload bank_account_payload = 2;
+        CashDepositAccountPayload cash_deposit_account_payload = 3;
+        SepaAccountPayload sepa_account_payload = 4;
     }
 }
 
-message BankAccountContractData {
+message BankAccountPayload {
     string holder_name = 2;
     string bank_name = 3;
     string bank_id = 4;
@@ -664,22 +657,22 @@ message BankAccountContractData {
     string account_type = 7;
     string holder_tax_id = 8;
     oneof message {
-        NationalBankAccountContractData national_bank_account_contract_data = 9;
-        SameBankAccountContractData same_bank_accont_contract_data = 10;
-        SpecificBanksAccountContractData specific_banks_account_contract_data = 11;
+        NationalBankAccountPayload national_bank_account_payload = 9;
+        SameBankAccountPayload same_bank_accont_payload = 10;
+        SpecificBanksAccountPayload specific_banks_account_payload = 11;
     }
 }
 
-message NationalBankAccountContractData {
+message NationalBankAccountPayload {
 }
 
-message SameBankAccountContractData {
+message SameBankAccountPayload {
 }
-message SpecificBanksAccountContractData {
+message SpecificBanksAccountPayload {
     repeated string accepted_banks = 2;
 }
 
-message CashDepositAccountContractData {
+message CashDepositAccountPayload {
     string holder_name = 1;
     string holder_email = 2;
     string bank_name = 3;
@@ -691,43 +684,43 @@ message CashDepositAccountContractData {
     string holder_tax_id = 9;
 }
 
-message SepaAccountContractData {
+message SepaAccountPayload {
     string holder_name = 1;
     string iban = 2;
     string bic = 3;
     repeated string accepted_country_codes = 4;
 }
 
-message CryptoCurrencyAccountContractData {
+message CryptoCurrencyAccountPayload {
     string address = 1;
 }
 
-message FasterPaymentsAccountContractData {
+message FasterPaymentsAccountPayload {
     string sort_code = 1;
     string account_nr = 2;
 }
 
-message InteracETransferAccountContractData {
+message InteracETransferAccountPayload {
     string email = 1;
     string holder_name = 2;
     string question = 3;
     string answer = 4;
 }
 
-message OKPayAccountContractData {
+message OKPayAccountPayload {
     string account_nr = 1;
 }
 
-message PerfectMoneyAccountContractData {
+message PerfectMoneyAccountPayload {
     string account_nr = 1;
 }
 
-message SwishAccountContractData {
+message SwishAccountPayload {
     string mobile_nr = 1;
     string holder_name = 2;
 }
 
-message USPostalMoneyOrderAccountContractData {
+message USPostalMoneyOrderAccountPayload {
     string postal_address = 1;
     string holder_name = 2;
 }

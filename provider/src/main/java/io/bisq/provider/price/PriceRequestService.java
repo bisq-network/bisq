@@ -155,7 +155,10 @@ public class PriceRequestService {
                 .filter(e -> poloniexMap == null || !poloniexMap.containsKey(e.getKey()))
                 .forEach(e -> allPricesMap.put(e.getKey(), e.getValue()));
         coinmarketcapTs = Instant.now().getEpochSecond();
-        log.info("Coinmarketcap LTC (last): " + map.get("LTC").l);
+
+        if (map.get("LTC") != null)
+            log.info("Coinmarketcap LTC (last): " + map.get("LTC").l);
+
         writeToJson();
     }
 
@@ -167,15 +170,21 @@ public class PriceRequestService {
         removeOutdatedPrices(allPricesMap);
         allPricesMap.putAll(poloniexMap);
         poloniexTs = Instant.now().getEpochSecond();
-        log.info("Poloniex LTC (last): " + poloniexMap.get("LTC").l);
+
+        if (poloniexMap.get("LTC") != null)
+            log.info("Poloniex LTC (last): " + poloniexMap.get("LTC").l);
+
         writeToJson();
     }
 
     private void requestBtcAverageLocalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException, HttpException {
         long ts = System.currentTimeMillis();
         btcAverageLocalMap = btcAverageProvider.getLocal();
-        log.info("BTCAverage local USD (last):" + btcAverageLocalMap.get("USD").l);
+
+        if (btcAverageLocalMap.get("USD") != null)
+            log.info("BTCAverage local USD (last):" + btcAverageLocalMap.get("USD").l);
         log.info("requestBtcAverageLocalPrices took {} ms.", (System.currentTimeMillis() - ts));
+
         removeOutdatedPrices(allPricesMap);
         allPricesMap.putAll(btcAverageLocalMap);
         btcAverageTs = Instant.now().getEpochSecond();
@@ -185,8 +194,11 @@ public class PriceRequestService {
     private void requestBtcAverageGlobalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException, HttpException {
         long ts = System.currentTimeMillis();
         Map<String, PriceData> map = btcAverageProvider.getGlobal();
-        log.info("BTCAverage global USD (last):" + map.get("USD").l);
+
+        if (map.get("USD") != null)
+            log.info("BTCAverage global USD (last):" + map.get("USD").l);
         log.info("requestBtcAverageGlobalPrices took {} ms.", (System.currentTimeMillis() - ts));
+
         removeOutdatedPrices(btcAverageLocalMap);
         removeOutdatedPrices(allPricesMap);
         // we don't replace prices which we got form the local request, just in case the global data are received 
@@ -208,10 +220,10 @@ public class PriceRequestService {
     }
 
     private void removeOutdatedPrices(Map<String, PriceData> map) {
-        long epochSecond = Instant.now().getEpochSecond();
-        long limit = epochSecond - MARKET_PRICE_TTL_SEC;
+        long now = Instant.now().getEpochSecond();
+        long limit = now - MARKET_PRICE_TTL_SEC;
         Map<String, PriceData> filtered = map.entrySet().stream()
-                .filter(e -> e.getValue().e > limit)
+                .filter(e -> e.getValue().ts > limit)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         map.clear();
         map.putAll(filtered);

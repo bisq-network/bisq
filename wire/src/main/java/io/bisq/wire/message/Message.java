@@ -1,6 +1,6 @@
 package io.bisq.wire.message;
 
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.wire.proto.Messages;
 
 import java.io.Serializable;
 

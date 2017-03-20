@@ -21,7 +21,6 @@ import io.bisq.common.app.Log;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.trade.TradeManager;
-import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
@@ -67,7 +66,7 @@ public class OfferBook {
             @Override
             public void onRemoved(Offer offer) {
                 // Update state in case that that offer is used in the take offer screen, so it gets updated correctly
-                offer.setState(OfferPayload.State.REMOVED);
+                offer.setState(Offer.State.REMOVED);
 
                 // clean up possible references in openOfferManager 
                 tradeManager.onOfferRemovedFromRemoteOfferBook(offer);

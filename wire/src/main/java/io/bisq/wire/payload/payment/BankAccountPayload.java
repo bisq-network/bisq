@@ -19,38 +19,34 @@ package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.BankUtil;
-import io.bisq.common.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Locale;
 
-public class CashDepositAccountContractData extends CountryBasedPaymentAccountContractData {
+public abstract class BankAccountPayload extends CountryBasedPaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(CashDepositAccountContractData.class);
+    private static final Logger log = LoggerFactory.getLogger(BankAccountPayload.class);
 
     protected String holderName;
-    protected String holderEmail;
     protected String bankName;
     protected String bankId;
     protected String branchId;
     protected String accountNr;
     protected String accountType;
     @Nullable
-    protected String requirements;
-    @Nullable
     protected String holderTaxId;
 
-    public CashDepositAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public BankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
     @Override
     public String getPaymentDetails(Locale locale) {
-        return "Cash deposit - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+        return "Bank account transfer - " + getPaymentDetailsForTradePopup(locale).replace("\n", ", ");
     }
 
     @Override
@@ -61,43 +57,15 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
         String accountNr = BankUtil.isAccountNrRequired(countryCode) ? BankUtil.getAccountNrLabel(countryCode) + " " + this.accountNr + "\n" : "";
         String accountType = BankUtil.isAccountTypeRequired(countryCode) ? BankUtil.getAccountTypeLabel(countryCode) + " " + this.accountType + "\n" : "";
         String holderIdString = BankUtil.isHolderIdRequired(countryCode) ? (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
-        String requirementsString = requirements != null && !requirements.isEmpty() ? ("Extra requirements: " + requirements + "\n") : "";
 
         return "Holder name: " + holderName + "\n" +
-                "Holder email: " + holderEmail + "\n" +
                 bankName +
                 bankId +
                 branchId +
                 accountNr +
                 accountType +
                 holderIdString +
-                requirementsString +
                 "Country of bank: " + new Locale(locale.getLanguage(), countryCode).getDisplayCountry();
-    }
-
-    @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.CashDepositAccountContractData.Builder cashDepositAccountContractData =
-                Messages.CashDepositAccountContractData.newBuilder()
-                        .setHolderName(holderName)
-                        .setHolderEmail(holderEmail)
-                        .setBankName(bankName)
-                        .setBankId(bankId)
-                        .setBranchId(branchId)
-                        .setAccountNr(accountNr)
-                        .setRequirements(requirements)
-                        .setHolderTaxId(holderTaxId);
-        Messages.CountryBasedPaymentAccountContractData.Builder countryBasedPaymentAccountContractData =
-                Messages.CountryBasedPaymentAccountContractData.newBuilder()
-                        .setCountryCode(countryCode)
-                        .setCashDepositAccountContractData(cashDepositAccountContractData);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
-        return paymentAccountContractData.build();
     }
 
 
@@ -111,14 +79,6 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
 
     public String getHolderName() {
         return holderName;
-    }
-
-    public void setHolderEmail(String holderEmail) {
-        this.holderEmail = holderEmail;
-    }
-
-    public String getHolderEmail() {
-        return holderEmail;
     }
 
     public void setBankName(String bankName) {
@@ -174,14 +134,4 @@ public class CashDepositAccountContractData extends CountryBasedPaymentAccountCo
     public String getAccountType() {
         return accountType;
     }
-
-    @Nullable
-    public String getRequirements() {
-        return requirements;
-    }
-
-    public void setRequirements(String requirements) {
-        this.requirements = requirements;
-    }
-
 }

@@ -18,9 +18,9 @@
 package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.wire.proto.Messages;
 
-public final class InteracETransferAccountContractData extends PaymentAccountContractData {
+public final class InteracETransferAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -29,12 +29,12 @@ public final class InteracETransferAccountContractData extends PaymentAccountCon
     private String question;
     private String answer;
 
-    public InteracETransferAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public InteracETransferAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public InteracETransferAccountContractData(String paymentMethodName, String id, long maxTradePeriod,
-                                               String email, String holderName, String question, String answer) {
+    public InteracETransferAccountPayload(String paymentMethodName, String id, long maxTradePeriod,
+                                          String email, String holderName, String question, String answer) {
         super(paymentMethodName, id, maxTradePeriod);
         this.email = email;
         this.holderName = holderName;
@@ -88,19 +88,19 @@ public final class InteracETransferAccountContractData extends PaymentAccountCon
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.InteracETransferAccountContractData.Builder interacETransferAccountContractData =
-                Messages.InteracETransferAccountContractData.newBuilder()
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.InteracETransferAccountPayload.Builder interacETransferAccountPayload =
+                Messages.InteracETransferAccountPayload.newBuilder()
                         .setEmail(email)
                         .setHolderName(holderName)
                         .setQuestion(question)
                         .setAnswer(answer);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setInteracETransferAccountContractData(interacETransferAccountContractData);
-        return paymentAccountContractData.build();
+                        .setInteracETransferAccountPayload(interacETransferAccountPayload);
+        return paymentAccountPayload.build();
     }
 }

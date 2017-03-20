@@ -32,7 +32,6 @@ import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.CurrencyListItem;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -121,8 +120,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         createChart();
 
-        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleBuy = getOfferTable(OfferPayload.Direction.BUY);
-        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleSell = getOfferTable(OfferPayload.Direction.SELL);
+        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleBuy = getOfferTable(Offer.Direction.BUY);
+        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleSell = getOfferTable(Offer.Direction.SELL);
         buyOfferTableView = tupleBuy.first;
         sellOfferTableView = tupleSell.first;
 
@@ -137,8 +136,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         bottomHBox.setAlignment(Pos.CENTER);
         HBox.setHgrow(tupleBuy.second, Priority.ALWAYS);
         HBox.setHgrow(tupleSell.second, Priority.ALWAYS);
-        tupleBuy.second.setUserData(OfferPayload.Direction.BUY.name());
-        tupleSell.second.setUserData(OfferPayload.Direction.SELL.name());
+        tupleBuy.second.setUserData(Offer.Direction.BUY.name());
+        tupleSell.second.setUserData(Offer.Direction.SELL.name());
         bottomHBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
 
         root.getChildren().addAll(currencyHBox, areaChart, bottomHBox);
@@ -197,7 +196,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     });
 
                     if (CurrencyUtil.isCryptoCurrency(code)) {
-                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(OfferPayload.Direction.BUY.name())) {
+                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(Offer.Direction.BUY.name())) {
                             bottomHBox.getChildren().get(0).toFront();
                             reverseTableColumns();
                         }
@@ -210,7 +209,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", "BTC"));
                     } else {
-                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(OfferPayload.Direction.SELL.name())) {
+                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(Offer.Direction.SELL.name())) {
                             bottomHBox.getChildren().get(0).toFront();
                             reverseTableColumns();
                         }
@@ -288,7 +287,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         seriesSell.getData().addAll(model.getSellData());
     }
 
-    private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(OfferPayload.Direction direction) {
+    private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(Offer.Direction direction) {
         TableView<OfferListItem> tableView = new TableView<>();
         tableView.setMinHeight(109);
         tableView.setPrefHeight(121);
@@ -355,7 +354,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
-                                        setText(formatter.formatVolume(offer.getOfferVolume()));
+                                        setText(formatter.formatVolume(offer.getVolume()));
                                         model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     }
                                 }
@@ -371,7 +370,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                         model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
-                                        setText(formatter.formatVolume(offer.getOfferVolume()));
+                                        setText(formatter.formatVolume(offer.getVolume()));
                                     }
                                 } else {
                                     if (listener != null)
@@ -428,7 +427,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     }
                 });
 
-        if (direction == OfferPayload.Direction.BUY) {
+        if (direction == Offer.Direction.BUY) {
             tableView.getColumns().add(accumulatedColumn);
             tableView.getColumns().add(volumeColumn);
             tableView.getColumns().add(amountColumn);
@@ -449,7 +448,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16; -fx-alignment: center");
         UserThread.execute(() -> titleLabel.prefWidthProperty().bind(tableView.widthProperty()));
 
-        boolean isSellOffer = direction == OfferPayload.Direction.SELL;
+        boolean isSellOffer = direction == Offer.Direction.SELL;
         Button button = new Button();
         ImageView iconView = new ImageView();
         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");

@@ -21,46 +21,45 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.util.JsonExclude;
-import io.bisq.common.util.Utilities;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.payload.RequiresOwnerIsOnlinePayload;
 import io.bisq.wire.payload.StoragePayload;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.payment.PaymentMethod;
+import io.bisq.wire.proto.Messages;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @ToString
 @EqualsAndHashCode
+@Getter
+@Slf4j
 public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnlinePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODO remove once PB work is completed
     // That object is sent over the wire, so we need to take care of version compatibility.
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-    @JsonExclude
-    private static final Logger log = LoggerFactory.getLogger(OfferPayload.class);
+
     public static final long TTL = TimeUnit.MINUTES.toMillis(DevEnv.STRESS_TEST_MODE ? 6 : 6);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
@@ -68,83 +67,54 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
     public enum Direction {BUY, SELL}
 
-    public enum State {
-        UNDEFINED,
-        OFFER_FEE_PAID,
-        AVAILABLE,
-        NOT_AVAILABLE,
-        REMOVED,
-        OFFERER_OFFLINE
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Fields for filtering offers
-    @Getter
     private final Direction direction;
-    @Getter
-    private final String currencyCode;
-    // payment method
-    private final String paymentMethodName;
+
+    private final String baseCurrencyCode;
+    private final String counterCurrencyCode;
+    
+    private final String paymentMethodId;
     @Nullable
-    @Getter
     private final String countryCode;
     @Nullable
-    @Getter
     private final List<String> acceptedCountryCodes;
-
     @Nullable
-    @Getter
     private final String bankId;
     @Nullable
-    @Getter
     private final List<String> acceptedBankIds;
-
-    @Getter
     private final List<NodeAddress> arbitratorNodeAddresses;
-
-    @Getter
     private final String id;
     private final long date;
-    @Getter
     private final long protocolVersion;
 
     // We use 2 type of prices: fixed price or price based on distance from market price
-    @Getter
     private final boolean useMarketBasedPrice;
-    // fiatPrice if fixed price is used (usePercentageBasedPrice = false), otherwise 0
-
-    //TODO add support for altcoin price or fix precision issue
-    @Getter
-    private final long fiatPrice;
+    // price if fixed price is used (usePercentageBasedPrice = false), otherwise 0
+    private final long price;
 
     // Distance form market price if percentage based price is used (usePercentageBasedPrice = true), otherwise 0.
     // E.g. 0.1 -> 10%. Can be negative as well. Depending on direction the marketPriceMargin is above or below the market price.
     // Positive values is always the usual case where you want a better price as the market.
     // E.g. Buy offer with market price 400.- leads to a 360.- price.
     // Sell offer with market price 400.- leads to a 440.- price.
-    @Getter
+
     private final double marketPriceMargin;
     private final long amount;
     private final long minAmount;
-    @Getter
     private final NodeAddress offererNodeAddress;
     @JsonExclude
-    @Getter
     private final PubKeyRing pubKeyRing;
-    @Getter
     private final String offererPaymentAccountId;
 
     // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
-    @Getter
     @Setter
-    private String offerFeePaymentTxID;
+    private String offerFeePaymentTxId;
 
     // New properties from v. 0.5.0.0
-    @Getter
     private final String versionNr;
     private final long blockHeightAtOfferCreation;
     private final long txFee;
@@ -152,7 +122,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final long buyerSecurityDeposit;
     private final long sellerSecurityDeposit;
     private final long maxTradeLimit;
-    @Getter
     private final long maxTradePeriod;
 
     // reserved for future use cases
@@ -184,20 +153,21 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
      * meaning it's null here and "" there => not good
      *
      * @param id
-     * @param creationDate               date of OfferPayload creation, can be null in which case the current date/time will be used.
+     * @param date                       date of OfferPayload creation, can be null in which case the current date/time will be used.
      * @param offererNodeAddress
      * @param pubKeyRing
      * @param direction
-     * @param fiatPrice
+     * @param price
      * @param marketPriceMargin
      * @param useMarketBasedPrice
      * @param amount
      * @param minAmount
-     * @param currencyCode
+     * @param baseCurrencyCode
+     * @param counterCurrencyCode
      * @param arbitratorNodeAddresses
-     * @param paymentMethodName
+     * @param paymentMethodId
      * @param offererPaymentAccountId
-     * @param offerFeePaymentTxID
+     * @param offerFeePaymentTxId
      * @param countryCode
      * @param acceptedCountryCodes
      * @param bankId
@@ -218,21 +188,23 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
      * @param hashOfChallenge
      * @param extraDataMap
      */
+    @SuppressWarnings("JavaDoc")
     public OfferPayload(String id,
-                        Long creationDate,
+                        long date,
                         NodeAddress offererNodeAddress,
                         PubKeyRing pubKeyRing,
                         Direction direction,
-                        long fiatPrice,
+                        long price,
                         double marketPriceMargin,
                         boolean useMarketBasedPrice,
                         long amount,
                         long minAmount,
-                        String currencyCode,
+                        String baseCurrencyCode,
+                        String counterCurrencyCode,
                         List<NodeAddress> arbitratorNodeAddresses,
-                        String paymentMethodName,
+                        String paymentMethodId,
                         String offererPaymentAccountId,
-                        @Nullable String offerFeePaymentTxID,
+                        @Nullable String offerFeePaymentTxId,
                         @Nullable String countryCode,
                         @Nullable List<String> acceptedCountryCodes,
                         @Nullable String bankId,
@@ -252,21 +224,22 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                         boolean isPrivateOffer,
                         @Nullable String hashOfChallenge,
                         @Nullable Map<String, String> extraDataMap) {
-
         this.id = id;
+        this.date = date;
         this.offererNodeAddress = offererNodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.direction = direction;
-        this.fiatPrice = fiatPrice;
+        this.price = price;
         this.marketPriceMargin = marketPriceMargin;
         this.useMarketBasedPrice = useMarketBasedPrice;
         this.amount = amount;
         this.minAmount = minAmount;
-        this.currencyCode = currencyCode;
+        this.baseCurrencyCode = baseCurrencyCode;
+        this.counterCurrencyCode = counterCurrencyCode;
         this.arbitratorNodeAddresses = arbitratorNodeAddresses;
-        this.paymentMethodName = paymentMethodName;
+        this.paymentMethodId = paymentMethodId;
         this.offererPaymentAccountId = offererPaymentAccountId;
-        this.offerFeePaymentTxID = Optional.ofNullable(offerFeePaymentTxID).orElse("");
+        this.offerFeePaymentTxId = Optional.ofNullable(offerFeePaymentTxId).orElse("");
         this.countryCode = Optional.ofNullable(countryCode).orElse("");
         this.acceptedCountryCodes = Optional.ofNullable(acceptedCountryCodes).orElse(Lists.newArrayList());
         this.bankId = Optional.ofNullable(bankId).orElse("");
@@ -286,84 +259,22 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.isPrivateOffer = isPrivateOffer;
         this.hashOfChallenge = Optional.ofNullable(hashOfChallenge).orElse("");
         this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
-        this.date = Optional.ofNullable(creationDate).orElse(new Date().getTime());
         this.protocolVersion = Version.TRADE_PROTOCOL_VERSION;
     }
 
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
-    }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Overridden Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public NodeAddress getOwnerNodeAddress() {
         return offererNodeAddress;
     }
 
-    //TODO update with new properties
-    public void checkCoinNotNullOrZero(Coin value, String name) {
-        checkNotNull(value, name + " is null");
-        checkArgument(value.isPositive(),
-                name + " must be positive. " + name + "=" + value.toFriendlyString());
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    public Direction getMirroredDirection() {
-        return direction == Direction.BUY ? Direction.SELL : Direction.BUY;
-    }
-
     @Override
     public PublicKey getOwnerPubKey() {
-        return pubKeyRing != null ? pubKeyRing.getSignaturePubKey() : null;
-    }
-
-    public String getShortId() {
-        return Utilities.getShortId(id);
-    }
-
-    public PaymentMethod getPaymentMethod() {
-        return PaymentMethod.getPaymentMethodById(paymentMethodName);
-    }
-
-    public Coin getTxFee() {
-        return Coin.valueOf(txFee);
-    }
-
-    public Coin getCreateOfferFee() {
-        return Coin.valueOf(createOfferFee);
-    }
-
-    public Coin getBuyerSecurityDeposit() {
-        return Coin.valueOf(buyerSecurityDeposit);
-    }
-
-    public Coin getSellerSecurityDeposit() {
-        return Coin.valueOf(sellerSecurityDeposit);
-    }
-
-    public Coin getMaxTradeLimit() {
-        return Coin.valueOf(maxTradeLimit);
-    }
-
-    public Coin getAmount() {
-        return Coin.valueOf(amount);
-    }
-
-    public Coin getMinAmount() {
-        return Coin.valueOf(minAmount);
-    }
-
-    public Date getDate() {
-        return new Date(date);
+        return pubKeyRing.getSignaturePubKey();
     }
 
     @Override
@@ -373,18 +284,21 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
     @Override
     public Messages.StoragePayload toProtoBuf() {
-        Messages.Offer.Builder offerBuilder = Messages.Offer.newBuilder()
+        List<Messages.NodeAddress> arbitratorNodeAddresses = this.arbitratorNodeAddresses.stream()
+                .map(NodeAddress::toProtoBuf)
+                .collect(Collectors.toList());
+        Messages.PB_Offer.Builder offerBuilder = Messages.PB_Offer.newBuilder()
                 .setTTL(TTL)
                 .setDirectionValue(direction.ordinal())
-                .setCurrencyCode(currencyCode)
-                .setPaymentMethodName(paymentMethodName)
-                .addAllArbitratorNodeAddresses(arbitratorNodeAddresses.stream()
-                        .map(nodeAddress -> nodeAddress.toProtoBuf()).collect(Collectors.toList()))
+                .setBaseCurrencyCode(baseCurrencyCode)
+                .setCounterCurrencyCode(counterCurrencyCode)
+                .setPaymentMethodId(paymentMethodId)
+                .addAllArbitratorNodeAddresses(arbitratorNodeAddresses)
                 .setId(id)
                 .setDate(date)
                 .setProtocolVersion(protocolVersion)
                 .setUseMarketBasedPrice(useMarketBasedPrice)
-                .setFiatPrice(fiatPrice)
+                .setPrice(price)
                 .setMarketPriceMargin(marketPriceMargin)
                 .setAmount(amount)
                 .setMinAmount(minAmount)
@@ -405,9 +319,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setUpperClosePrice(upperClosePrice)
                 .setIsPrivateOffer(isPrivateOffer);
 
-
-        if (Objects.nonNull(offerFeePaymentTxID)) {
-            offerBuilder.setOfferFeePaymentTxID(offerFeePaymentTxID);
+        if (Objects.nonNull(offerFeePaymentTxId)) {
+            offerBuilder.setOfferFeePaymentTxId(offerFeePaymentTxId);
         } else {
             throw new RuntimeException("OfferPayload is in invalid state: offerFeePaymentTxID is not set when adding to P2P network.");
         }
@@ -418,6 +331,14 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         Optional.ofNullable(hashOfChallenge).ifPresent(offerBuilder::setHashOfChallenge);
         Optional.ofNullable(extraDataMap).ifPresent(offerBuilder::putAllExtraDataMap);
 
-        return Messages.StoragePayload.newBuilder().setOffer(offerBuilder).build();
+        return Messages.StoragePayload.newBuilder().setPbOffer(offerBuilder).build();
+    }
+
+    //TODO remove
+    public String getCurrencyCode() {
+        if (CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()))
+            return getBaseCurrencyCode();
+        else
+            return getCounterCurrencyCode();
     }
 }

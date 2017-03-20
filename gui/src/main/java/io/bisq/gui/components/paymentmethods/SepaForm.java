@@ -29,8 +29,8 @@ import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.BICValidator;
 import io.bisq.gui.util.validation.IBANValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
-import io.bisq.wire.payload.payment.SepaAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.wire.payload.payment.SepaAccountPayload;
 import javafx.collections.FXCollections;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -62,17 +62,17 @@ public class SepaForm extends PaymentMethodForm {
     private ComboBox<TradeCurrency> currencyComboBox;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
-                                      PaymentAccountContractData paymentAccountContractData) {
-        SepaAccountContractData sepaAccountContractData = (SepaAccountContractData) paymentAccountContractData;
+                                      PaymentAccountPayload paymentAccountPayload) {
+        SepaAccountPayload sepaAccountPayload = (SepaAccountPayload) paymentAccountPayload;
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                 Res.getWithCol("payment.account.owner"),
-                sepaAccountContractData.getHolderName());
+                sepaAccountPayload.getHolderName());
         FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                 Res.getWithCol("payment.bank.country"),
-                CountryUtil.getNameAndCode(sepaAccountContractData.getCountryCode(), Preferences.getDefaultLocale()));
+                CountryUtil.getNameAndCode(sepaAccountPayload.getCountryCode(), Preferences.getDefaultLocale()));
         // IBAN, BIC will not be translated
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", sepaAccountContractData.getIban());
-        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC:", sepaAccountContractData.getBic());
+        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "IBAN:", sepaAccountPayload.getIban());
+        FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, "BIC:", sepaAccountPayload.getBic());
         return gridRow;
     }
 

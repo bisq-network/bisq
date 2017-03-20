@@ -38,7 +38,7 @@ public class LoadCreateOfferFeeTx extends TradeTask {
             runInterceptHook();
 
             // TODO impl. missing
-            ///processModel.getWalletService().findTxInBlockChain(trade.getOfferPayload().getOfferFeePaymentTxID());
+            ///processModel.getWalletService().findTxInBlockChain(trade.getOfferPayload().getOfferFeePaymentTxId());
 
             complete();
         } catch (Throwable t) {

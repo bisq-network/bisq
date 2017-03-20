@@ -27,8 +27,8 @@ import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.ChaseQuickPayValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.ChaseQuickPayAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.ChaseQuickPayAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -42,11 +42,11 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
     private final ChaseQuickPayValidator chaseQuickPayValidator;
     private InputTextField mobileNrInputTextField;
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
+    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
-                ((ChaseQuickPayAccountContractData) paymentAccountContractData).getHolderName());
+                ((ChaseQuickPayAccountPayload) paymentAccountPayload).getHolderName());
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
-                ((ChaseQuickPayAccountContractData) paymentAccountContractData).getEmail());
+                ((ChaseQuickPayAccountPayload) paymentAccountPayload).getEmail());
         return gridRow;
     }
 

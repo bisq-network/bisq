@@ -18,32 +18,33 @@
 package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.wire.proto.Messages;
 
-public final class SwishAccountContractData extends PaymentAccountContractData {
+public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private String mobileNr;
+    private String postalAddress;
     private String holderName;
 
-    public SwishAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+
+    public USPostalMoneyOrderAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public SwishAccountContractData(String paymentMethodName, String id, long maxTradePeriod,
-                                    String mobileNr, String holderName) {
+    public USPostalMoneyOrderAccountPayload(String paymentMethodName, String id, long maxTradePeriod,
+                                            String postalAddress, String holderName) {
         super(paymentMethodName, id, maxTradePeriod);
-        this.mobileNr = mobileNr;
+        this.postalAddress = postalAddress;
         this.holderName = holderName;
     }
 
-    public void setMobileNr(String mobileNr) {
-        this.mobileNr = mobileNr;
+    public void setPostalAddress(String postalAddress) {
+        this.postalAddress = postalAddress;
     }
 
-    public String getMobileNr() {
-        return mobileNr;
+    public String getPostalAddress() {
+        return postalAddress;
     }
 
     public String getHolderName() {
@@ -56,27 +57,28 @@ public final class SwishAccountContractData extends PaymentAccountContractData {
 
     @Override
     public String getPaymentDetails() {
-        return "Swish - Holder name: " + holderName + ", mobile no.: " + mobileNr;
+        return "US Postal Money Order - Holder name: " + holderName + ", postal address: " + postalAddress;
     }
+
 
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-                "Mobile no.: " + mobileNr;
+                "Postal address: " + postalAddress;
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.SwishAccountContractData.Builder thisClass =
-                Messages.SwishAccountContractData.newBuilder()
-                        .setMobileNr(mobileNr)
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.USPostalMoneyOrderAccountPayload.Builder thisClass =
+                Messages.USPostalMoneyOrderAccountPayload.newBuilder()
+                        .setPostalAddress(postalAddress)
                         .setHolderName(holderName);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setSwishAccountContractData(thisClass);
-        return paymentAccountContractData.build();
+                        .setUSPostalMoneyOrderAccountPayload(thisClass);
+        return paymentAccountPayload.build();
     }
 }

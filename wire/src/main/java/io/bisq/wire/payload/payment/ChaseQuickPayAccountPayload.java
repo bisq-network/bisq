@@ -18,33 +18,32 @@
 package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.wire.proto.Messages;
 
-public final class USPostalMoneyOrderAccountContractData extends PaymentAccountContractData {
+public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private String postalAddress;
+    private String email;
     private String holderName;
 
-
-    public USPostalMoneyOrderAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public ChaseQuickPayAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public USPostalMoneyOrderAccountContractData(String paymentMethodName, String id, long maxTradePeriod,
-                                                 String postalAddress, String holderName) {
-        super(paymentMethodName, id, maxTradePeriod);
-        this.postalAddress = postalAddress;
-        this.holderName = holderName;
+    public ChaseQuickPayAccountPayload(String paymentMethod, String id, long maxTradePeriod, String email,
+                                       String holderName) {
+        this(paymentMethod, id, maxTradePeriod);
+        setEmail(email);
+        setHolderName(holderName);
     }
 
-    public void setPostalAddress(String postalAddress) {
-        this.postalAddress = postalAddress;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
-    public String getPostalAddress() {
-        return postalAddress;
+    public String getEmail() {
+        return email;
     }
 
     public String getHolderName() {
@@ -57,28 +56,27 @@ public final class USPostalMoneyOrderAccountContractData extends PaymentAccountC
 
     @Override
     public String getPaymentDetails() {
-        return "US Postal Money Order - Holder name: " + holderName + ", postal address: " + postalAddress;
+        return "Chase QuickPay - Holder name: " + holderName + ", email: " + email;
     }
-
 
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-                "Postal address: " + postalAddress;
+                "Email: " + email;
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.USPostalMoneyOrderAccountContractData.Builder thisClass =
-                Messages.USPostalMoneyOrderAccountContractData.newBuilder()
-                        .setPostalAddress(postalAddress)
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.ChaseQuickPayAccountPayload.Builder chaseQuickPayAccountPayload =
+                Messages.ChaseQuickPayAccountPayload.newBuilder()
+                        .setEmail(email)
                         .setHolderName(holderName);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setUSPostalMoneyOrderAccountContractData(thisClass);
-        return paymentAccountContractData.build();
+                        .setChaseQuickPayAccountPayload(chaseQuickPayAccountPayload);
+        return paymentAccountPayload.build();
     }
 }

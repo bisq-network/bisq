@@ -29,7 +29,7 @@ public class PeerServiceTest {
     private static final Logger log = LoggerFactory.getLogger(PeerServiceTest.class);
     private static final int MAX_CONNECTIONS = 100;
 
-    final boolean useLocalhost = true;
+    final boolean useLocalhostForP2P = true;
     private CountDownLatch latch;
     private int sleepTime;
     private DummySeedNode seedNode1, seedNode2, seedNode3;
@@ -42,7 +42,7 @@ public class PeerServiceTest {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(50);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
 
-        if (useLocalhost) {
+        if (useLocalhostForP2P) {
             seedNodeAddresses.add(new NodeAddress("localhost:8001"));
             seedNodeAddresses.add(new NodeAddress("localhost:8002"));
             seedNodeAddresses.add(new NodeAddress("localhost:8003"));
@@ -123,7 +123,7 @@ public class PeerServiceTest {
         
        /* latch = new CountDownLatch(2);
         
-        seedNode.createAndStartP2PService(nodeAddress, MAX_CONNECTIONS, useLocalhost, 2, true,
+        seedNode.createAndStartP2PService(nodeAddress, MAX_CONNECTIONS, useLocalhostForP2P, 2, true,
                 seedNodeAddresses, new P2PServiceListener() {
                     @Override
                     public void onRequestingDataCompleted() {
@@ -177,7 +177,7 @@ public class PeerServiceTest {
         latch = new CountDownLatch(6);
 
         seedNode1 = new DummySeedNode("test_dummy_dir");
-        seedNode1.createAndStartP2PService(nodeAddress1, MAX_CONNECTIONS, useLocalhost, 2, true, seedNodeAddresses, new P2PServiceListener() {
+        seedNode1.createAndStartP2PService(nodeAddress1, MAX_CONNECTIONS, useLocalhostForP2P, 2, true, seedNodeAddresses, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 latch.countDown();
@@ -214,7 +214,7 @@ public class PeerServiceTest {
         Thread.sleep(500);
 
         seedNode2 = new DummySeedNode("test_dummy_dir");
-        seedNode2.createAndStartP2PService(nodeAddress2, MAX_CONNECTIONS, useLocalhost, 2, true, seedNodeAddresses, new P2PServiceListener() {
+        seedNode2.createAndStartP2PService(nodeAddress2, MAX_CONNECTIONS, useLocalhostForP2P, 2, true, seedNodeAddresses, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 latch.countDown();
@@ -450,7 +450,8 @@ public class PeerServiceTest {
         DummySeedNode seedNode = new DummySeedNode("test_dummy_dir");
 
         latch = new CountDownLatch(1);
-        seedNode.createAndStartP2PService(new NodeAddress("localhost", port), MAX_CONNECTIONS, useLocalhost, 2, true, seedNodeAddresses, new P2PServiceListener() {
+        seedNode.createAndStartP2PService(new NodeAddress("localhost", port), MAX_CONNECTIONS,
+                useLocalhostForP2P, 2, true, seedNodeAddresses, new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
                 latch.countDown();

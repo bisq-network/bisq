@@ -28,7 +28,7 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.trade.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +51,9 @@ public class CreateAndSignContract extends TradeTask {
             Preconditions.checkNotNull(trade.getTakeOfferFeeTxId(), "trade.getTakeOfferFeeTxId() must not be null");
 
             TradingPeer taker = processModel.tradingPeer;
-            PaymentAccountContractData offererPaymentAccountContractData = processModel.getPaymentAccountContractData(trade);
-            checkNotNull(offererPaymentAccountContractData, "offererPaymentAccountContractData must not be null");
-            PaymentAccountContractData takerPaymentAccountContractData = taker.getPaymentAccountContractData();
+            PaymentAccountPayload offererPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
+            checkNotNull(offererPaymentAccountPayload, "offererPaymentAccountPayload must not be null");
+            PaymentAccountPayload takerPaymentAccountPayload = taker.getPaymentAccountPayload();
             boolean isBuyerOffererAndSellerTaker = trade instanceof BuyerAsOffererTrade;
 
             NodeAddress buyerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getMyNodeAddress() : processModel.getTempTradingPeerNodeAddress();
@@ -75,8 +75,8 @@ public class CreateAndSignContract extends TradeTask {
                     isBuyerOffererAndSellerTaker,
                     processModel.getAccountId(),
                     taker.getAccountId(),
-                    offererPaymentAccountContractData,
-                    takerPaymentAccountContractData,
+                    offererPaymentAccountPayload,
+                    takerPaymentAccountPayload,
                     processModel.getPubKeyRing(),
                     taker.getPubKeyRing(),
                     takerAddressEntry.getAddressString(),

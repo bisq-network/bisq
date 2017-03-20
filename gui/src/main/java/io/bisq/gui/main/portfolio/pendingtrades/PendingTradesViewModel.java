@@ -250,7 +250,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public String getPaymentMethod() {
         if (dataModel.getTrade() != null && dataModel.getTrade().getContract() != null)
-            return Res.get(dataModel.getTrade().getContract().getPaymentMethodName());
+            return Res.get(dataModel.getTrade().getContract().getPaymentMethodId());
         else
             return "";
     }

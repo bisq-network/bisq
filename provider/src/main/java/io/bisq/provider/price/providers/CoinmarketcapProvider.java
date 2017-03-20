@@ -34,16 +34,14 @@ public class CoinmarketcapProvider {
         Map<String, PriceData> marketPriceMap = new HashMap<>();
         String response = httpClient.requestWithGET("v1/ticker/?limit=200", "User-Agent", "");
         List<LinkedTreeMap<String, Object>> list = new Gson().fromJson(response, ArrayList.class);
-        long epochSec = Instant.now().getEpochSecond();
+        long ts = Instant.now().getEpochSecond();
         list.stream().forEach(treeMap -> {
             String code = (String) treeMap.get("symbol");
             if (supportedAltcoins.contains(code)) {
                 double price_btc = parseDouble((String) treeMap.get("price_btc"));
                 marketPriceMap.put(code, new PriceData(code,
                         price_btc,
-                        price_btc,
-                        price_btc,
-                        epochSec));
+                        ts));
             }
         });
         return marketPriceMap;

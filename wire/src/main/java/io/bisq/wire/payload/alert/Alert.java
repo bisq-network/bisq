@@ -21,8 +21,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.payload.StoragePayload;
+import io.bisq.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,14 +40,17 @@ public final class Alert implements StoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(Alert.class);
-    private static final long TTL = TimeUnit.DAYS.toMillis(21);
+    private static final long TTL = TimeUnit.DAYS.toMillis(30);
 
+    // Payload
     public final String message;
     public final String version;
     public final boolean isUpdateInfo;
     private String signatureAsBase64;
-    private transient PublicKey storagePublicKey;
     private byte[] storagePublicKeyBytes;
+
+    // Domain
+    private transient PublicKey storagePublicKey;
 
     public Alert(String message, boolean isUpdateInfo, String version) {
         this.message = message;
@@ -74,7 +77,8 @@ public final class Alert implements StoragePayload {
 
     private void init() {
         try {
-            storagePublicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(storagePublicKeyBytes));
+            storagePublicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC")
+                    .generatePublic(new X509EncodedKeySpec(storagePublicKeyBytes));
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
             log.error("Couldn't create the storage public key", e);
         }

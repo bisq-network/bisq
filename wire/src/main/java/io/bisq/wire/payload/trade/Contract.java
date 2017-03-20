@@ -20,16 +20,16 @@ package io.bisq.wire.payload.trade;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
+import io.bisq.common.monetary.Price;
 import io.bisq.common.util.JsonExclude;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.payload.Payload;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.wire.proto.Messages;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
-import org.bitcoinj.utils.Fiat;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.Arrays;
@@ -41,7 +41,8 @@ public final class Contract implements Payload {
     @JsonExclude
     public static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public final OfferPayload offer;
+    // Payload
+    public final OfferPayload offerPayload;
     private final long tradeAmount;
     private final long tradePrice;
     public final String takeOfferFeeTxID;
@@ -49,8 +50,8 @@ public final class Contract implements Payload {
     private final boolean isBuyerOffererAndSellerTaker;
     private final String offererAccountId;
     private final String takerAccountId;
-    private final PaymentAccountContractData offererPaymentAccountContractData;
-    private final PaymentAccountContractData takerPaymentAccountContractData;
+    private final PaymentAccountPayload offererPaymentAccountPayload;
+    private final PaymentAccountPayload takerPaymentAccountPayload;
     @JsonExclude
     private final PubKeyRing offererPubKeyRing;
     @JsonExclude
@@ -66,9 +67,9 @@ public final class Contract implements Payload {
     @JsonExclude
     private final byte[] takerMultiSigPubKey;
 
-    public Contract(OfferPayload offer,
+    public Contract(OfferPayload offerPayload,
                     Coin tradeAmount,
-                    Fiat tradePrice,
+                    Price tradePrice,
                     String takeOfferFeeTxID,
                     NodeAddress buyerNodeAddress,
                     NodeAddress sellerNodeAddress,
@@ -76,16 +77,16 @@ public final class Contract implements Payload {
                     boolean isBuyerOffererAndSellerTaker,
                     String offererAccountId,
                     String takerAccountId,
-                    PaymentAccountContractData offererPaymentAccountContractData,
-                    PaymentAccountContractData takerPaymentAccountContractData,
+                    PaymentAccountPayload offererPaymentAccountPayload,
+                    PaymentAccountPayload takerPaymentAccountPayload,
                     PubKeyRing offererPubKeyRing,
                     PubKeyRing takerPubKeyRing,
                     String offererPayoutAddressString,
                     String takerPayoutAddressString,
                     byte[] offererMultiSigPubKey,
                     byte[] takerMultiSigPubKey) {
-        this.offer = offer;
-        this.tradePrice = tradePrice.value;
+        this.offerPayload = offerPayload;
+        this.tradePrice = tradePrice.getValue();
         this.buyerNodeAddress = buyerNodeAddress;
         this.sellerNodeAddress = sellerNodeAddress;
         this.tradeAmount = tradeAmount.value;
@@ -94,8 +95,8 @@ public final class Contract implements Payload {
         this.isBuyerOffererAndSellerTaker = isBuyerOffererAndSellerTaker;
         this.offererAccountId = offererAccountId;
         this.takerAccountId = takerAccountId;
-        this.offererPaymentAccountContractData = offererPaymentAccountContractData;
-        this.takerPaymentAccountContractData = takerPaymentAccountContractData;
+        this.offererPaymentAccountPayload = offererPaymentAccountPayload;
+        this.takerPaymentAccountPayload = takerPaymentAccountPayload;
         this.offererPubKeyRing = offererPubKeyRing;
         this.takerPubKeyRing = takerPubKeyRing;
         this.offererPayoutAddressString = offererPayoutAddressString;
@@ -141,27 +142,27 @@ public final class Contract implements Payload {
         return isBuyerOffererAndSellerTaker ? takerMultiSigPubKey : offererMultiSigPubKey;
     }
 
-    public PaymentAccountContractData getBuyerPaymentAccountContractData() {
-        return isBuyerOffererAndSellerTaker ? offererPaymentAccountContractData : takerPaymentAccountContractData;
+    public PaymentAccountPayload getBuyerPaymentAccountPayload() {
+        return isBuyerOffererAndSellerTaker ? offererPaymentAccountPayload : takerPaymentAccountPayload;
     }
 
-    public PaymentAccountContractData getSellerPaymentAccountContractData() {
-        return isBuyerOffererAndSellerTaker ? takerPaymentAccountContractData : offererPaymentAccountContractData;
+    public PaymentAccountPayload getSellerPaymentAccountPayload() {
+        return isBuyerOffererAndSellerTaker ? takerPaymentAccountPayload : offererPaymentAccountPayload;
     }
 
-    public String getPaymentMethodName() {
+    public String getPaymentMethodId() {
         // PaymentMethod need to be the same
-        Preconditions.checkArgument(offererPaymentAccountContractData.getPaymentMethodName().equals(takerPaymentAccountContractData.getPaymentMethodName()),
-                "NOT offererPaymentAccountContractData.getPaymentMethodName().equals(takerPaymentAccountContractData.getPaymentMethodName())");
-        return offererPaymentAccountContractData.getPaymentMethodName();
+        Preconditions.checkArgument(offererPaymentAccountPayload.getPaymentMethodId().equals(takerPaymentAccountPayload.getPaymentMethodId()),
+                "NOT offererPaymentAccountPayload.getPaymentMethodName().equals(takerPaymentAccountPayload.getPaymentMethodName())");
+        return offererPaymentAccountPayload.getPaymentMethodId();
     }
 
     public Coin getTradeAmount() {
         return Coin.valueOf(tradeAmount);
     }
 
-    public Fiat getTradePrice() {
-        return Fiat.valueOf(offer.getCurrencyCode(), tradePrice);
+    public Price getTradePrice() {
+        return Price.valueOf(offerPayload.getCurrencyCode(), tradePrice);
     }
 
     public NodeAddress getBuyerNodeAddress() {
@@ -183,7 +184,8 @@ public final class Contract implements Payload {
         if (tradeAmount != contract.tradeAmount) return false;
         if (tradePrice != contract.tradePrice) return false;
         if (isBuyerOffererAndSellerTaker != contract.isBuyerOffererAndSellerTaker) return false;
-        if (offer != null ? !offer.equals(contract.offer) : contract.offer != null) return false;
+        if (offerPayload != null ? !offerPayload.equals(contract.offerPayload) : contract.offerPayload != null)
+            return false;
         if (takeOfferFeeTxID != null ? !takeOfferFeeTxID.equals(contract.takeOfferFeeTxID) : contract.takeOfferFeeTxID != null)
             return false;
         if (arbitratorNodeAddress != null ? !arbitratorNodeAddress.equals(contract.arbitratorNodeAddress) : contract.arbitratorNodeAddress != null)
@@ -192,9 +194,9 @@ public final class Contract implements Payload {
             return false;
         if (takerAccountId != null ? !takerAccountId.equals(contract.takerAccountId) : contract.takerAccountId != null)
             return false;
-        if (offererPaymentAccountContractData != null ? !offererPaymentAccountContractData.equals(contract.offererPaymentAccountContractData) : contract.offererPaymentAccountContractData != null)
+        if (offererPaymentAccountPayload != null ? !offererPaymentAccountPayload.equals(contract.offererPaymentAccountPayload) : contract.offererPaymentAccountPayload != null)
             return false;
-        if (takerPaymentAccountContractData != null ? !takerPaymentAccountContractData.equals(contract.takerPaymentAccountContractData) : contract.takerPaymentAccountContractData != null)
+        if (takerPaymentAccountPayload != null ? !takerPaymentAccountPayload.equals(contract.takerPaymentAccountPayload) : contract.takerPaymentAccountPayload != null)
             return false;
         if (offererPubKeyRing != null ? !offererPubKeyRing.equals(contract.offererPubKeyRing) : contract.offererPubKeyRing != null)
             return false;
@@ -215,7 +217,7 @@ public final class Contract implements Payload {
 
     @Override
     public int hashCode() {
-        int result = offer != null ? offer.hashCode() : 0;
+        int result = offerPayload != null ? offerPayload.hashCode() : 0;
         result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
         result = 31 * result + (int) (tradePrice ^ (tradePrice >>> 32));
         result = 31 * result + (takeOfferFeeTxID != null ? takeOfferFeeTxID.hashCode() : 0);
@@ -223,8 +225,8 @@ public final class Contract implements Payload {
         result = 31 * result + (isBuyerOffererAndSellerTaker ? 1 : 0);
         result = 31 * result + (offererAccountId != null ? offererAccountId.hashCode() : 0);
         result = 31 * result + (takerAccountId != null ? takerAccountId.hashCode() : 0);
-        result = 31 * result + (offererPaymentAccountContractData != null ? offererPaymentAccountContractData.hashCode() : 0);
-        result = 31 * result + (takerPaymentAccountContractData != null ? takerPaymentAccountContractData.hashCode() : 0);
+        result = 31 * result + (offererPaymentAccountPayload != null ? offererPaymentAccountPayload.hashCode() : 0);
+        result = 31 * result + (takerPaymentAccountPayload != null ? takerPaymentAccountPayload.hashCode() : 0);
         result = 31 * result + (offererPubKeyRing != null ? offererPubKeyRing.hashCode() : 0);
         result = 31 * result + (takerPubKeyRing != null ? takerPubKeyRing.hashCode() : 0);
         result = 31 * result + (buyerNodeAddress != null ? buyerNodeAddress.hashCode() : 0);
@@ -239,7 +241,7 @@ public final class Contract implements Payload {
     @Override
     public String toString() {
         return "Contract{" +
-                "\n\toffer=" + offer +
+                "\n\toffer=" + offerPayload +
                 "\n\ttradeAmount=" + tradeAmount +
                 "\n\ttradePrice=" + tradePrice +
                 "\n\ttakeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
@@ -247,8 +249,8 @@ public final class Contract implements Payload {
                 "\n\tisBuyerOffererAndSellerTaker=" + isBuyerOffererAndSellerTaker +
                 "\n\toffererAccountId='" + offererAccountId + '\'' +
                 "\n\ttakerAccountId='" + takerAccountId + '\'' +
-                "\n\toffererPaymentAccountContractData=" + offererPaymentAccountContractData +
-                "\n\ttakerPaymentAccountContractData=" + takerPaymentAccountContractData +
+                "\n\toffererPaymentAccountPayload=" + offererPaymentAccountPayload +
+                "\n\ttakerPaymentAccountPayload=" + takerPaymentAccountPayload +
                 "\n\toffererPubKeyRing=" + offererPubKeyRing +
                 "\n\ttakerPubKeyRing=" + takerPubKeyRing +
                 "\n\tbuyerAddress=" + buyerNodeAddress +
@@ -265,7 +267,7 @@ public final class Contract implements Payload {
     @Override
     public Messages.Contract toProtoBuf() {
         return Messages.Contract.newBuilder()
-                .setOffer(offer.toProtoBuf().getOffer())
+                .setPbOffer(offerPayload.toProtoBuf().getPbOffer())
                 .setTradeAmount(tradeAmount)
                 .setTradePrice(tradePrice)
                 .setTakeOfferFeeTxId(takeOfferFeeTxID)
@@ -273,8 +275,8 @@ public final class Contract implements Payload {
                 .setIsBuyerOffererAndSellerTaker(isBuyerOffererAndSellerTaker)
                 .setOffererAccountId(offererAccountId)
                 .setTakerAccountId(takerAccountId)
-                .setOffererPaymentAccountContractData((Messages.PaymentAccountContractData) offererPaymentAccountContractData.toProtoBuf())
-                .setTakerPaymentAccountContractData((Messages.PaymentAccountContractData) takerPaymentAccountContractData.toProtoBuf())
+                .setOffererPaymentAccountPayload((Messages.PaymentAccountPayload) offererPaymentAccountPayload.toProtoBuf())
+                .setTakerPaymentAccountPayload((Messages.PaymentAccountPayload) takerPaymentAccountPayload.toProtoBuf())
                 .setOffererPubKeyRing(offererPubKeyRing.toProtoBuf())
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoBuf())
                 .setBuyerNodeAddress(buyerNodeAddress.toProtoBuf())

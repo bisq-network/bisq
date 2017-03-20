@@ -2,9 +2,9 @@ package io.bisq.wire.message.p2p.peers.getdata;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.message.SendersNodeAddressMessage;
 import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.wire.proto.Messages;
 
 import java.util.Set;
 import java.util.stream.Collectors;

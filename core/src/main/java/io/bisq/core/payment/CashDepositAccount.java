@@ -18,8 +18,8 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.app.Version;
-import io.bisq.wire.payload.payment.CashDepositAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.CashDepositAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 
 import javax.annotation.Nullable;
@@ -33,13 +33,13 @@ public final class CashDepositAccount extends CountryBasedPaymentAccount impleme
     }
 
     @Override
-    protected PaymentAccountContractData setContractData() {
-        return new CashDepositAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload setPayload() {
+        return new CashDepositAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     @Override
     public String getBankId() {
-        return ((CashDepositAccountContractData) contractData).getBankId();
+        return ((CashDepositAccountPayload) paymentAccountPayload).getBankId();
     }
 
     @Override
@@ -49,10 +49,10 @@ public final class CashDepositAccount extends CountryBasedPaymentAccount impleme
 
     @Nullable
     public String getRequirements() {
-        return ((CashDepositAccountContractData) contractData).getRequirements();
+        return ((CashDepositAccountPayload) paymentAccountPayload).getRequirements();
     }
 
     public void setRequirements(String requirements) {
-        ((CashDepositAccountContractData) contractData).setRequirements(requirements);
+        ((CashDepositAccountPayload) paymentAccountPayload).setRequirements(requirements);
     }
 }

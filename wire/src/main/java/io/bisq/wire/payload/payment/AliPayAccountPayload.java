@@ -18,20 +18,20 @@
 package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.wire.proto.Messages;
 
-public final class AliPayAccountContractData extends PaymentAccountContractData {
+public final class AliPayAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private String accountNr;
 
-    public AliPayAccountContractData(String paymentMethod, String id, long maxTradePeriod, String accountNr) {
+    public AliPayAccountPayload(String paymentMethod, String id, long maxTradePeriod, String accountNr) {
         this(paymentMethod, id, maxTradePeriod);
         setAccountNr(accountNr);
     }
 
-    public AliPayAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public AliPayAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
@@ -54,21 +54,21 @@ public final class AliPayAccountContractData extends PaymentAccountContractData 
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.AliPayAccountContractData.Builder thisClass =
-                Messages.AliPayAccountContractData.newBuilder().setAccountNr(accountNr);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.AliPayAccountPayload.Builder thisClass =
+                Messages.AliPayAccountPayload.newBuilder().setAccountNr(accountNr);
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setAliPayAccountContractData(thisClass);
-        return paymentAccountContractData.build();
+                        .setAliPayAccountPayload(thisClass);
+        return paymentAccountPayload.build();
     }
 
     @Override
     public String toString() {
-        return "AliPayAccountContractData{" +
+        return "AliPayAccountPayload{" +
                 "accountNr='" + accountNr + '\'' +
                 '}';
     }

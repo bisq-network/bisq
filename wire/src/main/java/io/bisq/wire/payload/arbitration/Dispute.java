@@ -21,11 +21,12 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.persisted.payload.arbitration.DisputeList;
 import io.bisq.wire.message.arbitration.DisputeCommunicationMessage;
 import io.bisq.wire.payload.Payload;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.trade.Contract;
+import io.bisq.wire.proto.Messages;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -51,6 +52,7 @@ public final class Dispute implements Payload {
     // Fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // Payload
     private final String tradeId;
     private final String id;
     private final int traderId;
@@ -85,8 +87,10 @@ public final class Dispute implements Payload {
     @Nullable
     private String disputePayoutTxId;
 
+
+    // Domain
     transient private Storage<DisputeList<Dispute>> storage;
-    transient private ObservableList<DisputeCommunicationMessage> disputeCommunicationMessagesAsObservableList = FXCollections.observableArrayList(disputeCommunicationMessages);
+    transient private ObservableList<DisputeCommunicationMessage> observableList = FXCollections.observableArrayList(disputeCommunicationMessages);
     transient private BooleanProperty isClosedProperty = new SimpleBooleanProperty(isClosed);
     transient private ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
 
@@ -170,7 +174,7 @@ public final class Dispute implements Payload {
     }
 
     private void fillInTransients() {
-        disputeCommunicationMessagesAsObservableList = FXCollections.observableArrayList(disputeCommunicationMessages);
+        observableList = FXCollections.observableArrayList(disputeCommunicationMessages);
         isClosedProperty = new SimpleBooleanProperty(isClosed);
         disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
     }
@@ -178,7 +182,7 @@ public final class Dispute implements Payload {
     public void addDisputeMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
         if (!disputeCommunicationMessages.contains(disputeCommunicationMessage)) {
             disputeCommunicationMessages.add(disputeCommunicationMessage);
-            disputeCommunicationMessagesAsObservableList.add(disputeCommunicationMessage);
+            observableList.add(disputeCommunicationMessage);
             storage.queueUpForSave();
         } else {
             log.error("disputeDirectMessage already exists");
@@ -294,7 +298,7 @@ public final class Dispute implements Payload {
     }
 
     public ObservableList<DisputeCommunicationMessage> getDisputeCommunicationMessagesAsObservableList() {
-        return disputeCommunicationMessagesAsObservableList;
+        return observableList;
     }
 
     public boolean isClosed() {
@@ -356,7 +360,7 @@ public final class Dispute implements Payload {
                 ", isClosed=" + isClosed +
                 ", disputeResult=" + disputeResult +
                 ", disputePayoutTxId='" + disputePayoutTxId + '\'' +
-                ", disputeCommunicationMessagesAsObservableList=" + disputeCommunicationMessagesAsObservableList +
+                ", disputeCommunicationMessagesAsObservableList=" + observableList +
                 ", isClosedProperty=" + isClosedProperty +
                 ", disputeResultProperty=" + disputeResultProperty +
                 '}';

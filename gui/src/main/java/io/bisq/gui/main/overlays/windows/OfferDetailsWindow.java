@@ -21,6 +21,7 @@ import com.google.common.base.Joiner;
 import io.bisq.common.locale.BankUtil;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.common.locale.Res;
+import io.bisq.common.monetary.Price;
 import io.bisq.common.util.Tuple3;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
@@ -37,7 +38,6 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -46,7 +46,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +65,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private final Navigation navigation;
     private Offer offer;
     private Coin tradeAmount;
-    private Fiat tradePrice;
+    private Price tradePrice;
     private Optional<Runnable> placeOfferHandlerOptional = Optional.empty();
     private Optional<Runnable> takeOfferHandlerOptional = Optional.empty();
     private BusyAnimation busyAnimation;
@@ -86,7 +85,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         type = Type.Confirmation;
     }
 
-    public void show(Offer offer, Coin tradeAmount, Fiat tradePrice) {
+    public void show(Offer offer, Coin tradeAmount, Price tradePrice) {
         this.offer = offer;
         this.tradeAmount = tradeAmount;
         this.tradePrice = tradePrice;
@@ -158,7 +157,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         String fiatDirectionInfo = ":";
         String btcDirectionInfo = ":";
-        OfferPayload.Direction direction = offer.getDirection();
+        Offer.Direction direction = offer.getDirection();
         String currencyCode = offer.getCurrencyCode();
         String offerTypeLabel = Res.getWithCol("shared.offerType");
         String toReceive = " " + Res.get("shared.toReceive");
@@ -167,13 +166,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
-            btcDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
+            fiatDirectionInfo = direction == Offer.Direction.BUY ? toReceive : toSpend;
+            btcDirectionInfo = direction == Offer.Direction.SELL ? toReceive : toSpend;
         } else if (placeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
-            btcDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
+            fiatDirectionInfo = direction == Offer.Direction.SELL ? toReceive : toSpend;
+            btcDirectionInfo = direction == Offer.Direction.BUY ? toReceive : toSpend;
         } else {
             addLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getDirectionBothSides(direction, currencyCode), firstRowDistance);
@@ -189,10 +188,11 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                     formatter.formatCoinWithCode(offer.getAmount()));
             addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.minBtcAmount"),
                     formatter.formatCoinWithCode(offer.getMinAmount()));
-            String volume = formatter.formatVolumeWithCode(offer.getOfferVolume());
+            String volume = formatter.formatVolumeWithCode(offer.getVolume());
             String minVolume = "";
-            if (!offer.getAmount().equals(offer.getMinAmount()))
-                minVolume = " " + Res.get("offerDetailsWindow.min");
+            if (offer.getVolume() != null && offer.getMinVolume() != null &&
+                    !offer.getVolume().equals(offer.getMinVolume()))
+                minVolume = " " + Res.get("offerDetailsWindow.min", formatter.formatVolumeWithCode(offer.getMinVolume()));
             addLabelTextField(gridPane, ++rowIndex,
                     formatter.formatVolumeLabel(currencyCode) + fiatDirectionInfo, volume + minVolume);
         }
@@ -201,7 +201,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(tradePrice));
         } else {
-            Fiat price = offer.getPrice();
+            Price price = offer.getPrice();
             if (offer.isUseMarketBasedPrice()) {
                 addLabelTextField(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(price) +
                         " " + Res.get("offerDetailsWindow.distance",
@@ -278,7 +278,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         String paymentMethodCountryCode = offer.getCountryCode();
         if (paymentMethodCountryCode != null)
             rows++;
-        if (offer.getOfferFeePaymentTxID() != null)
+        if (offer.getOfferFeePaymentTxId() != null)
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.details"), Layout.GROUP_DISTANCE);
@@ -303,12 +303,12 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.acceptedArbitrators"),
                 formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
-        if (offer.getOfferFeePaymentTxID() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxID());
+        if (offer.getOfferFeePaymentTxId() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
 
         if (placeOfferHandlerOptional.isPresent()) {
             addTitledGroupBg(gridPane, ++rowIndex, 1, Res.get("offerDetailsWindow.commitment"), Layout.GROUP_DISTANCE);
-            addLabelTextField(gridPane, rowIndex, Res.get("offerDetailsWindow.agree"),  Res.get("createOffer.tac"),
+            addLabelTextField(gridPane, rowIndex, Res.get("offerDetailsWindow.agree"), Res.get("createOffer.tac"),
                     Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
             addConfirmAndCancelButtons(true);
@@ -328,7 +328,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     }
 
     private void addConfirmAndCancelButtons(boolean isPlaceOffer) {
-        boolean isBuyOffer = offer.getDirection() == OfferPayload.Direction.BUY;
+        boolean isBuyOffer = offer.isBuyOffer();
         boolean isBuyerRole = isPlaceOffer ? isBuyOffer : !isBuyOffer;
         String placeOfferButtonText = isBuyerRole ?
                 Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.buy")) :

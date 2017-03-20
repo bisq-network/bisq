@@ -4,7 +4,6 @@ import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Version;
 import io.bisq.common.util.Tuple3;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
@@ -16,6 +15,7 @@ import io.bisq.wire.message.p2p.DirectMessage;
 import io.bisq.wire.message.p2p.MailboxMessage;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.wire.proto.Messages;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -141,7 +141,7 @@ public class NetworkStressTest {
     /**
      * Whether to use localhost addresses instead of Tor hidden services.
      */
-    private boolean useLocalhost;
+    private boolean useLocalhostForP2P;
     /**
      * A single seed node that other nodes will contact to request initial data.
      */
@@ -278,16 +278,16 @@ public class NetworkStressTest {
         // Create and start the seed node.
         seedNode = new DummySeedNode(testDataDir.toString());
         final NodeAddress seedNodeAddress = newSeedNodeAddress();
-        useLocalhost = seedNodeAddress.hostName.equals("localhost");
+        useLocalhostForP2P = seedNodeAddress.hostName.equals("localhost");
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
-        seedNode.createAndStartP2PService(seedNodeAddress, DummySeedNode.MAX_CONNECTIONS_DEFAULT, useLocalhost,
+        seedNode.createAndStartP2PService(seedNodeAddress, DummySeedNode.MAX_CONNECTIONS_DEFAULT, useLocalhostForP2P,
                 REGTEST_NETWORK_ID, USE_DETAILED_LOGGING, seedNodes,
                 new SeedServiceListener(localServicesLatch, localServicesFailed));
         print("created seed node");
 
         // Create and start peer nodes, all connecting to the seed node above.
-        if (useLocalhost) {
+        if (useLocalhostForP2P) {
             seedNodesRepository.setLocalhostSeedNodeAddresses(seedNodes);
         } else {
             seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
@@ -385,7 +385,7 @@ public class NetworkStressTest {
         final KeyRing peerKeyRing = new KeyRing(peerKeyStorage);
         final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing);
 
-        return new P2PService(seedNodesRepository, port, peerTorDir, useLocalhost,
+        return new P2PService(seedNodesRepository, port, peerTorDir, useLocalhostForP2P,
                 REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir, null, null, null, new Clock(), null, peerEncryptionService, peerKeyRing);
     }
 

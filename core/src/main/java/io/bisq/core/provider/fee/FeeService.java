@@ -45,11 +45,9 @@ public class FeeService {
     public static final long DEFAULT_TX_FEE = 150;
 
     public static final long MIN_CREATE_OFFER_FEE_IN_BTC = 10_000;
-    public static final long MAX_CREATE_OFFER_FEE_IN_BTC = 500_000;
     public static final long DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BTC = 30_000; // excluded mining fee
 
     public static final long MIN_TAKE_OFFER_FEE_IN_BTC = 10_000;
-    public static final long MAX_TAKE_OFFER_FEE_IN_BTC = 1000_000;
     public static final long DEFAULT_TAKE_OFFER_FEE_IN_BTC_PER_BTC = 40_000; // excluded mining fee
 
     // 0.00216 btc is for 3 x tx fee for taker -> about 2 EUR!

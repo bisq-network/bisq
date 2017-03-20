@@ -20,14 +20,17 @@ package io.bisq.gui.util;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.Res;
+import io.bisq.common.monetary.Altcoin;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.user.Preferences;
-import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
@@ -58,8 +61,9 @@ public class BSFormatter {
 
     //  protected String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
 
-    // format is like: 1,00  never more then 2 decimals
-    protected final MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0);
+    protected final MonetaryFormat fiatFormat = new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0);
+    protected final MonetaryFormat fiatFormatWithMinPrecision = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(0, 0);
+    protected final MonetaryFormat altcoinFormat = new MonetaryFormat().shift(0).minDecimals(8).repeatOptionalDecimals(0, 0);
     protected final DecimalFormat decimalFormat = new DecimalFormat("#.#");
 
 
@@ -194,22 +198,21 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String formatFiat(Fiat fiat) {
-        if (fiat != null) {
-            try {
-                return fiatFormat.noCode().format(fiat).toString();
-            } catch (Throwable t) {
-                log.warn("Exception at formatFiat: " + t.toString());
-                return Res.get("shared.na") + " " + fiat.getCurrencyCode();
-            }
-        } else {
-            return Res.get("shared.na");
-        }
+        return formatFiat(fiat, fiatFormat, false);
     }
 
-    protected String formatFiatWithCode(Fiat fiat) {
+    public String formatFiatWithCode(Fiat fiat) {
+        return formatFiat(fiat, fiatFormat, true);
+    }
+
+    public String formatFiat(Fiat fiat, MonetaryFormat format, boolean appendCurrencyCode) {
         if (fiat != null) {
             try {
-                return fiatFormat.noCode().format(fiat).toString() + " " + fiat.getCurrencyCode();
+                final String res = format.noCode().format(fiat).toString();
+                if (appendCurrencyCode)
+                    return res + " " + fiat.getCurrencyCode();
+                else
+                    return res;
             } catch (Throwable t) {
                 log.warn("Exception at formatFiatWithCode: " + t.toString());
                 return Res.get("shared.na") + " " + fiat.getCurrencyCode();
@@ -245,7 +248,8 @@ public class BSFormatter {
     public Fiat parseToFiatWithPrecision(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
-                return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString(), currencyCode);
+                return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString(),
+                        currencyCode);
             } catch (Throwable t) {
                 log.warn("Exception at parseToFiatWithPrecision: " + t.toString());
                 return Fiat.valueOf(currencyCode, 0);
@@ -261,15 +265,62 @@ public class BSFormatter {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Altcoin
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String formatAltcoin(Altcoin altcoin) {
+        return formatAltcoin(altcoin, false);
+    }
+
+    public String formatAltcoinWithCode(Altcoin altcoin) {
+        return formatAltcoin(altcoin, true);
+    }
+
+    public String formatAltcoin(Altcoin altcoin, boolean appendCurrencyCode) {
+        if (altcoin != null) {
+            try {
+                String res = altcoinFormat.noCode().format(altcoin).toString();
+                if (appendCurrencyCode)
+                    return res + " " + altcoin.getCurrencyCode();
+                else
+                    return res;
+            } catch (Throwable t) {
+                log.warn("Exception at formatAltcoin: " + t.toString());
+                return Res.get("shared.na") + " " + altcoin.getCurrencyCode();
+            }
+        } else {
+            return Res.get("shared.na");
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Volume
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String formatVolume(Fiat fiat) {
-        return formatFiat(fiat);
+
+    public String formatVolume(Volume volume) {
+        return formatVolume(volume, fiatFormat, false);
     }
 
-    public String formatVolumeWithCode(Fiat fiat) {
-        return formatFiatWithCode(fiat);
+    public String formatVolumeWithMinPrecision(Volume volume) {
+        return formatVolume(volume, fiatFormatWithMinPrecision, false);
+    }
+
+    public String formatVolumeWithCode(Volume volume) {
+        return formatVolume(volume, fiatFormat, true);
+    }
+
+    public String formatVolume(Volume volume, MonetaryFormat fiatFormat, boolean appendCurrencyCode) {
+        if (volume != null) {
+            Monetary monetary = volume.getMonetary();
+            if (monetary instanceof Fiat)
+                return formatFiat((Fiat) monetary, fiatFormat, appendCurrencyCode);
+            else
+                return formatAltcoin((Altcoin) monetary, appendCurrencyCode);
+        } else {
+            return "";
+        }
     }
 
     public String formatVolumeLabel(String currencyCode) {
@@ -283,7 +334,7 @@ public class BSFormatter {
     }
 
     public String formatMinVolumeAndVolume(Offer offer) {
-        return formatVolume(offer.getMinOfferVolume()) + " - " + formatVolume(offer.getOfferVolume());
+        return formatVolume(offer.getMinVolume()) + " - " + formatVolume(offer.getVolume());
     }
 
 
@@ -304,23 +355,35 @@ public class BSFormatter {
     // Price
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String formatPrice(Fiat fiat) {
-        if (fiat != null) {
-            final String currencyCode = fiat.getCurrencyCode();
-            if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                decimalFormat.setMinimumFractionDigits(8);
-                decimalFormat.setMaximumFractionDigits(8);
-                final double value = fiat.value != 0 ? 10000D / fiat.value : 0;
-                return decimalFormat.format(MathUtils.roundDouble(value, 8)).replace(",", ".");
-            } else
-                return formatFiat(fiat);
+
+    public String formatPrice(Price price, MonetaryFormat fiatFormat, boolean appendCurrencyCode) {
+        if (price != null) {
+            Monetary monetary = price.getMonetary();
+            if (monetary instanceof Fiat)
+                return formatFiat((Fiat) monetary, fiatFormat, appendCurrencyCode);
+            else
+                return formatAltcoin((Altcoin) monetary, appendCurrencyCode);
         } else {
             return Res.get("shared.na");
         }
     }
 
-    public String formatPriceWithCode(Fiat fiat) {
-        return formatPrice(fiat) + " " + getCurrencyPair(fiat.getCurrencyCode());
+    public String formatPriceWithMinPrecision(Price price) {
+        return formatPrice(price, fiatFormatWithMinPrecision, false);
+    }
+
+    public String formatPrice(Price price) {
+        return formatPrice(price, fiatFormat, false);
+    }
+
+    public String formatPriceWithCode(Price price) {
+        Monetary monetary = price.getMonetary();
+        if (monetary instanceof Fiat)
+            return formatFiatWithCode((Fiat) monetary);
+        else {
+            return formatAltcoinWithCode((Altcoin) monetary);
+        }
+        //return formatPrice(fiat) + " " + getCurrencyPair(fiat.getCurrencyCode());
     }
 
 
@@ -350,18 +413,18 @@ public class BSFormatter {
         return decimalFormat.format(MathUtils.roundDouble(value, precision)).replace(",", ".");
     }
 
-    public String getDirectionWithCode(OfferPayload.Direction direction, String currencyCode) {
+    public String getDirectionWithCode(Offer.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyCurrency", "BTC") : Res.get("shared.sellCurrency", "BTC");
+            return (direction == Offer.Direction.BUY) ? Res.get("shared.buyCurrency", "BTC") : Res.get("shared.sellCurrency", "BTC");
         else
-            return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyCurrency", currencyCode) : Res.get("shared.sellCurrency", currencyCode);
+            return (direction == Offer.Direction.SELL) ? Res.get("shared.buyCurrency", currencyCode) : Res.get("shared.sellCurrency", currencyCode);
     }
 
-    public String getDirectionWithCodeDetailed(OfferPayload.Direction direction, String currencyCode) {
+    public String getDirectionWithCodeDetailed(Offer.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
+            return (direction == Offer.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
         else
-            return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
+            return (direction == Offer.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
     }
 
     public String arbitratorAddressesToString(List<NodeAddress> nodeAddresses) {
@@ -519,15 +582,15 @@ public class BSFormatter {
         return value ? Res.get("shared.yes") : Res.get("shared.no");
     }
 
-    public String getDirectionBothSides(OfferPayload.Direction direction, String currencyCode) {
+    public String getDirectionBothSides(Offer.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             currencyCode = "BTC";
-            return direction == OfferPayload.Direction.BUY ?
+            return direction == Offer.Direction.BUY ?
                     Res.get("formatter.makerTaker", currencyCode, Res.get("shared.buyer"), currencyCode, Res.get("shared.seller")) :
                     Res.get("formatter.makerTaker", currencyCode, Res.get("shared.seller"), currencyCode, Res.get("shared.buyer"));
         } else {
             String code = currencyCode;
-            return direction == OfferPayload.Direction.SELL ?
+            return direction == Offer.Direction.SELL ?
                     Res.get("formatter.makerTaker", code, Res.get("shared.buyer"), code, Res.get("shared.seller")) :
                     Res.get("formatter.makerTaker", code, Res.get("shared.seller"), code, Res.get("shared.buyer"));
         }
@@ -561,29 +624,29 @@ public class BSFormatter {
         }
     }
 
-    public String getDirectionForTakeOffer(OfferPayload.Direction direction, String currencyCode) {
+    public String getDirectionForTakeOffer(Offer.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String btc = "BTC";
-            return direction == OfferPayload.Direction.BUY ?
+            return direction == Offer.Direction.BUY ?
                     Res.get("formatter.youAre", Res.get("shared.selling"), btc, Res.get("shared.buying"), currencyCode) :
                     Res.get("formatter.youAre", Res.get("shared.buying"), btc, Res.get("shared.selling"), currencyCode);
         } else {
             String btc = "BTC";
-            return direction == OfferPayload.Direction.SELL ?
+            return direction == Offer.Direction.SELL ?
                     Res.get("formatter.youAre", Res.get("shared.selling"), currencyCode, Res.get("shared.buying"), btc) :
                     Res.get("formatter.youAre", Res.get("shared.buying"), currencyCode, Res.get("shared.selling"), btc);
         }
     }
 
-    public String getOfferDirectionForCreateOffer(OfferPayload.Direction direction, String currencyCode) {
+    public String getOfferDirectionForCreateOffer(Offer.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String btc = "BTC";
-            return direction == OfferPayload.Direction.BUY ?
+            return direction == Offer.Direction.BUY ?
                     Res.get("formatter.youAreCreatingAnOffer.fiat", Res.get("shared.buy"), btc) :
                     Res.get("formatter.youAreCreatingAnOffer.fiat", Res.get("shared.sell"), btc);
         } else {
             String btc = "BTC";
-            return direction == OfferPayload.Direction.SELL ?
+            return direction == Offer.Direction.SELL ?
                     Res.get("formatter.youAreCreatingAnOffer.altcoin", Res.get("shared.buy"), currencyCode, Res.get("shared.selling"), btc) :
                     Res.get("formatter.youAreCreatingAnOffer.altcoin", Res.get("shared.sell"), currencyCode, Res.get("shared.buying"), btc);
         }

@@ -1,25 +1,24 @@
 package io.bisq.core.trade.statistics;
 
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
-import io.bisq.wire.payload.offer.OfferPayload;
+import io.bisq.core.offer.Offer;
 import io.bisq.wire.payload.trade.statistics.TradeStatistics;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.Immutable;
-import java.text.DecimalFormat;
 
 @Immutable
 public final class TradeStatisticsForJson {
     private static final Logger log = LoggerFactory.getLogger(TradeStatisticsForJson.class);
 
     public final String currency;
-    public final OfferPayload.Direction direction;
+    public final Offer.Direction direction;
     public final long tradePrice;
     public final long tradeAmount;
     public final long tradeDate;
@@ -34,7 +33,7 @@ public final class TradeStatisticsForJson {
 
     // primaryMarket fields are based on industry standard where primaryMarket is always in the focus (in the app BTC is always in the focus - will be changed in a larger refactoring once)
     public String currencyPair;
-    public OfferPayload.Direction primaryMarketDirection;
+    public Offer.Direction primaryMarketDirection;
 
     public String tradePriceDisplayString;
 
@@ -47,9 +46,9 @@ public final class TradeStatisticsForJson {
 
 
     public TradeStatisticsForJson(TradeStatistics tradeStatistics) {
-        this.direction = tradeStatistics.direction;
-        this.currency = tradeStatistics.currency;
-        this.paymentMethod = tradeStatistics.paymentMethod;
+        this.direction = Offer.Direction.valueOf(tradeStatistics.direction.name());
+        this.currency = tradeStatistics.getCurrencyCode();
+        this.paymentMethod = tradeStatistics.paymentMethodId;
         this.offerDate = tradeStatistics.offerDate;
         this.useMarketBasedPrice = tradeStatistics.useMarketBasedPrice;
         this.marketPriceMargin = tradeStatistics.marketPriceMargin;
@@ -63,53 +62,55 @@ public final class TradeStatisticsForJson {
 
 
         try {
-            MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0);
-            MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
-            final Fiat tradePriceAsFiat = getTradePrice();
+            final Price tradePrice = getTradePrice();
             if (CurrencyUtil.isCryptoCurrency(currency)) {
-                primaryMarketDirection = direction == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
-                final double value = tradePriceAsFiat.value != 0 ? 10000D / tradePriceAsFiat.value : 0;
-                DecimalFormat decimalFormat = new DecimalFormat("#.#");
-                decimalFormat.setMaximumFractionDigits(8);
-                tradePriceDisplayString = decimalFormat.format(MathUtils.roundDouble(value, 8)).replace(",", ".");
+                MonetaryFormat altcoinFormat = new MonetaryFormat().shift(0).minDecimals(8)
+                        .repeatOptionalDecimals(0, 0).noCode();
+                primaryMarketDirection = direction == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
+                tradePriceDisplayString = altcoinFormat.format(tradePrice.getMonetary()).toString();
                 currencyPair = currency + "/" + "BTC";
 
-                primaryMarketTradePrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(value, 8));
+                primaryMarketTradePrice = tradePrice.getValue();
 
-                primaryMarketTradeVolumeDisplayString = coinFormat.noCode().format(getTradeAmount()).toString();
-                primaryMarketTradeAmountDisplayString = fiatFormat.noCode().format(getTradeVolume()).toString();
-
-                primaryMarketTradeAmount = (long) MathUtils.scaleUpByPowerOf10(getTradeVolume().longValue(), 4);
-                primaryMarketTradeVolume = getTradeAmount().longValue();
+                primaryMarketTradeVolumeDisplayString = altcoinFormat.format(getTradeAmount()).toString();
+                primaryMarketTradeAmountDisplayString = altcoinFormat.format(getTradeVolume().getMonetary()).toString();
+                primaryMarketTradeAmount = getTradeVolume() != null ? getTradeVolume().getValue() : 0;
+                primaryMarketTradeVolume = getTradeAmount().getValue();
             } else {
+                MonetaryFormat fiatFormat = new MonetaryFormat().shift(0).minDecimals(4)
+                        .repeatOptionalDecimals(0, 0).noCode();
                 primaryMarketDirection = direction;
                 currencyPair = "BTC/" + currency;
-                tradePriceDisplayString = fiatFormat.noCode().format(tradePriceAsFiat).toString();
+                tradePriceDisplayString = fiatFormat.format(tradePrice.getMonetary()).toString();
 
-                primaryMarketTradePrice = (long) MathUtils.scaleUpByPowerOf10(tradePriceAsFiat.longValue(), 4);
+                // we use precision 4 for fiat based price but on the markets api we use precision 8 so we scale up by 10000
+                primaryMarketTradePrice = (long) MathUtils.scaleUpByPowerOf10(tradePrice.getValue(), 4);
 
-                primaryMarketTradeAmountDisplayString = coinFormat.noCode().format(getTradeAmount()).toString();
-                primaryMarketTradeVolumeDisplayString = fiatFormat.noCode().format(getTradeVolume()).toString();
-
-                primaryMarketTradeAmount = getTradeAmount().longValue();
-                primaryMarketTradeVolume = (long) MathUtils.scaleUpByPowerOf10(getTradeVolume().longValue(), 4);
+                primaryMarketTradeAmountDisplayString = fiatFormat.format(getTradeAmount()).toString();
+                primaryMarketTradeVolumeDisplayString = getTradeVolume() != null ?
+                        fiatFormat.format(getTradeVolume().getMonetary()).toString() : "";
+                primaryMarketTradeAmount = getTradeAmount().getValue();
+                // we use precision 4 for fiat but on the markets api we use precision 8 so we scale up by 10000
+                primaryMarketTradeVolume = getTradeVolume() != null ?
+                        (long) MathUtils.scaleUpByPowerOf10(getTradeVolume().getValue(), 4) : 0;
             }
         } catch (Throwable t) {
             log.error("Error at setDisplayStrings: " + t.getMessage());
+            t.printStackTrace();
         }
     }
 
 
-    public Fiat getTradePrice() {
-        return Fiat.valueOf(currency, tradePrice);
+    public Price getTradePrice() {
+        return Price.valueOf(currency, tradePrice);
     }
 
     public Coin getTradeAmount() {
         return Coin.valueOf(tradeAmount);
     }
 
-    public Fiat getTradeVolume() {
-        return new ExchangeRate(getTradePrice()).coinToFiat(getTradeAmount());
+    public Volume getTradeVolume() {
+        return getTradePrice().getVolumeByAmount(getTradeAmount());
     }
 
     @Override
@@ -145,10 +146,7 @@ public final class TradeStatisticsForJson {
     public int hashCode() {
         int result;
         long temp;
-        result = tradePriceDisplayString != null ? tradePriceDisplayString.hashCode() : 0;
-        result = 31 * result + (primaryMarketTradeAmountDisplayString != null ? primaryMarketTradeAmountDisplayString.hashCode() : 0);
-        result = 31 * result + (primaryMarketTradeVolumeDisplayString != null ? primaryMarketTradeVolumeDisplayString.hashCode() : 0);
-        result = 31 * result + (currency != null ? currency.hashCode() : 0);
+        result = currency != null ? currency.hashCode() : 0;
         result = 31 * result + (direction != null ? direction.hashCode() : 0);
         result = 31 * result + (int) (tradePrice ^ (tradePrice >>> 32));
         result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
@@ -162,6 +160,14 @@ public final class TradeStatisticsForJson {
         result = 31 * result + (int) (offerMinAmount ^ (offerMinAmount >>> 32));
         result = 31 * result + (offerId != null ? offerId.hashCode() : 0);
         result = 31 * result + (depositTxId != null ? depositTxId.hashCode() : 0);
+        result = 31 * result + (currencyPair != null ? currencyPair.hashCode() : 0);
+        result = 31 * result + (primaryMarketDirection != null ? primaryMarketDirection.hashCode() : 0);
+        result = 31 * result + (tradePriceDisplayString != null ? tradePriceDisplayString.hashCode() : 0);
+        result = 31 * result + (primaryMarketTradeAmountDisplayString != null ? primaryMarketTradeAmountDisplayString.hashCode() : 0);
+        result = 31 * result + (primaryMarketTradeVolumeDisplayString != null ? primaryMarketTradeVolumeDisplayString.hashCode() : 0);
+        result = 31 * result + (int) (primaryMarketTradePrice ^ (primaryMarketTradePrice >>> 32));
+        result = 31 * result + (int) (primaryMarketTradeAmount ^ (primaryMarketTradeAmount >>> 32));
+        result = 31 * result + (int) (primaryMarketTradeVolume ^ (primaryMarketTradeVolume >>> 32));
         return result;
     }
 

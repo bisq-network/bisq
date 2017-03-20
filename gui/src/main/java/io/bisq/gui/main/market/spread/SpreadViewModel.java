@@ -19,6 +19,8 @@ package io.bisq.gui.main.market.spread;
 
 import com.google.inject.Inject;
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.monetary.Altcoin;
+import io.bisq.common.monetary.Price;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -26,13 +28,14 @@ import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -87,52 +90,75 @@ class SpreadViewModel extends ActivatableViewModel {
         spreadItems.clear();
         for (String currencyCode : offersByCurrencyMap.keySet()) {
             List<Offer> offers = offersByCurrencyMap.get(currencyCode);
+            final boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(currencyCode);
             List<Offer> buyOffers = offers
                     .stream()
-                    .filter(e -> e.getDirection().equals(OfferPayload.Direction.BUY))
+                    .filter(e -> e.getDirection().equals(Offer.Direction.BUY))
                     .sorted((o1, o2) -> {
-                        long a = o1.getPrice() != null ? o1.getPrice().value : 0;
-                        long b = o2.getPrice() != null ? o2.getPrice().value : 0;
-                        if (a != b)
-                            return a < b ? 1 : -1;
+                        long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
+                        long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
+                        if (a != b) {
+                            if (isFiatCurrency) {
+                                return a < b ? 1 : -1;
+                            } else {
+                                return a < b ? -1 : 1;
+                            }
+                        }
                         return 0;
                     })
                     .collect(Collectors.toList());
 
             List<Offer> sellOffers = offers
                     .stream()
-                    .filter(e -> e.getDirection().equals(OfferPayload.Direction.SELL))
+                    .filter(e -> e.getDirection().equals(Offer.Direction.SELL))
                     .sorted((o1, o2) -> {
-                        long a = o1.getPrice() != null ? o1.getPrice().value : 0;
-                        long b = o2.getPrice() != null ? o2.getPrice().value : 0;
-                        if (a != b)
-                            return a > b ? 1 : -1;
+                        long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
+                        long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
+                        if (a != b) {
+                            if (isFiatCurrency) {
+                                return a > b ? 1 : -1;
+                            } else {
+                                return a > b ? -1 : 1;
+                            }
+                        }
                         return 0;
                     })
                     .collect(Collectors.toList());
 
-            Fiat spread = null;
+            Price spread = null;
             String percentage = "";
-            Fiat bestSellOfferPrice = sellOffers.isEmpty() ? null : sellOffers.get(0).getPrice();
-            Fiat bestBuyOfferPrice = buyOffers.isEmpty() ? null : buyOffers.get(0).getPrice();
+            Price bestSellOfferPrice = sellOffers.isEmpty() ? null : sellOffers.get(0).getPrice();
+            Price bestBuyOfferPrice = buyOffers.isEmpty() ? null : buyOffers.get(0).getPrice();
             if (bestBuyOfferPrice != null && bestSellOfferPrice != null) {
                 MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-                spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
+                if (isFiatCurrency)
+                    spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
+                else
+                    spread = bestBuyOfferPrice.subtract(bestSellOfferPrice);
+
+                // TODO maybe show extra colums with spread and use real amount diff 
+                // not % based. e.g. diff between best buy and sell offer (of small amounts its a smaller gain)
+                
                 if (spread != null && marketPrice != null) {
-                    double marketPriceAsDouble = marketPrice.getPrice(PriceFeedService.Type.LAST);
-                    if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-                        double result = ((double) spread.value / 10000D) / marketPriceAsDouble;
-                        percentage = " (" + formatter.formatPercentagePrice(result) + ")";
-                    } else {
-                        final double spreadAsDouble = spread.value != 0 ? 10000D / spread.value : 0;
-                        double result = marketPriceAsDouble / spreadAsDouble;
-                        percentage = " (" + formatter.formatPercentagePrice(result) + ")";
-                    }
+                    double marketPriceAsDouble = marketPrice.getPrice();
+                    final double precision = isFiatCurrency ?
+                            Math.pow(10, Fiat.SMALLEST_UNIT_EXPONENT) :
+                            Math.pow(10, Altcoin.SMALLEST_UNIT_EXPONENT);
+
+                    BigDecimal marketPriceAsBigDecimal = BigDecimal.valueOf(marketPriceAsDouble)
+                            .multiply(BigDecimal.valueOf(precision));
+                    // We multiply with 10000 because we use precision of 2 at % (100.00%)
+                    double result = BigDecimal.valueOf(spread.getValue())
+                            .multiply(BigDecimal.valueOf(10000))
+                            .divide(marketPriceAsBigDecimal, RoundingMode.HALF_UP)
+                            .doubleValue() / 10000;
+                    percentage = formatter.formatPercentagePrice(result);
                 }
             }
 
             Coin totalAmount = Coin.valueOf(offers.stream().mapToLong(offer -> offer.getAmount().getValue()).sum());
-            spreadItems.add(new SpreadItem(currencyCode, buyOffers.size(), sellOffers.size(), offers.size(), spread, percentage, totalAmount));
+            spreadItems.add(new SpreadItem(currencyCode, buyOffers.size(), sellOffers.size(),
+                    offers.size(), spread, percentage, totalAmount));
         }
     }
 }

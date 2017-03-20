@@ -27,8 +27,8 @@ import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.gui.util.validation.InteracETransferValidator;
-import io.bisq.wire.payload.payment.InteracETransferAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.InteracETransferAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -44,15 +44,15 @@ public class InteracETransferForm extends PaymentMethodForm {
     private InputTextField answerInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
-                                      PaymentAccountContractData paymentAccountContractData) {
+                                      PaymentAccountPayload paymentAccountPayload) {
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
-                ((InteracETransferAccountContractData) paymentAccountContractData).getHolderName());
+                ((InteracETransferAccountPayload) paymentAccountPayload).getHolderName());
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.emailOrMobile"),
-                ((InteracETransferAccountContractData) paymentAccountContractData).getEmail());
+                ((InteracETransferAccountPayload) paymentAccountPayload).getEmail());
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.secret"),
-                ((InteracETransferAccountContractData) paymentAccountContractData).getQuestion());
+                ((InteracETransferAccountPayload) paymentAccountPayload).getQuestion());
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.answer"),
-                ((InteracETransferAccountContractData) paymentAccountContractData).getAnswer());
+                ((InteracETransferAccountPayload) paymentAccountPayload).getAnswer());
         return gridRow;
     }
 

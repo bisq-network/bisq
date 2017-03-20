@@ -27,7 +27,7 @@ import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.trade.Contract;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -141,8 +141,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
 
         // second group
         rows = 6;
-        PaymentAccountContractData buyerPaymentAccountContractData = null;
-        PaymentAccountContractData sellerPaymentAccountContractData = null;
+        PaymentAccountPayload buyerPaymentAccountPayload = null;
+        PaymentAccountPayload sellerPaymentAccountPayload = null;
 
        /* if (offer.getAcceptedCountryCodes() != null)
             rows++;
@@ -152,15 +152,15 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         if (contract != null) {
             rows++;
 
-            buyerPaymentAccountContractData = contract.getBuyerPaymentAccountContractData();
-            sellerPaymentAccountContractData = contract.getSellerPaymentAccountContractData();
-            if (buyerPaymentAccountContractData != null)
+            buyerPaymentAccountPayload = contract.getBuyerPaymentAccountPayload();
+            sellerPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
+            if (buyerPaymentAccountPayload != null)
                 rows++;
 
-            if (sellerPaymentAccountContractData != null)
+            if (sellerPaymentAccountPayload != null)
                 rows++;
 
-            if (buyerPaymentAccountContractData == null && sellerPaymentAccountContractData == null)
+            if (buyerPaymentAccountPayload == null && sellerPaymentAccountPayload == null)
                 rows++;
         }
 
@@ -206,24 +206,24 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                     trade.getTradingPeerNodeAddress().getFullAddress());
 
         if (contract != null) {
-            if (buyerPaymentAccountContractData != null) {
+            if (buyerPaymentAccountPayload != null) {
                 TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                         Res.get("shared.paymentDetails", Res.get("shared.buyer")),
-                        buyerPaymentAccountContractData.getPaymentDetails()).second;
+                        buyerPaymentAccountPayload.getPaymentDetails()).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
-            if (sellerPaymentAccountContractData != null) {
+            if (sellerPaymentAccountPayload != null) {
                 TextFieldWithCopyIcon tf = addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                         Res.get("shared.paymentDetails", Res.get("shared.seller")),
-                        sellerPaymentAccountContractData.getPaymentDetails()).second;
+                        sellerPaymentAccountPayload.getPaymentDetails()).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
-            if (buyerPaymentAccountContractData == null && sellerPaymentAccountContractData == null)
+            if (buyerPaymentAccountPayload == null && sellerPaymentAccountPayload == null)
                 addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.paymentMethod"),
-                        Res.get(contract.getPaymentMethodName()));
+                        Res.get(contract.getPaymentMethodId()));
         }
 
-        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxID());
+        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
         if (trade.getTakeOfferFeeTxId() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), trade.getTakeOfferFeeTxId());
 

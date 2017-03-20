@@ -20,8 +20,8 @@ package io.bisq.wire.payload.alert;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.payload.Payload;
+import io.bisq.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +39,13 @@ public final class PrivateNotification implements Payload {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(PrivateNotification.class);
 
+    // Payload
     public final String message;
     private String signatureAsBase64;
-    private transient PublicKey publicKey;
     private byte[] publicKeyBytes;
+
+    // Domain
+    private transient PublicKey publicKey;
 
     public PrivateNotification(String message) {
         this.message = message;

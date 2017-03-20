@@ -17,8 +17,9 @@
 
 package io.bisq.network.p2p.network;
 
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.wire.ProtoBufferUtilities;
 import io.bisq.wire.payload.offer.OfferPayload;
+import io.bisq.wire.proto.Messages;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -27,8 +28,8 @@ public class ProtoBufferUtilitiesTest {
 
     @Test
     public void testEnum() {
-        Messages.Offer.Direction direction = Messages.Offer.Direction.SELL;
-        Messages.Offer.Direction direction2 = Messages.Offer.Direction.BUY;
+        Messages.PB_Offer.Direction direction = Messages.PB_Offer.Direction.SELL;
+        Messages.PB_Offer.Direction direction2 = Messages.PB_Offer.Direction.BUY;
         OfferPayload.Direction realDirection = ProtoBufferUtilities.getDirection(direction);
         OfferPayload.Direction realDirection2 = ProtoBufferUtilities.getDirection(direction2);
         assertEquals("SELL", realDirection.name());

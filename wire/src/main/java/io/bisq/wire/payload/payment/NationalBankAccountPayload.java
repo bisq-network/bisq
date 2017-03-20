@@ -18,17 +18,17 @@
 package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class NationalBankAccountContractData extends BankAccountContractData {
+public final class NationalBankAccountPayload extends BankAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(NationalBankAccountContractData.class);
+    private static final Logger log = LoggerFactory.getLogger(NationalBankAccountPayload.class);
 
-    public NationalBankAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public NationalBankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
@@ -38,11 +38,11 @@ public final class NationalBankAccountContractData extends BankAccountContractDa
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.NationalBankAccountContractData.Builder thisClass =
-                Messages.NationalBankAccountContractData.newBuilder();
-        Messages.BankAccountContractData.Builder bankAccountContractData =
-                Messages.BankAccountContractData.newBuilder()
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.NationalBankAccountPayload.Builder thisClass =
+                Messages.NationalBankAccountPayload.newBuilder();
+        Messages.BankAccountPayload.Builder bankAccountPayload =
+                Messages.BankAccountPayload.newBuilder()
                         .setHolderName(holderName)
                         .setBankName(bankName)
                         .setBankId(bankId)
@@ -50,17 +50,17 @@ public final class NationalBankAccountContractData extends BankAccountContractDa
                         .setAccountNr(accountNr)
                         .setAccountType(accountType)
                         .setHolderTaxId(holderTaxId)
-                        .setNationalBankAccountContractData(thisClass);
-        Messages.CountryBasedPaymentAccountContractData.Builder countryBasedPaymentAccountContractData =
-                Messages.CountryBasedPaymentAccountContractData.newBuilder()
+                        .setNationalBankAccountPayload(thisClass);
+        Messages.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload =
+                Messages.CountryBasedPaymentAccountPayload.newBuilder()
                         .setCountryCode(countryCode)
-                        .setBankAccountContractData(bankAccountContractData);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+                        .setBankAccountPayload(bankAccountPayload);
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setCountryBasedPaymentAccountContractData(countryBasedPaymentAccountContractData);
-        return paymentAccountContractData.build();
+                        .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayload);
+        return paymentAccountPayload.build();
     }
 }

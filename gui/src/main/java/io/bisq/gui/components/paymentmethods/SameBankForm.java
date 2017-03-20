@@ -25,7 +25,7 @@ import io.bisq.core.payment.PaymentAccount;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -38,8 +38,8 @@ import static io.bisq.gui.util.FormBuilder.addLabelTextField;
 public class SameBankForm extends BankForm {
     private static final Logger log = LoggerFactory.getLogger(SameBankForm.class);
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        return BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountContractData);
+    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
+        return BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
     }
 
     public SameBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
@@ -53,7 +53,7 @@ public class SameBankForm extends BankForm {
         holderNameInputTextField = tuple.second;
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountContractData.setHolderName(newValue);
+            bankAccountPayload.setHolderName(newValue);
             updateFromInputs();
         });
     }
@@ -61,21 +61,21 @@ public class SameBankForm extends BankForm {
     @Override
     public void updateAllInputsValid() {
         boolean result = isAccountNameValid()
-                && inputValidator.validate(bankAccountContractData.getHolderName()).isValid
+                && inputValidator.validate(bankAccountPayload.getHolderName()).isValid
                 && paymentAccount.getSingleTradeCurrency() != null
                 && ((CountryBasedPaymentAccount) paymentAccount).getCountry() != null;
 
-        if (BankUtil.isBankNameRequired(bankAccountContractData.getCountryCode()))
-            result &= inputValidator.validate(bankAccountContractData.getBankName()).isValid;
+        if (BankUtil.isBankNameRequired(bankAccountPayload.getCountryCode()))
+            result &= inputValidator.validate(bankAccountPayload.getBankName()).isValid;
 
-        if (BankUtil.isBankIdRequired(bankAccountContractData.getCountryCode()))
-            result &= inputValidator.validate(bankAccountContractData.getBankId()).isValid;
+        if (BankUtil.isBankIdRequired(bankAccountPayload.getCountryCode()))
+            result &= inputValidator.validate(bankAccountPayload.getBankId()).isValid;
 
-        if (BankUtil.isBranchIdRequired(bankAccountContractData.getCountryCode()))
-            result &= inputValidator.validate(bankAccountContractData.getBranchId()).isValid;
+        if (BankUtil.isBranchIdRequired(bankAccountPayload.getCountryCode()))
+            result &= inputValidator.validate(bankAccountPayload.getBranchId()).isValid;
 
-        if (BankUtil.isAccountNrRequired(bankAccountContractData.getCountryCode()))
-            result &= inputValidator.validate(bankAccountContractData.getAccountNr()).isValid;
+        if (BankUtil.isAccountNrRequired(bankAccountPayload.getCountryCode()))
+            result &= inputValidator.validate(bankAccountPayload.getAccountNr()).isValid;
 
         allInputsValid.set(result);
     }
@@ -85,7 +85,7 @@ public class SameBankForm extends BankForm {
         Tuple2<Label, TextField> tuple = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"));
         TextField holderNameTextField = tuple.second;
         holderNameTextField.setMinWidth(300);
-        holderNameTextField.setText(bankAccountContractData.getHolderName());
+        holderNameTextField.setText(bankAccountPayload.getHolderName());
     }
 
 }

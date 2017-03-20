@@ -32,7 +32,6 @@ import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.*;
 import io.bisq.core.user.Preferences;
 import io.bisq.network.DnsLookupTor;
-import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.Socks5MultiDiscovery;
 import io.bisq.network.Socks5ProxyProvider;
 import javafx.beans.property.*;
@@ -99,7 +98,7 @@ public class WalletsSetup {
                         Preferences preferences,
                         Socks5ProxyProvider socks5ProxyProvider,
                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
-                        @Named(NetworkOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
+                        @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
 
         this.regTestHost = regTestHost;
         this.addressEntryList = addressEntryList;
@@ -155,7 +154,8 @@ public class WalletsSetup {
                 final PeerGroup peerGroup = walletConfig.peerGroup();
 
                 // We don't want to get our node white list polluted with nodes from AddressMessage calls.
-                if (preferences.getBitcoinNodes() != null && !preferences.getBitcoinNodes().isEmpty())
+                if (preferences.getBitcoinNodes() != null && !preferences.getBitcoinNodes().isEmpty()
+                        )
                     peerGroup.setAddPeersFromAddressMessage(false);
 
                 peerGroup.addEventListener(new PeerEventListener() {
@@ -421,6 +421,9 @@ public class WalletsSetup {
 
     public void restoreSeedWords(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
         checkNotNull(seed, "Seed must be not be null.");
+
+        backupWallets();
+        
         Context ctx = Context.get();
         new Thread(() -> {
             try {

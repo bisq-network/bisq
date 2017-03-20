@@ -18,9 +18,9 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.app.Version;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
-import io.bisq.wire.payload.payment.SpecificBanksAccountContractData;
+import io.bisq.wire.payload.payment.SpecificBanksAccountPayload;
 
 import java.util.ArrayList;
 
@@ -33,17 +33,17 @@ public final class SpecificBanksAccount extends CountryBasedPaymentAccount imple
     }
 
     @Override
-    protected PaymentAccountContractData setContractData() {
-        return new SpecificBanksAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload setPayload() {
+        return new SpecificBanksAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public ArrayList<String> getAcceptedBanks() {
-        return ((SpecificBanksAccountContractData) contractData).getAcceptedBanks();
+        return ((SpecificBanksAccountPayload) paymentAccountPayload).getAcceptedBanks();
     }
 
     @Override
     public String getBankId() {
-        return ((SpecificBanksAccountContractData) contractData).getBankId();
+        return ((SpecificBanksAccountPayload) paymentAccountPayload).getBankId();
     }
 
     @Override

@@ -61,7 +61,7 @@ public class OfferAvailabilityModel implements Model {
     }
 
     public long getTakersTradePrice() {
-        return offer.getPrice() != null ? offer.getPrice().value : 0;
+        return offer.getPrice() != null ? offer.getPrice().getValue() : 0;
     }
 
     @Override

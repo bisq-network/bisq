@@ -18,32 +18,32 @@
 package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.wire.proto.Messages;
 
-public final class ChaseQuickPayAccountContractData extends PaymentAccountContractData {
+public final class SwishAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private String email;
+    private String mobileNr;
     private String holderName;
 
-    public ChaseQuickPayAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public SwishAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public ChaseQuickPayAccountContractData(String paymentMethod, String id, long maxTradePeriod, String email,
-                                            String holderName) {
-        this(paymentMethod, id, maxTradePeriod);
-        setEmail(email);
-        setHolderName(holderName);
+    public SwishAccountPayload(String paymentMethodName, String id, long maxTradePeriod,
+                               String mobileNr, String holderName) {
+        super(paymentMethodName, id, maxTradePeriod);
+        this.mobileNr = mobileNr;
+        this.holderName = holderName;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setMobileNr(String mobileNr) {
+        this.mobileNr = mobileNr;
     }
 
-    public String getEmail() {
-        return email;
+    public String getMobileNr() {
+        return mobileNr;
     }
 
     public String getHolderName() {
@@ -56,27 +56,27 @@ public final class ChaseQuickPayAccountContractData extends PaymentAccountContra
 
     @Override
     public String getPaymentDetails() {
-        return "Chase QuickPay - Holder name: " + holderName + ", email: " + email;
+        return "Swish - Holder name: " + holderName + ", mobile no.: " + mobileNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
-                "Email: " + email;
+                "Mobile no.: " + mobileNr;
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.ChaseQuickPayAccountContractData.Builder chaseQuickPayAccountContractData =
-                Messages.ChaseQuickPayAccountContractData.newBuilder()
-                        .setEmail(email)
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.SwishAccountPayload.Builder thisClass =
+                Messages.SwishAccountPayload.newBuilder()
+                        .setMobileNr(mobileNr)
                         .setHolderName(holderName);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setChaseQuickPayAccountContractData(chaseQuickPayAccountContractData);
-        return paymentAccountContractData.build();
+                        .setSwishAccountPayload(thisClass);
+        return paymentAccountPayload.build();
     }
 }

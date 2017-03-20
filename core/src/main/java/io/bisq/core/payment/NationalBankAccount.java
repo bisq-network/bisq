@@ -18,9 +18,9 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.app.Version;
-import io.bisq.wire.payload.payment.BankAccountContractData;
-import io.bisq.wire.payload.payment.NationalBankAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.BankAccountPayload;
+import io.bisq.wire.payload.payment.NationalBankAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 
 public final class NationalBankAccount extends CountryBasedPaymentAccount implements SameCountryRestrictedBankAccount {
@@ -32,13 +32,13 @@ public final class NationalBankAccount extends CountryBasedPaymentAccount implem
     }
 
     @Override
-    protected PaymentAccountContractData setContractData() {
-        return new NationalBankAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload setPayload() {
+        return new NationalBankAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     @Override
     public String getBankId() {
-        return ((BankAccountContractData) contractData).getBankId();
+        return ((BankAccountPayload) paymentAccountPayload).getBankId();
     }
 
     @Override

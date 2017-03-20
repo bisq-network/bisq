@@ -72,10 +72,12 @@ public abstract class BisqExecutable {
     }
 
     protected void customizeOptionParsing(OptionParser parser) {
+        //CommonOptionKeys
         parser.accepts(CommonOptionKeys.LOG_LEVEL_KEY,
                 description("Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]", BisqEnvironment.LOG_LEVEL_DEFAULT))
                 .withRequiredArg();
 
+        //NetworkOptionKeys
         parser.accepts(NetworkOptionKeys.SEED_NODES_KEY,
                 description("Override hard coded seed nodes as comma separated list: E.g. rxdkppp3vicnbgqt.onion:8002, mfla72c4igh5ta2t.onion:8002", ""))
                 .withRequiredArg();
@@ -90,8 +92,8 @@ public abstract class BisqExecutable {
                 description("Port to listen on", 9999))
                 .withRequiredArg()
                 .ofType(int.class);
-        parser.accepts(NetworkOptionKeys.USE_LOCALHOST,
-                description("Use localhost network for development", false))
+        parser.accepts(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P,
+                description("Use localhost P2P network for development", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
         parser.accepts(NetworkOptionKeys.MAX_CONNECTIONS,
@@ -104,11 +106,8 @@ public abstract class BisqExecutable {
         parser.accepts(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS,
                 description("A proxy address to be used for Http requests (should be non-Tor). [host:port]", ""))
                 .withRequiredArg();
-        parser.accepts(NetworkOptionKeys.SOCKS5_DISCOVER_MODE,
-                description("Specify discovery mode for Bitcoin nodes. One or more of: [ADDR, DNS, ONION, ALL]" +
-                        " (comma separated, they get OR'd together). Default value is ALL", "ALL"))
-                .withRequiredArg();
 
+        //AppOptionKeys
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
                 description("User data directory", BisqEnvironment.DEFAULT_USER_DATA_DIR))
                 .withRequiredArg();
@@ -134,22 +133,7 @@ public abstract class BisqExecutable {
                 description("Custom providers (comma separated)", false))
                 .withRequiredArg();
 
-        parser.accepts(RpcOptionKeys.RPC_USER,
-                description("Bitcoind rpc username", ""))
-                .withRequiredArg();
-        parser.accepts(RpcOptionKeys.RPC_PASSWORD,
-                description("Bitcoind rpc password", ""))
-                .withRequiredArg();
-        parser.accepts(RpcOptionKeys.RPC_PORT,
-                description("Bitcoind rpc port", ""))
-                .withRequiredArg();
-        parser.accepts(RpcOptionKeys.RPC_BLOCK_PORT,
-                description("Bitcoind rpc port for block notifications", ""))
-                .withRequiredArg();
-        parser.accepts(RpcOptionKeys.RPC_WALLET_PORT,
-                description("Bitcoind rpc port for wallet notifications", ""))
-                .withRequiredArg();
-
+        //BtcOptionKeys
         parser.accepts(BtcOptionKeys.BTC_NETWORK,
                 description("Bitcoin network", BitcoinNetwork.DEFAULT.name()))
                 .withRequiredArg()
@@ -166,6 +150,29 @@ public abstract class BisqExecutable {
         parser.accepts(BtcOptionKeys.USE_TOR_FOR_BTC,
                 description("If set to true BitcoinJ is routed over tor (socks 5 proxy).", ""))
                 .withRequiredArg();
+        parser.accepts(BtcOptionKeys.SOCKS5_DISCOVER_MODE,
+                description("Specify discovery mode for Bitcoin nodes. One or more of: [ADDR, DNS, ONION, ALL]" +
+                        " (comma separated, they get OR'd together). Default value is ALL", "ALL"))
+                .withRequiredArg();
+
+
+        //RpcOptionKeys
+        parser.accepts(RpcOptionKeys.RPC_USER,
+                description("Bitcoind rpc username", ""))
+                .withRequiredArg();
+        parser.accepts(RpcOptionKeys.RPC_PASSWORD,
+                description("Bitcoind rpc password", ""))
+                .withRequiredArg();
+        parser.accepts(RpcOptionKeys.RPC_PORT,
+                description("Bitcoind rpc port", ""))
+                .withRequiredArg();
+        parser.accepts(RpcOptionKeys.RPC_BLOCK_PORT,
+                description("Bitcoind rpc port for block notifications", ""))
+                .withRequiredArg();
+        parser.accepts(RpcOptionKeys.RPC_WALLET_PORT,
+                description("Bitcoind rpc port for wallet notifications", ""))
+                .withRequiredArg();
+
     }
 
     public static BisqEnvironment getBisqEnvironment(OptionSet options) {

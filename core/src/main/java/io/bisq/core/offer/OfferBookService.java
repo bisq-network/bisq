@@ -77,7 +77,8 @@ public class OfferBookService {
             public void onAdded(ProtectedStorageEntry data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
                     if (data.getStoragePayload() instanceof OfferPayload) {
-                        Offer offer = new Offer((OfferPayload) data.getStoragePayload());
+                        OfferPayload offerPayload = (OfferPayload) data.getStoragePayload();
+                        Offer offer = new Offer(offerPayload);
                         offer.setPriceFeedService(priceFeedService);
                         listener.onAdded(offer);
                     }
@@ -88,7 +89,8 @@ public class OfferBookService {
             public void onRemoved(ProtectedStorageEntry data) {
                 offerBookChangedListeners.stream().forEach(listener -> {
                     if (data.getStoragePayload() instanceof OfferPayload) {
-                        Offer offer = new Offer((OfferPayload) data.getStoragePayload());
+                        OfferPayload offerPayload = (OfferPayload) data.getStoragePayload();
+                        Offer offer = new Offer(offerPayload);
                         offer.setPriceFeedService(priceFeedService);
                         listener.onRemoved(offer);
                     }
@@ -134,19 +136,19 @@ public class OfferBookService {
         }
     }
 
-    public void refreshTTL(OfferPayload offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        boolean result = p2PService.refreshTTL(offer, true);
+    public void refreshTTL(OfferPayload offerPayload, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        boolean result = p2PService.refreshTTL(offerPayload, true);
         if (result) {
-            log.trace("Refresh TTL was successful. OfferPayload ID = " + offer.getId());
+            log.trace("Refresh TTL was successful. OfferPayload ID = " + offerPayload.getId());
             resultHandler.handleResult();
         } else {
             errorMessageHandler.handleErrorMessage("Refresh TTL failed.");
         }
     }
 
-    public void removeOffer(OfferPayload offer, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
-        if (p2PService.removeData(offer, true)) {
-            log.trace("Remove offer from network was successful. OfferPayload ID = " + offer.getId());
+    public void removeOffer(OfferPayload offerPayload, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
+        if (p2PService.removeData(offerPayload, true)) {
+            log.trace("Remove offer from network was successful. OfferPayload ID = " + offerPayload.getId());
             if (resultHandler != null)
                 resultHandler.handleResult();
         } else {
@@ -159,16 +161,17 @@ public class OfferBookService {
         return p2PService.getDataMap().values().stream()
                 .filter(data -> data.getStoragePayload() instanceof OfferPayload)
                 .map(data -> {
-                    Offer offer = new Offer((OfferPayload) data.getStoragePayload());
+                    OfferPayload offerPayload = (OfferPayload) data.getStoragePayload();
+                    Offer offer = new Offer(offerPayload);
                     offer.setPriceFeedService(priceFeedService);
                     return offer;
                 })
                 .collect(Collectors.toList());
     }
 
-    public void removeOfferAtShutDown(OfferPayload offer) {
-        log.debug("removeOfferAtShutDown " + offer);
-        removeOffer(offer, null, null);
+    public void removeOfferAtShutDown(OfferPayload offerPayload) {
+        log.debug("removeOfferAtShutDown " + offerPayload);
+        removeOffer(offerPayload, null, null);
     }
 
     public boolean isBootstrapped() {
@@ -201,7 +204,7 @@ public class OfferBookService {
                                 offer.isUseMarketBasedPrice(),
                                 offer.getMarketPriceMargin(),
                                 offer.getPaymentMethod(),
-                                offer.getOfferFeePaymentTxID()
+                                offer.getOfferFeePaymentTxId()
                         );
                     } catch (Throwable t) {
                         // In case a offer was corrupted with null values we ignore it

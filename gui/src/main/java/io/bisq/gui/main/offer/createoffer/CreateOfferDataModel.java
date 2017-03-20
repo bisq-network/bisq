@@ -24,6 +24,8 @@ import io.bisq.common.app.Version;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.Restrictions;
@@ -39,14 +41,12 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.model.ActivatableDataModel;
-import io.bisq.gui.main.offer.createoffer.monetary.Price;
-import io.bisq.gui.main.offer.createoffer.monetary.Volume;
 import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.wire.crypto.KeyRing;
 import io.bisq.wire.payload.offer.OfferPayload;
-import io.bisq.wire.payload.payment.BankAccountContractData;
+import io.bisq.wire.payload.payment.BankAccountPayload;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -54,10 +54,7 @@ import javafx.collections.SetChangeListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -86,30 +83,28 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final BalanceListener balanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
-    private OfferPayload.Direction direction;
+    private Offer.Direction direction;
 
     private TradeCurrency tradeCurrency;
 
-    final StringProperty tradeCurrencyCode = new SimpleStringProperty();
-    final StringProperty btcCode = new SimpleStringProperty();
+    private final StringProperty tradeCurrencyCode = new SimpleStringProperty();
+    private final StringProperty btcCode = new SimpleStringProperty();
 
-    final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
-    final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
+    private final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
+    private final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
     //final BooleanProperty isMainNet = new SimpleBooleanProperty();
     //final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
 
     // final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
-    final ObjectProperty<Coin> amount = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> minAmount = new SimpleObjectProperty<>();
-    // Price is always otherCurrency/BTC, for altcoins we only invert at the display level. 
-    // If we would change the price representation in the domain we would not be backward compatible
-    final ObjectProperty<Price> price = new SimpleObjectProperty<>();
-    final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> buyerSecurityDeposit = new SimpleObjectProperty<>();
-    final Coin sellerSecurityDeposit;
-    final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
-    final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
+    private final ObjectProperty<Coin> amount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Coin> minAmount = new SimpleObjectProperty<>();
+    private final ObjectProperty<Price> price = new SimpleObjectProperty<>();
+    private final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
+    private final ObjectProperty<Coin> buyerSecurityDeposit = new SimpleObjectProperty<>();
+    private final Coin sellerSecurityDeposit;
+    private final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
+    private final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
+    private final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
 
     private final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
@@ -223,7 +218,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // called before activate()
-    boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    boolean initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
 
         fillPaymentAccounts();
@@ -286,8 +281,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long priceAsLong = price.get() != null && !useMarketBasedPrice.get() ? price.get().getValue() : 0L;
         // We use precision 8 in AltcoinPrice but in OfferPayload we use Fiat with precision 4. Will be refactored once in a bigger update....
         // TODO use same precision for both in next release
-        if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
-            priceAsLong = priceAsLong / 10000;
+        String currencyCode = tradeCurrencyCode.get();
+        boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
+        String baseCurrencyCode = isCryptoCurrency ? currencyCode : "BTC";
+        String counterCurrencyCode = isCryptoCurrency ? "BTC" : currencyCode;
 
         double marketPriceMarginParam = useMarketBasedPrice.get() ? marketPriceMargin : 0;
         long amount = this.amount.get() != null ? this.amount.get().getValue() : 0L;
@@ -338,16 +335,17 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 "securityDeposit must be not be less than " +
                         Restrictions.MIN_BUYER_SECURITY_DEPOSIT.toFriendlyString());
         OfferPayload offerPayload = new OfferPayload(offerId,
-                null,
+                new Date().getTime(),
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
-                direction,
+                OfferPayload.Direction.valueOf(direction.name()),
                 priceAsLong,
                 marketPriceMarginParam,
                 useMarketBasedPrice.get(),
                 amount,
                 minAmount,
-                tradeCurrencyCode.get(),
+                baseCurrencyCode,
+                counterCurrencyCode,
                 Lists.newArrayList(user.getAcceptedArbitratorAddresses()),
                 paymentAccount.getPaymentMethod().getId(),
                 paymentAccount.getId(),
@@ -454,7 +452,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return true;
     }
 
-    OfferPayload.Direction getDirection() {
+    Offer.Direction getDirection() {
         return direction;
     }
 
@@ -506,7 +504,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 !amount.get().isZero() &&
                 !price.get().isZero()) {
             try {
-                volume.set(new Volume(price.get().getVolumeByAmount(amount.get())));
+                volume.set(price.get().getVolumeByAmount(amount.get()));
             } catch (Throwable t) {
                 log.error(t.toString());
             }
@@ -521,7 +519,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 !volume.get().isZero() &&
                 !price.get().isZero()) {
             try {
-                amount.set(formatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get().getMonetary())));
+                //TODO check for altcoins
+                amount.set(formatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get())));
                 calculateTotalToPay();
             } catch (Throwable t) {
                 log.error(t.toString());
@@ -547,7 +546,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     boolean isBuyOffer() {
-        return direction == OfferPayload.Direction.BUY;
+        return direction == Offer.Direction.BUY;
     }
 
     private void updateBalance() {
@@ -615,7 +614,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     private boolean isNotUSBankAccount(PaymentAccount paymentAccount) {
         //noinspection SimplifiableIfStatement
-        if (paymentAccount instanceof SameCountryRestrictedBankAccount && paymentAccount.getContractData() instanceof BankAccountContractData)
+        if (paymentAccount instanceof SameCountryRestrictedBankAccount && paymentAccount.getPaymentAccountPayload() instanceof BankAccountPayload)
             return !((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
         else
             return true;
@@ -623,6 +622,14 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void setAmount(Coin amount) {
         this.amount.set(amount);
+    }
+
+    public void setPrice(Price price) {
+        this.price.set(price);
+    }
+
+    public void setVolume(Volume volume) {
+        this.volume.set(volume);
     }
 
     void setBuyerSecurityDeposit(Coin buyerSecurityDeposit) {
@@ -638,5 +645,74 @@ class CreateOfferDataModel extends ActivatableDataModel {
             createOfferFeeAsCoin = createOfferFeeAsCoin.divide(10).multiply(Math.round(marketPriceMargin * 1_000));
             createOfferFeeAsCoin = CoinUtil.maxCoin(createOfferFeeAsCoin, feeService.getMinCreateOfferFeeInBtc());
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    ReadOnlyObjectProperty<Coin> getAmount() {
+        return amount;
+    }
+
+    ReadOnlyObjectProperty<Coin> getMinAmount() {
+        return minAmount;
+    }
+
+    ReadOnlyObjectProperty<Price> getPrice() {
+        return price;
+    }
+
+    ReadOnlyObjectProperty<Volume> getVolume() {
+        return volume;
+    }
+
+    void setMinAmount(Coin minAmount) {
+        this.minAmount.set(minAmount);
+    }
+
+    void setDirection(Offer.Direction direction) {
+        this.direction = direction;
+    }
+
+    void setTradeCurrency(TradeCurrency tradeCurrency) {
+        this.tradeCurrency = tradeCurrency;
+    }
+
+    ReadOnlyStringProperty getTradeCurrencyCode() {
+        return tradeCurrencyCode;
+    }
+
+    ReadOnlyStringProperty getBtcCode() {
+        return btcCode;
+    }
+
+    ReadOnlyBooleanProperty getIsWalletFunded() {
+        return isWalletFunded;
+    }
+
+    ReadOnlyBooleanProperty getUseMarketBasedPrice() {
+        return useMarketBasedPrice;
+    }
+
+    ReadOnlyObjectProperty<Coin> getBuyerSecurityDeposit() {
+        return buyerSecurityDeposit;
+    }
+
+    Coin getSellerSecurityDeposit() {
+        return sellerSecurityDeposit;
+    }
+
+    ReadOnlyObjectProperty<Coin> getTotalToPayAsCoin() {
+        return totalToPayAsCoin;
+    }
+
+    ReadOnlyObjectProperty<Coin> getMissingCoin() {
+        return missingCoin;
+    }
+
+    ReadOnlyObjectProperty<Coin> getBalance() {
+        return balance;
     }
 }

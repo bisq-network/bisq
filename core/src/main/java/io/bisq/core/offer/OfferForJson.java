@@ -1,24 +1,21 @@
 package io.bisq.core.offer;
 
 import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.util.MathUtils;
-import io.bisq.wire.payload.offer.OfferPayload;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.wire.payload.payment.PaymentMethod;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.Date;
 
 public class OfferForJson {
     private static final Logger log = LoggerFactory.getLogger(OfferForJson.class);
 
-    public final OfferPayload.Direction direction;
+    public final Offer.Direction direction;
     public final String currencyCode;
     public final long minAmount;
     public final long amount;
@@ -32,7 +29,7 @@ public class OfferForJson {
 
     // primaryMarket fields are based on industry standard where primaryMarket is always in the focus (in the app BTC is always in the focus - will be changed in a larger refactoring once)
     public String currencyPair;
-    public OfferPayload.Direction primaryMarketDirection;
+    public Offer.Direction primaryMarketDirection;
 
     public String priceDisplayString;
     public String primaryMarketAmountDisplayString;
@@ -47,11 +44,11 @@ public class OfferForJson {
     public long primaryMarketMinVolume;
 
 
-    public OfferForJson(OfferPayload.Direction direction,
+    public OfferForJson(Offer.Direction direction,
                         String currencyCode,
                         Coin minAmount,
                         Coin amount,
-                        Fiat price,
+                        Price price,
                         Date date,
                         String id,
                         boolean useMarketBasedPrice,
@@ -63,7 +60,7 @@ public class OfferForJson {
         this.currencyCode = currencyCode;
         this.minAmount = minAmount.value;
         this.amount = amount.value;
-        this.price = price.value;
+        this.price = price.getValue();
         this.date = date.getTime();
         this.id = id;
         this.useMarketBasedPrice = useMarketBasedPrice;
@@ -83,45 +80,79 @@ public class OfferForJson {
         }
     }
 
+    protected final MonetaryFormat fiatFormat = new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0);
+    protected final MonetaryFormat altcoinFormat = new MonetaryFormat().shift(0).minDecimals(8).repeatOptionalDecimals(0, 0);
+    protected final MonetaryFormat coinFormat = MonetaryFormat.BTC;
+    //protected final DecimalFormat decimalFormat = new DecimalFormat("#.#");
+
     private void setDisplayStrings() {
         try {
-            MonetaryFormat fiatFormat = MonetaryFormat.FIAT.repeatOptionalDecimals(0, 0);
-            MonetaryFormat coinFormat = MonetaryFormat.BTC.minDecimals(2).repeatOptionalDecimals(1, 6);
-            final Fiat priceAsFiat = getPriceAsFiat();
+            final Price price = getPrice();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                primaryMarketDirection = direction == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
+                primaryMarketDirection = direction == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
                 currencyPair = currencyCode + "/" + "BTC";
 
-                DecimalFormat decimalFormat = new DecimalFormat("#.#");
-                decimalFormat.setMaximumFractionDigits(8);
-                final double value = priceAsFiat.value != 0 ? 10000D / priceAsFiat.value : 0;
-                priceDisplayString = decimalFormat.format(MathUtils.roundDouble(value, 8)).replace(",", ".");
-                primaryMarketMinAmountDisplayString = fiatFormat.noCode().format(getMinVolumeAsFiat()).toString();
-                primaryMarketAmountDisplayString = fiatFormat.noCode().format(getVolumeAsFiat()).toString();
+                // int precision = 8;
+                //decimalFormat.setMaximumFractionDigits(precision);
+
+                // amount and volume is inverted for json    
+                priceDisplayString = altcoinFormat.noCode().format(price.getMonetary()).toString();
+                primaryMarketMinAmountDisplayString = altcoinFormat.noCode().format(getMinVolume().getMonetary()).toString();
+                primaryMarketAmountDisplayString = altcoinFormat.noCode().format(getVolume().getMonetary()).toString();
                 primaryMarketMinVolumeDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();
                 primaryMarketVolumeDisplayString = coinFormat.noCode().format(getAmountAsCoin()).toString();
 
-                primaryMarketPrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(value, 8));
-                primaryMarketMinAmount = (long) MathUtils.scaleUpByPowerOf10(getMinVolumeAsFiat().longValue(), 4);
-                primaryMarketAmount = (long) MathUtils.scaleUpByPowerOf10(getVolumeAsFiat().longValue(), 4);
+                primaryMarketPrice = price.getValue();
+                primaryMarketMinAmount = getMinVolume().getValue();
+                primaryMarketAmount = getVolume().getValue();
+                primaryMarketMinVolume = getMinAmountAsCoin().getValue();
+                primaryMarketVolume = getAmountAsCoin().getValue();
+
+
+                //final double value = price.value != 0 ? price.value / 100000000D : 0;
+                // priceDisplayString = decimalFormat.format(MathUtils.roundDouble(value, precision)).replace(",", ".");
+                // primaryMarketMinAmountDisplayString = altcoinFormat.noCode().format(getMinVolume()).toString();
+                // primaryMarketAmountDisplayString = altcoinFormat.noCode().format(getVolume()).toString();
+                // primaryMarketMinVolumeDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();
+                // primaryMarketVolumeDisplayString = coinFormat.noCode().format(getAmountAsCoin()).toString();
+
+                
+                /*primaryMarketPrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(value, precision));
+                primaryMarketMinAmount = (long) MathUtils.scaleUpByPowerOf10(getMinVolume().longValue(), precision);
+                primaryMarketAmount = (long) MathUtils.scaleUpByPowerOf10(getVolume().longValue(), precision);
                 primaryMarketMinVolume = getMinAmountAsCoin().longValue();
-                primaryMarketVolume = getAmountAsCoin().longValue();
+                primaryMarketVolume = getAmountAsCoin().longValue();*/
 
             } else {
                 primaryMarketDirection = direction;
                 currencyPair = "BTC/" + currencyCode;
-                priceDisplayString = fiatFormat.noCode().format(priceAsFiat).toString();
+
+                priceDisplayString = fiatFormat.noCode().format(price.getMonetary()).toString();
+                primaryMarketMinAmountDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();
+                primaryMarketAmountDisplayString = coinFormat.noCode().format(getAmountAsCoin()).toString();
+                primaryMarketMinVolumeDisplayString = fiatFormat.noCode().format(getMinVolume().getMonetary()).toString();
+                primaryMarketVolumeDisplayString = fiatFormat.noCode().format(getVolume().getMonetary()).toString();
+
+                primaryMarketPrice = price.getValue();
+                primaryMarketMinAmount = getMinAmountAsCoin().getValue();
+                primaryMarketAmount = getAmountAsCoin().getValue();
+                primaryMarketMinVolume = getMinVolume().getValue();
+                primaryMarketVolume = getVolume().getValue();
+                
+           /*     
+                priceDisplayString = fiatFormat.noCode().format(price.getMonetary()).toString();
 
                 primaryMarketMinAmountDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();
                 primaryMarketAmountDisplayString = coinFormat.noCode().format(getAmountAsCoin()).toString();
-                primaryMarketMinVolumeDisplayString = fiatFormat.noCode().format(getMinVolumeAsFiat()).toString();
-                primaryMarketVolumeDisplayString = fiatFormat.noCode().format(getVolumeAsFiat()).toString();
+                primaryMarketMinVolumeDisplayString = fiatFormat.noCode().format(getMinVolume().getMonetary()).toString();
+                primaryMarketVolumeDisplayString = fiatFormat.noCode().format(getVolume().getMonetary()).toString();
 
-                primaryMarketPrice = (long) MathUtils.scaleUpByPowerOf10(priceAsFiat.longValue(), 4);
-                primaryMarketMinAmount = getMinAmountAsCoin().longValue();
-                primaryMarketAmount = getAmountAsCoin().longValue();
-                primaryMarketMinVolume = (long) MathUtils.scaleUpByPowerOf10(getMinVolumeAsFiat().longValue(), 4);
-                primaryMarketVolume = (long) MathUtils.scaleUpByPowerOf10(getVolumeAsFiat().longValue(), 4);
+                int precision = 4;
+                primaryMarketPrice = (long) MathUtils.scaleUpByPowerOf10(price.getValue(), precision);
+                primaryMarketMinAmount = getMinAmountAsCoin().getValue();
+                primaryMarketAmount = getAmountAsCoin().getValue();
+                primaryMarketMinVolume = (long) MathUtils.scaleUpByPowerOf10(getMinVolume().getValue(), precision);
+                primaryMarketVolume = (long) MathUtils.scaleUpByPowerOf10(getVolume().getValue(), precision);*/
             }
 
         } catch (Throwable t) {
@@ -129,8 +160,8 @@ public class OfferForJson {
         }
     }
 
-    private Fiat getPriceAsFiat() {
-        return Fiat.valueOf(currencyCode, price);
+    private Price getPrice() {
+        return Price.valueOf(currencyCode, price);
     }
 
     private Coin getAmountAsCoin() {
@@ -141,11 +172,11 @@ public class OfferForJson {
         return Coin.valueOf(minAmount);
     }
 
-    private Fiat getVolumeAsFiat() {
-        return new ExchangeRate(getPriceAsFiat()).coinToFiat(getAmountAsCoin());
+    private Volume getVolume() {
+        return getPrice().getVolumeByAmount(getAmountAsCoin());
     }
 
-    private Fiat getMinVolumeAsFiat() {
-        return new ExchangeRate(getPriceAsFiat()).coinToFiat(getMinAmountAsCoin());
+    private Volume getMinVolume() {
+        return getPrice().getVolumeByAmount(getMinAmountAsCoin());
     }
 }

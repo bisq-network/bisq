@@ -20,8 +20,8 @@ package io.bisq.core.offer.placeoffer.tasks;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
+import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.placeoffer.PlaceOfferModel;
-import io.bisq.wire.payload.offer.OfferPayload;
 import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -48,7 +48,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                     log.debug("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
 
                     if (model.getTransaction().getHashAsString().equals(transaction.getHashAsString())) {
-                        model.offer.setState(OfferPayload.State.OFFER_FEE_PAID);
+                        model.offer.setState(Offer.State.OFFER_FEE_PAID);
                         // No tx malleability happened after broadcast (still not in blockchain)
                         complete();
                     } else {
@@ -60,7 +60,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                                 () -> {
                                     log.debug("We store now the changed txID to the offer and add that again.");
                                     // We store now the changed txID to the offer and add that again.
-                                    model.offer.setOfferFeePaymentTxID(transaction.getHashAsString());
+                                    model.offer.setOfferFeePaymentTxId(transaction.getHashAsString());
                                     model.setTransaction(transaction);
                                     model.offerBookService.addOffer(model.offer,
                                             BroadcastCreateOfferFeeTx.this::complete,

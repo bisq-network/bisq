@@ -17,10 +17,11 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades;
 
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.core.trade.Trade;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
@@ -41,11 +42,11 @@ public class PendingTradesListItem {
         return trade.tradeAmountProperty();
     }
 
-    public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
+    public ReadOnlyObjectProperty<Volume> tradeVolumeProperty() {
         return trade.tradeVolumeProperty();
     }
 
-    public Fiat getPrice() {
+    public Price getPrice() {
         return trade.getTradePrice();
     }
 

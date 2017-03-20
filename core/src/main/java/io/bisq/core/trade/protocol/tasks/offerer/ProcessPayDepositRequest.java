@@ -23,7 +23,7 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.wire.message.trade.PayDepositRequest;
 import io.bisq.wire.payload.filter.PaymentAccountFilter;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,15 +50,15 @@ public class ProcessPayDepositRequest extends TradeTask {
             checkNotNull(payDepositRequest);
             checkTradeId(processModel.getId(), payDepositRequest);
 
-            PaymentAccountContractData paymentAccountContractData = checkNotNull(payDepositRequest.takerPaymentAccountContractData);
+            PaymentAccountPayload paymentAccountPayload = checkNotNull(payDepositRequest.takerPaymentAccountPayload);
             final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
-            if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountContractData, appliedPaymentAccountFilter)) {
+            if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
                 failed("Other trader is banned by his trading account data.\n" +
-                        "paymentAccountContractData=" + paymentAccountContractData.getPaymentDetails() + "\n" +
+                        "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails() + "\n" +
                         "banFilter=" + appliedPaymentAccountFilter[0].toString());
                 return;
             }
-            processModel.tradingPeer.setPaymentAccountContractData(paymentAccountContractData);
+            processModel.tradingPeer.setPaymentAccountPayload(paymentAccountPayload);
 
             processModel.tradingPeer.setRawTransactionInputs(checkNotNull(payDepositRequest.rawTransactionInputs));
             checkArgument(payDepositRequest.rawTransactionInputs.size() > 0);

@@ -18,24 +18,24 @@
 package io.bisq.wire.payload.payment;
 
 import com.google.protobuf.util.JsonFormat;
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.wire.proto.Messages;
 import org.junit.Test;
 
 import java.io.IOException;
 
 import static org.junit.Assert.fail;
 
-public class OKPayAccountContractDataTest {
+public class OKPayAccountPayloadTest {
     @Test
     public void toProtoBuf() throws Exception {
-        OKPayAccountContractData accountContractData = new OKPayAccountContractData("method", "id", 100);
-        accountContractData.setAccountNr("AccNr");
+        OKPayAccountPayload accountPayload = new OKPayAccountPayload("method", "id", 100);
+        accountPayload.setAccountNr("AccNr");
         try {
-            String buffer = JsonFormat.printer().print(accountContractData.toProtoBuf().getOKPayAccountContractData());
+            String buffer = JsonFormat.printer().print(accountPayload.toProtoBuf().getOKPayAccountPayload());
             JsonFormat.Parser parser = JsonFormat.parser();
-            Messages.OKPayAccountContractData.Builder builder = Messages.OKPayAccountContractData.newBuilder();
+            Messages.OKPayAccountPayload.Builder builder = Messages.OKPayAccountPayload.newBuilder();
             parser.merge(buffer, builder);
-            //assertEquals(accountContractData, new OKPayAccountContractData()ProtoBufferUtilities.getOkPayAccountContractData(builder.build()));
+            //assertEquals(accountPayload, new OKPayAccountPayload()ProtoBufferUtilities.getOkPayAccountPayload(builder.build()));
         } catch (IOException e) {
             e.printStackTrace();
             fail();

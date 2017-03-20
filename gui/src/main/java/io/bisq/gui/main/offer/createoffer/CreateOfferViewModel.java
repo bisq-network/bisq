@@ -19,10 +19,12 @@ package io.bisq.gui.main.offer.createoffer;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.monetary.Altcoin;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.offer.Offer;
@@ -36,9 +38,6 @@ import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.funds.FundsView;
 import io.bisq.gui.main.funds.deposit.DepositView;
-import io.bisq.gui.main.offer.createoffer.monetary.Altcoin;
-import io.bisq.gui.main.offer.createoffer.monetary.Price;
-import io.bisq.gui.main.offer.createoffer.monetary.Volume;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.settings.SettingsView;
 import io.bisq.gui.main.settings.preferences.PreferencesView;
@@ -49,14 +48,13 @@ import io.bisq.gui.util.validation.FiatValidator;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.gui.util.validation.SecurityDepositValidator;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
-import java.util.concurrent.TimeUnit;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
@@ -164,7 +162,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         this.formatter = formatter;
 
         paymentLabel = Res.get("createOffer.fundsBox.paymentLabel", dataModel.shortOfferId);
-        sellerSecurityDeposit = formatter.formatCoin(dataModel.sellerSecurityDeposit);
+        sellerSecurityDeposit = formatter.formatCoin(dataModel.getSellerSecurityDeposit());
 
         if (dataModel.getAddressEntry() != null) {
             addressAsString = dataModel.getAddressEntry().getAddressString();
@@ -175,7 +173,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Override
     protected void activate() {
-        if (DevEnv.DEV_MODE) {
+       /* if (DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
                 amount.set("1");
                 minAmount.set(amount.get());
@@ -193,14 +191,14 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 updateButtonDisableState();
                 updateSpinnerInfo();
             }, 10, TimeUnit.MILLISECONDS);
-        }
+        }*/
 
         addBindings();
         addListeners();
 
         updateButtonDisableState();
 
-        if (dataModel.getDirection() == OfferPayload.Direction.BUY) {
+        if (dataModel.getDirection() == Offer.Direction.BUY) {
             directionLabel = Res.get("shared.buyBitcoin");
             amountDescription = Res.get("createOffer.amountPriceBox.amountDescription", Res.get("shared.buy"));
         } else {
@@ -208,7 +206,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             amountDescription = Res.get("createOffer.amountPriceBox.amountDescription", Res.get("shared.sell"));
         }
 
-        buyerSecurityDeposit.set(formatter.formatCoin(dataModel.buyerSecurityDeposit.get()));
+        buyerSecurityDeposit.set(formatter.formatCoin(dataModel.getBuyerSecurityDeposit().get()));
 
         updateMarketPriceAvailable();
     }
@@ -221,29 +219,29 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private void addBindings() {
-        if (dataModel.getDirection() == OfferPayload.Direction.BUY) {
+        if (dataModel.getDirection() == Offer.Direction.BUY) {
             volumeDescriptionLabel.bind(createStringBinding(
-                    () -> Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.tradeCurrencyCode.get()),
-                    dataModel.tradeCurrencyCode));
+                    () -> Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getTradeCurrencyCode().get()),
+                    dataModel.getTradeCurrencyCode()));
         } else {
             volumeDescriptionLabel.bind(createStringBinding(
-                    () -> Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.tradeCurrencyCode.get()),
-                    dataModel.tradeCurrencyCode));
+                    () -> Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getTradeCurrencyCode().get()),
+                    dataModel.getTradeCurrencyCode()));
         }
         volumePromptLabel.bind(createStringBinding(
-                () -> Res.get("createOffer.volume.prompt", dataModel.tradeCurrencyCode.get()),
-                dataModel.tradeCurrencyCode));
+                () -> Res.get("createOffer.volume.prompt", dataModel.getTradeCurrencyCode().get()),
+                dataModel.getTradeCurrencyCode()));
 
-        totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
-                dataModel.totalToPayAsCoin));
-
-
-        tradeAmount.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.amount.get()),
-                dataModel.amount));
+        totalToPay.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()),
+                dataModel.getTotalToPayAsCoin()));
 
 
-        btcCode.bind(dataModel.btcCode);
-        tradeCurrencyCode.bind(dataModel.tradeCurrencyCode);
+        tradeAmount.bind(createStringBinding(() -> formatter.formatCoinWithCode(dataModel.getAmount().get()),
+                dataModel.getAmount()));
+
+
+        btcCode.bind(dataModel.getBtcCode());
+        tradeCurrencyCode.bind(dataModel.getTradeCurrencyCode());
     }
 
     private void removeBindings() {
@@ -273,7 +271,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         };
         priceStringListener = (ov, oldValue, newValue) -> {
             updateMarketPriceAvailable();
-            final String currencyCode = dataModel.tradeCurrencyCode.get();
+            final String currencyCode = dataModel.getTradeCurrencyCode().get();
             if (!ignorePriceStringListener) {
                 if (isPriceInputValid(newValue).isValid) {
                     setPriceToModel();
@@ -282,16 +280,14 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
                     if (!inputIsMarketBasedPrice) {
                         if (marketPrice != null) {
-                            double marketPriceAsDouble = marketPrice.getPrice(getPriceFeedType());
+                            double marketPriceAsDouble = marketPrice.getPrice();
                             try {
                                 double priceAsDouble = formatter.parseNumberStringToDouble(price.get());
                                 double relation = priceAsDouble / marketPriceAsDouble;
-                                double percentage;
-                                if (CurrencyUtil.isCryptoCurrency(currencyCode))
-                                    percentage = dataModel.getDirection() == OfferPayload.Direction.SELL ? 1 - relation : relation - 1;
-                                else
-                                    percentage = dataModel.getDirection() == OfferPayload.Direction.BUY ? 1 - relation : relation - 1;
-
+                                final Offer.Direction compareDirection = CurrencyUtil.isCryptoCurrency(currencyCode) ?
+                                        Offer.Direction.SELL :
+                                        Offer.Direction.BUY;
+                                double percentage = dataModel.getDirection() == compareDirection ? 1 - relation : relation - 1;
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
                                 dataModel.updateTradeFee();
@@ -314,24 +310,28 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     if (!newValue.isEmpty() && !newValue.equals("-")) {
                         double percentage = formatter.parsePercentStringToDouble(newValue);
                         if (percentage >= 1 || percentage <= -1) {
-                            new Popup().warning(Res.get("popup.warning.tooLargePercentageValue") + "\n" + Res.get("popup.warning.examplePercentageValue"))
+                            new Popup().warning(Res.get("popup.warning.tooLargePercentageValue") + "\n" +
+                                    Res.get("popup.warning.examplePercentageValue"))
                                     .show();
                         } else {
-                            final String currencyCode = dataModel.tradeCurrencyCode.get();
+                            final String currencyCode = dataModel.getTradeCurrencyCode().get();
                             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
                             if (marketPrice != null) {
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
                                 dataModel.updateTradeFee();
-
-                                double marketPriceAsDouble = marketPrice.getPrice(getPriceFeedType());
-                                double factor;
-                                if (CurrencyUtil.isCryptoCurrency(currencyCode))
-                                    factor = dataModel.getDirection() == OfferPayload.Direction.SELL ? 1 - percentage : 1 + percentage;
-                                else
-                                    factor = dataModel.getDirection() == OfferPayload.Direction.BUY ? 1 - percentage : 1 + percentage;
+                                double marketPriceAsDouble = marketPrice.getPrice();
+                                final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
+                                final Offer.Direction compareDirection = isCryptoCurrency ?
+                                        Offer.Direction.SELL :
+                                        Offer.Direction.BUY;
+                                double factor = dataModel.getDirection() == compareDirection ?
+                                        1 - percentage :
+                                        1 + percentage;
                                 double targetPrice = marketPriceAsDouble * factor;
-                                int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ? Altcoin.SMALLEST_UNIT_EXPONENT : 2;
+                                int precision = isCryptoCurrency ?
+                                        Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
+                                // protect from triggering unwanted updates
                                 ignorePriceStringListener = true;
                                 price.set(formatter.formatRoundedDoubleWithPrecision(targetPrice, precision));
                                 ignorePriceStringListener = false;
@@ -392,7 +392,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         priceListener = (ov, oldValue, newValue) -> {
             ignorePriceStringListener = true;
             if (newValue != null)
-                price.set(newValue.toString());
+                price.set(formatter.formatPrice(newValue));
             else
                 price.set("");
 
@@ -401,7 +401,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         volumeListener = (ov, oldValue, newValue) -> {
             ignoreVolumeStringListener = true;
             if (newValue != null)
-                volume.set(newValue.toString());
+                volume.set(formatter.formatVolumeWithMinPrecision(newValue));
             else
                 volume.set("");
 
@@ -428,7 +428,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private void updateMarketPriceAvailable() {
-        marketPrice = priceFeedService.getMarketPrice(dataModel.tradeCurrencyCode.get());
+        marketPrice = priceFeedService.getMarketPrice(dataModel.getTradeCurrencyCode().get());
         marketPriceAvailableProperty.set(marketPrice == null ? 0 : 1);
     }
 
@@ -439,19 +439,19 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         minAmount.addListener(minAmountStringListener);
         price.addListener(priceStringListener);
         marketPriceMargin.addListener(marketPriceMarginStringListener);
-        dataModel.useMarketBasedPrice.addListener(useMarketBasedPriceListener);
+        dataModel.getUseMarketBasedPrice().addListener(useMarketBasedPriceListener);
         volume.addListener(volumeStringListener);
         buyerSecurityDeposit.addListener(securityDepositStringListener);
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
-        dataModel.amount.addListener(amountAsCoinListener);
-        dataModel.minAmount.addListener(minAmountAsCoinListener);
-        dataModel.price.addListener(priceListener);
-        dataModel.volume.addListener(volumeListener);
-        dataModel.buyerSecurityDeposit.addListener(securityDepositAsCoinListener);
+        dataModel.getAmount().addListener(amountAsCoinListener);
+        dataModel.getMinAmount().addListener(minAmountAsCoinListener);
+        dataModel.getPrice().addListener(priceListener);
+        dataModel.getVolume().addListener(volumeListener);
+        dataModel.getBuyerSecurityDeposit().addListener(securityDepositAsCoinListener);
 
         // dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
-        dataModel.isWalletFunded.addListener(isWalletFundedListener);
+        dataModel.getIsWalletFunded().addListener(isWalletFundedListener);
 
         priceFeedService.currenciesUpdateFlagProperty().addListener(currenciesUpdateListener);
     }
@@ -461,19 +461,19 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         minAmount.removeListener(minAmountStringListener);
         price.removeListener(priceStringListener);
         marketPriceMargin.removeListener(marketPriceMarginStringListener);
-        dataModel.useMarketBasedPrice.removeListener(useMarketBasedPriceListener);
+        dataModel.getUseMarketBasedPrice().removeListener(useMarketBasedPriceListener);
         volume.removeListener(volumeStringListener);
         buyerSecurityDeposit.removeListener(securityDepositStringListener);
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
-        dataModel.amount.removeListener(amountAsCoinListener);
-        dataModel.minAmount.removeListener(minAmountAsCoinListener);
-        dataModel.price.removeListener(priceListener);
-        dataModel.volume.removeListener(volumeListener);
-        dataModel.buyerSecurityDeposit.removeListener(securityDepositAsCoinListener);
+        dataModel.getAmount().removeListener(amountAsCoinListener);
+        dataModel.getMinAmount().removeListener(minAmountAsCoinListener);
+        dataModel.getPrice().removeListener(priceListener);
+        dataModel.getVolume().removeListener(volumeListener);
+        dataModel.getBuyerSecurityDeposit().removeListener(securityDepositAsCoinListener);
 
         //dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
-        dataModel.isWalletFunded.removeListener(isWalletFundedListener);
+        dataModel.getIsWalletFunded().removeListener(isWalletFundedListener);
 
         if (offer != null && errorMessageListener != null)
             offer.getErrorMessageProperty().removeListener(errorMessageListener);
@@ -486,7 +486,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    boolean initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         boolean result = dataModel.initWithData(direction, tradeCurrency);
         if (dataModel.paymentAccount != null)
             btcValidator.setMaxValueInBitcoin(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimit());
@@ -519,7 +519,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             if (newValue != null) {
                 stopTimeoutTimer();
                 createOfferRequested = false;
-                if (offer.getState() == OfferPayload.State.OFFER_FEE_PAID)
+                if (offer.getState() == Offer.State.OFFER_FEE_PAID)
                     errorMessage.set(newValue + Res.get("createOffer.errorInfo"));
                 else
                     errorMessage.set(newValue);
@@ -554,7 +554,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
         dataModel.onCurrencySelected(tradeCurrency);
 
-        marketPrice = priceFeedService.getMarketPrice(dataModel.tradeCurrencyCode.get());
+        marketPrice = priceFeedService.getMarketPrice(dataModel.getTradeCurrencyCode().get());
         marketPriceAvailableProperty.set(marketPrice == null ? 0 : 1);
         updateButtonDisableState();
     }
@@ -567,12 +567,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     boolean fundFromSavingsWallet() {
         dataModel.fundFromSavingsWallet();
-        if (dataModel.isWalletFunded.get()) {
+        if (dataModel.getIsWalletFunded().get()) {
             updateButtonDisableState();
             return true;
         } else {
             new Popup().warning(Res.get("shared.notEnoughFunds",
-                    formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
+                    formatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()),
                     formatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
@@ -595,7 +595,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             if (result.isValid) {
                 setAmountToModel();
                 ignoreAmountStringListener = true;
-                amount.set(formatter.formatCoin(dataModel.amount.get()));
+                amount.set(formatter.formatCoin(dataModel.getAmount().get()));
                 ignoreAmountStringListener = false;
                 dataModel.calculateVolume();
 
@@ -616,7 +616,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             minAmountValidationResult.set(result);
             if (result.isValid) {
                 setMinAmountToModel();
-                minAmount.set(formatter.formatCoin(dataModel.minAmount.get()));
+                minAmount.set(formatter.formatCoin(dataModel.getMinAmount().get()));
 
                 if (!dataModel.isMinAmountLessOrEqualAmount()) {
                     amount.set(minAmount.get());
@@ -637,8 +637,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             if (isValid) {
                 setPriceToModel();
                 ignorePriceStringListener = true;
-                if (dataModel.price.get() != null)
-                    price.set(dataModel.price.get().toString());
+                if (dataModel.getPrice().get() != null)
+                    price.set(formatter.formatPrice(dataModel.getPrice().get()));
                 ignorePriceStringListener = false;
                 dataModel.calculateVolume();
                 dataModel.calculateAmount();
@@ -659,8 +659,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             if (result.isValid) {
                 setVolumeToModel();
                 ignoreVolumeStringListener = true;
-                if (dataModel.volume.get() != null)
-                    volume.set(dataModel.volume.get().toString());
+                if (dataModel.getVolume().get() != null)
+                    volume.set(formatter.formatVolumeWithMinPrecision(dataModel.getVolume().get()));
                 ignoreVolumeStringListener = false;
 
                 dataModel.calculateAmount();
@@ -697,7 +697,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                             .onAction(() -> {
                                 dataModel.setBuyerSecurityDeposit(defaultSecurityDeposit);
                                 ignoreSecurityDepositStringListener = true;
-                                buyerSecurityDeposit.set(formatter.formatCoin(dataModel.buyerSecurityDeposit.get()));
+                                buyerSecurityDeposit.set(formatter.formatCoin(dataModel.getBuyerSecurityDeposit().get()));
                                 ignoreSecurityDepositStringListener = false;
                             })
                             .closeButtonText(Res.get("createOffer.useLowerValue"))
@@ -714,7 +714,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private void applyBuyerSecurityDepositOnFocusOut() {
         setBuyerSecurityDepositToModel();
         ignoreSecurityDepositStringListener = true;
-        buyerSecurityDeposit.set(formatter.formatCoin(dataModel.buyerSecurityDeposit.get()));
+        buyerSecurityDeposit.set(formatter.formatCoin(dataModel.getBuyerSecurityDeposit().get()));
         ignoreSecurityDepositStringListener = false;
     }
 
@@ -752,7 +752,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     boolean isSellOffer() {
-        return dataModel.getDirection() == OfferPayload.Direction.SELL;
+        return dataModel.getDirection() == Offer.Direction.SELL;
     }
 
     public TradeCurrency getTradeCurrency() {
@@ -760,22 +760,22 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     public String getTradeAmount() {
-        return formatter.formatCoinWithCode(dataModel.amount.get());
+        return formatter.formatCoinWithCode(dataModel.getAmount().get());
     }
 
     public String getSecurityDepositInfo() {
         return formatter.formatCoinWithCode(dataModel.getSecurityDeposit()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.amount.get(), formatter);
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get(), formatter);
     }
 
     public String getCreateOfferFee() {
         return formatter.formatCoinWithCode(dataModel.getCreateOfferFeeAsCoin()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getCreateOfferFeeAsCoin(), dataModel.amount.get(), formatter);
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getCreateOfferFeeAsCoin(), dataModel.getAmount().get(), formatter);
     }
 
     public String getTxFee() {
         return formatter.formatCoinWithCode(dataModel.getTxFeeAsCoin()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getTxFeeAsCoin(), dataModel.amount.get(), formatter);
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getTxFeeAsCoin(), dataModel.getAmount().get(), formatter);
     }
 
     public PaymentAccount getPaymentAccount() {
@@ -823,7 +823,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private void setAmountToModel() {
         if (amount.get() != null && !amount.get().isEmpty()) {
             dataModel.setAmount(formatter.parseToCoinWith4Decimals(amount.get()));
-            if (dataModel.minAmount.get() == null || dataModel.minAmount.get().equals(Coin.ZERO)) {
+            if (dataModel.getMinAmount().get() == null || dataModel.getMinAmount().get().equals(Coin.ZERO)) {
                 minAmount.set(amount.get());
                 setMinAmountToModel();
             }
@@ -835,34 +835,32 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private void setMinAmountToModel() {
         if (minAmount.get() != null && !minAmount.get().isEmpty())
-            dataModel.minAmount.set(formatter.parseToCoinWith4Decimals(minAmount.get()));
+            dataModel.setMinAmount(formatter.parseToCoinWith4Decimals(minAmount.get()));
         else
-            dataModel.minAmount.set(null);
+            dataModel.setMinAmount(null);
     }
 
     private void setPriceToModel() {
         if (price.get() != null && !price.get().isEmpty()) {
             try {
-                final Price price = Price.parse(this.price.get(), dataModel.tradeCurrencyCode.get());
-                dataModel.price.set(price);
+                dataModel.setPrice(Price.parse(dataModel.getTradeCurrencyCode().get(), this.price.get()));
             } catch (Throwable t) {
                 log.debug(t.getMessage());
             }
         } else {
-            dataModel.price.set(null);
+            dataModel.setPrice(null);
         }
     }
 
     private void setVolumeToModel() {
         if (volume.get() != null && !volume.get().isEmpty()) {
             try {
-                final Volume value = Volume.parse(volume.get(), dataModel.tradeCurrencyCode.get());
-                dataModel.volume.set(value);
+                dataModel.setVolume(Volume.parse(volume.get(), dataModel.getTradeCurrencyCode().get()));
             } catch (Throwable t) {
                 log.debug(t.getMessage());
             }
         } else {
-            dataModel.volume.set(null);
+            dataModel.setVolume(null);
         }
     }
 
@@ -880,6 +878,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private InputValidator.ValidationResult isPriceInputValid(String input) {
+        //TODO use altcoinValidator
         if (CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()))
             fiatValidator.setMinValue(0.00000001);
         else
@@ -889,8 +888,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private InputValidator.ValidationResult isVolumeInputValid(String input) {
+        //TODO use altcoinValidator
         if (CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()))
-            fiatValidator.setMinValue(0.01);
+            fiatValidator.setMinValue(0.00000001);
         else
             fiatValidator.setMinValue(FiatValidator.MIN_FIAT_VALUE);
 
@@ -902,7 +902,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 errorMessage.get() != null ||
                 showTransactionPublishedScreen.get()) {
             waitingForFundsText.set("");
-        } else if (dataModel.isWalletFunded.get()) {
+        } else if (dataModel.getIsWalletFunded().get()) {
             waitingForFundsText.set("");
            /* if (dataModel.isFeeFromFundingTxSufficient.get()) {
                 spinnerInfoText.set("");
@@ -922,22 +922,15 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 isBtcInputValid(minAmount.get()).isValid &&
                 isPriceInputValid(price.get()).isValid &&
                 securityDepositValidator.validate(buyerSecurityDeposit.get()).isValid &&
-                dataModel.price.get() != null &&
-                dataModel.price.get().getValue() != 0 &&
+                dataModel.getPrice().get() != null &&
+                dataModel.getPrice().get().getValue() != 0 &&
                 isVolumeInputValid(volume.get()).isValid &&
                 dataModel.isMinAmountLessOrEqualAmount();
 
         isNextButtonDisabled.set(!inputDataValid);
         // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
         //isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || notSufficientFees);
-        isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || !dataModel.isWalletFunded.get());
-    }
-
-    private PriceFeedService.Type getPriceFeedType() {
-        if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
-            return dataModel.getDirection() == OfferPayload.Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
-        else
-            return dataModel.getDirection() == OfferPayload.Direction.SELL ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
+        isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || !dataModel.getIsWalletFunded().get());
     }
 
     private void stopTimeoutTimer() {

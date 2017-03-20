@@ -22,7 +22,6 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.gui.common.model.ActivatableDataModel;
-import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -57,7 +56,7 @@ class ClosedTradesDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public OfferPayload.Direction getDirection(Offer offer) {
+    public Offer.Direction getDirection(Offer offer) {
         return closedTradableManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 

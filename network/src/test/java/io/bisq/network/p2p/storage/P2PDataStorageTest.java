@@ -6,12 +6,11 @@ import com.google.protobuf.util.JsonFormat;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.network.NetworkNode;
-import io.bisq.network.p2p.network.ProtoBufferUtilities;
 import io.bisq.network.p2p.peers.Broadcaster;
+import io.bisq.wire.ProtoBufferUtilities;
 import io.bisq.wire.crypto.Hash;
 import io.bisq.wire.crypto.KeyRing;
 import io.bisq.wire.crypto.KeyStorage;
@@ -20,6 +19,7 @@ import io.bisq.wire.payload.alert.Alert;
 import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.wire.proto.Messages;
 import lombok.extern.slf4j.Slf4j;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -130,11 +130,11 @@ public class P2PDataStorageTest {
     public void testOfferRoundtrip() throws InvalidProtocolBufferException {
         OfferPayload offer = getDummyOffer();
         try {
-            String buffer = JsonFormat.printer().print(offer.toProtoBuf().getOffer());
+            String buffer = JsonFormat.printer().print(offer.toProtoBuf().getPbOffer());
             JsonFormat.Parser parser = JsonFormat.parser();
-            Messages.Offer.Builder builder = Messages.Offer.newBuilder();
+            Messages.PB_Offer.Builder builder = Messages.PB_Offer.newBuilder();
             parser.merge(buffer, builder);
-            assertEquals(offer, ProtoBufferUtilities.getOffer(builder.build()));
+            assertEquals(offer, ProtoBufferUtilities.getOfferPayload(builder.build()));
         } catch (IOException e) {
             e.printStackTrace();
             fail();
@@ -157,6 +157,7 @@ public class P2PDataStorageTest {
                 true,
                 100,
                 50,
+                "BTC",
                 "USD",
                 Lists.newArrayList(nodeAddress,
                         nodeAddress2,

@@ -2,9 +2,9 @@ package io.bisq.wire.payload.p2p;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.crypto.Hash;
 import io.bisq.wire.payload.Payload;
+import io.bisq.wire.proto.Messages;
 import lombok.Getter;
 
 import java.util.regex.Pattern;
@@ -13,10 +13,13 @@ public final class NodeAddress implements Persistable, Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
+    // Payload
     @Getter
     public final String hostName;
     @Getter
     public final int port;
+
+    // Domain
     transient private byte[] addressPrefixHash;
 
     public NodeAddress(String hostName, int port) {

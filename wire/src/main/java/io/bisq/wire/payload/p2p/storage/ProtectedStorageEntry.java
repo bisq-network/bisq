@@ -5,9 +5,9 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.payload.Payload;
 import io.bisq.wire.payload.StoragePayload;
+import io.bisq.wire.proto.Messages;
 import lombok.EqualsAndHashCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,13 +28,16 @@ public class ProtectedStorageEntry implements Payload {
 
     private static final Logger log = LoggerFactory.getLogger(ProtectedStorageEntry.class);
 
+    // Payload
     protected final StoragePayload storagePayload;
     private final byte[] ownerPubKeyBytes;
-    public transient PublicKey ownerPubKey;
     public int sequenceNumber;
     public byte[] signature;
     @VisibleForTesting
     public long creationTimeStamp;
+
+    // Domain
+    public transient PublicKey ownerPubKey;
 
     public ProtectedStorageEntry(StoragePayload storagePayload, PublicKey ownerPubKey, int sequenceNumber, byte[] signature) {
         this.storagePayload = storagePayload;

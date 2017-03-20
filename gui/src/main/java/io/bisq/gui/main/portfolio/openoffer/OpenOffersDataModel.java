@@ -25,7 +25,6 @@ import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.gui.common.model.ActivatableDataModel;
-import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -72,7 +71,7 @@ class OpenOffersDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public OfferPayload.Direction getDirection(Offer offer) {
+    public Offer.Direction getDirection(Offer offer) {
         return openOfferManager.isMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 

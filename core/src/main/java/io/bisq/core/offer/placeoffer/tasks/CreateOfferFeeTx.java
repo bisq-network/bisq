@@ -47,7 +47,7 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
         try {
             runInterceptHook();
 
-            NodeAddress selectedArbitratorNodeAddress = ArbitrationSelectionRule.select(model.user.getAcceptedArbitratorAddresses(), model.offer.getOfferPayload());
+            NodeAddress selectedArbitratorNodeAddress = ArbitrationSelectionRule.select(model.user.getAcceptedArbitratorAddresses(), model.offer);
             log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
             Arbitrator selectedArbitrator = model.user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
             checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateOfferFeeTx");
@@ -69,7 +69,7 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
             // We assume there will be no tx malleability. We add a check later in case the published offer has a different hash.
             // As the txId is part of the offer and therefore change the hash data we need to be sure to have no
             // tx malleability
-            offer.setOfferFeePaymentTxID(transaction.getHashAsString());
+            offer.setOfferFeePaymentTxId(transaction.getHashAsString());
             model.setTransaction(transaction);
 
             complete();

@@ -27,7 +27,7 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.trade.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +54,8 @@ public class VerifyAndSignContract extends TradeTask {
             checkNotNull(trade.getTakeOfferFeeTxId(), "TakeOfferFeeTxId must not be null");
 
             TradingPeer offerer = processModel.tradingPeer;
-            PaymentAccountContractData offererPaymentAccountContractData = offerer.getPaymentAccountContractData();
-            PaymentAccountContractData takerPaymentAccountContractData = processModel.getPaymentAccountContractData(trade);
+            PaymentAccountPayload offererPaymentAccountPayload = offerer.getPaymentAccountPayload();
+            PaymentAccountPayload takerPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
 
             boolean isBuyerOffererAndSellerTaker = trade instanceof SellerAsTakerTrade;
             NodeAddress buyerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getTempTradingPeerNodeAddress() : processModel.getMyNodeAddress();
@@ -87,8 +87,8 @@ public class VerifyAndSignContract extends TradeTask {
                     isBuyerOffererAndSellerTaker,
                     offerer.getAccountId(),
                     processModel.getAccountId(),
-                    offererPaymentAccountContractData,
-                    takerPaymentAccountContractData,
+                    offererPaymentAccountPayload,
+                    takerPaymentAccountPayload,
                     offerer.getPubKeyRing(),
                     processModel.getPubKeyRing(),
                     offerer.getPayoutAddressString(),

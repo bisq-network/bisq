@@ -26,8 +26,8 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.gui.util.validation.PerfectMoneyValidator;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
-import io.bisq.wire.payload.payment.PerfectMoneyAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.wire.payload.payment.PerfectMoneyAccountPayload;
 import javafx.collections.FXCollections;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -44,8 +44,8 @@ public class PerfectMoneyForm extends PaymentMethodForm {
     private final PerfectMoneyValidator perfectMoneyValidator;
     private InputTextField accountNrInputTextField;
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((PerfectMoneyAccountContractData) paymentAccountContractData).getAccountNr());
+    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((PerfectMoneyAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
 

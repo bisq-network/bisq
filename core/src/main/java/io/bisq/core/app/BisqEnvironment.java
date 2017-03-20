@@ -118,10 +118,12 @@ public class BisqEnvironment extends StandardEnvironment {
     }
 
     public BisqEnvironment(PropertySource commandLineProperties) {
+        //CommonOptionKeys
         logLevel = commandLineProperties.containsProperty(CommonOptionKeys.LOG_LEVEL_KEY) ?
                 (String) commandLineProperties.getProperty(CommonOptionKeys.LOG_LEVEL_KEY) :
                 LOG_LEVEL_DEFAULT;
 
+        //AppOptionKeys
         userDataDir = commandLineProperties.containsProperty(AppOptionKeys.USER_DATA_DIR_KEY) ?
                 (String) commandLineProperties.getProperty(AppOptionKeys.USER_DATA_DIR_KEY) :
                 DEFAULT_USER_DATA_DIR;
@@ -146,9 +148,25 @@ public class BisqEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(AppOptionKeys.PROVIDERS) :
                 "";
 
+        //NetworkOptionKeys
         seedNodes = commandLineProperties.containsProperty(NetworkOptionKeys.SEED_NODES_KEY) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SEED_NODES_KEY) :
                 "";
+
+        myAddress = commandLineProperties.containsProperty(NetworkOptionKeys.MY_ADDRESS) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.MY_ADDRESS) :
+                "";
+        banList = commandLineProperties.containsProperty(NetworkOptionKeys.BAN_LIST) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.BAN_LIST) :
+                "";
+        socks5ProxyBtcAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) :
+                "";
+        socks5ProxyHttpAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) :
+                "";
+
+        //RpcOptionKeys
         rpcUser = commandLineProperties.containsProperty(RpcOptionKeys.RPC_USER) ?
                 (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_USER) :
                 "";
@@ -165,19 +183,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_WALLET_PORT) :
                 "";
 
-        myAddress = commandLineProperties.containsProperty(NetworkOptionKeys.MY_ADDRESS) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.MY_ADDRESS) :
-                "";
-        banList = commandLineProperties.containsProperty(NetworkOptionKeys.BAN_LIST) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.BAN_LIST) :
-                "";
-        socks5ProxyBtcAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) :
-                "";
-        socks5ProxyHttpAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) :
-                "";
-
+        //BtcOptionKeys
         btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_NODES) :
                 "";
@@ -189,7 +195,8 @@ public class BisqEnvironment extends StandardEnvironment {
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
-            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BtcOptionKeys.BTC_NETWORK, BitcoinNetwork.DEFAULT.name()).toUpperCase());
+            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BtcOptionKeys.BTC_NETWORK,
+                    BitcoinNetwork.DEFAULT.name()).toUpperCase());
             btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())
@@ -255,10 +262,11 @@ public class BisqEnvironment extends StandardEnvironment {
 
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
+                setProperty(BtcOptionKeys.WALLET_DIR, btcNetworkDir);
 
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);
-                setProperty(BtcOptionKeys.WALLET_DIR, btcNetworkDir);
+
                 setProperty(Storage.DIR_KEY, Paths.get(btcNetworkDir, "db").toString());
                 setProperty(KeyStorage.DIR_KEY, Paths.get(btcNetworkDir, "keys").toString());
             }

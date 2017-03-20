@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.monetary.Altcoin;
 import io.bisq.common.util.MathUtils;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
@@ -44,6 +45,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 import javafx.scene.chart.XYChart;
+import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,7 +125,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         // Don't use a set as we need all entries
         List<TradeCurrency> tradeCurrencyList = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .map(e -> {
-                    Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(e.currency);
+                    Optional<TradeCurrency> tradeCurrencyOptional = CurrencyUtil.getTradeCurrency(e.getCurrencyCode());
                     if (tradeCurrencyOptional.isPresent())
                         return tradeCurrencyOptional.get();
                     else
@@ -239,7 +241,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     private void updateChartData() {
         tradeStatisticsByCurrency.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> showAllTradeCurrenciesProperty.get() || e.currency.equals(getCurrencyCode()))
+                .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrencyCode().equals(getCurrencyCode()))
                 .collect(Collectors.toList()));
 
         // Get all entries for the defined time interval
@@ -297,12 +299,21 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
             }
 
-            accumulatedVolume += (item.getTradeVolume() != null) ? item.getTradeVolume().value : 0;
+            accumulatedVolume += (item.getTradeVolume() != null) ? item.getTradeVolume().getValue() : 0;
             accumulatedAmount += item.tradeAmount;
         }
-        // 100000000 -> Coin.COIN.value;
-        final double value = MathUtils.scaleUpByPowerOf10(accumulatedVolume, 8);
-        long averagePrice = MathUtils.roundDoubleToLong(value / (double) accumulatedAmount);
+
+        long averagePrice;
+        boolean isBullish;
+        if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
+            isBullish = close < open;
+            double accumulatedAmountAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
+            averagePrice = MathUtils.roundDoubleToLong(accumulatedAmountAsDouble / (double) accumulatedVolume);
+        } else {
+            isBullish = close > open;
+            double accumulatedVolumeAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedVolume, Coin.SMALLEST_UNIT_EXPONENT);
+            averagePrice = MathUtils.roundDoubleToLong(accumulatedVolumeAsDouble / (double) accumulatedAmount);
+        }
 
         List<TradeStatistics> list = new ArrayList<>(set);
         list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? -1 : (o1.tradeDate == o2.tradeDate ? 0 : 1)));
@@ -310,26 +321,14 @@ class TradesChartsViewModel extends ActivatableViewModel {
             open = list.get(0).tradePrice;
             close = list.get(list.size() - 1).tradePrice;
         }
-        boolean isBullish = close > open;
+
         final Date dateFrom = new Date(getTimeFromTickIndex(tick));
         final Date dateTo = new Date(getTimeFromTickIndex(tick + 1));
         String dateString = tickUnit.ordinal() > TickUnit.DAY.ordinal() ?
                 formatter.formatDateTimeSpan(dateFrom, dateTo) :
                 formatter.formatDate(dateFrom) + " - " + formatter.formatDate(dateTo);
-
-        if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
-            return new CandleData(tick, getInvertedPrice(open), getInvertedPrice(close), getInvertedPrice(high),
-                    getInvertedPrice(low), getInvertedPrice(averagePrice), accumulatedAmount, accumulatedVolume,
-                    numTrades, isBullish, dateString);
-        } else {
-            return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume,
-                    numTrades, isBullish, dateString);
-        }
-    }
-
-    private long getInvertedPrice(long price) {
-        final double value = price != 0 ? 1000000000000D / price : 0;
-        return MathUtils.roundDoubleToLong(value);
+        return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume,
+                numTrades, isBullish, dateString);
     }
 
     long getTickFromTime(long tradeDateAsTime, TickUnit tickUnit) {

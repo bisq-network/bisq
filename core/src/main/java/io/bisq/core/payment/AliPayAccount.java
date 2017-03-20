@@ -20,8 +20,8 @@ package io.bisq.core.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.user.Preferences;
-import io.bisq.wire.payload.payment.AliPayAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.AliPayAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 
 public final class AliPayAccount extends PaymentAccount {
@@ -34,15 +34,15 @@ public final class AliPayAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountContractData setContractData() {
-        return new AliPayAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload setPayload() {
+        return new AliPayAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setAccountNr(String accountNr) {
-        ((AliPayAccountContractData) contractData).setAccountNr(accountNr);
+        ((AliPayAccountPayload) paymentAccountPayload).setAccountNr(accountNr);
     }
 
     public String getAccountNr() {
-        return ((AliPayAccountContractData) contractData).getAccountNr();
+        return ((AliPayAccountPayload) paymentAccountPayload).getAccountNr();
     }
 }

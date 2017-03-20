@@ -50,7 +50,6 @@ import io.bisq.wire.crypto.KeyRing;
 import io.bisq.wire.message.Message;
 import io.bisq.wire.message.trade.PayDepositRequest;
 import io.bisq.wire.message.trade.TradeMessage;
-import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.payload.trade.statistics.TradeStatistics;
 import javafx.beans.property.BooleanProperty;
@@ -276,7 +275,7 @@ public class TradeManager {
             checkArgument(message instanceof PayDepositRequest, "message must be PayDepositRequest");
             PayDepositRequest payDepositRequest = (PayDepositRequest) message;
             Trade trade;
-            if (offer.getDirection() == OfferPayload.Direction.BUY)
+            if (offer.isBuyOffer())
                 trade = new BuyerAsOffererTrade(offer, payDepositRequest.txFee, payDepositRequest.takeOfferFee, tradableListStorage);
             else
                 trade = new SellerAsOffererTrade(offer, payDepositRequest.txFee, payDepositRequest.takeOfferFee, tradableListStorage);
@@ -345,7 +344,7 @@ public class TradeManager {
         final OfferAvailabilityModel model = getOfferAvailabilityModel(offer);
         offer.checkOfferAvailability(model,
                 () -> {
-                    if (offer.getState() == OfferPayload.State.AVAILABLE)
+                    if (offer.getState() == Offer.State.AVAILABLE)
                         createTrade(amount, txFee, takeOfferFee, tradePrice, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
                 },
                 errorMessageHandler::handleErrorMessage);
@@ -362,7 +361,7 @@ public class TradeManager {
                              OfferAvailabilityModel model,
                              TradeResultHandler tradeResultHandler) {
         Trade trade;
-        if (offer.getDirection() == OfferPayload.Direction.BUY)
+        if (offer.isBuyOffer())
             trade = new SellerAsTakerTrade(offer, amount, txFee, takeOfferFee, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
         else
             trade = new BuyerAsTakerTrade(offer, amount, txFee, takeOfferFee, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
@@ -475,9 +474,9 @@ public class TradeManager {
     public boolean isBuyer(Offer offer) {
         // If I am the offerer, we use the offer direction, otherwise the mirrored direction
         if (isMyOffer(offer))
-            return offer.getDirection() == OfferPayload.Direction.BUY;
+            return offer.isBuyOffer();
         else
-            return offer.getDirection() == OfferPayload.Direction.SELL;
+            return offer.getDirection() == Offer.Direction.SELL;
     }
 
     public Optional<Trade> getTradeById(String tradeId) {

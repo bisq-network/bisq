@@ -18,19 +18,19 @@
 package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.wire.proto.Messages;
 
-public final class CryptoCurrencyAccountContractData extends PaymentAccountContractData {
+public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private String address;
 
-    public CryptoCurrencyAccountContractData(String paymentMethod, String id, long maxTradePeriod) {
+    public CryptoCurrencyAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public CryptoCurrencyAccountContractData(String paymentMethod, String id, long maxTradePeriod, String address) {
+    public CryptoCurrencyAccountPayload(String paymentMethod, String id, long maxTradePeriod, String address) {
         super(paymentMethod, id, maxTradePeriod);
         this.address = address;
     }
@@ -54,15 +54,15 @@ public final class CryptoCurrencyAccountContractData extends PaymentAccountContr
     }
 
     @Override
-    public Messages.PaymentAccountContractData toProtoBuf() {
-        Messages.CryptoCurrencyAccountContractData.Builder cryptoCurrencyAccountContractData =
-                Messages.CryptoCurrencyAccountContractData.newBuilder().setAddress(address);
-        Messages.PaymentAccountContractData.Builder paymentAccountContractData =
-                Messages.PaymentAccountContractData.newBuilder()
+    public Messages.PaymentAccountPayload toProtoBuf() {
+        Messages.CryptoCurrencyAccountPayload.Builder cryptoCurrencyAccountPayload =
+                Messages.CryptoCurrencyAccountPayload.newBuilder().setAddress(address);
+        Messages.PaymentAccountPayload.Builder paymentAccountPayload =
+                Messages.PaymentAccountPayload.newBuilder()
                         .setId(id)
-                        .setPaymentMethodName(paymentMethodName)
+                        .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setCryptoCurrencyAccountContractData(cryptoCurrencyAccountContractData);
-        return paymentAccountContractData.build();
+                        .setCryptoCurrencyAccountPayload(cryptoCurrencyAccountPayload);
+        return paymentAccountPayload.build();
     }
 }

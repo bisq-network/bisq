@@ -20,9 +20,9 @@ package io.bisq.wire.payload.crypto;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.crypto.Encryption;
 import io.bisq.wire.payload.Payload;
+import io.bisq.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,10 +45,13 @@ public final class PubKeyRing implements Payload {
 
     private static final Logger log = LoggerFactory.getLogger(PubKeyRing.class);
 
-    transient private PublicKey signaturePubKey;
+    // Payload
     private final byte[] signaturePubKeyBytes;
-    transient private PublicKey encryptionPubKey;
     private final byte[] encryptionPubKeyBytes;
+
+    // Domain
+    transient private PublicKey signaturePubKey;
+    transient private PublicKey encryptionPubKey;
 
     public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey) {
         this.signaturePubKey = signaturePubKey;

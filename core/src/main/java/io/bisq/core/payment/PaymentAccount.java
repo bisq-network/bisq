@@ -20,7 +20,7 @@ package io.bisq.core.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.persistance.Persistable;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ public abstract class PaymentAccount implements Persistable {
     protected String accountName;
     final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
     protected TradeCurrency selectedTradeCurrency;
-    public final PaymentAccountContractData contractData;
+    public final PaymentAccountPayload paymentAccountPayload;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ public abstract class PaymentAccount implements Persistable {
         this.paymentMethod = paymentMethod;
         id = UUID.randomUUID().toString();
         creationDate = new Date();
-        contractData = setContractData();
+        paymentAccountPayload = setPayload();
     }
 
 
@@ -96,7 +96,7 @@ public abstract class PaymentAccount implements Persistable {
     // Getter, Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected abstract PaymentAccountContractData setContractData();
+    protected abstract PaymentAccountPayload setPayload();
 
     public String getAccountName() {
         return accountName;
@@ -131,12 +131,12 @@ public abstract class PaymentAccount implements Persistable {
         return tradeCurrencies;
     }
 
-    public PaymentAccountContractData getContractData() {
-        return contractData;
+    public PaymentAccountPayload getPaymentAccountPayload() {
+        return paymentAccountPayload;
     }
 
     public String getPaymentDetails() {
-        return contractData.getPaymentDetails();
+        return paymentAccountPayload.getPaymentDetails();
     }
 
     public Date getCreationDate() {
@@ -160,7 +160,7 @@ public abstract class PaymentAccount implements Persistable {
             return false;
         if (selectedTradeCurrency != null ? !selectedTradeCurrency.equals(that.selectedTradeCurrency) : that.selectedTradeCurrency != null)
             return false;
-        return !(contractData != null ? !contractData.equals(that.contractData) : that.contractData != null);
+        return !(paymentAccountPayload != null ? !paymentAccountPayload.equals(that.paymentAccountPayload) : that.paymentAccountPayload != null);
 
     }
 
@@ -172,7 +172,7 @@ public abstract class PaymentAccount implements Persistable {
         result = 31 * result + (accountName != null ? accountName.hashCode() : 0);
         result = 31 * result + (tradeCurrencies != null ? tradeCurrencies.hashCode() : 0);
         result = 31 * result + (selectedTradeCurrency != null ? selectedTradeCurrency.hashCode() : 0);
-        result = 31 * result + (contractData != null ? contractData.hashCode() : 0);
+        result = 31 * result + (paymentAccountPayload != null ? paymentAccountPayload.hashCode() : 0);
         return result;
     }
 
@@ -185,7 +185,7 @@ public abstract class PaymentAccount implements Persistable {
                 ", accountName='" + accountName + '\'' +
                 ", tradeCurrencies=" + tradeCurrencies +
                 ", selectedTradeCurrency=" + selectedTradeCurrency +
-                ", contractData=" + contractData +
+                ", contractData=" + paymentAccountPayload +
                 '}';
     }
 }

@@ -18,10 +18,10 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.app.Version;
-import io.bisq.wire.payload.payment.BankAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.BankAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
-import io.bisq.wire.payload.payment.SameBankAccountContractData;
+import io.bisq.wire.payload.payment.SameBankAccountPayload;
 
 public final class SameBankAccount extends CountryBasedPaymentAccount implements BankNameRestrictedBankAccount, SameCountryRestrictedBankAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -32,13 +32,13 @@ public final class SameBankAccount extends CountryBasedPaymentAccount implements
     }
 
     @Override
-    protected PaymentAccountContractData setContractData() {
-        return new SameBankAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+    protected PaymentAccountPayload setPayload() {
+        return new SameBankAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     @Override
     public String getBankId() {
-        return ((BankAccountContractData) contractData).getBankId();
+        return ((BankAccountPayload) paymentAccountPayload).getBankId();
     }
 
     @Override

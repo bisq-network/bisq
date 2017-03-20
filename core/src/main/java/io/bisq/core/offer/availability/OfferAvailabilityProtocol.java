@@ -22,6 +22,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.taskrunner.TaskRunner;
+import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
 import io.bisq.core.util.Validator;
@@ -29,7 +30,6 @@ import io.bisq.network.p2p.DecryptedDirectMessageListener;
 import io.bisq.wire.message.Message;
 import io.bisq.wire.message.offer.OfferAvailabilityResponse;
 import io.bisq.wire.message.offer.OfferMessage;
-import io.bisq.wire.payload.offer.OfferPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +82,7 @@ public class OfferAvailabilityProtocol {
 
     public void sendOfferAvailabilityRequest() {
         // reset
-        model.offer.setState(OfferPayload.State.UNDEFINED);
+        model.offer.setState(Offer.State.UNDEFINED);
 
         model.p2PService.addDecryptedDirectMessageListener(decryptedDirectMessageListener);
         model.setPeerNodeAddress(model.offer.getOffererNodeAddress());
@@ -135,7 +135,7 @@ public class OfferAvailabilityProtocol {
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {
                 log.debug("Timeout reached at " + this);
-                model.offer.setState(OfferPayload.State.OFFERER_OFFLINE);
+                model.offer.setState(Offer.State.OFFERER_OFFLINE);
                 errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
             }, TIMEOUT_SEC);
         } else {

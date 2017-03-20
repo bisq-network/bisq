@@ -18,6 +18,8 @@
 package io.bisq.gui.main.portfolio.openoffer;
 
 import io.bisq.common.locale.Res;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
@@ -36,7 +38,6 @@ import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
 
@@ -89,13 +90,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         marketColumn.setComparator((o1, o2) -> model.getMarketLabel(o1).compareTo(model.getMarketLabel(o2)));
         amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
         priceColumn.setComparator((o1, o2) -> {
-            Fiat price1 = o1.getOffer().getPrice();
-            Fiat price2 = o2.getOffer().getPrice();
+            Price price1 = o1.getOffer().getPrice();
+            Price price2 = o2.getOffer().getPrice();
             return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
         });
         volumeColumn.setComparator((o1, o2) -> {
-            Fiat offerVolume1 = o1.getOffer().getOfferVolume();
-            Fiat offerVolume2 = o2.getOffer().getOfferVolume();
+            Volume offerVolume1 = o1.getOffer().getVolume();
+            Volume offerVolume2 = o2.getOffer().getVolume();
             return offerVolume1 != null && offerVolume2 != null ? offerVolume1.compareTo(offerVolume2) : 0;
         });
         dateColumn.setComparator((o1, o2) -> o1.getOffer().getDate().compareTo(o2.getOffer().getDate()));

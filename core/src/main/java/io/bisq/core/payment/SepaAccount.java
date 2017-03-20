@@ -20,9 +20,9 @@ package io.bisq.core.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.core.user.Preferences;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
-import io.bisq.wire.payload.payment.SepaAccountContractData;
+import io.bisq.wire.payload.payment.SepaAccountPayload;
 
 import java.util.List;
 
@@ -35,50 +35,50 @@ public final class SepaAccount extends CountryBasedPaymentAccount implements Ban
     }
 
     @Override
-    protected PaymentAccountContractData setContractData() {
-        return new SepaAccountContractData(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod(),
+    protected PaymentAccountPayload setPayload() {
+        return new SepaAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod(),
                 CountryUtil.getAllSepaCountries(Preferences.getDefaultLocale()));
     }
 
     @Override
     public String getBankId() {
-        return ((SepaAccountContractData) contractData).getBic();
+        return ((SepaAccountPayload) paymentAccountPayload).getBic();
     }
 
     public void setHolderName(String holderName) {
-        ((SepaAccountContractData) contractData).setHolderName(holderName);
+        ((SepaAccountPayload) paymentAccountPayload).setHolderName(holderName);
     }
 
     public String getHolderName() {
-        return ((SepaAccountContractData) contractData).getHolderName();
+        return ((SepaAccountPayload) paymentAccountPayload).getHolderName();
     }
 
     public void setIban(String iban) {
-        ((SepaAccountContractData) contractData).setIban(iban);
+        ((SepaAccountPayload) paymentAccountPayload).setIban(iban);
     }
 
     public String getIban() {
-        return ((SepaAccountContractData) contractData).getIban();
+        return ((SepaAccountPayload) paymentAccountPayload).getIban();
     }
 
     public void setBic(String bic) {
-        ((SepaAccountContractData) contractData).setBic(bic);
+        ((SepaAccountPayload) paymentAccountPayload).setBic(bic);
     }
 
     public String getBic() {
-        return ((SepaAccountContractData) contractData).getBic();
+        return ((SepaAccountPayload) paymentAccountPayload).getBic();
     }
 
     public List<String> getAcceptedCountryCodes() {
-        return ((SepaAccountContractData) contractData).getAcceptedCountryCodes();
+        return ((SepaAccountPayload) paymentAccountPayload).getAcceptedCountryCodes();
     }
 
     public void addAcceptedCountry(String countryCode) {
-        ((SepaAccountContractData) contractData).addAcceptedCountry(countryCode);
+        ((SepaAccountPayload) paymentAccountPayload).addAcceptedCountry(countryCode);
     }
 
     public void removeAcceptedCountry(String countryCode) {
-        ((SepaAccountContractData) contractData).removeAcceptedCountry(countryCode);
+        ((SepaAccountPayload) paymentAccountPayload).removeAcceptedCountry(countryCode);
     }
 
 

@@ -37,7 +37,6 @@ import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.ConnectionListener;
 import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.wire.payload.arbitration.Arbitrator;
-import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -91,7 +90,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ChangeListener<Boolean> isWalletFundedListener;
     private ChangeListener<Trade.State> tradeStateListener;
     private ChangeListener<String> tradeErrorListener;
-    private ChangeListener<OfferPayload.State> offerStateListener;
+    private ChangeListener<Offer.State> offerStateListener;
     private ChangeListener<String> offerErrorListener;
     private ConnectionListener connectionListener;
     //  private Subscription isFeeSufficientSubscription;
@@ -153,7 +152,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.initWithData(offer);
         this.offer = offer;
 
-        if (offer.getDirection() == OfferPayload.Direction.BUY) {
+        if (offer.isBuyOffer()) {
             directionLabel = Res.get("shared.sellBitcoin");
             amountDescription = Res.get("takeOffer.amountPriceBox.buy.amountDescription");
         } else {
@@ -268,7 +267,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     // States
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void applyOfferState(OfferPayload.State state) {
+    private void applyOfferState(Offer.State state) {
         log.debug("applyOfferState state = " + state);
         offerWarning.set(null);
 
@@ -387,9 +386,9 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
-        volume.bind(createStringBinding(() -> formatter.formatVolume(dataModel.volumeAsFiat.get()), dataModel.volumeAsFiat));
+        volume.bind(createStringBinding(() -> formatter.formatVolume(dataModel.volume.get()), dataModel.volume));
 
-        if (dataModel.getDirection() == OfferPayload.Direction.SELL) {
+        if (dataModel.getDirection() == Offer.Direction.SELL) {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
         } else {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));
@@ -521,7 +520,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     boolean isSeller() {
-        return dataModel.getDirection() == OfferPayload.Direction.BUY;
+        return dataModel.getDirection() == Offer.Direction.BUY;
     }
 
     private InputValidator.ValidationResult isBtcInputValid(String input) {

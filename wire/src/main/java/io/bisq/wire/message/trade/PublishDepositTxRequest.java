@@ -20,10 +20,10 @@ package io.bisq.wire.message.trade;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.util.Utilities;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.message.ToProtoBuffer;
 import io.bisq.wire.payload.btc.RawTransactionInput;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
 
     private static final Logger log = LoggerFactory.getLogger(PublishDepositTxRequest.class);
 
-    public final PaymentAccountContractData offererPaymentAccountContractData;
+    public final PaymentAccountPayload offererPaymentAccountPayload;
     public final String offererAccountId;
     public final String offererContractAsJson;
     public final String offererContractSignature;
@@ -51,7 +51,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
     public final byte[] offererMultiSigPubKey;
 
     public PublishDepositTxRequest(String tradeId,
-                                   PaymentAccountContractData offererPaymentAccountContractData,
+                                   PaymentAccountPayload offererPaymentAccountPayload,
                                    String offererAccountId,
                                    byte[] offererMultiSigPubKey,
                                    String offererContractAsJson,
@@ -60,7 +60,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
                                    byte[] preparedDepositTx,
                                    List<RawTransactionInput> offererInputs) {
         super(tradeId);
-        this.offererPaymentAccountContractData = offererPaymentAccountContractData;
+        this.offererPaymentAccountPayload = offererPaymentAccountPayload;
         this.offererAccountId = offererAccountId;
         this.offererMultiSigPubKey = offererMultiSigPubKey;
         this.offererContractAsJson = offererContractAsJson;
@@ -69,7 +69,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
         this.preparedDepositTx = preparedDepositTx;
         this.offererInputs = offererInputs;
 
-        log.trace("offererPaymentAccount size " + Utilities.serialize(offererPaymentAccountContractData).length);
+        log.trace("offererPaymentAccount size " + Utilities.serialize(offererPaymentAccountPayload).length);
         log.trace("offererTradeWalletPubKey size " + offererMultiSigPubKey.length);
         log.trace("preparedDepositTx size " + preparedDepositTx.length);
         log.trace("offererInputs size " + Utilities.serialize(new ArrayList<>(offererInputs)).length);
@@ -81,7 +81,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
         return baseEnvelope.setPublishDepositTxRequest(baseEnvelope.getPublishDepositTxRequestBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)
-                .setOffererPaymentAccountContractData((Messages.PaymentAccountContractData) offererPaymentAccountContractData.toProtoBuf())
+                .setOffererPaymentAccountPayload((Messages.PaymentAccountPayload) offererPaymentAccountPayload.toProtoBuf())
                 .setOffererAccountId(offererAccountId)
                 .setOffererMultiSigPubKey(ByteString.copyFrom(offererMultiSigPubKey))
                 .setOffererContractAsJson(offererContractAsJson)

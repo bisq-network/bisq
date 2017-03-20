@@ -65,24 +65,24 @@ public class SellerStep3View extends TradeStepView {
 
         tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
             if (state == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG) {
-                PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
+                PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                 String key = "confirmPayment" + trade.getId();
                 String message;
                 String tradeVolumeWithCode = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
                 String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale());
                 String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
                 String id = trade.getShortId();
-                if (paymentAccountContractData instanceof CryptoCurrencyAccountContractData) {
-                    String address = ((CryptoCurrencyAccountContractData) paymentAccountContractData).getAddress();
+                if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
+                    String address = ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress();
                     message = Res.get("portfolio.pending.step3_seller.altcoin", part1, currencyName, address, tradeVolumeWithCode, currencyName);
                 } else {
-                    if (paymentAccountContractData instanceof USPostalMoneyOrderAccountContractData)
+                    if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
                         message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);
                     else
                         message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
 
                     String part = Res.get("portfolio.pending.step3_seller.openDispute");
-                    if (paymentAccountContractData instanceof CashDepositAccountContractData)
+                    if (paymentAccountPayload instanceof CashDepositAccountPayload)
                         message = message + Res.get("portfolio.pending.step3_seller.cash", part);
 
                     Optional<String> optionalHolderName = getOptionalHolderName();
@@ -140,17 +140,17 @@ public class SellerStep3View extends TradeStepView {
         String nameByCode = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale());
         Contract contract = trade.getContract();
         if (contract != null) {
-            PaymentAccountContractData myPaymentAccountContractData = contract.getSellerPaymentAccountContractData();
-            PaymentAccountContractData peersPaymentAccountContractData = contract.getBuyerPaymentAccountContractData();
-            if (myPaymentAccountContractData instanceof CryptoCurrencyAccountContractData) {
-                myPaymentDetails = ((CryptoCurrencyAccountContractData) myPaymentAccountContractData).getAddress();
-                peersPaymentDetails = ((CryptoCurrencyAccountContractData) peersPaymentAccountContractData).getAddress();
+            PaymentAccountPayload myPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
+            PaymentAccountPayload peersPaymentAccountPayload = contract.getBuyerPaymentAccountPayload();
+            if (myPaymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
+                myPaymentDetails = ((CryptoCurrencyAccountPayload) myPaymentAccountPayload).getAddress();
+                peersPaymentDetails = ((CryptoCurrencyAccountPayload) peersPaymentAccountPayload).getAddress();
                 myTitle = Res.get("portfolio.pending.step3_seller.yourAddress");
                 peersTitle = Res.get("portfolio.pending.step3_seller.buyersAddress", nameByCode);
                 isBlockChain = true;
             } else {
-                myPaymentDetails = myPaymentAccountContractData.getPaymentDetails();
-                peersPaymentDetails = peersPaymentAccountContractData.getPaymentDetails();
+                myPaymentDetails = myPaymentAccountPayload.getPaymentDetails();
+                peersPaymentDetails = peersPaymentAccountPayload.getPaymentDetails();
                 myTitle = Res.get("portfolio.pending.step3_seller.yourAccount");
                 peersTitle = Res.get("portfolio.pending.step3_seller.buyersAccount");
             }
@@ -236,9 +236,9 @@ public class SellerStep3View extends TradeStepView {
             Preferences preferences = model.dataModel.preferences;
             String key = "confirmPaymentReceived";
             if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
-                PaymentAccountContractData paymentAccountContractData = model.dataModel.getSellersPaymentAccountContractData();
+                PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                 String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode(), Preferences.getDefaultLocale()));
-                if (!(paymentAccountContractData instanceof CryptoCurrencyAccountContractData)) {
+                if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload)) {
                     message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getShortId());
 
                     Optional<String> optionalHolderName = getOptionalHolderName();
@@ -294,11 +294,11 @@ public class SellerStep3View extends TradeStepView {
     private Optional<String> getOptionalHolderName() {
         Contract contract = trade.getContract();
         if (contract != null) {
-            PaymentAccountContractData paymentAccountContractData = contract.getBuyerPaymentAccountContractData();
-            if (paymentAccountContractData instanceof BankAccountContractData)
-                return Optional.of(((BankAccountContractData) paymentAccountContractData).getHolderName());
-            else if (paymentAccountContractData instanceof SepaAccountContractData)
-                return Optional.of(((SepaAccountContractData) paymentAccountContractData).getHolderName());
+            PaymentAccountPayload paymentAccountPayload = contract.getBuyerPaymentAccountPayload();
+            if (paymentAccountPayload instanceof BankAccountPayload)
+                return Optional.of(((BankAccountPayload) paymentAccountPayload).getHolderName());
+            else if (paymentAccountPayload instanceof SepaAccountPayload)
+                return Optional.of(((SepaAccountPayload) paymentAccountPayload).getHolderName());
             else
                 return Optional.empty();
         } else {

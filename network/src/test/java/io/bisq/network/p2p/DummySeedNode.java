@@ -36,7 +36,7 @@ public class DummySeedNode {
     public static final String HELP = "help";
     private NodeAddress mySeedNodeAddress = new NodeAddress("localhost:8001");
     private int maxConnections = MAX_CONNECTIONS_DEFAULT;  // we keep default a higher connection size for seed nodes
-    private boolean useLocalhost = false;
+    private boolean useLocalhostForP2P = false;
     private Set<NodeAddress> progArgSeedNodes;
     private P2PService seedNodeP2PService;
     private boolean stopped;
@@ -53,21 +53,21 @@ public class DummySeedNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // args: myAddress (incl. port) bitcoinNetworkId maxConnections useLocalhost seedNodes (separated with |)
+    // args: myAddress (incl. port) bitcoinNetworkId maxConnections useLocalhostForP2P seedNodes (separated with |)
     // 2. and 3. args are optional
     // eg. lmvdenjkyvx2ovga.onion:8001 0 20 false eo5ay2lyzrfvx2nr.onion:8002|si3uu56adkyqkldl.onion:8003
     // or when using localhost:  localhost:8001 2 20 true localhost:8002|localhost:8003
     // BitcoinNetworkId: The id for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
     // localhost:3002 2 50 true
     // localhost:3002 2 50 localhost:4442|localhost:4443 true
-    // Usage: -myAddress=<my onion address> -networkId=<networkId (Mainnet = 0, TestNet = 1, Regtest = 2)> -maxConnections=<No. of max. connections allowed> -useLocalhost=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
-    // Example usage: -myAddress=lmvdenjkyvx2ovga.onion:8001 -networkId=0 -maxConnections=20 -useLocalhost=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
+    // Usage: -myAddress=<my onion address> -networkId=<networkId (Mainnet = 0, TestNet = 1, Regtest = 2)> -maxConnections=<No. of max. connections allowed> -useLocalhostForP2P=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
+    // Example usage: -myAddress=lmvdenjkyvx2ovga.onion:8001 -networkId=0 -maxConnections=20 -useLocalhostForP2P=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
 
     public static final String USAGE = "Usage:\n" +
             "--myAddress=<my onion address>\n" +
             "--networkId=[0|1|2] (Mainnet = 0, TestNet = 1, Regtest = 2)\n" +
             "--maxConnections=<No. of max. connections allowed>\n" +
-            "--useLocalhost=[true|false]\n" +
+            "--useLocalhostForP2P=[true|false]\n" +
             "--logLevel=Log level [OFF, ALL, ERROR, WARN, INFO, DEBUG, TRACE]\n" +
             "--seedNodes=[onion addresses separated with comma]\n" +
             "--banList=[onion addresses separated with comma]\n" +
@@ -97,11 +97,11 @@ public class DummySeedNode {
                     maxConnections = Integer.parseInt(arg);
                     log.debug("From processArgs: maxConnections=" + maxConnections);
                     checkArgument(maxConnections < MAX_CONNECTIONS_LIMIT, "maxConnections seems to be a bit too high...");
-                } else if (arg.startsWith(NetworkOptionKeys.USE_LOCALHOST)) {
-                    arg = arg.substring(NetworkOptionKeys.USE_LOCALHOST.length() + 1);
+                } else if (arg.startsWith(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P)) {
+                    arg = arg.substring(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P.length() + 1);
                     checkArgument(arg.equals("true") || arg.equals("false"));
-                    useLocalhost = ("true").equals(arg);
-                    log.debug("From processArgs: useLocalhost=" + useLocalhost);
+                    useLocalhostForP2P = ("true").equals(arg);
+                    log.debug("From processArgs: useLocalhostForP2P=" + useLocalhostForP2P);
                 } else if (arg.startsWith(CommonOptionKeys.LOG_LEVEL_KEY)) {
                     arg = arg.substring(CommonOptionKeys.LOG_LEVEL_KEY.length() + 1);
                     logLevel = Level.toLevel(arg.toUpperCase());
@@ -149,14 +149,14 @@ public class DummySeedNode {
     }
 
     public void createAndStartP2PService(boolean useDetailedLogging) {
-        createAndStartP2PService(mySeedNodeAddress, maxConnections, useLocalhost,
+        createAndStartP2PService(mySeedNodeAddress, maxConnections, useLocalhostForP2P,
                 Version.getBtcNetworkId(), useDetailedLogging, progArgSeedNodes, null);
     }
 
     @VisibleForTesting
     public void createAndStartP2PService(NodeAddress mySeedNodeAddress,
                                          int maxConnections,
-                                         boolean useLocalhost,
+                                         boolean useLocalhostForP2P,
                                          int networkId,
                                          boolean useDetailedLogging,
                                          @Nullable Set<NodeAddress> progArgSeedNodes,
@@ -173,7 +173,7 @@ public class DummySeedNode {
 
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (progArgSeedNodes != null && !progArgSeedNodes.isEmpty()) {
-            if (useLocalhost)
+            if (useLocalhostForP2P)
                 seedNodesRepository.setLocalhostSeedNodeAddresses(progArgSeedNodes);
             else
                 seedNodesRepository.setTorSeedNodeAddresses(progArgSeedNodes);
@@ -189,7 +189,7 @@ public class DummySeedNode {
 
         seedNodesRepository.setNodeAddressToExclude(mySeedNodeAddress);
         seedNodeP2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, maxConnections,
-                torDir, useLocalhost, networkId, storageDir, null, null, null, new Clock(), null, null, null);
+                torDir, useLocalhostForP2P, networkId, storageDir, null, null, null, new Clock(), null, null, null);
         seedNodeP2PService.start(listener);
     }
 

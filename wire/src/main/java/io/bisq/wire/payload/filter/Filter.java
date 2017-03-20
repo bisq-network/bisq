@@ -20,8 +20,8 @@ package io.bisq.wire.payload.filter;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.payload.StoragePayload;
+import io.bisq.wire.proto.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,12 +43,14 @@ public final class Filter implements StoragePayload {
     private static final Logger log = LoggerFactory.getLogger(Filter.class);
     private static final long TTL = TimeUnit.DAYS.toMillis(21);
 
+    // Payload
     public final List<String> bannedNodeAddress;
     public final List<String> bannedOfferIds;
     public final List<PaymentAccountFilter> bannedPaymentAccounts;
     private String signatureAsBase64;
     private byte[] publicKeyBytes;
 
+    // Domain
     private transient PublicKey publicKey;
 
     public Filter(List<String> bannedOfferIds, List<String> bannedNodeAddress, List<PaymentAccountFilter> bannedPaymentAccounts) {

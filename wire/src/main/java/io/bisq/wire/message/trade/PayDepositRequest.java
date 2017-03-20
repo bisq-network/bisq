@@ -19,13 +19,13 @@ package io.bisq.wire.message.trade;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
 import io.bisq.wire.message.ToProtoBuffer;
 import io.bisq.wire.message.p2p.MailboxMessage;
 import io.bisq.wire.payload.btc.RawTransactionInput;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.wire.proto.Messages;
 import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;
@@ -52,7 +52,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     public final String changeOutputAddress;
     public final String takerPayoutAddressString;
     public final PubKeyRing takerPubKeyRing;
-    public final PaymentAccountContractData takerPaymentAccountContractData;
+    public final PaymentAccountPayload takerPaymentAccountPayload;
     public final String takerAccountId;
     public final String takeOfferFeeTxId;
     public final List<NodeAddress> acceptedArbitratorNodeAddresses;
@@ -72,7 +72,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                              byte[] takerMultiSigPubKey,
                              String takerPayoutAddressString,
                              PubKeyRing takerPubKeyRing,
-                             PaymentAccountContractData takerPaymentAccountContractData,
+                             PaymentAccountPayload takerPaymentAccountPayload,
                              String takerAccountId,
                              String takeOfferFeeTxId,
                              List<NodeAddress> acceptedArbitratorNodeAddresses,
@@ -89,7 +89,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         this.takerPayoutAddressString = takerPayoutAddressString;
         this.takerPubKeyRing = takerPubKeyRing;
         this.takerMultiSigPubKey = takerMultiSigPubKey;
-        this.takerPaymentAccountContractData = takerPaymentAccountContractData;
+        this.takerPaymentAccountPayload = takerPaymentAccountPayload;
         this.takerAccountId = takerAccountId;
         this.takeOfferFeeTxId = takeOfferFeeTxId;
         this.acceptedArbitratorNodeAddresses = acceptedArbitratorNodeAddresses;
@@ -126,7 +126,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
             return false;
         if (takerPubKeyRing != null ? !takerPubKeyRing.equals(that.takerPubKeyRing) : that.takerPubKeyRing != null)
             return false;
-        if (takerPaymentAccountContractData != null ? !takerPaymentAccountContractData.equals(that.takerPaymentAccountContractData) : that.takerPaymentAccountContractData != null)
+        if (takerPaymentAccountPayload != null ? !takerPaymentAccountPayload.equals(that.takerPaymentAccountPayload) : that.takerPaymentAccountPayload != null)
             return false;
         if (takerAccountId != null ? !takerAccountId.equals(that.takerAccountId) : that.takerAccountId != null)
             return false;
@@ -152,7 +152,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         result = 31 * result + (changeOutputAddress != null ? changeOutputAddress.hashCode() : 0);
         result = 31 * result + (takerPayoutAddressString != null ? takerPayoutAddressString.hashCode() : 0);
         result = 31 * result + (takerPubKeyRing != null ? takerPubKeyRing.hashCode() : 0);
-        result = 31 * result + (takerPaymentAccountContractData != null ? takerPaymentAccountContractData.hashCode() : 0);
+        result = 31 * result + (takerPaymentAccountPayload != null ? takerPaymentAccountPayload.hashCode() : 0);
         result = 31 * result + (takerAccountId != null ? takerAccountId.hashCode() : 0);
         result = 31 * result + (takeOfferFeeTxId != null ? takeOfferFeeTxId.hashCode() : 0);
         result = 31 * result + (acceptedArbitratorNodeAddresses != null ? acceptedArbitratorNodeAddresses.hashCode() : 0);
@@ -176,7 +176,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                 .setChangeOutputValue(changeOutputValue)
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoBuf())
-                .setTakerPaymentAccountContractData((Messages.PaymentAccountContractData) takerPaymentAccountContractData.toProtoBuf())
+                .setTakerPaymentAccountPayload((Messages.PaymentAccountPayload) takerPaymentAccountPayload.toProtoBuf())
                 .setTakerAccountId(takerAccountId)
                 .setTakeOfferFeeTxId(takeOfferFeeTxId)
                 .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream().map(nodeAddress -> nodeAddress.toProtoBuf()).collect(Collectors.toList()))

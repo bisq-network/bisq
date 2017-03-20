@@ -129,7 +129,6 @@ public class MainViewModel implements ViewModel {
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
     final StringProperty marketPriceCurrencyCode = new SimpleStringProperty("");
-    final ObjectProperty<PriceFeedService.Type> typeProperty = new SimpleObjectProperty<>(PriceFeedService.Type.LAST);
     final ObjectProperty<PriceFeedComboBoxItem> selectedPriceFeedComboBoxItemProperty = new SimpleObjectProperty<>();
     final BooleanProperty isFiatCurrencyPriceFeedSelected = new SimpleBooleanProperty(true);
     final BooleanProperty isCryptoCurrencyPriceFeedSelected = new SimpleBooleanProperty(false);
@@ -768,12 +767,9 @@ public class MainViewModel implements ViewModel {
     private void setupMarketPriceFeed() {
         if (priceFeedService.getCurrencyCode() == null)
             priceFeedService.setCurrencyCode(preferences.getPreferredTradeCurrency().getCode());
-        if (priceFeedService.getType() == null)
-            priceFeedService.setType(PriceFeedService.Type.LAST);
         priceFeedService.init(price -> marketPrice.set(formatter.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
                 (errorMessage, throwable) -> marketPrice.set(Res.get("shared.na")));
         marketPriceCurrencyCode.bind(priceFeedService.currencyCodeProperty());
-        typeProperty.bind(priceFeedService.typeProperty());
 
         marketPriceBinding = EasyBind.combine(
                 marketPriceCurrencyCode, marketPrice,
@@ -827,7 +823,7 @@ public class MainViewModel implements ViewModel {
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             String priceString;
             if (marketPrice != null) {
-                double price = marketPrice.getPrice(priceFeedService.getType());
+                double price = marketPrice.getPrice();
                 if (price != 0) {
                     priceString = formatter.formatMarketPrice(price, currencyCode);
                     item.setIsPriceAvailable(true);

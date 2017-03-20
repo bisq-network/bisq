@@ -33,8 +33,8 @@ import io.bisq.gui.util.validation.AccountNrValidator;
 import io.bisq.gui.util.validation.BankIdValidator;
 import io.bisq.gui.util.validation.BranchIdValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.CashDepositAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.CashDepositAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 public class CashDepositForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(CashDepositForm.class);
 
-    protected final CashDepositAccountContractData cashDepositAccountContractData;
+    protected final CashDepositAccountPayload cashDepositAccountPayload;
     private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
     private Label holderIdLabel;
     protected InputTextField holderNameInputTextField, holderEmailInputTextField;
@@ -67,8 +67,8 @@ public class CashDepositForm extends PaymentMethodForm {
     private boolean useHolderID;
     private ComboBox<TradeCurrency> currencyComboBox;
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        CashDepositAccountContractData data = (CashDepositAccountContractData) paymentAccountContractData;
+    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
+        CashDepositAccountPayload data = (CashDepositAccountPayload) paymentAccountPayload;
         String countryCode = data.getCountryCode();
         String requirements = data.getRequirements();
         boolean showRequirements = requirements != null && !requirements.isEmpty();
@@ -216,13 +216,13 @@ public class CashDepositForm extends PaymentMethodForm {
     public CashDepositForm(PaymentAccount paymentAccount, InputValidator inputValidator,
                            GridPane gridPane, int gridRow, BSFormatter formatter) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
-        this.cashDepositAccountContractData = (CashDepositAccountContractData) paymentAccount.contractData;
+        this.cashDepositAccountPayload = (CashDepositAccountPayload) paymentAccount.paymentAccountPayload;
     }
 
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        String countryCode = cashDepositAccountContractData.getCountryCode();
+        String countryCode = cashDepositAccountPayload.getCountryCode();
 
         FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"),
@@ -236,29 +236,29 @@ public class CashDepositForm extends PaymentMethodForm {
         addAcceptedBanksForDisplayAccount();
         addHolderNameAndIdForDisplayAccount();
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.owner.email"),
-                cashDepositAccountContractData.getHolderEmail());
+                cashDepositAccountPayload.getHolderEmail());
 
         if (BankUtil.isBankNameRequired(countryCode))
             FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.name"),
-                    cashDepositAccountContractData.getBankName()).second.setMouseTransparent(false);
+                    cashDepositAccountPayload.getBankName()).second.setMouseTransparent(false);
 
         if (BankUtil.isBankIdRequired(countryCode))
             FormBuilder.addLabelTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(countryCode),
-                    cashDepositAccountContractData.getBankId()).second.setMouseTransparent(false);
+                    cashDepositAccountPayload.getBankId()).second.setMouseTransparent(false);
 
         if (BankUtil.isBranchIdRequired(countryCode))
             FormBuilder.addLabelTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(countryCode),
-                    cashDepositAccountContractData.getBranchId()).second.setMouseTransparent(false);
+                    cashDepositAccountPayload.getBranchId()).second.setMouseTransparent(false);
 
         if (BankUtil.isAccountNrRequired(countryCode))
             FormBuilder.addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(countryCode),
-                    cashDepositAccountContractData.getAccountNr()).second.setMouseTransparent(false);
+                    cashDepositAccountPayload.getAccountNr()).second.setMouseTransparent(false);
 
         if (BankUtil.isAccountTypeRequired(countryCode))
             FormBuilder.addLabelTextField(gridPane, ++gridRow, BankUtil.getAccountTypeLabel(countryCode),
-                    cashDepositAccountContractData.getAccountType()).second.setMouseTransparent(false);
+                    cashDepositAccountPayload.getAccountType()).second.setMouseTransparent(false);
 
-        String requirements = cashDepositAccountContractData.getRequirements();
+        String requirements = cashDepositAccountPayload.getRequirements();
         boolean showRequirements = requirements != null && !requirements.isEmpty();
         if (showRequirements) {
             TextArea textArea = FormBuilder.addLabelTextArea(gridPane, ++gridRow, Res.get("payment.extras"), "").second;
@@ -461,7 +461,7 @@ public class CashDepositForm extends PaymentMethodForm {
         bankNameInputTextField = bankNameTuple.second;
 
         bankNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            cashDepositAccountContractData.setBankName(newValue);
+            cashDepositAccountPayload.setBankName(newValue);
             updateFromInputs();
 
         });
@@ -470,7 +470,7 @@ public class CashDepositForm extends PaymentMethodForm {
         bankIdLabel = bankIdTuple.first;
         bankIdInputTextField = bankIdTuple.second;
         bankIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            cashDepositAccountContractData.setBankId(newValue);
+            cashDepositAccountPayload.setBankId(newValue);
             updateFromInputs();
 
         });
@@ -479,7 +479,7 @@ public class CashDepositForm extends PaymentMethodForm {
         branchIdLabel = branchIdTuple.first;
         branchIdInputTextField = branchIdTuple.second;
         branchIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            cashDepositAccountContractData.setBranchId(newValue);
+            cashDepositAccountPayload.setBranchId(newValue);
             updateFromInputs();
 
         });
@@ -488,7 +488,7 @@ public class CashDepositForm extends PaymentMethodForm {
         accountNrLabel = accountNrTuple.first;
         accountNrInputTextField = accountNrTuple.second;
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            cashDepositAccountContractData.setAccountNr(newValue);
+            cashDepositAccountPayload.setAccountNr(newValue);
             updateFromInputs();
 
         });
@@ -498,8 +498,8 @@ public class CashDepositForm extends PaymentMethodForm {
         accountTypeComboBox = accountTypeTuple.second;
         accountTypeComboBox.setPromptText(Res.get("payment.select.account"));
         accountTypeComboBox.setOnAction(e -> {
-            if (BankUtil.isAccountTypeRequired(cashDepositAccountContractData.getCountryCode())) {
-                cashDepositAccountContractData.setAccountType(accountTypeComboBox.getSelectionModel().getSelectedItem());
+            if (BankUtil.isAccountTypeRequired(cashDepositAccountPayload.getCountryCode())) {
+                cashDepositAccountPayload.setAccountType(accountTypeComboBox.getSelectionModel().getSelectedItem());
                 updateFromInputs();
             }
         });
@@ -508,7 +508,7 @@ public class CashDepositForm extends PaymentMethodForm {
         requirementsTextArea.setMinHeight(30);
         requirementsTextArea.setMaxHeight(30);
         requirementsTextArea.textProperty().addListener((ov, oldValue, newValue) -> {
-            cashDepositAccountContractData.setRequirements(newValue);
+            cashDepositAccountPayload.setRequirements(newValue);
             updateFromInputs();
         });
 
@@ -531,7 +531,7 @@ public class CashDepositForm extends PaymentMethodForm {
         holderNameInputTextField = tuple.second;
         holderNameInputTextField.setMinWidth(300);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            cashDepositAccountContractData.setHolderName(newValue);
+            cashDepositAccountPayload.setHolderName(newValue);
             updateFromInputs();
         });
         holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
@@ -539,7 +539,7 @@ public class CashDepositForm extends PaymentMethodForm {
 
         holderEmailInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.owner.email")).second;
         holderEmailInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            cashDepositAccountContractData.setHolderEmail(newValue);
+            cashDepositAccountPayload.setHolderEmail(newValue);
             updateFromInputs();
         });
         holderEmailInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());
@@ -554,7 +554,7 @@ public class CashDepositForm extends PaymentMethodForm {
         holderIdInputTextField.setVisible(false);
         holderIdInputTextField.setManaged(false);
         holderIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            cashDepositAccountContractData.setHolderTaxId(newValue);
+            cashDepositAccountPayload.setHolderTaxId(newValue);
             updateFromInputs();
         });
     }
@@ -563,7 +563,7 @@ public class CashDepositForm extends PaymentMethodForm {
     protected void autoFillNameTextField() {
         if (useCustomAccountNameCheckBox != null && !useCustomAccountNameCheckBox.isSelected()) {
             String bankId = null;
-            String countryCode = cashDepositAccountContractData.getCountryCode();
+            String countryCode = cashDepositAccountPayload.getCountryCode();
             if (countryCode == null)
                 countryCode = "";
             if (BankUtil.isBankIdRequired(countryCode)) {
@@ -597,44 +597,44 @@ public class CashDepositForm extends PaymentMethodForm {
         boolean result = isAccountNameValid()
                 && paymentAccount.getSingleTradeCurrency() != null
                 && getCountryBasedPaymentAccount().getCountry() != null
-                && holderNameInputTextField.getValidator().validate(cashDepositAccountContractData.getHolderName()).isValid
-                && holderEmailInputTextField.getValidator().validate(cashDepositAccountContractData.getHolderEmail()).isValid;
+                && holderNameInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderName()).isValid
+                && holderEmailInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderEmail()).isValid;
 
-        String countryCode = cashDepositAccountContractData.getCountryCode();
+        String countryCode = cashDepositAccountPayload.getCountryCode();
         if (validatorsApplied && BankUtil.useValidation(countryCode)) {
             if (BankUtil.isBankNameRequired(countryCode))
-                result &= bankNameInputTextField.getValidator().validate(cashDepositAccountContractData.getBankName()).isValid;
+                result &= bankNameInputTextField.getValidator().validate(cashDepositAccountPayload.getBankName()).isValid;
 
             if (BankUtil.isBankIdRequired(countryCode))
-                result &= bankIdInputTextField.getValidator().validate(cashDepositAccountContractData.getBankId()).isValid;
+                result &= bankIdInputTextField.getValidator().validate(cashDepositAccountPayload.getBankId()).isValid;
 
             if (BankUtil.isBranchIdRequired(countryCode))
-                result &= branchIdInputTextField.getValidator().validate(cashDepositAccountContractData.getBranchId()).isValid;
+                result &= branchIdInputTextField.getValidator().validate(cashDepositAccountPayload.getBranchId()).isValid;
 
             if (BankUtil.isAccountNrRequired(countryCode))
-                result &= accountNrInputTextField.getValidator().validate(cashDepositAccountContractData.getAccountNr()).isValid;
+                result &= accountNrInputTextField.getValidator().validate(cashDepositAccountPayload.getAccountNr()).isValid;
 
             if (BankUtil.isAccountTypeRequired(countryCode))
-                result &= cashDepositAccountContractData.getAccountType() != null;
+                result &= cashDepositAccountPayload.getAccountType() != null;
 
             if (useHolderID && BankUtil.isHolderIdRequired(countryCode))
-                result &= holderIdInputTextField.getValidator().validate(cashDepositAccountContractData.getHolderTaxId()).isValid;
+                result &= holderIdInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderTaxId()).isValid;
         }
         allInputsValid.set(result);
     }
 
     protected void addHolderNameAndIdForDisplayAccount() {
-        String countryCode = cashDepositAccountContractData.getCountryCode();
+        String countryCode = cashDepositAccountPayload.getCountryCode();
         if (BankUtil.isHolderIdRequired(countryCode)) {
             Tuple4<Label, TextField, Label, TextField> tuple = FormBuilder.addLabelTextFieldLabelTextField(gridPane, ++gridRow,
                     Res.getWithCol("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
             TextField holderNameTextField = tuple.second;
-            holderNameTextField.setText(cashDepositAccountContractData.getHolderName());
+            holderNameTextField.setText(cashDepositAccountPayload.getHolderName());
             holderNameTextField.setMinWidth(300);
-            tuple.forth.setText(cashDepositAccountContractData.getHolderTaxId());
+            tuple.forth.setText(cashDepositAccountPayload.getHolderTaxId());
         } else {
             FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("payment.account.owner"),
-                    cashDepositAccountContractData.getHolderName());
+                    cashDepositAccountPayload.getHolderName());
         }
     }
 

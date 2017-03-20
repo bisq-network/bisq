@@ -20,11 +20,11 @@ package io.bisq.wire.payload.payment;
 import io.bisq.common.app.Version;
 import io.bisq.wire.payload.Payload;
 
-public abstract class PaymentAccountContractData implements Payload {
+public abstract class PaymentAccountPayload implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    protected final String paymentMethodName;
+    protected final String paymentMethodId;
     protected final String id;
     protected final long maxTradePeriod;
 
@@ -33,8 +33,8 @@ public abstract class PaymentAccountContractData implements Payload {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    PaymentAccountContractData(String paymentMethodName, String id, long maxTradePeriod) {
-        this.paymentMethodName = paymentMethodName;
+    PaymentAccountPayload(String paymentMethodId, String id, long maxTradePeriod) {
+        this.paymentMethodId = paymentMethodId;
         this.id = id;
         this.maxTradePeriod = maxTradePeriod;
     }
@@ -47,8 +47,8 @@ public abstract class PaymentAccountContractData implements Payload {
         return id;
     }
 
-    public String getPaymentMethodName() {
-        return paymentMethodName;
+    public String getPaymentMethodId() {
+        return paymentMethodId;
     }
 
     abstract public String getPaymentDetails();
@@ -62,12 +62,12 @@ public abstract class PaymentAccountContractData implements Payload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PaymentAccountContractData)) return false;
+        if (!(o instanceof PaymentAccountPayload)) return false;
 
-        PaymentAccountContractData that = (PaymentAccountContractData) o;
+        PaymentAccountPayload that = (PaymentAccountPayload) o;
 
         if (maxTradePeriod != that.maxTradePeriod) return false;
-        if (paymentMethodName != null ? !paymentMethodName.equals(that.paymentMethodName) : that.paymentMethodName != null)
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null)
             return false;
         return !(id != null ? !id.equals(that.id) : that.id != null);
 
@@ -75,7 +75,7 @@ public abstract class PaymentAccountContractData implements Payload {
 
     @Override
     public int hashCode() {
-        int result = paymentMethodName != null ? paymentMethodName.hashCode() : 0;
+        int result = paymentMethodId != null ? paymentMethodId.hashCode() : 0;
         result = 31 * result + (id != null ? id.hashCode() : 0);
         result = 31 * result + (int) (maxTradePeriod ^ (maxTradePeriod >>> 32));
         return result;
@@ -83,8 +83,8 @@ public abstract class PaymentAccountContractData implements Payload {
 
     @Override
     public String toString() {
-        return "PaymentAccountContractData{" +
-                "paymentMethodName='" + paymentMethodName + '\'' +
+        return "PaymentAccountPayload{" +
+                "paymentMethodName='" + paymentMethodId + '\'' +
                 ", id='" + id + '\'' +
                 ", maxTradePeriod=" + maxTradePeriod +
                 '}';

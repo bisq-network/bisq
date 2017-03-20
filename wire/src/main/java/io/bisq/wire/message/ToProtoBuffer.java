@@ -19,7 +19,7 @@ package io.bisq.wire.message;
 
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
-import io.bisq.common.wire.proto.Messages;
+import io.bisq.wire.proto.Messages;
 
 public interface ToProtoBuffer {
     static Messages.Envelope.Builder getBaseEnvelope() {

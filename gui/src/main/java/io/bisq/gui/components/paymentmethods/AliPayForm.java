@@ -25,8 +25,8 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.AliPayValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.AliPayAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.AliPayAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -42,8 +42,8 @@ public class AliPayForm extends PaymentMethodForm {
     private final AliPayValidator aliPayValidator;
     private InputTextField accountNrInputTextField;
 
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountContractData paymentAccountContractData) {
-        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((AliPayAccountContractData) paymentAccountContractData).getAccountNr());
+    public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
+        addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.no"), ((AliPayAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
 

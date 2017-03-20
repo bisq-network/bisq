@@ -21,6 +21,8 @@ import com.google.inject.Inject;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -39,14 +41,11 @@ import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.wire.payload.arbitration.Arbitrator;
-import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 
 import java.util.List;
 
@@ -81,7 +80,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
     // final BooleanProperty isMainNet = new SimpleBooleanProperty();
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
+    final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
@@ -92,7 +91,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private boolean useSavingsWallet;
     Coin totalAvailableBalance;
     private Notification walletFundedNotification;
-    Fiat tradePrice;
+    Price tradePrice;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +118,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     @Override
     protected void activate() {
         // when leaving screen we reset state
-        offer.setState(OfferPayload.State.UNDEFINED);
+        offer.setState(Offer.State.UNDEFINED);
 
         addBindings();
         addListeners();
@@ -170,7 +169,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (DevEnv.DEV_MODE)
             amountAsCoin.set(offer.getAmount());
 
-        securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
+        securityDeposit = offer.getDirection() == Offer.Direction.SELL ?
                 getBuyerSecurityDeposit() :
                 getSellerSecurityDeposit();
 
@@ -300,7 +299,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    OfferPayload.Direction getDirection() {
+    Offer.Direction getDirection() {
         return offer.getDirection();
     }
 
@@ -346,7 +345,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (tradePrice != null && offer != null &&
                 amountAsCoin.get() != null &&
                 !amountAsCoin.get().isZero()) {
-            volumeAsFiat.set(new ExchangeRate(tradePrice).coinToFiat(amountAsCoin.get()));
+            volume.set(tradePrice.getVolumeByAmount(amountAsCoin.get()));
+            //volume.set(new ExchangeRate(tradePrice).coinToFiat(amountAsCoin.get()));
 
             updateBalance();
         }
@@ -367,7 +367,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (offer != null && amountAsCoin.get() != null && takerFeeAsCoin != null) {
             Coin value = takerFeeAsCoin.add(totalTxFeeAsCoin).add(securityDeposit);
-            if (getDirection() == OfferPayload.Direction.SELL)
+            if (getDirection() == Offer.Direction.SELL)
                 totalToPayAsCoin.set(value);
             else
                 totalToPayAsCoin.set(value.add(amountAsCoin.get()));

@@ -27,8 +27,8 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.InputValidator;
 import io.bisq.gui.util.validation.OKPayValidator;
-import io.bisq.wire.payload.payment.OKPayAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.OKPayAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.CheckBox;
@@ -51,9 +51,9 @@ public class OKPayForm extends PaymentMethodForm {
     private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
-                                      PaymentAccountContractData paymentAccountContractData) {
+                                      PaymentAccountPayload paymentAccountPayload) {
         addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.wallet"),
-                ((OKPayAccountContractData) paymentAccountContractData).getAccountNr());
+                ((OKPayAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
 

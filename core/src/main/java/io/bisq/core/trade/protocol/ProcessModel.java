@@ -37,7 +37,7 @@ import io.bisq.wire.payload.btc.RawTransactionInput;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.filter.PaymentAccountFilter;
 import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
@@ -183,13 +183,13 @@ public class ProcessModel implements Model, Serializable {
     }
 
     @Nullable
-    public PaymentAccountContractData getPaymentAccountContractData(Trade trade) {
+    public PaymentAccountPayload getPaymentAccountPayload(Trade trade) {
         PaymentAccount paymentAccount;
         if (trade instanceof OffererTrade)
             paymentAccount = user.getPaymentAccount(offer.getOffererPaymentAccountId());
         else
             paymentAccount = user.getPaymentAccount(trade.getTakerPaymentAccountId());
-        return paymentAccount != null ? paymentAccount.getContractData() : null;
+        return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
     }
 
     public String getAccountId() {
@@ -298,15 +298,15 @@ public class ProcessModel implements Model, Serializable {
         return useSavingsWallet;
     }
 
-    public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountContractData paymentAccountContractData, PaymentAccountFilter[] appliedPaymentAccountFilter) {
+    public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload, PaymentAccountFilter[] appliedPaymentAccountFilter) {
         return filterManager.getFilter() != null &&
                 filterManager.getFilter().bannedPaymentAccounts.stream()
                         .filter(paymentAccountFilter -> {
-                            final boolean samePaymentMethodId = paymentAccountFilter.paymentMethodId.equals(paymentAccountContractData.getPaymentMethodName());
+                            final boolean samePaymentMethodId = paymentAccountFilter.paymentMethodId.equals(paymentAccountPayload.getPaymentMethodId());
                             if (samePaymentMethodId) {
                                 try {
-                                    Method method = paymentAccountContractData.getClass().getMethod(paymentAccountFilter.getMethodName);
-                                    String result = (String) method.invoke(paymentAccountContractData);
+                                    Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getMethodName);
+                                    String result = (String) method.invoke(paymentAccountPayload);
                                     appliedPaymentAccountFilter[0] = paymentAccountFilter;
                                     return result.equals(paymentAccountFilter.value);
                                 } catch (Throwable e) {

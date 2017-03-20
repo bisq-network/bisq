@@ -1,4 +1,4 @@
-package io.bisq.gui.main.offer.createoffer.monetary;
+package io.bisq.common.monetary;
 
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.MonetaryFormat;

@@ -156,7 +156,7 @@ class TransactionsListItem {
                     details = Res.get("funds.tx.takeOfferFee", id);
                 } else {
                     Offer offer = trade.getOffer();
-                    String offerFeePaymentTxID = offer.getOfferFeePaymentTxID();
+                    String offerFeePaymentTxID = offer.getOfferFeePaymentTxId();
                     if (offer != null &&
                             offerFeePaymentTxID != null &&
                             offerFeePaymentTxID.equals(txId)) {

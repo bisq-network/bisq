@@ -32,7 +32,6 @@ import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.offer.createoffer.CreateOfferView;
 import io.bisq.gui.main.offer.offerbook.OfferBookView;
 import io.bisq.gui.main.offer.takeoffer.TakeOfferView;
-import io.bisq.wire.payload.offer.OfferPayload;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.scene.control.Tab;
@@ -54,7 +53,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final Preferences preferences;
-    private final OfferPayload.Direction direction;
+    private final Offer.Direction direction;
 
     private Offer offer;
     private TradeCurrency tradeCurrency;
@@ -67,7 +66,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
-        this.direction = (this instanceof BuyOfferView) ? OfferPayload.Direction.BUY : OfferPayload.Direction.SELL;
+        this.direction = (this instanceof BuyOfferView) ? Offer.Direction.BUY : Offer.Direction.SELL;
     }
 
     @Override
@@ -144,7 +143,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private void loadView(Class<? extends View> viewClass) {
         TabPane tabPane = root;
         View view;
-        boolean isBuy = direction == OfferPayload.Direction.BUY;
+        boolean isBuy = direction == Offer.Direction.BUY;
 
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);

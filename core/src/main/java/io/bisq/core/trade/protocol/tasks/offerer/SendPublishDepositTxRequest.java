@@ -57,7 +57,7 @@ public class SendPublishDepositTxRequest extends TradeTask {
 
             PublishDepositTxRequest tradeMessage = new PublishDepositTxRequest(
                     processModel.getId(),
-                    processModel.getPaymentAccountContractData(trade),
+                    processModel.getPaymentAccountPayload(trade),
                     processModel.getAccountId(),
                     offererMultiSigPubKey,
                     trade.getContractAsJson(),

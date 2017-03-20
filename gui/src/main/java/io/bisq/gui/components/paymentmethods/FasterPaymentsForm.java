@@ -27,8 +27,8 @@ import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.AccountNrValidator;
 import io.bisq.gui.util.validation.BranchIdValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.FasterPaymentsAccountContractData;
-import io.bisq.wire.payload.payment.PaymentAccountContractData;
+import io.bisq.wire.payload.payment.FasterPaymentsAccountPayload;
+import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -46,12 +46,12 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     private InputTextField sortCodeInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
-                                      PaymentAccountContractData paymentAccountContractData) {
+                                      PaymentAccountPayload paymentAccountPayload) {
         // do not translate as it is used in english only
         addLabelTextField(gridPane, ++gridRow, "UK sort code:",
-                ((FasterPaymentsAccountContractData) paymentAccountContractData).getSortCode());
+                ((FasterPaymentsAccountPayload) paymentAccountPayload).getSortCode());
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
-                ((FasterPaymentsAccountContractData) paymentAccountContractData).getAccountNr());
+                ((FasterPaymentsAccountPayload) paymentAccountPayload).getAccountNr());
         return gridRow;
     }
 

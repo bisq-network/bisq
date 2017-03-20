@@ -23,6 +23,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.taskrunner.Model;
 import io.bisq.core.arbitration.ArbitratorManager;
@@ -44,8 +46,6 @@ import javafx.beans.property.*;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -178,7 +178,7 @@ public abstract class Trade implements Tradable, Model {
     private String errorMessage;
     transient private StringProperty errorMessageProperty;
     transient private ObjectProperty<Coin> tradeAmountProperty;
-    transient private ObjectProperty<Fiat> tradeVolumeProperty;
+    transient private ObjectProperty<Volume> tradeVolumeProperty;
     transient private Set<DecryptedMsgWithPubKey> mailboxMessageSet = new HashSet<>();
 
 
@@ -411,9 +411,9 @@ public abstract class Trade implements Tradable, Model {
     }
 
     @Nullable
-    public Fiat getTradeVolume() {
+    public Volume getTradeVolume() {
         if (tradeAmount != null && getTradePrice() != null)
-            return new ExchangeRate(getTradePrice()).coinToFiat(tradeAmount);
+            return getTradePrice().getVolumeByAmount(tradeAmount);
         else
             return null;
     }
@@ -444,7 +444,7 @@ public abstract class Trade implements Tradable, Model {
         return tradeAmountProperty;
     }
 
-    public ReadOnlyObjectProperty<Fiat> tradeVolumeProperty() {
+    public ReadOnlyObjectProperty<Volume> tradeVolumeProperty() {
         return tradeVolumeProperty;
     }
 
@@ -488,8 +488,8 @@ public abstract class Trade implements Tradable, Model {
         this.tradePrice = tradePrice;
     }
 
-    public Fiat getTradePrice() {
-        return Fiat.valueOf(offer.getCurrencyCode(), tradePrice);
+    public Price getTradePrice() {
+        return Price.valueOf(offer.getCurrencyCode(), tradePrice);
     }
 
     @Nullable

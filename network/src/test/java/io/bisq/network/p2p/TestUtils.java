@@ -65,10 +65,10 @@ public class TestUtils {
         return result;
     }
 
-    public static DummySeedNode getAndStartSeedNode(int port, boolean useLocalhost, Set<NodeAddress> seedNodes) throws InterruptedException {
+    public static DummySeedNode getAndStartSeedNode(int port, boolean useLocalhostForP2P, Set<NodeAddress> seedNodes) throws InterruptedException {
         DummySeedNode seedNode;
 
-        if (useLocalhost) {
+        if (useLocalhostForP2P) {
             seedNodes.add(new NodeAddress("localhost:8001"));
             seedNodes.add(new NodeAddress("localhost:8002"));
             seedNodes.add(new NodeAddress("localhost:8003"));
@@ -83,7 +83,7 @@ public class TestUtils {
         }
 
         CountDownLatch latch = new CountDownLatch(1);
-        seedNode.createAndStartP2PService(new NodeAddress("localhost", port), DummySeedNode.MAX_CONNECTIONS_DEFAULT, useLocalhost, 2, true,
+        seedNode.createAndStartP2PService(new NodeAddress("localhost", port), DummySeedNode.MAX_CONNECTIONS_DEFAULT, useLocalhostForP2P, 2, true,
                 seedNodes, new P2PServiceListener() {
                     @Override
                     public void onRequestingDataCompleted() {
@@ -120,18 +120,18 @@ public class TestUtils {
     }
 
     public static P2PService getAndAuthenticateP2PService(int port, EncryptionService encryptionService, KeyRing keyRing,
-                                                          boolean useLocalhost, Set<NodeAddress> seedNodes)
+                                                          boolean useLocalhostForP2P, Set<NodeAddress> seedNodes)
             throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         SeedNodesRepository seedNodesRepository = new SeedNodesRepository();
         if (seedNodes != null && !seedNodes.isEmpty()) {
-            if (useLocalhost)
+            if (useLocalhostForP2P)
                 seedNodesRepository.setLocalhostSeedNodeAddresses(seedNodes);
             else
                 seedNodesRepository.setTorSeedNodeAddresses(seedNodes);
         }
 
-        P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhost,
+        P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhostForP2P,
                 2, P2PService.MAX_CONNECTIONS_DEFAULT, new File("dummy"), null, null, null, new Clock(), null, encryptionService, keyRing);
         p2PService.start(new P2PServiceListener() {
             @Override
