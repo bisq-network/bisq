@@ -649,17 +649,17 @@ message CountryBasedPaymentAccountPayload {
 }
 
 message BankAccountPayload {
-    string holder_name = 2;
-    string bank_name = 3;
-    string bank_id = 4;
-    string branch_id = 5;
-    string account_nr = 6;
-    string account_type = 7;
-    string holder_tax_id = 8;
+    string holder_name = 1;
+    string bank_name = 2;
+    string bank_id = 3;
+    string branch_id = 4;
+    string account_nr = 5;
+    string account_type = 6;
+    string holder_tax_id = 7;
     oneof message {
-        NationalBankAccountPayload national_bank_account_payload = 9;
-        SameBankAccountPayload same_bank_accont_payload = 10;
-        SpecificBanksAccountPayload specific_banks_account_payload = 11;
+        NationalBankAccountPayload national_bank_account_payload = 8;
+        SameBankAccountPayload same_bank_accont_payload = 9;
+        SpecificBanksAccountPayload specific_banks_account_payload = 10;
     }
 }
 
@@ -668,8 +668,9 @@ message NationalBankAccountPayload {
 
 message SameBankAccountPayload {
 }
+
 message SpecificBanksAccountPayload {
-    repeated string accepted_banks = 2;
+    repeated string accepted_banks = 1;
 }
 
 message CashDepositAccountPayload {

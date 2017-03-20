@@ -1,6 +1,5 @@
 package io.bisq.wire.payload.p2p.storage;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
@@ -33,7 +32,6 @@ public class ProtectedStorageEntry implements Payload {
     private final byte[] ownerPubKeyBytes;
     public int sequenceNumber;
     public byte[] signature;
-    @VisibleForTesting
     public long creationTimeStamp;
 
     // Domain

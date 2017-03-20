@@ -72,9 +72,9 @@ public final class Dispute implements Payload {
     @Nullable
     private final String payoutTxId;
     private final String contractAsJson;
-    @Nullable // not always filled in
+    @Nullable
     private final String offererContractSignature;
-    @Nullable // not always filled in
+    @Nullable
     private final String takerContractSignature;
     private final PubKeyRing arbitratorPubKeyRing;
     private final boolean isSupportTicket;
@@ -82,7 +82,7 @@ public final class Dispute implements Payload {
     private final ArrayList<DisputeCommunicationMessage> disputeCommunicationMessages = new ArrayList<>();
 
     private boolean isClosed;
-    @Nullable // not always filled in
+    @Nullable
     private DisputeResult disputeResult;
     @Nullable
     private String disputePayoutTxId;
