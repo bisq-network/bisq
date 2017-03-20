@@ -157,6 +157,7 @@ public class P2PDataStorageTest {
                 true,
                 100,
                 50,
+                "BTC",
                 "USD",
                 Lists.newArrayList(nodeAddress,
                         nodeAddress2,

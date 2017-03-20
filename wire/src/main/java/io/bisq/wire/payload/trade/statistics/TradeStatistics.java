@@ -2,6 +2,11 @@ package io.bisq.wire.payload.trade.statistics;
 
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.monetary.Altcoin;
+import io.bisq.common.monetary.AltcoinExchangeRate;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.wire.payload.CapabilityRequiringPayload;
 import io.bisq.wire.payload.LazyProcessedStoragePayload;
@@ -32,7 +37,8 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
     // Payload
-    public final String currency;
+    public final String baseCurrency;
+    public final String counterCurrency;
     public final OfferPayload.Direction direction;
     public final long tradePrice;
     public final long tradeAmount;
@@ -48,9 +54,15 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     @JsonExclude
     public final PubKeyRing pubKeyRing;
 
-    public TradeStatistics(OfferPayload offerPayload, Fiat tradePrice, Coin tradeAmount, Date tradeDate, String depositTxId, PubKeyRing pubKeyRing) {
+    public TradeStatistics(OfferPayload offerPayload,
+                           Price tradePrice,
+                           Coin tradeAmount,
+                           Date tradeDate,
+                           String depositTxId,
+                           PubKeyRing pubKeyRing) {
         this(offerPayload.getDirection(),
-                offerPayload.getCurrencyCode(),
+                offerPayload.getBaseCurrencyCode(),
+                offerPayload.getCounterCurrencyCode(),
                 offerPayload.getPaymentMethodId(),
                 offerPayload.getDate(),
                 offerPayload.isUseMarketBasedPrice(),
@@ -58,14 +70,16 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                 offerPayload.getAmount(),
                 offerPayload.getMinAmount(),
                 offerPayload.getId(),
-                tradePrice.longValue(),
+                tradePrice.getValue(),
                 tradeAmount.value,
                 tradeDate.getTime(),
                 depositTxId,
                 pubKeyRing);
     }
 
-    public TradeStatistics(OfferPayload.Direction direction, String offerCurrency,
+    public TradeStatistics(OfferPayload.Direction direction,
+                           String baseCurrency,
+                           String counterCurrency,
                            String offerPaymentMethod,
                            long offerDate,
                            boolean offerUseMarketBasedPrice,
@@ -79,7 +93,8 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                            String depositTxId,
                            PubKeyRing pubKeyRing) {
         this.direction = direction;
-        this.currency = offerCurrency;
+        this.baseCurrency = baseCurrency;
+        this.counterCurrency = counterCurrency;
         this.paymentMethodId = offerPaymentMethod;
         this.offerDate = offerDate;
         this.useMarketBasedPrice = offerUseMarketBasedPrice;
@@ -117,16 +132,23 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         return new Date(tradeDate);
     }
 
-    public Fiat getTradePrice() {
-        return Fiat.valueOf(currency, tradePrice);
+    public Price getTradePrice() {
+        return Price.valueOf(getCurrencyCode(), tradePrice);
+    }
+
+    public String getCurrencyCode() {
+        return CurrencyUtil.isCryptoCurrency(baseCurrency) ? baseCurrency : counterCurrency;
     }
 
     public Coin getTradeAmount() {
         return Coin.valueOf(tradeAmount);
     }
 
-    public Fiat getTradeVolume() {
-        return new ExchangeRate(getTradePrice()).coinToFiat(getTradeAmount());
+    public Volume getTradeVolume() {
+        if (getTradePrice().getMonetary() instanceof Altcoin)
+            return new Volume(new AltcoinExchangeRate((Altcoin) getTradePrice().getMonetary()).coinToAltcoin(getTradeAmount()));
+        else
+            return new Volume(new ExchangeRate((Fiat) getTradePrice().getMonetary()).coinToFiat(getTradeAmount()));
     }
 
     public String getOfferId() {
@@ -137,7 +159,8 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     public Messages.StoragePayload toProtoBuf() {
         return Messages.StoragePayload.newBuilder().setTradeStatistics(Messages.TradeStatistics.newBuilder()
                 .setTTL(TTL)
-                .setCurrency(currency)
+                .setBaseCurrency(baseCurrency)
+                .setCounterCurrency(counterCurrency)
                 .setDirection(Messages.PB_Offer.Direction.forNumber(direction.ordinal()))
                 .setTradePrice(tradePrice)
                 .setTradeAmount(tradeAmount)
@@ -171,7 +194,9 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         if (Double.compare(that.marketPriceMargin, marketPriceMargin) != 0) return false;
         if (offerAmount != that.offerAmount) return false;
         if (offerMinAmount != that.offerMinAmount) return false;
-        if (currency != null ? !currency.equals(that.currency) : that.currency != null) return false;
+        if (baseCurrency != null ? !baseCurrency.equals(that.baseCurrency) : that.baseCurrency != null) return false;
+        if (counterCurrency != null ? !counterCurrency.equals(that.counterCurrency) : that.counterCurrency != null)
+            return false;
 
         if (direction != null && that.direction != null && direction.ordinal() != that.direction.ordinal())
             return false;
@@ -188,8 +213,9 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     public int hashCode() {
         int result;
         long temp;
-        result = currency != null ? currency.hashCode() : 0;
-        result = 31 * result + (direction != null ? direction.ordinal() : 0);
+        result = baseCurrency != null ? baseCurrency.hashCode() : 0;
+        result = 31 * result + (counterCurrency != null ? counterCurrency.hashCode() : 0);
+        result = 31 * result + (direction != null ? direction.hashCode() : 0);
         result = 31 * result + (int) (tradePrice ^ (tradePrice >>> 32));
         result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
         result = 31 * result + (paymentMethodId != null ? paymentMethodId.hashCode() : 0);
@@ -199,7 +225,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         result = 31 * result + (int) (temp ^ (temp >>> 32));
         result = 31 * result + (int) (offerAmount ^ (offerAmount >>> 32));
         result = 31 * result + (int) (offerMinAmount ^ (offerMinAmount >>> 32));
-        result = 31 * result + (getOfferId() != null ? getOfferId().hashCode() : 0);
+        result = 31 * result + (offerId != null ? offerId.hashCode() : 0);
         result = 31 * result + (depositTxId != null ? depositTxId.hashCode() : 0);
         return result;
     }
@@ -207,7 +233,8 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     @Override
     public String toString() {
         return "TradeStatistics{" +
-                "currency='" + currency + '\'' +
+                "baseCurrency='" + baseCurrency + '\'' +
+                ", counterCurrency=" + counterCurrency +
                 ", direction=" + direction +
                 ", tradePrice=" + tradePrice +
                 ", tradeAmount=" + tradeAmount +

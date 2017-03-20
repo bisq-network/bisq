@@ -354,7 +354,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                                     if (offer != null && offer.getPrice() != null) {
-                                        setText(formatter.formatVolume(offer.getOfferVolume()));
+                                        setText(formatter.formatVolume(offer.getVolume()));
                                         model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     }
                                 }
@@ -370,7 +370,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                         model.priceFeedService.currenciesUpdateFlagProperty().addListener(listener);
                                         setText(Res.get("shared.na"));
                                     } else {
-                                        setText(formatter.formatVolume(offer.getOfferVolume()));
+                                        setText(formatter.formatVolume(offer.getVolume()));
                                     }
                                 } else {
                                     if (listener != null)

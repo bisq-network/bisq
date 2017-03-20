@@ -2,6 +2,8 @@ package io.bisq.wire;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.locale.CountryUtil;
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.monetary.Price;
 import io.bisq.wire.message.Message;
 import io.bisq.wire.message.alert.PrivateNotificationMessage;
 import io.bisq.wire.message.arbitration.*;
@@ -48,7 +50,6 @@ import io.bisq.wire.proto.Messages;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.WriterOutputStream;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
@@ -82,9 +83,9 @@ public class ProtoBufferUtilities {
             return Optional.empty();
         }
         if (envelope.getMessageCase() != PING && envelope.getMessageCase() != PONG && envelope.getMessageCase() != REFRESH_TTL_MESSAGE) {
-            log.info("Convert protobuffer envelope: {}, {}", envelope.getMessageCase(), envelope.toString());
+            log.debug("Convert protobuffer envelope: {}, {}", envelope.getMessageCase(), envelope.toString());
         } else {
-            log.info("Convert protobuffer envelope: {}", envelope.getMessageCase());
+            log.debug("Convert protobuffer envelope: {}", envelope.getMessageCase());
             log.trace("Convert protobuffer envelope: {}", envelope.toString());
         }
         StringWriter stringWriter = new StringWriter();
@@ -286,13 +287,33 @@ public class ProtoBufferUtilities {
     }
 
     private static Contract getContract(Messages.Contract contract) {
-        return new Contract(getOfferPayload(contract.getPbOffer()), Coin.valueOf(contract.getTradeAmount()), getFiat(contract.getPbOffer().getCurrencyCode(), contract.getTradePrice()),
-                contract.getTakeOfferFeeTxId(), getNodeAddress(contract.getBuyerNodeAddress()), getNodeAddress(contract.getSellerNodeAddress()),
-                getNodeAddress(contract.getArbitratorNodeAddress()), contract.getIsBuyerOffererAndSellerTaker(), contract.getOffererAccountId(),
-                contract.getTakerAccountId(), getPaymentAccountPayload(contract.getOffererPaymentAccountPayload()),
-                getPaymentAccountPayload(contract.getTakerPaymentAccountPayload()), getPubKeyRing(contract.getOffererPubKeyRing()),
-                getPubKeyRing(contract.getTakerPubKeyRing()), contract.getOffererPayoutAddressString(), contract.getTakerPayoutAddressString(),
-                contract.getOffererBtcPubKey().toByteArray(), contract.getTakerBtcPubKey().toByteArray());
+        return new Contract(getOfferPayload(contract.getPbOffer()),
+                Coin.valueOf(contract.getTradeAmount()),
+                Price.valueOf(getCurrencyCode(contract.getPbOffer()), contract.getTradePrice()),
+                contract.getTakeOfferFeeTxId(),
+                getNodeAddress(contract.getBuyerNodeAddress()),
+                getNodeAddress(contract.getSellerNodeAddress()),
+                getNodeAddress(contract.getArbitratorNodeAddress()),
+                contract.getIsBuyerOffererAndSellerTaker(),
+                contract.getOffererAccountId(),
+                contract.getTakerAccountId(),
+                getPaymentAccountPayload(contract.getOffererPaymentAccountPayload()),
+                getPaymentAccountPayload(contract.getTakerPaymentAccountPayload()),
+                getPubKeyRing(contract.getOffererPubKeyRing()),
+                getPubKeyRing(contract.getTakerPubKeyRing()),
+                contract.getOffererPayoutAddressString(),
+                contract.getTakerPayoutAddressString(),
+                contract.getOffererBtcPubKey().toByteArray(),
+                contract.getTakerBtcPubKey().toByteArray());
+    }
+
+    private static String getCurrencyCode(Messages.PB_Offer pbOffer) {
+        String currencyCode;
+        if (CurrencyUtil.isCryptoCurrency(pbOffer.getBaseCurrencyCode()))
+            currencyCode = pbOffer.getBaseCurrencyCode();
+        else
+            currencyCode = pbOffer.getCounterCurrencyCode();
+        return currencyCode;
     }
 
     public static PaymentAccountPayload getPaymentAccountPayload(Messages.PaymentAccountPayload protoEntry) {
@@ -415,10 +436,6 @@ public class ProtoBufferUtilities {
         countryBasedPaymentAccountPayload.setCountryCode(protoEntry.getCountryBasedPaymentAccountPayload().getCountryCode());
     }
 
-    private static Fiat getFiat(String currencyCode, long tradePrice) {
-        return Fiat.valueOf(currencyCode, tradePrice);
-    }
-
     public static OfferPayload getOfferPayload(Messages.PB_Offer pbOffer) {
         List<NodeAddress> arbitratorNodeAddresses = pbOffer.getArbitratorNodeAddressesList().stream()
                 .map(ProtoBufferUtilities::getNodeAddress).collect(Collectors.toList());
@@ -433,19 +450,41 @@ public class ProtoBufferUtilities {
         } else {
             extraDataMapMap = pbOffer.getExtraDataMapMap();
         }
-        return new OfferPayload(pbOffer.getId(), pbOffer.getDate(), getNodeAddress(pbOffer.getOffererNodeAddress()),
-                getPubKeyRing(pbOffer.getPubKeyRing()), getDirection(pbOffer.getDirection()),
-                pbOffer.getFiatPrice(), pbOffer.getMarketPriceMargin(), pbOffer.getUseMarketBasedPrice(),
-                pbOffer.getAmount(), pbOffer.getMinAmount(), pbOffer.getCurrencyCode(), arbitratorNodeAddresses,
-                pbOffer.getPaymentMethodId(), pbOffer.getOffererPaymentAccountId(), pbOffer.getOfferFeePaymentTxId(),
-                pbOffer.getCountryCode(), acceptedCountryCodes, pbOffer.getBankId(), acceptedBankIds,
-                pbOffer.getVersionNr(), pbOffer.getBlockHeightAtOfferCreation(), pbOffer.getTxFee(),
+        return new OfferPayload(pbOffer.getId(),
+                pbOffer.getDate(),
+                getNodeAddress(pbOffer.getOffererNodeAddress()),
+                getPubKeyRing(pbOffer.getPubKeyRing()),
+                getDirection(pbOffer.getDirection()),
+                pbOffer.getPrice(),
+                pbOffer.getMarketPriceMargin(),
+                pbOffer.getUseMarketBasedPrice(),
+                pbOffer.getAmount(),
+                pbOffer.getMinAmount(),
+                pbOffer.getBaseCurrencyCode(),
+                pbOffer.getCounterCurrencyCode(),
+                arbitratorNodeAddresses,
+                pbOffer.getPaymentMethodId(),
+                pbOffer.getOffererPaymentAccountId(),
+                pbOffer.getOfferFeePaymentTxId(),
+                pbOffer.getCountryCode(),
+                acceptedCountryCodes,
+                pbOffer.getBankId(),
+                acceptedBankIds,
+                pbOffer.getVersionNr(),
+                pbOffer.getBlockHeightAtOfferCreation(),
+                pbOffer.getTxFee(),
                 pbOffer.getCreateOfferFee(),
                 pbOffer.getBuyerSecurityDeposit(),
                 pbOffer.getSellerSecurityDeposit(),
-                pbOffer.getMaxTradeLimit(), pbOffer.getMaxTradePeriod(), pbOffer.getUseAutoClose(),
-                pbOffer.getUseReOpenAfterAutoClose(), pbOffer.getLowerClosePrice(), pbOffer.getUpperClosePrice(),
-                pbOffer.getIsPrivateOffer(), pbOffer.getHashOfChallenge(), extraDataMapMap);
+                pbOffer.getMaxTradeLimit(),
+                pbOffer.getMaxTradePeriod(),
+                pbOffer.getUseAutoClose(),
+                pbOffer.getUseReOpenAfterAutoClose(),
+                pbOffer.getLowerClosePrice(),
+                pbOffer.getUpperClosePrice(),
+                pbOffer.getIsPrivateOffer(),
+                pbOffer.getHashOfChallenge(),
+                extraDataMapMap);
     }
 
     private static Message getDisputeCommunicationMessage(Messages.DisputeCommunicationMessage disputeCommunicationMessage) {
@@ -559,12 +598,22 @@ public class ProtoBufferUtilities {
                 break;
             case TRADE_STATISTICS:
                 Messages.TradeStatistics protoTrade = protoEntry.getTradeStatistics();
-                storagePayload = new TradeStatistics(getDirection(protoTrade.getDirection()), protoTrade.getCurrency(), protoTrade.getPaymentMethodId(),
-                        protoTrade.getOfferDate(), protoTrade.getUseMarketBasedPrice(), protoTrade.getMarketPriceMargin(),
-                        protoTrade.getOfferAmount(), protoTrade.getOfferMinAmount(), protoTrade.getOfferId(),
-                        protoTrade.getTradePrice(), protoTrade.getTradeAmount(), protoTrade.getTradeDate(),
-                        protoTrade.getDepositTxId(), new PubKeyRing(protoTrade.getPubKeyRing().getSignaturePubKeyBytes().toByteArray(),
-                        protoTrade.getPubKeyRing().getEncryptionPubKeyBytes().toByteArray()));
+                storagePayload = new TradeStatistics(getDirection(protoTrade.getDirection()),
+                        protoTrade.getBaseCurrency(),
+                        protoTrade.getCounterCurrency(),
+                        protoTrade.getPaymentMethodId(),
+                        protoTrade.getOfferDate(),
+                        protoTrade.getUseMarketBasedPrice(),
+                        protoTrade.getMarketPriceMargin(),
+                        protoTrade.getOfferAmount(),
+                        protoTrade.getOfferMinAmount(),
+                        protoTrade.getOfferId(),
+                        protoTrade.getTradePrice(),
+                        protoTrade.getTradeAmount(),
+                        protoTrade.getTradeDate(),
+                        protoTrade.getDepositTxId(),
+                        new PubKeyRing(protoTrade.getPubKeyRing().getSignaturePubKeyBytes().toByteArray(),
+                                protoTrade.getPubKeyRing().getEncryptionPubKeyBytes().toByteArray()));
                 break;
             case MAILBOX_STORAGE_PAYLOAD:
                 Messages.MailboxStoragePayload mbox = protoEntry.getMailboxStoragePayload();
@@ -720,5 +769,4 @@ public class ProtoBufferUtilities {
                         .stream()
                         .map(ByteString::toByteArray).collect(Collectors.toList()));
     }
-
 }

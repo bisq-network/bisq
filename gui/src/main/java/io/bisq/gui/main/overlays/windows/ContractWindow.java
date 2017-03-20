@@ -43,7 +43,6 @@ import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Utils;
-import org.bitcoinj.utils.ExchangeRate;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -126,7 +125,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
         addLabelTextField(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode, ":"),
-                formatter.formatVolumeWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
+                formatter.formatVolumeWithCode(contract.getTradePrice().getVolumeByAmount(contract.getTradeAmount())));
         String securityDeposit = Res.getWithColAndCap("shared.buyer") +
                 " " +
                 formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +

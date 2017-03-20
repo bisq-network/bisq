@@ -23,6 +23,8 @@ import io.bisq.common.app.Version;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.*;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOfferManager;
@@ -42,17 +44,14 @@ import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.payload.payment.PaymentMethod;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.scene.control.TableColumn;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +74,8 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final FilterManager filterManager;
     private final Navigation navigation;
     final BSFormatter formatter;
+    final ObjectProperty<TableColumn.SortType> priceSortTypeProperty = new SimpleObjectProperty<>();
+
 
     private final FilteredList<OfferBookListItem> filteredItems;
     private final SortedList<OfferBookListItem> sortedItems;
@@ -125,17 +126,20 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.sortedItems = new SortedList<>(filteredItems);
 
         tradeCurrencyListChangeListener = c -> {
-            tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream().map(e -> e.getCode()).collect(Collectors.toSet());
+            tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream()
+                    .map(e -> e.getCode()).collect(Collectors.toSet());
             fillAllTradeCurrencies();
         };
     }
 
     @Override
     protected void activate() {
-        tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream().map(e -> e.getCode()).collect(Collectors.toSet());
+        tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream()
+                .map(e -> e.getCode()).collect(Collectors.toSet());
 
         String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
-        if (code != null && !code.equals(GUIUtil.SHOW_ALL_FLAG) && !code.isEmpty() && CurrencyUtil.getTradeCurrency(code).isPresent()) {
+        if (code != null && !code.equals(GUIUtil.SHOW_ALL_FLAG) && !code.isEmpty() &&
+                CurrencyUtil.getTradeCurrency(code).isPresent()) {
             showAllTradeCurrenciesProperty.set(false);
             selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
         } else {
@@ -144,6 +148,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
 
+        applyPriceSortTypeProperty(code);
         setPriceFeedType();
 
         fillAllTradeCurrencies();
@@ -190,6 +195,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                 this.selectedTradeCurrency = tradeCurrency;
                 tradeCurrencyCode.set(code);
             }
+            applyPriceSortTypeProperty(code);
 
             setPriceFeedType();
             setMarketPriceFeedCurrency();
@@ -200,6 +206,15 @@ class OfferBookViewModel extends ActivatableViewModel {
             else
                 preferences.setSellScreenCurrencyCode(code);
         }
+    }
+
+    private void applyPriceSortTypeProperty(String code) {
+        final Offer.Direction compareDirection = CurrencyUtil.isCryptoCurrency(code) ?
+                Offer.Direction.SELL :
+                Offer.Direction.BUY;
+        priceSortTypeProperty.set(getDirection() == compareDirection ?
+                TableColumn.SortType.ASCENDING :
+                TableColumn.SortType.DESCENDING);
     }
 
     void onSetPaymentMethod(PaymentMethod paymentMethod) {
@@ -264,7 +279,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             return "";
 
         Offer offer = item.getOffer();
-        Fiat price = offer.getPrice();
+        Price price = offer.getPrice();
         if (price != null) {
             String postFix = "";
             if (offer.isUseMarketBasedPrice()) {
@@ -281,8 +296,8 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     String getVolume(OfferBookListItem item) {
         Offer offer = item.getOffer();
-        Fiat offerVolume = offer.getOfferVolume();
-        Fiat minOfferVolume = offer.getMinOfferVolume();
+        Volume offerVolume = offer.getVolume();
+        Volume minOfferVolume = offer.getMinVolume();
         if (offerVolume != null && minOfferVolume != null) {
             String postFix = showAllTradeCurrenciesProperty.get() ? " " + offer.getCurrencyCode() : "";
             if (offerVolume.equals(minOfferVolume))
@@ -370,10 +385,11 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     private void setPriceFeedType() {
-        if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
+        priceFeedService.setType(PriceFeedService.Type.LAST);
+      /*  if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
             priceFeedService.setType(direction == Offer.Direction.SELL ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);
         else
-            priceFeedService.setType(direction == Offer.Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);
+            priceFeedService.setType(direction == Offer.Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);*/
     }
 
     private void fillAllTradeCurrencies() {

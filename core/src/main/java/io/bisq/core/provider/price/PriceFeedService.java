@@ -37,9 +37,12 @@ public class PriceFeedService {
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODO remove Type
     public enum Type {
-        ASK(Res.get("marketPrice.ask")),
-        BID(Res.get("marketPrice.bid")),
+        /*  ASK(Res.get("marketPrice.ask")),
+          BID(Res.get("marketPrice.bid")),*/
+        ASK(Res.get("marketPrice.last")),
+        BID(Res.get("marketPrice.last")),
         LAST(Res.get("marketPrice.last"));
 
         public final String name;

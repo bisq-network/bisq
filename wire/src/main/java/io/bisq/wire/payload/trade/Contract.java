@@ -20,6 +20,7 @@ package io.bisq.wire.payload.trade;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
+import io.bisq.common.monetary.Price;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.wire.payload.Payload;
 import io.bisq.wire.payload.crypto.PubKeyRing;
@@ -29,7 +30,6 @@ import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.proto.Messages;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
-import org.bitcoinj.utils.Fiat;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.Arrays;
@@ -69,7 +69,7 @@ public final class Contract implements Payload {
 
     public Contract(OfferPayload offerPayload,
                     Coin tradeAmount,
-                    Fiat tradePrice,
+                    Price tradePrice,
                     String takeOfferFeeTxID,
                     NodeAddress buyerNodeAddress,
                     NodeAddress sellerNodeAddress,
@@ -86,7 +86,7 @@ public final class Contract implements Payload {
                     byte[] offererMultiSigPubKey,
                     byte[] takerMultiSigPubKey) {
         this.offerPayload = offerPayload;
-        this.tradePrice = tradePrice.value;
+        this.tradePrice = tradePrice.getValue();
         this.buyerNodeAddress = buyerNodeAddress;
         this.sellerNodeAddress = sellerNodeAddress;
         this.tradeAmount = tradeAmount.value;
@@ -161,8 +161,8 @@ public final class Contract implements Payload {
         return Coin.valueOf(tradeAmount);
     }
 
-    public Fiat getTradePrice() {
-        return Fiat.valueOf(offerPayload.getCurrencyCode(), tradePrice);
+    public Price getTradePrice() {
+        return Price.valueOf(offerPayload.getCurrencyCode(), tradePrice);
     }
 
     public NodeAddress getBuyerNodeAddress() {

@@ -1,4 +1,4 @@
-package io.bisq.gui.main.offer.createoffer.monetary;
+package io.bisq.common.monetary;
 
 import com.google.common.math.LongMath;
 import org.bitcoinj.core.Monetary;
@@ -28,6 +28,8 @@ public final class Altcoin implements Monetary, Comparable<Altcoin>, Serializabl
      * 2, because in financial applications it's common to use sub-cent precision.
      */
     public static final int SMALLEST_UNIT_EXPONENT = 8;
+    private static final MonetaryFormat FRIENDLY_FORMAT = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(2, 1).postfixCode();
+    private static final MonetaryFormat PLAIN_FORMAT = new MonetaryFormat().shift(0).minDecimals(0).repeatOptionalDecimals(1, 8).noCode();
 
     /**
      * The number of smallest units of this monetary value.
@@ -70,9 +72,10 @@ public final class Altcoin implements Monetary, Comparable<Altcoin>, Serializabl
      *
      * @throws IllegalArgumentException if you try to specify fractional satoshis, or a value out of range.
      */
-    public static Altcoin parseAltcoin(final String currencyCode, final String str) {
+    public static Altcoin parseAltcoin(final String currencyCode, String inputValue) {
+        inputValue = inputValue.replace(",", ".");
         try {
-            long val = new BigDecimal(str).movePointRight(SMALLEST_UNIT_EXPONENT)
+            long val = new BigDecimal(inputValue).movePointRight(SMALLEST_UNIT_EXPONENT)
                     .toBigIntegerExact().longValue();
             return Altcoin.valueOf(currencyCode, val);
         } catch (ArithmeticException e) {
@@ -155,25 +158,9 @@ public final class Altcoin implements Monetary, Comparable<Altcoin>, Serializabl
         return new Altcoin(currencyCode, -this.value);
     }
 
-    /**
-     * Returns the number of satoshis of this monetary value. It's deprecated in favour of accessing {@link #value}
-     * directly.
-     */
-    public long longValue() {
-        return this.value;
-    }
-
-    private static final MonetaryFormat FRIENDLY_FORMAT = MonetaryFormat.FIAT.postfixCode();
-
-    /**
-     * Returns the value as a 0.12 type string. More digits after the decimal place will be used if necessary, but two
-     * will always be present.
-     */
     public String toFriendlyString() {
         return FRIENDLY_FORMAT.code(0, currencyCode).format(this).toString();
     }
-
-    private static final MonetaryFormat PLAIN_FORMAT = MonetaryFormat.FIAT.minDecimals(0).repeatOptionalDecimals(1, 8).noCode();
 
     /**
      * <p>
@@ -187,7 +174,7 @@ public final class Altcoin implements Monetary, Comparable<Altcoin>, Serializabl
 
     @Override
     public String toString() {
-        return Long.toString(value);
+        return toPlainString();
     }
 
     @Override

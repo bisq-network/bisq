@@ -17,16 +17,21 @@ public class MarketPrice {
         this.last = last;
     }
 
+    public double getPrice() {
+        return getPrice(PriceFeedService.Type.LAST);
+    }
+
+    //TODO remove Type
     public double getPrice(PriceFeedService.Type type) {
-        switch (type) {
+       /* switch (type) {
             case ASK:
                 return ask;
             case BID:
                 return (bid);
             case LAST:
                 return last;
-        }
-        return 0;
+        }*/
+        return last;
     }
 
     @Override

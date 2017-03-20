@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.wire.payload.RequiresOwnerIsOnlinePayload;
 import io.bisq.wire.payload.StoragePayload;
@@ -71,9 +72,11 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Fields for filtering offers
     private final Direction direction;
-    private final String currencyCode;
+
+    private final String baseCurrencyCode;
+    private final String counterCurrencyCode;
+    
     private final String paymentMethodId;
     @Nullable
     private final String countryCode;
@@ -90,10 +93,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
     // We use 2 type of prices: fixed price or price based on distance from market price
     private final boolean useMarketBasedPrice;
-    // fiatPrice if fixed price is used (usePercentageBasedPrice = false), otherwise 0
-
-    //TODO add support for altcoin price or fix precision issue
-    private final long fiatPrice;
+    // price if fixed price is used (usePercentageBasedPrice = false), otherwise 0
+    private final long price;
 
     // Distance form market price if percentage based price is used (usePercentageBasedPrice = true), otherwise 0.
     // E.g. 0.1 -> 10%. Can be negative as well. Depending on direction the marketPriceMargin is above or below the market price.
@@ -156,12 +157,13 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
      * @param offererNodeAddress
      * @param pubKeyRing
      * @param direction
-     * @param fiatPrice
+     * @param price
      * @param marketPriceMargin
      * @param useMarketBasedPrice
      * @param amount
      * @param minAmount
-     * @param currencyCode
+     * @param baseCurrencyCode
+     * @param counterCurrencyCode
      * @param arbitratorNodeAddresses
      * @param paymentMethodId
      * @param offererPaymentAccountId
@@ -192,12 +194,13 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                         NodeAddress offererNodeAddress,
                         PubKeyRing pubKeyRing,
                         Direction direction,
-                        long fiatPrice,
+                        long price,
                         double marketPriceMargin,
                         boolean useMarketBasedPrice,
                         long amount,
                         long minAmount,
-                        String currencyCode,
+                        String baseCurrencyCode,
+                        String counterCurrencyCode,
                         List<NodeAddress> arbitratorNodeAddresses,
                         String paymentMethodId,
                         String offererPaymentAccountId,
@@ -221,18 +224,18 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                         boolean isPrivateOffer,
                         @Nullable String hashOfChallenge,
                         @Nullable Map<String, String> extraDataMap) {
-
         this.id = id;
         this.date = date;
         this.offererNodeAddress = offererNodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.direction = direction;
-        this.fiatPrice = fiatPrice;
+        this.price = price;
         this.marketPriceMargin = marketPriceMargin;
         this.useMarketBasedPrice = useMarketBasedPrice;
         this.amount = amount;
         this.minAmount = minAmount;
-        this.currencyCode = currencyCode;
+        this.baseCurrencyCode = baseCurrencyCode;
+        this.counterCurrencyCode = counterCurrencyCode;
         this.arbitratorNodeAddresses = arbitratorNodeAddresses;
         this.paymentMethodId = paymentMethodId;
         this.offererPaymentAccountId = offererPaymentAccountId;
@@ -287,14 +290,15 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         Messages.PB_Offer.Builder offerBuilder = Messages.PB_Offer.newBuilder()
                 .setTTL(TTL)
                 .setDirectionValue(direction.ordinal())
-                .setCurrencyCode(currencyCode)
+                .setBaseCurrencyCode(baseCurrencyCode)
+                .setCounterCurrencyCode(counterCurrencyCode)
                 .setPaymentMethodId(paymentMethodId)
                 .addAllArbitratorNodeAddresses(arbitratorNodeAddresses)
                 .setId(id)
                 .setDate(date)
                 .setProtocolVersion(protocolVersion)
                 .setUseMarketBasedPrice(useMarketBasedPrice)
-                .setFiatPrice(fiatPrice)
+                .setPrice(price)
                 .setMarketPriceMargin(marketPriceMargin)
                 .setAmount(amount)
                 .setMinAmount(minAmount)
@@ -328,5 +332,13 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         Optional.ofNullable(extraDataMap).ifPresent(offerBuilder::putAllExtraDataMap);
 
         return Messages.StoragePayload.newBuilder().setPbOffer(offerBuilder).build();
+    }
+
+    //TODO remove
+    public String getCurrencyCode() {
+        if (CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()))
+            return getBaseCurrencyCode();
+        else
+            return getCounterCurrencyCode();
     }
 }

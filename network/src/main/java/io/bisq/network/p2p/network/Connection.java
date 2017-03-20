@@ -197,7 +197,7 @@ public class Connection implements MessageListener {
                     String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
 
                     envelope = message.toProtoBuf();
-                    log.info("Sending message: {}", Utilities.toTruncatedString(envelope.toString(), 10000));
+                    log.debug("Sending message: {}", Utilities.toTruncatedString(envelope.toString(), 10000));
 
                     if (message instanceof Ping | message instanceof RefreshTTLMessage) {
                         // pings and offer refresh msg we dont want to log in production
@@ -834,7 +834,7 @@ public class Connection implements MessageListener {
                         boolean exceeds;
                         if (message instanceof GetDataResponse || message instanceof GetDataRequest) {
                             exceeds = size > MAX_MSG_SIZE_GET_DATA;
-                            log.info("size={}; object={}", size, Utilities.toTruncatedString(envelope, 100));
+                            log.debug("size={}; object={}", size, Utilities.toTruncatedString(envelope, 100));
                         } else {
                             exceeds = size > MAX_MSG_SIZE;
                         }

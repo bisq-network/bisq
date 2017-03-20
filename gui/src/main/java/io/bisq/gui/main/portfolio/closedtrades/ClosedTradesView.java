@@ -19,6 +19,8 @@ package io.bisq.gui.main.portfolio.closedtrades;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 import io.bisq.common.locale.Res;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.trade.Tradable;
@@ -42,7 +44,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
 
@@ -106,8 +107,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         priceColumn.setComparator((o1, o2) -> {
             final Tradable tradable1 = o1.getTradable();
             final Tradable tradable2 = o2.getTradable();
-            Fiat price1 = null;
-            Fiat price2 = null;
+            Price price1 = null;
+            Price price2 = null;
             if (tradable1 != null)
                 price1 = tradable1 instanceof Trade ? ((Trade) tradable1).getTradePrice() : tradable1.getOffer().getPrice();
             if (tradable2 != null)
@@ -116,8 +117,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         });
         volumeColumn.setComparator((o1, o2) -> {
             if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
-                Fiat tradeVolume1 = ((Trade) o1.getTradable()).getTradeVolume();
-                Fiat tradeVolume2 = ((Trade) o2.getTradable()).getTradeVolume();
+                Volume tradeVolume1 = ((Trade) o1.getTradable()).getTradeVolume();
+                Volume tradeVolume2 = ((Trade) o2.getTradable()).getTradeVolume();
                 return tradeVolume1 != null && tradeVolume2 != null ? tradeVolume1.compareTo(tradeVolume2) : 0;
             } else
                 return 0;

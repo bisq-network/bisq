@@ -88,7 +88,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
         numberOfBuyOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfBuyOffers).compareTo(o2.numberOfBuyOffers));
         numberOfSellOffersColumn.setComparator((o1, o2) -> Integer.valueOf(o1.numberOfSellOffers).compareTo(o2.numberOfSellOffers));
         totalAmountColumn.setComparator((o1, o2) -> o1.totalAmount.compareTo(o2.totalAmount));
-        spreadColumn.setComparator((o1, o2) -> o1.spread != null && o2.spread != null ? formatter.formatVolumeWithCode(o1.spread).compareTo(formatter.formatVolumeWithCode(o2.spread)) : 0);
+        spreadColumn.setComparator((o1, o2) -> o1.priceSpread != null && o2.priceSpread != null ? formatter.formatPriceWithCode(o1.priceSpread).compareTo(formatter.formatPriceWithCode(o2.priceSpread)) : 0);
 
         numberOfOffersColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(numberOfOffersColumn);
@@ -285,8 +285,12 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
                             public void updateItem(final SpreadItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    if (item.spread != null)
-                                        setText(formatter.formatVolumeWithCode(item.spread) + item.percentage);
+                                    // TODO maybe show exra colums with item.priceSpread and use real amount diff 
+                                    // not % based
+                                    if (item.priceSpread != null)
+                                        setText(item.percentage);
+                                    /*setText(item.percentage +
+                                            " (" + formatter.formatPriceWithCode(item.priceSpread) + ")");*/
                                     else
                                         setText("-");
                                 } else {

@@ -1,4 +1,4 @@
-package io.bisq.gui.main.offer.createoffer.monetary;
+package io.bisq.common.monetary;
 
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
@@ -44,9 +44,9 @@ public class AltcoinExchangeRate implements Serializable {
      * @throws ArithmeticException if the converted altcoin amount is too high or too low.
      */
     public Altcoin coinToAltcoin(Coin convertCoin) {
-        // Use BigInteger because it's much easier to maintain full precision without overflowing.
-        final BigInteger converted = BigInteger.valueOf(convertCoin.value).multiply(BigInteger.valueOf(altcoin.value))
-                .divide(BigInteger.valueOf(coin.value));
+        BigInteger converted = BigInteger.valueOf(coin.value)
+                .multiply(BigInteger.valueOf(convertCoin.value))
+                .divide(BigInteger.valueOf(altcoin.value));
         if (converted.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0
                 || converted.compareTo(BigInteger.valueOf(Long.MIN_VALUE)) < 0)
             throw new ArithmeticException("Overflow");
@@ -62,8 +62,9 @@ public class AltcoinExchangeRate implements Serializable {
         checkArgument(convertAltcoin.currencyCode.equals(altcoin.currencyCode), "Currency mismatch: %s vs %s",
                 convertAltcoin.currencyCode, altcoin.currencyCode);
         // Use BigInteger because it's much easier to maintain full precision without overflowing.
-        final BigInteger converted = BigInteger.valueOf(convertAltcoin.value).multiply(BigInteger.valueOf(coin.value))
-                .divide(BigInteger.valueOf(altcoin.value));
+        BigInteger converted = BigInteger.valueOf(altcoin.value)
+                .multiply(BigInteger.valueOf(convertAltcoin.value))
+                .divide(BigInteger.valueOf(coin.value));
         if (converted.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0
                 || converted.compareTo(BigInteger.valueOf(Long.MIN_VALUE)) < 0)
             throw new ArithmeticException("Overflow");

@@ -386,7 +386,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
-        volume.bind(createStringBinding(() -> formatter.formatVolume(dataModel.volumeAsFiat.get()), dataModel.volumeAsFiat));
+        volume.bind(createStringBinding(() -> formatter.formatVolume(dataModel.volume.get()), dataModel.volume));
 
         if (dataModel.getDirection() == Offer.Direction.SELL) {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));

@@ -19,6 +19,7 @@ package io.bisq.common.locale;
 
 import java.io.Serializable;
 
+//TODO
 public class CurrencyTuple implements Serializable {
     // That object is used for serializing to a Json file.
 

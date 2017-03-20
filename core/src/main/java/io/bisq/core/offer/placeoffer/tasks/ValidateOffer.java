@@ -56,9 +56,6 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkArgument(offer.getCreateOfferFee().value >= FeeService.MIN_CREATE_OFFER_FEE_IN_BTC,
                     "createOfferFee must not be less than FeeService.MIN_CREATE_OFFER_FEE_IN_BTC. " +
                             "createOfferFee=" + offer.getCreateOfferFee().toFriendlyString());
-            checkArgument(offer.getCreateOfferFee().value <= FeeService.MAX_CREATE_OFFER_FEE_IN_BTC,
-                    "createOfferFee must not be larger than FeeService.MAX_CREATE_OFFER_FEE_IN_BTC. " +
-                            "createOfferFee=" + offer.getCreateOfferFee().toFriendlyString());
 
             checkCoinNotNullOrZero(offer.getBuyerSecurityDeposit(), "buyerSecurityDeposit");
             checkCoinNotNullOrZero(offer.getSellerSecurityDeposit(), "sellerSecurityDeposit");

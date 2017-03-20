@@ -21,6 +21,7 @@ import com.google.common.math.LongMath;
 import com.google.inject.Inject;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.monetary.Price;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.user.Preferences;
@@ -41,7 +42,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.chart.XYChart;
-import org.bitcoinj.utils.Fiat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -243,8 +243,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .filter(e -> e.getOfferPayload().getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
                         && e.getOfferPayload().getDirection().equals(Offer.Direction.BUY))
                 .sorted((o1, o2) -> {
-                    long a = o1.getPrice() != null ? o1.getPrice().value : 0;
-                    long b = o2.getPrice() != null ? o2.getPrice().value : 0;
+                    long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
+                    long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
                     if (a != b)
                         return a < b ? 1 : -1;
                     return 0;
@@ -259,8 +259,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .filter(e -> e.getOfferPayload().getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
                         && e.getOfferPayload().getDirection().equals(Offer.Direction.SELL))
                 .sorted((o1, o2) -> {
-                    long a = o1.getPrice() != null ? o1.getPrice().value : 0;
-                    long b = o2.getPrice() != null ? o2.getPrice().value : 0;
+                    long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
+                    long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
                     if (a != b)
                         return a > b ? 1 : -1;
                     return 0;
@@ -274,15 +274,15 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     // If there are more then 3 offers we ignore the offers which are further than 30% from the best price
     private List<Offer> filterOffersWithRelevantPrices(List<Offer> offers) {
         if (offers.size() > 3) {
-            Fiat bestPrice = offers.get(0).getPrice();
+            Price bestPrice = offers.get(0).getPrice();
             if (bestPrice != null) {
-                long bestPriceAsLong = bestPrice.longValue();
+                long bestPriceAsLong = bestPrice.getValue();
                 return offers.stream()
                         .filter(e -> {
                             if (e.getPrice() == null)
                                 return false;
 
-                            double ratio = (double) e.getPrice().longValue() / (double) bestPriceAsLong;
+                            double ratio = (double) e.getPrice().getValue() / (double) bestPriceAsLong;
                             return Math.abs(1 - ratio) < 0.3;
                         })
                         .collect(Collectors.toList());
@@ -296,24 +296,23 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         double accumulatedAmount = 0;
         List<OfferListItem> offerTableListTemp = new ArrayList<>();
         for (Offer offer : sortedList) {
-            Fiat priceAsFiat = offer.getPrice();
-            if (priceAsFiat != null) {
+            Price price = offer.getPrice();
+            if (price != null) {
                 double amount = (double) offer.getAmount().value / LongMath.pow(10, offer.getAmount().smallestUnitExponent());
                 accumulatedAmount += amount;
                 offerTableListTemp.add(new OfferListItem(offer, accumulatedAmount));
 
-                double price = (double) priceAsFiat.value / LongMath.pow(10, priceAsFiat.smallestUnitExponent());
+                double priceAsDouble = (double) price.getValue() / LongMath.pow(10, price.smallestUnitExponent());
                 if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
-                    price = price != 0 ? 1d / price : 0;
                     if (direction.equals(Offer.Direction.SELL))
-                        data.add(0, new XYChart.Data<>(price, accumulatedAmount));
+                        data.add(0, new XYChart.Data<>(priceAsDouble, accumulatedAmount));
                     else
-                        data.add(new XYChart.Data<>(price, accumulatedAmount));
+                        data.add(new XYChart.Data<>(priceAsDouble, accumulatedAmount));
                 } else {
                     if (direction.equals(Offer.Direction.BUY))
-                        data.add(0, new XYChart.Data<>(price, accumulatedAmount));
+                        data.add(0, new XYChart.Data<>(priceAsDouble, accumulatedAmount));
                     else
-                        data.add(new XYChart.Data<>(price, accumulatedAmount));
+                        data.add(new XYChart.Data<>(priceAsDouble, accumulatedAmount));
                 }
             }
         }

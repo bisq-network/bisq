@@ -20,6 +20,8 @@ package io.bisq.gui.main.market.trades;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
 import io.bisq.core.offer.Offer;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
@@ -49,7 +51,6 @@ import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.Fiat;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
@@ -90,6 +91,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private TableColumn<TradeStatistics, TradeStatistics> priceColumn, volumeColumn, marketColumn;
     private MonadicBinding<Void> currencySelectionBinding;
     private Subscription currencySelectionSubscriber;
+    private HBox toolBox;
+    private ChangeListener<Number> parentHeightListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -108,11 +111,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @Override
     public void initialize() {
-        HBox toolBox = getToolBox();
+        toolBox = getToolBox();
         createCharts();
         createTable();
 
-        nrOfTradeStatisticsLabel = new Label("");
+        nrOfTradeStatisticsLabel = new Label(" "); // set empty string for layout
         nrOfTradeStatisticsLabel.setId("num-offers");
         nrOfTradeStatisticsLabel.setPadding(new Insets(-5, 0, -10, 5));
         root.getChildren().addAll(toolBox, priceChart, volumeChart, tableView, nrOfTradeStatisticsLabel);
@@ -132,7 +135,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             volumeAxisYWidth = (double) newValue;
             layoutChart();
         };
-        tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
+        tradeStatisticsByCurrencyListener = c -> nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades",
+                model.tradeStatisticsByCurrency.size()));
+        parentHeightListener = (observable, oldValue, newValue) -> layout();
     }
 
     @Override
@@ -181,16 +186,20 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         priceColumnLabel.set(Res.get("shared.price"));
                         if (!tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().add(1, marketColumn);
-                    } else {
-                        priceSeries.setName(selectedTradeCurrency.getName());
 
+                        volumeChart.setPrefHeight(volumeChart.getMaxHeight());
+                    } else {
+                        volumeChart.setPrefHeight(volumeChart.getMinHeight());
+                        priceSeries.setName(selectedTradeCurrency.getName());
                         String code = selectedTradeCurrency.getCode();
-                        volumeColumn.setText(Res.get("shared.amountWithCur", "BTC"));
+                        volumeColumn.setText(Res.get("shared.amountWithCur", code));
+
                         priceColumnLabel.set(formatter.getPriceWithCurrencyCode(code));
 
                         if (tableView.getColumns().contains(marketColumn))
                             tableView.getColumns().remove(marketColumn);
                     }
+                    layout();
                     return null;
                 });
 
@@ -209,6 +218,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
 
         UserThread.runAfter(this::updateChartData, 100, TimeUnit.MILLISECONDS);
+
+        if (root.getParent() instanceof Pane)
+            ((Pane) root.getParent()).heightProperty().addListener(parentHeightListener);
+
+        layout();
     }
 
     @Override
@@ -231,6 +245,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         priceSeries.getData().clear();
         priceChart.getData().clear();
+
+        if (root.getParent() instanceof Pane)
+            ((Pane) root.getParent()).heightProperty().removeListener(parentHeightListener);
     }
 
 
@@ -253,11 +270,14 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisY.setTickLabelFormatter(new StringConverter<Number>() {
             @Override
             public String toString(Number object) {
-                if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
-                    final double value = MathUtils.scaleDownByPowerOf10((double) object, 8);
+                String currencyCode = model.getCurrencyCode();
+                double doubleValue = (double) object;
+                if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                    final double value = MathUtils.scaleDownByPowerOf10(doubleValue, 8);
                     return formatter.formatRoundedDoubleWithPrecision(value, 8);
-                } else
-                    return formatter.formatPrice(Fiat.valueOf(model.getCurrencyCode(), MathUtils.doubleToLong((double) object)));
+                } else {
+                    return formatter.formatPrice(Price.valueOf(currencyCode, MathUtils.doubleToLong(doubleValue)));
+                }
             }
 
             @Override
@@ -273,7 +293,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     final double value = MathUtils.scaleDownByPowerOf10((long) object, 8);
                     return formatter.formatRoundedDoubleWithPrecision(value, 8);
                 } else {
-                    return formatter.formatPrice(Fiat.valueOf(model.getCurrencyCode(), (long) object));
+                    return formatter.formatPriceWithMinPrecision(Price.valueOf(model.getCurrencyCode(), (long) object));
                 }
             }
 
@@ -478,7 +498,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.getCurrencyPair(item.currency));
+                                    setText(formatter.getCurrencyPair(item.getCurrencyCode()));
                                 else
                                     setText("");
                             }
@@ -560,8 +580,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     }
                 });
         volumeColumn.setComparator((o1, o2) -> {
-            final Fiat tradeVolume1 = o1.getTradeVolume();
-            final Fiat tradeVolume2 = o2.getTradeVolume();
+            final Volume tradeVolume1 = o1.getTradeVolume();
+            final Volume tradeVolume2 = o2.getTradeVolume();
             return tradeVolume1 != null && tradeVolume2 != null ? tradeVolume1.compareTo(tradeVolume2) : 0;
         });
         tableView.getColumns().add(volumeColumn);
@@ -624,11 +644,28 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @NotNull
     private String getDirectionLabel(TradeStatistics item) {
-        return formatter.getDirectionWithCode(Offer.Direction.valueOf(item.direction.name()), item.currency);
+        return formatter.getDirectionWithCode(Offer.Direction.valueOf(item.direction.name()), item.getCurrencyCode());
     }
 
     @NotNull
     private String getPaymentMethodLabel(TradeStatistics item) {
         return Res.get(item.paymentMethodId);
+    }
+
+    private void layout() {
+        UserThread.runAfter(() -> {
+            double available;
+            if (root.getParent() instanceof Pane)
+                available = ((Pane) root.getParent()).getHeight();
+            else
+                available = root.getHeight();
+
+            available = available - volumeChart.getHeight() - toolBox.getHeight() - nrOfTradeStatisticsLabel.getHeight() - 65;
+            if (priceChart.isManaged())
+                available = available - priceChart.getHeight();
+            else
+                available = available + 10;
+            tableView.setPrefHeight(available);
+        }, 100, TimeUnit.MILLISECONDS);
     }
 }

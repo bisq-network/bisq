@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.Res;
+import io.bisq.common.monetary.Price;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
@@ -28,7 +29,6 @@ import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.storage.P2PService;
 import javafx.collections.ObservableList;
-import org.bitcoinj.utils.Fiat;
 
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {
     private final P2PService p2PService;
@@ -64,7 +64,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
             return "";
 
         Offer offer = item.getOffer();
-        Fiat price = offer.getPrice();
+        Price price = offer.getPrice();
         if (price != null) {
             String postFix = "";
             if (offer.isUseMarketBasedPrice())

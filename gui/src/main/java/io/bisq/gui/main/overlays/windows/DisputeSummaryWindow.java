@@ -48,7 +48,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.ExchangeRate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -244,9 +243,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 role = Res.get("support.sellerTaker");
         }
         addLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.role"), role);
-        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeAmount"), formatter.formatCoinWithCode(contract.getTradeAmount()));
-        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradePrice"), formatter.formatPrice(contract.getTradePrice()));
-        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeVolume"), formatter.formatVolumeWithCode(new ExchangeRate(contract.getTradePrice()).coinToFiat(contract.getTradeAmount())));
+        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeAmount"),
+                formatter.formatCoinWithCode(contract.getTradeAmount()));
+        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradePrice"),
+                formatter.formatPrice(contract.getTradePrice()));
+        addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.tradeVolume"),
+                formatter.formatVolumeWithCode(contract.getTradePrice().getVolumeByAmount(contract.getTradeAmount())));
     }
 
     private void addCheckboxes() {

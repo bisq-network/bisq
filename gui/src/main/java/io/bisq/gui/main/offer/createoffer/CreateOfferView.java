@@ -215,7 +215,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
             onPaymentAccountsComboBoxSelected();
 
-            balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
+            balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());
 
             // if (DevFlags.STRESS_TEST_MODE)
             //     UserThread.runAfter(this::onShowPayFundsScreen, 200, TimeUnit.MILLISECONDS);
@@ -285,7 +285,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     // called form parent as the view does not get notified when the tab is closed
     public void onClose() {
         // we use model.placeOfferCompleted to not react on close which was triggered by a successful placeOffer
-        if (model.dataModel.balance.get().isPositive() && !model.placeOfferCompleted.get()) {
+        if (model.dataModel.getBalance().get().isPositive() && !model.placeOfferCompleted.get()) {
             model.dataModel.swapTradeToSavings();
             new Popup().information(Res.get("createOffer.alreadyFunded"))
                     .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
@@ -337,7 +337,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             node.setFocusTraversable(false);
         });
 
-        balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoin.get());
+        balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());
 
         //noinspection PointlessBooleanExpression
         if (!DevEnv.DEV_MODE) {
@@ -473,7 +473,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         volumeTextField.textProperty().bindBidirectional(model.volume);
         volumeTextField.promptTextProperty().bind(model.volumePromptLabel);
         totalToPayTextField.textProperty().bind(model.totalToPay);
-        addressTextField.amountAsCoinProperty().bind(model.dataModel.missingCoin);
+        addressTextField.amountAsCoinProperty().bind(model.dataModel.getMissingCoin());
         buyerSecurityDepositTextField.textProperty().bindBidirectional(model.buyerSecurityDeposit);
 
         // Validation
@@ -484,11 +484,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         buyerSecurityDepositTextField.validationResultProperty().bind(model.buyerSecurityDepositValidationResult);
 
         // funding
-        fundingHBox.visibleProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
-        fundingHBox.managedProperty().bind(model.dataModel.isWalletFunded.not().and(model.showPayFundsScreenDisplayed));
+        fundingHBox.visibleProperty().bind(model.dataModel.getIsWalletFunded().not().and(model.showPayFundsScreenDisplayed));
+        fundingHBox.managedProperty().bind(model.dataModel.getIsWalletFunded().not().and(model.showPayFundsScreenDisplayed));
         waitingForFundsLabel.textProperty().bind(model.waitingForFundsText);
-        placeOfferButton.visibleProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
-        placeOfferButton.managedProperty().bind(model.dataModel.isWalletFunded.and(model.showPayFundsScreenDisplayed));
+        placeOfferButton.visibleProperty().bind(model.dataModel.getIsWalletFunded().and(model.showPayFundsScreenDisplayed));
+        placeOfferButton.managedProperty().bind(model.dataModel.getIsWalletFunded().and(model.showPayFundsScreenDisplayed));
         placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
         cancelButton2.disableProperty().bind(model.cancelButtonDisabled);
 
@@ -565,7 +565,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton2StyleSubscription = EasyBind.subscribe(placeOfferButton.visibleProperty(),
                 isVisible -> cancelButton2.setId(isVisible ? "cancel-button" : null));
 
-        balanceSubscription = EasyBind.subscribe(model.dataModel.balance, balanceTextField::setBalance);
+        balanceSubscription = EasyBind.subscribe(model.dataModel.getBalance(), balanceTextField::setBalance);
     }
 
     private void removeSubscriptions() {
@@ -677,7 +677,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             percentagePriceBox.setManaged(isMarketPriceAvailable);
             toggleButtonsHBox.setVisible(isMarketPriceAvailable);
             toggleButtonsHBox.setManaged(isMarketPriceAvailable);
-            boolean fixedPriceSelected = !model.dataModel.useMarketBasedPrice.get() || !isMarketPriceAvailable;
+            boolean fixedPriceSelected = !model.dataModel.getUseMarketBasedPrice().get() || !isMarketPriceAvailable;
             updateToggleButtons(fixedPriceSelected);
         }
     }
@@ -930,7 +930,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         cancelButton2 = addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
-            if (model.dataModel.isWalletFunded.get()) {
+            if (model.dataModel.getIsWalletFunded().get()) {
                 new Popup().warning(Res.get("createOffer.warnCancelOffer"))
                         .closeButtonText(Res.get("shared.no"))
                         .actionButtonText(Res.get("shared.yesCancel"))
@@ -959,7 +959,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     @NotNull
     private String getBitcoinURI() {
-        return model.getAddressAsString() != null ? BitcoinURI.convertToBitcoinURI(model.getAddressAsString(), model.dataModel.missingCoin.get(),
+        return model.getAddressAsString() != null ? BitcoinURI.convertToBitcoinURI(model.getAddressAsString(), model.dataModel.getMissingCoin().get(),
                 model.getPaymentLabel(), null) : "";
     }
 

@@ -26,6 +26,7 @@ import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.UserAgent;
 import io.bisq.core.dao.RpcOptionKeys;
+import io.bisq.core.exceptions.BisqException;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.wire.crypto.KeyStorage;
 import joptsimple.OptionSet;
@@ -190,18 +191,22 @@ public class BisqEnvironment extends StandardEnvironment {
         useTorForBtc = commandLineProperties.containsProperty(BtcOptionKeys.USE_TOR_FOR_BTC) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
                 "";
-        bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BtcOptionKeys.BTC_NETWORK,
-                BitcoinNetwork.DEFAULT.name()).toUpperCase());
-
-        // btcNetworkDir used in defaultProperties
-        btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
-        File btcNetworkDirFile = new File(btcNetworkDir);
-        if (!btcNetworkDirFile.exists())
-            btcNetworkDirFile.mkdir();
 
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
-        propertySources.addLast(defaultProperties());
+        try {
+            bitcoinNetwork = BitcoinNetwork.valueOf(getProperty(BtcOptionKeys.BTC_NETWORK,
+                    BitcoinNetwork.DEFAULT.name()).toUpperCase());
+            btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
+            File btcNetworkDirFile = new File(btcNetworkDir);
+            if (!btcNetworkDirFile.exists())
+                btcNetworkDirFile.mkdir();
+
+            // btcNetworkDir used in defaultProperties
+            propertySources.addLast(defaultProperties());
+        } catch (Exception ex) {
+            throw new BisqException(ex);
+        }
     }
 
     private Resource getAppDirPropertiesResource() {

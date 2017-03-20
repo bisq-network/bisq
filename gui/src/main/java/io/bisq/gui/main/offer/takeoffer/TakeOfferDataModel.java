@@ -21,6 +21,8 @@ import com.google.inject.Inject;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -44,8 +46,6 @@ import javafx.beans.property.*;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 
 import java.util.List;
 
@@ -80,7 +80,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
     // final BooleanProperty isMainNet = new SimpleBooleanProperty();
     final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
-    final ObjectProperty<Fiat> volumeAsFiat = new SimpleObjectProperty<>();
+    final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> missingCoin = new SimpleObjectProperty<>(Coin.ZERO);
@@ -91,7 +91,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private boolean useSavingsWallet;
     Coin totalAvailableBalance;
     private Notification walletFundedNotification;
-    Fiat tradePrice;
+    Price tradePrice;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -345,7 +345,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (tradePrice != null && offer != null &&
                 amountAsCoin.get() != null &&
                 !amountAsCoin.get().isZero()) {
-            volumeAsFiat.set(new ExchangeRate(tradePrice).coinToFiat(amountAsCoin.get()));
+            volume.set(tradePrice.getVolumeByAmount(amountAsCoin.get()));
+            //volume.set(new ExchangeRate(tradePrice).coinToFiat(amountAsCoin.get()));
 
             updateBalance();
         }

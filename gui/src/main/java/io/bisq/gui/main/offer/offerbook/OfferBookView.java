@@ -17,9 +17,12 @@
 
 package io.bisq.gui.main.offer.offerbook;
 
+import io.bisq.common.UserThread;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.monetary.Price;
+import io.bisq.common.monetary.Volume;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.gui.Navigation;
@@ -56,7 +59,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
-import org.bitcoinj.utils.Fiat;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
@@ -162,14 +164,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.setPlaceholder(placeholder);
 
         priceColumn.setComparator((o1, o2) -> {
-            Fiat price1 = o1.getOffer().getPrice();
-            Fiat price2 = o2.getOffer().getPrice();
+            Price price1 = o1.getOffer().getPrice();
+            Price price2 = o2.getOffer().getPrice();
             return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
         });
         amountColumn.setComparator((o1, o2) -> o1.getOffer().getAmount().compareTo(o2.getOffer().getAmount()));
         volumeColumn.setComparator((o1, o2) -> {
-            Fiat offerVolume1 = o1.getOffer().getOfferVolume();
-            Fiat offerVolume2 = o2.getOffer().getOfferVolume();
+            Volume offerVolume1 = o1.getOffer().getVolume();
+            Volume offerVolume2 = o2.getOffer().getVolume();
             return offerVolume1 != null && offerVolume2 != null ? offerVolume1.compareTo(offerVolume2) : 0;
         });
         paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
@@ -207,9 +209,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         else
             currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
 
-        priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
-
+        priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
+        model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
+        // We dont get it sorted without the delay at startup
+        UserThread.execute(() -> priceColumn.sortTypeProperty().bind(model.priceSortTypeProperty));
+        
         paymentMethodComboBox.setItems(model.getPaymentMethods());
         paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
         if (model.showAllPaymentMethods)
@@ -239,14 +244,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                     return null;
                 });
-
         currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {
         });
 
-        model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
-
         tableView.setItems(model.getOfferList());
-        priceColumn.setSortType((model.getDirection() == Offer.Direction.BUY) ? TableColumn.SortType.ASCENDING : TableColumn.SortType.DESCENDING);
 
         model.getOfferList().addListener(offerListListener);
         nrOfOffersLabel.setText(Res.get("offerbook.nrOffers", model.getOfferList().size()));
@@ -260,6 +261,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         model.getOfferList().comparatorProperty().unbind();
 
         priceColumn.sortableProperty().unbind();
+        priceColumn.sortTypeProperty().unbind();
         amountColumn.sortableProperty().unbind();
         model.getOfferList().removeListener(offerListListener);
 
@@ -556,7 +558,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             final ChangeListener<Number> listener = new ChangeListener<Number>() {
                                 @Override
                                 public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                                    if (offerBookListItem != null && offerBookListItem.getOffer().getOfferVolume() != null) {
+                                    if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
                                         setText(model.getVolume(offerBookListItem));
                                         model.priceFeedService.currenciesUpdateFlagProperty().removeListener(listener);
                                     }

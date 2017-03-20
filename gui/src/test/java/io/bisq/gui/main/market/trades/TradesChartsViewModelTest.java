@@ -1,5 +1,6 @@
 package io.bisq.gui.main.market.trades;
 
+import io.bisq.common.monetary.Price;
 import io.bisq.gui.main.market.trades.charts.CandleData;
 import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.payload.trade.statistics.TradeStatistics;
@@ -47,7 +48,8 @@ public class TradesChartsViewModelTest {
                 false,
                 0,
                 0,
-                "EUR",
+                "BTC",
+                "USD",
                 null,
                 null,
                 null,
@@ -73,10 +75,10 @@ public class TradesChartsViewModelTest {
                 null
         );
 
-        set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "520"), Coin.parseCoin("1"), new Date(now.getTime()), null, null));
-        set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "500"), Coin.parseCoin("1"), new Date(now.getTime() + 100), null, null));
-        set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "600"), Coin.parseCoin("1"), new Date(now.getTime() + 200), null, null));
-        set.add(new TradeStatistics(offer, Fiat.parseFiat("EUR", "580"), Coin.parseCoin("1"), new Date(now.getTime() + 300), null, null));
+        set.add(new TradeStatistics(offer, Price.parse("520", "EUR"), Coin.parseCoin("1"), new Date(now.getTime()), null, null));
+        set.add(new TradeStatistics(offer, Price.parse("500", "EUR"), Coin.parseCoin("1"), new Date(now.getTime() + 100), null, null));
+        set.add(new TradeStatistics(offer, Price.parse("600", "EUR"), Coin.parseCoin("1"), new Date(now.getTime() + 200), null, null));
+        set.add(new TradeStatistics(offer, Price.parse("580", "EUR"), Coin.parseCoin("1"), new Date(now.getTime() + 300), null, null));
 
         CandleData candleData = model.getCandleData(model.getTickFromTime(now.getTime(), TradesChartsViewModel.TickUnit.DAY), set);
         assertEquals(open, candleData.open);
