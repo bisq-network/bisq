@@ -62,36 +62,41 @@ public final class TradeStatisticsForJson {
 
 
         try {
-            MonetaryFormat format = new MonetaryFormat().shift(0).minDecimals(8)
-                    .repeatOptionalDecimals(0, 0).noCode();
             final Price tradePrice = getTradePrice();
             if (CurrencyUtil.isCryptoCurrency(currency)) {
+                MonetaryFormat altcoinFormat = new MonetaryFormat().shift(0).minDecimals(8)
+                        .repeatOptionalDecimals(0, 0).noCode();
                 primaryMarketDirection = direction == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
-                tradePriceDisplayString = format.format(tradePrice.getMonetary()).toString();
+                tradePriceDisplayString = altcoinFormat.format(tradePrice.getMonetary()).toString();
                 currencyPair = currency + "/" + "BTC";
 
                 primaryMarketTradePrice = tradePrice.getValue();
 
-                primaryMarketTradeVolumeDisplayString = format.format(getTradeAmount()).toString();
-                primaryMarketTradeAmountDisplayString = format.format(getTradeVolume().getMonetary()).toString();
-                primaryMarketTradeAmount = getTradeVolume().getValue();
+                primaryMarketTradeVolumeDisplayString = altcoinFormat.format(getTradeAmount()).toString();
+                primaryMarketTradeAmountDisplayString = altcoinFormat.format(getTradeVolume().getMonetary()).toString();
+                primaryMarketTradeAmount = getTradeVolume() != null ? getTradeVolume().getValue() : 0;
                 primaryMarketTradeVolume = getTradeAmount().getValue();
             } else {
+                MonetaryFormat fiatFormat = new MonetaryFormat().shift(0).minDecimals(4)
+                        .repeatOptionalDecimals(0, 0).noCode();
                 primaryMarketDirection = direction;
                 currencyPair = "BTC/" + currency;
-                tradePriceDisplayString = format.format(tradePrice.getMonetary()).toString();
+                tradePriceDisplayString = fiatFormat.format(tradePrice.getMonetary()).toString();
 
                 // we use precision 4 for fiat based price but on the markets api we use precision 8 so we scale up by 10000
                 primaryMarketTradePrice = (long) MathUtils.scaleUpByPowerOf10(tradePrice.getValue(), 4);
 
-                primaryMarketTradeAmountDisplayString = format.format(getTradeAmount()).toString();
-                primaryMarketTradeVolumeDisplayString = format.format(getTradeVolume().getMonetary()).toString();
+                primaryMarketTradeAmountDisplayString = fiatFormat.format(getTradeAmount()).toString();
+                primaryMarketTradeVolumeDisplayString = getTradeVolume() != null ?
+                        fiatFormat.format(getTradeVolume().getMonetary()).toString() : "";
                 primaryMarketTradeAmount = getTradeAmount().getValue();
                 // we use precision 4 for fiat but on the markets api we use precision 8 so we scale up by 10000
-                primaryMarketTradeVolume = (long) MathUtils.scaleUpByPowerOf10(getTradeVolume().getValue(), 4);
+                primaryMarketTradeVolume = getTradeVolume() != null ?
+                        (long) MathUtils.scaleUpByPowerOf10(getTradeVolume().getValue(), 4) : 0;
             }
         } catch (Throwable t) {
             log.error("Error at setDisplayStrings: " + t.getMessage());
+            t.printStackTrace();
         }
     }
 
