@@ -43,10 +43,7 @@ import io.bisq.gui.main.settings.SettingsView;
 import io.bisq.gui.main.settings.preferences.PreferencesView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.gui.util.validation.BtcValidator;
-import io.bisq.gui.util.validation.FiatValidator;
-import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.gui.util.validation.SecurityDepositValidator;
+import io.bisq.gui.util.validation.*;
 import io.bisq.network.p2p.storage.P2PService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -67,6 +64,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     private final Navigation navigation;
     private final BSFormatter formatter;
     private final FiatValidator fiatValidator;
+    private final AltcoinValidator altcoinValidator;
 
     private String amountDescription;
     private String directionLabel;
@@ -145,7 +143,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public CreateOfferViewModel(CreateOfferDataModel dataModel, FiatValidator fiatValidator, BtcValidator btcValidator,
+    public CreateOfferViewModel(CreateOfferDataModel dataModel, FiatValidator fiatValidator,
+                                AltcoinValidator altcoinValidator, BtcValidator btcValidator,
                                 SecurityDepositValidator securityDepositValidator,
                                 P2PService p2PService, PriceFeedService priceFeedService,
                                 Preferences preferences, Navigation navigation,
@@ -153,6 +152,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         super(dataModel);
 
         this.fiatValidator = fiatValidator;
+        this.altcoinValidator = altcoinValidator;
         this.btcValidator = btcValidator;
         this.securityDepositValidator = securityDepositValidator;
         this.p2PService = p2PService;
@@ -878,23 +878,15 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private InputValidator.ValidationResult isPriceInputValid(String input) {
-        //TODO use altcoinValidator
-        if (CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()))
-            fiatValidator.setMinValue(0.00000001);
-        else
-            fiatValidator.setMinValue(FiatValidator.MIN_FIAT_VALUE);
-
-        return fiatValidator.validate(input);
+        return getValidator().validate(input);
     }
 
     private InputValidator.ValidationResult isVolumeInputValid(String input) {
-        //TODO use altcoinValidator
-        if (CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()))
-            fiatValidator.setMinValue(0.00000001);
-        else
-            fiatValidator.setMinValue(FiatValidator.MIN_FIAT_VALUE);
+        return getValidator().validate(input);
+    }
 
-        return fiatValidator.validate(input);
+    private MonetaryValidator getValidator() {
+        return CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()) ? altcoinValidator : fiatValidator;
     }
 
     private void updateSpinnerInfo() {
