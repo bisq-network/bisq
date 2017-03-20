@@ -287,7 +287,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         List<Messages.NodeAddress> arbitratorNodeAddresses = this.arbitratorNodeAddresses.stream()
                 .map(NodeAddress::toProtoBuf)
                 .collect(Collectors.toList());
-        Messages.PB_Offer.Builder offerBuilder = Messages.PB_Offer.newBuilder()
+        Messages.OfferPayload.Builder offerBuilder = Messages.OfferPayload.newBuilder()
                 .setTTL(TTL)
                 .setDirectionValue(direction.ordinal())
                 .setBaseCurrencyCode(baseCurrencyCode)
@@ -331,7 +331,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         Optional.ofNullable(hashOfChallenge).ifPresent(offerBuilder::setHashOfChallenge);
         Optional.ofNullable(extraDataMap).ifPresent(offerBuilder::putAllExtraDataMap);
 
-        return Messages.StoragePayload.newBuilder().setPbOffer(offerBuilder).build();
+        return Messages.StoragePayload.newBuilder().setOfferPayload(offerBuilder).build();
     }
 
     //TODO remove

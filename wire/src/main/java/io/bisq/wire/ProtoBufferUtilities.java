@@ -287,9 +287,9 @@ public class ProtoBufferUtilities {
     }
 
     private static Contract getContract(Messages.Contract contract) {
-        return new Contract(getOfferPayload(contract.getPbOffer()),
+        return new Contract(getOfferPayload(contract.getOfferPayload()),
                 Coin.valueOf(contract.getTradeAmount()),
-                Price.valueOf(getCurrencyCode(contract.getPbOffer()), contract.getTradePrice()),
+                Price.valueOf(getCurrencyCode(contract.getOfferPayload()), contract.getTradePrice()),
                 contract.getTakeOfferFeeTxId(),
                 getNodeAddress(contract.getBuyerNodeAddress()),
                 getNodeAddress(contract.getSellerNodeAddress()),
@@ -307,7 +307,7 @@ public class ProtoBufferUtilities {
                 contract.getTakerBtcPubKey().toByteArray());
     }
 
-    private static String getCurrencyCode(Messages.PB_Offer pbOffer) {
+    private static String getCurrencyCode(Messages.OfferPayload pbOffer) {
         String currencyCode;
         if (CurrencyUtil.isCryptoCurrency(pbOffer.getBaseCurrencyCode()))
             currencyCode = pbOffer.getBaseCurrencyCode();
@@ -436,7 +436,7 @@ public class ProtoBufferUtilities {
         countryBasedPaymentAccountPayload.setCountryCode(protoEntry.getCountryBasedPaymentAccountPayload().getCountryCode());
     }
 
-    public static OfferPayload getOfferPayload(Messages.PB_Offer pbOffer) {
+    public static OfferPayload getOfferPayload(Messages.OfferPayload pbOffer) {
         List<NodeAddress> arbitratorNodeAddresses = pbOffer.getArbitratorNodeAddressesList().stream()
                 .map(ProtoBufferUtilities::getNodeAddress).collect(Collectors.toList());
         // convert these lists because otherwise when they're empty they are lazyStringArrayList objects and NOT serializable,
@@ -622,8 +622,8 @@ public class ProtoBufferUtilities {
                         mbox.getSenderPubKeyForAddOperationBytes().toByteArray(),
                         mbox.getReceiverPubKeyForRemoveOperationBytes().toByteArray());
                 break;
-            case PB_OFFER:
-                storagePayload = getOfferPayload(protoEntry.getPbOffer());
+            case OFFER_PAYLOAD:
+                storagePayload = getOfferPayload(protoEntry.getOfferPayload());
                 break;
             default:
                 log.error("Unknown storagepayload:{}", protoEntry.getMessageCase());
@@ -632,7 +632,7 @@ public class ProtoBufferUtilities {
     }
 
     @NotNull
-    public static OfferPayload.Direction getDirection(Messages.PB_Offer.Direction direction) {
+    public static OfferPayload.Direction getDirection(Messages.OfferPayload.Direction direction) {
         return OfferPayload.Direction.valueOf(direction.name());
     }
 

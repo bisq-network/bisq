@@ -130,9 +130,9 @@ public class P2PDataStorageTest {
     public void testOfferRoundtrip() throws InvalidProtocolBufferException {
         OfferPayload offer = getDummyOffer();
         try {
-            String buffer = JsonFormat.printer().print(offer.toProtoBuf().getPbOffer());
+            String buffer = JsonFormat.printer().print(offer.toProtoBuf().getOfferPayload());
             JsonFormat.Parser parser = JsonFormat.parser();
-            Messages.PB_Offer.Builder builder = Messages.PB_Offer.newBuilder();
+            Messages.OfferPayload.Builder builder = Messages.OfferPayload.newBuilder();
             parser.merge(buffer, builder);
             assertEquals(offer, ProtoBufferUtilities.getOfferPayload(builder.build()));
         } catch (IOException e) {
