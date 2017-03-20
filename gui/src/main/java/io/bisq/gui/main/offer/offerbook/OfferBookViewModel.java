@@ -149,7 +149,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
 
         applyPriceSortTypeProperty(code);
-        setPriceFeedType();
 
         fillAllTradeCurrencies();
         btcCode.bind(preferences.btcDenominationProperty());
@@ -197,7 +196,6 @@ class OfferBookViewModel extends ActivatableViewModel {
             }
             applyPriceSortTypeProperty(code);
 
-            setPriceFeedType();
             setMarketPriceFeedCurrency();
             applyFilterPredicate();
 
@@ -382,14 +380,6 @@ class OfferBookViewModel extends ActivatableViewModel {
             else
                 priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
         }
-    }
-
-    private void setPriceFeedType() {
-        priceFeedService.setType(PriceFeedService.Type.LAST);
-      /*  if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
-            priceFeedService.setType(direction == Offer.Direction.SELL ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);
-        else
-            priceFeedService.setType(direction == Offer.Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID);*/
     }
 
     private void fillAllTradeCurrencies() {

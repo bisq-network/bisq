@@ -145,21 +145,16 @@ public class Offer implements Serializable {
             checkNotNull(priceFeedService, "priceFeed must not be null");
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             if (marketPrice != null) {
-                PriceFeedService.Type priceFeedType = PriceFeedService.Type.LAST;
                 double factor;
                 double marketPriceMargin = offerPayload.getMarketPriceMargin();
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                    // priceFeedType = getDirection() == Offer.Direction.BUY ?
-                    ///        PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
                     factor = getDirection() == Offer.Direction.SELL ?
                             1 - marketPriceMargin : 1 + marketPriceMargin;
                 } else {
-                    //priceFeedType = getDirection() == Offer.Direction.SELL ?
-                    //         PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
                     factor = getDirection() == Offer.Direction.BUY ?
                             1 - marketPriceMargin : 1 + marketPriceMargin;
                 }
-                double marketPriceAsDouble = marketPrice.getPrice(priceFeedType);
+                double marketPriceAsDouble = marketPrice.getPrice();
                 double targetPriceAsDouble = marketPriceAsDouble * factor;
                 try {
                     int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?

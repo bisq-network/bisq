@@ -51,8 +51,6 @@ public class PoloniexProvider {
                             LinkedTreeMap<String, Object> data = (LinkedTreeMap) value;
                             marketPriceMap.put(altcoinCurrency,
                                     new PriceData(altcoinCurrency,
-                                            parseDouble((String) data.get("lowestAsk")),
-                                            parseDouble((String) data.get("highestBid")),
                                             parseDouble((String) data.get("last")),
                                             ts)
                             );

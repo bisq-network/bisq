@@ -280,7 +280,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
                     if (!inputIsMarketBasedPrice) {
                         if (marketPrice != null) {
-                            double marketPriceAsDouble = marketPrice.getPrice(getPriceFeedType());
+                            double marketPriceAsDouble = marketPrice.getPrice();
                             try {
                                 double priceAsDouble = formatter.parseNumberStringToDouble(price.get());
                                 double relation = priceAsDouble / marketPriceAsDouble;
@@ -320,7 +320,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
                                 dataModel.updateTradeFee();
-                                double marketPriceAsDouble = marketPrice.getPrice(getPriceFeedType());
+                                double marketPriceAsDouble = marketPrice.getPrice();
                                 final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
                                 final Offer.Direction compareDirection = isCryptoCurrency ?
                                         Offer.Direction.SELL :
@@ -931,16 +931,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
         //isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || notSufficientFees);
         isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || !dataModel.getIsWalletFunded().get());
-    }
-
-    //TODO remove Type
-    private PriceFeedService.Type getPriceFeedType() {
-        return PriceFeedService.Type.LAST;
-        // return dataModel.getDirection() == Offer.Direction.SELL ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
-      /*  if (CurrencyUtil.isCryptoCurrency(tradeCurrencyCode.get()))
-            return dataModel.getDirection() == Offer.Direction.BUY ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;
-        else
-            return dataModel.getDirection() == Offer.Direction.SELL ? PriceFeedService.Type.ASK : PriceFeedService.Type.BID;*/
     }
 
     private void stopTimeoutTimer() {

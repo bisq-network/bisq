@@ -140,7 +140,6 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
     @Override
     protected void activate() {
-        priceFeedService.setType(PriceFeedService.Type.LAST);
         offerBookListItems.addListener(offerBookListItemsListener);
 
         offerBook.fillOfferBookListItems();

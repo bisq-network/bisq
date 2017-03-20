@@ -76,8 +76,6 @@ public class BtcAverageProvider {
                 String currencyCode = e.getKey().substring(3);
                 marketPriceMap.put(currencyCode,
                         new PriceData(currencyCode,
-                                (double) data.get("ask"),
-                                (double) data.get("bid"),
                                 (double) data.get("last"),
                                 ts));
             }

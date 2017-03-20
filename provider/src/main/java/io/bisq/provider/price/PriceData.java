@@ -20,15 +20,11 @@ package io.bisq.provider.price;
 @SuppressWarnings("FieldCanBeLocal")
 public class PriceData {
     public final String c; // currencyCode
-    public final double a; // ask;
-    public final double b; // bid
     public final double l; // last
     public final long ts;  // timestamp
 
-    public PriceData(String currencyCode, double ask, double bid, double last, long ts) {
+    public PriceData(String currencyCode, double last, long ts) {
         this.c = currencyCode;
-        this.a = ask;
-        this.b = bid;
         this.l = last;
         this.ts = ts;
     }

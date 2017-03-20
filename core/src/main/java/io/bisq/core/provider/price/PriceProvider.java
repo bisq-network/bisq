@@ -35,7 +35,7 @@ public class PriceProvider extends HttpClientProvider {
         List<LinkedTreeMap<String, Object>> list = (ArrayList<LinkedTreeMap<String, Object>>) map.get("data");
         list.stream().forEach(treeMap -> {
             marketPriceMap.put((String) treeMap.get("c"),
-                    new MarketPrice((String) treeMap.get("c"), (double) treeMap.get("a"), (double) treeMap.get("b"), (double) treeMap.get("l")));
+                    new MarketPrice((String) treeMap.get("c"), (double) treeMap.get("l")));
         });
         return new Tuple2<>(tsMap, marketPriceMap);
     }

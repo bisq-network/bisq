@@ -26,7 +26,6 @@ import io.bisq.common.util.Tuple3;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.exceptions.BisqException;
-import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.components.BusyAnimation;
@@ -58,7 +57,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.List;
 
-import static javafx.beans.binding.Bindings.createStringBinding;
 import static javafx.scene.layout.AnchorPane.*;
 
 @FxmlView
@@ -161,12 +159,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.selectedPriceFeedComboBoxItemProperty.addListener(selectedPriceFeedItemListener);
         priceComboBox.setItems(model.priceFeedComboBoxItems);
 
-        marketPriceBox.second.textProperty().bind(createStringBinding(
-                () -> {
-                    PriceFeedService.Type type = model.typeProperty.get();
-                    return type != null ? Res.get("mainView.marketPrice", type.name) : "";
-                },
-                model.marketPriceCurrencyCode, model.typeProperty));
         HBox.setMargin(marketPriceBox.third, new Insets(0, 0, 0, 0));
 
 

@@ -7,11 +7,13 @@ import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
-import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.provider.ProvidersRepository;
 import io.bisq.network.http.HttpClient;
-import javafx.beans.property.*;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,36 +34,14 @@ public class PriceFeedService {
     private final HttpClient httpClient;
     private final ProvidersRepository providersRepository;
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enum
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    //TODO remove Type
-    public enum Type {
-        /*  ASK(Res.get("marketPrice.ask")),
-          BID(Res.get("marketPrice.bid")),*/
-        ASK(Res.get("marketPrice.last")),
-        BID(Res.get("marketPrice.last")),
-        LAST(Res.get("marketPrice.last"));
-
-        public final String name;
-
-        Type(String name) {
-            this.name = name;
-        }
-    }
-
     private static final long PERIOD_SEC = 60;
 
     private final Map<String, MarketPrice> cache = new HashMap<>();
     private PriceProvider priceProvider;
     private Consumer<Double> priceConsumer;
     private FaultHandler faultHandler;
-    private Type type;
     private String currencyCode;
     private final StringProperty currencyCodeProperty = new SimpleStringProperty();
-    private final ObjectProperty<Type> typeProperty = new SimpleObjectProperty<>();
     private final IntegerProperty currenciesUpdateFlag = new SimpleIntegerProperty(0);
     private long epochInSecondAtLastRequest;
     private Map<String, Long> timeStampMap = new HashMap<>();
@@ -128,12 +108,6 @@ public class PriceFeedService {
     // Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setType(Type type) {
-        this.type = type;
-        typeProperty.set(type);
-        applyPriceToConsumer();
-    }
-
     public void setCurrencyCode(String currencyCode) {
         if (this.currencyCode == null || !this.currencyCode.equals(currencyCode)) {
             this.currencyCode = currencyCode;
@@ -147,20 +121,12 @@ public class PriceFeedService {
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Type getType() {
-        return type;
-    }
-
     public String getCurrencyCode() {
         return currencyCode;
     }
 
     public StringProperty currencyCodeProperty() {
         return currencyCodeProperty;
-    }
-
-    public ObjectProperty<Type> typeProperty() {
-        return typeProperty;
     }
 
     public IntegerProperty currenciesUpdateFlagProperty() {
@@ -195,11 +161,11 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applyPriceToConsumer() {
-        if (priceConsumer != null && currencyCode != null && type != null) {
+        if (priceConsumer != null && currencyCode != null) {
             if (cache.containsKey(currencyCode)) {
                 try {
                     MarketPrice marketPrice = cache.get(currencyCode);
-                    priceConsumer.accept(marketPrice.getPrice(type));
+                    priceConsumer.accept(marketPrice.getPrice());
                 } catch (Throwable t) {
                     log.warn("Error at applyPriceToConsumer " + t.getMessage());
                 }

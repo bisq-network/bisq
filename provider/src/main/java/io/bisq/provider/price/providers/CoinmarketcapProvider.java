@@ -41,8 +41,6 @@ public class CoinmarketcapProvider {
                 double price_btc = parseDouble((String) treeMap.get("price_btc"));
                 marketPriceMap.put(code, new PriceData(code,
                         price_btc,
-                        price_btc,
-                        price_btc,
                         ts));
             }
         });
