@@ -323,7 +323,7 @@ public class Offer implements Serializable {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Delegate Getter (boilerplate code generated via IntelliJ generate delegte feature)
+    // Delegate Getter (boilerplate code generated via IntelliJ generate delegate feature)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Offer.Direction getDirection() {

@@ -1,5 +1,7 @@
 package io.bisq.common.persistance;
 
+import io.bisq.common.app.Version;
+
 import java.io.Serializable;
 
 /**
