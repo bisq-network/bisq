@@ -717,7 +717,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             if (!(o instanceof ByteArray)) return false;
 
             ByteArray byteArray = (ByteArray) o;
-
             return Arrays.equals(bytes, byteArray.bytes);
         }
 
@@ -733,7 +732,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     '}';
         }
     }
-
 
     /**
      * Used as value in map

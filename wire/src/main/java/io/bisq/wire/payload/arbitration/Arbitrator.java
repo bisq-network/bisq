@@ -24,12 +24,23 @@ import io.bisq.wire.payload.StoragePayload;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.proto.Messages;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+@EqualsAndHashCode
+@Slf4j
+@ToString
+@Getter
 public final class Arbitrator implements StoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -72,12 +83,6 @@ public final class Arbitrator implements StoragePayload {
         this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
     }
 
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
     public long getTTL() {
         return TTL;
@@ -87,46 +92,6 @@ public final class Arbitrator implements StoragePayload {
     public PublicKey getOwnerPubKey() {
         return pubKeyRing.getSignaturePubKey();
     }
-
-    @Nullable
-    @Override
-    public Map<String, String> getExtraDataMap() {
-        return extraDataMap;
-    }
-
-
-    public byte[] getBtcPubKey() {
-        return btcPubKey;
-    }
-
-    public PubKeyRing getPubKeyRing() {
-        return pubKeyRing;
-    }
-
-    public NodeAddress getArbitratorNodeAddress() {
-        return arbitratorNodeAddress;
-    }
-
-    public Date getRegistrationDate() {
-        return new Date(registrationDate);
-    }
-
-    public String getBtcAddress() {
-        return btcAddress;
-    }
-
-    public List<String> getLanguageCodes() {
-        return languageCodes;
-    }
-
-    public String getRegistrationSignature() {
-        return registrationSignature;
-    }
-
-    public byte[] getRegistrationPubKey() {
-        return registrationPubKey;
-    }
-
 
     @Override
     public Messages.StoragePayload toProtoBuf() {
@@ -144,52 +109,4 @@ public final class Arbitrator implements StoragePayload {
         return Messages.StoragePayload.newBuilder().setArbitrator(builder).build();
     }
 
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Arbitrator)) return false;
-
-        Arbitrator that = (Arbitrator) o;
-
-        if (registrationDate != that.registrationDate) return false;
-        if (!Arrays.equals(btcPubKey, that.btcPubKey)) return false;
-        if (pubKeyRing != null ? !pubKeyRing.equals(that.pubKeyRing) : that.pubKeyRing != null) return false;
-        if (arbitratorNodeAddress != null ? !arbitratorNodeAddress.equals(that.arbitratorNodeAddress) : that.arbitratorNodeAddress != null)
-            return false;
-        if (languageCodes != null ? !languageCodes.equals(that.languageCodes) : that.languageCodes != null)
-            return false;
-        if (btcAddress != null ? !btcAddress.equals(that.btcAddress) : that.btcAddress != null) return false;
-        if (registrationSignature != null ? !registrationSignature.equals(that.registrationSignature) : that.registrationSignature != null)
-            return false;
-        return Arrays.equals(registrationPubKey, that.registrationPubKey);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = btcPubKey != null ? Arrays.hashCode(btcPubKey) : 0;
-        result = 31 * result + (pubKeyRing != null ? pubKeyRing.hashCode() : 0);
-        result = 31 * result + (arbitratorNodeAddress != null ? arbitratorNodeAddress.hashCode() : 0);
-        result = 31 * result + (languageCodes != null ? languageCodes.hashCode() : 0);
-        result = 31 * result + (btcAddress != null ? btcAddress.hashCode() : 0);
-        result = 31 * result + (int) (registrationDate ^ (registrationDate >>> 32));
-        result = 31 * result + (registrationSignature != null ? registrationSignature.hashCode() : 0);
-        result = 31 * result + (registrationPubKey != null ? Arrays.hashCode(registrationPubKey) : 0);
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "Arbitrator{" +
-                "\n\tarbitratorAddress=" + arbitratorNodeAddress +
-                "\n\tlanguageCodes=" + languageCodes +
-                "\n\tbtcAddress='" + btcAddress + '\'' +
-                "\n\tregistrationDate=" + registrationDate +
-                "\n\tbtcPubKey.hashCode()=" + Arrays.toString(btcPubKey).hashCode() +
-                "\n\tpubKeyRing.hashCode()=" + pubKeyRing.hashCode() +
-                "\n\tregistrationSignature.hashCode()='" + registrationSignature.hashCode() + '\'' +
-                "\n\tregistrationPubKey.hashCode()=" + Arrays.toString(registrationPubKey).hashCode() +
-                '}';
-    }
 }

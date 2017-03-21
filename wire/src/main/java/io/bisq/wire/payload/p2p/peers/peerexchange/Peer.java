@@ -5,9 +5,13 @@ import io.bisq.common.persistance.Persistable;
 import io.bisq.wire.payload.Payload;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.proto.Messages;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 
+@ToString
+@Slf4j
 public final class Peer implements Payload, Persistable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -48,14 +52,6 @@ public final class Peer implements Payload, Persistable {
     @Override
     public int hashCode() {
         return nodeAddress != null ? nodeAddress.hashCode() : 0;
-    }
-
-    @Override
-    public String toString() {
-        return "ReportedPeer{" +
-                "address=" + nodeAddress +
-                ", date=" + date +
-                '}';
     }
 
     @Override

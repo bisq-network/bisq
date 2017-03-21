@@ -73,10 +73,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final Direction direction;
-
     private final String baseCurrencyCode;
     private final String counterCurrencyCode;
-    
     private final String paymentMethodId;
     @Nullable
     private final String countryCode;
@@ -101,7 +99,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     // Positive values is always the usual case where you want a better price as the market.
     // E.g. Buy offer with market price 400.- leads to a 360.- price.
     // Sell offer with market price 400.- leads to a 440.- price.
-
     private final double marketPriceMargin;
     private final long amount;
     private final long minAmount;

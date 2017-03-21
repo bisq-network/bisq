@@ -18,17 +18,22 @@
 package io.bisq.common.locale;
 
 import io.bisq.common.app.Version;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Currency;
 import java.util.Locale;
 
+@EqualsAndHashCode
+@ToString
+@Getter
 public final class FiatCurrency extends TradeCurrency {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "★ ";
-
     private static Locale defaultLocale;
 
     public static void setDefaultLocale(Locale defaultLocale) {
@@ -56,22 +61,8 @@ public final class FiatCurrency extends TradeCurrency {
         this.currency = currency;
     }
 
-    public Currency getCurrency() {
-        return currency;
-    }
-
     @Override
     public String getDisplayPrefix() {
         return PREFIX;
-    }
-
-    @Override
-    public String toString() {
-        return "FiatCurrency{" +
-                "currency=" + currency +
-                ", code='" + code + '\'' +
-                ", name='" + name + '\'' +
-                ", symbol='" + symbol + '\'' +
-                '}';
     }
 }

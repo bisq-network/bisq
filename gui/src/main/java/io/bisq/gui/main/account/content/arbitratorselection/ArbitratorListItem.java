@@ -22,6 +22,8 @@ import io.bisq.wire.payload.arbitration.Arbitrator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
+import java.util.Date;
+
 public class ArbitratorListItem {
     public final Arbitrator arbitrator;
     private final BSFormatter formatter;
@@ -37,11 +39,12 @@ public class ArbitratorListItem {
     }
 
     public String getLanguageCodes() {
-        return arbitrator != null && arbitrator.getLanguageCodes() != null ? formatter.languageCodesToString(arbitrator.getLanguageCodes()) : "";
+        return arbitrator != null && arbitrator.getLanguageCodes() != null ?
+                formatter.languageCodesToString(arbitrator.getLanguageCodes()) : "";
     }
 
     public String getRegistrationDate() {
-        return arbitrator != null ? formatter.formatDate(arbitrator.getRegistrationDate()) : "";
+        return arbitrator != null ? formatter.formatDate(new Date(arbitrator.getRegistrationDate())) : "";
     }
 
     public boolean getIsSelected() {

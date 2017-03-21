@@ -25,10 +25,11 @@ import io.bisq.wire.payload.LazyProcessedStoragePayload;
 import io.bisq.wire.payload.PersistedStoragePayload;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.proto.Messages;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -44,12 +45,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+@EqualsAndHashCode
+@Slf4j
 public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
-    private static final Logger log = LoggerFactory.getLogger(CompensationRequestPayload.class);
-
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
     // Payload
@@ -246,62 +246,11 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
         return Messages.StoragePayload.newBuilder().setCompensationRequestPayload(builder).build();
     }
 
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        CompensationRequestPayload that = (CompensationRequestPayload) o;
-
-        if (version != that.version) return false;
-        if (startDate != that.startDate) return false;
-        if (endDate != that.endDate) return false;
-        if (requestedBtc != that.requestedBtc) return false;
-        if (creationDate != that.creationDate) return false;
-        if (uid != null ? !uid.equals(that.uid) : that.uid != null) return false;
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        if (title != null ? !title.equals(that.title) : that.title != null) return false;
-        if (category != null ? !category.equals(that.category) : that.category != null) return false;
-        if (description != null ? !description.equals(that.description) : that.description != null) return false;
-        if (link != null ? !link.equals(that.link) : that.link != null) return false;
-        if (btcAddress != null ? !btcAddress.equals(that.btcAddress) : that.btcAddress != null) return false;
-        if (nodeAddress != null ? !nodeAddress.equals(that.nodeAddress) : that.nodeAddress != null) return false;
-        if (p2pStorageSignaturePubKey != null ? !p2pStorageSignaturePubKey.equals(that.p2pStorageSignaturePubKey) : that.p2pStorageSignaturePubKey != null)
-            return false;
-        if (p2pStorageSignaturePubKeyAsHex != null ? !p2pStorageSignaturePubKeyAsHex.equals(that.p2pStorageSignaturePubKeyAsHex) : that.p2pStorageSignaturePubKeyAsHex != null)
-            return false;
-        if (signature != null ? !signature.equals(that.signature) : that.signature != null) return false;
-        return !(feeTxId != null ? !feeTxId.equals(that.feeTxId) : that.feeTxId != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (int) version;
-        result = 31 * result + (uid != null ? uid.hashCode() : 0);
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (title != null ? title.hashCode() : 0);
-        result = 31 * result + (category != null ? category.hashCode() : 0);
-        result = 31 * result + (description != null ? description.hashCode() : 0);
-        result = 31 * result + (link != null ? link.hashCode() : 0);
-        result = 31 * result + (int) (startDate ^ (startDate >>> 32));
-        result = 31 * result + (int) (endDate ^ (endDate >>> 32));
-        result = 31 * result + (int) (requestedBtc ^ (requestedBtc >>> 32));
-        result = 31 * result + (btcAddress != null ? btcAddress.hashCode() : 0);
-        result = 31 * result + (nodeAddress != null ? nodeAddress.hashCode() : 0);
-        result = 31 * result + (int) (creationDate ^ (creationDate >>> 32));
-        result = 31 * result + (p2pStorageSignaturePubKey != null ? p2pStorageSignaturePubKey.hashCode() : 0);
-        result = 31 * result + (p2pStorageSignaturePubKeyAsHex != null ? p2pStorageSignaturePubKeyAsHex.hashCode() : 0);
-        result = 31 * result + (signature != null ? signature.hashCode() : 0);
-        result = 31 * result + (feeTxId != null ? feeTxId.hashCode() : 0);
-        return result;
-    }
-
     @Override
     public String toString() {
         return "CompensationRequestPayload{" +
                 "version=" + version +
+                ", creationDate=" + getCreationDate() +
                 ", uid='" + uid + '\'' +
                 ", name='" + name + '\'' +
                 ", title='" + title + '\'' +
@@ -313,10 +262,11 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                 ", requestedBtc=" + requestedBtc +
                 ", btcAddress='" + btcAddress + '\'' +
                 ", nodeAddress='" + getNodeAddress() + '\'' +
-                ", creationDate=" + getCreationDate() +
+                ", p2pStorageSignaturePubKeyBytes=" + Hex.toHexString(p2pStorageSignaturePubKeyBytes) +
                 ", p2pStorageSignaturePubKeyAsHex='" + p2pStorageSignaturePubKeyAsHex + '\'' +
                 ", signature='" + signature + '\'' +
                 ", feeTxId='" + feeTxId + '\'' +
+                ", extraDataMap=" + extraDataMap +
                 '}';
     }
 }

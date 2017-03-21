@@ -20,6 +20,9 @@ package io.bisq.core.btc;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.util.Utilities;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
@@ -27,34 +30,29 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Every trade use a addressEntry with a dedicated address for all transactions related to the trade.
  * That way we have a kind of separated trade wallet, isolated from other transactions and avoiding coin merge.
  * If we would not avoid coin merge the user would lose privacy between trades.
  */
+@EqualsAndHashCode
+@Slf4j
+@Getter
 public final class AddressEntry implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(AddressEntry.class);
-
     public enum Context {
         ARBITRATOR,
-
         AVAILABLE,
-
         OFFER_FUNDING,
-        RESERVED_FOR_TRADE, //reserved
-        MULTI_SIG, //locked
+        RESERVED_FOR_TRADE,
+        MULTI_SIG,
         TRADE_PAYOUT
     }
 
@@ -63,11 +61,8 @@ public final class AddressEntry implements Persistable {
     // So after startup it never must be null
     @Nullable
     transient private DeterministicKey keyPair;
-
-    // Only set if its a TRADE Context
     @Nullable
     private final String offerId;
-
     private final Context context;
     private final byte[] pubKey;
     private final byte[] pubKeyHash;
@@ -81,21 +76,16 @@ public final class AddressEntry implements Persistable {
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // If created without offerId (arbitrator)
     public AddressEntry(DeterministicKey keyPair, NetworkParameters params, Context context) {
         this(keyPair, params, context, null);
     }
 
-    // If created with offerId
-    public AddressEntry(@Nullable DeterministicKey keyPair, NetworkParameters params, Context context, @Nullable String offerId) {
+    public AddressEntry(DeterministicKey keyPair, NetworkParameters params, Context context, @Nullable String offerId) {
         this.keyPair = keyPair;
         this.params = params;
         this.context = context;
         this.offerId = offerId;
-
         paramId = params.getId();
-
-        checkNotNull(keyPair);
         pubKey = keyPair.getPubKey();
         pubKeyHash = keyPair.getPubKeyHash();
     }
@@ -121,24 +111,19 @@ public final class AddressEntry implements Persistable {
         this.keyPair = deterministicKey;
     }
 
+    public void setCoinLockedInMultiSig(Coin coinLockedInMultiSig) {
+        this.coinLockedInMultiSig = coinLockedInMultiSig;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
-    public String getOfferId() {
-        return offerId;
-    }
-
     // For display we usually only display the first 8 characters.
     @Nullable
     public String getShortOfferId() {
         return offerId != null ? Utilities.getShortId(offerId) : null;
-    }
-
-    public Context getContext() {
-        return context;
     }
 
     @Nullable
@@ -147,21 +132,8 @@ public final class AddressEntry implements Persistable {
     }
 
     @Nullable
-    public DeterministicKey getKeyPair() {
-        return keyPair != null ? keyPair : null;
-    }
-
-    @Nullable
     public Address getAddress() {
         return keyPair != null ? keyPair.toAddress(params) : null;
-    }
-
-    public byte[] getPubKeyHash() {
-        return pubKeyHash;
-    }
-
-    public byte[] getPubKey() {
-        return pubKey;
     }
 
     public boolean isOpenOffer() {
@@ -174,10 +146,6 @@ public final class AddressEntry implements Persistable {
 
     public boolean isTradable() {
         return isOpenOffer() || isTrade();
-    }
-
-    public void setCoinLockedInMultiSig(Coin coinLockedInMultiSig) {
-        this.coinLockedInMultiSig = coinLockedInMultiSig;
     }
 
     @Nullable
