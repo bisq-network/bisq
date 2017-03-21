@@ -23,7 +23,6 @@ import io.bisq.common.crypto.Sig;
 import io.bisq.wire.crypto.Encryption;
 import io.bisq.wire.payload.Payload;
 import io.bisq.wire.proto.Messages;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
@@ -36,12 +35,12 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
 /**
  * Same as KeyRing but with public keys only.
  * Used to send public keys over the wire to other peer.
  */
-@EqualsAndHashCode
 @Slf4j
 public final class PubKeyRing implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -96,6 +95,24 @@ public final class PubKeyRing implements Payload {
     public Messages.PubKeyRing toProtoBuf() {
         return Messages.PubKeyRing.newBuilder().setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes))
                 .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes)).build();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PubKeyRing that = (PubKeyRing) o;
+
+        if (!Arrays.equals(signaturePubKeyBytes, that.signaturePubKeyBytes)) return false;
+        return Arrays.equals(encryptionPubKeyBytes, that.encryptionPubKeyBytes);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = signaturePubKeyBytes != null ? Arrays.hashCode(signaturePubKeyBytes) : 0;
+        result = 31 * result + (encryptionPubKeyBytes != null ? Arrays.hashCode(encryptionPubKeyBytes) : 0);
+        return result;
     }
 
     @Override

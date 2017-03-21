@@ -443,4 +443,33 @@ public class Offer implements Serializable {
         return offerPayload.isUseReOpenAfterAutoClose();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Offer offer = (Offer) o;
+
+        if (offerPayload != null ? !offerPayload.equals(offer.offerPayload) : offer.offerPayload != null) return false;
+        if (state != offer.state) return false;
+        return !(errorMessageProperty != null ? !errorMessageProperty.equals(offer.errorMessageProperty) : offer.errorMessageProperty != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = offerPayload != null ? offerPayload.hashCode() : 0;
+        result = 31 * result + (state != null ? state.hashCode() : 0);
+        result = 31 * result + (errorMessageProperty != null ? errorMessageProperty.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Offer{" +
+                "offerPayload=" + offerPayload +
+                ", state=" + state +
+                ", errorMessageProperty=" + errorMessageProperty +
+                '}';
+    }
 }
