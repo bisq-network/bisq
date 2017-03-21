@@ -1,6 +1,5 @@
 package io.bisq.wire.payload.p2p.storage;
 
-import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
@@ -82,7 +81,7 @@ public final class MailboxStoragePayload implements StoragePayload {
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
         this.senderPubKeyForAddOperationBytes = senderPubKeyForAddOperationBytes;
         this.receiverPubKeyForRemoveOperationBytes = receiverPubKeyForRemoveOperationBytes;
-        this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
+        this.extraDataMap = extraDataMap;
 
         init();
     }

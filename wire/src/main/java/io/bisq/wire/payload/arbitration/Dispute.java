@@ -90,7 +90,8 @@ public final class Dispute implements Payload {
 
     // Domain
     transient private Storage<DisputeList<Dispute>> storage;
-    transient private ObservableList<DisputeCommunicationMessage> observableList = FXCollections.observableArrayList(disputeCommunicationMessages);
+    transient private ObservableList<DisputeCommunicationMessage> observableList = FXCollections.observableArrayList(
+            disputeCommunicationMessages);
     transient private BooleanProperty isClosedProperty = new SimpleBooleanProperty(isClosed);
     transient private ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
 
@@ -117,10 +118,23 @@ public final class Dispute implements Payload {
                    @Nullable String takerContractSignature,
                    PubKeyRing arbitratorPubKeyRing,
                    boolean isSupportTicket) {
-        this(tradeId, traderId, disputeOpenerIsBuyer, disputeOpenerIsOfferer, traderPubKeyRing, tradeDate,
-                contract, contractHash, depositTxSerialized, payoutTxSerialized, depositTxId,
-                payoutTxId, contractAsJson, offererContractSignature, takerContractSignature,
-                arbitratorPubKeyRing, isSupportTicket);
+        this(tradeId,
+                traderId,
+                disputeOpenerIsBuyer,
+                disputeOpenerIsOfferer,
+                traderPubKeyRing,
+                tradeDate,
+                contract,
+                contractHash,
+                depositTxSerialized,
+                payoutTxSerialized,
+                depositTxId,
+                payoutTxId,
+                contractAsJson,
+                offererContractSignature,
+                takerContractSignature,
+                arbitratorPubKeyRing,
+                isSupportTicket);
         this.storage = storage;
     }
 
@@ -129,7 +143,7 @@ public final class Dispute implements Payload {
                    boolean disputeOpenerIsBuyer,
                    boolean disputeOpenerIsOfferer,
                    PubKeyRing traderPubKeyRing,
-                   Date tradeDate,
+                   Date tradeDate, 
                    Contract contract,
                    byte[] contractHash,
                    @Nullable byte[] depositTxSerialized,

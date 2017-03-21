@@ -27,6 +27,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     transient private BooleanProperty storedInMailboxProperty = new SimpleBooleanProperty();
 
     public DisputeCommunicationMessage(String tradeId, int traderId, boolean senderIsTrader, String message,
-                                       List<Attachment> attachments, NodeAddress myNodeAddress, long date,
+                                       @Nullable List<Attachment> attachments, NodeAddress myNodeAddress, long date,
                                        boolean arrived, boolean storedInMailbox) {
         this.tradeId = tradeId;
         this.traderId = traderId;
@@ -66,7 +67,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         this.date = date;
         this.arrived = arrived;
         this.storedInMailbox = storedInMailbox;
-        Optional.ofNullable(attachments).ifPresent(attachments1 -> addAllAttachments(attachments));
+        Optional.ofNullable(attachments).ifPresent(e -> addAllAttachments(attachments));
         updateBooleanProperties();
     }
 

@@ -86,7 +86,7 @@ public final class Filter implements StoragePayload {
         this(bannedOfferIds, bannedNodeAddress, bannedPaymentAccounts);
         this.signatureAsBase64 = signatureAsBase64;
         this.publicKeyBytes = publicKeyBytes;
-        this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
+        this.extraDataMap = extraDataMap;
 
         init();
     }

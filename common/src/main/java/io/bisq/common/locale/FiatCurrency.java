@@ -25,7 +25,7 @@ import lombok.ToString;
 import java.util.Currency;
 import java.util.Locale;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @ToString
 @Getter
 public final class FiatCurrency extends TradeCurrency {

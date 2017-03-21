@@ -20,10 +20,12 @@ package io.bisq.wire.payload.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Res;
 import io.bisq.common.persistance.Persistable;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,11 +34,13 @@ import java.util.List;
 import java.util.Optional;
 
 // Don't use Enum as it breaks serialisation when changing entries and we want to stay flexible here
+@Slf4j
+@Getter
+@EqualsAndHashCode
+@ToString
 public final class PaymentMethod implements Persistable, Comparable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     // time in blocks (average 10 min for one block confirmation
     private static final long HOUR = 3600_000;
@@ -76,7 +80,8 @@ public final class PaymentMethod implements Persistable, Comparable {
 
     public static final List<PaymentMethod> ALL_VALUES = new ArrayList<>(Arrays.asList(
             // EUR
-            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY, Coin.parseCoin("0.5")), // sepa takes 1-3 business days. We use 8 days to include safety for holidays
+            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY, Coin.parseCoin("0.5")),
+            // sepa takes 1-3 business days. We use 8 days to include safety for holidays
 
             // Global
             NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
@@ -152,60 +157,11 @@ public final class PaymentMethod implements Persistable, Comparable {
             return new PaymentMethod(Res.get("shared.na"), 1, DAY, Coin.parseCoin("0"));
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public long getMaxTradePeriod() {
-        return maxTradePeriod;
-    }
-
-    public long getLockTime() {
-        return lockTime;
-    }
-
-    public Coin getMaxTradeLimit() {
-        return maxTradeLimit;
-    }
-
     @Override
     public int compareTo(@NotNull Object other) {
         if (id != null)
             return this.id.compareTo(((PaymentMethod) other).id);
         else
             return 0;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PaymentMethod)) return false;
-
-        PaymentMethod that = (PaymentMethod) o;
-
-        if (lockTime != that.lockTime) return false;
-        if (maxTradePeriod != that.maxTradePeriod) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        return !(maxTradeLimit != null ? !maxTradeLimit.equals(that.maxTradeLimit) : that.maxTradeLimit != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (int) (lockTime ^ (lockTime >>> 32));
-        result = 31 * result + (int) (maxTradePeriod ^ (maxTradePeriod >>> 32));
-        result = 31 * result + (maxTradeLimit != null ? maxTradeLimit.hashCode() : 0);
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "PaymentMethod{" +
-                "id='" + id + '\'' +
-                ", lockTime=" + lockTime +
-                ", maxTradePeriod=" + maxTradePeriod +
-                ", maxTradeLimitInBitcoin=" + maxTradeLimit +
-                '}';
     }
 }

@@ -17,7 +17,6 @@
 
 package io.bisq.wire.payload.arbitration;
 
-import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.wire.payload.StoragePayload;
@@ -80,7 +79,7 @@ public final class Arbitrator implements StoragePayload {
         this.registrationDate = registrationDate.getTime();
         this.registrationPubKey = registrationPubKey;
         this.registrationSignature = registrationSignature;
-        this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
+        this.extraDataMap = extraDataMap;
     }
 
     @Override
@@ -98,7 +97,7 @@ public final class Arbitrator implements StoragePayload {
         final Messages.Arbitrator.Builder builder = Messages.Arbitrator.newBuilder()
                 .setTTL(TTL)
                 .setBtcPubKey(ByteString.copyFrom(btcPubKey))
-                .setPubKeyRing((Messages.PubKeyRing) pubKeyRing.toProtoBuf())
+                .setPubKeyRing(pubKeyRing.toProtoBuf())
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoBuf())
                 .addAllLanguageCodes(languageCodes)
                 .setBtcAddress(btcAddress)

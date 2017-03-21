@@ -75,8 +75,6 @@ import static io.bisq.wire.proto.Messages.Envelope.MessageCase.*;
  */
 @Slf4j
 public class ProtoBufferUtilities {
-
-
     public static Optional<Message> fromProtoBuf(Messages.Envelope envelope) {
         if (Objects.isNull(envelope)) {
             log.warn("fromProtoBuf called with empty envelope.");

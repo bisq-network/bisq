@@ -17,7 +17,6 @@
 
 package io.bisq.wire.payload.dao.compensation;
 
-import com.google.common.collect.Maps;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.util.JsonExclude;
@@ -149,7 +148,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
         this.nodeAddress = nodeAddress.getFullAddress();
         this.p2pStorageSignaturePubKeyBytes = p2pStorageSignaturePubKeyBytes;
 
-        this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
+        this.extraDataMap = extraDataMap;
         init();
     }
 

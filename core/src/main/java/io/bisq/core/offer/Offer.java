@@ -30,7 +30,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.PublicKey;
-import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -80,8 +79,6 @@ public class Offer implements Serializable {
     @Setter
     @Nullable
     transient private PriceFeedService priceFeedService;
-    @JsonExclude
-    transient private DecimalFormat decimalFormat;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -90,10 +87,6 @@ public class Offer implements Serializable {
 
     public Offer(OfferPayload offerPayload) {
         this.offerPayload = offerPayload;
-
-        // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
-        decimalFormat = new DecimalFormat("#.#");
-        decimalFormat.setMaximumFractionDigits(Fiat.SMALLEST_UNIT_EXPONENT);
     }
 
     // TODO still needed as we get the offer from persistence serialized
@@ -105,8 +98,6 @@ public class Offer implements Serializable {
 
             // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
             errorMessageProperty = new SimpleStringProperty();
-            decimalFormat = new DecimalFormat("#.#");
-            decimalFormat.setMaximumFractionDigits(Fiat.SMALLEST_UNIT_EXPONENT);
         } catch (Throwable t) {
             log.warn("Cannot be deserialized." + t.getMessage());
         }

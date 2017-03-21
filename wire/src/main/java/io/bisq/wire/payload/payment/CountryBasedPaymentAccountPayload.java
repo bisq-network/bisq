@@ -18,41 +18,30 @@
 package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Locale;
 
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@Setter
+@Getter
+@Slf4j
 public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     protected String countryCode = "";
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod) {
         super(paymentMethodName, id, maxTradePeriod);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getter, Setter
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setCountryCode(String countryCode) {
-        this.countryCode = countryCode;
-    }
-
-    public String getCountryCode() {
-        return countryCode;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getter
-    ///////////////////////////////////////////////////////////////////////////////////////////
     public String getPaymentDetails() {
         throw new NotImplementedException();
     }
@@ -67,30 +56,4 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
     }
 
     abstract public String getPaymentDetailsForTradePopup(Locale locale);
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CountryBasedPaymentAccountPayload)) return false;
-        if (!super.equals(o)) return false;
-
-        CountryBasedPaymentAccountPayload that = (CountryBasedPaymentAccountPayload) o;
-
-        return countryCode.equals(that.countryCode);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + countryCode.hashCode();
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "CountryBasedPaymentAccountPayload{" +
-                "countryCode='" + countryCode + '\'' +
-                "} " + super.toString();
-    }
 }

@@ -1,6 +1,5 @@
 package io.bisq.wire.payload.trade.statistics;
 
-import com.google.common.collect.Maps;
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.CurrencyUtil;
@@ -119,7 +118,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         this.tradeDate = tradeDate;
         this.depositTxId = depositTxId;
         this.pubKeyRing = pubKeyRing;
-        this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
+        this.extraDataMap = extraDataMap;
     }
 
     @Override

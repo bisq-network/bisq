@@ -20,29 +20,43 @@ package io.bisq.wire.payload.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.BankUtil;
 import io.bisq.wire.proto.Messages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Locale;
 
+@Setter
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@Slf4j
 public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(CashDepositAccountPayload.class);
-
+    @Getter
     protected String holderName;
+    @Getter
     protected String holderEmail;
+    @Getter
     protected String bankName;
-    protected String bankId;
+    @Getter
     protected String branchId;
+    @Getter
     protected String accountNr;
+    @Getter
     protected String accountType;
     @Nullable
+    @Getter
     protected String requirements;
     @Nullable
+    @Getter
     protected String holderTaxId;
+    // Custom getter
+    protected String bankId;
 
     public CashDepositAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
@@ -55,13 +69,20 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
 
     @Override
     public String getPaymentDetailsForTradePopup(Locale locale) {
-        String bankName = BankUtil.isBankNameRequired(countryCode) ? BankUtil.getBankNameLabel(countryCode) + " " + this.bankName + "\n" : "";
-        String bankId = BankUtil.isBankIdRequired(countryCode) ? BankUtil.getBankIdLabel(countryCode) + " " + this.bankId + "\n" : "";
-        String branchId = BankUtil.isBranchIdRequired(countryCode) ? BankUtil.getBranchIdLabel(countryCode) + " " + this.branchId + "\n" : "";
-        String accountNr = BankUtil.isAccountNrRequired(countryCode) ? BankUtil.getAccountNrLabel(countryCode) + " " + this.accountNr + "\n" : "";
-        String accountType = BankUtil.isAccountTypeRequired(countryCode) ? BankUtil.getAccountTypeLabel(countryCode) + " " + this.accountType + "\n" : "";
-        String holderIdString = BankUtil.isHolderIdRequired(countryCode) ? (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
-        String requirementsString = requirements != null && !requirements.isEmpty() ? ("Extra requirements: " + requirements + "\n") : "";
+        String bankName = BankUtil.isBankNameRequired(countryCode) ?
+                BankUtil.getBankNameLabel(countryCode) + " " + this.bankName + "\n" : "";
+        String bankId = BankUtil.isBankIdRequired(countryCode) ?
+                BankUtil.getBankIdLabel(countryCode) + " " + this.bankId + "\n" : "";
+        String branchId = BankUtil.isBranchIdRequired(countryCode) ?
+                BankUtil.getBranchIdLabel(countryCode) + " " + this.branchId + "\n" : "";
+        String accountNr = BankUtil.isAccountNrRequired(countryCode) ?
+                BankUtil.getAccountNrLabel(countryCode) + " " + this.accountNr + "\n" : "";
+        String accountType = BankUtil.isAccountTypeRequired(countryCode) ?
+                BankUtil.getAccountTypeLabel(countryCode) + " " + this.accountType + "\n" : "";
+        String holderIdString = BankUtil.isHolderIdRequired(countryCode) ?
+                (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
+        String requirementsString = requirements != null && !requirements.isEmpty() ?
+                ("Extra requirements: " + requirements + "\n") : "";
 
         return "Holder name: " + holderName + "\n" +
                 "Holder email: " + holderEmail + "\n" +
@@ -105,83 +126,10 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
         return BankUtil.getHolderIdLabel(countryCode);
     }
 
-    public void setHolderName(String holderName) {
-        this.holderName = holderName;
-    }
-
-    public String getHolderName() {
-        return holderName;
-    }
-
-    public void setHolderEmail(String holderEmail) {
-        this.holderEmail = holderEmail;
-    }
-
-    public String getHolderEmail() {
-        return holderEmail;
-    }
-
-    public void setBankName(String bankName) {
-        this.bankName = bankName;
-    }
-
-    @Nullable
-    public String getBankName() {
-        return bankName;
-    }
-
-    public void setBankId(String bankId) {
-        this.bankId = bankId;
-    }
-
     @Nullable
     public String getBankId() {
         return BankUtil.isBankIdRequired(countryCode) ? bankId : bankName;
     }
 
-    public void setBranchId(String branchId) {
-        this.branchId = branchId;
-    }
-
-    @Nullable
-    public String getBranchId() {
-        return branchId;
-    }
-
-    public void setAccountNr(String accountNr) {
-        this.accountNr = accountNr;
-    }
-
-    @Nullable
-    public String getAccountNr() {
-        return accountNr;
-    }
-
-    public void setHolderTaxId(String holderTaxId) {
-        this.holderTaxId = holderTaxId;
-    }
-
-    @Nullable
-    public String getHolderTaxId() {
-        return holderTaxId;
-    }
-
-    public void setAccountType(String accountType) {
-        this.accountType = accountType;
-    }
-
-    @Nullable
-    public String getAccountType() {
-        return accountType;
-    }
-
-    @Nullable
-    public String getRequirements() {
-        return requirements;
-    }
-
-    public void setRequirements(String requirements) {
-        this.requirements = requirements;
-    }
 
 }

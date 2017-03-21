@@ -85,7 +85,7 @@ public final class Alert implements StoragePayload {
         this(message, isUpdateInfo, version);
         this.storagePublicKeyBytes = storagePublicKeyBytes;
         this.signatureAsBase64 = signatureAsBase64;
-        this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
+        this.extraDataMap = extraDataMap;
 
         init();
     }

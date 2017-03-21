@@ -17,8 +17,6 @@
 
 package io.bisq.wire.payload.offer;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.CurrencyUtil;
@@ -238,11 +236,11 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.arbitratorNodeAddresses = arbitratorNodeAddresses;
         this.paymentMethodId = paymentMethodId;
         this.offererPaymentAccountId = offererPaymentAccountId;
-        this.offerFeePaymentTxId = Optional.ofNullable(offerFeePaymentTxId).orElse("");
-        this.countryCode = Optional.ofNullable(countryCode).orElse("");
-        this.acceptedCountryCodes = Optional.ofNullable(acceptedCountryCodes).orElse(Lists.newArrayList());
-        this.bankId = Optional.ofNullable(bankId).orElse("");
-        this.acceptedBankIds = Optional.ofNullable(acceptedBankIds).orElse(Lists.newArrayList());
+        this.offerFeePaymentTxId = offerFeePaymentTxId;
+        this.countryCode = countryCode;
+        this.acceptedCountryCodes = acceptedCountryCodes;
+        this.bankId = bankId;
+        this.acceptedBankIds = acceptedBankIds;
         this.versionNr = versionNr;
         this.blockHeightAtOfferCreation = blockHeightAtOfferCreation;
         this.txFee = txFee;
@@ -256,8 +254,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.lowerClosePrice = lowerClosePrice;
         this.upperClosePrice = upperClosePrice;
         this.isPrivateOffer = isPrivateOffer;
-        this.hashOfChallenge = Optional.ofNullable(hashOfChallenge).orElse("");
-        this.extraDataMap = Optional.ofNullable(extraDataMap).orElse(Maps.newHashMap());
+        this.hashOfChallenge = hashOfChallenge;
+        this.extraDataMap = extraDataMap;
         this.protocolVersion = Version.TRADE_PROTOCOL_VERSION;
     }
 
@@ -323,11 +321,12 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         } else {
             throw new RuntimeException("OfferPayload is in invalid state: offerFeePaymentTxID is not set when adding to P2P network.");
         }
+
         Optional.ofNullable(countryCode).ifPresent(offerBuilder::setCountryCode);
         Optional.ofNullable(bankId).ifPresent(offerBuilder::setBankId);
-        Optional.ofNullable(acceptedCountryCodes).ifPresent(offerBuilder::addAllAcceptedCountryCodes);
-        Optional.ofNullable(getAcceptedBankIds()).ifPresent(offerBuilder::addAllAcceptedBankIds);
+        Optional.ofNullable(acceptedBankIds).ifPresent(offerBuilder::addAllAcceptedBankIds);
         Optional.ofNullable(hashOfChallenge).ifPresent(offerBuilder::setHashOfChallenge);
+        Optional.ofNullable(acceptedCountryCodes).ifPresent(offerBuilder::addAllAcceptedCountryCodes);
         Optional.ofNullable(extraDataMap).ifPresent(offerBuilder::putAllExtraDataMap);
 
         return Messages.StoragePayload.newBuilder().setOfferPayload(offerBuilder).build();

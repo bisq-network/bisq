@@ -20,8 +20,11 @@ package io.bisq.wire.payload.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Country;
 import io.bisq.wire.proto.Messages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,15 +32,19 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-// TODO refactor with BankAccountPayload
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@Getter
+@Slf4j
 public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(SepaAccountPayload.class);
-
+    @Setter
     private String holderName;
+    @Setter
     private String iban;
+    @Setter
     private String bic;
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private final List<String> acceptedCountryCodes;
@@ -50,30 +57,6 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
         acceptedCountryCodes.sort(String::compareTo);
     }
 
-    public void setHolderName(String holderName) {
-        this.holderName = holderName;
-    }
-
-    public String getHolderName() {
-        return holderName;
-    }
-
-    public void setIban(String iban) {
-        this.iban = iban;
-    }
-
-    public String getIban() {
-        return iban;
-    }
-
-    public void setBic(String bic) {
-        this.bic = bic;
-    }
-
-    public String getBic() {
-        return bic;
-    }
-
     public void addAcceptedCountry(String countryCode) {
         if (!acceptedCountryCodes.contains(countryCode))
             acceptedCountryCodes.add(countryCode);
@@ -82,10 +65,6 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     public void removeAcceptedCountry(String countryCode) {
         if (acceptedCountryCodes.contains(countryCode))
             acceptedCountryCodes.remove(countryCode);
-    }
-
-    public List<String> getAcceptedCountryCodes() {
-        return acceptedCountryCodes;
     }
 
     @Override
