@@ -30,7 +30,11 @@ Some interfaces have a 'toProtobuf' method to force all extending classes to imp
 Some interfaces have a 'toProtobuf' method to force all extending classes to implement that method.
 
 
-## default values?
+## If fields are not filled in, what are protobuffer's default values?
+
+Read this very carefully:
+
+https://developers.google.com/protocol-buffers/docs/proto3#default
 
 ## How to handle Enums 
  
