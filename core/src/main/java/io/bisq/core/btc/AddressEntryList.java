@@ -17,32 +17,36 @@
 
 package io.bisq.core.btc;
 
-import com.google.inject.Inject;
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.storage.Storage;
+import io.bisq.wire.proto.Messages;
+import lombok.Getter;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * The List supporting our persistence solution.
  */
-public final class AddressEntryList extends ArrayList<AddressEntry> implements Persistable {
+public final class AddressEntryList implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
     private static final Logger log = LoggerFactory.getLogger(AddressEntryList.class);
 
     final transient private Storage<AddressEntryList> storage;
     transient private Wallet wallet;
+    @Getter
+    private List<AddressEntry> addressEntryList = new ArrayList<>();
 
-    // Persisted fields are in ArrayList superclass
-
-    @Inject
+    //@Inject
     public AddressEntryList(Storage<AddressEntryList> storage) {
         this.storage = storage;
     }
@@ -52,7 +56,7 @@ public final class AddressEntryList extends ArrayList<AddressEntry> implements P
 
         AddressEntryList persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
-            for (AddressEntry addressEntry : persisted) {
+            for (AddressEntry addressEntry : persisted.getAddressEntryList()) {
                 DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash());
                 if (keyFromPubHash != null) {
                     addressEntry.setDeterministicKey(keyFromPubHash);
@@ -67,6 +71,14 @@ public final class AddressEntryList extends ArrayList<AddressEntry> implements P
         }
     }
 
+    private boolean add(AddressEntry addressEntry) {
+        return addressEntryList.add(addressEntry);
+    }
+
+    private boolean remove(AddressEntry addressEntry) {
+        return addressEntryList.remove(addressEntry);
+    }
+
     public AddressEntry addAddressEntry(AddressEntry addressEntry) {
         boolean changed = add(addressEntry);
         if (changed)
@@ -76,7 +88,7 @@ public final class AddressEntryList extends ArrayList<AddressEntry> implements P
 
 
     public void swapTradeToSavings(String offerId) {
-        Optional<AddressEntry> addressEntryOptional = this.stream().filter(addressEntry -> offerId.equals(addressEntry.getOfferId())).findAny();
+        Optional<AddressEntry> addressEntryOptional = addressEntryList.stream().filter(addressEntry -> offerId.equals(addressEntry.getOfferId())).findAny();
         if (addressEntryOptional.isPresent()) {
             AddressEntry addressEntry = addressEntryOptional.get();
             boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.AVAILABLE));
@@ -85,6 +97,7 @@ public final class AddressEntryList extends ArrayList<AddressEntry> implements P
                 storage.queueUpForSave();
         }
     }
+
 
     public void swapToAvailable(AddressEntry addressEntry) {
         remove(addressEntry);
@@ -96,5 +109,14 @@ public final class AddressEntryList extends ArrayList<AddressEntry> implements P
 
     public void queueUpForSave() {
         storage.queueUpForSave(50);
+    }
+
+    @Override
+    public Message toProtobuf() {
+        return Messages.AddressEntryList.newBuilder()
+                .addAllAddressEntry(getAddressEntryList().stream()
+                        .map(addressEntry -> ((Messages.AddressEntry) addressEntry.toProtobuf()))
+                        .collect(Collectors.toList()))
+                .build();
     }
 }

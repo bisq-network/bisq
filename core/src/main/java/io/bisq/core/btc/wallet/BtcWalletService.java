@@ -80,7 +80,7 @@ public class BtcWalletService extends WalletService {
     void decryptWallet(@NotNull KeyParameter key) {
         super.decryptWallet(key);
 
-        addressEntryList.stream().forEach(e -> {
+        addressEntryList.getAddressEntryList().stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
             if (keyPair != null && keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.decrypt(key));
@@ -92,7 +92,7 @@ public class BtcWalletService extends WalletService {
     void encryptWallet(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
         super.encryptWallet(keyCrypterScrypt, key);
 
-        addressEntryList.stream().forEach(e -> {
+        addressEntryList.getAddressEntryList().stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
             if (keyPair != null && keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
@@ -349,7 +349,7 @@ public class BtcWalletService extends WalletService {
     }
 
     private List<AddressEntry> getAddressEntryListAsImmutableList() {
-        return ImmutableList.copyOf(addressEntryList);
+        return ImmutableList.copyOf(addressEntryList.getAddressEntryList());
     }
 
     public void swapTradeEntryToAvailableEntry(String offerId, AddressEntry.Context context) {

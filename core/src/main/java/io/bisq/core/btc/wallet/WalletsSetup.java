@@ -489,7 +489,7 @@ public class WalletsSetup {
     }
 
     public Set<Address> getAddressesByContext(AddressEntry.Context context) {
-        return ImmutableList.copyOf(addressEntryList).stream()
+        return ImmutableList.copyOf(addressEntryList.getAddressEntryList()).stream()
                 .filter(addressEntry -> addressEntry.getContext() == context)
                 .map(AddressEntry::getAddress)
                 .collect(Collectors.toSet());

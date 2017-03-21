@@ -17,9 +17,12 @@
 
 package io.bisq.core.btc;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.util.Utilities;
+import io.bisq.wire.proto.Messages;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -160,5 +163,17 @@ public final class AddressEntry implements Persistable {
                 ", context=" + context +
                 ", address=" + getAddressString() +
                 '}';
+    }
+
+    @Override
+    public Message toProtobuf() {
+        return Messages.AddressEntry.newBuilder()
+                .setOfferId(offerId)
+                .setContext(Messages.AddressEntry.Context.valueOf(context.name()))
+                .setPubkey(ByteString.copyFrom(pubKey))
+                .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
+                .setParamId(paramId)
+                .setCoinLockedInMultiSig(Messages.Coin.newBuilder().setValue(coinLockedInMultiSig.getValue()))
+                .build();
     }
 }

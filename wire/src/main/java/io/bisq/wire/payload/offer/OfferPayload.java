@@ -286,7 +286,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .collect(Collectors.toList());
         Messages.OfferPayload.Builder offerBuilder = Messages.OfferPayload.newBuilder()
                 .setTTL(TTL)
-                .setDirectionValue(direction.ordinal())
+                .setDirection(Messages.OfferPayload.Direction.valueOf(direction.name()))
                 .setBaseCurrencyCode(baseCurrencyCode)
                 .setCounterCurrencyCode(counterCurrencyCode)
                 .setPaymentMethodId(paymentMethodId)

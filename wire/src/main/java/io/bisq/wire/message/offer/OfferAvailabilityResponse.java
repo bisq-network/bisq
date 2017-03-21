@@ -65,7 +65,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
         Messages.Envelope.Builder baseEnvelope = ToProtoBuffer.getBaseEnvelope();
         return baseEnvelope.setOfferAvailabilityResponse(Messages.OfferAvailabilityResponse.newBuilder().setMessageVersion(getMessageVersion())
                 .setOfferId(offerId)
-                .setAvailabilityResult(Messages.AvailabilityResult.forNumber(availabilityResult.ordinal()))
+                .setAvailabilityResult(Messages.AvailabilityResult.valueOf(availabilityResult.name()))
                 .addAllSupportedCapabilities(supportedCapabilities)).build();
     }
 }

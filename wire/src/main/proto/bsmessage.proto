@@ -756,13 +756,12 @@ message DiskEnvelope {
 
 message AddressEntry {
     enum Context {
-        MISSING = 0;
-        ARBITRATOR = 1;
-        AVAILABLE = 2;
-        OFFER_FUNDING = 3;
-        RESERVED_FOR_TRADE = 4;
-        MULTI_SIG = 5;
-        TRADE_PAYOUT = 6;
+        ARBITRATOR = 0;
+        AVAILABLE = 1;
+        OFFER_FUNDING = 2;
+        RESERVED_FOR_TRADE = 3;
+        MULTI_SIG = 4;
+        TRADE_PAYOUT = 5;
     }
 
     string offerId = 7;
@@ -774,7 +773,7 @@ message AddressEntry {
 }
 
 message AddressEntryList {
-    // TODO ARRAYLIST !
+    repeated AddressEntry address_entry = 1;
 }
 
 message BlockChainExplorer {
@@ -1150,5 +1149,28 @@ message Currency {
 
 message PersistedPeers {
     repeated Peer peers = 1; // not sure about this
+}
+
+message Transaction {
+   // BITCOINJ transaction
+}
+
+message ProcessModel {
+     TradingPeer tradingPeer = 1;
+     bytes payoutTxSignature = 2;
+     repeated NodeAddress takerAcceptedArbitratorNodeAddresses = 3;
+     NodeAddress tempTradingPeerNodeAddress = 4;
+     bytes preparedDepositTx = 5;
+     repeated RawTransactionInput rawTransactionInputs = 6;
+     int64 changeOutputValue = 7;
+     string changeOutputAddress = 8;
+     Transaction takeOfferFeeTx = 9;
+     bool useSavingsWallet = 10;
+     Coin fundsNeededForTrade = 11;
+     bytes myMultiSigPubKey = 12;
+}
+
+message Offer {
+
 }
 
