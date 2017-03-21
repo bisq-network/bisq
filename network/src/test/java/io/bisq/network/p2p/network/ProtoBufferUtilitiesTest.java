@@ -28,8 +28,8 @@ public class ProtoBufferUtilitiesTest {
 
     @Test
     public void testEnum() {
-        Messages.PB_Offer.Direction direction = Messages.PB_Offer.Direction.SELL;
-        Messages.PB_Offer.Direction direction2 = Messages.PB_Offer.Direction.BUY;
+        Messages.OfferPayload.Direction direction = Messages.OfferPayload.Direction.SELL;
+        Messages.OfferPayload.Direction direction2 = Messages.OfferPayload.Direction.BUY;
         OfferPayload.Direction realDirection = ProtoBufferUtilities.getDirection(direction);
         OfferPayload.Direction realDirection2 = ProtoBufferUtilities.getDirection(direction2);
         assertEquals("SELL", realDirection.name());

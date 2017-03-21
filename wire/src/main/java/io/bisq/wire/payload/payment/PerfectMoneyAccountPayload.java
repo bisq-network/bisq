@@ -19,7 +19,17 @@ package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
 import io.bisq.wire.proto.Messages;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@Setter
+@Getter
+@Slf4j
 public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -33,14 +43,6 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     public PerfectMoneyAccountPayload(String paymentMethodName, String id, long maxTradePeriod, String accountNr) {
         super(paymentMethodName, id, maxTradePeriod);
         this.accountNr = accountNr;
-    }
-
-    public void setAccountNr(String accountNr) {
-        this.accountNr = accountNr;
-    }
-
-    public String getAccountNr() {
-        return accountNr;
     }
 
     @Override

@@ -19,7 +19,13 @@ package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
 import io.bisq.wire.payload.Payload;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
+@Getter
+@EqualsAndHashCode
+@ToString
 public abstract class PaymentAccountPayload implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -43,50 +49,7 @@ public abstract class PaymentAccountPayload implements Payload {
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getId() {
-        return id;
-    }
-
-    public String getPaymentMethodId() {
-        return paymentMethodId;
-    }
-
     abstract public String getPaymentDetails();
 
     abstract public String getPaymentDetailsForTradePopup();
-
-    public long getMaxTradePeriod() {
-        return maxTradePeriod;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PaymentAccountPayload)) return false;
-
-        PaymentAccountPayload that = (PaymentAccountPayload) o;
-
-        if (maxTradePeriod != that.maxTradePeriod) return false;
-        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null)
-            return false;
-        return !(id != null ? !id.equals(that.id) : that.id != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = paymentMethodId != null ? paymentMethodId.hashCode() : 0;
-        result = 31 * result + (id != null ? id.hashCode() : 0);
-        result = 31 * result + (int) (maxTradePeriod ^ (maxTradePeriod >>> 32));
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "PaymentAccountPayload{" +
-                "paymentMethodName='" + paymentMethodId + '\'' +
-                ", id='" + id + '\'' +
-                ", maxTradePeriod=" + maxTradePeriod +
-                '}';
-    }
 }

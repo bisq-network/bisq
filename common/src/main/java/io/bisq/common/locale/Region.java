@@ -19,10 +19,14 @@ package io.bisq.common.locale;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
+@EqualsAndHashCode
+@ToString
 public final class Region implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -33,33 +37,5 @@ public final class Region implements Persistable {
     public Region(String code, String name) {
         this.code = code;
         this.name = name;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Region region = (Region) o;
-
-        //noinspection SimplifiableIfStatement
-        if (code != null ? !code.equals(region.code) : region.code != null) return false;
-        return !(name != null ? !name.equals(region.name) : region.name != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = code != null ? code.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "Region{" +
-                "code='" + code + '\'' +
-                ", name='" + name + '\'' +
-                '}';
     }
 }

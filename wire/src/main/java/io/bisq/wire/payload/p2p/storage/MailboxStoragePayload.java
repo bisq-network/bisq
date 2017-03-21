@@ -1,13 +1,17 @@
-package io.bisq.wire.payload;
+package io.bisq.wire.payload.p2p.storage;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.wire.message.p2p.PrefixedSealedAndSignedMessage;
+import io.bisq.wire.payload.StoragePayload;
 import io.bisq.wire.proto.Messages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.encoders.Hex;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -15,6 +19,8 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -25,10 +31,11 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Typical payloads are trade or dispute network_messages to be stored when the peer is offline.
  */
+@EqualsAndHashCode
+@Slf4j
 public final class MailboxStoragePayload implements StoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(MailboxStoragePayload.class);
 
     private static final long TTL = TimeUnit.DAYS.toMillis(10);
 
@@ -40,27 +47,42 @@ public final class MailboxStoragePayload implements StoragePayload {
     /**
      * Used for check if the add operation is permitted.
      * senderStoragePublicKey has to be equal to the ownerPubKey of the ProtectedData
-     *
      */
     public transient PublicKey senderPubKeyForAddOperation;
     private final byte[] senderPubKeyForAddOperationBytes;
     /**
      * Used for check if the remove operation is permitted.
      * senderStoragePublicKey has to be equal to the ownerPubKey of the ProtectedData
-     *
      */
     public transient PublicKey receiverPubKeyForRemoveOperation;
     private final byte[] receiverPubKeyForRemoveOperationBytes;
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // field in a class would break that hash and therefore break the storage mechanism.
+    @Getter
+    @Nullable
+    private Map<String, String> extraDataMap;
 
-    public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage, PublicKey senderPubKeyForAddOperation, PublicKey receiverPubKeyForRemoveOperation) {
-        this(prefixedSealedAndSignedMessage, new X509EncodedKeySpec(senderPubKeyForAddOperation.getEncoded()).getEncoded(),
-                new X509EncodedKeySpec(receiverPubKeyForRemoveOperation.getEncoded()).getEncoded());
+    // Called from domain
+    public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
+                                 PublicKey senderPubKeyForAddOperation,
+                                 PublicKey receiverPubKeyForRemoveOperation) {
+        this(prefixedSealedAndSignedMessage,
+                new X509EncodedKeySpec(senderPubKeyForAddOperation.getEncoded()).getEncoded(),
+                new X509EncodedKeySpec(receiverPubKeyForRemoveOperation.getEncoded()).getEncoded(),
+                null);
     }
 
-    public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage, byte[] senderPubKeyForAddOperationBytes, byte[] receiverPubKeyForRemoveOperationBytes) {
+    // Called from PB
+    public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
+                                 byte[] senderPubKeyForAddOperationBytes,
+                                 byte[] receiverPubKeyForRemoveOperationBytes,
+                                 @Nullable Map<String, String> extraDataMap) {
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
         this.senderPubKeyForAddOperationBytes = senderPubKeyForAddOperationBytes;
         this.receiverPubKeyForRemoveOperationBytes = receiverPubKeyForRemoveOperationBytes;
+        this.extraDataMap = extraDataMap;
+
         init();
     }
 
@@ -94,36 +116,22 @@ public final class MailboxStoragePayload implements StoragePayload {
 
     @Override
     public Messages.StoragePayload toProtoBuf() {
-        return Messages.StoragePayload.newBuilder().setMailboxStoragePayload(Messages.MailboxStoragePayload.newBuilder()
+        final Messages.MailboxStoragePayload.Builder builder = Messages.MailboxStoragePayload.newBuilder()
                 .setTTL(TTL)
                 .setPrefixedSealedAndSignedMessage(prefixedSealedAndSignedMessage.toProtoBuf().getPrefixedSealedAndSignedMessage())
                 .setSenderPubKeyForAddOperationBytes(ByteString.copyFrom(senderPubKeyForAddOperationBytes))
-                .setReceiverPubKeyForRemoveOperationBytes(ByteString.copyFrom(receiverPubKeyForRemoveOperationBytes))).build();
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof MailboxStoragePayload)) return false;
-
-        MailboxStoragePayload that = (MailboxStoragePayload) o;
-
-        return !(prefixedSealedAndSignedMessage != null ? !prefixedSealedAndSignedMessage.equals(that.prefixedSealedAndSignedMessage) : that.prefixedSealedAndSignedMessage != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return prefixedSealedAndSignedMessage != null ? prefixedSealedAndSignedMessage.hashCode() : 0;
+                .setReceiverPubKeyForRemoveOperationBytes(ByteString.copyFrom(receiverPubKeyForRemoveOperationBytes));
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
+        return Messages.StoragePayload.newBuilder().setMailboxStoragePayload(builder).build();
     }
 
     @Override
     public String toString() {
         return "MailboxStoragePayload{" +
                 "prefixedSealedAndSignedMessage=" + prefixedSealedAndSignedMessage +
-                ", senderPubKeyForAddOperation.hashCode()=" + (senderPubKeyForAddOperation != null ? senderPubKeyForAddOperation.hashCode() : "null") +
-                ", receiverPubKeyForRemoveOperation.hashCode()=" + (receiverPubKeyForRemoveOperation != null ? receiverPubKeyForRemoveOperation.hashCode() : "null") +
+                ", senderPubKeyForAddOperation=" + Hex.toHexString(senderPubKeyForAddOperation.getEncoded()) +
+                ", receiverPubKeyForRemoveOperation=" + Hex.toHexString(receiverPubKeyForRemoveOperation.getEncoded()) +
+                ", extraDataMap=" + extraDataMap +
                 '}';
     }
 }

@@ -23,8 +23,9 @@ import io.bisq.common.crypto.Sig;
 import io.bisq.wire.crypto.Encryption;
 import io.bisq.wire.payload.Payload;
 import io.bisq.wire.proto.Messages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -34,23 +35,26 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
 /**
  * Same as KeyRing but with public keys only.
  * Used to send public keys over the wire to other peer.
  */
+@Slf4j
 public final class PubKeyRing implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(PubKeyRing.class);
 
     // Payload
     private final byte[] signaturePubKeyBytes;
     private final byte[] encryptionPubKeyBytes;
 
     // Domain
+    @Getter
     transient private PublicKey signaturePubKey;
+    @Getter
     transient private PublicKey encryptionPubKey;
 
     public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey) {
@@ -77,53 +81,45 @@ public final class PubKeyRing implements Payload {
 
     private void init() {
         try {
-            signaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(signaturePubKeyBytes));
-            encryptionPubKey = KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
+            signaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC")
+                    .generatePublic(new X509EncodedKeySpec(signaturePubKeyBytes));
+            encryptionPubKey = KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC")
+                    .generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
             log.error(e.getMessage());
         }
     }
 
-    public PublicKey getSignaturePubKey() {
-        return signaturePubKey;
-    }
-
-    public PublicKey getEncryptionPubKey() {
-        return encryptionPubKey;
+    @Override
+    public Messages.PubKeyRing toProtoBuf() {
+        return Messages.PubKeyRing.newBuilder().setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes))
+                .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes)).build();
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PubKeyRing)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
         PubKeyRing that = (PubKeyRing) o;
 
-        if (signaturePubKey != null ? !signaturePubKey.equals(that.signaturePubKey) : that.signaturePubKey != null)
-            return false;
-        return !(encryptionPubKey != null ? !encryptionPubKey.equals(that.encryptionPubKey) : that.encryptionPubKey != null);
-
+        if (!Arrays.equals(signaturePubKeyBytes, that.signaturePubKeyBytes)) return false;
+        return Arrays.equals(encryptionPubKeyBytes, that.encryptionPubKeyBytes);
     }
 
     @Override
     public int hashCode() {
-        int result = signaturePubKey != null ? signaturePubKey.hashCode() : 0;
-        result = 31 * result + (encryptionPubKey != null ? encryptionPubKey.hashCode() : 0);
+        int result = signaturePubKeyBytes != null ? Arrays.hashCode(signaturePubKeyBytes) : 0;
+        result = 31 * result + (encryptionPubKeyBytes != null ? Arrays.hashCode(encryptionPubKeyBytes) : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "PubKeyRing{" +
-                "signaturePubKey.hashCode()=" + (signaturePubKey != null ? signaturePubKey.hashCode() : "") +
-                ", encryptionPubKey.hashCode()=" + (encryptionPubKey != null ? encryptionPubKey.hashCode() : "") +
+                "signaturePubKey=" + Hex.toHexString(signaturePubKey.getEncoded()) +
+                ", encryptionPubKey=" + Hex.toHexString(encryptionPubKey.getEncoded()) +
                 '}';
-    }
-
-    @Override
-    public Messages.PubKeyRing toProtoBuf() {
-        return Messages.PubKeyRing.newBuilder().setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes))
-                .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes)).build();
     }
 }

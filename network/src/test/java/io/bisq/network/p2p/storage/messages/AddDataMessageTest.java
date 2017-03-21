@@ -6,9 +6,9 @@ import io.bisq.wire.crypto.KeyRing;
 import io.bisq.wire.crypto.KeyStorage;
 import io.bisq.wire.message.p2p.PrefixedSealedAndSignedMessage;
 import io.bisq.wire.message.p2p.storage.AddDataMessage;
-import io.bisq.wire.payload.MailboxStoragePayload;
 import io.bisq.wire.payload.crypto.SealedAndSigned;
 import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.wire.payload.p2p.storage.MailboxStoragePayload;
 import io.bisq.wire.payload.p2p.storage.ProtectedMailboxStorageEntry;
 import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
 import io.bisq.wire.proto.Messages;
@@ -44,8 +44,10 @@ public class AddDataMessageTest {
     public void toProtoBuf() throws Exception {
         SealedAndSigned sealedAndSigned = new SealedAndSigned(RandomUtils.nextBytes(10), RandomUtils.nextBytes(10), RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
         PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(new NodeAddress("host", 1000), sealedAndSigned, RandomUtils.nextBytes(10));
-        MailboxStoragePayload mailboxStoragePayload = new MailboxStoragePayload(prefixedSealedAndSignedMessage, keyRing1.getPubKeyRing().getSignaturePubKey(), keyRing1.getPubKeyRing().getSignaturePubKey());
-        ProtectedStorageEntry protectedStorageEntry = new ProtectedMailboxStorageEntry(mailboxStoragePayload, keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
+        MailboxStoragePayload mailboxStoragePayload = new MailboxStoragePayload(prefixedSealedAndSignedMessage,
+                keyRing1.getPubKeyRing().getSignaturePubKey(), keyRing1.getPubKeyRing().getSignaturePubKey());
+        ProtectedStorageEntry protectedStorageEntry = new ProtectedMailboxStorageEntry(mailboxStoragePayload,
+                keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
         AddDataMessage dataMessage1 = new AddDataMessage(protectedStorageEntry);
         Messages.Envelope envelope = dataMessage1.toProtoBuf();
         AddDataMessage dataMessage2 = (AddDataMessage) ProtoBufferUtilities.getAddDataMessage(envelope);

@@ -6,9 +6,11 @@ import io.bisq.wire.crypto.Hash;
 import io.bisq.wire.payload.Payload;
 import io.bisq.wire.proto.Messages;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.regex.Pattern;
 
+@Slf4j
 public final class NodeAddress implements Persistable, Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -47,7 +49,6 @@ public final class NodeAddress implements Persistable, Payload {
     public String getHostNameWithoutPostFix() {
         return hostName.replace(".onion", "");
     }
-
 
     public Messages.NodeAddress toProtoBuf() {
         return Messages.NodeAddress.newBuilder().setHostName(hostName).setPort(port).build();

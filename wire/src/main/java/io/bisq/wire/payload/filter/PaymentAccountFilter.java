@@ -2,15 +2,16 @@ package io.bisq.wire.payload.filter;
 
 import io.bisq.common.app.Version;
 import io.bisq.wire.proto.Messages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 
+@ToString
+@Slf4j
 public class PaymentAccountFilter implements Serializable {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(PaymentAccountFilter.class);
 
     // Payload
     public final String paymentMethodId;
@@ -21,15 +22,6 @@ public class PaymentAccountFilter implements Serializable {
         this.paymentMethodId = paymentMethodId;
         this.getMethodName = getMethodName;
         this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return "PaymentAccountFilter{" +
-                "paymentMethodId='" + paymentMethodId + '\'' +
-                ", getMethodName='" + getMethodName + '\'' +
-                ", value='" + value + '\'' +
-                '}';
     }
 
     public Messages.PaymentAccountFilter toProtoBuf() {

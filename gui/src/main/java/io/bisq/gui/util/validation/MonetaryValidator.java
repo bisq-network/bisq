@@ -17,43 +17,51 @@
 
 package io.bisq.gui.util.validation;
 
+import io.bisq.common.locale.Res;
+
 import javax.inject.Inject;
 
-/**
- * That validator accepts empty inputs
- */
-public class OptionalFiatValidator extends FiatValidator {
+public abstract class MonetaryValidator extends NumberValidator {
+
+    protected abstract double getMinValue();
+
+    protected abstract double getMaxValue();
 
     @Inject
-    public OptionalFiatValidator() {
-        super();
+    public MonetaryValidator() {
     }
 
     @Override
     public ValidationResult validate(String input) {
         ValidationResult result = validateIfNotEmpty(input);
-
-        // we accept empty input
-        if (!result.isValid)
-            return new ValidationResult(true);
-
         if (result.isValid) {
             input = cleanInput(input);
             result = validateIfNumber(input);
         }
 
         if (result.isValid) {
-            result = validateIfNotZero(input);
-            if (result.isValid) {
-                result = validateIfNotNegative(input)
-                        .and(validateIfNotExceedsMinFiatValue(input))
-                        .and(validateIfNotExceedsMaxFiatValue(input));
-            } else {
-                // we accept zero input
-                return new ValidationResult(true);
-            }
+            result = validateIfNotZero(input)
+                    .and(validateIfNotNegative(input))
+                    .and(validateIfNotExceedsMinValue(input))
+                    .and(validateIfNotExceedsMaxValue(input));
         }
 
         return result;
+    }
+
+    protected ValidationResult validateIfNotExceedsMinValue(String input) {
+        double d = Double.parseDouble(input);
+        if (d < getMinValue())
+            return new ValidationResult(false, Res.get("validation.fiat.toSmall"));
+        else
+            return new ValidationResult(true);
+    }
+
+    protected ValidationResult validateIfNotExceedsMaxValue(String input) {
+        double d = Double.parseDouble(input);
+        if (d > getMaxValue())
+            return new ValidationResult(false, Res.get("validation.fiat.toLarge"));
+        else
+            return new ValidationResult(true);
     }
 }

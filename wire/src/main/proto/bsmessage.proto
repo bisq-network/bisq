@@ -180,7 +180,7 @@ message Payload {
         ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 12;
         PubKeyRing pub_key_ring = 13;
         RawTransactionInput raw_transaction_input = 14;
-        PB_OfferPayload pb_offer = 15;
+        OfferPayload offer_payload = 15;
         SealedAndSigned SealedAndSigned = 16;
     }
 }
@@ -199,7 +199,7 @@ message StoragePayload {
         CompensationRequestPayload compensation_request_payload = 4;
         TradeStatistics trade_statistics = 5;
         MailboxStoragePayload mailbox_storage_payload = 6;
-        PB_OfferPayload pb_offer = 7;
+        OfferPayload offer_payload = 7;
     }
 }
 
@@ -210,6 +210,7 @@ message Alert {
     bool is_update_info = 4;
     string signature_as_base64 = 5;
     bytes storage_public_key_bytes = 6;
+    map<string, string> extra_data_map = 7;
 }
 
 message Arbitrator {
@@ -222,6 +223,7 @@ message Arbitrator {
     int64 registrationDate = 7;
     string registrationSignature = 8;
     bytes registrationPubKey = 9;
+    map<string, string> extra_data_map = 10;
 }
 
 message Filter {
@@ -231,6 +233,7 @@ message Filter {
     repeated PaymentAccountFilter bannedPaymentAccounts = 4;
     string signatureAsBase64 = 5;
     bytes publicKeyBytes = 6;
+    map<string, string> extra_data_map = 7;
 }
 
 message PaymentAccountFilter {
@@ -258,13 +261,14 @@ message CompensationRequestPayload {
     string p2pStorageSignaturePubKeyAsHex = 16;
     string signature = 17;
     string feeTxId = 18;
+    map<string, string> extra_data_map = 19;
 }
 
 message TradeStatistics {
     int64 TTL = 1;
     string baseCurrency = 2;
     string counterCurrency = 3;
-    PB_OfferPayload.Direction direction = 4;
+    OfferPayload.Direction direction = 4;
     int64 trade_price = 5;
     int64 trade_amount = 6;
     int64 trade_date = 7;
@@ -277,15 +281,17 @@ message TradeStatistics {
     string offer_id = 14;
     string deposit_tx_id = 15;
     PubKeyRing pub_key_ring = 16;
+    map<string, string> extra_data_map = 17;
 }
 message MailboxStoragePayload {
     int64 TTL = 1;
     PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = 2;
     bytes senderPubKeyForAddOperationBytes = 3;
     bytes receiverPubKeyForRemoveOperationBytes = 4;
+    map<string, string> extra_data_map = 5;
 }
 
-message PB_OfferPayload {
+message OfferPayload {
     enum Direction {
         BUY = 0;
         SELL = 1;
@@ -453,7 +459,7 @@ message PubKeyRing {
 }
 
 message Contract {
-    PB_OfferPayload pb_offer = 1;
+    OfferPayload offer_payload = 1;
     int64 trade_amount = 2;
     int64 trade_price = 3;
     string take_offer_fee_tx_id = 4;
@@ -653,17 +659,17 @@ message CountryBasedPaymentAccountPayload {
 }
 
 message BankAccountPayload {
-    string holder_name = 2;
-    string bank_name = 3;
-    string bank_id = 4;
-    string branch_id = 5;
-    string account_nr = 6;
-    string account_type = 7;
-    string holder_tax_id = 8;
+    string holder_name = 1;
+    string bank_name = 2;
+    string bank_id = 3;
+    string branch_id = 4;
+    string account_nr = 5;
+    string account_type = 6;
+    string holder_tax_id = 7;
     oneof message {
-        NationalBankAccountPayload national_bank_account_payload = 9;
-        SameBankAccountPayload same_bank_accont_payload = 10;
-        SpecificBanksAccountPayload specific_banks_account_payload = 11;
+        NationalBankAccountPayload national_bank_account_payload = 8;
+        SameBankAccountPayload same_bank_accont_payload = 9;
+        SpecificBanksAccountPayload specific_banks_account_payload = 10;
     }
 }
 
@@ -672,8 +678,9 @@ message NationalBankAccountPayload {
 
 message SameBankAccountPayload {
 }
+
 message SpecificBanksAccountPayload {
-    repeated string accepted_banks = 2;
+    repeated string accepted_banks = 1;
 }
 
 message CashDepositAccountPayload {

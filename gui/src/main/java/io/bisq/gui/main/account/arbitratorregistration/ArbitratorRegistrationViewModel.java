@@ -154,7 +154,8 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                     new ArrayList<>(languageCodes),
                     new Date(),
                     registrationKey.getPubKey(),
-                    registrationSignature
+                    registrationSignature,
+                    null
             );
 
             arbitratorManager.addArbitrator(arbitrator,

@@ -19,37 +19,33 @@ package io.bisq.common.locale;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
+
+@EqualsAndHashCode
+@ToString
+@Getter
 public abstract class TradeCurrency implements Persistable, Comparable<TradeCurrency> {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     protected final String code;
     protected final String name;
+    @Nullable
     protected String symbol;
 
     protected TradeCurrency(String code, String name) {
-        this.code = code;
-        this.name = name;
+        this(code, name, null);
     }
 
-    public TradeCurrency(String code, String name, String symbol) {
+    public TradeCurrency(String code, String name, @Nullable String symbol) {
         this.code = code;
         this.name = name;
         this.symbol = symbol;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getSymbol() {
-        return symbol;
     }
 
     public String getDisplayPrefix() {
@@ -66,31 +62,6 @@ public abstract class TradeCurrency implements Persistable, Comparable<TradeCurr
 
     @Override
     public int compareTo(@NotNull TradeCurrency other) {
-        return this.getName().compareTo(other.getName());
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TradeCurrency)) return false;
-
-        TradeCurrency that = (TradeCurrency) o;
-
-        return !(getCode() != null ? !getCode().equals(that.getCode()) : that.getCode() != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return getCode() != null ? getCode().hashCode() : 0;
-    }
-
-    @Override
-    public String toString() {
-        return "TradeCurrency{" +
-                "code='" + code + '\'' +
-                ", name='" + name + '\'' +
-                ", symbol='" + symbol + '\'' +
-                '}';
+        return this.code.compareTo(other.code);
     }
 }

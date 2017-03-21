@@ -23,8 +23,7 @@ import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.trade.TradeManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
 import java.util.Optional;
@@ -37,9 +36,8 @@ import java.util.stream.Collectors;
  * It also use OfferRepository.Listener as the lists items class and we don't want to get any dependency out of the
  * package for that.
  */
+@Slf4j
 public class OfferBook {
-    private static final Logger log = LoggerFactory.getLogger(OfferBook.class);
-
     private final OfferBookService offerBookService;
     private final ObservableList<OfferBookListItem> offerBookListItems = FXCollections.observableArrayList();
 
@@ -58,7 +56,6 @@ public class OfferBook {
                 OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
                 if (!offerBookListItems.contains(offerBookListItem)) {
                     offerBookListItems.add(offerBookListItem);
-
                     Log.logIfStressTests("OfferPayload added: No. of offers = " + offerBookListItems.size());
                 }
             }
@@ -101,7 +98,7 @@ public class OfferBook {
 
             Log.logIfStressTests("OfferPayload filled: No. of offers = " + offerBookListItems.size());
 
-            log.debug("offerBookListItems " + offerBookListItems.size());
+            log.debug("offerBookListItems.size " + offerBookListItems.size());
         } catch (Throwable t) {
             t.printStackTrace();
             log.error("Error at fillOfferBookListItems: " + t.toString());

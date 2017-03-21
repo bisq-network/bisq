@@ -20,18 +20,21 @@ package io.bisq.wire.payload.payment;
 import com.google.common.base.Joiner;
 import io.bisq.common.app.Version;
 import io.bisq.wire.proto.Messages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Locale;
 
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@Getter
+@Slf4j
 public final class SpecificBanksAccountPayload extends BankAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
-    private static final Logger log = LoggerFactory.getLogger(SpecificBanksAccountPayload.class);
-
 
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private ArrayList<String> acceptedBanks;
@@ -49,11 +52,6 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
         if (!acceptedBanks.contains(bankName))
             acceptedBanks.add(bankName);
     }
-
-    public ArrayList<String> getAcceptedBanks() {
-        return acceptedBanks;
-    }
-
 
     @Override
     public String getPaymentDetails() {

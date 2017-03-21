@@ -23,17 +23,16 @@ import io.bisq.common.app.Version;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.TradableList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.Date;
 
+@Slf4j
 public final class OpenOffer implements Tradable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
-    private static final Logger log = LoggerFactory.getLogger(OpenOffer.class);
 
     // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state.
     private static final long TIMEOUT_SEC = 30;
@@ -46,7 +45,9 @@ public final class OpenOffer implements Tradable {
         CANCELED
     }
 
+    @Getter
     private final Offer offer;
+    @Getter
     private State state = State.AVAILABLE;
 
     transient private Storage<TradableList<OpenOffer>> storage;
@@ -83,10 +84,6 @@ public final class OpenOffer implements Tradable {
         return offer.getShortId();
     }
 
-    public Offer getOffer() {
-        return offer;
-    }
-
     public void setStorage(Storage<TradableList<OpenOffer>> storage) {
         this.storage = storage;
     }
@@ -104,11 +101,6 @@ public final class OpenOffer implements Tradable {
         else
             stopTimeout();
     }
-
-    public State getState() {
-        return state;
-    }
-
 
     private void startTimeout() {
         stopTimeout();
@@ -128,12 +120,29 @@ public final class OpenOffer implements Tradable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        OpenOffer openOffer = (OpenOffer) o;
+
+        if (offer != null ? !offer.equals(openOffer.offer) : openOffer.offer != null) return false;
+        return state == openOffer.state;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = offer != null ? offer.hashCode() : 0;
+        result = 31 * result + (state != null ? state.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "OpenOffer{" +
-                "\n\ttimeoutTimer=" + timeoutTimer +
                 "\n\toffer=" + offer +
                 "\n\tstate=" + state +
-                "\n\tstorage=" + storage +
                 '}';
     }
 }

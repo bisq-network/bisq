@@ -19,7 +19,17 @@ package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
 import io.bisq.wire.proto.Messages;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@Setter
+@Getter
+@Slf4j
 public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -33,14 +43,6 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     public CryptoCurrencyAccountPayload(String paymentMethod, String id, long maxTradePeriod, String address) {
         super(paymentMethod, id, maxTradePeriod);
         this.address = address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getAddress() {
-        return address;
     }
 
     @Override

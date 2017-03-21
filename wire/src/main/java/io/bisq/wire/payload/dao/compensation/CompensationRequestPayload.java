@@ -24,11 +24,13 @@ import io.bisq.wire.payload.LazyProcessedStoragePayload;
 import io.bisq.wire.payload.PersistedStoragePayload;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.proto.Messages;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.bouncycastle.util.encoders.Hex;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.security.KeyFactory;
@@ -38,15 +40,15 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-// The data of the CompensationRequest
+@EqualsAndHashCode
+@Slf4j
 public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
-    private static final Logger log = LoggerFactory.getLogger(CompensationRequestPayload.class);
-
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
     // Payload
@@ -66,7 +68,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     @JsonExclude
     private final byte[] p2pStorageSignaturePubKeyBytes;
     // used for json
-    private final String p2pStorageSignaturePubKeyAsHex;
+    private String p2pStorageSignaturePubKeyAsHex;
     // Signature of the JSON data of this object excluding the signature and feeTxId fields using the standard Bitcoin
     // messaging signing format as a base64 encoded string.
     @JsonExclude
@@ -74,12 +76,18 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     // Set after we signed and set the hash. The hash is used in the OP_RETURN of the fee tx
     @JsonExclude
     public String feeTxId;
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // field in a class would break that hash and therefore break the storage mechanism.
+    @Nullable
+    private Map<String, String> extraDataMap;
 
 
     // Domain
     @JsonExclude
     private transient PublicKey p2pStorageSignaturePubKey;
 
+    // Called from domain
     public CompensationRequestPayload(String uid,
                                       String name,
                                       String title,
@@ -92,27 +100,24 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                                       String btcAddress,
                                       NodeAddress nodeAddress,
                                       PublicKey p2pStorageSignaturePubKey) {
+        this(uid,
+                name,
+                title,
+                category,
+                description,
+                link,
+                startDate,
+                endDate,
+                requestedBtc,
+                btcAddress,
+                nodeAddress,
+                new X509EncodedKeySpec(p2pStorageSignaturePubKey.getEncoded()).getEncoded(),
+                null);
 
-        version = Version.COMPENSATION_REQUEST_VERSION;
-        creationDate = new Date().getTime();
-
-        this.uid = uid;
-        this.name = name;
-        this.title = title;
-        this.category = category;
-        this.description = description;
-        this.link = link;
-        this.startDate = startDate.getTime();
-        this.endDate = endDate.getTime();
-        this.requestedBtc = requestedBtc.value;
-        this.btcAddress = btcAddress;
-        this.nodeAddress = nodeAddress.getFullAddress();
-        this.p2pStorageSignaturePubKey = p2pStorageSignaturePubKey;
-        this.p2pStorageSignaturePubKeyBytes = new X509EncodedKeySpec(p2pStorageSignaturePubKey.getEncoded()).getEncoded();
-        p2pStorageSignaturePubKeyAsHex = Utils.HEX.encode(p2pStorageSignaturePubKey.getEncoded());
         init();
     }
 
+    // Called from PB
     public CompensationRequestPayload(String uid,
                                       String name,
                                       String title,
@@ -124,7 +129,8 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                                       Coin requestedBtc,
                                       String btcAddress,
                                       NodeAddress nodeAddress,
-                                      byte[] p2pStorageSignaturePubKeyBytes) {
+                                      byte[] p2pStorageSignaturePubKeyBytes,
+                                      @Nullable Map<String, String> extraDataMap) {
 
         version = Version.COMPENSATION_REQUEST_VERSION;
         creationDate = new Date().getTime();
@@ -140,11 +146,10 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
         this.requestedBtc = requestedBtc.value;
         this.btcAddress = btcAddress;
         this.nodeAddress = nodeAddress.getFullAddress();
-        //TODO p2pStorageSignaturePubKeynot in constr.
-        this.p2pStorageSignaturePubKey = p2pStorageSignaturePubKey;
         this.p2pStorageSignaturePubKeyBytes = p2pStorageSignaturePubKeyBytes;
+
+        this.extraDataMap = extraDataMap;
         init();
-        this.p2pStorageSignaturePubKeyAsHex = Utils.HEX.encode(p2pStorageSignaturePubKey.getEncoded());
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -158,7 +163,9 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
 
     private void init() {
         try {
-            p2pStorageSignaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(p2pStorageSignaturePubKeyBytes));
+            p2pStorageSignaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC")
+                    .generatePublic(new X509EncodedKeySpec(p2pStorageSignaturePubKeyBytes));
+            this.p2pStorageSignaturePubKeyAsHex = Utils.HEX.encode(p2pStorageSignaturePubKey.getEncoded());
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
             log.error("Couldn't create the p2p storage public key", e);
         }
@@ -182,6 +189,13 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     public PublicKey getOwnerPubKey() {
         return p2pStorageSignaturePubKey;
     }
+
+    @Nullable
+    @Override
+    public Map<String, String> getExtraDataMap() {
+        return extraDataMap;
+    }
+
 
     public Date getStartDate() {
         return new Date(startDate);
@@ -209,83 +223,33 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
 
     @Override
     public Messages.StoragePayload toProtoBuf() {
-        return Messages.StoragePayload.newBuilder().setCompensationRequestPayload(
-                Messages.CompensationRequestPayload.newBuilder()
-                        .setTTL(TTL)
-                        .setVersion(version)
-                        .setCreationDate(creationDate)
-                        .setUid(uid)
-                        .setName(name)
-                        .setTitle(title)
-                        .setCategory(category)
-                        .setDescription(description)
-                        .setLink(link)
-                        .setStartDate(startDate)
-                        .setEndDate(endDate)
-                        .setRequestedBtc(requestedBtc)
-                        .setBtcAddress(btcAddress)
-                        .setNodeAddress(nodeAddress)
-                        .setP2PStorageSignaturePubKeyAsHex(p2pStorageSignaturePubKeyAsHex)
-                        .setSignature(signature)
-                        .setFeeTxId(feeTxId)).build();
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        CompensationRequestPayload that = (CompensationRequestPayload) o;
-
-        if (version != that.version) return false;
-        if (startDate != that.startDate) return false;
-        if (endDate != that.endDate) return false;
-        if (requestedBtc != that.requestedBtc) return false;
-        if (creationDate != that.creationDate) return false;
-        if (uid != null ? !uid.equals(that.uid) : that.uid != null) return false;
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        if (title != null ? !title.equals(that.title) : that.title != null) return false;
-        if (category != null ? !category.equals(that.category) : that.category != null) return false;
-        if (description != null ? !description.equals(that.description) : that.description != null) return false;
-        if (link != null ? !link.equals(that.link) : that.link != null) return false;
-        if (btcAddress != null ? !btcAddress.equals(that.btcAddress) : that.btcAddress != null) return false;
-        if (nodeAddress != null ? !nodeAddress.equals(that.nodeAddress) : that.nodeAddress != null) return false;
-        if (p2pStorageSignaturePubKey != null ? !p2pStorageSignaturePubKey.equals(that.p2pStorageSignaturePubKey) : that.p2pStorageSignaturePubKey != null)
-            return false;
-        if (p2pStorageSignaturePubKeyAsHex != null ? !p2pStorageSignaturePubKeyAsHex.equals(that.p2pStorageSignaturePubKeyAsHex) : that.p2pStorageSignaturePubKeyAsHex != null)
-            return false;
-        if (signature != null ? !signature.equals(that.signature) : that.signature != null) return false;
-        return !(feeTxId != null ? !feeTxId.equals(that.feeTxId) : that.feeTxId != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (int) version;
-        result = 31 * result + (uid != null ? uid.hashCode() : 0);
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (title != null ? title.hashCode() : 0);
-        result = 31 * result + (category != null ? category.hashCode() : 0);
-        result = 31 * result + (description != null ? description.hashCode() : 0);
-        result = 31 * result + (link != null ? link.hashCode() : 0);
-        result = 31 * result + (int) (startDate ^ (startDate >>> 32));
-        result = 31 * result + (int) (endDate ^ (endDate >>> 32));
-        result = 31 * result + (int) (requestedBtc ^ (requestedBtc >>> 32));
-        result = 31 * result + (btcAddress != null ? btcAddress.hashCode() : 0);
-        result = 31 * result + (nodeAddress != null ? nodeAddress.hashCode() : 0);
-        result = 31 * result + (int) (creationDate ^ (creationDate >>> 32));
-        result = 31 * result + (p2pStorageSignaturePubKey != null ? p2pStorageSignaturePubKey.hashCode() : 0);
-        result = 31 * result + (p2pStorageSignaturePubKeyAsHex != null ? p2pStorageSignaturePubKeyAsHex.hashCode() : 0);
-        result = 31 * result + (signature != null ? signature.hashCode() : 0);
-        result = 31 * result + (feeTxId != null ? feeTxId.hashCode() : 0);
-        return result;
+        final Messages.CompensationRequestPayload.Builder builder = Messages.CompensationRequestPayload.newBuilder()
+                .setTTL(TTL)
+                .setVersion(version)
+                .setCreationDate(creationDate)
+                .setUid(uid)
+                .setName(name)
+                .setTitle(title)
+                .setCategory(category)
+                .setDescription(description)
+                .setLink(link)
+                .setStartDate(startDate)
+                .setEndDate(endDate)
+                .setRequestedBtc(requestedBtc)
+                .setBtcAddress(btcAddress)
+                .setNodeAddress(nodeAddress)
+                .setP2PStorageSignaturePubKeyAsHex(p2pStorageSignaturePubKeyAsHex)
+                .setSignature(signature)
+                .setFeeTxId(feeTxId);
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
+        return Messages.StoragePayload.newBuilder().setCompensationRequestPayload(builder).build();
     }
 
     @Override
     public String toString() {
         return "CompensationRequestPayload{" +
                 "version=" + version +
+                ", creationDate=" + getCreationDate() +
                 ", uid='" + uid + '\'' +
                 ", name='" + name + '\'' +
                 ", title='" + title + '\'' +
@@ -297,10 +261,11 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                 ", requestedBtc=" + requestedBtc +
                 ", btcAddress='" + btcAddress + '\'' +
                 ", nodeAddress='" + getNodeAddress() + '\'' +
-                ", creationDate=" + getCreationDate() +
+                ", p2pStorageSignaturePubKeyBytes=" + Hex.toHexString(p2pStorageSignaturePubKeyBytes) +
                 ", p2pStorageSignaturePubKeyAsHex='" + p2pStorageSignaturePubKeyAsHex + '\'' +
                 ", signature='" + signature + '\'' +
                 ", feeTxId='" + feeTxId + '\'' +
+                ", extraDataMap=" + extraDataMap +
                 '}';
     }
 }

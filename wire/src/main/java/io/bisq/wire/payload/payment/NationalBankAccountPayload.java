@@ -19,14 +19,16 @@ package io.bisq.wire.payload.payment;
 
 import io.bisq.common.app.Version;
 import io.bisq.wire.proto.Messages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@Slf4j
 public final class NationalBankAccountPayload extends BankAccountPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
-    private static final Logger log = LoggerFactory.getLogger(NationalBankAccountPayload.class);
 
     public NationalBankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);

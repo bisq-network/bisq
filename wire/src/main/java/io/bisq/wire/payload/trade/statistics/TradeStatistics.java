@@ -14,23 +14,23 @@ import io.bisq.wire.payload.PersistedStoragePayload;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.offer.OfferPayload;
 import io.bisq.wire.proto.Messages;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.security.PublicKey;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+@ToString
+@Slf4j
 @Immutable
 public final class TradeStatistics implements LazyProcessedStoragePayload, CapabilityRequiringPayload, PersistedStoragePayload {
-    private static final Logger log = LoggerFactory.getLogger(TradeStatistics.class);
-
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     @JsonExclude
@@ -49,11 +49,19 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     public final double marketPriceMargin;
     public final long offerAmount;
     public final long offerMinAmount;
+    @Getter
     public final String offerId;
     public final String depositTxId;
     @JsonExclude
     public final PubKeyRing pubKeyRing;
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // field in a class would break that hash and therefore break the storage mechanism.
+    @Getter
+    @Nullable
+    private Map<String, String> extraDataMap;
 
+    // Called from domain
     public TradeStatistics(OfferPayload offerPayload,
                            Price tradePrice,
                            Coin tradeAmount,
@@ -74,9 +82,11 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                 tradeAmount.value,
                 tradeDate.getTime(),
                 depositTxId,
-                pubKeyRing);
+                pubKeyRing,
+                null);
     }
 
+    // Called from PB
     public TradeStatistics(OfferPayload.Direction direction,
                            String baseCurrency,
                            String counterCurrency,
@@ -91,7 +101,8 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                            long tradeAmount,
                            long tradeDate,
                            String depositTxId,
-                           PubKeyRing pubKeyRing) {
+                           PubKeyRing pubKeyRing,
+                           @Nullable Map<String, String> extraDataMap) {
         this.direction = direction;
         this.baseCurrency = baseCurrency;
         this.counterCurrency = counterCurrency;
@@ -102,14 +113,13 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         this.offerAmount = offerAmount;
         this.offerMinAmount = offerMinAmount;
         this.offerId = offerId;
-
         this.tradePrice = tradePrice;
         this.tradeAmount = tradeAmount;
         this.tradeDate = tradeDate;
         this.depositTxId = depositTxId;
         this.pubKeyRing = pubKeyRing;
+        this.extraDataMap = extraDataMap;
     }
-
 
     @Override
     public long getTTL() {
@@ -151,17 +161,13 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
             return new Volume(new ExchangeRate((Fiat) getTradePrice().getMonetary()).coinToFiat(getTradeAmount()));
     }
 
-    public String getOfferId() {
-        return offerId;
-    }
-
     @Override
     public Messages.StoragePayload toProtoBuf() {
-        return Messages.StoragePayload.newBuilder().setTradeStatistics(Messages.TradeStatistics.newBuilder()
+        final Messages.TradeStatistics.Builder builder = Messages.TradeStatistics.newBuilder()
                 .setTTL(TTL)
                 .setBaseCurrency(baseCurrency)
                 .setCounterCurrency(counterCurrency)
-                .setDirection(Messages.PB_Offer.Direction.forNumber(direction.ordinal()))
+                .setDirection(Messages.OfferPayload.Direction.forNumber(direction.ordinal()))
                 .setTradePrice(tradePrice)
                 .setTradeAmount(tradeAmount)
                 .setTradeDate(tradeDate)
@@ -173,42 +179,15 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                 .setOfferMinAmount(offerMinAmount)
                 .setOfferId(offerId)
                 .setDepositTxId(depositTxId)
-                .setPubKeyRing((Messages.PubKeyRing) pubKeyRing.toProtoBuf())).build();
+                .setPubKeyRing(pubKeyRing.toProtoBuf());
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
+        return Messages.StoragePayload.newBuilder().setTradeStatistics(builder).build();
     }
 
 
     // We don't include the pubKeyRing as both traders might publish it if the offerer uses an old
     // version and update later (taker publishes first, then later offerer)
     // We also don't include the trade date as that is set locally and different for offerer and taker
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TradeStatistics)) return false;
-
-        TradeStatistics that = (TradeStatistics) o;
-
-        if (tradePrice != that.tradePrice) return false;
-        if (tradeAmount != that.tradeAmount) return false;
-        if (offerDate != that.offerDate) return false;
-        if (useMarketBasedPrice != that.useMarketBasedPrice) return false;
-        if (Double.compare(that.marketPriceMargin, marketPriceMargin) != 0) return false;
-        if (offerAmount != that.offerAmount) return false;
-        if (offerMinAmount != that.offerMinAmount) return false;
-        if (baseCurrency != null ? !baseCurrency.equals(that.baseCurrency) : that.baseCurrency != null) return false;
-        if (counterCurrency != null ? !counterCurrency.equals(that.counterCurrency) : that.counterCurrency != null)
-            return false;
-
-        if (direction != null && that.direction != null && direction.ordinal() != that.direction.ordinal())
-            return false;
-        else if ((direction == null && that.direction != null) || (direction != null && that.direction == null))
-            return false;
-
-        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null)
-            return false;
-        if (getOfferId() != null ? !getOfferId().equals(that.getOfferId()) : that.getOfferId() != null) return false;
-        return !(depositTxId != null ? !depositTxId.equals(that.depositTxId) : that.depositTxId != null);
-    }
-
     @Override
     public int hashCode() {
         int result;
@@ -227,28 +206,33 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         result = 31 * result + (int) (offerMinAmount ^ (offerMinAmount >>> 32));
         result = 31 * result + (offerId != null ? offerId.hashCode() : 0);
         result = 31 * result + (depositTxId != null ? depositTxId.hashCode() : 0);
+        result = 31 * result + (extraDataMap != null ? extraDataMap.hashCode() : 0);
         return result;
     }
 
     @Override
-    public String toString() {
-        return "TradeStatistics{" +
-                "baseCurrency='" + baseCurrency + '\'' +
-                ", counterCurrency=" + counterCurrency +
-                ", direction=" + direction +
-                ", tradePrice=" + tradePrice +
-                ", tradeAmount=" + tradeAmount +
-                ", tradeDate=" + tradeDate +
-                ", paymentMethod='" + paymentMethodId + '\'' +
-                ", offerDate=" + offerDate +
-                ", useMarketBasedPrice=" + useMarketBasedPrice +
-                ", marketPriceMargin=" + marketPriceMargin +
-                ", offerAmount=" + offerAmount +
-                ", offerMinAmount=" + offerMinAmount +
-                ", offerId='" + getOfferId() + '\'' +
-                ", depositTxId='" + depositTxId + '\'' +
-                ", pubKeyRing=" + pubKeyRing +
-                ", hashCode=" + hashCode() +
-                '}';
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TradeStatistics that = (TradeStatistics) o;
+
+        if (tradePrice != that.tradePrice) return false;
+        if (tradeAmount != that.tradeAmount) return false;
+        if (offerDate != that.offerDate) return false;
+        if (useMarketBasedPrice != that.useMarketBasedPrice) return false;
+        if (Double.compare(that.marketPriceMargin, marketPriceMargin) != 0) return false;
+        if (offerAmount != that.offerAmount) return false;
+        if (offerMinAmount != that.offerMinAmount) return false;
+        if (baseCurrency != null ? !baseCurrency.equals(that.baseCurrency) : that.baseCurrency != null) return false;
+        if (counterCurrency != null ? !counterCurrency.equals(that.counterCurrency) : that.counterCurrency != null)
+            return false;
+        if (direction != that.direction) return false;
+        if (paymentMethodId != null ? !paymentMethodId.equals(that.paymentMethodId) : that.paymentMethodId != null)
+            return false;
+        if (offerId != null ? !offerId.equals(that.offerId) : that.offerId != null) return false;
+        if (depositTxId != null ? !depositTxId.equals(that.depositTxId) : that.depositTxId != null) return false;
+        return !(extraDataMap != null ? !extraDataMap.equals(that.extraDataMap) : that.extraDataMap != null);
+
     }
 }

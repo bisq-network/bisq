@@ -19,19 +19,19 @@ package io.bisq.gui.util.validation;
 
 import javax.inject.Inject;
 
-public class FiatValidator extends MonetaryValidator {
+public class AltcoinValidator extends MonetaryValidator {
     @Override
     protected double getMinValue() {
-        return 0.01;
+        return 0.00000001;
     }
 
     @Override
     protected double getMaxValue() {
-        // hard to say what the max value should be (zimbabwe dollar....)?
+        // hard to say what the max value should be with altcoins
         return 100_000_000;
     }
 
     @Inject
-    public FiatValidator() {
+    public AltcoinValidator() {
     }
 }

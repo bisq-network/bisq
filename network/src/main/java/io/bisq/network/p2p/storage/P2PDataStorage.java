@@ -20,8 +20,12 @@ import io.bisq.wire.crypto.Hash;
 import io.bisq.wire.message.Message;
 import io.bisq.wire.message.ToProtoBuffer;
 import io.bisq.wire.message.p2p.storage.*;
-import io.bisq.wire.payload.*;
+import io.bisq.wire.payload.ExpirablePayload;
+import io.bisq.wire.payload.PersistedStoragePayload;
+import io.bisq.wire.payload.RequiresOwnerIsOnlinePayload;
+import io.bisq.wire.payload.StoragePayload;
 import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.wire.payload.p2p.storage.MailboxStoragePayload;
 import io.bisq.wire.payload.p2p.storage.ProtectedMailboxStorageEntry;
 import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
 import lombok.EqualsAndHashCode;
@@ -561,7 +565,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             String res2 = "null";
             if (protectedStorageEntry != null) {
                 res1 = protectedStorageEntry.toString();
-                if (protectedStorageEntry.getStoragePayload() != null && protectedStorageEntry.getStoragePayload().getOwnerPubKey() != null)
+                if (protectedStorageEntry.getStoragePayload() != null &&
+                        protectedStorageEntry.getStoragePayload().getOwnerPubKey() != null)
                     res2 = protectedStorageEntry.getStoragePayload().getOwnerPubKey().toString();
             }
 
@@ -713,7 +718,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             if (!(o instanceof ByteArray)) return false;
 
             ByteArray byteArray = (ByteArray) o;
-
             return Arrays.equals(bytes, byteArray.bytes);
         }
 
@@ -729,7 +733,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     '}';
         }
     }
-
 
     /**
      * Used as value in map

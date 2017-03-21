@@ -1,6 +1,8 @@
 package io.bisq.wire.payload;
 
+import javax.annotation.Nullable;
 import java.security.PublicKey;
+import java.util.Map;
 
 /**
  * Messages which support ownership protection (using signatures) and a time to live
@@ -19,4 +21,10 @@ public interface StoragePayload extends ExpirablePayload {
      * @return The public key of the data owner.
      */
     PublicKey getOwnerPubKey();
+
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // field in a class would break that hash and therefore break the storage mechanism.
+    @Nullable
+    Map<String, String> getExtraDataMap();
 }
