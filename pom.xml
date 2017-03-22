@@ -82,8 +82,9 @@
         <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
-            <version>0.13.1.10</version>
+            <version>0.13.1.11</version>
         </dependency>
+        Update to 
 
         <!--guice-->
         <dependency>
