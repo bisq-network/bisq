@@ -1153,6 +1153,7 @@ message PersistedPeers {
 
 message Transaction {
    // BITCOINJ transaction
+   // - refactor, only store transaction id, where it is used, request transaction from wallet wallet.getwalletransaction(id)
 }
 
 message ProcessModel {
