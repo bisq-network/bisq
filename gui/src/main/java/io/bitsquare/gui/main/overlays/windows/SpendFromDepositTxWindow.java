@@ -114,8 +114,8 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
         
         depositTxHex.setText("");
 
-        buyerPayoutAmount.setText("0.51");
-        sellerPayoutAmount.setText("0.01");
+        buyerPayoutAmount.setText("1.03");
+        sellerPayoutAmount.setText("0.03");
         arbitratorPayoutAmount.setText("0");
 
         buyerAddressString.setText("");
