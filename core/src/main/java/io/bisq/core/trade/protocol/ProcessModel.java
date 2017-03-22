@@ -38,10 +38,10 @@ import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.filter.PaymentAccountFilter;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -51,42 +51,69 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class ProcessModel implements Model, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessModel.class);
-
     // Transient/Immutable
+    @Getter
     transient private TradeManager tradeManager;
+    @Getter
     transient private OpenOfferManager openOfferManager;
+    @Getter
     transient private BtcWalletService walletService;
+    @Getter
     transient private TradeWalletService tradeWalletService;
+    @Getter
     transient private ArbitratorManager arbitratorManager;
+    @Getter
     transient private Offer offer;
+    @Getter
     transient private User user;
     transient private FilterManager filterManager;
+    @Getter
     transient private KeyRing keyRing;
+    @Getter
     transient private P2PService p2PService;
 
     // Mutable
     public final TradingPeer tradingPeer;
+    @Setter
     transient private TradeMessage tradeMessage;
+    @Getter
+    @Setter
     private byte[] payoutTxSignature;
 
+    @Getter
+    @Setter
     private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
 
     // that is used to store temp. the peers address when we get an incoming message before the message is verified.
     // After successful verified we copy that over to the trade.tradingPeerAddress
+    @Getter
+    @Setter
     private NodeAddress tempTradingPeerNodeAddress;
+    @Getter
+    @Setter
     private byte[] preparedDepositTx;
+    @Getter
+    @Setter
     private ArrayList<RawTransactionInput> rawTransactionInputs;
+    @Getter
+    @Setter
     private long changeOutputValue;
     @Nullable
     private String changeOutputAddress;
-    private Transaction takeOfferFeeTx;
+    @Getter
+    @Setter
+    private byte[] takeOfferFeeTxId;
+    @Getter
     private boolean useSavingsWallet;
+    @Getter
     private Coin fundsNeededForTrade;
+    @Getter
+    @Setter
     private byte[] myMultiSigPubKey;
 
     public ProcessModel() {
@@ -131,51 +158,18 @@ public class ProcessModel implements Model, Serializable {
     // Getter only
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public TradeManager getTradeManager() {
-        return tradeManager;
-    }
-
-    public OpenOfferManager getOpenOfferManager() {
-        return openOfferManager;
-    }
-
-    public BtcWalletService getWalletService() {
-        return walletService;
-    }
-
-    public TradeWalletService getTradeWalletService() {
-        return tradeWalletService;
-    }
-
-    public Offer getOffer() {
-        return offer;
-    }
-
     public String getId() {
         return offer.getId();
     }
 
-    public User getUser() {
-        return user;
-    }
 
     public NodeAddress getMyNodeAddress() {
         return p2PService.getAddress();
     }
 
-    public Coin getFundsNeededForTrade() {
-        return fundsNeededForTrade;
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter/Setter for Mutable objects
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setTradeMessage(TradeMessage tradeMessage) {
-        this.tradeMessage = tradeMessage;
-    }
 
     @Nullable
     public TradeMessage getTradeMessage() {
@@ -213,60 +207,8 @@ public class ProcessModel implements Model, Serializable {
     public void onComplete() {
     }
 
-    public P2PService getP2PService() {
-        return p2PService;
-    }
-
     public PubKeyRing getPubKeyRing() {
         return keyRing.getPubKeyRing();
-    }
-
-    public KeyRing getKeyRing() {
-        return keyRing;
-    }
-
-    public void setTakerAcceptedArbitratorNodeAddresses(List<NodeAddress> takerAcceptedArbitratorNodeAddresses) {
-        this.takerAcceptedArbitratorNodeAddresses = takerAcceptedArbitratorNodeAddresses;
-    }
-
-    public List<NodeAddress> getTakerAcceptedArbitratorNodeAddresses() {
-        return takerAcceptedArbitratorNodeAddresses;
-    }
-
-    public void setTempTradingPeerNodeAddress(NodeAddress tempTradingPeerNodeAddress) {
-        this.tempTradingPeerNodeAddress = tempTradingPeerNodeAddress;
-    }
-
-    public NodeAddress getTempTradingPeerNodeAddress() {
-        return tempTradingPeerNodeAddress;
-    }
-
-    public ArbitratorManager getArbitratorManager() {
-        return arbitratorManager;
-    }
-
-    public void setPreparedDepositTx(byte[] preparedDepositTx) {
-        this.preparedDepositTx = preparedDepositTx;
-    }
-
-    public byte[] getPreparedDepositTx() {
-        return preparedDepositTx;
-    }
-
-    public void setRawTransactionInputs(ArrayList<RawTransactionInput> rawTransactionInputs) {
-        this.rawTransactionInputs = rawTransactionInputs;
-    }
-
-    public ArrayList<RawTransactionInput> getRawTransactionInputs() {
-        return rawTransactionInputs;
-    }
-
-    public void setChangeOutputValue(long changeOutputValue) {
-        this.changeOutputValue = changeOutputValue;
-    }
-
-    public long getChangeOutputValue() {
-        return changeOutputValue;
     }
 
     public void setChangeOutputAddress(String changeOutputAddress) {
@@ -276,26 +218,6 @@ public class ProcessModel implements Model, Serializable {
     @Nullable
     public String getChangeOutputAddress() {
         return changeOutputAddress;
-    }
-
-    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
-        this.takeOfferFeeTx = takeOfferFeeTx;
-    }
-
-    public Transaction getTakeOfferFeeTx() {
-        return takeOfferFeeTx;
-    }
-
-    public void setMyMultiSigPubKey(byte[] myMultiSigPubKey) {
-        this.myMultiSigPubKey = myMultiSigPubKey;
-    }
-
-    public byte[] getMyMultiSigPubKey() {
-        return myMultiSigPubKey;
-    }
-
-    public boolean getUseSavingsWallet() {
-        return useSavingsWallet;
     }
 
     public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload, PaymentAccountFilter[] appliedPaymentAccountFilter) {

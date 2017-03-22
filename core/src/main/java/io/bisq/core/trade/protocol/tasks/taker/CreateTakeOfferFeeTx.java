@@ -64,12 +64,12 @@ public class CreateTakeOfferFeeTx extends TradeTask {
                     reservedForTradeAddress,
                     changeAddress,
                     processModel.getFundsNeededForTrade(),
-                    processModel.getUseSavingsWallet(),
+                    processModel.isUseSavingsWallet(),
                     trade.getTakeOfferFee(),
                     trade.getTxFee(),
                     selectedArbitrator.getBtcAddress());
 
-            processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
+            processModel.setTakeOfferFeeTxId(createTakeOfferFeeTx.getHash().getBytes());
             trade.setTakeOfferFeeTxId(createTakeOfferFeeTx.getHashAsString());
 
             complete();

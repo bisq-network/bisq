@@ -204,7 +204,7 @@ public class TradeManager {
             trade.setStorage(tradableListStorage);
 
             if (trade.isDepositPaid() || (trade.isTakerFeePaid() && trade.errorMessageProperty().get() == null)) {
-                initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
+                initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
                 trade.updateDepositTxFromWallet();
                 tradesForStatistics.add(trade);
             } else if (trade.isTakerFeePaid()) {
@@ -281,7 +281,7 @@ public class TradeManager {
                 trade = new SellerAsOffererTrade(offer, payDepositRequest.txFee, payDepositRequest.takeOfferFee, tradableListStorage);
 
             trade.setStorage(tradableListStorage);
-            initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
+            initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
             trades.add(trade);
             ((OffererTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
         } else {
