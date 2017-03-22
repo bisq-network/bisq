@@ -388,8 +388,8 @@ public final class Preferences implements Persistable {
         if (nonTradeTxFeePerKB < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value)
             throw new Exception("Transaction fee must be at least 5 satoshi/byte");
 
-        if (nonTradeTxFeePerKB > 500_000)
-            throw new Exception("Transaction fee is in the range of 10-100 satoshi/byte. Your input is above any reasonable value (>500 satoshi/byte).");
+        if (nonTradeTxFeePerKB > 1_000_000)
+            throw new Exception("Transaction fee is in the range of 10-100 satoshi/byte. Your input is above any reasonable value (>1000 satoshi/byte).");
 
         this.nonTradeTxFeePerKB = nonTradeTxFeePerKB;
         FeePolicy.setNonTradeFeePerKb(Coin.valueOf(nonTradeTxFeePerKB));

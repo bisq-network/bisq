@@ -31,6 +31,7 @@ public class FeePolicy {
     // https://bitcoinfees.github.io/#1d
     // Average values are 10-100 satoshis/byte in january 2016
     // Average values are 60-140 satoshis/byte in february 2017
+    // Average values are 100-250 satoshis/byte in March 22th 2017
     // 
     // Our trade transactions have a fixed set of inputs and outputs making the size very predictable 
     // (as long the user does not do multiple funding transactions)
@@ -59,7 +60,7 @@ public class FeePolicy {
     // The BitcoinJ fee calculation use kb so a tx size  < 1kb will still pay the fee for a kb tx.
     // Our payout tx has about 370 bytes so we get a fee/kb value of about 90 satoshi/byte making it high priority
     // Other payout transactions (E.g. arbitrators many collected transactions) will go with 30 satoshi/byte if > 1kb
-    private static Coin NON_TRADE_FEE_PER_KB = Coin.valueOf(30_000); // 0.0003 BTC about 0.3 EUR @ 1000 EUR/BTC 
+    private static Coin NON_TRADE_FEE_PER_KB = Coin.valueOf(60_000); // 0.0003 BTC about 0.3 EUR @ 1000 EUR/BTC 
 
     public static void setNonTradeFeePerKb(Coin nonTradeFeePerKb) {
         NON_TRADE_FEE_PER_KB = nonTradeFeePerKb;
