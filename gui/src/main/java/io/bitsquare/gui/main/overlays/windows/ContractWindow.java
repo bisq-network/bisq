@@ -177,7 +177,10 @@ public class ContractWindow extends Overlay<ContractWindow> {
             viewContractButton.setDefaultButton(false);
             viewContractButton.setOnAction(e -> {
                 TextArea textArea = new TextArea();
-                textArea.setText(dispute.getContractAsJson());
+                String contractAsJson = dispute.getContractAsJson();
+                contractAsJson += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(dispute.getContract().getBuyerMultiSigPubKey());
+                contractAsJson += "\nSellerMultiSigPubKeyHex: " + Utils.HEX.encode(dispute.getContract().getSellerMultiSigPubKey());
+                textArea.setText(contractAsJson);
                 textArea.setPrefHeight(50);
                 textArea.setEditable(false);
                 textArea.setWrapText(true);
