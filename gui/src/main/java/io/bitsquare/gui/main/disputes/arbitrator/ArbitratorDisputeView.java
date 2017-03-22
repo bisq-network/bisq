@@ -59,6 +59,7 @@ public class ArbitratorDisputeView extends TraderDisputeView {
                 dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()) &&
                         (filterString.isEmpty() ||
                                 (dispute.getId().contains(filterString) ||
+                                        (!dispute.isClosed() && filterString.toLowerCase().equals("open")) ||
                                         formatter.formatDate(dispute.getOpeningDate()).contains(filterString)) ||
                                 getBuyerOnionAddressColumnLabel(dispute).contains(filterString) ||
                                 getSellerOnionAddressColumnLabel(dispute).contains(filterString)
