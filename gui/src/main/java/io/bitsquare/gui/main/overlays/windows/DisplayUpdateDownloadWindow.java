@@ -19,8 +19,8 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.alert.Alert;
 import io.bitsquare.common.util.Utilities;
-import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.main.overlays.Overlay;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -40,6 +40,7 @@ import static io.bitsquare.gui.util.FormBuilder.addMultilineLabel;
 public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWindow> {
     private static final Logger log = LoggerFactory.getLogger(DisplayUpdateDownloadWindow.class);
     private Alert alert;
+    private Task<File> task;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +89,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         Button downloadButton = addButton(gridPane, ++rowIndex, "Download now");
 
         // TODO How do we get the right URL for the download?
-        String url = "https://bitsquare.io/downloads" + File.separator + alert.version + File.separator;
+        String url = "https://github.com/bitsquare/bitsquare/releases/download/" + "v" + alert.version + "/" ;
         String fileName;
         if (Utilities.isOSX())
             fileName = "Bitsquare-" + alert.version + ".dmg";
@@ -97,26 +98,43 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         else if (Utilities.isLinux())
             fileName = "Bitsquare-" + Utilities.getOSArchitecture() + "bit-" + alert.version + ".deb";
         else {
+            fileName = "";
             downloadButton.setDisable(true);
             messageLabel.setText("Unable to determine the correct installer. Pleaase manually download and verify " +
                     "the correct file from https://bitsquare.io/downloads");
         }
 
         downloadButton.setOnAction(e -> {
+            String source = url.concat(fileName);
             indicator.setVisible(true);
+            downloadButton.setDisable(true);
             try {
-            Utilities.downloadFile(url, null, indicator);
+                System.out.println("Button: " + source);
+                task = Utilities.downloadFile(source, null, indicator);
+                task.setOnSucceeded(evt -> {
+                    if (task.getValue() == null) {
+                        messageLabel.setText("Download failed. Please download and verify the correct file yourself from https://bitsquare.io/downloads/");
+                        return;
+                    }
+                    try {
+                        Utilities.openDirectory(task.getValue());
+                        messageLabel.setText("Successfully downloaded file " + fileName);
+                    } catch (IOException exc) {
+                        messageLabel.setText("Unable to open download directory " + task.getValue() + " in file browser.");
+                        exc.printStackTrace();
+                    }
+                });
             } catch (IOException exception)  {
                 messageLabel.setText("Unable to download files.\n" +
                 "Please manually download and verify the file from https://bitsquare.io/downloads");
-                downloadButton.setDisable(true);
-
             }
         });
 
         closeButton = new Button("Close");
         closeButton.setOnAction(e -> {
             hide();
+            if (task != null && task.isRunning())
+                task.cancel();
             closeHandlerOptional.ifPresent(closeHandler -> closeHandler.run());
         });
 
