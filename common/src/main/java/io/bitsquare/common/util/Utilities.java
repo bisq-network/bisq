@@ -36,9 +36,7 @@ import org.slf4j.LoggerFactory;
 import javax.crypto.Cipher;
 import java.awt.*;
 import java.io.*;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
 import java.net.URLConnection;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
@@ -209,7 +207,7 @@ public class Utilities {
         }
     }
 
-    public static File downloadFile(String fileURL, String saveDir, ProgressIndicator indicator) throws IOException {
+    public static Task<File> downloadFile(String fileURL, String saveDir, ProgressIndicator indicator) throws IOException {
         DownloadUtil task;
         if (saveDir != null)
             task = new DownloadUtil(fileURL, saveDir);
@@ -221,7 +219,8 @@ public class Utilities {
         }
         Thread th = new Thread(task);
         th.start();
-        return null; // TODO !
+        // TODO: check for problems when creating task
+        return task;
     }
 
     public static void printSystemLoad() {
