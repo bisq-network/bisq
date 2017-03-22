@@ -23,6 +23,7 @@ import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.gui.common.model.ActivatableViewModel;
 import io.bitsquare.gui.main.offer.offerbook.OfferBook;
 import io.bitsquare.gui.main.offer.offerbook.OfferBookListItem;
+import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.trade.offer.Offer;
@@ -116,22 +117,46 @@ class SpreadViewModel extends ActivatableViewModel {
             Fiat bestBuyOfferPrice = buyOffers.isEmpty() ? null : buyOffers.get(0).getPrice();
             if (bestBuyOfferPrice != null && bestSellOfferPrice != null) {
                 MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-                spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
-                if (spread != null && marketPrice != null) {
-                    double marketPriceAsDouble = marketPrice.getPrice(PriceFeedService.Type.LAST);
-                    if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-                        double result = ((double) spread.value / 10000D) / marketPriceAsDouble;
-                        percentage = " (" + formatter.formatPercentagePrice(result) + ")";
-                    } else {
-                        final double spreadAsDouble = spread.value != 0 ? 10000D / spread.value : 0;
-                        double result = marketPriceAsDouble / spreadAsDouble;
-                        percentage = " (" + formatter.formatPercentagePrice(result) + ")";
+
+                // There have been some bug reports that an offer caused an overflow exception.
+                // We never found out which offer it was. So add here a try/catch to get better info if it 
+                // happens again
+                try {
+                    spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
+                    if (spread != null && marketPrice != null) {
+                        double marketPriceAsDouble = marketPrice.getPrice(PriceFeedService.Type.LAST);
+                        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+                            double result = ((double) spread.value / 10000D) / marketPriceAsDouble;
+                            percentage = " (" + formatter.formatPercentagePrice(result) + ")";
+                        } else {
+                            final double spreadAsDouble = spread.value != 0 ? 10000D / spread.value : 0;
+                            double result = marketPriceAsDouble / spreadAsDouble;
+                            percentage = " (" + formatter.formatPercentagePrice(result) + ")";
+                        }
+                    }
+                } catch (Throwable t) {
+                    try {
+                        String msg = "An error occurred at the spread calculation.\n" +
+                                "Error msg: " + t.toString() + "\n" +
+                                "Details of offer data: \n" +
+                                "bestSellOfferPrice: " + bestSellOfferPrice.value + "\n" +
+                                "bestBuyOfferPrice: " + bestBuyOfferPrice.value + "\n" +
+                                "sellOffer getCurrencyCode: " + sellOffers.get(0).getCurrencyCode() + "\n" +
+                                "buyOffer getCurrencyCode: " + buyOffers.get(0).getCurrencyCode() + "\n\n" +
+                                "Please copy and paste this data and send it to the developers so they can investigate the issue.";
+                        new Popup().error(msg).show();
+                        log.error(t.toString());
+                        t.printStackTrace();
+                    } catch (Throwable t2) {
+                        log.error(t2.toString());
+                        t2.printStackTrace();
                     }
                 }
             }
 
             Coin totalAmount = Coin.valueOf(offers.stream().mapToLong(offer -> offer.getAmount().getValue()).sum());
-            spreadItems.add(new SpreadItem(currencyCode, buyOffers.size(), sellOffers.size(), offers.size(), spread, percentage, totalAmount));
+            spreadItems.add(new SpreadItem(currencyCode, buyOffers.size(), sellOffers.size(),
+                    offers.size(), spread, percentage, totalAmount));
         }
     }
 }
