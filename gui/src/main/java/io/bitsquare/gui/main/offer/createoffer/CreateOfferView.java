@@ -47,6 +47,7 @@ import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import javafx.beans.value.ChangeListener;
@@ -96,8 +97,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private Button nextButton, cancelButton1, cancelButton2, fundFromSavingsWalletButton, fundFromExternalWalletButton, placeOfferButton;
     private InputTextField amountTextField, minAmountTextField, fixedPriceTextField, marketBasedPriceTextField, volumeTextField;
     private TextField currencyTextField;
-    private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel, totalToPayLabel, totalToPayInfoIconLabel, amountBtcLabel, priceCurrencyLabel,
-            volumeCurrencyLabel, minAmountBtcLabel, priceDescriptionLabel, volumeDescriptionLabel, currencyTextFieldLabel,
+    private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel,
+            totalToPayLabel, totalToPayInfoIconLabel, amountBtcLabel, priceCurrencyLabel,
+            volumeCurrencyLabel, minAmountBtcLabel, priceDescriptionLabel,
+            volumeDescriptionLabel, currencyTextFieldLabel,
             currencyComboBoxLabel, waitingForFundsLabel, marketBasedPriceLabel;
     private TextFieldWithCopyIcon totalToPayTextField;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
@@ -129,6 +132,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private List<Node> editOfferElements = new ArrayList<>();
     private boolean isActivated;
     private Label xLabel;
+    private boolean clearXchangeWarningDisplayed;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +140,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private CreateOfferView(CreateOfferViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, Preferences preferences, BSFormatter formatter) {
+    private CreateOfferView(CreateOfferViewModel model, Navigation navigation,
+                            OfferDetailsWindow offerDetailsWindow, Preferences preferences, BSFormatter formatter) {
         super(model);
 
         this.navigation = navigation;
@@ -389,8 +394,19 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         qrCodeImageView.setImage(qrImage);
     }
 
+    private void maybeShowClearXchangeWarning(PaymentAccount paymentAccount) {
+        if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
+                !clearXchangeWarningDisplayed) {
+            clearXchangeWarningDisplayed = true;
+            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(paymentAccount.getPaymentMethod(), preferences),
+                    500, TimeUnit.MILLISECONDS);
+        }
+    }
+
     private void onPaymentAccountsComboBoxSelected() {
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
+        maybeShowClearXchangeWarning(paymentAccount);
+
         if (paymentAccount != null) {
             currencyComboBox.setVisible(paymentAccount.hasMultipleCurrencies());
             if (paymentAccount.hasMultipleCurrencies()) {

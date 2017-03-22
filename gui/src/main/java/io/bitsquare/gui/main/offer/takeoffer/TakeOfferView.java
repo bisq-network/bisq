@@ -46,6 +46,7 @@ import io.bitsquare.gui.util.GUIUtil;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.locale.BSResources;
 import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.trade.offer.Offer;
 import io.bitsquare.user.Preferences;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -119,6 +120,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     //  private MonadicBinding<Boolean> noSufficientFeeBinding;
     private Subscription cancelButton2StyleSubscription;
     private VBox priceAsPercentageInputBox;
+    private boolean clearXchangeWarningDisplayed;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -194,6 +196,17 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
        /* if (DevFlags.DEV_MODE)
             UserThread.runAfter(() -> onShowPayFundsScreen(), 200, TimeUnit.MILLISECONDS);*/
+
+        maybeShowClearXchangeWarning();
+    }
+
+    private void maybeShowClearXchangeWarning() {
+        if (model.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
+                !clearXchangeWarningDisplayed) {
+            clearXchangeWarningDisplayed = true;
+            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(model.getPaymentMethod(), preferences),
+                    500, TimeUnit.MILLISECONDS);
+        }
     }
 
     @Override
@@ -245,6 +258,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         paymentMethodLabel.setManaged(!showComboBox);
         if (!showComboBox)
             paymentMethodTextField.setText(BSResources.get(model.getPaymentMethod().getId()));
+
         currencyTextField.setText(model.dataModel.getCurrencyNameAndCode());
         directionLabel.setText(model.getDirectionLabel());
         amountDescriptionLabel.setText(model.getAmountDescription());
@@ -640,7 +654,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
         paymentAccountsComboBox.setVisible(false);
         paymentAccountsComboBox.setManaged(false);
-        paymentAccountsComboBox.setOnAction(e -> model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem()));
+        paymentAccountsComboBox.setOnAction(e -> {
+            maybeShowClearXchangeWarning();
+            model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem());
+        });
 
         Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, gridRow, "Payment method:", "", Layout.FIRST_ROW_DISTANCE);
         paymentMethodLabel = tuple2.first;

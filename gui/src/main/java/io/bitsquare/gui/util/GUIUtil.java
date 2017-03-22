@@ -25,9 +25,11 @@ import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 import io.bitsquare.app.DevFlags;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.main.overlays.popups.Popup;
+import io.bitsquare.locale.BSResources;
 import io.bitsquare.locale.CurrencyUtil;
 import io.bitsquare.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
+import io.bitsquare.payment.PaymentMethod;
 import io.bitsquare.storage.Storage;
 import io.bitsquare.user.Preferences;
 import io.bitsquare.user.User;
@@ -299,7 +301,7 @@ public class GUIUtil {
             e.printStackTrace();
         }
     }
-    
+
     public static <T> T getParentOfType(Node node, Class<T> t) {
         Node parent = node.getParent();
 
@@ -313,5 +315,29 @@ public class GUIUtil {
 
         return parent != null ? (T) parent : null;
     }
-    
+
+    public static void showClearXchangeWarning(PaymentMethod paymentMethod, Preferences preferences) {
+        String key = "confirmClearXchangeRequirements";
+        final String cxc = BSResources.get(paymentMethod.getId());
+        new Popup().information("Your selected payment method is " + cxc +
+                ". Please be sure that you fulfill the requirements for the usage of " +
+                cxc + ".\n\n" +
+                "1. You need to have your " + cxc + " account verified at their platform " +
+                "before starting a trade or creating an offer.\n\n" +
+                "2. You need to have a bank account at one of the following member banks:\n" +
+                "    ● Bank of America\n" +
+                "    ● Capital One P2P Payments\n" +
+                "    ● Chase QuickPay\n" +
+                "    ● FirstBank Person to Person Transfers\n" +
+                "    ● Frost Send Money\n" +
+                "    ● U.S. Bank Send Money\n" +
+                "    ● Wells Fargo SurePay\n\n" +
+                "Please use " + cxc + " only if you fulfill those requirements, " +
+                "otherwise it is very likely that the " + cxc + " transfer fails and the trade ends up in a dispute.\n" +
+                "If you have not fulfilled the above requirements you would lose your security deposit in such a case.")
+                .width(900)
+                .closeButtonText("I confirm")
+                .dontShowAgainId(key, preferences)
+                .show();
+    }
 }
