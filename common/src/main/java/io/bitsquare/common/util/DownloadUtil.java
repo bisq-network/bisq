@@ -44,9 +44,11 @@ public class DownloadUtil extends Task<File> {
     public DownloadUtil (final String fileURL) {
         this.fileURL = fileURL;
         this.saveDir = System.getProperty("java.io.tmpdir");
+        System.out.println("Auto-selected temp dir " + this.saveDir);
     }
 
     @Override protected File call() throws Exception{
+        System.out.println("Task started....");
         URL url = new URL(fileURL);
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
         int responseCode = httpConn.getResponseCode();
@@ -88,6 +90,8 @@ public class DownloadUtil extends Task<File> {
             int totalRead = 0;
             byte[] buffer = new byte[BUFFER_SIZE];
             while ((bytesRead = inputStream.read(buffer)) != -1) {
+                if (this.isCancelled())
+                    break;
                 outputStream.write(buffer, 0, bytesRead);
                 totalRead += bytesRead;
                 updateProgress(totalRead, contentLength);
