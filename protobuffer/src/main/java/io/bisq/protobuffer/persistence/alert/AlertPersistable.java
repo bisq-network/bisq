@@ -15,16 +15,14 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.protobuffer.persisted.alert;
+package io.bisq.protobuffer.persistence.alert;
 
 import io.bisq.protobuffer.alert.AlertProto;
-import io.bisq.protobuffer.persisted.PersistableNew;
+import io.bisq.protobuffer.persistence.PersistableNew;
 import io.bisq.vo.alert.AlertVO;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
 
-@Slf4j
 @Immutable
 public final class AlertPersistable extends AlertProto implements PersistableNew {
     public AlertPersistable(AlertVO alertVO) {

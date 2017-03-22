@@ -19,7 +19,7 @@ package io.bisq.protobuffer.message.arbitration;
 
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.protobuffer.payload.Payload;
+import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.payload.arbitration.Dispute;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 
@@ -68,7 +68,7 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Payload.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
         return baseEnvelope.setOpenNewDisputeMessage(PB.OpenNewDisputeMessage.newBuilder()
                 .setDispute(dispute.toProto()).setMyNodeAddress(myNodeAddress.toProto()).setUid(getUID())).build();
     }

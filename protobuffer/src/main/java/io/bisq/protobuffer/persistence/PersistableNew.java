@@ -1,4 +1,4 @@
-package io.bisq.protobuffer.persisted;
+package io.bisq.protobuffer.persistence;
 
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;

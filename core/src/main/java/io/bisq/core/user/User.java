@@ -28,7 +28,7 @@ import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.filter.Filter;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.persisted.alert.AlertPersistable;
+import io.bisq.protobuffer.persistence.alert.AlertPersistable;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;

@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.protobuffer.persisted.arbitration;
+package io.bisq.protobuffer.persistence.arbitration;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;

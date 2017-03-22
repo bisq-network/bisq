@@ -19,7 +19,7 @@ package io.bisq.protobuffer.message.arbitration;
 
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.protobuffer.payload.Payload;
+import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.payload.arbitration.Attachment;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.beans.property.BooleanProperty;
@@ -204,7 +204,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Payload.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
         return baseEnvelope.setDisputeCommunicationMessage(PB.DisputeCommunicationMessage.newBuilder()
                 .setDate(date)
                 .setTradeId(tradeId)

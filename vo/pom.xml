@@ -11,5 +11,11 @@
 
     <artifactId>vo</artifactId>
 
-
+    <dependencies>
+        <dependency>
+            <groupId>io.bisq</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+    </dependencies>
 </project>

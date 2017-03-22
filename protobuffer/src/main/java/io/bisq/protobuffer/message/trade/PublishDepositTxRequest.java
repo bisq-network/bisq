@@ -21,7 +21,7 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.protobuffer.payload.Payload;
+import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.payload.btc.RawTransactionInput;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import org.slf4j.Logger;
@@ -77,7 +77,7 @@ public final class PublishDepositTxRequest extends TradeMessage {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Payload.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
         return baseEnvelope.setPublishDepositTxRequest(baseEnvelope.getPublishDepositTxRequestBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)

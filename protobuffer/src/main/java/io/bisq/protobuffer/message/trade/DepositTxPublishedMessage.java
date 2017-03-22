@@ -20,8 +20,8 @@ package io.bisq.protobuffer.message.trade;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
+import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
-import io.bisq.protobuffer.payload.Payload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 
 import javax.annotation.concurrent.Immutable;
@@ -84,7 +84,7 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Payload.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
         return baseEnvelope.setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)

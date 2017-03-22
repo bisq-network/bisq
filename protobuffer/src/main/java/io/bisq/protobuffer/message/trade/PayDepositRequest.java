@@ -20,8 +20,8 @@ package io.bisq.protobuffer.message.trade;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
+import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
-import io.bisq.protobuffer.payload.Payload;
 import io.bisq.protobuffer.payload.btc.RawTransactionInput;
 import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
@@ -164,7 +164,7 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Payload.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
         PB.PayDepositRequest.Builder builderForValue = PB.PayDepositRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setTradeAmount(tradeAmount)

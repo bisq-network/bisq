@@ -26,7 +26,7 @@ import io.bisq.protobuffer.message.arbitration.DisputeCommunicationMessage;
 import io.bisq.protobuffer.payload.Payload;
 import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.trade.Contract;
-import io.bisq.protobuffer.persisted.arbitration.DisputeList;
+import io.bisq.protobuffer.persistence.arbitration.DisputeList;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

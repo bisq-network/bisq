@@ -50,7 +50,7 @@ import io.bisq.protobuffer.payload.arbitration.DisputeResult;
 import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.trade.Contract;
-import io.bisq.protobuffer.persisted.arbitration.DisputeList;
+import io.bisq.protobuffer.persistence.arbitration.DisputeList;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.AddressFormatException;
