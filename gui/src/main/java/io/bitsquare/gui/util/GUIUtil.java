@@ -76,8 +76,7 @@ public class GUIUtil {
             new Popup<>().information("Please be sure that the mining fee used at your external wallet is " +
                     "sufficiently high so that the funding transaction will be accepted by the miners.\n" +
                     "Otherwise the trade transactions cannot be confirmed and a trade would end up in a dispute.\n\n" +
-                    "The recommended fee is about 120 Satoshi/Byte which is for an average transaction about 0.0005 BTC.\n\n" +
-                    "You can view typically used fees at: https://tradeblock.com/blockchain")
+                    "You can check out the currently recommended fees at: https://bitcoinfees.21.co")
                     .dontShowAgainId(key, Preferences.INSTANCE)
                     .onClose(runnable::run)
                     .closeButtonText("I understand")
