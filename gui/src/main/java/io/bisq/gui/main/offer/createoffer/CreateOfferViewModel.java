@@ -19,6 +19,7 @@ package io.bisq.gui.main.offer.createoffer;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
@@ -52,6 +53,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+import java.util.concurrent.TimeUnit;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
@@ -173,7 +175,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Override
     protected void activate() {
-       /* if (DevEnv.DEV_MODE) {
+        if (DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
                 amount.set("1");
                 minAmount.set(amount.get());
@@ -191,7 +193,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 updateButtonDisableState();
                 updateSpinnerInfo();
             }, 10, TimeUnit.MILLISECONDS);
-        }*/
+        }
 
         addBindings();
         addListeners();

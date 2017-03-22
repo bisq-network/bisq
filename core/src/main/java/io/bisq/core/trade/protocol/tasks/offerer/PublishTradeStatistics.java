@@ -20,7 +20,7 @@ package io.bisq.core.trade.protocol.tasks.offerer;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.wire.payload.trade.statistics.TradeStatistics;
+import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
 
 public class PublishTradeStatistics extends TradeTask {
     public PublishTradeStatistics(TaskRunner taskHandler, Trade trade) {

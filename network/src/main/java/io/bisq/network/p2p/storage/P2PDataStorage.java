@@ -13,22 +13,22 @@ import io.bisq.common.storage.ResourceNotFoundException;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.BroadcastHandler;
 import io.bisq.network.p2p.peers.Broadcaster;
-import io.bisq.wire.crypto.Hash;
-import io.bisq.wire.message.Message;
-import io.bisq.wire.message.ToProtoBuffer;
-import io.bisq.wire.message.p2p.storage.*;
-import io.bisq.wire.payload.ExpirablePayload;
-import io.bisq.wire.payload.PersistedStoragePayload;
-import io.bisq.wire.payload.RequiresOwnerIsOnlinePayload;
-import io.bisq.wire.payload.StoragePayload;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.p2p.storage.MailboxStoragePayload;
-import io.bisq.wire.payload.p2p.storage.ProtectedMailboxStorageEntry;
-import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
-import io.bisq.wire.proto.Messages;
+import io.bisq.protobuffer.Marshaller;
+import io.bisq.protobuffer.crypto.Hash;
+import io.bisq.protobuffer.message.Message;
+import io.bisq.protobuffer.message.p2p.storage.*;
+import io.bisq.protobuffer.payload.ExpirablePayload;
+import io.bisq.protobuffer.payload.PersistedStoragePayload;
+import io.bisq.protobuffer.payload.RequiresOwnerIsOnlinePayload;
+import io.bisq.protobuffer.payload.StoragePayload;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.p2p.storage.MailboxStoragePayload;
+import io.bisq.protobuffer.payload.p2p.storage.ProtectedMailboxStorageEntry;
+import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -318,7 +318,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 PublicKey ownerPubKey = storedData.getStoragePayload().getOwnerPubKey();
                 final boolean checkSignature = checkSignature(ownerPubKey, hashOfDataAndSeqNr, signature);
                 final boolean hasSequenceNrIncreased = hasSequenceNrIncreased(sequenceNumber, hashOfPayload);
-                final boolean checkIfStoredDataPubKeyMatchesNewDataPubKey = checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload);
+                final boolean checkIfStoredDataPubKeyMatchesNewDataPubKey = checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey,
+                        hashOfPayload);
                 boolean allValid = checkSignature &&
                         hasSequenceNrIncreased &&
                         checkIfStoredDataPubKeyMatchesNewDataPubKey;
@@ -540,7 +541,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     // Check that the pubkey of the storage entry matches the allowed pubkey for the addition or removal operation
-    // in the contained mailbox message, or the pubkey of other kinds of network_messages.
+    // in the contained mailbox message, or the pubKey of other kinds of network_messages.
     boolean checkPublicKeys(ProtectedStorageEntry protectedStorageEntry, boolean isAddOperation) {
         boolean result;
         if (protectedStorageEntry.getStoragePayload() instanceof MailboxStoragePayload) {
@@ -552,22 +553,19 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 result = payload.receiverPubKeyForRemoveOperation != null &&
                         payload.receiverPubKeyForRemoveOperation.equals(protectedStorageEntry.ownerPubKey);
         } else {
-            // TODO We got sometimes a nullpointer at protectedStorageEntry.ownerPubKey
+            // TODO We got sometimes a nullPointer at protectedStorageEntry.ownerPubKey
             // Probably caused by an exception at deserialization:  OfferPayload: Cannot be deserialized.null
-            result = protectedStorageEntry != null && protectedStorageEntry.ownerPubKey != null &&
+            result = protectedStorageEntry.ownerPubKey != null &&
                     protectedStorageEntry.getStoragePayload() != null &&
                     protectedStorageEntry.ownerPubKey.equals(protectedStorageEntry.getStoragePayload().getOwnerPubKey());
         }
 
         if (!result) {
-            String res1 = "null";
+            String res1 = protectedStorageEntry.toString();
             String res2 = "null";
-            if (protectedStorageEntry != null) {
-                res1 = protectedStorageEntry.toString();
-                if (protectedStorageEntry.getStoragePayload() != null &&
-                        protectedStorageEntry.getStoragePayload().getOwnerPubKey() != null)
-                    res2 = protectedStorageEntry.getStoragePayload().getOwnerPubKey().toString();
-            }
+            if (protectedStorageEntry.getStoragePayload() != null &&
+                    protectedStorageEntry.getStoragePayload().getOwnerPubKey() != null)
+                res2 = protectedStorageEntry.getStoragePayload().getOwnerPubKey().toString();
 
             log.warn("PublicKey of payload data and ProtectedData are not matching. protectedStorageEntry=" + res1 +
                     "protectedStorageEntry.getStoragePayload().getOwnerPubKey()=" + res2);
@@ -670,7 +668,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
      * Needs to be Serializable because we convert the object to a byte array via java serialization
      * before calculating the hash.
      */
-    public static final class DataAndSeqNrPair implements Serializable, ToProtoBuffer {
+    public static final class DataAndSeqNrPair implements Serializable, Marshaller {
         // data are only used for calculating cryptographic hash from both values so they are kept private
         private final StoragePayload data;
         private final int sequenceNumber;
@@ -689,10 +687,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
 
         @Override
-        public com.google.protobuf.Message toProtoBuf() {
+        public com.google.protobuf.Message toProto() {
             //data.toProtoBuf().getOneofFieldDescriptor();
-            //Messages.Payload payload = Messages.Payload.newBuilder().setUnknownFields()
-            return Messages.DataAndSeqNrPair.newBuilder().setPayload((Messages.StoragePayload) data.toProtoBuf()).setSequenceNumber(sequenceNumber).build();
+            //PB.Payload payload = PB.Payload.newBuilder().setUnknownFields()
+            return PB.DataAndSeqNrPair.newBuilder().setPayload((PB.StoragePayload) data.toProto()).setSequenceNumber(sequenceNumber).build();
         }
     }
 

@@ -19,9 +19,9 @@ package io.bisq.core.trade.protocol;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
-import io.bisq.wire.payload.btc.RawTransactionInput;
-import io.bisq.wire.payload.crypto.PubKeyRing;
-import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.protobuffer.payload.btc.RawTransactionInput;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

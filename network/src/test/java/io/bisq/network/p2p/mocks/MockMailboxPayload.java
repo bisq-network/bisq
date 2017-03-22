@@ -1,10 +1,10 @@
 package io.bisq.network.p2p.mocks;
 
 import io.bisq.common.app.Version;
-import io.bisq.wire.message.p2p.MailboxMessage;
-import io.bisq.wire.payload.ExpirablePayload;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.proto.Messages;
+import io.bisq.generated.protobuffer.PB;
+import io.bisq.protobuffer.message.p2p.MailboxMessage;
+import io.bisq.protobuffer.payload.ExpirablePayload;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.UUID;
@@ -28,7 +28,7 @@ public final class MockMailboxPayload implements MailboxMessage, ExpirablePayloa
     }
 
     @Override
-    public Messages.Envelope toProtoBuf() {
+    public PB.Envelope toProto() {
         throw new NotImplementedException();
     }
 

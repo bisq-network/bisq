@@ -1,17 +1,17 @@
 package io.bisq.network.p2p.storage.messages;
 
 import io.bisq.common.crypto.CryptoException;
-import io.bisq.wire.ProtoBufferUtilities;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.crypto.KeyStorage;
-import io.bisq.wire.message.p2p.PrefixedSealedAndSignedMessage;
-import io.bisq.wire.message.p2p.storage.AddDataMessage;
-import io.bisq.wire.payload.crypto.SealedAndSigned;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.p2p.storage.MailboxStoragePayload;
-import io.bisq.wire.payload.p2p.storage.ProtectedMailboxStorageEntry;
-import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
-import io.bisq.wire.proto.Messages;
+import io.bisq.generated.protobuffer.PB;
+import io.bisq.protobuffer.ProtoBufferUtilities;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.crypto.KeyStorage;
+import io.bisq.protobuffer.message.p2p.PrefixedSealedAndSignedMessage;
+import io.bisq.protobuffer.message.p2p.storage.AddDataMessage;
+import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.p2p.storage.MailboxStoragePayload;
+import io.bisq.protobuffer.payload.p2p.storage.ProtectedMailboxStorageEntry;
+import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -49,7 +49,7 @@ public class AddDataMessageTest {
         ProtectedStorageEntry protectedStorageEntry = new ProtectedMailboxStorageEntry(mailboxStoragePayload,
                 keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
         AddDataMessage dataMessage1 = new AddDataMessage(protectedStorageEntry);
-        Messages.Envelope envelope = dataMessage1.toProtoBuf();
+        PB.Envelope envelope = dataMessage1.toProto();
         AddDataMessage dataMessage2 = (AddDataMessage) ProtoBufferUtilities.getAddDataMessage(envelope);
 
         assertTrue(dataMessage1.protectedStorageEntry.getStoragePayload().equals(dataMessage2.protectedStorageEntry.getStoragePayload()));

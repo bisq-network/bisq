@@ -44,9 +44,9 @@ import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.offer.OfferPayload;
-import io.bisq.wire.payload.payment.BankAccountPayload;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.offer.OfferPayload;
+import io.bisq.protobuffer.payload.payment.BankAccountPayload;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -319,14 +319,15 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
 
         // reserved for future use cases
+        // Use null values if not set
         boolean isPrivateOffer = false;
-        String hashOfChallenge = "";
-        HashMap<String, String> extraDataMap = new HashMap<>();
         boolean useAutoClose = false;
         boolean useReOpenAfterAutoClose = false;
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
-
+        String hashOfChallenge = null;
+        HashMap<String, String> extraDataMap = null;
+        
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.MAX_BUYER_SECURITY_DEPOSIT) <= 0,
                 "securityDeposit must be not exceed " +

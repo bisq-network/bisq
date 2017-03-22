@@ -23,7 +23,7 @@ import io.bisq.core.trade.OffererTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.core.util.Validator;
-import io.bisq.wire.message.trade.DepositTxPublishedMessage;
+import io.bisq.protobuffer.message.trade.DepositTxPublishedMessage;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

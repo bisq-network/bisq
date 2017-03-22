@@ -24,9 +24,10 @@ import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.alert.Alert;
-import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.StoragePayload;
+import io.bisq.protobuffer.payload.alert.AlertPayload;
+import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -69,8 +70,9 @@ public class AlertManager {
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
                 @Override
                 public void onAdded(ProtectedStorageEntry data) {
-                    if (data.getStoragePayload() instanceof Alert) {
-                        Alert alert = (Alert) data.getStoragePayload();
+                    final StoragePayload storagePayload = data.getStoragePayload();
+                    if (storagePayload instanceof AlertPayload) {
+                        Alert alert = new Alert(((AlertPayload) storagePayload).getAlertVO());
                         if (verifySignature(alert))
                             alertMessageProperty.set(alert);
                     }
@@ -78,8 +80,9 @@ public class AlertManager {
 
                 @Override
                 public void onRemoved(ProtectedStorageEntry data) {
-                    if (data.getStoragePayload() instanceof Alert) {
-                        Alert alert = (Alert) data.getStoragePayload();
+                    final StoragePayload storagePayload = data.getStoragePayload();
+                    if (storagePayload instanceof AlertPayload) {
+                        Alert alert = new Alert(((AlertPayload) storagePayload).getAlertVO());
                         if (verifySignature(alert))
                             alertMessageProperty.set(null);
                     }
@@ -106,7 +109,7 @@ public class AlertManager {
         if (isKeyValid) {
             signAndAddSignatureToAlertMessage(alert);
             user.setDevelopersAlert(alert);
-            boolean result = p2PService.addData(alert, true);
+            boolean result = p2PService.addData(new AlertPayload(alert.getAlertVO()), true);
             if (result) {
                 log.trace("Add alertMessage to network was successful. AlertMessage = " + alert);
             }
@@ -118,7 +121,7 @@ public class AlertManager {
     public boolean removeAlertMessageIfKeyIsValid(String privKeyString) {
         Alert alert = user.getDevelopersAlert();
         if (isKeyValid(privKeyString) && alert != null) {
-            if (p2PService.removeData(alert, true))
+            if (p2PService.removeData(new AlertPayload(alert.getAlertVO()), true))
                 log.trace("Remove alertMessage from network was successful. AlertMessage = " + alert);
 
             user.setDevelopersAlert(null);
@@ -138,13 +141,13 @@ public class AlertManager {
     }
 
     private void signAndAddSignatureToAlertMessage(Alert alert) {
-        String alertMessageAsHex = Utils.HEX.encode(alert.message.getBytes());
+        String alertMessageAsHex = Utils.HEX.encode(alert.getMessage().getBytes());
         String signatureAsBase64 = alertSigningKey.signMessage(alertMessageAsHex);
         alert.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
     }
 
     private boolean verifySignature(Alert alert) {
-        String alertMessageAsHex = Utils.HEX.encode(alert.message.getBytes());
+        String alertMessageAsHex = Utils.HEX.encode(alert.getMessage().getBytes());
         try {
             ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex)).verifyMessage(alertMessageAsHex, alert.getSignatureAsBase64());
             return true;

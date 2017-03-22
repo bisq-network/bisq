@@ -20,7 +20,7 @@ package io.bisq.gui.main.dao.compensation.active;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
-import io.bisq.wire.payload.dao.compensation.CompensationRequestPayload;
+import io.bisq.protobuffer.payload.dao.compensation.CompensationRequestPayload;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;

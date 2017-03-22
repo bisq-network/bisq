@@ -25,7 +25,7 @@ import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.util.Layout;
-import io.bisq.wire.payload.dao.compensation.CompensationRequestPayload;
+import io.bisq.protobuffer.payload.dao.compensation.CompensationRequestPayload;
 import javafx.beans.property.DoubleProperty;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;

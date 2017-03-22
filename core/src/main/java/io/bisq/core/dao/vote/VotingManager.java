@@ -28,7 +28,7 @@ import io.bisq.core.dao.DaoPeriodService;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.wire.payload.dao.compensation.CompensationRequestPayload;
+import io.bisq.protobuffer.payload.dao.compensation.CompensationRequestPayload;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;

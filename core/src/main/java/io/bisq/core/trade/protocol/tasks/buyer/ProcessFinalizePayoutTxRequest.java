@@ -21,7 +21,7 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.core.util.Validator;
-import io.bisq.wire.message.trade.FinalizePayoutTxRequest;
+import io.bisq.protobuffer.message.trade.FinalizePayoutTxRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

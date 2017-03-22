@@ -20,9 +20,9 @@ package io.bisq.core.trade.protocol.tasks.taker;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.wire.message.trade.PublishDepositTxRequest;
-import io.bisq.wire.payload.filter.PaymentAccountFilter;
-import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.protobuffer.message.trade.PublishDepositTxRequest;
+import io.bisq.protobuffer.payload.filter.PaymentAccountFilter;
+import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

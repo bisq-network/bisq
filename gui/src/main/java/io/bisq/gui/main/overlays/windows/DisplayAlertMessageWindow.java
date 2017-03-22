@@ -18,10 +18,10 @@
 package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.common.locale.Res;
+import io.bisq.core.alert.Alert;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.FormBuilder;
-import io.bisq.wire.payload.alert.Alert;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
@@ -66,8 +66,8 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
 
     private void addContent() {
         checkNotNull(alert, "alertMessage must not be null");
-        FormBuilder.addMultilineLabel(gridPane, ++rowIndex, alert.message, 10);
-        if (alert.isUpdateInfo) {
+        FormBuilder.addMultilineLabel(gridPane, ++rowIndex, alert.getMessage(), 10);
+        if (alert.isUpdateInfo()) {
             headLine = Res.get("displayAlertMessageWindow.update.headline");
             headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
             String url = "https://bisq.io/downloads";

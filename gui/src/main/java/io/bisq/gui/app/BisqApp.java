@@ -295,7 +295,7 @@ public class BisqApp extends Application {
     private void showErrorPopup(Throwable throwable, boolean doShutDown) {
         if (!shutDownRequested) {
             if (scene == null) {
-                log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in guice.");
+                log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in guice. throwable=" + throwable.toString());
                 scene = new Scene(new StackPane(), 1000, 650);
                 scene.getStylesheets().setAll(
                         "/io/bisq/gui/bisq.css",

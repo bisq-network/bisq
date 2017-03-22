@@ -20,7 +20,7 @@ package io.bisq.core.trade.protocol.tasks.taker;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.wire.payload.trade.statistics.TradeStatistics;
+import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

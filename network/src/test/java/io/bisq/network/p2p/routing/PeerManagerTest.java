@@ -4,7 +4,7 @@ import io.bisq.network.p2p.DummySeedNode;
 import io.bisq.network.p2p.P2PServiceListener;
 import io.bisq.network.p2p.network.LocalhostNetworkNode;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;

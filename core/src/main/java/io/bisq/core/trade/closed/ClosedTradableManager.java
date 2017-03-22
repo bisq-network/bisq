@@ -23,7 +23,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.TradableList;
-import io.bisq.wire.crypto.KeyRing;
+import io.bisq.protobuffer.crypto.KeyRing;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

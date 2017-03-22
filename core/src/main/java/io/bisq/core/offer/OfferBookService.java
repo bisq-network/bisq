@@ -29,8 +29,8 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.payload.offer.OfferPayload;
-import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.protobuffer.payload.offer.OfferPayload;
+import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

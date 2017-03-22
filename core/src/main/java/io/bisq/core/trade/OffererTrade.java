@@ -18,8 +18,8 @@
 package io.bisq.core.trade;
 
 
-import io.bisq.wire.message.trade.TradeMessage;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.message.trade.TradeMessage;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 
 public interface OffererTrade {
     void handleTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress);

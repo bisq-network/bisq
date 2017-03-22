@@ -1,6 +1,6 @@
 package io.bisq.network.p2p.peers;
 
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -8,24 +8,24 @@ import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.peers.BanList;
-import io.bisq.wire.ProtoBufferUtilities;
-import io.bisq.wire.message.Message;
-import io.bisq.wire.message.SendersNodeAddressMessage;
-import io.bisq.wire.message.p2p.CloseConnectionMessage;
-import io.bisq.wire.message.p2p.PrefixedSealedAndSignedMessage;
-import io.bisq.wire.message.p2p.SupportedCapabilitiesMessage;
-import io.bisq.wire.message.p2p.peers.getdata.GetDataRequest;
-import io.bisq.wire.message.p2p.peers.getdata.GetDataResponse;
-import io.bisq.wire.message.p2p.peers.keepalive.KeepAliveMessage;
-import io.bisq.wire.message.p2p.peers.keepalive.Ping;
-import io.bisq.wire.message.p2p.peers.keepalive.Pong;
-import io.bisq.wire.message.p2p.storage.AddDataMessage;
-import io.bisq.wire.message.p2p.storage.RefreshTTLMessage;
-import io.bisq.wire.payload.CapabilityRequiringPayload;
-import io.bisq.wire.payload.StoragePayload;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.proto.Messages;
+import io.bisq.protobuffer.ProtoBufferUtilities;
+import io.bisq.protobuffer.message.Message;
+import io.bisq.protobuffer.message.SendersNodeAddressMessage;
+import io.bisq.protobuffer.message.p2p.CloseConnectionMessage;
+import io.bisq.protobuffer.message.p2p.PrefixedSealedAndSignedMessage;
+import io.bisq.protobuffer.message.p2p.SupportedCapabilitiesMessage;
+import io.bisq.protobuffer.message.p2p.peers.getdata.GetDataRequest;
+import io.bisq.protobuffer.message.p2p.peers.getdata.GetDataResponse;
+import io.bisq.protobuffer.message.p2p.peers.keepalive.KeepAliveMessage;
+import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
+import io.bisq.protobuffer.message.p2p.peers.keepalive.Pong;
+import io.bisq.protobuffer.message.p2p.storage.AddDataMessage;
+import io.bisq.protobuffer.message.p2p.storage.RefreshTTLMessage;
+import io.bisq.protobuffer.payload.CapabilityRequiringPayload;
+import io.bisq.protobuffer.payload.StoragePayload;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -191,12 +191,12 @@ public class Connection implements MessageListener {
                         Thread.sleep(50);
                     }
 
-                    Messages.Envelope envelope = null;
+                    PB.Envelope envelope = null;
 
                     lastSendTimeStamp = now;
                     String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
 
-                    envelope = message.toProtoBuf();
+                    envelope = message.toProto();
                     log.debug("Sending message: {}", Utilities.toTruncatedString(envelope.toString(), 10000));
 
                     if (message instanceof Ping | message instanceof RefreshTTLMessage) {
@@ -751,10 +751,10 @@ public class Connection implements MessageListener {
                         }
 
                         // Reading the protobuffer message from the inputstream
-                        Messages.Envelope envelope = null;
+                        PB.Envelope envelope = null;
                         try {
 //                            if (protoInputStream.available() > 0) {
-                            envelope = Messages.Envelope.parseDelimitedFrom(protoInputStream);
+                            envelope = PB.Envelope.parseDelimitedFrom(protoInputStream);
 //                            } else {
 //                                return;
 //                            }

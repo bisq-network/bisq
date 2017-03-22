@@ -24,7 +24,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.wire.crypto.Hash;
+import io.bisq.protobuffer.crypto.Hash;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
                     .add(trade.getTxFee())
                     .add(trade.getOffer().getBuyerSecurityDeposit());
 
-            log.debug("\n\n------------------------------------------------------------\n"
+            log.error("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"
                     + trade.getContractAsJson()
                     + "\n------------------------------------------------------------\n");

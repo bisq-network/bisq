@@ -21,18 +21,18 @@ package io.bisq.network.crypto;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.storage.FileUtil;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.wire.crypto.*;
-import io.bisq.wire.message.Message;
-import io.bisq.wire.message.alert.PrivateNotificationMessage;
-import io.bisq.wire.message.p2p.MailboxMessage;
-import io.bisq.wire.message.p2p.PrefixedSealedAndSignedMessage;
-import io.bisq.wire.message.p2p.peers.keepalive.Ping;
-import io.bisq.wire.payload.alert.PrivateNotification;
-import io.bisq.wire.payload.crypto.PubKeyRing;
-import io.bisq.wire.payload.crypto.SealedAndSigned;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.proto.Messages;
+import io.bisq.protobuffer.crypto.*;
+import io.bisq.protobuffer.message.Message;
+import io.bisq.protobuffer.message.alert.PrivateNotificationMessage;
+import io.bisq.protobuffer.message.p2p.MailboxMessage;
+import io.bisq.protobuffer.message.p2p.PrefixedSealedAndSignedMessage;
+import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
+import io.bisq.protobuffer.payload.alert.PrivateNotification;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -139,8 +139,8 @@ public class EncryptionServiceTests {
         }
 
         @Override
-        public Messages.Envelope toProtoBuf() {
-            return Messages.Envelope.newBuilder().setPing(Messages.Ping.newBuilder().setNonce(nonce)).build();
+        public PB.Envelope toProto() {
+            return PB.Envelope.newBuilder().setPing(PB.Ping.newBuilder().setNonce(nonce)).build();
         }
     }
 }
@@ -171,7 +171,7 @@ final class TestMessage implements MailboxMessage {
     }
 
     @Override
-    public Messages.Envelope toProtoBuf() {
+    public PB.Envelope toProto() {
         throw new NotImplementedException();
     }
 }

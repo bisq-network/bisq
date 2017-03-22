@@ -23,7 +23,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.network.p2p.SendMailboxMessageListener;
-import io.bisq.wire.message.trade.FiatTransferStartedMessage;
+import io.bisq.protobuffer.message.trade.FiatTransferStartedMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

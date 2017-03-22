@@ -29,7 +29,7 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bisq.gui.main.portfolio.pendingtrades.TradeSubView;
 import io.bisq.gui.util.Layout;
-import io.bisq.wire.payload.arbitration.Dispute;
+import io.bisq.protobuffer.payload.arbitration.Dispute;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;

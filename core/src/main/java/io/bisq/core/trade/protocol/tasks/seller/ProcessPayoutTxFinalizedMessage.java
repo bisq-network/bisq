@@ -22,7 +22,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.core.util.Validator;
-import io.bisq.wire.message.trade.PayoutTxFinalizedMessage;
+import io.bisq.protobuffer.message.trade.PayoutTxFinalizedMessage;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

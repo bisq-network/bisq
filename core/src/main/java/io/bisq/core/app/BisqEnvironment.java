@@ -28,7 +28,7 @@ import io.bisq.core.btc.UserAgent;
 import io.bisq.core.dao.RpcOptionKeys;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.network.NetworkOptionKeys;
-import io.bisq.wire.crypto.KeyStorage;
+import io.bisq.protobuffer.crypto.KeyStorage;
 import joptsimple.OptionSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

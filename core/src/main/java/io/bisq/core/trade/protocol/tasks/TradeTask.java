@@ -22,7 +22,7 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.ProcessModel;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.wire.message.p2p.MailboxMessage;
+import io.bisq.protobuffer.message.p2p.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -26,10 +26,10 @@ import io.bisq.core.trade.protocol.tasks.offerer.*;
 import io.bisq.core.trade.protocol.tasks.seller.*;
 import io.bisq.core.trade.protocol.tasks.shared.BroadcastAfterLockTime;
 import io.bisq.core.util.Validator;
-import io.bisq.wire.message.Message;
-import io.bisq.wire.message.p2p.MailboxMessage;
-import io.bisq.wire.message.trade.*;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.message.Message;
+import io.bisq.protobuffer.message.p2p.MailboxMessage;
+import io.bisq.protobuffer.message.trade.*;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -24,10 +24,10 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.network.p2p.DecryptedDirectMessageListener;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.wire.message.Message;
-import io.bisq.wire.message.trade.TradeMessage;
-import io.bisq.wire.payload.crypto.PubKeyRing;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.message.Message;
+import io.bisq.protobuffer.message.trade.TradeMessage;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

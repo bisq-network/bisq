@@ -20,9 +20,9 @@ package io.bisq.core.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.user.Preferences;
-import io.bisq.wire.payload.payment.PaymentAccountPayload;
-import io.bisq.wire.payload.payment.PaymentMethod;
-import io.bisq.wire.payload.payment.PerfectMoneyAccountPayload;
+import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.payload.payment.PerfectMoneyAccountPayload;
 
 public final class PerfectMoneyAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.

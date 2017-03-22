@@ -30,7 +30,7 @@ import io.bisq.gui.main.overlays.windows.UnlockArbitrationRegistrationWindow;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
-import io.bisq.wire.payload.arbitration.Arbitrator;
+import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.HPos;

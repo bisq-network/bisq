@@ -1,0 +1,737 @@
+syntax = "proto3";
+package io.bisq.protobuffer;
+
+//
+// A simple protocol for describing signed sets of IP addresses. Intended to be distributed via HTTP[S] or in files.
+//
+
+option java_package = "io.bisq.generated.protobuffer";
+option java_outer_classname = "PB";
+
+message Envelope {
+    int64 p2p_network_version = 1;
+    oneof message {
+        Ping ping = 2;
+        Pong pong = 3;
+        RefreshTTLMessage refresh_ttl_message = 4;
+        CloseConnectionMessage close_connection_message = 5;
+        PreliminaryGetDataRequest preliminary_get_data_request = 6;
+        GetUpdatedDataRequest get_updated_data_request = 7;
+        GetPeersRequest get_peers_request = 8;
+        GetPeersResponse get_peers_response = 9;
+        GetDataResponse get_data_response = 11;
+        PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 13;
+        OfferAvailabilityRequest offer_availability_request = 14;
+        OfferAvailabilityResponse offer_availability_response = 15;
+        RemoveDataMessage remove_data_message = 16;
+        AddDataMessage add_data_message = 17;
+        RemoveMailboxDataMessage remove_mailbox_data_message = 18;
+        DepositTxPublishedMessage deposit_tx_published_message = 19;
+        FinalizePayoutTxRequest finalize_payout_tx_request = 20;
+        DisputeCommunicationMessage dispute_communication_message = 21;
+        OpenNewDisputeMessage open_new_dispute_message = 22;
+        PeerOpenedDisputeMessage peer_opened_dispute_message = 23;
+        DisputeResultMessage dispute_result_message = 24;
+        PeerPublishedPayoutTxMessage peer_published_payout_tx_message = 25;
+        PayDepositRequest pay_deposit_request = 26;
+        PublishDepositTxRequest publish_deposit_tx_request = 27;
+        FiatTransferStartedMessage fiat_transfer_started_message = 28;
+        PayoutTxFinalizedMessage payout_tx_finalized_message = 29;
+        PrivateNotificationMessage private_notification_message = 30;
+    }
+}
+
+message Ping {
+    int32 nonce = 1;
+    int32 lastRoundTripTime = 2;
+}
+
+message Pong {
+    int32 requestNonce = 1;
+}
+
+
+message CloseConnectionMessage {
+    int64 message_version = 1;
+    string reason = 2;
+}
+
+// START GetDataRequest
+message PreliminaryGetDataRequest {
+    int64 message_version = 1;
+    int32 nonce = 2;
+    repeated bytes excluded_keys = 3;
+    repeated int32 supported_capabilities = 4;
+}
+
+message GetUpdatedDataRequest {
+    int64 message_version = 1;
+    NodeAddress sender_node_address = 2;
+    int32 nonce = 3;
+    repeated bytes excluded_keys = 4;
+}
+// STOP GetDataRequest
+
+message GetPeersRequest {
+    int32 message_version = 1;
+    NodeAddress sender_node_address = 2;
+    int32 nonce = 3;
+    repeated int32 supported_capabilities = 4;
+    repeated Peer reported_peers = 5;
+}
+
+message GetPeersResponse {
+    int32 message_version = 1;
+    int32 requestNonce = 2;
+    repeated Peer reportedPeers = 3;
+    repeated int32 supported_capabilities = 5;
+}
+
+message NodeAddress {
+    string host_name = 1;
+    int32 port = 2;
+}
+
+message Peer {
+    NodeAddress node_address = 1;
+    int64 date = 2;
+}
+
+
+message GetDataResponse {
+    int64 message_version = 1;
+    int32 request_nonce = 2;
+    bool is_get_updated_data_response = 3;
+    repeated ProtectedStorageEntryOrProtectedMailboxStorageEntry data_set = 4;
+    repeated int32 supported_capabilities = 5;
+}
+
+message ProtectedStorageEntry {
+    StoragePayload storagePayload = 1;
+    bytes owner_pub_key_bytes = 2;
+    int32 sequence_number = 3;
+    bytes signature = 4;
+    int64 creation_time_stamp = 5;
+}
+
+message SendersNodeAddressMessage {
+    oneof message {
+        GetUpdatedDataRequest get_updated_data_request = 1;
+        GetPeersRequest get_peers_request = 2;
+        PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 3;
+    }
+}
+
+// start BroadcastMessage
+message BroadcastMessage {
+    oneof message {
+        RemoveDataMessage remove_data_message = 1;
+        AddDataMessage add_data_message = 2;
+        RefreshTTLMessage refresh_ttl_message = 3;
+        RemoveMailboxDataMessage remove_mailbox_data_message = 4;
+    }
+}
+
+message RemoveDataMessage {
+    ProtectedStorageEntry protected_storage_entry = 1;
+}
+
+message AddDataMessage {
+    ProtectedStorageEntryOrProtectedMailboxStorageEntry entry = 1;
+}
+
+message ProtectedStorageEntryOrProtectedMailboxStorageEntry {
+    oneof message {
+        ProtectedStorageEntry protected_storage_entry = 1;
+        ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 2;
+    }
+}
+
+message RefreshTTLMessage {
+    bytes hash_of_data_and_seq_nr = 1; // 32 bytes
+    bytes signature = 2; // 46 bytes
+    bytes hash_of_payload = 3; // 32 bytes
+    int32 sequence_number = 4; // 4 bytes
+}
+
+message RemoveMailboxDataMessage {
+    ProtectedMailboxStorageEntry protected_storage_entry = 1;
+}
+// end BroadcastMessage
+
+// Payload interface - not used at the moment! Planned to use in DataSeqAndNumber which is not sent over the wire
+message Payload {
+    oneof message {
+        Attachment attachment = 1;
+        TradeStatistics trade_statistics = 2;
+        Contract contract = 3;
+        Dispute dispute = 4;
+        DisputeResult dispute_result = 5;
+        StoragePayload storage_payload = 6;
+        NodeAddress node_address = 7;
+        PaymentAccountPayload payment_account_payload = 8;
+        Peer peer = 9;
+        PrivateNotification private_notification = 10;
+        ProtectedStorageEntry protected_storage_entry = 11;
+        ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 12;
+        PubKeyRing pub_key_ring = 13;
+        RawTransactionInput raw_transaction_input = 14;
+        OfferPayload offer_payload = 15;
+        SealedAndSigned SealedAndSigned = 16;
+    }
+}
+
+message DataAndSeqNrPair {
+    StoragePayload payload = 1;
+    int32 sequence_number =2;
+}
+
+// start storagepayloads
+message StoragePayload {
+    oneof message {
+        AlertProto alertProto = 1;
+        Arbitrator arbitrator = 2;
+        Filter filter = 3;
+        CompensationRequestPayload compensation_request_payload = 4;
+        TradeStatistics trade_statistics = 5;
+        MailboxStoragePayload mailbox_storage_payload = 6;
+        OfferPayload offer_payload = 7;
+    }
+}
+
+message AlertProto {
+    string message = 1;
+    string version = 2;
+    bool is_update_info = 3;
+    string signature_as_base64 = 4;
+    bytes storage_public_key_bytes = 5;
+    map<string, string> extra_data_map = 6;
+}
+
+message Arbitrator {
+    int64 TTL = 1;
+    bytes btcPubKey = 2;
+    PubKeyRing pubKeyRing = 3;
+    NodeAddress arbitratorNodeAddress = 4;
+    repeated string languageCodes = 5;
+    string btcAddress = 6;
+    int64 registrationDate = 7;
+    string registrationSignature = 8;
+    bytes registrationPubKey = 9;
+    map<string, string> extra_data_map = 10;
+}
+
+message Filter {
+    int64 TTL = 1;
+    repeated string bannedNodeAddress = 2;
+    repeated string bannedOfferIds = 3;
+    repeated PaymentAccountFilter bannedPaymentAccounts = 4;
+    string signatureAsBase64 = 5;
+    bytes publicKeyBytes = 6;
+    map<string, string> extra_data_map = 7;
+}
+
+message PaymentAccountFilter {
+    string paymentMethodId = 1;
+    string getMethodName = 2;
+    string value = 3;
+}
+
+message CompensationRequestPayload {
+    int64 TTL = 1;
+    uint32 version = 2; // 1 byte
+    int64 creationDate = 3;
+    string uid = 4;
+    string name = 5;
+    string title = 6;
+    string category = 7;
+    string description = 8;
+    string link = 9;
+    int64 startDate = 10;
+    int64 endDate = 11;
+    int64 requestedBtc = 12;
+    string btcAddress = 13;
+    string nodeAddress = 14;
+    bytes p2pStorageSignaturePubKeyBytes = 15;
+    string p2pStorageSignaturePubKeyAsHex = 16;
+    string signature = 17;
+    string feeTxId = 18;
+    map<string, string> extra_data_map = 19;
+}
+
+message TradeStatistics {
+    int64 TTL = 1;
+    string baseCurrency = 2;
+    string counterCurrency = 3;
+    OfferPayload.Direction direction = 4;
+    int64 trade_price = 5;
+    int64 trade_amount = 6;
+    int64 trade_date = 7;
+    string payment_method_id = 8;
+    int64 offer_date = 9;
+    bool use_market_based_price = 10;
+    double market_price_margin = 11;
+    int64 offer_amount = 12;
+    int64 offer_min_amount = 13;
+    string offer_id = 14;
+    string deposit_tx_id = 15;
+    PubKeyRing pub_key_ring = 16;
+    map<string, string> extra_data_map = 17;
+}
+message MailboxStoragePayload {
+    int64 TTL = 1;
+    PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = 2;
+    bytes senderPubKeyForAddOperationBytes = 3;
+    bytes receiverPubKeyForRemoveOperationBytes = 4;
+    map<string, string> extra_data_map = 5;
+}
+
+message OfferPayload {
+    enum Direction {
+        BUY = 0;
+        SELL = 1;
+    }
+
+    int64 TTL = 1;
+    Direction direction = 2;
+    string base_currency_code = 3;
+    string counter_currency_code = 4;
+    string payment_method_id = 5;
+    string country_code = 6;
+    repeated string accepted_country_codes = 7;
+    string bank_id = 8;
+    repeated string accepted_bank_ids = 9;
+    repeated NodeAddress arbitrator_node_addresses = 10;
+    string id = 11;
+    int64 date = 12;
+    int64 protocol_version = 13;
+    bool use_market_based_price = 14;
+    int64 price = 15;
+    double market_price_margin = 16;
+    int64 amount = 17;
+    int64 min_amount = 18;
+    NodeAddress offerer_node_address = 19;
+    PubKeyRing pub_key_ring = 20;
+    string offerer_payment_account_id = 21;
+    string offer_fee_payment_tx_id = 22;
+    string version_nr = 23;
+    int64 block_height_at_offer_creation = 24;
+    int64 tx_fee = 25;
+    int64 create_offer_fee = 26;
+    int64 buyer_security_deposit = 27;
+    int64 seller_security_deposit = 28;
+    int64 max_trade_limit = 29;
+    int64 max_trade_period = 30;
+    bool use_auto_close = 31;
+    bool use_re_open_after_auto_close = 32;
+    int64 lower_close_price = 33;
+    int64 upper_close_price = 34;
+    bool is_private_offer = 35;
+    string hash_of_challenge = 36;
+    map<string, string> extra_data_map = 37;
+}
+
+// stop storagepayloads
+
+message PrefixedSealedAndSignedMessage {
+    int64 message_version = 1;
+    NodeAddress node_address = 2;
+    SealedAndSigned sealed_and_signed = 3;
+    bytes address_prefix_hash = 4;
+    string uid = 5;
+}
+
+message SealedAndSigned {
+    bytes encrypted_secret_key = 1;
+    bytes encrypted_payload_with_hmac = 2;
+    bytes signature = 3;
+    bytes sig_public_key_bytes = 4;
+}
+
+message DepositTxPublishedMessage {
+    int32 message_version = 1;
+    string trade_id = 2;
+    bytes deposit_tx = 3;
+    NodeAddress sender_node_address = 4;
+    string uid = 5;
+}
+
+// DisputeMessage
+message DisputeCommunicationMessage {
+    int64 date = 1;
+    string trade_id = 2;
+    int32 trader_id = 3;
+    bool sender_is_trader = 4;
+    string message = 5;
+    repeated Attachment attachments = 6;
+    bool arrived = 7;
+    bool stored_in_mailbox = 8;
+    bool is_system_message = 9;
+    NodeAddress my_node_address = 10;
+}
+
+message Attachment {
+    bytes bytes = 1;
+    string file_name = 2;
+}
+
+message DisputeResultMessage {
+    string uid = 1;
+    DisputeResult dispute_result = 2;
+    NodeAddress my_node_address = 3;
+}
+
+// payload
+message DisputeResult {
+    enum Winner {
+        BUYER = 0;
+        SELLER = 1;
+    }
+
+    // only append new values as we use the ordinal value
+    enum Reason {
+        OTHER = 0;
+        BUG = 1;
+        USABILITY = 2;
+        SCAM = 3;
+        PROTOCOL_VIOLATION = 4;
+        NO_REPLY = 5;
+        BANK_PROBLEMS = 6;
+    }
+
+    string trade_id = 1;
+    int32 trader_id = 2;
+    Winner winner = 3;
+    int32 reason_ordinal = 4;
+
+    bool tamper_proof_evidence = 5;
+    bool id_verification = 6;
+    bool screen_cast = 7;
+    string summary_notes = 8;
+    DisputeCommunicationMessage dispute_communication_message = 9;
+    bytes arbitrator_signature = 10;
+    int64 buyer_payout_amount = 11;
+    int64 seller_payout_amount = 12;
+    bytes arbitrator_pub_key = 13;
+    int64 close_date = 14;
+    bool is_loser_publisher = 15;
+}
+message OpenNewDisputeMessage {
+    Dispute dispute = 1;
+    NodeAddress my_node_address = 2;
+    string uid = 3;
+}
+
+message Dispute {
+    string trade_id = 1;
+    string id = 2;
+    int32 trader_id = 3;
+    bool dispute_opener_is_buyer = 4;
+    bool dispute_opener_is_offerer = 5;
+    int64 opening_date = 6;
+    PubKeyRing trader_pub_key_ring = 7;
+    int64 trade_date = 8;
+    Contract contract = 9;
+    bytes contract_hash = 10;
+    bytes deposit_tx_serialized = 11;
+    bytes payout_tx_serialized = 12;
+    string deposit_tx_id = 13;
+    string payout_tx_id = 14;
+    string contract_as_json = 15;
+    string offerer_contract_signature = 16;
+    string taker_contract_signature = 17;
+    PubKeyRing arbitrator_pub_key_ring = 18;
+    bool is_support_ticket = 19;
+    repeated DisputeCommunicationMessage dispute_communication_messages = 20;
+    bool is_closed = 21;
+    DisputeResult dispute_result = 22;
+    string dispute_payout_tx_id = 23;
+}
+
+message PubKeyRing {
+    bytes signature_pub_key_bytes = 1;
+    bytes encryption_pub_key_bytes = 2;
+}
+
+message Contract {
+    OfferPayload offer_payload = 1;
+    int64 trade_amount = 2;
+    int64 trade_price = 3;
+    string take_offer_fee_tx_id = 4;
+    NodeAddress arbitrator_node_address = 5;
+    bool is_buyer_offerer_and_seller_taker = 6;
+    string offerer_account_id = 7;
+    string taker_account_id = 8;
+    PaymentAccountPayload offerer_payment_account_payload = 9;
+    PaymentAccountPayload taker_payment_account_payload = 10;
+    PubKeyRing offerer_pub_key_ring = 11;
+    PubKeyRing taker_pub_key_ring = 12;
+    NodeAddress buyer_node_address = 13;
+    NodeAddress seller_node_address = 14;
+    string offerer_payout_address_string = 15;
+    string taker_payout_address_string = 16;
+    bytes offerer_btc_pub_key = 17;
+    bytes taker_btc_pub_key = 18;
+}
+
+message PeerOpenedDisputeMessage {
+    Dispute dispute = 1;
+    NodeAddress my_node_address = 2;
+    string uid = 3;
+}
+message PeerPublishedPayoutTxMessage {
+    bytes transaction = 1;
+    string trade_id = 2;
+    NodeAddress my_node_address = 3;
+}
+// DisputeMessage
+
+
+message MockMailboxPayload {
+    int32 message_version = 1;
+    string msg = 2;
+    NodeAddress sender_node_address = 3;
+    int64 ttl = 4;
+    string uid = 5;
+}
+
+message MockPayload {
+    string messageVersion = 1;
+    string msg = 2;
+    string ttl = 3;
+}
+
+message PayDepositRequest {
+    string trade_id = 1;
+    int64 trade_amount = 2;
+    int64 trade_price = 3;
+    bytes taker_multi_sig_pub_key = 4;
+    Coin tx_fee = 5;
+    Coin take_offer_fee = 6;
+    repeated RawTransactionInput raw_transaction_inputs = 7;
+    int64 change_output_value = 8;
+    string change_output_address = 9;
+    string taker_payout_address_string = 10;
+    PubKeyRing taker_pub_key_ring = 11;
+    PaymentAccountPayload taker_payment_account_payload = 12;
+    string taker_account_id = 13;
+    string take_offer_fee_tx_id = 14;
+    repeated NodeAddress accepted_arbitrator_node_addresses = 15;
+    NodeAddress arbitrator_node_address = 16;
+    NodeAddress sender_node_address = 17;
+    string uid = 18;
+}
+
+message Coin {
+    int64 value = 1;
+}
+
+message RawTransactionInput {
+    int64 index = 1;
+    bytes parent_transaction = 2;
+    int64 value = 3;
+}
+
+message PayoutTxFinalizedMessage {
+    string uid = 1;
+    int32 message_version = 2;
+    string trade_id = 3;
+    bytes payout_tx = 4;
+    NodeAddress sender_node_address = 5;
+}
+
+message PrivateNotificationMessage {
+    int32 message_version = 1;
+    string uid = 2;
+    NodeAddress my_node_address = 3;
+    PrivateNotification private_notification = 4;
+}
+
+
+message PrivateNotification {
+    string message = 1;
+    string signature_as_base64 = 2;
+    bytes public_key_bytes = 3;
+}
+
+message OfferAvailabilityRequest {
+    int32 message_version = 1;
+    string offer_id = 2;
+    PubKeyRing pub_key_ring = 3;
+    int64 takers_trade_price = 4;
+    repeated int32 supported_capabilities = 5;
+}
+
+message OfferAvailabilityResponse {
+    int32 message_version = 1;
+    string offer_id = 2;
+    AvailabilityResult availability_result = 3;
+    repeated int32 supported_capabilities = 4;
+}
+
+enum AvailabilityResult {
+    UNKNOWN_FAILURE = 0; // 0 is the default value when something goes wrong, map it to failure
+    AVAILABLE = 1;
+    OFFER_TAKEN = 2;
+    PRICE_OUT_OF_TOLERANCE = 3;
+    MARKET_PRICE_NOT_AVAILABLE = 4;
+    NO_ARBITRATORS = 5;
+    USER_IGNORED = 6;
+}
+
+
+message FiatTransferStartedMessage {
+    int32 message_version = 1;
+    string trade_id = 2;
+    string buyer_payout_address = 3;
+    NodeAddress sender_node_address = 4;
+    string uid = 5;
+}
+
+message FinalizePayoutTxRequest {
+    int32 message_version = 1;
+    string trade_id = 2;
+    bytes seller_signature = 3;
+    string seller_payout_address = 4;
+    int64 lock_time_as_block_height = 5;
+    NodeAddress sender_node_address = 6;
+    string uid = 7;
+}
+
+message PublishDepositTxRequest {
+    int32 message_version = 1;
+    string trade_id = 2;
+    PaymentAccountPayload offerer_payment_account_payload = 3;
+    string offerer_account_id = 4;
+    string offerer_contract_as_json = 5;
+    string offerer_contract_signature = 6;
+    string offerer_payout_address_string = 7;
+    bytes prepared_deposit_tx = 8;
+    repeated RawTransactionInput offerer_inputs = 9;
+    bytes offerer_multi_sig_pub_key = 10;
+}
+
+message PaymentAccountPayload {
+    string id = 1;
+    string payment_method_id = 2;
+    int64 max_trade_period = 3;
+    oneof message {
+        AliPayAccountPayload ali_pay_account_payload = 4;
+        ChaseQuickPayAccountPayload chase_quick_pay_account_payload = 5;
+        ClearXchangeAccountPayload clear_xchange_account_payload = 6;
+        CountryBasedPaymentAccountPayload country_based_payment_account_payload = 7;
+        CryptoCurrencyAccountPayload crypto_currency_account_payload = 8;
+        FasterPaymentsAccountPayload faster_payments_account_payload = 9;
+        InteracETransferAccountPayload interac_e_transfer_account_payload = 10;
+        OKPayAccountPayload o_k_pay_account_payload = 11;
+        PerfectMoneyAccountPayload perfect_money_account_payload = 12;
+        SwishAccountPayload swish_account_payload = 13;
+        USPostalMoneyOrderAccountPayload u_s_postal_money_order_account_payload = 14;
+    }
+}
+
+message AliPayAccountPayload {
+    string account_nr = 1;
+}
+
+message ChaseQuickPayAccountPayload {
+    string email = 1;
+    string holder_name = 2;
+}
+
+message ClearXchangeAccountPayload {
+    string holder_name = 1;
+    string email_or_mobile_nr = 2;
+}
+
+message CountryBasedPaymentAccountPayload {
+    string countryCode = 1;
+    oneof message {
+        BankAccountPayload bank_account_payload = 2;
+        CashDepositAccountPayload cash_deposit_account_payload = 3;
+        SepaAccountPayload sepa_account_payload = 4;
+    }
+}
+
+message BankAccountPayload {
+    string holder_name = 1;
+    string bank_name = 2;
+    string bank_id = 3;
+    string branch_id = 4;
+    string account_nr = 5;
+    string account_type = 6;
+    string holder_tax_id = 7;
+    oneof message {
+        NationalBankAccountPayload national_bank_account_payload = 8;
+        SameBankAccountPayload same_bank_accont_payload = 9;
+        SpecificBanksAccountPayload specific_banks_account_payload = 10;
+    }
+}
+
+message NationalBankAccountPayload {
+}
+
+message SameBankAccountPayload {
+}
+
+message SpecificBanksAccountPayload {
+    repeated string accepted_banks = 1;
+}
+
+message CashDepositAccountPayload {
+    string holder_name = 1;
+    string holder_email = 2;
+    string bank_name = 3;
+    string bank_id = 4;
+    string branch_id = 5;
+    string account_nr = 6;
+    string account_type = 7;
+    string requirements = 8;
+    string holder_tax_id = 9;
+}
+
+message SepaAccountPayload {
+    string holder_name = 1;
+    string iban = 2;
+    string bic = 3;
+    repeated string accepted_country_codes = 4;
+}
+
+message CryptoCurrencyAccountPayload {
+    string address = 1;
+}
+
+message FasterPaymentsAccountPayload {
+    string sort_code = 1;
+    string account_nr = 2;
+}
+
+message InteracETransferAccountPayload {
+    string email = 1;
+    string holder_name = 2;
+    string question = 3;
+    string answer = 4;
+}
+
+message OKPayAccountPayload {
+    string account_nr = 1;
+}
+
+message PerfectMoneyAccountPayload {
+    string account_nr = 1;
+}
+
+message SwishAccountPayload {
+    string mobile_nr = 1;
+    string holder_name = 2;
+}
+
+message USPostalMoneyOrderAccountPayload {
+    string postal_address = 1;
+    string holder_name = 2;
+}
+
+message ProtectedMailboxStorageEntry {
+    ProtectedStorageEntry entry = 1;
+    bytes receivers_pub_key_bytes = 2;
+}

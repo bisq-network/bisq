@@ -28,6 +28,7 @@ import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.alert.Alert;
 import io.bisq.core.alert.AlertManager;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.arbitration.ArbitratorManager;
@@ -67,14 +68,13 @@ import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.ConnectionListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.DecryptedDataTuple;
-import io.bisq.wire.crypto.Encryption;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.message.p2p.peers.keepalive.Ping;
-import io.bisq.wire.payload.alert.Alert;
-import io.bisq.wire.payload.alert.PrivateNotification;
-import io.bisq.wire.payload.arbitration.Dispute;
-import io.bisq.wire.payload.crypto.SealedAndSigned;
+import io.bisq.protobuffer.crypto.DecryptedDataTuple;
+import io.bisq.protobuffer.crypto.Encryption;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
+import io.bisq.protobuffer.payload.alert.PrivateNotification;
+import io.bisq.protobuffer.payload.arbitration.Dispute;
+import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -887,7 +887,7 @@ public class MainViewModel implements ViewModel {
         user.setDisplayedAlert(alert);
         if (alert != null &&
                 !alreadyDisplayed &&
-                (!alert.isUpdateInfo || alert.isNewVersion()))
+                (!alert.isUpdateInfo() || alert.isNewVersion()))
             new DisplayAlertMessageWindow().alertMessage(alert).show();
     }
 

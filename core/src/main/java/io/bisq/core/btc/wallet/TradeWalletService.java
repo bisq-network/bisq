@@ -31,7 +31,7 @@ import io.bisq.core.btc.exceptions.SigningException;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.user.Preferences;
-import io.bisq.wire.payload.btc.RawTransactionInput;
+import io.bisq.protobuffer.payload.btc.RawTransactionInput;
 import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;

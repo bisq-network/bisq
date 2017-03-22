@@ -4,18 +4,18 @@ import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Version;
 import io.bisq.common.util.Tuple3;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.crypto.KeyStorage;
-import io.bisq.wire.message.p2p.DirectMessage;
-import io.bisq.wire.message.p2p.MailboxMessage;
-import io.bisq.wire.payload.crypto.PubKeyRing;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.proto.Messages;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.crypto.KeyStorage;
+import io.bisq.protobuffer.message.p2p.DirectMessage;
+import io.bisq.protobuffer.message.p2p.MailboxMessage;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -825,7 +825,7 @@ final class StressTestDirectMessage implements DirectMessage {
     }
 
     @Override
-    public Messages.Envelope toProtoBuf() {
+    public PB.Envelope toProto() {
         throw new NotImplementedException();
     }
 
@@ -853,7 +853,7 @@ final class StressTestMailboxMessage implements MailboxMessage {
     }
 
     @Override
-    public Messages.Envelope toProtoBuf() {
+    public PB.Envelope toProto() {
         throw new NotImplementedException();
     }
 
