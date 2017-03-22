@@ -195,7 +195,7 @@ public class VotingManager {
             outputStream.write(Utils.sha256hash160(getCompensationRequestsCollection()));
 
             // Then we add the a multiple of 2 bytes for compensationRequest votes
-            Optional<VoteItem> itemOptional = voteItemsList.stream()
+            Optional<VoteItem> itemOptional = voteItemsList.getAllVoteItemList().stream()
                     .filter(e -> e instanceof CompensationRequestVoteItemCollection)
                     .findAny();
             int sizeOfCompReqVotesInBytes = 0;
@@ -253,7 +253,7 @@ public class VotingManager {
 
             // After that we add the optional parameter votes
             int freeSpace = 80 - outputStream.size();
-            Set<VoteItem> items = voteItemsList.stream()
+            Set<VoteItem> items = voteItemsList.getAllVoteItemList().stream()
                     .filter(e -> !(e instanceof CompensationRequestVoteItemCollection))
                     .filter(VoteItem::hasVoted)
                     .collect(Collectors.toSet());

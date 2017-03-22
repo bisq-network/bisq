@@ -19,6 +19,7 @@ package io.bisq.core.dao.vote;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public final class VoteItemsList extends ArrayList<VoteItem> implements Persistable {
+public final class VoteItemsList implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
     private static final Logger log = LoggerFactory.getLogger(VoteItemsList.class);
@@ -35,6 +36,17 @@ public final class VoteItemsList extends ArrayList<VoteItem> implements Persista
 
     private boolean isMyVote;
     private byte[] hashOfCompensationRequestsCollection;
+    @Getter
+    private List<VoteItem> allVoteItemList = new ArrayList<>();
+
+
+    private boolean add(VoteItem voteItem) {
+        return allVoteItemList.add(voteItem);
+    }
+
+    private boolean remove(VoteItem voteItem) {
+        return allVoteItemList.remove(voteItem);
+    }
 
     public VoteItemsList(VotingDefaultValues votingDefaultValues) {
         add(new VoteItem(VotingType.CREATE_OFFER_FEE_IN_BTC, "Create offer fee (in BTC Satoshi)", votingDefaultValues));
@@ -66,7 +78,7 @@ public final class VoteItemsList extends ArrayList<VoteItem> implements Persista
     }
 
     public List<VoteItem> getVoteItemList() {
-        return this.stream()
+        return allVoteItemList.stream()
                 .filter(e -> !(e instanceof CompensationRequestVoteItemCollection))
                 .collect(Collectors.toList());
     }
@@ -84,13 +96,13 @@ public final class VoteItemsList extends ArrayList<VoteItem> implements Persista
     }
 
     public boolean hasVotedOnAnyItem() {
-        return getVoteItemList().stream()
+        return allVoteItemList.stream()
                 .filter(VoteItem::hasVoted)
                 .findAny()
                 .isPresent() || compensationRequest.hasVotedOnAnyItem();
     }
 
     public Optional<VoteItem> getVoteItemByVotingType(VotingType votingType) {
-        return getVoteItemList().stream().filter(e -> e.votingType == votingType).findAny();
+        return allVoteItemList.stream().filter(e -> e.votingType == votingType).findAny();
     }
 }

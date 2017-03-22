@@ -1125,7 +1125,7 @@ message VoteItem {
 }
 
 message VoteItemsList {
-    // TODO ARRAYLIST
+    repeated VoteItem vote_item = 1;
 }
 
 message Message {
@@ -1154,6 +1154,7 @@ message PersistedPeers {
 message Transaction {
    // BITCOINJ transaction
    // - refactor, only store transaction id, where it is used, request transaction from wallet wallet.getwalletransaction(id)
+   bytes hash = 1;
 }
 
 message ProcessModel {
