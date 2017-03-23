@@ -17,19 +17,13 @@
 
 package io.bisq.vo.alert;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Value;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.util.Map;
 
-@Getter
-@EqualsAndHashCode
-@ToString
-@Slf4j
+@Value
 @Immutable
 public final class AlertVO {
     //TODO remove after refact.
