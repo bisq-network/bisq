@@ -238,47 +238,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <!-- <profiles>
-         <profile>
-             <id>update-protobuf</id>
-             <activation>
-                 <property>
-                     <name>updateProtobuf</name>
-                     <value>true</value>
-                 </property>
-             </activation>
-             <build>
-                 <plugins>
-                     <plugin>
-                         <artifactId>maven-antrun-plugin</artifactId>
-                         <executions>
-                             <execution>
-                                 <id>compile-protoc</id>
-                                 <phase>generate-sources</phase>
-                                 <configuration>
-                                     <tasks>
-                                         <path id="proto.path">
-                                             <fileset dir="wire/src/main/proto">
-                                                 <include name="**/*.proto"/>
-                                             </fileset>
-                                         </path>
-                                         <pathconvert pathsep=" " property="proto.files" refid="proto.path"/>
-                                         <exec executable="protoc" failonerror="true">
-                                             <arg value="&#45;&#45;java_out=./wire/src/main/java"/>
-                                             <arg value="-Iwire/src/main/proto"/>
-                                             <arg line="${proto.files}"/>
-                                         </exec>
-                                     </tasks>
-                                 </configuration>
-                                 <goals>
-                                     <goal>run</goal>
-                                 </goals>
-                             </execution>
-                         </executions>
-                     </plugin>
-                 </plugins>
-             </build>
-         </profile>
-     </profiles>-->
 </project>
