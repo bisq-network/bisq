@@ -131,11 +131,47 @@ class SpreadViewModel extends ActivatableViewModel {
             Price bestBuyOfferPrice = buyOffers.isEmpty() ? null : buyOffers.get(0).getPrice();
             if (bestBuyOfferPrice != null && bestSellOfferPrice != null) {
                 MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-                if (isFiatCurrency)
-                    spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
-                else
-                    spread = bestBuyOfferPrice.subtract(bestSellOfferPrice);
-
+               
+                // There have been some bug reports that an offer caused an overflow exception.
+                // We never found out which offer it was. So add here a try/catch to get better info if it 
+                // happens again
+                try {
+                    if (isFiatCurrency)
+                        spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
+                    else
+                        spread = bestBuyOfferPrice.subtract(bestSellOfferPrice);
+                    if (spread != null && marketPrice != null) {
+                        double marketPriceAsDouble = marketPrice.getPrice();
+                        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+                            double result = ((double) spread.getValue() / 10000D) / marketPriceAsDouble;
+                            percentage = " (" + formatter.formatPercentagePrice(result) + ")";
+                        } else {
+                            final double spreadAsDouble = spread.getValue() != 0 ? 10000D / spread.getValue() : 0;
+                            double result = marketPriceAsDouble / spreadAsDouble;
+                            percentage = " (" + formatter.formatPercentagePrice(result) + ")";
+                        }
+                    }
+                } catch (Throwable t) {
+                    try {
+                        // Don't translate msg. It is just for rare error cases and can be removed probably later if 
+                        // that error never gets reported again.
+                        String msg = "An error occurred at the spread calculation.\n" +
+                                "Error msg: " + t.toString() + "\n" +
+                                "Details of offer data: \n" +
+                                "bestSellOfferPrice: " + bestSellOfferPrice.getValue() + "\n" +
+                                "bestBuyOfferPrice: " + bestBuyOfferPrice.getValue() + "\n" +
+                                "sellOffer getCurrencyCode: " + sellOffers.get(0).getCurrencyCode() + "\n" +
+                                "buyOffer getCurrencyCode: " + buyOffers.get(0).getCurrencyCode() + "\n\n" +
+                                "Please copy and paste this data and send it to the developers so they can investigate the issue.";
+                        new Popup<>().error(msg).show();
+                        log.error(t.toString());
+                        t.printStackTrace();
+                    } catch (Throwable t2) {
+                        log.error(t2.toString());
+                        t2.printStackTrace();
+                    }
+                }
+                
                 // TODO maybe show extra colums with spread and use real amount diff 
                 // not % based. e.g. diff between best buy and sell offer (of small amounts its a smaller gain)
                 

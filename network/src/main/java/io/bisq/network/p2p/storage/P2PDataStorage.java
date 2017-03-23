@@ -87,6 +87,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
     private void init(File storageDir) {
         sequenceNumberMapStorage.setNumMaxBackupFiles(5);
+        persistedEntryMapStorage.setNumMaxBackupFiles(1);
+        
         HashMap<ByteArray, MapValue> persistedSequenceNumberMap = sequenceNumberMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName("SequenceNumberMap");
         if (persistedSequenceNumberMap != null)
             sequenceNumberMap = getPurgedSequenceNumberMap(persistedSequenceNumberMap);
