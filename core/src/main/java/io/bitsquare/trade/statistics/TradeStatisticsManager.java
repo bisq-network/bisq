@@ -46,6 +46,8 @@ public class TradeStatisticsManager {
         this.statisticsJsonStorage = statisticsJsonStorage;
         this.dumpStatistics = dumpStatistics;
 
+        statisticsStorage.setNumMaxBackupFiles(1);
+
         init(p2PService);
     }
 
