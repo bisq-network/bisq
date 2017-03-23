@@ -803,7 +803,7 @@ message CompensationRequestVoteItem {
 }
 
 message CompensationRequestVoteItemCollection {
-    // TODO ARRAYLIST
+    repeated CompensationRequestVoteItem compensation_request_vote_item = 1;
 }
 
 message Country {
@@ -818,7 +818,7 @@ message DecryptedMsgWithPubKey {
 }
 
 message DisputeList {
-    // TODO ARRAYLIST
+    repeated Dispute dispute = 1;
 }
 
 message MapValue {
@@ -830,6 +830,7 @@ message Navigation {
     ViewPath previous_path = 1;
 }
 
+// there is a paymentaccountfactory !!!
 message PaymentAccount {
     string id = 1;
     int64 creation_date = 2;
@@ -840,39 +841,6 @@ message PaymentAccount {
     PaymentAccountPayload payment_account_payload = 7;
 }
 
-message AliPayAccount {
-
-}
-message ChaseQuickPayAccount {
-}
-message ClearXchangeAccount {
-}
-message CountryBasedPaymentAccount {
-}
-message CashDepositAccount {
-}
-message NationalBankAccount {
-}
-message SameBankAccount {
-}
-message SepaAccount {
-}
-message SpecificBanksAccount {
-}
-message CryptoCurrencyAccount {
-}
-message FasterPaymentsAccount {
-}
-message InteracETransferAccount {
-}
-message OKPayAccount {
-}
-message PerfectMoneyAccount {
-}
-message SwishAccount {
-}
-message USPostalMoneyOrderAccount {
-}
 message PaymentMethod {
     string id = 1;
     int64 lock_time = 2;
@@ -880,8 +848,6 @@ message PaymentMethod {
     Coin max_trade_limit = 4;
 }
 
-//message Peer {
-//}
 message Preferences {
     // Persisted fields
     string userLanguage = 1;
@@ -1092,10 +1058,10 @@ message User {
     Arbitrator registered_arbitrator = 9;
 }
 
-
 message ViewPath {
-    // TODO ARRAYLIST
+    // TODO BALLOONS INTO 40 classes !!!!!!!!!!!!!!!!
 }
+
 message VoteItem {
     enum VotingType {
         UNKNOWN_FAILURE = 0;
@@ -1151,9 +1117,8 @@ message PersistedPeers {
     repeated Peer peers = 1; // not sure about this
 }
 
+// stores bitcoin transaction id (which is a hash)
 message Transaction {
-   // BITCOINJ transaction
-   // - refactor, only store transaction id, where it is used, request transaction from wallet wallet.getwalletransaction(id)
    bytes hash = 1;
 }
 

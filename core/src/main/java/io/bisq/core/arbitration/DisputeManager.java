@@ -51,7 +51,6 @@ import io.bisq.wire.payload.arbitration.DisputeResult;
 import io.bisq.wire.payload.crypto.PubKeyRing;
 import io.bisq.wire.payload.p2p.NodeAddress;
 import io.bisq.wire.payload.trade.Contract;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Transaction;
@@ -77,9 +76,8 @@ public class DisputeManager {
     private final OpenOfferManager openOfferManager;
     private final P2PService p2PService;
     private final KeyRing keyRing;
-    private final Storage<DisputeList<Dispute>> disputeStorage;
-    private final DisputeList<Dispute> disputes;
-    transient private final ObservableList<Dispute> disputesObservableList;
+    private final Storage<DisputeList> disputeStorage;
+    private final DisputeList disputes;
     private final String disputeInfo;
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
@@ -110,8 +108,7 @@ public class DisputeManager {
         this.keyRing = keyRing;
 
         disputeStorage = new Storage<>(storageDir);
-        disputes = new DisputeList<>(disputeStorage);
-        disputesObservableList = FXCollections.observableArrayList(disputes);
+        disputes = new DisputeList(disputeStorage);
 
         openDisputes = new HashMap<>();
         closedDisputes = new HashMap<>();
@@ -227,7 +224,6 @@ public class DisputeManager {
                 dispute.addDisputeMessage(disputeCommunicationMessage);
                 if (!reOpen) {
                     disputes.add(dispute);
-                    disputesObservableList.add(dispute);
                 }
 
                 p2PService.sendEncryptedMailboxMessage(dispute.getContract().arbitratorNodeAddress,
@@ -303,7 +299,6 @@ public class DisputeManager {
             disputeCommunicationMessage.setIsSystemMessage(true);
             dispute.addDisputeMessage(disputeCommunicationMessage);
             disputes.add(dispute);
-            disputesObservableList.add(dispute);
 
             // we mirrored dispute already!
             Contract contract = dispute.getContract();
@@ -468,7 +463,6 @@ public class DisputeManager {
                 if (!storedDisputeOptional.isPresent()) {
                     dispute.setStorage(getDisputeStorage());
                     disputes.add(dispute);
-                    disputesObservableList.add(dispute);
                     sendPeerOpenedDisputeMessage(dispute);
                 } else {
                     log.warn("We got a dispute already open for that trade and trading peer.\n" +
@@ -495,7 +489,6 @@ public class DisputeManager {
 
                     dispute.setStorage(getDisputeStorage());
                     disputes.add(dispute);
-                    disputesObservableList.add(dispute);
                 } else {
                     log.warn("We got a dispute already open for that trade and trading peer.\n" +
                             "TradeId = " + dispute.getTradeId());
@@ -707,12 +700,12 @@ public class DisputeManager {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Storage<DisputeList<Dispute>> getDisputeStorage() {
+    public Storage<DisputeList> getDisputeStorage() {
         return disputeStorage;
     }
 
     public ObservableList<Dispute> getDisputesAsObservableList() {
-        return disputesObservableList;
+        return disputes.getObservableList();
     }
 
     public boolean isTrader(Dispute dispute) {

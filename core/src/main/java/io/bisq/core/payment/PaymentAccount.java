@@ -22,8 +22,11 @@ import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.wire.payload.payment.PaymentAccountPayload;
 import io.bisq.wire.payload.payment.PaymentMethod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -31,20 +34,29 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+@ToString
+@EqualsAndHashCode
+@Slf4j
 public abstract class PaymentAccount implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(PaymentAccount.class);
-
+    @Getter
     protected final String id;
+    @Getter
     protected final Date creationDate;
+    @Getter
     protected final PaymentMethod paymentMethod;
+    @Getter
+    @Setter
     protected String accountName;
+    @Getter
     final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
+    @Getter
+    @Setter
     protected TradeCurrency selectedTradeCurrency;
+    @Getter
     public final PaymentAccountPayload paymentAccountPayload;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -91,101 +103,9 @@ public abstract class PaymentAccount implements Persistable {
             return null;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getter, Setter
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     protected abstract PaymentAccountPayload setPayload();
-
-    public String getAccountName() {
-        return accountName;
-    }
-
-    public void setAccountName(String accountName) {
-        this.accountName = accountName;
-    }
-
-    public void setSelectedTradeCurrency(TradeCurrency tradeCurrency) {
-        selectedTradeCurrency = tradeCurrency;
-    }
-
-    public TradeCurrency getSelectedTradeCurrency() {
-        return selectedTradeCurrency;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getter
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getId() {
-        return id;
-    }
-
-    public PaymentMethod getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public List<TradeCurrency> getTradeCurrencies() {
-        return tradeCurrencies;
-    }
-
-    public PaymentAccountPayload getPaymentAccountPayload() {
-        return paymentAccountPayload;
-    }
 
     public String getPaymentDetails() {
         return paymentAccountPayload.getPaymentDetails();
-    }
-
-    public Date getCreationDate() {
-        return creationDate;
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PaymentAccount)) return false;
-
-        PaymentAccount that = (PaymentAccount) o;
-
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        if (creationDate != null ? !creationDate.equals(that.creationDate) : that.creationDate != null) return false;
-        if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
-            return false;
-        if (accountName != null ? !accountName.equals(that.accountName) : that.accountName != null) return false;
-        if (tradeCurrencies != null ? !tradeCurrencies.equals(that.tradeCurrencies) : that.tradeCurrencies != null)
-            return false;
-        if (selectedTradeCurrency != null ? !selectedTradeCurrency.equals(that.selectedTradeCurrency) : that.selectedTradeCurrency != null)
-            return false;
-        return !(paymentAccountPayload != null ? !paymentAccountPayload.equals(that.paymentAccountPayload) : that.paymentAccountPayload != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (creationDate != null ? creationDate.hashCode() : 0);
-        result = 31 * result + (paymentMethod != null ? paymentMethod.hashCode() : 0);
-        result = 31 * result + (accountName != null ? accountName.hashCode() : 0);
-        result = 31 * result + (tradeCurrencies != null ? tradeCurrencies.hashCode() : 0);
-        result = 31 * result + (selectedTradeCurrency != null ? selectedTradeCurrency.hashCode() : 0);
-        result = 31 * result + (paymentAccountPayload != null ? paymentAccountPayload.hashCode() : 0);
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "PaymentAccount{" +
-                "id='" + id + '\'' +
-                ", creationDate=" + creationDate +
-                ", paymentMethod=" + paymentMethod +
-                ", accountName='" + accountName + '\'' +
-                ", tradeCurrencies=" + tradeCurrencies +
-                ", selectedTradeCurrency=" + selectedTradeCurrency +
-                ", contractData=" + paymentAccountPayload +
-                '}';
     }
 }

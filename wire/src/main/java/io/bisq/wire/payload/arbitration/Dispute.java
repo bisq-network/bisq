@@ -89,7 +89,7 @@ public final class Dispute implements Payload {
 
 
     // Domain
-    transient private Storage<DisputeList<Dispute>> storage;
+    transient private Storage<DisputeList> storage;
     transient private ObservableList<DisputeCommunicationMessage> observableList = FXCollections.observableArrayList(
             disputeCommunicationMessages);
     transient private BooleanProperty isClosedProperty = new SimpleBooleanProperty(isClosed);
@@ -100,7 +100,7 @@ public final class Dispute implements Payload {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Dispute(Storage<DisputeList<Dispute>> storage,
+    public Dispute(Storage<DisputeList> storage,
                    String tradeId,
                    int traderId,
                    boolean disputeOpenerIsBuyer,
@@ -209,7 +209,7 @@ public final class Dispute implements Payload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // In case we get the object via the network storage is not set as its transient, so we need to set it.
-    public void setStorage(Storage<DisputeList<Dispute>> storage) {
+    public void setStorage(Storage<DisputeList> storage) {
         this.storage = storage;
     }
 
