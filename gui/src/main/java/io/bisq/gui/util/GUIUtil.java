@@ -342,27 +342,11 @@ public class GUIUtil {
         return parent != null ? (T) parent : null;
     }
 
-    public static void showClearXchangeWarning(PaymentMethod paymentMethod, Preferences preferences) {
+    public static void showClearXchangeWarning(Preferences preferences) {
         String key = "confirmClearXchangeRequirements";
-        final String cxc = BSResources.get(paymentMethod.getId());
-        new Popup().information("Your selected payment method is " + cxc +
-                ". Please be sure that you fulfill the requirements for the usage of " +
-                cxc + ".\n\n" +
-                "1. You need to have your " + cxc + " account verified at their platform " +
-                "before starting a trade or creating an offer.\n\n" +
-                "2. You need to have a bank account at one of the following member banks:\n" +
-                "    ● Bank of America\n" +
-                "    ● Capital One P2P Payments\n" +
-                "    ● Chase QuickPay\n" +
-                "    ● FirstBank Person to Person Transfers\n" +
-                "    ● Frost Send Money\n" +
-                "    ● U.S. Bank Send Money\n" +
-                "    ● Wells Fargo SurePay\n\n" +
-                "Please use " + cxc + " only if you fulfill those requirements, " +
-                "otherwise it is very likely that the " + cxc + " transfer fails and the trade ends up in a dispute.\n" +
-                "If you have not fulfilled the above requirements you would lose your security deposit in such a case.")
+        new Popup().information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
                 .width(900)
-                .closeButtonText("I confirm")
+                .closeButtonText(Res.get("shared.iConfirm"))
                 .dontShowAgainId(key, preferences)
                 .show();
     }

@@ -49,6 +49,7 @@ import io.bisq.gui.main.portfolio.openoffer.OpenOffersView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -406,7 +407,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
                 !clearXchangeWarningDisplayed) {
             clearXchangeWarningDisplayed = true;
-            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(paymentAccount.getPaymentMethod(), preferences),
+            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(preferences),
                     500, TimeUnit.MILLISECONDS);
         }
     }

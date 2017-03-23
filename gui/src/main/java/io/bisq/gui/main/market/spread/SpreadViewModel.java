@@ -27,6 +27,7 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
+import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -131,7 +132,7 @@ class SpreadViewModel extends ActivatableViewModel {
             Price bestBuyOfferPrice = buyOffers.isEmpty() ? null : buyOffers.get(0).getPrice();
             if (bestBuyOfferPrice != null && bestSellOfferPrice != null) {
                 MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-               
+
                 // There have been some bug reports that an offer caused an overflow exception.
                 // We never found out which offer it was. So add here a try/catch to get better info if it 
                 // happens again
@@ -140,16 +141,24 @@ class SpreadViewModel extends ActivatableViewModel {
                         spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
                     else
                         spread = bestBuyOfferPrice.subtract(bestSellOfferPrice);
+
+                    // TODO maybe show extra colums with spread and use real amount diff 
+                    // not % based. e.g. diff between best buy and sell offer (of small amounts its a smaller gain)
+
                     if (spread != null && marketPrice != null) {
                         double marketPriceAsDouble = marketPrice.getPrice();
-                        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-                            double result = ((double) spread.getValue() / 10000D) / marketPriceAsDouble;
-                            percentage = " (" + formatter.formatPercentagePrice(result) + ")";
-                        } else {
-                            final double spreadAsDouble = spread.getValue() != 0 ? 10000D / spread.getValue() : 0;
-                            double result = marketPriceAsDouble / spreadAsDouble;
-                            percentage = " (" + formatter.formatPercentagePrice(result) + ")";
-                        }
+                        final double precision = isFiatCurrency ?
+                                Math.pow(10, Fiat.SMALLEST_UNIT_EXPONENT) :
+                                Math.pow(10, Altcoin.SMALLEST_UNIT_EXPONENT);
+
+                        BigDecimal marketPriceAsBigDecimal = BigDecimal.valueOf(marketPriceAsDouble)
+                                .multiply(BigDecimal.valueOf(precision));
+                        // We multiply with 10000 because we use precision of 2 at % (100.00%)
+                        double result = BigDecimal.valueOf(spread.getValue())
+                                .multiply(BigDecimal.valueOf(10000))
+                                .divide(marketPriceAsBigDecimal, RoundingMode.HALF_UP)
+                                .doubleValue() / 10000;
+                        percentage = formatter.formatPercentagePrice(result);
                     }
                 } catch (Throwable t) {
                     try {
@@ -170,25 +179,6 @@ class SpreadViewModel extends ActivatableViewModel {
                         log.error(t2.toString());
                         t2.printStackTrace();
                     }
-                }
-                
-                // TODO maybe show extra colums with spread and use real amount diff 
-                // not % based. e.g. diff between best buy and sell offer (of small amounts its a smaller gain)
-                
-                if (spread != null && marketPrice != null) {
-                    double marketPriceAsDouble = marketPrice.getPrice();
-                    final double precision = isFiatCurrency ?
-                            Math.pow(10, Fiat.SMALLEST_UNIT_EXPONENT) :
-                            Math.pow(10, Altcoin.SMALLEST_UNIT_EXPONENT);
-
-                    BigDecimal marketPriceAsBigDecimal = BigDecimal.valueOf(marketPriceAsDouble)
-                            .multiply(BigDecimal.valueOf(precision));
-                    // We multiply with 10000 because we use precision of 2 at % (100.00%)
-                    double result = BigDecimal.valueOf(spread.getValue())
-                            .multiply(BigDecimal.valueOf(10000))
-                            .divide(marketPriceAsBigDecimal, RoundingMode.HALF_UP)
-                            .doubleValue() / 10000;
-                    percentage = formatter.formatPercentagePrice(result);
                 }
             }
 

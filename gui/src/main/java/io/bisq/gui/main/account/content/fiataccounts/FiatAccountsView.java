@@ -21,6 +21,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
+import io.bisq.core.payment.ClearXchangeAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
@@ -144,25 +145,10 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
 
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
         if (paymentAccount instanceof ClearXchangeAccount) {
-            final String cxc = BSResources.get(paymentAccount.getPaymentMethod().getId());
-            new Popup().information("Please be sure that you fulfill the requirements for the usage of " +
-                    cxc + ".\n\n" +
-                    "1. You need to have your " + cxc + " account verified at their platform " +
-                    "before starting a trade or creating an offer.\n\n" +
-                    "2. You need to have a bank account at one of the following member banks:\n" +
-                    "    ● Bank of America\n" +
-                    "    ● Capital One P2P Payments\n" +
-                    "    ● Chase QuickPay\n" +
-                    "    ● FirstBank Person to Person Transfers\n" +
-                    "    ● Frost Send Money\n" +
-                    "    ● U.S. Bank Send Money\n" +
-                    "    ● Wells Fargo SurePay\n\n" +
-                    "Please use " + cxc + " only if you fulfill those requirements, " +
-                    "otherwise it is very likely that the " + cxc + " transfer fails and the trade ends up in a dispute.\n" +
-                    "If you have not fulfilled the above requirements you would lose your security deposit in such a case.")
+            new Popup().information(Res.get("payment.clearXchange.info"))
                     .width(900)
-                    .closeButtonText("Cancel")
-                    .actionButtonText("I confirm")
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .actionButtonText(Res.get("shared.iConfirm"))
                     .onAction(() -> doSaveNewAccount(paymentAccount))
                     .show();
         } else {
@@ -171,8 +157,6 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     }
 
     private void doSaveNewAccount(PaymentAccount paymentAccount) {
-
-
         if (!model.getPaymentAccounts().stream().filter(e -> {
             if (e.getAccountName() != null)
                 return e.getAccountName().equals(paymentAccount.getAccountName());

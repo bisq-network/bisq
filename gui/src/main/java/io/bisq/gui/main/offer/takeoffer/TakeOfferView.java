@@ -50,6 +50,7 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.*;
@@ -211,7 +212,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (model.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
                 !clearXchangeWarningDisplayed) {
             clearXchangeWarningDisplayed = true;
-            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(model.getPaymentMethod(), preferences),
+            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(preferences),
                     500, TimeUnit.MILLISECONDS);
         }
     }
