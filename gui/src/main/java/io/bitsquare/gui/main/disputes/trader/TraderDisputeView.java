@@ -161,6 +161,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         Label label = new Label("Filter list:");
         HBox.setMargin(label, new Insets(5, 0, 0, 0));
         filterTextField = new InputTextField();
+        filterTextField.setText("open");
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
 
         filterBox = new HBox();
