@@ -113,6 +113,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
         // Never set the priv arbitr. key here!
         
         depositTxHex.setText("");
+        P2SHMultiSigOutputScript.setText("");
 
         buyerPayoutAmount.setText("1.03");
         sellerPayoutAmount.setText("0.03");
@@ -133,8 +134,6 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
         // 4.2
          arbitratorAddressString.setText("1FdFzBazmHQxbUbdCUJwuCtR37DrZrEobu");
          arbitratorPubKeyAsHex.setText("030fdc2ebc297df4047442f6079f1ce3b7d1938a41f88bd11497545cc94fcfd315");
-
-        P2SHMultiSigOutputScript.setText("");
 
         actionButtonText("Sign and publish transaction");
 
