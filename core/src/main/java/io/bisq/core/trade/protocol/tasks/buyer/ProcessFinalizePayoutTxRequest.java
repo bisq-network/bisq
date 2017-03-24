@@ -46,7 +46,9 @@ public class ProcessFinalizePayoutTxRequest extends TradeTask {
 
             processModel.tradingPeer.setSignature(checkNotNull(message.sellerSignature));
             processModel.tradingPeer.setPayoutAddressString(Validator.nonEmptyStringOf(message.sellerPayoutAddress));
-            trade.setLockTimeAsBlockHeight(Validator.nonNegativeLongOf(message.lockTimeAsBlockHeight));
+
+            //TODO: locktime
+            // trade.setLockTimeAsBlockHeight(Validator.nonNegativeLongOf(message.lockTimeAsBlockHeight));
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

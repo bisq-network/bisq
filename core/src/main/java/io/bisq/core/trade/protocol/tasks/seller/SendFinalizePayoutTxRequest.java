@@ -38,6 +38,7 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
     @Override
     protected void run() {
         try {
+            //TODO: locktime
             runInterceptHook();
             if (trade.getTradingPeerNodeAddress() != null) {
                 BtcWalletService walletService = processModel.getWalletService();
@@ -46,7 +47,7 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
                         processModel.getId(),
                         processModel.getPayoutTxSignature(),
                         sellerPayoutAddress,
-                        trade.getLockTimeAsBlockHeight(),
+                      /*  trade.getLockTimeAsBlockHeight(),*/
                         processModel.getMyNodeAddress()
                 );
 

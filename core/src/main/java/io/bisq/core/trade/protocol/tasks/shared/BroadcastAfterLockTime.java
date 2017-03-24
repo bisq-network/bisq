@@ -18,20 +18,15 @@
 package io.bisq.core.trade.protocol.tasks.shared;
 
 import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.ListenableFuture;
-import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -46,11 +41,13 @@ public class BroadcastAfterLockTime extends TradeTask {
     @Override
     protected void run() {
         try {
+            //TODO: locktime
             runInterceptHook();
-            log.debug("ChainHeight/LockTime: {} / {}", processModel.getTradeWalletService().getBestChainHeight(), trade.getLockTimeAsBlockHeight());
-            if (trade.getLockTimeAsBlockHeight() == 0 || processModel.getTradeWalletService().getBestChainHeight() >= trade.getLockTimeAsBlockHeight()) {
+            /*log.debug("ChainHeight/LockTime: {} / {}", processModel.getTradeWalletService().getBestChainHeight(), trade.getLockTimeAsBlockHeight());*/
+            // if (trade.getLockTimeAsBlockHeight() == 0 /*|| 
+            //    processModel.getTradeWalletService().getBestChainHeight() >= trade.getLockTimeAsBlockHeight()) {
                 broadcastTx();
-            } else {
+           /* } else {
                 ListenableFuture<StoredBlock> blockHeightFuture = processModel.getTradeWalletService().getBlockHeightFuture(trade.getPayoutTx());
                 blockHeightFuture.addListener(
                         () -> {
@@ -64,7 +61,7 @@ public class BroadcastAfterLockTime extends TradeTask {
                             broadcastTx();
                         },
                         UserThread::execute);
-            }
+            }*/
         } catch (Throwable t) {
             failed(t);
         }

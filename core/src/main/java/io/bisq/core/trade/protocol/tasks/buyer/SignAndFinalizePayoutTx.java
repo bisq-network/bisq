@@ -55,6 +55,7 @@ public class SignAndFinalizePayoutTx extends TradeTask {
             byte[] buyerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(id, buyerMultiSigPubKey);
             TradingPeer tradingPeer = processModel.tradingPeer;
+            //TODO: locktime
             Transaction transaction = processModel.getTradeWalletService().buyerSignsAndFinalizesPayoutTx(
                     trade.getDepositTx(),
                     tradingPeer.getSignature(),
@@ -63,7 +64,7 @@ public class SignAndFinalizePayoutTx extends TradeTask {
                     buyerPayoutAddressString,
                     tradingPeer.getPayoutAddressString(),
                     multiSigKeyPair,
-                    trade.getLockTimeAsBlockHeight(),
+                   /* trade.getLockTimeAsBlockHeight(),*/
                     buyerMultiSigPubKey,
                     tradingPeer.getMultiSigPubKey(),
                     trade.getArbitratorPubKey()

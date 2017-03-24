@@ -35,29 +35,30 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
 
     public final byte[] sellerSignature;
     public final String sellerPayoutAddress;
-    public final long lockTimeAsBlockHeight;
+    /*  public final long lockTimeAsBlockHeight;*/
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
+    //TODO: locktime
     public FinalizePayoutTxRequest(String tradeId,
                                    byte[] sellerSignature,
                                    String sellerPayoutAddress,
-                                   long lockTimeAsBlockHeight,
+                                   /*long lockTimeAsBlockHeight,*/
                                    NodeAddress senderNodeAddress) {
-        this(tradeId, sellerSignature, sellerPayoutAddress, lockTimeAsBlockHeight, senderNodeAddress,
+        this(tradeId, sellerSignature, sellerPayoutAddress,/* lockTimeAsBlockHeight, */senderNodeAddress,
                 UUID.randomUUID().toString());
     }
 
     public FinalizePayoutTxRequest(String tradeId,
                                    byte[] sellerSignature,
                                    String sellerPayoutAddress,
-                                   long lockTimeAsBlockHeight,
+                                  /* long lockTimeAsBlockHeight,*/
                                    NodeAddress senderNodeAddress,
                                    String uid) {
         super(tradeId);
         this.sellerSignature = sellerSignature;
         this.sellerPayoutAddress = sellerPayoutAddress;
-        this.lockTimeAsBlockHeight = lockTimeAsBlockHeight;
+        // this.lockTimeAsBlockHeight = lockTimeAsBlockHeight;
         this.senderNodeAddress = senderNodeAddress;
         this.uid = uid;
     }
@@ -80,7 +81,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
 
         FinalizePayoutTxRequest that = (FinalizePayoutTxRequest) o;
 
-        if (lockTimeAsBlockHeight != that.lockTimeAsBlockHeight) return false;
+        // if (lockTimeAsBlockHeight != that.lockTimeAsBlockHeight) return false;
         if (!Arrays.equals(sellerSignature, that.sellerSignature)) return false;
         if (sellerPayoutAddress != null ? !sellerPayoutAddress.equals(that.sellerPayoutAddress) : that.sellerPayoutAddress != null)
             return false;
@@ -95,7 +96,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
         int result = super.hashCode();
         result = 31 * result + (sellerSignature != null ? Arrays.hashCode(sellerSignature) : 0);
         result = 31 * result + (sellerPayoutAddress != null ? sellerPayoutAddress.hashCode() : 0);
-        result = 31 * result + (int) (lockTimeAsBlockHeight ^ (lockTimeAsBlockHeight >>> 32));
+        //  result = 31 * result + (int) (lockTimeAsBlockHeight ^ (lockTimeAsBlockHeight >>> 32));
         result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
         result = 31 * result + (uid != null ? uid.hashCode() : 0);
         return result;
@@ -109,7 +110,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
                 .setTradeId(tradeId)
                 .setSellerSignature(ByteString.copyFrom(sellerSignature))
                 .setSellerPayoutAddress(sellerPayoutAddress)
-                .setLockTimeAsBlockHeight(lockTimeAsBlockHeight)
+               /* .setLockTimeAsBlockHeight(lockTimeAsBlockHeight)*/
                 .setSenderNodeAddress(senderNodeAddress.toProto())
                 .setUid(uid)).build();
     }

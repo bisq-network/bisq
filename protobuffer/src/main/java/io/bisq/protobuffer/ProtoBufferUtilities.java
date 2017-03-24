@@ -503,10 +503,11 @@ public class ProtoBufferUtilities {
                 disputeCommunicationMessage.getArrived(), disputeCommunicationMessage.getStoredInMailbox());
     }
 
+    //TODO: locktime
     private static Message getFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest finalizePayoutTxRequest) {
         return new FinalizePayoutTxRequest(finalizePayoutTxRequest.getTradeId(),
                 finalizePayoutTxRequest.getSellerSignature().toByteArray(),
-                finalizePayoutTxRequest.getSellerPayoutAddress(), finalizePayoutTxRequest.getLockTimeAsBlockHeight(),
+                finalizePayoutTxRequest.getSellerPayoutAddress(), /*finalizePayoutTxRequest.getLockTimeAsBlockHeight(),*/
                 getNodeAddress(finalizePayoutTxRequest.getSenderNodeAddress()));
     }
 

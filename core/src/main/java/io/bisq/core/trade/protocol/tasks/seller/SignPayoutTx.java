@@ -51,15 +51,17 @@ public class SignPayoutTx extends TradeTask {
             Coin buyerPayoutAmount = trade.getOffer().getBuyerSecurityDeposit()
                     .add(trade.getTradeAmount());
 
+
+            //TODO: locktime
             // We use the sellers LastBlockSeenHeight, which might be different to the buyers one.
             // If lock time is 0 we set lockTimeAsBlockHeight to 0 to mark it as "not set". 
             // In the tradeWallet we apply the lockTime only if it is set, otherwise we use the default values for 
             // transaction lockTime and sequence number
-            long lockTime = trade.getOffer().getPaymentMethod().getLockTime();
+           /* long lockTime = trade.getOffer().getPaymentMethod().getLockTime();
             long lockTimeAsBlockHeight = 0;
             if (lockTime > 0)
                 lockTimeAsBlockHeight = processModel.getTradeWalletService().getLastBlockSeenHeight() + lockTime;
-            trade.setLockTimeAsBlockHeight(lockTimeAsBlockHeight);
+            trade.setLockTimeAsBlockHeight(lockTimeAsBlockHeight);*/
 
             BtcWalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
@@ -77,7 +79,7 @@ public class SignPayoutTx extends TradeTask {
                     processModel.tradingPeer.getPayoutAddressString(),
                     sellerPayoutAddressString,
                     multiSigKeyPair,
-                    lockTimeAsBlockHeight,
+                 /*   lockTimeAsBlockHeight,*/
                     processModel.tradingPeer.getMultiSigPubKey(),
                     sellerMultiSigPubKey,
                     trade.getArbitratorPubKey());

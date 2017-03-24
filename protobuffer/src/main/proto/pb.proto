@@ -579,9 +579,8 @@ message FinalizePayoutTxRequest {
     string trade_id = 2;
     bytes seller_signature = 3;
     string seller_payout_address = 4;
-    int64 lock_time_as_block_height = 5;
-    NodeAddress sender_node_address = 6;
-    string uid = 7;
+    NodeAddress sender_node_address = 5;
+    string uid = 6;
 }
 
 message PublishDepositTxRequest {

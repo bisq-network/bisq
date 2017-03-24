@@ -38,6 +38,7 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode
 @ToString
+//TODO: locktime
 public final class PaymentMethod implements Persistable, Comparable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -80,57 +81,56 @@ public final class PaymentMethod implements Persistable, Comparable {
 
     public static final List<PaymentMethod> ALL_VALUES = new ArrayList<>(Arrays.asList(
             // EUR
-            SEPA = new PaymentMethod(SEPA_ID, 0, 8 * DAY, Coin.parseCoin("0.5")),
+            SEPA = new PaymentMethod(SEPA_ID, 8 * DAY, Coin.parseCoin("0.5")),
             // sepa takes 1-3 business days. We use 8 days to include safety for holidays
 
             // Global
-            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
-            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 0, 2 * DAY, Coin.parseCoin("0.5")),
-            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
-            CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
+            NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, Coin.parseCoin("0.5")),
+            SAME_BANK = new PaymentMethod(SAME_BANK_ID, 2 * DAY, Coin.parseCoin("0.5")),
+            SPECIFIC_BANKS = new PaymentMethod(SPECIFIC_BANKS_ID, 4 * DAY, Coin.parseCoin("0.5")),
+            CASH_DEPOSIT = new PaymentMethod(CASH_DEPOSIT_ID, 4 * DAY, Coin.parseCoin("0.5")),
 
             // Trans national
-            OK_PAY = new PaymentMethod(OK_PAY_ID, 0, DAY, Coin.parseCoin("1")),
-            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, 0, DAY, Coin.parseCoin("1")),
+            OK_PAY = new PaymentMethod(OK_PAY_ID, DAY, Coin.parseCoin("1")),
+            PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, Coin.parseCoin("1")),
 
             // UK
-            FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, 0, DAY, Coin.parseCoin("0.5")),
+            FASTER_PAYMENTS = new PaymentMethod(FASTER_PAYMENTS_ID, DAY, Coin.parseCoin("0.5")),
 
             // Canada
-            INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, 0, DAY, Coin.parseCoin("0.5")),
+            INTERAC_E_TRANSFER = new PaymentMethod(INTERAC_E_TRANSFER_ID, DAY, Coin.parseCoin("0.5")),
 
             // US
-            CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 0, 4 * DAY, Coin.parseCoin("0.5")),
-            CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, 0, DAY, Coin.parseCoin("0.5")),
-            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 0, 8 * DAY, Coin.parseCoin("0.5")),
+            CLEAR_X_CHANGE = new PaymentMethod(CLEAR_X_CHANGE_ID, 4 * DAY, Coin.parseCoin("0.5")),
+            CHASE_QUICK_PAY = new PaymentMethod(CHASE_QUICK_PAY_ID, DAY, Coin.parseCoin("0.5")),
+            US_POSTAL_MONEY_ORDER = new PaymentMethod(US_POSTAL_MONEY_ORDER_ID, 8 * DAY, Coin.parseCoin("0.5")),
 
             // Sweden
-            SWISH = new PaymentMethod(SWISH_ID, 0, DAY, Coin.parseCoin("1")),
+            SWISH = new PaymentMethod(SWISH_ID, DAY, Coin.parseCoin("1")),
 
             // China
-            ALI_PAY = new PaymentMethod(ALI_PAY_ID, 0, DAY, Coin.parseCoin("1")),
+            ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, Coin.parseCoin("1")),
 
             // Altcoins
-            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, 0, DAY, Coin.parseCoin("1"))
+            BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, Coin.parseCoin("1"))
     ));
 
     private final String id;
-    private long lockTime;
+    // private long lockTime;
     private long maxTradePeriod;
     private Coin maxTradeLimit;
 
     /**
      * @param id
-     * @param lockTime       lock time when seller release BTC until the payout tx gets valid (bitcoin tx lockTime). Serves as protection
      *                       against charge back risk. If Bank do the charge back quickly the Arbitrator and the seller can push another
      *                       double spend tx to invalidate the time locked payout tx. For the moment we set all to 0 but will have it in
      *                       place when needed.
      * @param maxTradePeriod The min. period a trader need to wait until he gets displayed the contact form for opening a dispute.
      * @param maxTradeLimit  The max. allowed trade amount in Bitcoin for that payment method (depending on charge back risk)
      */
-    public PaymentMethod(String id, long lockTime, long maxTradePeriod, Coin maxTradeLimit) {
+    public PaymentMethod(String id,/* long lockTime,*/ long maxTradePeriod, Coin maxTradeLimit) {
         this.id = id;
-        this.lockTime = lockTime;
+        // this.lockTime = lockTime;
         this.maxTradePeriod = maxTradePeriod;
         this.maxTradeLimit = maxTradeLimit;
     }
@@ -141,7 +141,7 @@ public final class PaymentMethod implements Persistable, Comparable {
 
             // In case we update those values we want that the persisted accounts get updated as well
             PaymentMethod paymentMethod = PaymentMethod.getPaymentMethodById(id);
-            this.lockTime = paymentMethod.getLockTime();
+            // this.lockTime = paymentMethod.getLockTime();
             this.maxTradePeriod = paymentMethod.getMaxTradePeriod();
             this.maxTradeLimit = paymentMethod.getMaxTradeLimit();
         } catch (Throwable t) {
@@ -154,7 +154,7 @@ public final class PaymentMethod implements Persistable, Comparable {
         if (paymentMethodOptional.isPresent())
             return paymentMethodOptional.get();
         else
-            return new PaymentMethod(Res.get("shared.na"), 1, DAY, Coin.parseCoin("0"));
+            return new PaymentMethod(Res.get("shared.na"), DAY, Coin.parseCoin("0"));
     }
 
     @Override

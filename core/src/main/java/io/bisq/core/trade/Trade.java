@@ -171,7 +171,8 @@ public abstract class Trade implements Tradable, Model {
     private String takerContractSignature;
     private String offererContractSignature;
     private Transaction payoutTx;
-    private long lockTimeAsBlockHeight;
+    //TODO: locktime
+    //   private long lockTimeAsBlockHeight;
     private NodeAddress arbitratorNodeAddress;
     private byte[] arbitratorBtcPubKey;
     private String takerPaymentAccountId;
@@ -505,14 +506,14 @@ public abstract class Trade implements Tradable, Model {
         return takeOfferFee;
     }
 
-
-    public void setLockTimeAsBlockHeight(long lockTimeAsBlockHeight) {
+    //TODO: locktime
+  /*  public void setLockTimeAsBlockHeight(long lockTimeAsBlockHeight) {
         this.lockTimeAsBlockHeight = lockTimeAsBlockHeight;
     }
 
     public long getLockTimeAsBlockHeight() {
         return lockTimeAsBlockHeight;
-    }
+    }*/
 
     public void setTakerContractSignature(String takerSignature) {
         this.takerContractSignature = takerSignature;
@@ -681,10 +682,12 @@ public abstract class Trade implements Tradable, Model {
                 "\n\tdepositTx=" + depositTx +
                 "\n\ttakeOfferFeeTxId=" + takeOfferFeeTxId +
                 "\n\tcontract=" + contract +
-                "\n\ttakerContractSignature.hashCode()='" + (takerContractSignature != null ? takerContractSignature.hashCode() : "") + '\'' +
-                "\n\toffererContractSignature.hashCode()='" + (offererContractSignature != null ? offererContractSignature.hashCode() : "") + '\'' +
+                "\n\ttakerContractSignature.hashCode()='" + (takerContractSignature != null ?
+                takerContractSignature.hashCode() : "") + '\'' +
+                "\n\toffererContractSignature.hashCode()='" + (offererContractSignature != null ?
+                offererContractSignature.hashCode() : "") + '\'' +
                 "\n\tpayoutTx=" + payoutTx +
-                "\n\tlockTimeAsBlockHeight=" + lockTimeAsBlockHeight +
+               /* "\n\tlockTimeAsBlockHeight=" + lockTimeAsBlockHeight +*/
                 "\n\tarbitratorNodeAddress=" + arbitratorNodeAddress +
                 "\n\ttakerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 "\n\ttxFee='" + txFee.toFriendlyString() + '\'' +

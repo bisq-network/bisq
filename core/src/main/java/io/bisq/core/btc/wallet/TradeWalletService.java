@@ -541,7 +541,6 @@ public class TradeWalletService {
      * @param buyerPayoutAddressString  Address for buyer
      * @param sellerPayoutAddressString Address for seller
      * @param multiSigKeyPair           DeterministicKey for MultiSig from seller
-     * @param lockTime                  Lock time
      * @param buyerPubKey               The public key of the buyer.
      * @param sellerPubKey              The public key of the seller.
      * @param arbitratorPubKey          The public key of the arbitrator.
@@ -549,13 +548,14 @@ public class TradeWalletService {
      * @throws AddressFormatException
      * @throws TransactionVerificationException
      */
+    //TODO: locktime
     public byte[] sellerSignsPayoutTx(Transaction depositTx,
                                       Coin buyerPayoutAmount,
                                       Coin sellerPayoutAmount,
                                       String buyerPayoutAddressString,
                                       String sellerPayoutAddressString,
                                       DeterministicKey multiSigKeyPair,
-                                      long lockTime,
+                                      /*long lockTime,*/
                                       byte[] buyerPubKey,
                                       byte[] sellerPubKey,
                                       byte[] arbitratorPubKey)
@@ -567,7 +567,7 @@ public class TradeWalletService {
         log.trace("buyerPayoutAddressString " + buyerPayoutAddressString);
         log.trace("sellerPayoutAddressString " + sellerPayoutAddressString);
         log.trace("multiSigKeyPair (not displayed for security reasons)");
-        log.trace("lockTime " + lockTime);
+      /*  log.trace("lockTime " + lockTime);*/
         log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
         log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
         log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
@@ -575,8 +575,8 @@ public class TradeWalletService {
                 buyerPayoutAmount,
                 sellerPayoutAmount,
                 buyerPayoutAddressString,
-                sellerPayoutAddressString,
-                lockTime
+                sellerPayoutAddressString/*,
+                lockTime*/
         );
         // MS redeemScript
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
@@ -605,7 +605,6 @@ public class TradeWalletService {
      * @param buyerPayoutAddressString  Address for buyer
      * @param sellerPayoutAddressString Address for seller
      * @param multiSigKeyPair           Buyer's keypair for MultiSig
-     * @param lockTime                  Lock time
      * @param buyerPubKey               The public key of the buyer.
      * @param sellerPubKey              The public key of the seller.
      * @param arbitratorPubKey          The public key of the arbitrator.
@@ -614,6 +613,7 @@ public class TradeWalletService {
      * @throws TransactionVerificationException
      * @throws WalletException
      */
+    //TODO: locktime
     public Transaction buyerSignsAndFinalizesPayoutTx(Transaction depositTx,
                                                       byte[] sellerSignature,
                                                       Coin buyerPayoutAmount,
@@ -621,7 +621,7 @@ public class TradeWalletService {
                                                       String buyerPayoutAddressString,
                                                       String sellerPayoutAddressString,
                                                       DeterministicKey multiSigKeyPair,
-                                                      long lockTime,
+                                                     /* long lockTime,*/
                                                       byte[] buyerPubKey,
                                                       byte[] sellerPubKey,
                                                       byte[] arbitratorPubKey)
@@ -635,7 +635,7 @@ public class TradeWalletService {
         log.trace("buyerPayoutAddressString " + buyerPayoutAddressString);
         log.trace("sellerPayoutAddressString " + sellerPayoutAddressString);
         log.trace("multiSigKeyPair (not displayed for security reasons)");
-        log.trace("lockTime " + lockTime);
+        /*log.trace("lockTime " + lockTime);*/
         log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
         log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
         log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
@@ -644,8 +644,8 @@ public class TradeWalletService {
                 buyerPayoutAmount,
                 sellerPayoutAmount,
                 buyerPayoutAddressString,
-                sellerPayoutAddressString,
-                lockTime);
+                sellerPayoutAddressString/*,
+                lockTime*/);
         // MS redeemScript
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         // MS output from prev. tx is index 0
@@ -995,6 +995,8 @@ public class TradeWalletService {
         return wallet.getLastBlockSeenHeight();
     }
 
+    //TODO: check transaction.getLockTime() ???
+    //TODO: locktime
     public ListenableFuture<StoredBlock> getBlockHeightFuture(Transaction transaction) {
         checkNotNull(walletConfig);
         return walletConfig.chain().getHeightFuture((int) transaction.getLockTime());
@@ -1069,23 +1071,24 @@ public class TradeWalletService {
         return ScriptBuilder.createP2SHOutputScript(getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey));
     }
 
+    //TODO: locktime
     private Transaction createPayoutTx(Transaction depositTx,
                                        Coin buyerPayoutAmount,
                                        Coin sellerPayoutAmount,
                                        String buyerAddressString,
-                                       String sellerAddressString,
-                                       long lockTime) throws AddressFormatException {
+                                       String sellerAddressString/*,
+                                       long lockTime*/) throws AddressFormatException {
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction transaction = new Transaction(params);
         transaction.addInput(p2SHMultiSigOutput);
         transaction.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
         transaction.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
-        if (lockTime != 0) {
+        /*if (lockTime != 0) {
             log.debug("We use a lockTime of " + lockTime);
             // When using lockTime we need to set sequenceNumber to 0 
             transaction.getInputs().stream().forEach(i -> i.setSequenceNumber(0));
             transaction.setLockTime(lockTime);
-        }
+        }*/
         return transaction;
     }
 
