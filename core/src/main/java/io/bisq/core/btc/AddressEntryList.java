@@ -17,6 +17,7 @@
 
 package io.bisq.core.btc;
 
+import com.google.inject.Inject;
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
@@ -46,7 +47,7 @@ public final class AddressEntryList implements Persistable {
     @Getter
     private List<AddressEntry> addressEntryList = new ArrayList<>();
 
-    //@Inject
+    @Inject
     public AddressEntryList(Storage<AddressEntryList> storage) {
         this.storage = storage;
     }

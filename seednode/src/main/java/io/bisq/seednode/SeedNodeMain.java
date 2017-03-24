@@ -91,7 +91,13 @@ public class SeedNodeMain extends BisqExecutable {
         final BisqEnvironment environment = getBisqEnvironment(options);
         SeedNode.setEnvironment(environment);
 
-        UserThread.execute(() -> seedNode = new SeedNode());
+        UserThread.execute(() -> {
+            try {
+                seedNode = new SeedNode();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
             if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
