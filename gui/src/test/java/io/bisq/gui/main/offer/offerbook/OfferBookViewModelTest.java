@@ -277,6 +277,7 @@ public class OfferBookViewModelTest {
                 "BTC",
                 tradeCurrencyCode,
                 null,
+                null,
                 paymentMethodId,
                 null,
                 null,

@@ -348,6 +348,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 baseCurrencyCode,
                 counterCurrencyCode,
                 Lists.newArrayList(user.getAcceptedArbitratorAddresses()),
+                Lists.newArrayList(user.getAcceptedMediatorAddresses()),
                 paymentAccount.getPaymentMethod().getId(),
                 paymentAccount.getId(),
                 null,

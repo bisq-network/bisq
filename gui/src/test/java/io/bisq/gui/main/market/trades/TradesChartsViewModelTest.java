@@ -59,6 +59,7 @@ public class TradesChartsViewModelTest {
                 null,
                 null,
                 null,
+                null,
                 0,
                 0,
                 0,

@@ -83,6 +83,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     @Nullable
     private final List<String> acceptedBankIds;
     private final List<NodeAddress> arbitratorNodeAddresses;
+    private final List<NodeAddress> mediatorNodeAddresses;
     private final String id;
     private final long date;
     private final long protocolVersion;
@@ -162,6 +163,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
      * @param baseCurrencyCode
      * @param counterCurrencyCode
      * @param arbitratorNodeAddresses
+     * @param mediatorNodeAddresses
      * @param paymentMethodId
      * @param offererPaymentAccountId
      * @param offerFeePaymentTxId
@@ -199,6 +201,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                         String baseCurrencyCode,
                         String counterCurrencyCode,
                         List<NodeAddress> arbitratorNodeAddresses,
+                        List<NodeAddress> mediatorNodeAddresses,
                         String paymentMethodId,
                         String offererPaymentAccountId,
                         @Nullable String offerFeePaymentTxId,
@@ -235,6 +238,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.baseCurrencyCode = baseCurrencyCode;
         this.counterCurrencyCode = counterCurrencyCode;
         this.arbitratorNodeAddresses = arbitratorNodeAddresses;
+        this.mediatorNodeAddresses = mediatorNodeAddresses;
         this.paymentMethodId = paymentMethodId;
         this.offererPaymentAccountId = offererPaymentAccountId;
         this.offerFeePaymentTxId = offerFeePaymentTxId;
@@ -286,13 +290,16 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         List<PB.NodeAddress> arbitratorNodeAddresses = this.arbitratorNodeAddresses.stream()
                 .map(NodeAddress::toProto)
                 .collect(Collectors.toList());
+        List<PB.NodeAddress> mediatorNodeAddresses = this.mediatorNodeAddresses.stream()
+                .map(NodeAddress::toProto)
+                .collect(Collectors.toList());
         PB.OfferPayload.Builder offerBuilder = PB.OfferPayload.newBuilder()
-                .setTTL(TTL)
                 .setDirectionValue(direction.ordinal())
                 .setBaseCurrencyCode(baseCurrencyCode)
                 .setCounterCurrencyCode(counterCurrencyCode)
                 .setPaymentMethodId(paymentMethodId)
                 .addAllArbitratorNodeAddresses(arbitratorNodeAddresses)
+                .addAllMediatorNodeAddresses(mediatorNodeAddresses)
                 .setId(id)
                 .setDate(date)
                 .setProtocolVersion(protocolVersion)

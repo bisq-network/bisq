@@ -26,7 +26,6 @@ import io.bisq.protobuffer.payload.btc.RawTransactionInput;
 import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
-import org.bitcoinj.core.Coin;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -44,8 +43,8 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     public final long tradeAmount;
     public final long tradePrice;
     public final byte[] takerMultiSigPubKey;
-    public final Coin txFee;
-    public final Coin takeOfferFee;
+    public final long txFee;
+    public final long takeOfferFee;
     public final List<RawTransactionInput> rawTransactionInputs;
     public final long changeOutputValue;
     @Nullable
@@ -64,8 +63,8 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                              String tradeId,
                              long tradeAmount,
                              long tradePrice,
-                             Coin txFee,
-                             Coin takeOfferFee,
+                             long txFee,
+                             long takeOfferFee,
                              List<RawTransactionInput> rawTransactionInputs,
                              long changeOutputValue,
                              String changeOutputAddress,
@@ -170,16 +169,18 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                 .setTradeAmount(tradeAmount)
                 .setTradePrice(tradePrice)
                 .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
-                .setTxFee(PB.Coin.newBuilder().setValue(txFee.getValue()))
-                .setTakeOfferFee(PB.Coin.newBuilder().setValue(takeOfferFee.getValue()))
-                .addAllRawTransactionInputs(rawTransactionInputs.stream().map(rawTransactionInput -> rawTransactionInput.toProto()).collect(Collectors.toList()))
+                .setTxFee(txFee)
+                .setTakeOfferFee(takeOfferFee)
+                .addAllRawTransactionInputs(rawTransactionInputs.stream()
+                        .map(rawTransactionInput -> rawTransactionInput.toProto()).collect(Collectors.toList()))
                 .setChangeOutputValue(changeOutputValue)
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setTakerPubKeyRing(takerPubKeyRing.toProto())
                 .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProto())
                 .setTakerAccountId(takerAccountId)
                 .setTakeOfferFeeTxId(takeOfferFeeTxId)
-                .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream().map(nodeAddress -> nodeAddress.toProto()).collect(Collectors.toList()))
+                .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream()
+                        .map(nodeAddress -> nodeAddress.toProto()).collect(Collectors.toList()))
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProto())
                 .setSenderNodeAddress(senderNodeAddress.toProto())
                 .setUid(uid);

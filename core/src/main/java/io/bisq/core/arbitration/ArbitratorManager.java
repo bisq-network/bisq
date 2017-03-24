@@ -165,7 +165,7 @@ public class ArbitratorManager {
         Map<NodeAddress, Arbitrator> filtered = map.values().stream()
                 .filter(e -> isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()))
                         && verifySignature(e.getPubKeyRing().getSignaturePubKey(), e.getRegistrationPubKey(), e.getRegistrationSignature()))
-                .collect(Collectors.toMap(Arbitrator::getArbitratorNodeAddress, Function.identity()));
+                .collect(Collectors.toMap(Arbitrator::getNodeAddress, Function.identity()));
 
         arbitratorsObservableMap.putAll(filtered);
         arbitratorsObservableMap.values().stream()
@@ -192,7 +192,7 @@ public class ArbitratorManager {
 
     public void addArbitrator(Arbitrator arbitrator, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         user.setRegisteredArbitrator(arbitrator);
-        arbitratorsObservableMap.put(arbitrator.getArbitratorNodeAddress(), arbitrator);
+        arbitratorsObservableMap.put(arbitrator.getNodeAddress(), arbitrator);
         arbitratorService.addArbitrator(arbitrator,
                 () -> {
                     log.debug("Arbitrator successfully saved in P2P network");
@@ -208,7 +208,7 @@ public class ArbitratorManager {
         Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
         if (registeredArbitrator != null) {
             user.setRegisteredArbitrator(null);
-            arbitratorsObservableMap.remove(registeredArbitrator.getArbitratorNodeAddress());
+            arbitratorsObservableMap.remove(registeredArbitrator.getNodeAddress());
             arbitratorService.removeArbitrator(registeredArbitrator,
                     () -> {
                         log.debug("Arbitrator successfully removed from P2P network");

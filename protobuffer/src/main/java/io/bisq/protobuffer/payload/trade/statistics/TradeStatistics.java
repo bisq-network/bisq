@@ -164,7 +164,6 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     @Override
     public PB.StoragePayload toProto() {
         final PB.TradeStatistics.Builder builder = PB.TradeStatistics.newBuilder()
-                .setTTL(TTL)
                 .setBaseCurrency(baseCurrency)
                 .setCounterCurrency(counterCurrency)
                 .setDirection(PB.OfferPayload.Direction.forNumber(direction.ordinal()))

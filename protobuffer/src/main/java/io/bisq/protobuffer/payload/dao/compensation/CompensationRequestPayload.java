@@ -224,7 +224,6 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     @Override
     public PB.StoragePayload toProto() {
         final PB.CompensationRequestPayload.Builder builder = PB.CompensationRequestPayload.newBuilder()
-                .setTTL(TTL)
                 .setVersion(version)
                 .setCreationDate(creationDate)
                 .setUid(uid)

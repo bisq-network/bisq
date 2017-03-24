@@ -91,7 +91,7 @@ public class ArbitratorService {
 
         Map<NodeAddress, Arbitrator> map = new HashMap<>();
         for (Arbitrator arbitrator : arbitratorSet) {
-            NodeAddress arbitratorNodeAddress = arbitrator.getArbitratorNodeAddress();
+            NodeAddress arbitratorNodeAddress = arbitrator.getNodeAddress();
             if (!map.containsKey(arbitratorNodeAddress))
                 map.put(arbitratorNodeAddress, arbitrator);
             else

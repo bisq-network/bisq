@@ -151,8 +151,10 @@ public class TradeWalletService {
      * @throws InsufficientMoneyException
      * @throws AddressFormatException
      */
-    public Transaction createTradingFeeTx(Address fundingAddress, Address reservedForTradeAddress, Address changeAddress, Coin reservedFundsForOffer,
-                                          boolean useSavingsWallet, Coin tradingFee, Coin txFee, String feeReceiverAddresses)
+    public Transaction createTradingFeeTx(Address fundingAddress, Address reservedForTradeAddress,
+                                          Address changeAddress, Coin reservedFundsForOffer,
+                                          boolean useSavingsWallet, Coin tradingFee, Coin txFee,
+                                          String feeReceiverAddresses)
             throws InsufficientMoneyException, AddressFormatException {
         Transaction tradingFeeTx = new Transaction(params);
         tradingFeeTx.addOutput(tradingFee, new Address(params, feeReceiverAddresses));

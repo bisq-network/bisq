@@ -27,10 +27,7 @@ import io.bisq.protobuffer.message.trade.*;
 import io.bisq.protobuffer.payload.StoragePayload;
 import io.bisq.protobuffer.payload.alert.AlertPayload;
 import io.bisq.protobuffer.payload.alert.PrivateNotification;
-import io.bisq.protobuffer.payload.arbitration.Arbitrator;
-import io.bisq.protobuffer.payload.arbitration.Attachment;
-import io.bisq.protobuffer.payload.arbitration.Dispute;
-import io.bisq.protobuffer.payload.arbitration.DisputeResult;
+import io.bisq.protobuffer.payload.arbitration.*;
 import io.bisq.protobuffer.payload.btc.RawTransactionInput;
 import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
@@ -237,7 +234,7 @@ public class ProtoBufferUtilities {
                 .map(ProtoBufferUtilities::getNodeAddress).collect(Collectors.toList());
         return new PayDepositRequest(getNodeAddress(payDepositRequest.getSenderNodeAddress()),
                 payDepositRequest.getTradeId(), payDepositRequest.getTradeAmount(), payDepositRequest.getTradePrice(),
-                Coin.valueOf(payDepositRequest.getTxFee().getValue()), Coin.valueOf(payDepositRequest.getTakeOfferFee().getValue()),
+                payDepositRequest.getTxFee(), payDepositRequest.getTakeOfferFee(),
                 rawTransactionInputs, payDepositRequest.getChangeOutputValue(), payDepositRequest.getChangeOutputAddress(),
                 payDepositRequest.getTakerMultiSigPubKey().toByteArray(), payDepositRequest.getTakerPayoutAddressString(),
                 getPubKeyRing(payDepositRequest.getTakerPubKeyRing()), getPaymentAccountPayload(payDepositRequest.getTakerPaymentAccountPayload()),
@@ -438,6 +435,8 @@ public class ProtoBufferUtilities {
     public static OfferPayload getOfferPayload(PB.OfferPayload pbOffer) {
         List<NodeAddress> arbitratorNodeAddresses = pbOffer.getArbitratorNodeAddressesList().stream()
                 .map(ProtoBufferUtilities::getNodeAddress).collect(Collectors.toList());
+        List<NodeAddress> mediatorNodeAddresses = pbOffer.getMediatorNodeAddressesList().stream()
+                .map(ProtoBufferUtilities::getNodeAddress).collect(Collectors.toList());
 
         // Nullable object need to be checked against the default values in PB (not nice... ;-( )
 
@@ -468,6 +467,7 @@ public class ProtoBufferUtilities {
                 pbOffer.getBaseCurrencyCode(),
                 pbOffer.getCounterCurrencyCode(),
                 arbitratorNodeAddresses,
+                mediatorNodeAddresses,
                 pbOffer.getPaymentMethodId(),
                 pbOffer.getOffererPaymentAccountId(),
                 offerFeePaymentTxId,
@@ -566,7 +566,7 @@ public class ProtoBufferUtilities {
         StoragePayload storagePayload = null;
         Map<String, String> extraDataMapMap;
         switch (protoEntry.getMessageCase()) {
-            case ALERTPROTO:
+            case ALERT_PROTO:
                 PB.AlertProto protoAlert = protoEntry.getAlertProto();
                 extraDataMapMap = CollectionUtils.isEmpty(protoAlert.getExtraDataMapMap()) ?
                         null : protoAlert.getExtraDataMapMap();
@@ -583,7 +583,7 @@ public class ProtoBufferUtilities {
                         null : arbitrator.getExtraDataMapMap();
                 List<String> strings = arbitrator.getLanguageCodesList().stream().collect(Collectors.toList());
                 Date date = new Date(arbitrator.getRegistrationDate());
-                storagePayload = new Arbitrator(getNodeAddress(arbitrator.getArbitratorNodeAddress()),
+                storagePayload = new Arbitrator(getNodeAddress(arbitrator.getNodeAddress()),
                         arbitrator.getBtcPubKey().toByteArray(),
                         arbitrator.getBtcAddress(),
                         getPubKeyRing(arbitrator.getPubKeyRing()),
@@ -591,6 +591,20 @@ public class ProtoBufferUtilities {
                         date,
                         arbitrator.getRegistrationPubKey().toByteArray(),
                         arbitrator.getRegistrationSignature(),
+                        extraDataMapMap);
+                break;
+            case MEDIATOR:
+                PB.Mediator mediator = protoEntry.getMediator();
+                extraDataMapMap = CollectionUtils.isEmpty(mediator.getExtraDataMapMap()) ?
+                        null : mediator.getExtraDataMapMap();
+                strings = mediator.getLanguageCodesList().stream().collect(Collectors.toList());
+                date = new Date(mediator.getRegistrationDate());
+                storagePayload = new Mediator(getNodeAddress(mediator.getNodeAddress()),
+                        getPubKeyRing(mediator.getPubKeyRing()),
+                        strings,
+                        date,
+                        mediator.getRegistrationPubKey().toByteArray(),
+                        mediator.getRegistrationSignature(),
                         extraDataMapMap);
                 break;
             case FILTER:

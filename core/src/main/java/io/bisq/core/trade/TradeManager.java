@@ -276,9 +276,11 @@ public class TradeManager {
             PayDepositRequest payDepositRequest = (PayDepositRequest) message;
             Trade trade;
             if (offer.isBuyOffer())
-                trade = new BuyerAsOffererTrade(offer, payDepositRequest.txFee, payDepositRequest.takeOfferFee, tradableListStorage);
+                trade = new BuyerAsOffererTrade(offer, Coin.valueOf(payDepositRequest.txFee),
+                        Coin.valueOf(payDepositRequest.takeOfferFee), tradableListStorage);
             else
-                trade = new SellerAsOffererTrade(offer, payDepositRequest.txFee, payDepositRequest.takeOfferFee, tradableListStorage);
+                trade = new SellerAsOffererTrade(offer, Coin.valueOf(payDepositRequest.txFee),
+                        Coin.valueOf(payDepositRequest.takeOfferFee), tradableListStorage);
 
             trade.setStorage(tradableListStorage);
             initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());

@@ -117,7 +117,6 @@ public final class MailboxStoragePayload implements StoragePayload {
     @Override
     public PB.StoragePayload toProto() {
         final PB.MailboxStoragePayload.Builder builder = PB.MailboxStoragePayload.newBuilder()
-                .setTTL(TTL)
                 .setPrefixedSealedAndSignedMessage(prefixedSealedAndSignedMessage.toProto().getPrefixedSealedAndSignedMessage())
                 .setSenderPubKeyForAddOperationBytes(ByteString.copyFrom(senderPubKeyForAddOperationBytes))
                 .setReceiverPubKeyForRemoveOperationBytes(ByteString.copyFrom(receiverPubKeyForRemoveOperationBytes));

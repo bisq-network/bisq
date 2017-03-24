@@ -40,18 +40,16 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @ToString
 @Getter
-public final class Arbitrator implements StoragePayload {
+public final class Mediator implements StoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
 
     // Payload
-    private final byte[] btcPubKey;
     private final PubKeyRing pubKeyRing;
     private final NodeAddress nodeAddress;
     private final List<String> languageCodes;
-    private final String btcAddress;
     private final long registrationDate;
     private final String registrationSignature;
     private final byte[] registrationPubKey;
@@ -62,18 +60,14 @@ public final class Arbitrator implements StoragePayload {
     private Map<String, String> extraDataMap;
 
     // Called from domain and PB
-    public Arbitrator(NodeAddress nodeAddress,
-                      byte[] btcPubKey,
-                      String btcAddress,
-                      PubKeyRing pubKeyRing,
-                      List<String> languageCodes,
-                      Date registrationDate,
-                      byte[] registrationPubKey,
-                      String registrationSignature,
-                      @Nullable Map<String, String> extraDataMap) {
+    public Mediator(NodeAddress nodeAddress,
+                    PubKeyRing pubKeyRing,
+                    List<String> languageCodes,
+                    Date registrationDate,
+                    byte[] registrationPubKey,
+                    String registrationSignature,
+                    @Nullable Map<String, String> extraDataMap) {
         this.nodeAddress = nodeAddress;
-        this.btcPubKey = btcPubKey;
-        this.btcAddress = btcAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;
         this.registrationDate = registrationDate.getTime();
@@ -94,17 +88,15 @@ public final class Arbitrator implements StoragePayload {
 
     @Override
     public PB.StoragePayload toProto() {
-        final PB.Arbitrator.Builder builder = PB.Arbitrator.newBuilder()
-                .setBtcPubKey(ByteString.copyFrom(btcPubKey))
+        final PB.Mediator.Builder builder = PB.Mediator.newBuilder()
                 .setPubKeyRing(pubKeyRing.toProto())
                 .setNodeAddress(nodeAddress.toProto())
                 .addAllLanguageCodes(languageCodes)
-                .setBtcAddress(btcAddress)
                 .setRegistrationDate(registrationDate)
                 .setRegistrationSignature(registrationSignature)
                 .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
-        return PB.StoragePayload.newBuilder().setArbitrator(builder).build();
+        return PB.StoragePayload.newBuilder().setMediator(builder).build();
     }
 
 }

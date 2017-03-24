@@ -130,7 +130,6 @@ public final class Filter implements StoragePayload {
         paymentAccountFilterList = bannedPaymentAccounts.stream()
                 .map(PaymentAccountFilter::toProtoBuf).collect(Collectors.toList());
         final PB.Filter.Builder builder = PB.Filter.newBuilder()
-                .setTTL(TTL)
                 .addAllBannedNodeAddress(bannedNodeAddress)
                 .addAllBannedOfferIds(bannedOfferIds)
                 .addAllBannedPaymentAccounts(paymentAccountFilterList)

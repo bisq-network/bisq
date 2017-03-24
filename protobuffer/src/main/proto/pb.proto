@@ -43,11 +43,11 @@ message Envelope {
 
 message Ping {
     int32 nonce = 1;
-    int32 lastRoundTripTime = 2;
+    int32 last_round_trip_time = 2;
 }
 
 message Pong {
-    int32 requestNonce = 1;
+    int32 request_nonce = 1;
 }
 
 
@@ -82,8 +82,8 @@ message GetPeersRequest {
 
 message GetPeersResponse {
     int32 message_version = 1;
-    int32 requestNonce = 2;
-    repeated Peer reportedPeers = 3;
+    int32 request_nonce = 2;
+    repeated Peer reported_peers = 3;
     repeated int32 supported_capabilities = 5;
 }
 
@@ -177,7 +177,7 @@ message Payload {
         PubKeyRing pub_key_ring = 13;
         RawTransactionInput raw_transaction_input = 14;
         OfferPayload offer_payload = 15;
-        SealedAndSigned SealedAndSigned = 16;
+        SealedAndSigned Sealed_and_signed = 16;
     }
 }
 
@@ -189,13 +189,14 @@ message DataAndSeqNrPair {
 // start storagepayloads
 message StoragePayload {
     oneof message {
-        AlertProto alertProto = 1;
+        AlertProto alert_proto = 1;
         Arbitrator arbitrator = 2;
-        Filter filter = 3;
-        CompensationRequestPayload compensation_request_payload = 4;
-        TradeStatistics trade_statistics = 5;
-        MailboxStoragePayload mailbox_storage_payload = 6;
-        OfferPayload offer_payload = 7;
+        Mediator mediator = 3;
+        Filter filter = 4;
+        CompensationRequestPayload compensation_request_payload = 5;
+        TradeStatistics trade_statistics = 6;
+        MailboxStoragePayload mailbox_storage_payload = 7;
+        OfferPayload offer_payload = 8;
     }
 }
 
@@ -209,81 +210,86 @@ message AlertProto {
 }
 
 message Arbitrator {
-    int64 TTL = 1;
-    bytes btcPubKey = 2;
-    PubKeyRing pubKeyRing = 3;
-    NodeAddress arbitratorNodeAddress = 4;
-    repeated string languageCodes = 5;
-    string btcAddress = 6;
-    int64 registrationDate = 7;
-    string registrationSignature = 8;
-    bytes registrationPubKey = 9;
-    map<string, string> extra_data_map = 10;
+    NodeAddress node_address = 1;
+    repeated string language_codes = 2;
+    int64 registration_date = 3;
+    string registration_signature = 4;
+    bytes registration_pub_key = 5;
+    map<string, string> extra_data_map = 6;
+    PubKeyRing pub_key_ring = 7;
+    bytes btc_pub_key = 8;
+    string btc_address = 9;
+}
+
+message Mediator {
+    NodeAddress node_address = 1;
+    repeated string language_codes = 2;
+    int64 registration_date = 3;
+    string registration_signature = 4;
+    bytes registration_pub_key = 5;
+    map<string, string> extra_data_map = 6;
+    PubKeyRing pub_key_ring = 7;
 }
 
 message Filter {
-    int64 TTL = 1;
-    repeated string bannedNodeAddress = 2;
-    repeated string bannedOfferIds = 3;
-    repeated PaymentAccountFilter bannedPaymentAccounts = 4;
-    string signatureAsBase64 = 5;
-    bytes publicKeyBytes = 6;
-    map<string, string> extra_data_map = 7;
+    repeated string banned_node_address = 1;
+    repeated string banned_offer_ids = 2;
+    repeated PaymentAccountFilter banned_payment_accounts = 3;
+    string signature_as_base64 = 4;
+    bytes public_key_bytes = 5;
+    map<string, string> extra_data_map = 6;
 }
 
 message PaymentAccountFilter {
-    string paymentMethodId = 1;
-    string getMethodName = 2;
+    string payment_method_id = 1;
+    string get_method_name = 2;
     string value = 3;
 }
 
 message CompensationRequestPayload {
-    int64 TTL = 1;
-    uint32 version = 2; // 1 byte
-    int64 creationDate = 3;
-    string uid = 4;
-    string name = 5;
-    string title = 6;
-    string category = 7;
-    string description = 8;
-    string link = 9;
-    int64 startDate = 10;
-    int64 endDate = 11;
-    int64 requestedBtc = 12;
-    string btcAddress = 13;
-    string nodeAddress = 14;
-    bytes p2pStorageSignaturePubKeyBytes = 15;
-    string p2pStorageSignaturePubKeyAsHex = 16;
-    string signature = 17;
-    string feeTxId = 18;
-    map<string, string> extra_data_map = 19;
+    uint32 version = 1;
+    int64 creation_date = 2;
+    string uid = 3;
+    string name = 4;
+    string title = 5;
+    string category = 6;
+    string description = 7;
+    string link = 8;
+    int64 start_date = 9;
+    int64 end_date = 10;
+    int64 requested_btc = 11;
+    string btc_address = 12;
+    string node_address = 13;
+    bytes p2p_storage_signature_pub_key_bytes = 14;
+    string p2p_storage_signature_pub_key_as_hex = 15;
+    string signature = 16;
+    string fee_tx_id = 17;
+    map<string, string> extra_data_map = 18;
 }
 
 message TradeStatistics {
-    int64 TTL = 1;
-    string baseCurrency = 2;
-    string counterCurrency = 3;
-    OfferPayload.Direction direction = 4;
-    int64 trade_price = 5;
-    int64 trade_amount = 6;
-    int64 trade_date = 7;
-    string payment_method_id = 8;
-    int64 offer_date = 9;
-    bool use_market_based_price = 10;
-    double market_price_margin = 11;
-    int64 offer_amount = 12;
-    int64 offer_min_amount = 13;
-    string offer_id = 14;
-    string deposit_tx_id = 15;
-    PubKeyRing pub_key_ring = 16;
-    map<string, string> extra_data_map = 17;
+    string base_currency = 1;
+    string counter_currency = 2;
+    OfferPayload.Direction direction = 3;
+    int64 trade_price = 4;
+    int64 trade_amount = 5;
+    int64 trade_date = 6;
+    string payment_method_id = 7;
+    int64 offer_date = 8;
+    bool use_market_based_price = 9;
+    double market_price_margin = 10;
+    int64 offer_amount = 11;
+    int64 offer_min_amount = 12;
+    string offer_id = 13;
+    string deposit_tx_id = 14;
+    PubKeyRing pub_key_ring = 15;
+    map<string, string> extra_data_map = 16;
 }
 message MailboxStoragePayload {
-    int64 TTL = 1;
-    PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = 2;
-    bytes senderPubKeyForAddOperationBytes = 3;
-    bytes receiverPubKeyForRemoveOperationBytes = 4;
-    map<string, string> extra_data_map = 5;
+    PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 1;
+    bytes sender_pub_key_for_add_operation_bytes = 2;
+    bytes receiver_pub_key_for_remove_operation_bytes = 3;
+    map<string, string> extra_data_map = 4;
 }
 
 message OfferPayload {
@@ -292,16 +298,16 @@ message OfferPayload {
         SELL = 1;
     }
 
-    int64 TTL = 1;
-    Direction direction = 2;
-    string base_currency_code = 3;
-    string counter_currency_code = 4;
-    string payment_method_id = 5;
-    string country_code = 6;
-    repeated string accepted_country_codes = 7;
-    string bank_id = 8;
-    repeated string accepted_bank_ids = 9;
-    repeated NodeAddress arbitrator_node_addresses = 10;
+    Direction direction = 1;
+    string base_currency_code = 2;
+    string counter_currency_code = 3;
+    string payment_method_id = 4;
+    string country_code = 5;
+    repeated string accepted_country_codes = 6;
+    string bank_id = 7;
+    repeated string accepted_bank_ids = 8;
+    repeated NodeAddress arbitrator_node_addresses = 9;
+    repeated NodeAddress mediator_node_addresses = 10;
     string id = 11;
     int64 date = 12;
     int64 protocol_version = 13;
@@ -484,30 +490,14 @@ message PeerPublishedPayoutTxMessage {
     string trade_id = 2;
     NodeAddress my_node_address = 3;
 }
-// DisputeMessage
-
-
-message MockMailboxPayload {
-    int32 message_version = 1;
-    string msg = 2;
-    NodeAddress sender_node_address = 3;
-    int64 ttl = 4;
-    string uid = 5;
-}
-
-message MockPayload {
-    string messageVersion = 1;
-    string msg = 2;
-    string ttl = 3;
-}
 
 message PayDepositRequest {
     string trade_id = 1;
     int64 trade_amount = 2;
     int64 trade_price = 3;
     bytes taker_multi_sig_pub_key = 4;
-    Coin tx_fee = 5;
-    Coin take_offer_fee = 6;
+    int64 tx_fee = 5;
+    int64 take_offer_fee = 6;
     repeated RawTransactionInput raw_transaction_inputs = 7;
     int64 change_output_value = 8;
     string change_output_address = 9;
@@ -520,10 +510,6 @@ message PayDepositRequest {
     NodeAddress arbitrator_node_address = 16;
     NodeAddress sender_node_address = 17;
     string uid = 18;
-}
-
-message Coin {
-    int64 value = 1;
 }
 
 message RawTransactionInput {
@@ -734,4 +720,17 @@ message USPostalMoneyOrderAccountPayload {
 message ProtectedMailboxStorageEntry {
     ProtectedStorageEntry entry = 1;
     bytes receivers_pub_key_bytes = 2;
+}
+
+
+message MockMailboxPayload {
+    int32 message_version = 1;
+    string msg = 2;
+    NodeAddress sender_node_address = 3;
+    string uid = 4;
+}
+
+message MockPayload {
+    string messageVersion = 1;
+    string msg = 2;
 }

@@ -35,7 +35,7 @@ public class ArbitratorListItem {
     }
 
     public String getAddressString() {
-        return arbitrator != null ? arbitrator.getArbitratorNodeAddress().getFullAddress() : "";
+        return arbitrator != null ? arbitrator.getNodeAddress().getFullAddress() : "";
     }
 
     public String getLanguageCodes() {
