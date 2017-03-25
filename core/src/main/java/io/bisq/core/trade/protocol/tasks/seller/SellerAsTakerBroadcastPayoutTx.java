@@ -21,17 +21,15 @@ import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class SellerAsTakerBroadcastPayoutTx extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SellerAsTakerBroadcastPayoutTx.class);
-
     @SuppressWarnings({"WeakerAccess", "unused"})
     public SellerAsTakerBroadcastPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

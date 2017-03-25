@@ -19,9 +19,8 @@ package io.bisq.core.trade.protocol;
 
 import io.bisq.core.offer.Offer;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Sha256Hash;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,9 +29,8 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class ArbitrationSelectionRule {
-    private static final Logger log = LoggerFactory.getLogger(ArbitrationSelectionRule.class);
-
     public static NodeAddress select(List<NodeAddress> acceptedArbitratorNodeAddresses, Offer offer) {
         List<NodeAddress> candidates = new ArrayList<>();
         for (NodeAddress offerArbitratorNodeAddress : offer.getArbitratorNodeAddresses()) {

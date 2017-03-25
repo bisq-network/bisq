@@ -112,7 +112,7 @@ public class DebugView extends InitializableView {
                         SelectArbitrator.class,
                         CreateTakeOfferFeeTx.class,
                         BroadcastTakeOfferFeeTx.class,
-                        TakerCreatesDepositTxInputsAsSeller.class,
+                        TakerAsSellerCreatesDepositTxInputs.class,
                         SendPayDepositRequest.class,
 
                         ProcessPublishDepositTxRequest.class,
@@ -138,7 +138,7 @@ public class DebugView extends InitializableView {
                         SelectArbitrator.class,
                         CreateTakeOfferFeeTx.class,
                         BroadcastTakeOfferFeeTx.class,
-                        TakerCreatesDepositTxInputsAsSeller.class,
+                        TakerAsSellerCreatesDepositTxInputs.class,
                         SendPayDepositRequest.class,
 
                         ProcessPublishDepositTxRequest.class,

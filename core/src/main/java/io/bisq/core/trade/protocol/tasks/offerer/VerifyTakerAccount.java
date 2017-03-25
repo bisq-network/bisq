@@ -20,13 +20,10 @@ package io.bisq.core.trade.protocol.tasks.offerer;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class VerifyTakerAccount extends TradeTask {
-    @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(VerifyTakerAccount.class);
-
     @SuppressWarnings({"WeakerAccess", "unused"})
     public VerifyTakerAccount(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

@@ -23,14 +23,12 @@ import io.bisq.core.btc.listeners.AddressConfidenceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.TransactionConfidence;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class SetupListenerForPayoutTx extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SetupListenerForPayoutTx.class);
-
     @SuppressWarnings({"WeakerAccess", "unused"})
     public SetupListenerForPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

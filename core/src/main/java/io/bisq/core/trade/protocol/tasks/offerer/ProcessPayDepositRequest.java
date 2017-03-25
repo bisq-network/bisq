@@ -24,18 +24,16 @@ import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.protobuffer.message.trade.PayDepositRequest;
 import io.bisq.protobuffer.payload.filter.PaymentAccountFilter;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static io.bisq.core.util.Validator.checkTradeId;
 import static io.bisq.core.util.Validator.nonEmptyStringOf;
 
+@Slf4j
 public class ProcessPayDepositRequest extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(ProcessPayDepositRequest.class);
-
     @SuppressWarnings({"WeakerAccess", "unused"})
     public ProcessPayDepositRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

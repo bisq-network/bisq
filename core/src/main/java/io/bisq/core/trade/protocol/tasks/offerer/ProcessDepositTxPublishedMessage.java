@@ -24,16 +24,14 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.core.util.Validator;
 import io.bisq.protobuffer.message.trade.DepositTxPublishedMessage;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Transaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class ProcessDepositTxPublishedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(ProcessDepositTxPublishedMessage.class);
-
     @SuppressWarnings({"WeakerAccess", "unused"})
     public ProcessDepositTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

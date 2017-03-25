@@ -23,14 +23,12 @@ import io.bisq.core.btc.data.InputsAndChangeOutput;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class TakerCreatesDepositTxInputsAsBuyer extends TradeTask {
-    @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(TakerCreatesDepositTxInputsAsBuyer.class);
 
     @SuppressWarnings({"WeakerAccess", "unused"})
     public TakerCreatesDepositTxInputsAsBuyer(TaskRunner taskHandler, Trade trade) {

@@ -31,12 +31,10 @@ import io.bisq.protobuffer.message.trade.FiatTransferStartedMessage;
 import io.bisq.protobuffer.message.trade.PublishDepositTxRequest;
 import io.bisq.protobuffer.message.trade.TradeMessage;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtocol, TakerProtocol {
-    private static final Logger log = LoggerFactory.getLogger(SellerAsTakerProtocol.class);
-
     private final SellerAsTakerTrade sellerAsTakerTrade;
 
 
@@ -106,7 +104,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 LoadCreateOfferFeeTx.class,
                 CreateTakeOfferFeeTx.class,
                 BroadcastTakeOfferFeeTx.class,
-                TakerCreatesDepositTxInputsAsSeller.class,
+                TakerAsSellerCreatesDepositTxInputs.class,
                 SendPayDepositRequest.class
         );
         startTimeout();

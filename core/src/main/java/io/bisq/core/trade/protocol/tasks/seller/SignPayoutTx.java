@@ -23,18 +23,16 @@ import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.crypto.DeterministicKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class SignPayoutTx extends TradeTask {
-    @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(SignPayoutTx.class);
 
     @SuppressWarnings({"WeakerAccess", "unused"})
     public SignPayoutTx(TaskRunner taskHandler, Trade trade) {

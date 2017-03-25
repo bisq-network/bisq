@@ -21,12 +21,10 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.ArbitrationSelectionRule;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class VerifyArbitrationSelection extends TradeTask {
-    @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(VerifyArbitrationSelection.class);
 
     @SuppressWarnings({"WeakerAccess", "unused"})
     public VerifyArbitrationSelection(TaskRunner taskHandler, Trade trade) {

@@ -31,14 +31,12 @@ import io.bisq.protobuffer.message.trade.PayDepositRequest;
 import io.bisq.protobuffer.message.trade.PayoutTxFinalizedMessage;
 import io.bisq.protobuffer.message.trade.TradeMessage;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtocol, OffererProtocol {
-    private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererProtocol.class);
-
     private final BuyerAsOffererTrade buyerAsOffererTrade;
 
 

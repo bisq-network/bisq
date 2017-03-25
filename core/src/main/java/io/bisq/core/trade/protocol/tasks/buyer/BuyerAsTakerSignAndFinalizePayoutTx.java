@@ -24,18 +24,15 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class BuyerAsTakerSignAndFinalizePayoutTx extends TradeTask {
-    @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerSignAndFinalizePayoutTx.class);
-
     @SuppressWarnings({"WeakerAccess", "unused"})
     public BuyerAsTakerSignAndFinalizePayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

@@ -26,16 +26,14 @@ import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.core.user.User;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class CreateTakeOfferFeeTx extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(CreateTakeOfferFeeTx.class);
-
     @SuppressWarnings({"WeakerAccess", "unused"})
     public CreateTakeOfferFeeTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

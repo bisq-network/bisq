@@ -24,12 +24,10 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.network.p2p.SendMailboxMessageListener;
 import io.bisq.protobuffer.message.trade.FiatTransferStartedMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class SendFiatTransferStartedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SendFiatTransferStartedMessage.class);
-
     @SuppressWarnings({"WeakerAccess", "unused"})
     public SendFiatTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

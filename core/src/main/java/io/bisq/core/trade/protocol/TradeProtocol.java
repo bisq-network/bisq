@@ -28,15 +28,14 @@ import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.trade.TradeMessage;
 import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
 
 import static io.bisq.core.util.Validator.nonEmptyStringOf;
 
+@Slf4j
 public abstract class TradeProtocol {
-    private static final Logger log = LoggerFactory.getLogger(TradeProtocol.class);
     private static final long TIMEOUT_SEC = 75;
 
     protected final ProcessModel processModel;

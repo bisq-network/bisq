@@ -24,17 +24,15 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.network.p2p.SendDirectMessageListener;
 import io.bisq.protobuffer.message.trade.PublishDepositTxRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class SendPublishDepositTxRequest extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SendPublishDepositTxRequest.class);
-
     @SuppressWarnings({"WeakerAccess", "unused"})
     public SendPublishDepositTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

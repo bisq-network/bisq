@@ -25,10 +25,9 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.protobuffer.crypto.Hash;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -36,9 +35,8 @@ import java.util.Optional;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class OffererCreatesAndSignsDepositTxAsSeller extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(OffererCreatesAndSignsDepositTxAsSeller.class);
-
     @SuppressWarnings({"WeakerAccess", "unused"})
     public OffererCreatesAndSignsDepositTxAsSeller(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

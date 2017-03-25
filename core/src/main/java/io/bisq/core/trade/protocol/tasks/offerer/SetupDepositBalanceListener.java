@@ -25,20 +25,19 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.OffererTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 // The buyer waits for the msg from the seller that he has published the deposit tx.
 // In error case he might not get that msg so we check additionally the balance of our inputs, if it is zero, it means the deposit
 // is already published. We set then the DEPOSIT_LOCKED state, so the user get informed that he is already in the critical state and need
 // to request support.
+@Slf4j
 public class SetupDepositBalanceListener extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SetupDepositBalanceListener.class);
     private Subscription tradeStateSubscription;
     private BalanceListener balanceListener;
 

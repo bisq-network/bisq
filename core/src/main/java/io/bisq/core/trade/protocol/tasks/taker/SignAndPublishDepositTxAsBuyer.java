@@ -26,11 +26,10 @@ import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.protobuffer.crypto.Hash;
 import io.bisq.protobuffer.payload.btc.RawTransactionInput;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,9 +37,8 @@ import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class SignAndPublishDepositTxAsBuyer extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SignAndPublishDepositTxAsBuyer.class);
-
     @SuppressWarnings({"WeakerAccess", "unused"})
     public SignAndPublishDepositTxAsBuyer(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

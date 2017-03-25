@@ -23,17 +23,14 @@ import io.bisq.core.btc.data.InputsAndChangeOutput;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class TakerCreatesDepositTxInputsAsSeller extends TradeTask {
-    @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(TakerCreatesDepositTxInputsAsSeller.class);
-
+@Slf4j
+public class TakerAsSellerCreatesDepositTxInputs extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public TakerCreatesDepositTxInputsAsSeller(TaskRunner taskHandler, Trade trade) {
+    public TakerAsSellerCreatesDepositTxInputs(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -43,9 +40,8 @@ public class TakerCreatesDepositTxInputsAsSeller extends TradeTask {
             runInterceptHook();
             if (trade.getTradeAmount() != null) {
                 Coin txFee = trade.getTxFee();
-                Coin doubleTxFee = txFee.add(txFee);
                 Coin takerInputAmount = trade.getOffer().getSellerSecurityDeposit()
-                        .add(doubleTxFee).add(trade.getTradeAmount());
+                        .add(txFee).add(txFee).add(trade.getTradeAmount());
 
                 BtcWalletService walletService = processModel.getWalletService();
                 Address takersAddress = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();

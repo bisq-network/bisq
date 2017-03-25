@@ -29,8 +29,7 @@ import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import io.bisq.protobuffer.payload.trade.Contract;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -38,9 +37,8 @@ import java.util.Optional;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class VerifyAndSignContract extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(VerifyAndSignContract.class);
-
     @SuppressWarnings({"WeakerAccess", "unused"})
     public VerifyAndSignContract(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);

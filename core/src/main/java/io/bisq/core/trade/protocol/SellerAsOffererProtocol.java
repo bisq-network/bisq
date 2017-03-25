@@ -30,14 +30,12 @@ import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
 import io.bisq.protobuffer.message.trade.*;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class SellerAsOffererProtocol extends TradeProtocol implements SellerProtocol, OffererProtocol {
-    private static final Logger log = LoggerFactory.getLogger(SellerAsOffererProtocol.class);
-
     private final SellerAsOffererTrade sellerAsOffererTrade;
 
 
@@ -81,9 +79,9 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
         if (message instanceof PayoutTxFinalizedMessage) {
             handle((PayoutTxFinalizedMessage) message, peerNodeAddress);
         } else {
-            if (message instanceof FiatTransferStartedMessage) 
+            if (message instanceof FiatTransferStartedMessage)
                 handle((FiatTransferStartedMessage) message, peerNodeAddress);
-            else if (message instanceof DepositTxPublishedMessage) 
+            else if (message instanceof DepositTxPublishedMessage)
                 handle((DepositTxPublishedMessage) message, peerNodeAddress);
             else
                 log.error("We received an unhandled MailboxMessage" + message.toString());
