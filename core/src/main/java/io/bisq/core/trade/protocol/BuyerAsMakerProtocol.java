@@ -123,9 +123,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         taskRunner.addTasks(
                 MakerProcessPayDepositRequest.class,
                 MakerVerifyArbitrationSelection.class,
-                MakerVerifyTakerFeePayment.class,
                 MakerVerifyTakerAccount.class,
-                MakerLoadTakeOfferFeeTx.class,
+                MakerVerifyTakerFeePayment.class,
                 MakerCreateAndSignContract.class,
                 BuyerAsMakerCreatesAndSignsDepositTx.class,
                 MakerSetupDepositBalanceListener.class,
@@ -149,8 +148,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 () -> handleTaskRunnerSuccess("handle DepositTxPublishedMessage"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(MakerProcessDepositTxPublishedMessage.class,
-                MakerVerifyTakerFeePayment.class,
                 MakerVerifyTakerAccount.class,
+                MakerVerifyTakerFeePayment.class,
                 MakerPublishTradeStatistics.class);
         taskRunner.run();
     }
@@ -180,8 +179,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                         handleTaskRunnerFault(errorMessage);
                     });
             taskRunner.addTasks(
-                    MakerVerifyTakerFeePayment.class,
                     MakerVerifyTakerAccount.class,
+                    MakerVerifyTakerFeePayment.class,
                     BuyerAsMakerSignPayoutTx.class,
                     BuyerSendFiatTransferStartedMessage.class,
                     BuyerSetupListenerForPayoutTx.class

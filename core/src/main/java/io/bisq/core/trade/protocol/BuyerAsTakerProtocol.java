@@ -96,7 +96,8 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
         taskRunner.addTasks(
                 TakerSelectArbitrator.class,
-                TakerLoadMakerFeeTx.class,
+                TakerVerifyMakerAccount.class,
+                TakerVerifyMakerFeePayment.class,
                 TakerCreateTakerFeeTx.class,
                 TakerBroadcastTakerFeeTx.class,
                 BuyerAsTakerCreatesDepositTxInputs.class,

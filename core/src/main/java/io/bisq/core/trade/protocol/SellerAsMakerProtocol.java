@@ -109,7 +109,6 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 MakerVerifyArbitrationSelection.class,
                 MakerVerifyTakerAccount.class,
                 MakerVerifyTakerFeePayment.class,
-                MakerLoadTakeOfferFeeTx.class,
                 MakerCreateAndSignContract.class,
                 SellerAsMakerCreatesAndSignsDepositTx.class,
                 MakerSetupDepositBalanceListener.class,
