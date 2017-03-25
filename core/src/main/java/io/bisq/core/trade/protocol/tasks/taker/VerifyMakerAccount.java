@@ -23,10 +23,10 @@ import io.bisq.core.trade.protocol.tasks.TradeTask;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class VerifyOffererAccount extends TradeTask {
+public class VerifyMakerAccount extends TradeTask {
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public VerifyOffererAccount(TaskRunner taskHandler, Trade trade) {
+    public VerifyMakerAccount(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

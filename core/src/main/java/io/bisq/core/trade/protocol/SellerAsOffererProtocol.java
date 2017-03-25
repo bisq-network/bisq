@@ -76,13 +76,13 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
         this.trade = trade;
 
         NodeAddress peerNodeAddress = ((MailboxMessage) message).getSenderNodeAddress();
-        if (message instanceof PayoutTxFinalizedMessage) {
-            handle((PayoutTxFinalizedMessage) message, peerNodeAddress);
+        if (message instanceof PayoutTxPublishedMessage) {
+            handle((PayoutTxPublishedMessage) message, peerNodeAddress);
         } else {
-            if (message instanceof FiatTransferStartedMessage)
-                handle((FiatTransferStartedMessage) message, peerNodeAddress);
-            else if (message instanceof DepositTxPublishedMessage)
+            if (message instanceof DepositTxPublishedMessage)
                 handle((DepositTxPublishedMessage) message, peerNodeAddress);
+            else if (message instanceof FiatTransferStartedMessage)
+                handle((FiatTransferStartedMessage) message, peerNodeAddress);
             else
                 log.error("We received an unhandled MailboxMessage" + message.toString());
         }
@@ -108,9 +108,10 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
                 ProcessPayDepositRequest.class,
                 VerifyArbitrationSelection.class,
                 VerifyTakerAccount.class,
+                VerifyTakerFeePayment.class,
                 LoadTakeOfferFeeTx.class,
                 CreateAndSignContract.class,
-                OffererCreatesAndSignsDepositTxAsSeller.class,  //TODO: locktime
+                OffererAsSelleCreatesAndSignsDepositTx.class,
                 SetupDepositBalanceListener.class,
                 SendPublishDepositTxRequest.class
         );
@@ -180,7 +181,8 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
                     });
 
             taskRunner.addTasks(
-                    VerifyTakeOfferFeePayment.class,
+                    VerifyTakerAccount.class,
+                    VerifyTakerFeePayment.class,
                     SignPayoutTx.class,  //TODO: locktime
                     SellerAsOffererSendFinalizePayoutTxRequest.class  //TODO: locktime
             );
@@ -192,7 +194,7 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
         }
     }
 
-    private void handle(PayoutTxFinalizedMessage tradeMessage, NodeAddress sender) {
+    private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -220,8 +222,8 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
             handle((DepositTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof FiatTransferStartedMessage) {
             handle((FiatTransferStartedMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof PayoutTxFinalizedMessage) {
-            handle((PayoutTxFinalizedMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
+            handle((PayoutTxPublishedMessage) tradeMessage, sender);
         } else {
             log.error("Incoming tradeMessage not supported. " + tradeMessage);
         }

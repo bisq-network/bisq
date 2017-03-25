@@ -74,10 +74,12 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     @Override
     public void doApplyMailboxMessage(Message message, Trade trade) {
         this.trade = trade;
-
-        if (message instanceof FinalizePayoutTxRequest)
-            handle((FinalizePayoutTxRequest) message, ((MailboxMessage) message).getSenderNodeAddress());
-        else
+        final NodeAddress senderNodeAddress = ((MailboxMessage) message).getSenderNodeAddress();
+        if (message instanceof PublishDepositTxRequest)
+            handle((PublishDepositTxRequest) message, senderNodeAddress);
+        else if (message instanceof FinalizePayoutTxRequest) {
+            handle((FinalizePayoutTxRequest) message, senderNodeAddress);
+        } else
             log.error("We received an unhandled MailboxMessage" + message.toString());
     }
 
@@ -119,9 +121,10 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
                 ProcessPublishDepositTxRequest.class,
-                VerifyOffererAccount.class,
+                VerifyMakerAccount.class,
+                VerifyMakerFeePayment.class,
                 VerifyAndSignContract.class,
-                SignAndPublishDepositTxAsBuyer.class,
+                BuyerAsTakerSignAndPublishDepositTx.class,
                 SendDepositTxPublishedMessage.class,
                 PublishTradeStatistics.class
         );
@@ -153,7 +156,8 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                         handleTaskRunnerFault(errorMessage);
                     });
             taskRunner.addTasks(
-                    VerifyOfferFeePayment.class,
+                    VerifyMakerAccount.class,
+                    VerifyMakerFeePayment.class,
                     SendFiatTransferStartedMessage.class
             );
             taskRunner.run();

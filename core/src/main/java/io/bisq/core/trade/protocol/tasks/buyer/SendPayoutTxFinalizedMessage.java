@@ -20,7 +20,7 @@ package io.bisq.core.trade.protocol.tasks.buyer;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.protobuffer.message.trade.PayoutTxFinalizedMessage;
+import io.bisq.protobuffer.message.trade.PayoutTxPublishedMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
@@ -40,7 +40,7 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
             runInterceptHook();
             if (trade.getPayoutTx() != null) {
                 final String id = processModel.getId();
-                final PayoutTxFinalizedMessage message = new PayoutTxFinalizedMessage(
+                final PayoutTxPublishedMessage message = new PayoutTxPublishedMessage(
                         id,
                         trade.getPayoutTx().bitcoinSerialize(),
                         processModel.getMyNodeAddress(),

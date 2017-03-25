@@ -21,16 +21,16 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.network.p2p.SendMailboxMessageListener;
-import io.bisq.protobuffer.message.trade.PayoutTxFinalizedMessage;
+import io.bisq.protobuffer.message.trade.PayoutTxPublishedMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
 
 @Slf4j
 // TODO remove
-public class SellerSendPayoutTxFinalizedMessage extends TradeTask {
+public class SellerAsTakerSendPayoutTxPublishedMessage extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public SellerSendPayoutTxFinalizedMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerAsTakerSendPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -40,7 +40,7 @@ public class SellerSendPayoutTxFinalizedMessage extends TradeTask {
             runInterceptHook();
             if (trade.getPayoutTx() != null) {
                 final String id = processModel.getId();
-                final PayoutTxFinalizedMessage message = new PayoutTxFinalizedMessage(
+                final PayoutTxPublishedMessage message = new PayoutTxPublishedMessage(
                         id,
                         trade.getPayoutTx().bitcoinSerialize(),
                         processModel.getMyNodeAddress(),
@@ -66,7 +66,7 @@ public class SellerSendPayoutTxFinalizedMessage extends TradeTask {
 
                             @Override
                             public void onFault(String errorMessage) {
-                                appendToErrorMessage("PayoutTxFinalizedMessage sending failed. errorMessage=" + errorMessage);
+                                appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
                                 failed(errorMessage);
                             }
                         }

@@ -36,7 +36,7 @@ message Envelope {
         PayDepositRequest pay_deposit_request = 26;
         PublishDepositTxRequest publish_deposit_tx_request = 27;
         FiatTransferStartedMessage fiat_transfer_started_message = 28;
-        PayoutTxFinalizedMessage payout_tx_finalized_message = 29;
+        PayoutTxPublishedMessage payout_tx_published_message = 29;
         PrivateNotificationMessage private_notification_message = 30;
     }
 }
@@ -519,7 +519,7 @@ message RawTransactionInput {
     int64 value = 3;
 }
 
-message PayoutTxFinalizedMessage {
+message PayoutTxPublishedMessage {
     string uid = 1;
     int32 message_version = 2;
     string trade_id = 3;

@@ -97,6 +97,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
+                VerifyMakerAccount.class,
+                VerifyMakerFeePayment.class,
                 SelectArbitrator.class,
                 LoadCreateOfferFeeTx.class,
                 CreateTakeOfferFeeTx.class,
@@ -125,7 +127,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         taskRunner.addTasks(
                 ProcessPublishDepositTxRequest.class,
-                VerifyOffererAccount.class,
+                VerifyMakerAccount.class,
+                VerifyMakerFeePayment.class,
                 VerifyAndSignContract.class,
                 SignAndPublishDepositTxAsSeller.class,
                 SendDepositTxPublishedMessage.class,
@@ -147,7 +150,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 () -> handleTaskRunnerSuccess("FiatTransferStartedMessage"),
                 this::handleTaskRunnerFault);
 
-        taskRunner.addTasks(ProcessFiatTransferStartedMessage.class);
+        taskRunner.addTasks(ProcessFiatTransferStartedMessage.class,
+                VerifyMakerAccount.class,
+                VerifyMakerFeePayment.class);
         taskRunner.run();
     }
 
@@ -178,10 +183,11 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                     });
 
             taskRunner.addTasks(
-                    VerifyOfferFeePayment.class,
+                    VerifyMakerAccount.class,
+                    VerifyMakerFeePayment.class,
                     SellerAsTakerSignAndFinalizePayoutTx.class,
                     SellerAsTakerBroadcastPayoutTx.class,
-                    SellerSendPayoutTxFinalizedMessage.class
+                    SellerAsTakerSendPayoutTxPublishedMessage.class
             );
             taskRunner.run();
         } else {

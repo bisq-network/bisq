@@ -97,7 +97,7 @@ public class DebugView extends InitializableView {
 
                         ProcessDepositTxPublishedMessage.class,
 
-                        VerifyTakeOfferFeePayment.class,
+                        VerifyTakerFeePayment.class,
                         SendFiatTransferStartedMessage.class,
 
                         ProcessFinalizePayoutTxRequest.class,
@@ -116,14 +116,14 @@ public class DebugView extends InitializableView {
                         SendPayDepositRequest.class,
 
                         ProcessPublishDepositTxRequest.class,
-                        VerifyOffererAccount.class,
+                        VerifyMakerAccount.class,
                         VerifyAndSignContract.class,
                         SignAndPublishDepositTxAsSeller.class,
                         SendDepositTxPublishedMessage.class,
 
                         ProcessFiatTransferStartedMessage.class,
 
-                        VerifyOfferFeePayment.class,
+                        VerifyMakerFeePayment.class,
                         SignPayoutTx.class,
                         SellerAsOffererSendFinalizePayoutTxRequest.class,
 
@@ -142,12 +142,12 @@ public class DebugView extends InitializableView {
                         SendPayDepositRequest.class,
 
                         ProcessPublishDepositTxRequest.class,
-                        VerifyOffererAccount.class,
+                        VerifyMakerAccount.class,
                         VerifyAndSignContract.class,
                         SignAndPublishDepositTxAsSeller.class,
                         SendDepositTxPublishedMessage.class,
 
-                        VerifyOfferFeePayment.class,
+                        VerifyMakerFeePayment.class,
                         SignPayoutTx.class,
                         SendFiatTransferStartedMessage.class,
 
@@ -172,7 +172,7 @@ public class DebugView extends InitializableView {
 
                         ProcessFiatTransferStartedMessage.class,
 
-                        VerifyTakeOfferFeePayment.class,
+                        VerifyTakerFeePayment.class,
                         SignPayoutTx.class,
                         SellerAsOffererSendFinalizePayoutTxRequest.class,
 

@@ -29,7 +29,7 @@ import javax.annotation.concurrent.Immutable;
 
 @EqualsAndHashCode(callSuper = true)
 @Immutable
-public final class PayoutTxFinalizedMessage extends TradeMessage implements MailboxMessage {
+public final class PayoutTxPublishedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -37,7 +37,7 @@ public final class PayoutTxFinalizedMessage extends TradeMessage implements Mail
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
-    public PayoutTxFinalizedMessage(String tradeId, byte[] payoutTx, NodeAddress senderNodeAddress, String uid) {
+    public PayoutTxPublishedMessage(String tradeId, byte[] payoutTx, NodeAddress senderNodeAddress, String uid) {
         super(tradeId);
         this.payoutTx = payoutTx;
         this.senderNodeAddress = senderNodeAddress;
@@ -57,7 +57,7 @@ public final class PayoutTxFinalizedMessage extends TradeMessage implements Mail
     @Override
     public PB.Envelope toProto() {
         PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
-        return baseEnvelope.setPayoutTxFinalizedMessage(baseEnvelope.getPayoutTxFinalizedMessageBuilder()
+        return baseEnvelope.setPayoutTxPublishedMessage(baseEnvelope.getPayoutTxPublishedMessageBuilder()
                 .setUid(uid)
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)
@@ -68,7 +68,7 @@ public final class PayoutTxFinalizedMessage extends TradeMessage implements Mail
     // payoutTx not printed for privacy reasons
     @Override
     public String toString() {
-        return "PayoutTxFinalizedMessage{" +
+        return "PayoutTxPublishedMessage{" +
                 "payoutTx not printed for privacy reasons..." +
                 ", senderNodeAddress=" + senderNodeAddress +
                 ", uid='" + uid + '\'' +

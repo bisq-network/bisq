@@ -172,8 +172,8 @@ public class ProtoBufferUtilities {
             case FIAT_TRANSFER_STARTED_MESSAGE:
                 result = getFiatTransferStartedMessage(envelope.getFiatTransferStartedMessage());
                 break;
-            case PAYOUT_TX_FINALIZED_MESSAGE:
-                result = getPayoutTxFinalizedMessage(envelope.getPayoutTxFinalizedMessage());
+            case PAYOUT_TX_PUBLISHED_MESSAGE:
+                result = getPayoutTxPublishedMessage(envelope.getPayoutTxPublishedMessage());
                 break;
             case PRIVATE_NOTIFICATION_MESSAGE:
                 result = getPrivateNotificationMessage(envelope.getPrivateNotificationMessage());
@@ -200,11 +200,11 @@ public class ProtoBufferUtilities {
         return new PrivateNotificationPayload(privateNotification.getMessage());
     }
 
-    private static Message getPayoutTxFinalizedMessage(PB.PayoutTxFinalizedMessage payoutTxFinalizedMessage) {
-        return new PayoutTxFinalizedMessage(payoutTxFinalizedMessage.getTradeId(),
-                payoutTxFinalizedMessage.getPayoutTx().toByteArray(),
-                getNodeAddress(payoutTxFinalizedMessage.getSenderNodeAddress()),
-                payoutTxFinalizedMessage.getUid());
+    private static Message getPayoutTxPublishedMessage(PB.PayoutTxPublishedMessage payoutTxPublishedMessage) {
+        return new PayoutTxPublishedMessage(payoutTxPublishedMessage.getTradeId(),
+                payoutTxPublishedMessage.getPayoutTx().toByteArray(),
+                getNodeAddress(payoutTxPublishedMessage.getSenderNodeAddress()),
+                payoutTxPublishedMessage.getUid());
     }
 
     private static Message getFiatTransferStartedMessage(PB.FiatTransferStartedMessage fiatTransferStartedMessage) {
