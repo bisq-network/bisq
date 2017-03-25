@@ -21,9 +21,13 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.payload.Payload;
+import lombok.EqualsAndHashCode;
+import org.bouncycastle.util.encoders.Hex;
 
-import java.util.Arrays;
+import javax.annotation.concurrent.Immutable;
 
+@EqualsAndHashCode
+@Immutable
 public final class RawTransactionInput implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -39,32 +43,12 @@ public final class RawTransactionInput implements Payload {
         this.value = value;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof RawTransactionInput)) return false;
-
-        RawTransactionInput rawTransactionInput = (RawTransactionInput) o;
-
-        if (index != rawTransactionInput.index) return false;
-        if (value != rawTransactionInput.value) return false;
-        return Arrays.equals(parentTransaction, rawTransactionInput.parentTransaction);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (int) (index ^ (index >>> 32));
-        result = 31 * result + (parentTransaction != null ? Arrays.hashCode(parentTransaction) : 0);
-        result = 31 * result + (int) (value ^ (value >>> 32));
-        return result;
-    }
-
+    // byes not printed...
     @Override
     public String toString() {
         return "RawTransactionInput{" +
                 "index=" + index +
-                ", parentTransaction=" + Arrays.toString(parentTransaction) +
+                ", parentTransaction as HEX " + Hex.toHexString(parentTransaction) +
                 ", value=" + value +
                 '}';
     }

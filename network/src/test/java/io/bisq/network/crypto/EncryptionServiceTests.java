@@ -29,7 +29,7 @@ import io.bisq.protobuffer.message.alert.PrivateNotificationMessage;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
 import io.bisq.protobuffer.message.p2p.PrefixedSealedAndSignedMessage;
 import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
-import io.bisq.protobuffer.payload.alert.PrivateNotification;
+import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
 import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
@@ -85,17 +85,19 @@ public class EncryptionServiceTests {
     @Test
     public void testDecryptAndVerifyMessage() throws CryptoException {
         EncryptionService encryptionService = new EncryptionService(keyRing);
-        final PrivateNotification privateNotification = new PrivateNotification("test");
+        final PrivateNotificationPayload privateNotification = new PrivateNotificationPayload("test");
         privateNotification.setSigAndPubKey("", pubKeyRing.getSignaturePubKey());
         final NodeAddress nodeAddress = new NodeAddress("localhost", 2222);
         PrivateNotificationMessage data = new PrivateNotificationMessage(privateNotification,
-                nodeAddress);
+                nodeAddress,
+                UUID.randomUUID().toString());
         PrefixedSealedAndSignedMessage encrypted = new PrefixedSealedAndSignedMessage(nodeAddress,
                 encryptionService.encryptAndSign(pubKeyRing, data),
-                Hash.getHash("localhost"));
+                Hash.getHash("localhost"),
+                UUID.randomUUID().toString());
         DecryptedMsgWithPubKey decrypted = encryptionService.decryptAndVerify(encrypted.sealedAndSigned);
-        assertEquals(data.privateNotification.message,
-                ((PrivateNotificationMessage) decrypted.message).privateNotification.message);
+        assertEquals(data.privateNotificationPayload.message,
+                ((PrivateNotificationMessage) decrypted.message).privateNotificationPayload.message);
     }
 
 

@@ -26,6 +26,8 @@ import io.bisq.network.p2p.SendMailboxMessageListener;
 import io.bisq.protobuffer.message.trade.FiatTransferStartedMessage;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.UUID;
+
 @Slf4j
 public class SendFiatTransferStartedMessage extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
@@ -45,7 +47,8 @@ public class SendFiatTransferStartedMessage extends TradeTask {
                     id,
                     payoutAddressEntry.getAddressString(),
                     processModel.getMyNodeAddress(),
-                    processModel.getPayoutTxSignature()
+                    processModel.getPayoutTxSignature(),
+                    UUID.randomUUID().toString()
             );
             log.info("Send message to peer. tradeId={}, message{}", id, message);
             processModel.getP2PService().sendEncryptedMailboxMessage(

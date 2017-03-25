@@ -22,7 +22,7 @@ import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.network.p2p.SendMailboxMessageListener;
+import io.bisq.network.p2p.SendDirectMessageListener;
 import io.bisq.protobuffer.message.trade.PayDepositRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,18 +42,18 @@ public class SendPayDepositRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-
             checkNotNull(trade.getTradeAmount(), "TradeAmount must not be null");
             checkNotNull(trade.getTakeOfferFeeTxId(), "TakeOfferFeeTxId must not be null");
 
             BtcWalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
-            checkArgument(!walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(), "addressEntry must not be set here.");
+            checkArgument(!walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(),
+                    "addressEntry must not be set here.");
             AddressEntry addressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] takerMultiSigPubKey = addressEntry.getPubKey();
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
-            PayDepositRequest payDepositRequest = new PayDepositRequest(
+            PayDepositRequest message = new PayDepositRequest(
                     processModel.getMyNodeAddress(),
                     processModel.getId(),
                     trade.getTradeAmount().value,
@@ -74,26 +74,20 @@ public class SendPayDepositRequest extends TradeTask {
             );
             processModel.setMyMultiSigPubKey(takerMultiSigPubKey);
 
-            processModel.getP2PService().sendEncryptedMailboxMessage(
+            processModel.getP2PService().sendEncryptedDirectMessage(
                     trade.getTradingPeerNodeAddress(),
                     processModel.tradingPeer.getPubKeyRing(),
-                    payDepositRequest,
-                    new SendMailboxMessageListener() {
+                    message,
+                    new SendDirectMessageListener() {
                         @Override
                         public void onArrived() {
-                            log.trace("Message arrived at peer.");
+                            log.info("Message arrived at peer. tradeId={}, message{}", id, message);
                             complete();
                         }
 
                         @Override
-                        public void onStoredInMailbox() {
-                            log.trace("Message stored in mailbox.");
-                            complete();
-                        }
-
-                        @Override
-                        public void onFault(String errorMessage) {
-                            appendToErrorMessage("PayDepositRequest sending failed");
+                        public void onFault() {
+                            appendToErrorMessage("Sending message failed: message=" + message);
                             failed();
                         }
                     }

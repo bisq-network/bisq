@@ -22,9 +22,9 @@ import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import lombok.EqualsAndHashCode;
 
-import java.util.Arrays;
-
+@EqualsAndHashCode(callSuper = true)
 public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -33,39 +33,11 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
     public final String tradeId;
     private final NodeAddress myNodeAddress;
 
-    public PeerPublishedPayoutTxMessage(byte[] transaction, String tradeId, NodeAddress myNodeAddress) {
-        super();
-        this.transaction = transaction;
-        this.tradeId = tradeId;
-        this.myNodeAddress = myNodeAddress;
-    }
-
     public PeerPublishedPayoutTxMessage(byte[] transaction, String tradeId, NodeAddress myNodeAddress, String uid) {
         super(uid);
         this.transaction = transaction;
         this.tradeId = tradeId;
         this.myNodeAddress = myNodeAddress;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PeerPublishedPayoutTxMessage)) return false;
-
-        PeerPublishedPayoutTxMessage that = (PeerPublishedPayoutTxMessage) o;
-
-        if (!Arrays.equals(transaction, that.transaction)) return false;
-        if (tradeId != null ? !tradeId.equals(that.tradeId) : that.tradeId != null) return false;
-        return !(myNodeAddress != null ? !myNodeAddress.equals(that.myNodeAddress) : that.myNodeAddress != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = transaction != null ? Arrays.hashCode(transaction) : 0;
-        result = 31 * result + (tradeId != null ? tradeId.hashCode() : 0);
-        result = 31 * result + (myNodeAddress != null ? myNodeAddress.hashCode() : 0);
-        return result;
     }
 
     @Override
@@ -80,5 +52,15 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
                 .setTransaction(ByteString.copyFrom(transaction))
                 .setTradeId(tradeId)
                 .setMyNodeAddress(myNodeAddress.toProto())).build();
+    }
+
+    // transaction not displayed for privacy reasons...
+    @Override
+    public String toString() {
+        return "PeerPublishedPayoutTxMessage{" +
+                "transaction not displayed for privacy reasons..." +
+                ", tradeId='" + tradeId + '\'' +
+                ", myNodeAddress=" + myNodeAddress +
+                "} " + super.toString();
     }
 }

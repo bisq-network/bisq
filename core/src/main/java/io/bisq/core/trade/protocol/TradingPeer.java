@@ -152,7 +152,7 @@ public final class TradingPeer implements Persistable {
         return changeOutputValue;
     }
 
-    public void setChangeOutputAddress(String changeOutputAddress) {
+    public void setChangeOutputAddress(@Nullable String changeOutputAddress) {
         this.changeOutputAddress = changeOutputAddress;
     }
 

@@ -20,10 +20,14 @@ package io.bisq.core.trade.protocol.tasks.seller;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import io.bisq.network.p2p.SendMailboxMessageListener;
 import io.bisq.protobuffer.message.trade.PayoutTxFinalizedMessage;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.UUID;
+
 @Slf4j
+// TODO remove
 public class SellerSendPayoutTxFinalizedMessage extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
     public SellerSendPayoutTxFinalizedMessage(TaskRunner taskHandler, Trade trade) {
@@ -39,10 +43,11 @@ public class SellerSendPayoutTxFinalizedMessage extends TradeTask {
                 final PayoutTxFinalizedMessage message = new PayoutTxFinalizedMessage(
                         id,
                         trade.getPayoutTx().bitcoinSerialize(),
-                        processModel.getMyNodeAddress()
+                        processModel.getMyNodeAddress(),
+                        UUID.randomUUID().toString()
                 );
                 log.info("Send message to peer. tradeId={}, message{}", id, message);
-               /* processModel.getP2PService().sendEncryptedMailboxMessage(
+                processModel.getP2PService().sendEncryptedMailboxMessage(
                         trade.getTradingPeerNodeAddress(),
                         processModel.tradingPeer.getPubKeyRing(),
                         message,
@@ -65,7 +70,7 @@ public class SellerSendPayoutTxFinalizedMessage extends TradeTask {
                                 failed(errorMessage);
                             }
                         }
-                );*/
+                );
                 // state must not be set in onArrived or onStoredInMailbox handlers as we would get that 
                 // called delayed and would overwrite the broad cast state set by the next task
                 trade.setState(Trade.State.SELLER_STARTED_SEND_PAYOUT_TX);

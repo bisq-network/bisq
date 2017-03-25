@@ -603,7 +603,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
             disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessagesAsObservableList();
             SortedList<DisputeCommunicationMessage> sortedList = new SortedList<>(disputeCommunicationMessages);
-            sortedList.setComparator((o1, o2) -> o1.getDate().compareTo(o2.getDate()));
+            sortedList.setComparator((o1, o2) -> new Date(o1.getDate()).compareTo(new Date(o2.getDate())));
             messageListView = new ListView<>(sortedList);
             messageListView.setId("message-list-view");
 
@@ -813,7 +813,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 }
 
                                 AnchorPane.setBottomAnchor(statusIcon, 7d);
-                                headerLabel.setText(formatter.formatDateTime(item.getDate()));
+                                headerLabel.setText(formatter.formatDateTime(new Date(item.getDate())));
                                 messageLabel.setText(item.getMessage());
                                 attachmentsBox.getChildren().clear();
                                 if (item.getAttachments().size() > 0) {

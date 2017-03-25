@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -62,7 +63,9 @@ public class SendPublishDepositTxRequest extends TradeTask {
                     trade.getOffererContractSignature(),
                     offererPayoutAddressEntry.getAddressString(),
                     processModel.getPreparedDepositTx(),
-                    processModel.getRawTransactionInputs()
+                    processModel.getRawTransactionInputs(),
+                    processModel.getMyNodeAddress(),
+                    UUID.randomUUID().toString()
             );
 
             processModel.getP2PService().sendEncryptedDirectMessage(

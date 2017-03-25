@@ -24,41 +24,56 @@ import io.bisq.protobuffer.payload.arbitration.Attachment;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@EqualsAndHashCode
+@ToString
+@Getter
+@Slf4j
 public final class DisputeCommunicationMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(DisputeCommunicationMessage.class);
 
     private final long date;
     private final String tradeId;
-
     private final int traderId;
     private final boolean senderIsTrader;
     private final String message;
+    private final NodeAddress myNodeAddress;
+    @Nullable
     private final ArrayList<Attachment> attachments = new ArrayList<>();
     private boolean arrived;
     private boolean storedInMailbox;
+    @Setter
     private boolean isSystemMessage;
-    private final NodeAddress myNodeAddress;
 
+    // domain
     transient private BooleanProperty arrivedProperty = new SimpleBooleanProperty();
     transient private BooleanProperty storedInMailboxProperty = new SimpleBooleanProperty();
 
-    public DisputeCommunicationMessage(String tradeId, int traderId, boolean senderIsTrader, String message,
-                                       @Nullable List<Attachment> attachments, NodeAddress myNodeAddress, long date,
-                                       boolean arrived, boolean storedInMailbox) {
+    public DisputeCommunicationMessage(String tradeId,
+                                       int traderId,
+                                       boolean senderIsTrader,
+                                       String message,
+                                       @Nullable List<Attachment> attachments,
+                                       NodeAddress myNodeAddress,
+                                       long date,
+                                       boolean arrived,
+                                       boolean storedInMailbox,
+                                       String uid) {
+        super(uid);
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
@@ -69,12 +84,6 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         this.storedInMailbox = storedInMailbox;
         Optional.ofNullable(attachments).ifPresent(e -> addAllAttachments(attachments));
         updateBooleanProperties();
-    }
-
-    public DisputeCommunicationMessage(String tradeId, int traderId, boolean senderIsTrader, String message,
-                                       NodeAddress myNodeAddress) {
-        this(tradeId, traderId, senderIsTrader, message, null, myNodeAddress, new Date().getTime(),
-                false, false);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -90,7 +99,6 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         arrivedProperty = new SimpleBooleanProperty(arrived);
         storedInMailboxProperty = new SimpleBooleanProperty(storedInMailbox);
     }
-
 
     @Override
     public NodeAddress getSenderNodeAddress() {
@@ -115,91 +123,12 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         this.storedInMailboxProperty.set(storedInMailbox);
     }
 
-    public Date getDate() {
-        return new Date(date);
-    }
-
-    public boolean isSenderIsTrader() {
-        return senderIsTrader;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public int getTraderId() {
-        return traderId;
-    }
-
     public BooleanProperty arrivedProperty() {
         return arrivedProperty;
     }
 
     public BooleanProperty storedInMailboxProperty() {
         return storedInMailboxProperty;
-    }
-
-    public List<Attachment> getAttachments() {
-        return attachments;
-    }
-
-    public String getTradeId() {
-        return tradeId;
-    }
-
-    public boolean isSystemMessage() {
-        return isSystemMessage;
-    }
-
-    public void setIsSystemMessage(boolean isSystemMessage) {
-        this.isSystemMessage = isSystemMessage;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof DisputeCommunicationMessage)) return false;
-
-        DisputeCommunicationMessage that = (DisputeCommunicationMessage) o;
-
-        if (date != that.date) return false;
-        if (traderId != that.traderId) return false;
-        if (senderIsTrader != that.senderIsTrader) return false;
-        if (arrived != that.arrived) return false;
-        if (storedInMailbox != that.storedInMailbox) return false;
-        if (isSystemMessage != that.isSystemMessage) return false;
-        if (tradeId != null ? !tradeId.equals(that.tradeId) : that.tradeId != null) return false;
-        if (message != null ? !message.equals(that.message) : that.message != null) return false;
-        if (attachments != null ? !attachments.equals(that.attachments) : that.attachments != null) return false;
-        return !(myNodeAddress != null ? !myNodeAddress.equals(that.myNodeAddress) : that.myNodeAddress != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (int) (date ^ (date >>> 32));
-        result = 31 * result + (tradeId != null ? tradeId.hashCode() : 0);
-        result = 31 * result + traderId;
-        result = 31 * result + (senderIsTrader ? 1 : 0);
-        result = 31 * result + (message != null ? message.hashCode() : 0);
-        result = 31 * result + (attachments != null ? attachments.hashCode() : 0);
-        result = 31 * result + (arrived ? 1 : 0);
-        result = 31 * result + (storedInMailbox ? 1 : 0);
-        result = 31 * result + (isSystemMessage ? 1 : 0);
-        result = 31 * result + (myNodeAddress != null ? myNodeAddress.hashCode() : 0);
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "DisputeDirectMessage{" +
-                "date=" + date +
-                ", tradeId='" + tradeId + '\'' +
-                ", traderId='" + traderId + '\'' +
-                ", senderIsTrader=" + senderIsTrader +
-                ", message='" + message + '\'' +
-                ", attachments=" + attachments +
-                '}';
     }
 
     @Override

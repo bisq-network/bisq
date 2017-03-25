@@ -23,7 +23,11 @@ import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.protobuffer.message.trade.PayoutTxFinalizedMessage;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.UUID;
+
 @Slf4j
+// TODO remove 
+// TODO: locktime
 public class SendPayoutTxFinalizedMessage extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
     public SendPayoutTxFinalizedMessage(TaskRunner taskHandler, Trade trade) {
@@ -39,7 +43,8 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
                 final PayoutTxFinalizedMessage message = new PayoutTxFinalizedMessage(
                         id,
                         trade.getPayoutTx().bitcoinSerialize(),
-                        processModel.getMyNodeAddress()
+                        processModel.getMyNodeAddress(),
+                        UUID.randomUUID().toString()
                 );
                 log.info("Send message to peer. tradeId={}, message{}", id, message);
                /* processModel.getP2PService().sendEncryptedMailboxMessage(

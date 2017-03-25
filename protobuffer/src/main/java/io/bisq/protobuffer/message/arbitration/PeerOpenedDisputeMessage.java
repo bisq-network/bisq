@@ -22,7 +22,11 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.payload.arbitration.Dispute;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
+@EqualsAndHashCode(callSuper = true)
+@ToString
 public final class PeerOpenedDisputeMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
@@ -30,34 +34,10 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
     public final Dispute dispute;
     private final NodeAddress myNodeAddress;
 
-    public PeerOpenedDisputeMessage(Dispute dispute, NodeAddress myNodeAddress) {
-        this.dispute = dispute;
-        this.myNodeAddress = myNodeAddress;
-    }
-
     public PeerOpenedDisputeMessage(Dispute dispute, NodeAddress myNodeAddress, String uid) {
         super(uid);
         this.dispute = dispute;
         this.myNodeAddress = myNodeAddress;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PeerOpenedDisputeMessage)) return false;
-
-        PeerOpenedDisputeMessage that = (PeerOpenedDisputeMessage) o;
-
-        if (dispute != null ? !dispute.equals(that.dispute) : that.dispute != null) return false;
-        return !(myNodeAddress != null ? !myNodeAddress.equals(that.myNodeAddress) : that.myNodeAddress != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = dispute != null ? dispute.hashCode() : 0;
-        result = 31 * result + (myNodeAddress != null ? myNodeAddress.hashCode() : 0);
-        return result;
     }
 
     @Override

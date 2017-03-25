@@ -22,8 +22,9 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.payload.Payload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.security.KeyFactory;
@@ -32,12 +33,12 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 
-public final class PrivateNotification implements Payload {
+@EqualsAndHashCode
+@Slf4j
+public final class PrivateNotificationPayload implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(PrivateNotification.class);
 
     // Payload
     public final String message;
@@ -47,11 +48,11 @@ public final class PrivateNotification implements Payload {
     // Domain
     private transient PublicKey publicKey;
 
-    public PrivateNotification(String message) {
+    public PrivateNotificationPayload(String message) {
         this.message = message;
     }
 
-    public PrivateNotification(String message, String signatureAsBase64, byte[] publicKeyBytes) {
+    public PrivateNotificationPayload(String message, String signatureAsBase64, byte[] publicKeyBytes) {
         this(message);
         this.signatureAsBase64 = signatureAsBase64;
         this.publicKeyBytes = publicKeyBytes;
@@ -85,43 +86,21 @@ public final class PrivateNotification implements Payload {
         return signatureAsBase64;
     }
 
-
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PrivateNotification)) return false;
-
-        PrivateNotification that = (PrivateNotification) o;
-
-        if (message != null ? !message.equals(that.message) : that.message != null) return false;
-        if (signatureAsBase64 != null ? !signatureAsBase64.equals(that.signatureAsBase64) : that.signatureAsBase64 != null)
-            return false;
-        return Arrays.equals(publicKeyBytes, that.publicKeyBytes);
-
+    public PB.PrivateNotificationPayload toProto() {
+        return PB.PrivateNotificationPayload.newBuilder()
+                .setMessage(message)
+                .setSignatureAsBase64(signatureAsBase64)
+                .setPublicKeyBytes(ByteString.copyFrom(publicKeyBytes)).build();
     }
 
-    @Override
-    public int hashCode() {
-        int result = message != null ? message.hashCode() : 0;
-        result = 31 * result + (signatureAsBase64 != null ? signatureAsBase64.hashCode() : 0);
-        result = 31 * result + (publicKeyBytes != null ? Arrays.hashCode(publicKeyBytes) : 0);
-        return result;
-    }
-
+    // Hex
     @Override
     public String toString() {
         return "PrivateNotification{" +
                 "message='" + message + '\'' +
                 ", signatureAsBase64='" + signatureAsBase64 + '\'' +
-                ", publicKeyBytes=" + Arrays.toString(publicKeyBytes) +
+                ", publicKeyBytes=" + Hex.toHexString(publicKeyBytes) +
                 '}';
-    }
-
-    @Override
-    public PB.PrivateNotification toProto() {
-        return PB.PrivateNotification.newBuilder()
-                .setMessage(message)
-                .setSignatureAsBase64(signatureAsBase64)
-                .setPublicKeyBytes(ByteString.copyFrom(publicKeyBytes)).build();
     }
 }

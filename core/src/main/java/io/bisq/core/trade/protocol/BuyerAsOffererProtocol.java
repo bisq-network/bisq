@@ -91,10 +91,10 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
         if (message instanceof MailboxMessage) {
             MailboxMessage mailboxMessage = (MailboxMessage) message;
             NodeAddress peerNodeAddress = mailboxMessage.getSenderNodeAddress();
-            if (message instanceof PayoutTxFinalizedMessage)
-                handle((PayoutTxFinalizedMessage) message, peerNodeAddress);
-            else if (message instanceof DepositTxPublishedMessage)
+            if (message instanceof DepositTxPublishedMessage)
                 handle((DepositTxPublishedMessage) message, peerNodeAddress);
+            else if (message instanceof PayoutTxFinalizedMessage)
+                handle((PayoutTxFinalizedMessage) message, peerNodeAddress);
             else
                 log.error("We received an unhandled MailboxMessage" + message.toString());
         }
@@ -121,7 +121,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
                 VerifyTakerAccount.class,
                 LoadTakeOfferFeeTx.class,
                 CreateAndSignContract.class,
-                OffererCreatesAndSignsDepositTxAsBuyer.class,
+                OffererAsBuyerCreatesAndSignsDepositTx.class,
                 SetupDepositBalanceListener.class,
                 SendPublishDepositTxRequest.class
         );

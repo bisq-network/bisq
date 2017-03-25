@@ -19,9 +19,11 @@ package io.bisq.protobuffer.message.arbitration;
 
 import io.bisq.common.app.Version;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
-import java.util.UUID;
-
+@EqualsAndHashCode
+@ToString
 public abstract class DisputeMessage implements MailboxMessage {
     //TODO add serialVersionUID also in superclasses as changes would break compatibility
     private final int messageVersion = Version.getP2PMessageVersion();
@@ -29,10 +31,6 @@ public abstract class DisputeMessage implements MailboxMessage {
 
     public DisputeMessage(String uid) {
         this.uid = uid;
-    }
-
-    public DisputeMessage() {
-        uid = UUID.randomUUID().toString();
     }
 
     @Override

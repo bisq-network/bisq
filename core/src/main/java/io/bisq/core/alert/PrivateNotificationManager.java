@@ -27,7 +27,7 @@ import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.alert.PrivateNotificationMessage;
-import io.bisq.protobuffer.payload.alert.PrivateNotification;
+import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
 import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.security.SignatureException;
+import java.util.UUID;
 
 import static org.bitcoinj.core.Utils.HEX;
 
@@ -48,7 +49,7 @@ public class PrivateNotificationManager {
 
     private final P2PService p2PService;
     private final KeyRing keyRing;
-    private final ObjectProperty<PrivateNotification> privateNotificationMessageProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<PrivateNotificationPayload> privateNotificationMessageProperty = new SimpleObjectProperty<>();
 
     // Pub key for developer global privateNotification message
     private static final String pubKeyAsHex = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
@@ -81,7 +82,7 @@ public class PrivateNotificationManager {
             PrivateNotificationMessage privateNotificationMessage = (PrivateNotificationMessage) message;
             log.trace("Received privateNotificationMessage: " + privateNotificationMessage);
             if (privateNotificationMessage.getSenderNodeAddress().equals(senderNodeAddress)) {
-                final PrivateNotification privateNotification = privateNotificationMessage.privateNotification;
+                final PrivateNotificationPayload privateNotification = privateNotificationMessage.privateNotificationPayload;
                 if (verifySignature(privateNotification))
                     privateNotificationMessageProperty.set(privateNotification);
             } else {
@@ -95,18 +96,20 @@ public class PrivateNotificationManager {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ReadOnlyObjectProperty<PrivateNotification> privateNotificationProperty() {
+    public ReadOnlyObjectProperty<PrivateNotificationPayload> privateNotificationProperty() {
         return privateNotificationMessageProperty;
     }
 
-    public boolean sendPrivateNotificationMessageIfKeyIsValid(PrivateNotification privateNotification, PubKeyRing pubKeyRing, NodeAddress nodeAddress,
+    public boolean sendPrivateNotificationMessageIfKeyIsValid(PrivateNotificationPayload privateNotification, PubKeyRing pubKeyRing, NodeAddress nodeAddress,
                                                               String privKeyString, SendMailboxMessageListener sendMailboxMessageListener) {
         boolean isKeyValid = isKeyValid(privKeyString);
         if (isKeyValid) {
             signAndAddSignatureToPrivateNotificationMessage(privateNotification);
             p2PService.sendEncryptedMailboxMessage(nodeAddress,
                     pubKeyRing,
-                    new PrivateNotificationMessage(privateNotification, p2PService.getNetworkNode().getNodeAddress()),
+                    new PrivateNotificationMessage(privateNotification,
+                            p2PService.getNetworkNode().getNodeAddress(),
+                            UUID.randomUUID().toString()),
                     sendMailboxMessageListener);
         }
 
@@ -126,13 +129,13 @@ public class PrivateNotificationManager {
         }
     }
 
-    private void signAndAddSignatureToPrivateNotificationMessage(PrivateNotification privateNotification) {
+    private void signAndAddSignatureToPrivateNotificationMessage(PrivateNotificationPayload privateNotification) {
         String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.message.getBytes());
         String signatureAsBase64 = privateNotificationSigningKey.signMessage(privateNotificationMessageAsHex);
         privateNotification.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
     }
 
-    private boolean verifySignature(PrivateNotification privateNotification) {
+    private boolean verifySignature(PrivateNotificationPayload privateNotification) {
         String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.message.getBytes());
         try {
             ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex)).verifyMessage(privateNotificationMessageAsHex, privateNotification.getSignatureAsBase64());

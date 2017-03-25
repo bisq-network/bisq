@@ -26,7 +26,6 @@ import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 
 import javax.annotation.concurrent.Immutable;
-import java.util.UUID;
 
 @EqualsAndHashCode(callSuper = true)
 @Immutable
@@ -50,11 +49,6 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
         this.uid = uid;
     }
 
-    public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress,
-                                      NodeAddress senderNodeAddress, byte[] buyerSignature) {
-        this(tradeId, buyerPayoutAddress, senderNodeAddress, buyerSignature, UUID.randomUUID().toString());
-    }
-
     @Override
     public NodeAddress getSenderNodeAddress() {
         return senderNodeAddress;
@@ -64,7 +58,6 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
     public String getUID() {
         return uid;
     }
-
 
     @Override
     public PB.Envelope toProto() {
@@ -78,11 +71,12 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
                 .setUid(uid)).build();
     }
 
-    // We dont want to log the buyerSignature!
+    // buyerSignature not printed for privacy reasons...
     @Override
     public String toString() {
         return "FiatTransferStartedMessage{" +
-                "buyerPayoutAddress='" + buyerPayoutAddress + '\'' +
+                "buyerSignature not printed for privacy reasons..." +
+                ", buyerPayoutAddress='" + buyerPayoutAddress + '\'' +
                 ", senderNodeAddress=" + senderNodeAddress +
                 ", uid='" + uid + '\'' +
                 "} " + super.toString();

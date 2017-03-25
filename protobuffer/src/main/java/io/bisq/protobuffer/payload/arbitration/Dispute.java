@@ -32,12 +32,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -143,7 +143,7 @@ public final class Dispute implements Payload {
                    boolean disputeOpenerIsBuyer,
                    boolean disputeOpenerIsOfferer,
                    PubKeyRing traderPubKeyRing,
-                   Date tradeDate, 
+                   Date tradeDate,
                    Contract contract,
                    byte[] contractHash,
                    @Nullable byte[] depositTxSerialized,
@@ -348,6 +348,7 @@ public final class Dispute implements Payload {
         return disputePayoutTxId;
     }
 
+    //payoutTxSerialized not displayed for privacy reasons...
     @Override
     public String toString() {
         return "Dispute{" +
@@ -360,9 +361,9 @@ public final class Dispute implements Payload {
                 ", traderPubKeyRing=" + traderPubKeyRing +
                 ", tradeDate=" + tradeDate +
                 ", contract=" + contract +
-                ", contractHash=" + Arrays.toString(contractHash) +
-                ", depositTxSerialized=" + Arrays.toString(depositTxSerialized) +
-                ", payoutTxSerialized=" + Arrays.toString(payoutTxSerialized) +
+                ", contractHash=" + Hex.toHexString(contractHash) +
+                ", depositTxSerialized=" + Hex.toHexString(depositTxSerialized) +
+                ", payoutTxSerialized not displayed for privacy reasons..." +
                 ", depositTxId='" + depositTxId + '\'' +
                 ", payoutTxId='" + payoutTxId + '\'' +
                 ", contractAsJson='" + contractAsJson + '\'' +

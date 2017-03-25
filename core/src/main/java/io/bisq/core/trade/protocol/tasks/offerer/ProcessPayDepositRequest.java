@@ -62,8 +62,7 @@ public class ProcessPayDepositRequest extends TradeTask {
             checkArgument(payDepositRequest.rawTransactionInputs.size() > 0);
 
             processModel.tradingPeer.setChangeOutputValue(payDepositRequest.changeOutputValue);
-            if (payDepositRequest.changeOutputAddress != null)
-                processModel.tradingPeer.setChangeOutputAddress(payDepositRequest.changeOutputAddress);
+            processModel.tradingPeer.setChangeOutputAddress(payDepositRequest.changeOutputAddress);
 
             processModel.tradingPeer.setMultiSigPubKey(checkNotNull(payDepositRequest.takerMultiSigPubKey));
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(payDepositRequest.takerPayoutAddressString));
@@ -89,8 +88,6 @@ public class ProcessPayDepositRequest extends TradeTask {
             checkArgument(payDepositRequest.tradeAmount > 0);
             trade.setTradeAmount(Coin.valueOf(payDepositRequest.tradeAmount));
 
-            // check and update to the latest peer address of our peer if the payDepositRequest is correct
-            checkArgument(payDepositRequest.getSenderNodeAddress().equals(processModel.getTempTradingPeerNodeAddress()));
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             removeMailboxMessageAfterProcessing();

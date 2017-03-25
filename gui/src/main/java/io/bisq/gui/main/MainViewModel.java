@@ -72,7 +72,7 @@ import io.bisq.protobuffer.crypto.DecryptedDataTuple;
 import io.bisq.protobuffer.crypto.Encryption;
 import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
-import io.bisq.protobuffer.payload.alert.PrivateNotification;
+import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
 import io.bisq.protobuffer.payload.arbitration.Dispute;
 import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
 import javafx.beans.property.*;
@@ -891,7 +891,7 @@ public class MainViewModel implements ViewModel {
             new DisplayAlertMessageWindow().alertMessage(alert).show();
     }
 
-    private void displayPrivateNotification(PrivateNotification privateNotification) {
+    private void displayPrivateNotification(PrivateNotificationPayload privateNotification) {
         new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
                 .attention(privateNotification.message)
                 .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")

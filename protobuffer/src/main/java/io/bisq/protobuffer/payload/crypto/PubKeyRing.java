@@ -23,6 +23,7 @@ import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.crypto.Encryption;
 import io.bisq.protobuffer.payload.Payload;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
@@ -35,17 +36,16 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 
 /**
  * Same as KeyRing but with public keys only.
  * Used to send public keys over the wire to other peer.
  */
 @Slf4j
+@EqualsAndHashCode
 public final class PubKeyRing implements Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
 
     // Payload
     private final byte[] signaturePubKeyBytes;
@@ -97,29 +97,12 @@ public final class PubKeyRing implements Payload {
                 .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes)).build();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        PubKeyRing that = (PubKeyRing) o;
-
-        if (!Arrays.equals(signaturePubKeyBytes, that.signaturePubKeyBytes)) return false;
-        return Arrays.equals(encryptionPubKeyBytes, that.encryptionPubKeyBytes);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = signaturePubKeyBytes != null ? Arrays.hashCode(signaturePubKeyBytes) : 0;
-        result = 31 * result + (encryptionPubKeyBytes != null ? Arrays.hashCode(encryptionPubKeyBytes) : 0);
-        return result;
-    }
-
+    // Hex
     @Override
     public String toString() {
         return "PubKeyRing{" +
-                "signaturePubKey=" + Hex.toHexString(signaturePubKey.getEncoded()) +
-                ", encryptionPubKey=" + Hex.toHexString(encryptionPubKey.getEncoded()) +
+                "signaturePubKeyHex=" + Hex.toHexString(signaturePubKeyBytes) +
+                ", encryptionPubKeyHex=" + Hex.toHexString(encryptionPubKeyBytes) +
                 '}';
     }
 }

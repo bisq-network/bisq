@@ -26,7 +26,6 @@ import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 
 import javax.annotation.concurrent.Immutable;
-import java.util.UUID;
 
 @EqualsAndHashCode(callSuper = true)
 @Immutable
@@ -37,10 +36,6 @@ public final class PayoutTxFinalizedMessage extends TradeMessage implements Mail
     public final byte[] payoutTx;
     private final NodeAddress senderNodeAddress;
     private final String uid;
-
-    public PayoutTxFinalizedMessage(String tradeId, byte[] payoutTx, NodeAddress senderNodeAddress) {
-        this(tradeId, payoutTx, senderNodeAddress, UUID.randomUUID().toString());
-    }
 
     public PayoutTxFinalizedMessage(String tradeId, byte[] payoutTx, NodeAddress senderNodeAddress, String uid) {
         super(tradeId);
@@ -70,11 +65,11 @@ public final class PayoutTxFinalizedMessage extends TradeMessage implements Mail
                 .setSenderNodeAddress(senderNodeAddress.toProto())).build();
     }
 
-    // We dont print the bytes of payoutTx
+    // payoutTx not printed for privacy reasons
     @Override
     public String toString() {
         return "PayoutTxFinalizedMessage{" +
-                "payoutTx [bytes not printed...]" +
+                "payoutTx not printed for privacy reasons..." +
                 ", senderNodeAddress=" + senderNodeAddress +
                 ", uid='" + uid + '\'' +
                 "} " + super.toString();

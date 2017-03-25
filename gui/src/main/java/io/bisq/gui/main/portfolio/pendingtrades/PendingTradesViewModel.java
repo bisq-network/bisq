@@ -365,6 +365,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case BUYER_SAW_PAYOUT_TX_IN_NETWORK:
                 buyerState.set(BuyerState.REQUEST_WITHDRAWAL);
                 break;
+            case SELLER_COMMITTED_PAYOUT_TX:
+            case SELLER_STARTED_SEND_PAYOUT_TX:
             case PAYOUT_BROAD_CASTED:
                 sellerState.set(REQUEST_WITHDRAWAL);
                 buyerState.set(BuyerState.REQUEST_WITHDRAWAL);

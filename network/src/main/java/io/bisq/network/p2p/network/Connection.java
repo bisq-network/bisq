@@ -769,9 +769,10 @@ public class Connection implements MessageListener {
                                 log.error("Invalid data arrived at inputHandler of connection " + connection, e);
                                 reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                             }
+                            return;
                         }
 
-                        Message message = null;
+                        Message message;
                         Optional<Message> optMessage = ProtoBufferUtilities.fromProtoBuf(envelope);
                         if (optMessage.isPresent()) {
                             message = optMessage.get();

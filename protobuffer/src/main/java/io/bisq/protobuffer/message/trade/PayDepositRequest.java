@@ -21,22 +21,23 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.p2p.MailboxMessage;
 import io.bisq.protobuffer.payload.btc.RawTransactionInput;
 import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
+import lombok.EqualsAndHashCode;
+import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
+
+@EqualsAndHashCode(callSuper = true)
 @Immutable
-public final class PayDepositRequest extends TradeMessage implements MailboxMessage {
+public final class PayDepositRequest extends TradeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -57,7 +58,6 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
     public final List<NodeAddress> acceptedArbitratorNodeAddresses;
     public final NodeAddress arbitratorNodeAddress;
     private final NodeAddress senderNodeAddress;
-    private final String uid;
 
     public PayDepositRequest(NodeAddress senderNodeAddress,
                              String tradeId,
@@ -93,72 +93,6 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
         this.takeOfferFeeTxId = takeOfferFeeTxId;
         this.acceptedArbitratorNodeAddresses = acceptedArbitratorNodeAddresses;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
-        uid = UUID.randomUUID().toString();
-    }
-
-    @Override
-    public NodeAddress getSenderNodeAddress() {
-        return senderNodeAddress;
-    }
-
-    @Override
-    public String getUID() {
-        return uid;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PayDepositRequest)) return false;
-        if (!super.equals(o)) return false;
-
-        PayDepositRequest that = (PayDepositRequest) o;
-
-        if (tradeAmount != that.tradeAmount) return false;
-        if (changeOutputValue != that.changeOutputValue) return false;
-        if (!Arrays.equals(takerMultiSigPubKey, that.takerMultiSigPubKey)) return false;
-        if (rawTransactionInputs != null ? !rawTransactionInputs.equals(that.rawTransactionInputs) : that.rawTransactionInputs != null)
-            return false;
-        if (changeOutputAddress != null ? !changeOutputAddress.equals(that.changeOutputAddress) : that.changeOutputAddress != null)
-            return false;
-        if (takerPayoutAddressString != null ? !takerPayoutAddressString.equals(that.takerPayoutAddressString) : that.takerPayoutAddressString != null)
-            return false;
-        if (takerPubKeyRing != null ? !takerPubKeyRing.equals(that.takerPubKeyRing) : that.takerPubKeyRing != null)
-            return false;
-        if (takerPaymentAccountPayload != null ? !takerPaymentAccountPayload.equals(that.takerPaymentAccountPayload) : that.takerPaymentAccountPayload != null)
-            return false;
-        if (takerAccountId != null ? !takerAccountId.equals(that.takerAccountId) : that.takerAccountId != null)
-            return false;
-        if (takeOfferFeeTxId != null ? !takeOfferFeeTxId.equals(that.takeOfferFeeTxId) : that.takeOfferFeeTxId != null)
-            return false;
-        if (acceptedArbitratorNodeAddresses != null ? !acceptedArbitratorNodeAddresses.equals(that.acceptedArbitratorNodeAddresses) : that.acceptedArbitratorNodeAddresses != null)
-            return false;
-        if (arbitratorNodeAddress != null ? !arbitratorNodeAddress.equals(that.arbitratorNodeAddress) : that.arbitratorNodeAddress != null)
-            return false;
-        if (senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null)
-            return false;
-        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (int) (tradeAmount ^ (tradeAmount >>> 32));
-        result = 31 * result + (takerMultiSigPubKey != null ? Arrays.hashCode(takerMultiSigPubKey) : 0);
-        result = 31 * result + (rawTransactionInputs != null ? rawTransactionInputs.hashCode() : 0);
-        result = 31 * result + (int) (changeOutputValue ^ (changeOutputValue >>> 32));
-        result = 31 * result + (changeOutputAddress != null ? changeOutputAddress.hashCode() : 0);
-        result = 31 * result + (takerPayoutAddressString != null ? takerPayoutAddressString.hashCode() : 0);
-        result = 31 * result + (takerPubKeyRing != null ? takerPubKeyRing.hashCode() : 0);
-        result = 31 * result + (takerPaymentAccountPayload != null ? takerPaymentAccountPayload.hashCode() : 0);
-        result = 31 * result + (takerAccountId != null ? takerAccountId.hashCode() : 0);
-        result = 31 * result + (takeOfferFeeTxId != null ? takeOfferFeeTxId.hashCode() : 0);
-        result = 31 * result + (acceptedArbitratorNodeAddresses != null ? acceptedArbitratorNodeAddresses.hashCode() : 0);
-        result = 31 * result + (arbitratorNodeAddress != null ? arbitratorNodeAddress.hashCode() : 0);
-        result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
-        result = 31 * result + (uid != null ? uid.hashCode() : 0);
-        return result;
     }
 
     @Override
@@ -182,9 +116,31 @@ public final class PayDepositRequest extends TradeMessage implements MailboxMess
                 .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream()
                         .map(nodeAddress -> nodeAddress.toProto()).collect(Collectors.toList()))
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProto())
-                .setSenderNodeAddress(senderNodeAddress.toProto())
-                .setUid(uid);
+                .setSenderNodeAddress(senderNodeAddress.toProto());
         Optional.ofNullable(changeOutputAddress).ifPresent(builderForValue::setChangeOutputAddress);
         return baseEnvelope.setPayDepositRequest(builderForValue).build();
+    }
+
+    // Use Hex for bytes
+    @Override
+    public String toString() {
+        return "PayDepositRequest{" +
+                "tradeAmount=" + tradeAmount +
+                ", tradePrice=" + tradePrice +
+                ", takerMultiSigPubKey=" + Hex.toHexString(takerMultiSigPubKey) +
+                ", txFee=" + txFee +
+                ", takeOfferFee=" + takeOfferFee +
+                ", rawTransactionInputs=" + rawTransactionInputs +
+                ", changeOutputValue=" + changeOutputValue +
+                ", changeOutputAddress='" + changeOutputAddress + '\'' +
+                ", takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
+                ", takerPubKeyRing=" + takerPubKeyRing +
+                ", takerPaymentAccountPayload=" + takerPaymentAccountPayload +
+                ", takerAccountId='" + takerAccountId + '\'' +
+                ", takeOfferFeeTxId='" + takeOfferFeeTxId + '\'' +
+                ", acceptedArbitratorNodeAddresses=" + acceptedArbitratorNodeAddresses +
+                ", arbitratorNodeAddress=" + arbitratorNodeAddress +
+                ", senderNodeAddress=" + senderNodeAddress +
+                "} " + super.toString();
     }
 }

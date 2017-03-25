@@ -26,7 +26,10 @@ import io.bisq.network.p2p.SendMailboxMessageListener;
 import io.bisq.protobuffer.message.trade.FinalizePayoutTxRequest;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.UUID;
+
 @Slf4j
+//TODO remove
 public class SellerAsOffererSendFinalizePayoutTxRequest extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
     public SellerAsOffererSendFinalizePayoutTxRequest(TaskRunner taskHandler, Trade trade) {
@@ -38,6 +41,7 @@ public class SellerAsOffererSendFinalizePayoutTxRequest extends TradeTask {
         try {
             //TODO: locktime  
             runInterceptHook();
+            final String id = processModel.getId();
             if (trade.getTradingPeerNodeAddress() != null) {
                 BtcWalletService walletService = processModel.getWalletService();
                 String sellerPayoutAddress = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString();
@@ -46,7 +50,8 @@ public class SellerAsOffererSendFinalizePayoutTxRequest extends TradeTask {
                         processModel.getPayoutTxSignature(),
                         sellerPayoutAddress,
                       /*  trade.getLockTimeAsBlockHeight(),*/
-                        processModel.getMyNodeAddress()
+                        processModel.getMyNodeAddress(),
+                        UUID.randomUUID().toString()
                 );
 
                 processModel.getP2PService().sendEncryptedMailboxMessage(
@@ -56,14 +61,14 @@ public class SellerAsOffererSendFinalizePayoutTxRequest extends TradeTask {
                         new SendMailboxMessageListener() {
                             @Override
                             public void onArrived() {
-                                log.trace("Message arrived at peer.");
+                                log.info("Message arrived at peer. tradeId={}, message{}", id, message);
                                 trade.setState(Trade.State.SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
-                                log.trace("Message stored in mailbox.");
+                                log.info("Message stored in mailbox. tradeId={}, message{}", id, message);
                                 trade.setState(Trade.State.SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG);
                                 complete();
                             }

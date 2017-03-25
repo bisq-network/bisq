@@ -151,14 +151,7 @@ public class TradeManager {
                 log.trace("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMsgWithPubKey);
                 log.trace("onMailboxMessageAdded senderAddress: " + senderNodeAddress);
                 Message message = decryptedMsgWithPubKey.message;
-                if (message instanceof PayDepositRequest) {
-                    PayDepositRequest payDepositRequest = (PayDepositRequest) message;
-                    log.trace("Received payDepositRequest: " + payDepositRequest);
-                    if (payDepositRequest.getSenderNodeAddress().equals(senderNodeAddress))
-                        handleInitialTakeOfferRequest(payDepositRequest, senderNodeAddress);
-                    else
-                        log.warn("Peer address not matching for payDepositRequest");
-                } else if (message instanceof TradeMessage) {
+                if (message instanceof TradeMessage) {
                     log.trace("Received TradeMessage: " + message);
                     String tradeId = ((TradeMessage) message).tradeId;
                     Optional<Trade> tradeOptional = trades.stream().filter(e -> e.getId().equals(tradeId)).findAny();

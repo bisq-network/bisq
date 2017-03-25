@@ -23,7 +23,6 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.trade.SellerAsTakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.seller.*;
-import io.bisq.core.trade.protocol.tasks.shared.BroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
@@ -49,20 +48,19 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         processModel.tradingPeer.setPubKeyRing(trade.getOffer().getPubKeyRing());
 
-        // If we are after the timeLock state we need to setup the listener again
-        //TODO not sure if that is not called already from the checkPayoutTxTimeLock at tradeProtocol
         Trade.State tradeState = trade.getState();
         Trade.Phase phase = tradeState.getPhase();
-        if (trade.getPayoutTx() != null && (phase == Trade.Phase.FIAT_RECEIVED || phase == Trade.Phase.PAYOUT_PAID) &&
+        if (trade.getPayoutTx() != null &&
+                (phase == Trade.Phase.FIAT_RECEIVED || phase == Trade.Phase.PAYOUT_PAID) &&
                 tradeState != Trade.State.PAYOUT_BROAD_CASTED) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
-                        handleTaskRunnerSuccess("SetupPayoutTxLockTimeReachedListener");
+                        handleTaskRunnerSuccess("SellerAsTakerBroadcastPayoutTx");
                         processModel.onComplete();
                     },
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(BroadcastPayoutTx.class);  //TODO: locktime
+            taskRunner.addTasks(SellerAsTakerBroadcastPayoutTx.class);
             taskRunner.run();
         }
     }
@@ -78,10 +76,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         if (message instanceof MailboxMessage) {
             NodeAddress peerNodeAddress = ((MailboxMessage) message).getSenderNodeAddress();
-            /*if (message instanceof PayoutTxFinalizedMessage) {
-                handle((PayoutTxFinalizedMessage) message, peerNodeAddress);
-            } else */
-            if (message instanceof FiatTransferStartedMessage)
+            if (message instanceof PublishDepositTxRequest)
+                handle((PublishDepositTxRequest) message, peerNodeAddress);
+            else if (message instanceof FiatTransferStartedMessage)
                 handle((FiatTransferStartedMessage) message, peerNodeAddress);
             else
                 log.error("We received an unhandled MailboxMessage" + message.toString());

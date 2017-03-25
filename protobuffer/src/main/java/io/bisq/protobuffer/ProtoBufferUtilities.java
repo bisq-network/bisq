@@ -26,7 +26,7 @@ import io.bisq.protobuffer.message.p2p.storage.RemoveMailboxDataMessage;
 import io.bisq.protobuffer.message.trade.*;
 import io.bisq.protobuffer.payload.StoragePayload;
 import io.bisq.protobuffer.payload.alert.AlertPayload;
-import io.bisq.protobuffer.payload.alert.PrivateNotification;
+import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
 import io.bisq.protobuffer.payload.arbitration.*;
 import io.bisq.protobuffer.payload.btc.RawTransactionInput;
 import io.bisq.protobuffer.payload.crypto.PubKeyRing;
@@ -191,17 +191,20 @@ public class ProtoBufferUtilities {
     }
 
     private static Message getPrivateNotificationMessage(PB.PrivateNotificationMessage privateNotificationMessage) {
-        return new PrivateNotificationMessage(getPrivateNotification(privateNotificationMessage.getPrivateNotification()),
-                getNodeAddress(privateNotificationMessage.getMyNodeAddress()));
+        return new PrivateNotificationMessage(getPrivateNotification(privateNotificationMessage.getPrivateNotificationPayload()),
+                getNodeAddress(privateNotificationMessage.getMyNodeAddress()),
+                privateNotificationMessage.getUid());
     }
 
-    private static PrivateNotification getPrivateNotification(PB.PrivateNotification privateNotification) {
-        return new PrivateNotification(privateNotification.getMessage());
+    private static PrivateNotificationPayload getPrivateNotification(PB.PrivateNotificationPayload privateNotification) {
+        return new PrivateNotificationPayload(privateNotification.getMessage());
     }
 
     private static Message getPayoutTxFinalizedMessage(PB.PayoutTxFinalizedMessage payoutTxFinalizedMessage) {
-        return new PayoutTxFinalizedMessage(payoutTxFinalizedMessage.getTradeId(), payoutTxFinalizedMessage.getPayoutTx().toByteArray(),
-                getNodeAddress(payoutTxFinalizedMessage.getSenderNodeAddress()));
+        return new PayoutTxFinalizedMessage(payoutTxFinalizedMessage.getTradeId(),
+                payoutTxFinalizedMessage.getPayoutTx().toByteArray(),
+                getNodeAddress(payoutTxFinalizedMessage.getSenderNodeAddress()),
+                payoutTxFinalizedMessage.getUid());
     }
 
     private static Message getFiatTransferStartedMessage(PB.FiatTransferStartedMessage fiatTransferStartedMessage) {
@@ -226,7 +229,10 @@ public class ProtoBufferUtilities {
                 publishDepositTxRequest.getOffererContractAsJson(),
                 publishDepositTxRequest.getOffererContractSignature(),
                 publishDepositTxRequest.getOffererPayoutAddressString(),
-                publishDepositTxRequest.getPreparedDepositTx().toByteArray(), rawTransactionInputs);
+                publishDepositTxRequest.getPreparedDepositTx().toByteArray(),
+                rawTransactionInputs,
+                getNodeAddress(publishDepositTxRequest.getSenderNodeAddress()),
+                publishDepositTxRequest.getUid());
     }
 
     private static Message getPayDepositRequest(PB.PayDepositRequest payDepositRequest) {
@@ -237,17 +243,28 @@ public class ProtoBufferUtilities {
         List<NodeAddress> nodeAddresses = payDepositRequest.getAcceptedArbitratorNodeAddressesList().stream()
                 .map(ProtoBufferUtilities::getNodeAddress).collect(Collectors.toList());
         return new PayDepositRequest(getNodeAddress(payDepositRequest.getSenderNodeAddress()),
-                payDepositRequest.getTradeId(), payDepositRequest.getTradeAmount(), payDepositRequest.getTradePrice(),
-                payDepositRequest.getTxFee(), payDepositRequest.getTakeOfferFee(),
-                rawTransactionInputs, payDepositRequest.getChangeOutputValue(), payDepositRequest.getChangeOutputAddress(),
-                payDepositRequest.getTakerMultiSigPubKey().toByteArray(), payDepositRequest.getTakerPayoutAddressString(),
-                getPubKeyRing(payDepositRequest.getTakerPubKeyRing()), getPaymentAccountPayload(payDepositRequest.getTakerPaymentAccountPayload()),
-                payDepositRequest.getTakerAccountId(), payDepositRequest.getTakeOfferFeeTxId(), nodeAddresses, getNodeAddress(payDepositRequest.getArbitratorNodeAddress()));
+                payDepositRequest.getTradeId(),
+                payDepositRequest.getTradeAmount(),
+                payDepositRequest.getTradePrice(),
+                payDepositRequest.getTxFee(),
+                payDepositRequest.getTakeOfferFee(),
+                rawTransactionInputs, payDepositRequest.getChangeOutputValue(),
+                payDepositRequest.getChangeOutputAddress(),
+                payDepositRequest.getTakerMultiSigPubKey().toByteArray(),
+                payDepositRequest.getTakerPayoutAddressString(),
+                getPubKeyRing(payDepositRequest.getTakerPubKeyRing()),
+                getPaymentAccountPayload(payDepositRequest.getTakerPaymentAccountPayload()),
+                payDepositRequest.getTakerAccountId(),
+                payDepositRequest.getTakeOfferFeeTxId(),
+                nodeAddresses,
+                getNodeAddress(payDepositRequest.getArbitratorNodeAddress()));
     }
 
     private static Message getPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
         return new PeerPublishedPayoutTxMessage(peerPublishedPayoutTxMessage.getTransaction().toByteArray(),
-                peerPublishedPayoutTxMessage.getTradeId(), getNodeAddress(peerPublishedPayoutTxMessage.getMyNodeAddress()));
+                peerPublishedPayoutTxMessage.getTradeId(),
+                getNodeAddress(peerPublishedPayoutTxMessage.getMyNodeAddress()),
+                peerPublishedPayoutTxMessage.getUid());
     }
 
     private static Message getDisputeResultMessage(PB.DisputeResultMessage disputeResultMessage) {
@@ -263,7 +280,9 @@ public class ProtoBufferUtilities {
                 disputeResultproto.getSellerPayoutAmount(),
                 disputeResultproto.getArbitratorPubKey().toByteArray(), disputeResultproto.getCloseDate(),
                 disputeResultproto.getIsLoserPublisher());
-        return new DisputeResultMessage(disputeResult, getNodeAddress(disputeResultMessage.getMyNodeAddress()));
+        return new DisputeResultMessage(disputeResult,
+                getNodeAddress(disputeResultMessage.getMyNodeAddress()),
+                disputeResultMessage.getUid());
     }
 
     private static Message getPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
@@ -499,20 +518,26 @@ public class ProtoBufferUtilities {
     private static Message getDisputeCommunicationMessage(PB.DisputeCommunicationMessage disputeCommunicationMessage) {
         return new DisputeCommunicationMessage(disputeCommunicationMessage.getTradeId(),
                 disputeCommunicationMessage.getTraderId(),
-                disputeCommunicationMessage.getSenderIsTrader(), disputeCommunicationMessage.getMessage(),
+                disputeCommunicationMessage.getSenderIsTrader(),
+                disputeCommunicationMessage.getMessage(),
                 disputeCommunicationMessage.getAttachmentsList().stream()
                         .map(attachment -> new Attachment(attachment.getFileName(), attachment.getBytes().toByteArray()))
                         .collect(Collectors.toList()),
-                getNodeAddress(disputeCommunicationMessage.getMyNodeAddress()), disputeCommunicationMessage.getDate(),
-                disputeCommunicationMessage.getArrived(), disputeCommunicationMessage.getStoredInMailbox());
+                getNodeAddress(disputeCommunicationMessage.getMyNodeAddress()),
+                disputeCommunicationMessage.getDate(),
+                disputeCommunicationMessage.getArrived(),
+                disputeCommunicationMessage.getStoredInMailbox(),
+                disputeCommunicationMessage.getUid());
     }
 
     //TODO: locktime
     private static Message getFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest finalizePayoutTxRequest) {
         return new FinalizePayoutTxRequest(finalizePayoutTxRequest.getTradeId(),
                 finalizePayoutTxRequest.getSellerSignature().toByteArray(),
-                finalizePayoutTxRequest.getSellerPayoutAddress(), /*finalizePayoutTxRequest.getLockTimeAsBlockHeight(),*/
-                getNodeAddress(finalizePayoutTxRequest.getSenderNodeAddress()));
+                finalizePayoutTxRequest.getSellerPayoutAddress(),
+                /*finalizePayoutTxRequest.getLockTimeAsBlockHeight(),*/
+                getNodeAddress(finalizePayoutTxRequest.getSenderNodeAddress()),
+                finalizePayoutTxRequest.getUid());
     }
 
     private static Message getDepositTxPublishedMessage(PB.DepositTxPublishedMessage depositTxPublishedMessage) {

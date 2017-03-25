@@ -52,7 +52,8 @@ public class SetupDepositBalanceListener extends TradeTask {
             runInterceptHook();
 
             BtcWalletService walletService = processModel.getWalletService();
-            Address address = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+            Address address = walletService.getOrCreateAddressEntry(trade.getId(),
+                    AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             balanceListener = new BalanceListener(address) {
                 @Override
                 public void onBalanceChanged(Coin balance, Transaction tx) {
@@ -88,7 +89,7 @@ public class SetupDepositBalanceListener extends TradeTask {
         log.debug("updateBalance " + balance.toFriendlyString());
         log.debug("pre tradeState " + trade.getState().toString());
         Trade.State tradeState = trade.getState();
-        if (balance.compareTo(Coin.ZERO) == 0) {
+        if (balance.isZero()) {
             if (trade instanceof OffererTrade) {
                 processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
 
@@ -97,6 +98,7 @@ public class SetupDepositBalanceListener extends TradeTask {
                 } else if (tradeState.getPhase() == Trade.Phase.PREPARATION) {
                     processModel.getTradeManager().removePreparedTrade(trade);
                 } else if (tradeState.getPhase().ordinal() < Trade.Phase.DEPOSIT_PAID.ordinal()) {
+                    log.error("We add Trade To Failed Trades. tradeState " + tradeState);
                     // TODO need to evaluate if that is correct
                     processModel.getTradeManager().addTradeToFailedTrades(trade);
                 }

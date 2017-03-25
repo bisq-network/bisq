@@ -23,11 +23,11 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import lombok.EqualsAndHashCode;
 
 import javax.annotation.concurrent.Immutable;
-import java.util.Arrays;
-import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Immutable
 public final class FinalizePayoutTxRequest extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -35,30 +35,17 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
 
     public final byte[] sellerSignature;
     public final String sellerPayoutAddress;
-    /*  public final long lockTimeAsBlockHeight;*/
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
-    //TODO: locktime
     public FinalizePayoutTxRequest(String tradeId,
                                    byte[] sellerSignature,
                                    String sellerPayoutAddress,
-                                   /*long lockTimeAsBlockHeight,*/
-                                   NodeAddress senderNodeAddress) {
-        this(tradeId, sellerSignature, sellerPayoutAddress,/* lockTimeAsBlockHeight, */senderNodeAddress,
-                UUID.randomUUID().toString());
-    }
-
-    public FinalizePayoutTxRequest(String tradeId,
-                                   byte[] sellerSignature,
-                                   String sellerPayoutAddress,
-                                  /* long lockTimeAsBlockHeight,*/
                                    NodeAddress senderNodeAddress,
                                    String uid) {
         super(tradeId);
         this.sellerSignature = sellerSignature;
         this.sellerPayoutAddress = sellerPayoutAddress;
-        // this.lockTimeAsBlockHeight = lockTimeAsBlockHeight;
         this.senderNodeAddress = senderNodeAddress;
         this.uid = uid;
     }
@@ -74,35 +61,6 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof FinalizePayoutTxRequest)) return false;
-        if (!super.equals(o)) return false;
-
-        FinalizePayoutTxRequest that = (FinalizePayoutTxRequest) o;
-
-        // if (lockTimeAsBlockHeight != that.lockTimeAsBlockHeight) return false;
-        if (!Arrays.equals(sellerSignature, that.sellerSignature)) return false;
-        if (sellerPayoutAddress != null ? !sellerPayoutAddress.equals(that.sellerPayoutAddress) : that.sellerPayoutAddress != null)
-            return false;
-        if (senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null)
-            return false;
-        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (sellerSignature != null ? Arrays.hashCode(sellerSignature) : 0);
-        result = 31 * result + (sellerPayoutAddress != null ? sellerPayoutAddress.hashCode() : 0);
-        //  result = 31 * result + (int) (lockTimeAsBlockHeight ^ (lockTimeAsBlockHeight >>> 32));
-        result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
-        result = 31 * result + (uid != null ? uid.hashCode() : 0);
-        return result;
-    }
-
-    @Override
     public PB.Envelope toProto() {
         PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
         return baseEnvelope.setFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest.newBuilder()
@@ -110,8 +68,18 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
                 .setTradeId(tradeId)
                 .setSellerSignature(ByteString.copyFrom(sellerSignature))
                 .setSellerPayoutAddress(sellerPayoutAddress)
-               /* .setLockTimeAsBlockHeight(lockTimeAsBlockHeight)*/
                 .setSenderNodeAddress(senderNodeAddress.toProto())
                 .setUid(uid)).build();
+    }
+
+    // sellerSignature not printed for privacy reasons...
+    @Override
+    public String toString() {
+        return "FinalizePayoutTxRequest{" +
+                "sellerSignature not printed for privacy reasons..." +
+                ", sellerPayoutAddress='" + sellerPayoutAddress + '\'' +
+                ", senderNodeAddress=" + senderNodeAddress +
+                ", uid='" + uid + '\'' +
+                "} " + super.toString();
     }
 }

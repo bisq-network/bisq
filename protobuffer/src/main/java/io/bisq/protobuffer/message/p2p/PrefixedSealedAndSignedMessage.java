@@ -7,9 +7,7 @@ import io.bisq.protobuffer.message.SendersNodeAddressMessage;
 import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
-
-import java.util.Arrays;
-import java.util.UUID;
+import org.bouncycastle.util.encoders.Hex;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -31,10 +29,6 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
         this.sealedAndSigned = sealedAndSigned;
         this.addressPrefixHash = addressPrefixHash;
         this.uid = uid;
-    }
-
-    public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress, SealedAndSigned sealedAndSigned, byte[] addressPrefixHash) {
-        this(senderNodeAddress, sealedAndSigned, addressPrefixHash, UUID.randomUUID().toString());
     }
 
     @Override
@@ -62,13 +56,14 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
                         .setUid(uid)).build();
     }
 
+    // Hex
     @Override
     public String toString() {
         return "PrefixedSealedAndSignedMessage{" +
                 "uid=" + uid +
                 ", messageVersion=" + messageVersion +
                 ", sealedAndSigned=" + sealedAndSigned +
-                ", receiverAddressMaskHash.hashCode()=" + Arrays.toString(addressPrefixHash).hashCode() +
+                ", receiverAddressMaskHash=" + Hex.toHexString(addressPrefixHash) +
                 '}';
     }
 }

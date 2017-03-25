@@ -24,6 +24,8 @@ import io.bisq.network.p2p.SendMailboxMessageListener;
 import io.bisq.protobuffer.message.trade.DepositTxPublishedMessage;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.UUID;
+
 @Slf4j
 public class SendDepositTxPublishedMessage extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
@@ -36,25 +38,27 @@ public class SendDepositTxPublishedMessage extends TradeTask {
         try {
             runInterceptHook();
             if (trade.getDepositTx() != null) {
-                DepositTxPublishedMessage tradeMessage = new DepositTxPublishedMessage(processModel.getId(),
+                final String id = processModel.getId();
+                DepositTxPublishedMessage message = new DepositTxPublishedMessage(processModel.getId(),
                         trade.getDepositTx().bitcoinSerialize(),
-                        processModel.getMyNodeAddress());
+                        processModel.getMyNodeAddress(),
+                        UUID.randomUUID().toString());
 
                 processModel.getP2PService().sendEncryptedMailboxMessage(
                         trade.getTradingPeerNodeAddress(),
                         processModel.tradingPeer.getPubKeyRing(),
-                        tradeMessage,
+                        message,
                         new SendMailboxMessageListener() {
                             @Override
                             public void onArrived() {
-                                log.trace("Message arrived at peer.");
+                                log.info("Message arrived at peer. tradeId={}, message{}", id, message);
                                 trade.setState(Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
-                                log.trace("Message stored in mailbox.");
+                                log.info("Message stored in mailbox. tradeId={}, message{}", id, message);
                                 trade.setState(Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
                                 complete();
                             }

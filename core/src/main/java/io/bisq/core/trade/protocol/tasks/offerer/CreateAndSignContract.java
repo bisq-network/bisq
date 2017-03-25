@@ -54,12 +54,15 @@ public class CreateAndSignContract extends TradeTask {
             PaymentAccountPayload takerPaymentAccountPayload = taker.getPaymentAccountPayload();
             boolean isBuyerOffererAndSellerTaker = trade instanceof BuyerAsOffererTrade;
 
-            NodeAddress buyerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getMyNodeAddress() : processModel.getTempTradingPeerNodeAddress();
-            NodeAddress sellerNodeAddress = isBuyerOffererAndSellerTaker ? processModel.getTempTradingPeerNodeAddress() : processModel.getMyNodeAddress();
+            NodeAddress buyerNodeAddress = isBuyerOffererAndSellerTaker ?
+                    processModel.getMyNodeAddress() : processModel.getTempTradingPeerNodeAddress();
+            NodeAddress sellerNodeAddress = isBuyerOffererAndSellerTaker ?
+                    processModel.getTempTradingPeerNodeAddress() : processModel.getMyNodeAddress();
             BtcWalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry takerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
-            checkArgument(!walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(), "addressEntry must not be set here.");
+            checkArgument(!walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(),
+                    "addressEntry must not be set here.");
             AddressEntry offererAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] offererMultiSigPubKey = offererAddressEntry.getPubKey();
             Contract contract = new Contract(

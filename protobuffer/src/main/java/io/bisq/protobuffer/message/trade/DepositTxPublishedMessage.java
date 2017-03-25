@@ -23,11 +23,12 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import lombok.EqualsAndHashCode;
+import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.concurrent.Immutable;
-import java.util.Arrays;
-import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Immutable
 public final class DepositTxPublishedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -44,10 +45,6 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
         this.uid = uid;
     }
 
-    public DepositTxPublishedMessage(String tradeId, byte[] depositTx, NodeAddress senderNodeAddress) {
-        this(tradeId, depositTx, senderNodeAddress, UUID.randomUUID().toString());
-    }
-
     @Override
     public NodeAddress getSenderNodeAddress() {
         return senderNodeAddress;
@@ -59,30 +56,6 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof DepositTxPublishedMessage)) return false;
-        if (!super.equals(o)) return false;
-
-        DepositTxPublishedMessage that = (DepositTxPublishedMessage) o;
-
-        if (!Arrays.equals(depositTx, that.depositTx)) return false;
-        if (senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null)
-            return false;
-        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (depositTx != null ? Arrays.hashCode(depositTx) : 0);
-        result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
-        result = 31 * result + (uid != null ? uid.hashCode() : 0);
-        return result;
-    }
-
-    @Override
     public PB.Envelope toProto() {
         PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
         return baseEnvelope.setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
@@ -91,5 +64,15 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
                 .setDepositTx(ByteString.copyFrom(depositTx))
                 .setSenderNodeAddress(senderNodeAddress.toProto())
                 .setUid(uid)).build();
+    }
+
+    // Hex
+    @Override
+    public String toString() {
+        return "DepositTxPublishedMessage{" +
+                "depositTx=" + Hex.toHexString(depositTx) +
+                ", senderNodeAddress=" + senderNodeAddress +
+                ", uid='" + uid + '\'' +
+                "} " + super.toString();
     }
 }

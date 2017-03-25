@@ -36,9 +36,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class OffererCreatesAndSignsDepositTxAsBuyer extends TradeTask {
+public class OffererAsBuyerCreatesAndSignsDepositTx extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public OffererCreatesAndSignsDepositTxAsBuyer(TaskRunner taskHandler, Trade trade) {
+    public OffererAsBuyerCreatesAndSignsDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

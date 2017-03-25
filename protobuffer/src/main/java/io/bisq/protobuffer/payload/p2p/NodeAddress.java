@@ -5,11 +5,13 @@ import io.bisq.common.persistance.Persistable;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.crypto.Hash;
 import io.bisq.protobuffer.payload.Payload;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.regex.Pattern;
 
+@EqualsAndHashCode
 @Slf4j
 public final class NodeAddress implements Persistable, Payload {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -52,26 +54,6 @@ public final class NodeAddress implements Persistable, Payload {
 
     public PB.NodeAddress toProto() {
         return PB.NodeAddress.newBuilder().setHostName(hostName).setPort(port).build();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof NodeAddress)) return false;
-
-        NodeAddress nodeAddress = (NodeAddress) o;
-
-        //noinspection SimplifiableIfStatement
-        if (port != nodeAddress.port) return false;
-        return !(hostName != null ? !hostName.equals(nodeAddress.hostName) : nodeAddress.hostName != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = hostName != null ? hostName.hashCode() : 0;
-        result = 31 * result + port;
-        return result;
     }
 
     @Override

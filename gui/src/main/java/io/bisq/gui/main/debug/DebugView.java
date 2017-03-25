@@ -90,7 +90,7 @@ public class DebugView extends InitializableView {
                         VerifyArbitrationSelection.class,
                         VerifyTakerAccount.class,
                         CreateAndSignContract.class,
-                        OffererCreatesAndSignsDepositTxAsBuyer.class,
+                        OffererAsBuyerCreatesAndSignsDepositTx.class,
                         LoadTakeOfferFeeTx.class,
                         SetupDepositBalanceListener.class,
                         SendPublishDepositTxRequest.class,
@@ -164,7 +164,7 @@ public class DebugView extends InitializableView {
                         VerifyArbitrationSelection.class,
                         VerifyTakerAccount.class,
                         CreateAndSignContract.class,
-                        OffererCreatesAndSignsDepositTxAsBuyer.class,
+                        OffererAsBuyerCreatesAndSignsDepositTx.class,
                         SetupDepositBalanceListener.class,
                         SendPublishDepositTxRequest.class,
 

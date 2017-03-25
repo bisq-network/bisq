@@ -218,12 +218,20 @@ public class DisputeManager {
                 String sysMsg = dispute.isSupportTicket() ?
                         Res.get("support.youOpenedTicket")
                         : Res.get("support.youOpenedDispute", disputeInfo);
-                DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
+
+                DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                        dispute.getTradeId(),
                         keyRing.getPubKeyRing().hashCode(),
-                        true,
+                        false,
                         Res.get("support.systemMsg", sysMsg),
-                        p2PService.getAddress());
-                disputeCommunicationMessage.setIsSystemMessage(true);
+                        null,
+                        p2PService.getAddress(),
+                        new Date().getTime(),
+                        false,
+                        false,
+                        UUID.randomUUID().toString()
+                );
+                disputeCommunicationMessage.setSystemMessage(true);
                 dispute.addDisputeMessage(disputeCommunicationMessage);
                 if (!reOpen) {
                     disputes.add(dispute);
@@ -232,7 +240,8 @@ public class DisputeManager {
 
                 p2PService.sendEncryptedMailboxMessage(dispute.getContract().arbitratorNodeAddress,
                         dispute.getArbitratorPubKeyRing(),
-                        new OpenNewDisputeMessage(dispute, p2PService.getAddress()),
+                        new OpenNewDisputeMessage(dispute, p2PService.getAddress(),
+                                UUID.randomUUID().toString()),
                         new SendMailboxMessageListener() {
                             @Override
                             public void onArrived() {
@@ -295,12 +304,19 @@ public class DisputeManager {
             String sysMsg = dispute.isSupportTicket() ?
                     Res.get("support.peerOpenedTicket")
                     : Res.get("support.peerOpenedDispute", disputeInfo);
-            DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
+            DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                    dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
-                    true,
+                    false,
                     Res.get("support.systemMsg", sysMsg),
-                    p2PService.getAddress());
-            disputeCommunicationMessage.setIsSystemMessage(true);
+                    null,
+                    p2PService.getAddress(),
+                    new Date().getTime(),
+                    false,
+                    false,
+                    UUID.randomUUID().toString()
+            );
+            disputeCommunicationMessage.setSystemMessage(true);
             dispute.addDisputeMessage(disputeCommunicationMessage);
             disputes.add(dispute);
             disputesObservableList.add(dispute);
@@ -312,7 +328,9 @@ public class DisputeManager {
             log.trace("sendPeerOpenedDisputeMessage to peerAddress " + peerNodeAddress);
             p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
                     peersPubKeyRing,
-                    new PeerOpenedDisputeMessage(dispute, p2PService.getAddress()),
+                    new PeerOpenedDisputeMessage(dispute,
+                            p2PService.getAddress(),
+                            UUID.randomUUID().toString()),
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
@@ -338,11 +356,19 @@ public class DisputeManager {
 
     // traders send msg to the arbitrator or arbitrator to 1 trader (trader to trader is not allowed)
     public DisputeCommunicationMessage sendDisputeDirectMessage(Dispute dispute, String text, ArrayList<Attachment> attachments) {
-        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
+        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 isTrader(dispute),
                 text,
-                p2PService.getAddress());
+                null,
+                p2PService.getAddress(),
+                new Date().getTime(),
+                false,
+                false,
+                UUID.randomUUID().toString()
+        );
+        
         disputeCommunicationMessage.addAllAttachments(attachments);
         PubKeyRing receiverPubKeyRing = null;
         NodeAddress peerNodeAddress = null;
@@ -391,11 +417,19 @@ public class DisputeManager {
 
     // arbitrator send result to trader
     public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
-        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(dispute.getTradeId(),
+        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
                 text,
-                p2PService.getAddress());
+                null,
+                p2PService.getAddress(),
+                new Date().getTime(),
+                false,
+                false,
+                UUID.randomUUID().toString()
+        );
+        
         dispute.addDisputeMessage(disputeCommunicationMessage);
         disputeResult.setDisputeCommunicationMessage(disputeCommunicationMessage);
 
@@ -407,7 +441,8 @@ public class DisputeManager {
             peerNodeAddress = contract.getSellerNodeAddress();
         p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
                 dispute.getTraderPubKeyRing(),
-                new DisputeResultMessage(disputeResult, p2PService.getAddress()),
+                new DisputeResultMessage(disputeResult, p2PService.getAddress(),
+                        UUID.randomUUID().toString()),
                 new SendMailboxMessageListener() {
                     @Override
                     public void onArrived() {
@@ -434,7 +469,10 @@ public class DisputeManager {
         log.trace("sendPeerPublishedPayoutTxMessage to peerAddress " + peerNodeAddress);
         p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
                 peersPubKeyRing,
-                new PeerPublishedPayoutTxMessage(transaction.bitcoinSerialize(), dispute.getTradeId(), p2PService.getAddress()),
+                new PeerPublishedPayoutTxMessage(transaction.bitcoinSerialize(),
+                        dispute.getTradeId(),
+                        p2PService.getAddress(),
+                        UUID.randomUUID().toString()),
                 new SendMailboxMessageListener() {
                     @Override
                     public void onArrived() {
