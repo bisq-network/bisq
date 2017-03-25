@@ -24,7 +24,7 @@ import io.bisq.core.trade.SellerAsOffererTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.offerer.*;
 import io.bisq.core.trade.protocol.tasks.seller.*;
-import io.bisq.core.trade.protocol.tasks.shared.BroadcastAfterLockTime;
+import io.bisq.core.trade.protocol.tasks.shared.BroadcastPayoutTx;
 import io.bisq.core.util.Validator;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
@@ -63,7 +63,7 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
                     },
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(BroadcastAfterLockTime.class);
+            taskRunner.addTasks(BroadcastPayoutTx.class);  //TODO: locktime
             taskRunner.run();
         }
     }
@@ -81,11 +81,12 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
         if (message instanceof PayoutTxFinalizedMessage) {
             handle((PayoutTxFinalizedMessage) message, peerNodeAddress);
         } else {
-            if (message instanceof FiatTransferStartedMessage) {
+            if (message instanceof FiatTransferStartedMessage) 
                 handle((FiatTransferStartedMessage) message, peerNodeAddress);
-            } else if (message instanceof DepositTxPublishedMessage) {
+            else if (message instanceof DepositTxPublishedMessage) 
                 handle((DepositTxPublishedMessage) message, peerNodeAddress);
-            }
+            else
+                log.error("We received an unhandled MailboxMessage" + message.toString());
         }
     }
 
@@ -111,7 +112,7 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
                 VerifyTakerAccount.class,
                 LoadTakeOfferFeeTx.class,
                 CreateAndSignContract.class,
-                OffererCreatesAndSignsDepositTxAsSeller.class,
+                OffererCreatesAndSignsDepositTxAsSeller.class,  //TODO: locktime
                 SetupDepositBalanceListener.class,
                 SendPublishDepositTxRequest.class
         );
@@ -163,8 +164,8 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     @Override
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (sellerAsOffererTrade.getState().ordinal() <= Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG.ordinal()) {
-            if (sellerAsOffererTrade.getState() == Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG)
+        if (sellerAsOffererTrade.getState().ordinal() <= Trade.State.SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG.ordinal()) {
+            if (sellerAsOffererTrade.getState() == Trade.State.SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG)
                 log.warn("onFiatPaymentReceived called twice. " +
                         "That is expected if the app starts up and the other peer has still not continued.");
 
@@ -182,8 +183,8 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
 
             taskRunner.addTasks(
                     VerifyTakeOfferFeePayment.class,
-                    SignPayoutTx.class,
-                    SendFinalizePayoutTxRequest.class
+                    SignPayoutTx.class,  //TODO: locktime
+                    SellerAsOffererSendFinalizePayoutTxRequest.class  //TODO: locktime
             );
             taskRunner.run();
         } else {
@@ -206,7 +207,7 @@ public class SellerAsOffererProtocol extends TradeProtocol implements SellerProt
 
         taskRunner.addTasks(
                 ProcessPayoutTxFinalizedMessage.class,
-                BroadcastAfterLockTime.class
+                BroadcastPayoutTx.class  //TODO: locktime
         );
         taskRunner.run();
     }

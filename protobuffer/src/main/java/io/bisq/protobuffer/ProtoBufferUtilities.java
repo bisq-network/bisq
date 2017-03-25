@@ -205,8 +205,12 @@ public class ProtoBufferUtilities {
     }
 
     private static Message getFiatTransferStartedMessage(PB.FiatTransferStartedMessage fiatTransferStartedMessage) {
-        return new FiatTransferStartedMessage(fiatTransferStartedMessage.getTradeId(), fiatTransferStartedMessage.getBuyerPayoutAddress(),
-                getNodeAddress(fiatTransferStartedMessage.getSenderNodeAddress()));
+        return new FiatTransferStartedMessage(fiatTransferStartedMessage.getTradeId(),
+                fiatTransferStartedMessage.getBuyerPayoutAddress(),
+                getNodeAddress(fiatTransferStartedMessage.getSenderNodeAddress()),
+                fiatTransferStartedMessage.getBuyerSignature().toByteArray(),
+                fiatTransferStartedMessage.getUid()
+        );
     }
 
     private static Message getPublishDepositTxRequest(PB.PublishDepositTxRequest publishDepositTxRequest) {

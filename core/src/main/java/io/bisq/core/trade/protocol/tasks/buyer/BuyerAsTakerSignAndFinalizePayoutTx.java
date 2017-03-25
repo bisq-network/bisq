@@ -32,12 +32,12 @@ import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class SignAndFinalizePayoutTx extends TradeTask {
+public class BuyerAsTakerSignAndFinalizePayoutTx extends TradeTask {
     @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(SignAndFinalizePayoutTx.class);
+    private static final Logger log = LoggerFactory.getLogger(BuyerAsTakerSignAndFinalizePayoutTx.class);
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public SignAndFinalizePayoutTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerAsTakerSignAndFinalizePayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -55,7 +55,7 @@ public class SignAndFinalizePayoutTx extends TradeTask {
             byte[] buyerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(id, buyerMultiSigPubKey);
             TradingPeer tradingPeer = processModel.tradingPeer;
-            //TODO: locktime
+            //TODO: locktime  
             Transaction transaction = processModel.getTradeWalletService().buyerSignsAndFinalizesPayoutTx(
                     trade.getDepositTx(),
                     tradingPeer.getSignature(),
@@ -71,7 +71,7 @@ public class SignAndFinalizePayoutTx extends TradeTask {
             );
 
             trade.setPayoutTx(transaction);
-            trade.setState(Trade.State.BUYER_COMMITTED_PAYOUT_TX);
+            trade.setState(Trade.State.BUYER_AS_TAKER_COMMITTED_PAYOUT_TX);
 
             complete();
         } catch (Throwable t) {

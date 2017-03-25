@@ -27,18 +27,18 @@ import io.bisq.protobuffer.message.trade.FinalizePayoutTxRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SendFinalizePayoutTxRequest extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SendFinalizePayoutTxRequest.class);
+public class SellerAsOffererSendFinalizePayoutTxRequest extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SellerAsOffererSendFinalizePayoutTxRequest.class);
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public SendFinalizePayoutTxRequest(TaskRunner taskHandler, Trade trade) {
+    public SellerAsOffererSendFinalizePayoutTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void run() {
         try {
-            //TODO: locktime
+            //TODO: locktime  
             runInterceptHook();
             if (trade.getTradingPeerNodeAddress() != null) {
                 BtcWalletService walletService = processModel.getWalletService();
@@ -59,14 +59,14 @@ public class SendFinalizePayoutTxRequest extends TradeTask {
                             @Override
                             public void onArrived() {
                                 log.trace("Message arrived at peer.");
-                                trade.setState(Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG);
+                                trade.setState(Trade.State.SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
                                 log.trace("Message stored in mailbox.");
-                                trade.setState(Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG);
+                                trade.setState(Trade.State.SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG);
                                 complete();
                             }
 

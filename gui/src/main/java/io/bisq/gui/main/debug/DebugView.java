@@ -33,7 +33,7 @@ import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
 import io.bisq.core.trade.protocol.tasks.buyer.*;
 import io.bisq.core.trade.protocol.tasks.offerer.*;
 import io.bisq.core.trade.protocol.tasks.seller.*;
-import io.bisq.core.trade.protocol.tasks.shared.BroadcastAfterLockTime;
+import io.bisq.core.trade.protocol.tasks.shared.BroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.common.view.InitializableView;
@@ -101,9 +101,9 @@ public class DebugView extends InitializableView {
                         SendFiatTransferStartedMessage.class,
 
                         ProcessFinalizePayoutTxRequest.class,
-                        SignAndFinalizePayoutTx.class,
+                        BuyerAsTakerSignAndFinalizePayoutTx.class,
                         SendPayoutTxFinalizedMessage.class,
-                        BroadcastAfterLockTime.class,
+                        BroadcastPayoutTx.class,
                         Boolean.class, /* used as separator*/
                         
 
@@ -125,10 +125,10 @@ public class DebugView extends InitializableView {
 
                         VerifyOfferFeePayment.class,
                         SignPayoutTx.class,
-                        SendFinalizePayoutTxRequest.class,
+                        SellerAsOffererSendFinalizePayoutTxRequest.class,
 
                         ProcessPayoutTxFinalizedMessage.class,
-                        BroadcastAfterLockTime.class,
+                        BroadcastPayoutTx.class,
                         Boolean.class /* used as separator*/
                 )
         );
@@ -152,9 +152,9 @@ public class DebugView extends InitializableView {
                         SendFiatTransferStartedMessage.class,
 
                         ProcessFinalizePayoutTxRequest.class,
-                        SignAndFinalizePayoutTx.class,
+                        BuyerAsTakerSignAndFinalizePayoutTx.class,
                         SendPayoutTxFinalizedMessage.class,
-                        BroadcastAfterLockTime.class,
+                        BroadcastPayoutTx.class,
                         Boolean.class, /* used as separator*/
                         
                         
@@ -174,10 +174,10 @@ public class DebugView extends InitializableView {
 
                         VerifyTakeOfferFeePayment.class,
                         SignPayoutTx.class,
-                        SendFinalizePayoutTxRequest.class,
+                        SellerAsOffererSendFinalizePayoutTxRequest.class,
 
                         ProcessPayoutTxFinalizedMessage.class,
-                        BroadcastAfterLockTime.class,
+                        BroadcastPayoutTx.class,
                         Boolean.class /* used as separator*/
                 )
         );

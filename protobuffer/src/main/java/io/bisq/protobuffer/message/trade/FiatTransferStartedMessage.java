@@ -17,15 +17,18 @@
 
 package io.bisq.protobuffer.message.trade;
 
+import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import lombok.EqualsAndHashCode;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Immutable
 public final class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -34,17 +37,22 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
     public final String buyerPayoutAddress;
     private final NodeAddress senderNodeAddress;
     private final String uid;
+    public final byte[] buyerSignature;
 
     public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress,
-                                      NodeAddress senderNodeAddress, String uid) {
+                                      NodeAddress senderNodeAddress,
+                                      byte[] buyerSignature,
+                                      String uid) {
         super(tradeId);
         this.buyerPayoutAddress = buyerPayoutAddress;
         this.senderNodeAddress = senderNodeAddress;
+        this.buyerSignature = buyerSignature;
         this.uid = uid;
     }
 
-    public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress, NodeAddress senderNodeAddress) {
-        this(tradeId, buyerPayoutAddress, senderNodeAddress, UUID.randomUUID().toString());
+    public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress,
+                                      NodeAddress senderNodeAddress, byte[] buyerSignature) {
+        this(tradeId, buyerPayoutAddress, senderNodeAddress, buyerSignature, UUID.randomUUID().toString());
     }
 
     @Override
@@ -57,39 +65,6 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
         return uid;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof FiatTransferStartedMessage)) return false;
-        if (!super.equals(o)) return false;
-
-        FiatTransferStartedMessage that = (FiatTransferStartedMessage) o;
-
-        if (buyerPayoutAddress != null ? !buyerPayoutAddress.equals(that.buyerPayoutAddress) : that.buyerPayoutAddress != null)
-            return false;
-        if (senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null)
-            return false;
-        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (buyerPayoutAddress != null ? buyerPayoutAddress.hashCode() : 0);
-        result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
-        result = 31 * result + (uid != null ? uid.hashCode() : 0);
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "FiatTransferStartedMessage{" +
-                "buyerPayoutAddress='" + buyerPayoutAddress + '\'' +
-                ", senderNodeAddress=" + senderNodeAddress +
-                ", uid='" + uid + '\'' +
-                "} " + super.toString();
-    }
 
     @Override
     public PB.Envelope toProto() {
@@ -97,8 +72,19 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
         return baseEnvelope.setFiatTransferStartedMessage(baseEnvelope.getFiatTransferStartedMessageBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)
+                .setBuyerSignature(ByteString.copyFrom(buyerSignature))
                 .setBuyerPayoutAddress(buyerPayoutAddress)
                 .setSenderNodeAddress(senderNodeAddress.toProto())
                 .setUid(uid)).build();
+    }
+
+    // We dont want to log the buyerSignature!
+    @Override
+    public String toString() {
+        return "FiatTransferStartedMessage{" +
+                "buyerPayoutAddress='" + buyerPayoutAddress + '\'' +
+                ", senderNodeAddress=" + senderNodeAddress +
+                ", uid='" + uid + '\'' +
+                "} " + super.toString();
     }
 }

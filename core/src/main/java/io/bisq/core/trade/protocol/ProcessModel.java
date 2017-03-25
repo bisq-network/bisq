@@ -20,6 +20,7 @@ package io.bisq.core.trade.protocol;
 import io.bisq.common.app.Version;
 import io.bisq.common.taskrunner.Model;
 import io.bisq.core.arbitration.ArbitratorManager;
+import io.bisq.core.btc.listeners.AddressConfidenceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
@@ -88,6 +89,9 @@ public class ProcessModel implements Model, Serializable {
     private boolean useSavingsWallet;
     private Coin fundsNeededForTrade;
     private byte[] myMultiSigPubKey;
+
+    @Nullable
+    transient private AddressConfidenceListener payoutAddressConfidenceListener;
 
     public ProcessModel() {
         tradingPeer = new TradingPeer();
@@ -319,5 +323,14 @@ public class ProcessModel implements Model, Serializable {
                         })
                         .findAny()
                         .isPresent();
+    }
+
+    @Nullable
+    public AddressConfidenceListener getPayoutAddressConfidenceListener() {
+        return payoutAddressConfidenceListener;
+    }
+
+    public void setPayoutAddressConfidenceListener(AddressConfidenceListener payoutAddressConfidenceListener) {
+        this.payoutAddressConfidenceListener = payoutAddressConfidenceListener;
     }
 }

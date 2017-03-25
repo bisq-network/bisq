@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.trade.protocol.tasks.buyer;
+package io.bisq.core.trade.protocol.tasks.seller;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
@@ -23,11 +23,12 @@ import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.protobuffer.message.trade.PayoutTxFinalizedMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-public class SendPayoutTxFinalizedMessage extends TradeTask {
-    private static final Logger log = LoggerFactory.getLogger(SendPayoutTxFinalizedMessage.class);
+
+public class SellerSendPayoutTxFinalizedMessage extends TradeTask {
+    private static final Logger log = LoggerFactory.getLogger(SellerSendPayoutTxFinalizedMessage.class);
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public SendPayoutTxFinalizedMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerSendPayoutTxFinalizedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -69,7 +70,7 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
                 );*/
                 // state must not be set in onArrived or onStoredInMailbox handlers as we would get that 
                 // called delayed and would overwrite the broad cast state set by the next task
-                trade.setState(Trade.State.BUYER_STARTED_SEND_PAYOUT_TX);
+                trade.setState(Trade.State.SELLER_STARTED_SEND_PAYOUT_TX);
             } else {
                 log.error("trade.getPayoutTx() = " + trade.getPayoutTx());
                 failed("PayoutTx is null");

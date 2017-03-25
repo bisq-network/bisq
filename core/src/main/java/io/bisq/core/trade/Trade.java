@@ -86,12 +86,20 @@ public abstract class Trade implements Tradable, Model {
         SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG(Phase.FIAT_SENT),
 
         SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT(Phase.FIAT_RECEIVED),
-        SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG(Phase.FIAT_RECEIVED),
+        SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG(Phase.FIAT_RECEIVED),
         BUYER_RECEIVED_FIAT_PAYMENT_RECEIPT_MSG(Phase.FIAT_RECEIVED),
 
-        BUYER_COMMITTED_PAYOUT_TX(Phase.PAYOUT_PAID), //TODO needed?
+        SELLER_COMMITTED_PAYOUT_TX(Phase.PAYOUT_PAID), //new TODO needed?
+
+
+        BUYER_AS_TAKER_COMMITTED_PAYOUT_TX(Phase.PAYOUT_PAID), //TODO needed?
         BUYER_STARTED_SEND_PAYOUT_TX(Phase.PAYOUT_PAID), // not from the success/arrived handler!
+        SELLER_STARTED_SEND_PAYOUT_TX(Phase.PAYOUT_PAID), // new 
         SELLER_RECEIVED_AND_COMMITTED_PAYOUT_TX(Phase.PAYOUT_PAID),
+
+        BUYER_RECEIVED_AND_COMMITTED_PAYOUT_TX(Phase.PAYOUT_PAID), //new 
+        BUYER_SAW_PAYOUT_TX_IN_NETWORK(Phase.PAYOUT_PAID), //new 
+
         PAYOUT_BROAD_CASTED(Phase.PAYOUT_PAID),
 
         WITHDRAW_COMPLETED(Phase.WITHDRAWN);
@@ -326,7 +334,7 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {
-        log.info("Trade.setState: " + state);
+        log.error("Trade.setState: " + state);
         boolean changed = this.state != state;
         this.state = state;
         stateProperty.set(state);

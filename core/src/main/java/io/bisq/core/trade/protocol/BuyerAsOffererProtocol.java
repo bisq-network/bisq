@@ -23,13 +23,12 @@ import io.bisq.core.trade.BuyerAsOffererTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.buyer.*;
 import io.bisq.core.trade.protocol.tasks.offerer.*;
-import io.bisq.core.trade.protocol.tasks.shared.BroadcastAfterLockTime;
 import io.bisq.core.util.Validator;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
 import io.bisq.protobuffer.message.trade.DepositTxPublishedMessage;
-import io.bisq.protobuffer.message.trade.FinalizePayoutTxRequest;
 import io.bisq.protobuffer.message.trade.PayDepositRequest;
+import io.bisq.protobuffer.message.trade.PayoutTxFinalizedMessage;
 import io.bisq.protobuffer.message.trade.TradeMessage;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.slf4j.Logger;
@@ -52,20 +51,32 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
 
         this.buyerAsOffererTrade = trade;
 
-        // If we are after the time lock state we need to setup the listener again
         Trade.State tradeState = trade.getState();
         Trade.Phase phase = tradeState.getPhase();
-        if (trade.getPayoutTx() != null && (phase == Trade.Phase.FIAT_RECEIVED || phase == Trade.Phase.PAYOUT_PAID) &&
+        //TODO test case
+        if (trade.getPayoutTx() != null &&
+                (phase == Trade.Phase.FIAT_RECEIVED || phase == Trade.Phase.PAYOUT_PAID) &&
                 tradeState != Trade.State.PAYOUT_BROAD_CASTED) {
-
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
-                        handleTaskRunnerSuccess("SetupPayoutTxLockTimeReachedListener");
+                        handleTaskRunnerSuccess("BuyerAsOffererMightBroadcastPayoutTx");
                         processModel.onComplete();
                     },
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(BroadcastAfterLockTime.class);
+            taskRunner.addTasks(BuyerAsOffererMightBroadcastPayoutTx.class);
+            taskRunner.run();
+        } else if (trade.getPayoutTx() == null && tradeState == Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG
+                && phase != Trade.Phase.PAYOUT_PAID) {
+            //TODO test case
+            TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                    () -> {
+                        handleTaskRunnerSuccess("SetupListenerForPayoutTx");
+                        processModel.onComplete();
+                    },
+                    this::handleTaskRunnerFault);
+
+            taskRunner.addTasks(SetupListenerForPayoutTx.class);
             taskRunner.run();
         }
     }
@@ -82,11 +93,12 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
         if (message instanceof MailboxMessage) {
             MailboxMessage mailboxMessage = (MailboxMessage) message;
             NodeAddress peerNodeAddress = mailboxMessage.getSenderNodeAddress();
-            if (message instanceof FinalizePayoutTxRequest) {
-                handle((FinalizePayoutTxRequest) message, peerNodeAddress);
-            } else if (message instanceof DepositTxPublishedMessage) {
+            if (message instanceof PayoutTxFinalizedMessage)
+                handle((PayoutTxFinalizedMessage) message, peerNodeAddress);
+            else if (message instanceof DepositTxPublishedMessage)
                 handle((DepositTxPublishedMessage) message, peerNodeAddress);
-            }
+            else
+                log.error("We received an unhandled MailboxMessage" + message.toString());
         }
     }
 
@@ -163,7 +175,9 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
                     });
             taskRunner.addTasks(
                     VerifyTakeOfferFeePayment.class,
-                    SendFiatTransferStartedMessage.class
+                    BuyerAsOffererSignPayoutTx.class,
+                    SendFiatTransferStartedMessage.class,
+                    SetupListenerForPayoutTx.class
             );
             taskRunner.run();
         } else {
@@ -178,7 +192,7 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(FinalizePayoutTxRequest tradeMessage, NodeAddress peerNodeAddress) {
+    private void handle(PayoutTxFinalizedMessage tradeMessage, NodeAddress peerNodeAddress) {
         log.debug("handle RequestFinalizePayoutTxMessage called");
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
@@ -191,10 +205,8 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                ProcessFinalizePayoutTxRequest.class,
-                SignAndFinalizePayoutTx.class,
-                SendPayoutTxFinalizedMessage.class,
-                BroadcastAfterLockTime.class
+                BuyerProcessPayoutTxFinalizedMessage.class,
+                BuyerAsOffererMightBroadcastPayoutTx.class
         );
         taskRunner.run();
     }
@@ -208,13 +220,13 @@ public class BuyerAsOffererProtocol extends TradeProtocol implements BuyerProtoc
     protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress) {
         if (tradeMessage instanceof DepositTxPublishedMessage) {
             handle((DepositTxPublishedMessage) tradeMessage, peerNodeAddress);
-        } else if (tradeMessage instanceof FinalizePayoutTxRequest) {
-            handle((FinalizePayoutTxRequest) tradeMessage, peerNodeAddress);
+        } else if (tradeMessage instanceof PayoutTxFinalizedMessage) {
+            handle((PayoutTxFinalizedMessage) tradeMessage, peerNodeAddress);
         } else //noinspection StatementWithEmptyBody
             if (tradeMessage instanceof PayDepositRequest) {
-            // do nothing as we get called the handleTakeOfferRequest method from outside
-        } else {
-            log.error("Incoming decrypted tradeMessage not supported. " + tradeMessage);
-        }
+                // do nothing as we get called the handleTakeOfferRequest method from outside
+            } else {
+                log.error("Incoming decrypted tradeMessage not supported. " + tradeMessage);
+            }
     }
 }

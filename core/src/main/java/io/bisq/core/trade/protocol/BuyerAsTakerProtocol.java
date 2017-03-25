@@ -23,7 +23,7 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.trade.BuyerAsTakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.buyer.*;
-import io.bisq.core.trade.protocol.tasks.shared.BroadcastAfterLockTime;
+import io.bisq.core.trade.protocol.tasks.shared.BroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
@@ -63,7 +63,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                     },
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(BroadcastAfterLockTime.class);
+            taskRunner.addTasks(BroadcastPayoutTx.class);  //TODO: locktime
             taskRunner.run();
         }
     }
@@ -79,6 +79,8 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
         if (message instanceof FinalizePayoutTxRequest)
             handle((FinalizePayoutTxRequest) message, ((MailboxMessage) message).getSenderNodeAddress());
+        else
+            log.error("We received an unhandled MailboxMessage" + message.toString());
     }
 
 
@@ -181,10 +183,10 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                ProcessFinalizePayoutTxRequest.class,
-                SignAndFinalizePayoutTx.class,
+                ProcessFinalizePayoutTxRequest.class,  //TODO: locktime
+                BuyerAsTakerSignAndFinalizePayoutTx.class,  //TODO: locktime
                 SendPayoutTxFinalizedMessage.class,
-                BroadcastAfterLockTime.class
+                BroadcastPayoutTx.class  //TODO: locktime
         );
         taskRunner.run();
     }

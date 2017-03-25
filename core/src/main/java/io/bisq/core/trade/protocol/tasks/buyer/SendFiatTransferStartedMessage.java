@@ -40,26 +40,31 @@ public class SendFiatTransferStartedMessage extends TradeTask {
         try {
             runInterceptHook();
             BtcWalletService walletService = processModel.getWalletService();
-            AddressEntry payoutAddressEntry = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT);
+            final String id = processModel.getId();
+            AddressEntry payoutAddressEntry = walletService.getOrCreateAddressEntry(id,
+                    AddressEntry.Context.TRADE_PAYOUT);
+            final FiatTransferStartedMessage message = new FiatTransferStartedMessage(
+                    id,
+                    payoutAddressEntry.getAddressString(),
+                    processModel.getMyNodeAddress(),
+                    processModel.getPayoutTxSignature()
+            );
+            log.info("Send message to peer. tradeId={}, message{}", id, message);
             processModel.getP2PService().sendEncryptedMailboxMessage(
                     trade.getTradingPeerNodeAddress(),
                     processModel.tradingPeer.getPubKeyRing(),
-                    new FiatTransferStartedMessage(
-                            processModel.getId(),
-                            payoutAddressEntry.getAddressString(),
-                            processModel.getMyNodeAddress()
-                    ),
+                    message,
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
-                            log.debug("Message arrived at peer.");
+                            log.info("Message arrived at peer. tradeId={}, message{}", id, message);
                             trade.setState(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
                             complete();
                         }
 
                         @Override
                         public void onStoredInMailbox() {
-                            log.debug("Message stored in mailbox.");
+                            log.info("Message stored in mailbox. tradeId={}, message{}", id, message);
                             trade.setState(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
                             complete();
                         }

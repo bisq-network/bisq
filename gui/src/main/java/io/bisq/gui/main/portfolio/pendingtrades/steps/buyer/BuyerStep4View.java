@@ -27,6 +27,8 @@ import org.bitcoinj.core.*;
 
 import java.util.List;
 
+//TODO: locktime
+// remove
 public class BuyerStep4View extends TradeStepView {
 
     private TextField blockTextField;

@@ -571,7 +571,8 @@ message FiatTransferStartedMessage {
     string trade_id = 2;
     string buyer_payout_address = 3;
     NodeAddress sender_node_address = 4;
-    string uid = 5;
+    bytes buyer_signature = 5;
+    string uid = 6;
 }
 
 message FinalizePayoutTxRequest {

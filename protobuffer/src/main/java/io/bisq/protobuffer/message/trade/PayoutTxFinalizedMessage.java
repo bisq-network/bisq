@@ -23,11 +23,12 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import lombok.EqualsAndHashCode;
 
 import javax.annotation.concurrent.Immutable;
-import java.util.Arrays;
 import java.util.UUID;
 
+@EqualsAndHashCode(callSuper = true)
 @Immutable
 public final class PayoutTxFinalizedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -59,30 +60,6 @@ public final class PayoutTxFinalizedMessage extends TradeMessage implements Mail
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PayoutTxFinalizedMessage)) return false;
-        if (!super.equals(o)) return false;
-
-        PayoutTxFinalizedMessage that = (PayoutTxFinalizedMessage) o;
-
-        if (!Arrays.equals(payoutTx, that.payoutTx)) return false;
-        if (senderNodeAddress != null ? !senderNodeAddress.equals(that.senderNodeAddress) : that.senderNodeAddress != null)
-            return false;
-        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (payoutTx != null ? Arrays.hashCode(payoutTx) : 0);
-        result = 31 * result + (senderNodeAddress != null ? senderNodeAddress.hashCode() : 0);
-        result = 31 * result + (uid != null ? uid.hashCode() : 0);
-        return result;
-    }
-
-    @Override
     public PB.Envelope toProto() {
         PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
         return baseEnvelope.setPayoutTxFinalizedMessage(baseEnvelope.getPayoutTxFinalizedMessageBuilder()
@@ -91,5 +68,15 @@ public final class PayoutTxFinalizedMessage extends TradeMessage implements Mail
                 .setTradeId(tradeId)
                 .setPayoutTx(ByteString.copyFrom(payoutTx))
                 .setSenderNodeAddress(senderNodeAddress.toProto())).build();
+    }
+
+    // We dont print the bytes of payoutTx
+    @Override
+    public String toString() {
+        return "PayoutTxFinalizedMessage{" +
+                "payoutTx [bytes not printed...]" +
+                ", senderNodeAddress=" + senderNodeAddress +
+                ", uid='" + uid + '\'' +
+                "} " + super.toString();
     }
 }

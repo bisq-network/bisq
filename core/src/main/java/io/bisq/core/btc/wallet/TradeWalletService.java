@@ -548,6 +548,64 @@ public class TradeWalletService {
      * @throws AddressFormatException
      * @throws TransactionVerificationException
      */
+    public byte[] buyerSignsPayoutTx(Transaction depositTx,
+                                     Coin buyerPayoutAmount,
+                                     Coin sellerPayoutAmount,
+                                     String buyerPayoutAddressString,
+                                     String sellerPayoutAddressString,
+                                     DeterministicKey multiSigKeyPair,
+                                     byte[] buyerPubKey,
+                                     byte[] sellerPubKey,
+                                     byte[] arbitratorPubKey)
+            throws AddressFormatException, TransactionVerificationException {
+        log.trace("sellerSignsPayoutTx called");
+        log.trace("depositTx " + depositTx.toString());
+        log.trace("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
+        log.trace("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
+        log.trace("buyerPayoutAddressString " + buyerPayoutAddressString);
+        log.trace("sellerPayoutAddressString " + sellerPayoutAddressString);
+        log.trace("multiSigKeyPair (not displayed for security reasons)");
+        log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        Transaction preparedPayoutTx = createPayoutTx(depositTx,
+                buyerPayoutAmount,
+                sellerPayoutAmount,
+                buyerPayoutAddressString,
+                sellerPayoutAddressString);
+        // MS redeemScript
+        Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        // MS output from prev. tx is index 0
+        Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
+        checkNotNull(multiSigKeyPair, "multiSigKeyPair must not be null");
+        if (multiSigKeyPair.isEncrypted())
+            checkNotNull(aesKey);
+
+        ECKey.ECDSASignature buyerSignature = multiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+
+        BtcWalletService.printTx("prepared payoutTx", preparedPayoutTx);
+
+        verifyTransaction(preparedPayoutTx);
+
+        return buyerSignature.encodeToDER();
+    }
+
+    /**
+     * Seller signs payout transaction, buyer has not signed yet.
+     *
+     * @param depositTx                 Deposit transaction
+     * @param buyerPayoutAmount         Payout amount for buyer
+     * @param sellerPayoutAmount        Payout amount for seller
+     * @param buyerPayoutAddressString  Address for buyer
+     * @param sellerPayoutAddressString Address for seller
+     * @param multiSigKeyPair           DeterministicKey for MultiSig from seller
+     * @param buyerPubKey               The public key of the buyer.
+     * @param sellerPubKey              The public key of the seller.
+     * @param arbitratorPubKey          The public key of the arbitrator.
+     * @return DER encoded canonical signature
+     * @throws AddressFormatException
+     * @throws TransactionVerificationException
+     */
     //TODO: locktime
     public byte[] sellerSignsPayoutTx(Transaction depositTx,
                                       Coin buyerPayoutAmount,
@@ -594,6 +652,87 @@ public class TradeWalletService {
 
         return sellerSignature.encodeToDER();
     }
+
+    /**
+     * Buyer creates and signs payout transaction and adds signature of seller to complete the transaction
+     *
+     * @param depositTx                 Deposit transaction
+     * @param buyerSignature            DER encoded canonical signature of seller
+     * @param buyerPayoutAmount         Payout amount for buyer
+     * @param sellerPayoutAmount        Payout amount for seller
+     * @param buyerPayoutAddressString  Address for buyer
+     * @param sellerPayoutAddressString Address for seller
+     * @param multiSigKeyPair           Buyer's keypair for MultiSig
+     * @param buyerPubKey               The public key of the buyer.
+     * @param sellerPubKey              The public key of the seller.
+     * @param arbitratorPubKey          The public key of the arbitrator.
+     * @return The payout transaction
+     * @throws AddressFormatException
+     * @throws TransactionVerificationException
+     * @throws WalletException
+     */
+    public Transaction sellerSignsAndFinalizesPayoutTx(Transaction depositTx,
+                                                       byte[] buyerSignature,
+                                                       Coin buyerPayoutAmount,
+                                                       Coin sellerPayoutAmount,
+                                                       String buyerPayoutAddressString,
+                                                       String sellerPayoutAddressString,
+                                                       DeterministicKey multiSigKeyPair,
+                                                       byte[] buyerPubKey,
+                                                       byte[] sellerPubKey,
+                                                       byte[] arbitratorPubKey)
+            throws AddressFormatException, TransactionVerificationException, WalletException {
+        log.trace("buyerSignsAndFinalizesPayoutTx called");
+        log.trace("depositTx " + depositTx.toString());
+        log.trace("buyerSignature r " + ECKey.ECDSASignature.decodeFromDER(buyerSignature).r.toString());
+        log.trace("buyerSignature s " + ECKey.ECDSASignature.decodeFromDER(buyerSignature).s.toString());
+        log.trace("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
+        log.trace("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
+        log.trace("buyerPayoutAddressString " + buyerPayoutAddressString);
+        log.trace("sellerPayoutAddressString " + sellerPayoutAddressString);
+        log.trace("multiSigKeyPair (not displayed for security reasons)");
+        log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+
+        Transaction payoutTx = createPayoutTx(depositTx,
+                buyerPayoutAmount,
+                sellerPayoutAmount,
+                buyerPayoutAddressString,
+                sellerPayoutAddressString);
+        // MS redeemScript
+        Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        // MS output from prev. tx is index 0
+        Sha256Hash sigHash = payoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
+        checkNotNull(multiSigKeyPair, "multiSigKeyPair must not be null");
+        if (multiSigKeyPair.isEncrypted())
+            checkNotNull(aesKey);
+
+
+        ECKey.ECDSASignature sellerSignature = multiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+
+        TransactionSignature buyerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(buyerSignature),
+                Transaction.SigHash.ALL, false);
+        TransactionSignature sellerTxSig = new TransactionSignature(sellerSignature, Transaction.SigHash.ALL, false);
+        // Take care of order of signatures. Need to be reversed here. See comment below at getMultiSigRedeemScript (arbitrator, seller, buyer)
+        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig), redeemScript);
+
+        TransactionInput input = payoutTx.getInput(0);
+        input.setScriptSig(inputScript);
+
+        BtcWalletService.printTx("payoutTx", payoutTx);
+
+        verifyTransaction(payoutTx);
+        checkWalletConsistency();
+        checkScriptSig(payoutTx, input, 0);
+        checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
+        input.verify(input.getConnectedOutput());
+
+        // As we use lockTime the tx will not be relayed as it is not considered standard.
+        // We need to broadcast on our own when we reahced the block height. Both peers will do the broadcast.
+        return payoutTx;
+    }
+
 
     /**
      * Buyer creates and signs payout transaction and adds signature of seller to complete the transaction

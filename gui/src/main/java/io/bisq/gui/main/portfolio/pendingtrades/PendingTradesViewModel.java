@@ -56,7 +56,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         WAIT_FOR_BLOCKCHAIN_CONFIRMATION,
         REQUEST_START_FIAT_PAYMENT,
         WAIT_FOR_FIAT_PAYMENT_RECEIPT,
-        WAIT_FOR_BROADCAST_AFTER_UNLOCK,
+        /*  WAIT_FOR_BROADCAST_AFTER_UNLOCK,*/
         REQUEST_WITHDRAWAL
     }
 
@@ -66,7 +66,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         WAIT_FOR_FIAT_PAYMENT_STARTED,
         REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED,
         WAIT_FOR_PAYOUT_TX,
-        WAIT_FOR_BROADCAST_AFTER_UNLOCK,
+        /*  WAIT_FOR_BROADCAST_AFTER_UNLOCK,*/
         REQUEST_WITHDRAWAL
     }
 
@@ -322,7 +322,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         switch (tradeState) {
             case PREPARATION:
                 sellerState.set(UNDEFINED);
-                buyerState.set(PendingTradesViewModel.BuyerState.UNDEFINED);
+                buyerState.set(BuyerState.UNDEFINED);
                 break;
 
             case TAKER_FEE_PAID:
@@ -332,47 +332,52 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG:
             case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
                 sellerState.set(WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
-                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
+                buyerState.set(BuyerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
                 break;
 
             case DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN:
                 sellerState.set(WAIT_FOR_FIAT_PAYMENT_STARTED);
-                buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_START_FIAT_PAYMENT);
+                buyerState.set(BuyerState.REQUEST_START_FIAT_PAYMENT);
             case BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED:  // we stick with the state until we get the msg sent success
-                buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_START_FIAT_PAYMENT);
+                buyerState.set(BuyerState.REQUEST_START_FIAT_PAYMENT);
                 break;
             case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
-                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
+                buyerState.set(BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
                 break;
             case SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG: // seller
             case SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT:  // we stick with the state until we get the msg sent success
                 sellerState.set(REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED);
                 break;
-            case SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG:
+            case SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG: // todo remove?
                 sellerState.set(WAIT_FOR_PAYOUT_TX);
                 break;
             case BUYER_RECEIVED_FIAT_PAYMENT_RECEIPT_MSG:
-            case BUYER_COMMITTED_PAYOUT_TX:
+            case BUYER_AS_TAKER_COMMITTED_PAYOUT_TX: // todo remove?
             case BUYER_STARTED_SEND_PAYOUT_TX:
+                //TODO: locktime
                 // TODO would need extra state for wait until msg arrived and PAYOUT_BROAD_CASTED gets called.
-                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
+                // buyerState.set(BuyerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
                 break;
-            case SELLER_RECEIVED_AND_COMMITTED_PAYOUT_TX:
-                sellerState.set(SellerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
+            case SELLER_RECEIVED_AND_COMMITTED_PAYOUT_TX: // todo remove?
+                // sellerState.set(SellerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK); 
+                break;
+            case BUYER_RECEIVED_AND_COMMITTED_PAYOUT_TX:
+            case BUYER_SAW_PAYOUT_TX_IN_NETWORK:
+                buyerState.set(BuyerState.REQUEST_WITHDRAWAL);
                 break;
             case PAYOUT_BROAD_CASTED:
                 sellerState.set(REQUEST_WITHDRAWAL);
-                buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_WITHDRAWAL);
+                buyerState.set(BuyerState.REQUEST_WITHDRAWAL);
                 break;
 
             case WITHDRAW_COMPLETED:
                 sellerState.set(UNDEFINED);
-                buyerState.set(PendingTradesViewModel.BuyerState.UNDEFINED);
+                buyerState.set(BuyerState.UNDEFINED);
                 break;
 
             default:
                 sellerState.set(UNDEFINED);
-                buyerState.set(PendingTradesViewModel.BuyerState.UNDEFINED);
+                buyerState.set(BuyerState.UNDEFINED);
                 log.warn("unhandled processState " + tradeState);
                 break;
         }

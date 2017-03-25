@@ -51,7 +51,7 @@ public class SignAndPublishDepositTxAsBuyer extends TradeTask {
         try {
             runInterceptHook();
 
-            log.error("\n\n------------------------------------------------------------\n"
+            log.debug("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"
                     + trade.getContractAsJson()
                     + "\n------------------------------------------------------------\n");

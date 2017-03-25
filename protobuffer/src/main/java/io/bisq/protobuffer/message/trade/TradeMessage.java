@@ -19,32 +19,20 @@ package io.bisq.protobuffer.message.trade;
 
 import io.bisq.common.app.Version;
 import io.bisq.protobuffer.message.p2p.DirectMessage;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import javax.annotation.concurrent.Immutable;
 
+
+@EqualsAndHashCode
+@ToString
 @Immutable
 public abstract class TradeMessage implements DirectMessage {
-    //TODO add serialVersionUID also in superclasses as changes would break compatibility
-    // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final int messageVersion = Version.getP2PMessageVersion();
     public final String tradeId;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TradeMessage)) return false;
-
-        TradeMessage that = (TradeMessage) o;
-
-        return !(tradeId != null ? !tradeId.equals(that.tradeId) : that.tradeId != null);
-    }
-
-    @Override
-    public int hashCode() {
-        return tradeId != null ? tradeId.hashCode() : 0;
-    }
 
     protected TradeMessage(String tradeId) {
         this.tradeId = tradeId;

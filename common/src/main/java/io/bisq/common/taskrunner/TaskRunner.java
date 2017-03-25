@@ -19,16 +19,14 @@ package io.bisq.common.taskrunner;
 
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+@Slf4j
 public class TaskRunner<T extends Model> {
-    private static final Logger log = LoggerFactory.getLogger(TaskRunner.class);
-
     private final Queue<Class<? extends Task>> tasks = new LinkedBlockingQueue<>();
     private final T sharedModel;
     private final Class<T> sharedModelClass;
@@ -64,7 +62,7 @@ public class TaskRunner<T extends Model> {
             if (tasks.size() > 0) {
                 try {
                     currentTask = tasks.poll();
-                    log.trace("Run task: " + currentTask.getSimpleName());
+                    log.info("Run task: " + currentTask.getSimpleName());
                     currentTask.getDeclaredConstructor(TaskRunner.class, sharedModelClass).newInstance(this, sharedModel).run();
                 } catch (Throwable throwable) {
                     throwable.printStackTrace();

@@ -23,12 +23,11 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.trade.SellerAsTakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.seller.*;
-import io.bisq.core.trade.protocol.tasks.shared.BroadcastAfterLockTime;
+import io.bisq.core.trade.protocol.tasks.shared.BroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
 import io.bisq.protobuffer.message.trade.FiatTransferStartedMessage;
-import io.bisq.protobuffer.message.trade.PayoutTxFinalizedMessage;
 import io.bisq.protobuffer.message.trade.PublishDepositTxRequest;
 import io.bisq.protobuffer.message.trade.TradeMessage;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
@@ -65,7 +64,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                     },
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(BroadcastAfterLockTime.class);
+            taskRunner.addTasks(BroadcastPayoutTx.class);  //TODO: locktime
             taskRunner.run();
         }
     }
@@ -81,11 +80,13 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         if (message instanceof MailboxMessage) {
             NodeAddress peerNodeAddress = ((MailboxMessage) message).getSenderNodeAddress();
-            if (message instanceof PayoutTxFinalizedMessage) {
+            /*if (message instanceof PayoutTxFinalizedMessage) {
                 handle((PayoutTxFinalizedMessage) message, peerNodeAddress);
-            } else if (message instanceof FiatTransferStartedMessage) {
+            } else */
+            if (message instanceof FiatTransferStartedMessage)
                 handle((FiatTransferStartedMessage) message, peerNodeAddress);
-            }
+            else
+                log.error("We received an unhandled MailboxMessage" + message.toString());
         }
     }
 
@@ -163,8 +164,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     @Override
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (sellerAsTakerTrade.getState().ordinal() <= Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG.ordinal()) {
-            if (sellerAsTakerTrade.getState() == Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG)
+        //TODO check states
+        if (sellerAsTakerTrade.getState().ordinal() <= Trade.State.SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG.ordinal()) {
+            if (sellerAsTakerTrade.getState() == Trade.State.SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG)
                 log.warn("onFiatPaymentReceived called twice. " +
                         "That is expected if the app starts up and the other peer has still not continued.");
 
@@ -182,8 +184,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
             taskRunner.addTasks(
                     VerifyOfferFeePayment.class,
-                    SignPayoutTx.class,
-                    SendFinalizePayoutTxRequest.class
+                    SellerAsTakerSignAndFinalizePayoutTx.class,
+                    SellerAsTakerBroadcastPayoutTx.class,
+                    SellerSendPayoutTxFinalizedMessage.class
             );
             taskRunner.run();
         } else {
@@ -191,25 +194,6 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                     "That should not happen.\n" +
                     "state=" + sellerAsTakerTrade.getState());
         }
-    }
-
-    private void handle(PayoutTxFinalizedMessage tradeMessage, NodeAddress sender) {
-        stopTimeout();
-        processModel.setTradeMessage(tradeMessage);
-        processModel.setTempTradingPeerNodeAddress(sender);
-
-        TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
-                () -> {
-                    handleTaskRunnerSuccess("PayoutTxFinalizedMessage");
-                    processModel.onComplete();
-                },
-                this::handleTaskRunnerFault);
-
-        taskRunner.addTasks(
-                ProcessPayoutTxFinalizedMessage.class,
-                BroadcastAfterLockTime.class
-        );
-        taskRunner.run();
     }
 
 
@@ -223,8 +207,6 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
             handle((PublishDepositTxRequest) tradeMessage, sender);
         } else if (tradeMessage instanceof FiatTransferStartedMessage) {
             handle((FiatTransferStartedMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof PayoutTxFinalizedMessage) {
-            handle((PayoutTxFinalizedMessage) tradeMessage, sender);
         } else {
             log.error("Incoming message not supported. " + tradeMessage);
         }
