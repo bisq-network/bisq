@@ -23,12 +23,7 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.trade.BuyerAsTakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendFiatTransferStartedMessage;
-import io.bisq.core.trade.protocol.tasks.buyer.ProcessFinalizePayoutTxRequest;
-import io.bisq.core.trade.protocol.tasks.buyer.SendPayoutTxFinalizedMessage;
-import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositTxInputs;
-import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndFinalizePayoutTx;
-import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndPublishDepositTx;
-import io.bisq.core.trade.protocol.tasks.shared.BroadcastPayoutTx;
+import io.bisq.core.trade.protocol.tasks.buyer_as_taker.*;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
@@ -66,7 +61,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                     },
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(BroadcastPayoutTx.class);  //TODO: locktime
+            taskRunner.addTasks(BuyerAsTakerBroadcastPayoutTx.class);  //TODO: locktime
             taskRunner.run();
         }
     }
@@ -190,10 +185,10 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                ProcessFinalizePayoutTxRequest.class,  //TODO: locktime
+                BuyerAsTaker___ProcessFinalizePayoutTxRequest.class,  //TODO: locktime
                 BuyerAsTakerSignAndFinalizePayoutTx.class,  //TODO: locktime
-                SendPayoutTxFinalizedMessage.class,
-                BroadcastPayoutTx.class  //TODO: locktime
+                BuyerAsTaker___SendPayoutTxFinalizedMessage.class,
+                BuyerAsTakerBroadcastPayoutTx.class  //TODO: locktime
         );
         taskRunner.run();
     }

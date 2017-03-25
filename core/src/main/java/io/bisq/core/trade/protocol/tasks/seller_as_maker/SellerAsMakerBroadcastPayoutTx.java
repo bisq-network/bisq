@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.trade.protocol.tasks.shared;
+package io.bisq.core.trade.protocol.tasks.seller_as_maker;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.taskrunner.TaskRunner;
@@ -29,9 +29,10 @@ import org.jetbrains.annotations.NotNull;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BroadcastPayoutTx extends TradeTask {
+//TODO same as BuyerAsTakerBroadcastPayoutTx
+public class SellerAsMakerBroadcastPayoutTx extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public BroadcastPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SellerAsMakerBroadcastPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

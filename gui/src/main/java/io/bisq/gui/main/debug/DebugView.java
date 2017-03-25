@@ -31,18 +31,18 @@ import io.bisq.core.trade.protocol.BuyerAsTakerProtocol;
 import io.bisq.core.trade.protocol.SellerAsMakerProtocol;
 import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendFiatTransferStartedMessage;
-import io.bisq.core.trade.protocol.tasks.buyer.ProcessFinalizePayoutTxRequest;
-import io.bisq.core.trade.protocol.tasks.buyer.SendPayoutTxFinalizedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
 import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndFinalizePayoutTx;
+import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTaker___ProcessFinalizePayoutTxRequest;
+import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTaker___SendPayoutTxFinalizedMessage;
 import io.bisq.core.trade.protocol.tasks.maker.*;
 import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
-import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerProcessPayoutTxFinalizedMessage;
-import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerSendFinalizePayoutTxRequest;
+import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerBroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerSignPayoutTx;
+import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMaker___ProcessPayoutTxFinalizedMessage;
+import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMaker___SendFinalizePayoutTxRequest;
 import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
 import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
-import io.bisq.core.trade.protocol.tasks.shared.BroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.common.view.InitializableView;
@@ -109,10 +109,10 @@ public class DebugView extends InitializableView {
                         MakerVerifyTakerFeePayment.class,
                         BuyerSendFiatTransferStartedMessage.class,
 
-                        ProcessFinalizePayoutTxRequest.class,
+                        BuyerAsTaker___ProcessFinalizePayoutTxRequest.class,
                         BuyerAsTakerSignAndFinalizePayoutTx.class,
-                        SendPayoutTxFinalizedMessage.class,
-                        BroadcastPayoutTx.class,
+                        BuyerAsTaker___SendPayoutTxFinalizedMessage.class,
+                        SellerAsMakerBroadcastPayoutTx.class,
                         Boolean.class, /* used as separator*/
                         
 
@@ -134,10 +134,10 @@ public class DebugView extends InitializableView {
 
                         TakerVerifyMakerFeePayment.class,
                         SellerAsMakerSignPayoutTx.class,
-                        SellerAsMakerSendFinalizePayoutTxRequest.class,
+                        SellerAsMaker___SendFinalizePayoutTxRequest.class,
 
-                        SellerAsMakerProcessPayoutTxFinalizedMessage.class,
-                        BroadcastPayoutTx.class,
+                        SellerAsMaker___ProcessPayoutTxFinalizedMessage.class,
+                        SellerAsMakerBroadcastPayoutTx.class,
                         Boolean.class /* used as separator*/
                 )
         );
@@ -160,10 +160,10 @@ public class DebugView extends InitializableView {
                         SellerAsMakerSignPayoutTx.class,
                         BuyerSendFiatTransferStartedMessage.class,
 
-                        ProcessFinalizePayoutTxRequest.class,
+                        BuyerAsTaker___ProcessFinalizePayoutTxRequest.class,
                         BuyerAsTakerSignAndFinalizePayoutTx.class,
-                        SendPayoutTxFinalizedMessage.class,
-                        BroadcastPayoutTx.class,
+                        BuyerAsTaker___SendPayoutTxFinalizedMessage.class,
+                        SellerAsMakerBroadcastPayoutTx.class,
                         Boolean.class, /* used as separator*/
                         
                         
@@ -183,10 +183,10 @@ public class DebugView extends InitializableView {
 
                         MakerVerifyTakerFeePayment.class,
                         SellerAsMakerSignPayoutTx.class,
-                        SellerAsMakerSendFinalizePayoutTxRequest.class,
+                        SellerAsMaker___SendFinalizePayoutTxRequest.class,
 
-                        SellerAsMakerProcessPayoutTxFinalizedMessage.class,
-                        BroadcastPayoutTx.class,
+                        SellerAsMaker___ProcessPayoutTxFinalizedMessage.class,
+                        SellerAsMakerBroadcastPayoutTx.class,
                         Boolean.class /* used as separator*/
                 )
         );

@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.trade.protocol.tasks.buyer;
+package io.bisq.core.trade.protocol.tasks.buyer_as_taker;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
@@ -27,9 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class ProcessFinalizePayoutTxRequest extends TradeTask {
+public class BuyerAsTaker___ProcessFinalizePayoutTxRequest extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public ProcessFinalizePayoutTxRequest(TaskRunner taskHandler, Trade trade) {
+    public BuyerAsTaker___ProcessFinalizePayoutTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

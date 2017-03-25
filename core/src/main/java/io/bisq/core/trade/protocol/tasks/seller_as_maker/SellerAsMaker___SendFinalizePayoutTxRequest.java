@@ -15,39 +15,46 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.trade.protocol.tasks.buyer;
+package io.bisq.core.trade.protocol.tasks.seller_as_maker;
 
 import io.bisq.common.taskrunner.TaskRunner;
+import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.protobuffer.message.trade.PayoutTxPublishedMessage;
+import io.bisq.network.p2p.SendMailboxMessageListener;
+import io.bisq.protobuffer.message.trade.FinalizePayoutTxRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
 
 @Slf4j
-// TODO remove 
-// TODO: locktime
-public class SendPayoutTxFinalizedMessage extends TradeTask {
+//TODO remove
+public class SellerAsMaker___SendFinalizePayoutTxRequest extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public SendPayoutTxFinalizedMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerAsMaker___SendFinalizePayoutTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
     @Override
     protected void run() {
         try {
+            //TODO: locktime  
             runInterceptHook();
-            if (trade.getPayoutTx() != null) {
-                final String id = processModel.getId();
-                final PayoutTxPublishedMessage message = new PayoutTxPublishedMessage(
-                        id,
-                        trade.getPayoutTx().bitcoinSerialize(),
+            final String id = processModel.getId();
+            if (trade.getTradingPeerNodeAddress() != null) {
+                BtcWalletService walletService = processModel.getWalletService();
+                String sellerPayoutAddress = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString();
+                FinalizePayoutTxRequest message = new FinalizePayoutTxRequest(
+                        processModel.getId(),
+                        processModel.getPayoutTxSignature(),
+                        sellerPayoutAddress,
+                      /*  trade.getLockTimeAsBlockHeight(),*/
                         processModel.getMyNodeAddress(),
                         UUID.randomUUID().toString()
                 );
-                log.info("Send message to peer. tradeId={}, message{}", id, message);
-               /* processModel.getP2PService().sendEncryptedMailboxMessage(
+
+                processModel.getP2PService().sendEncryptedMailboxMessage(
                         trade.getTradingPeerNodeAddress(),
                         processModel.tradingPeer.getPubKeyRing(),
                         message,
@@ -55,28 +62,27 @@ public class SendPayoutTxFinalizedMessage extends TradeTask {
                             @Override
                             public void onArrived() {
                                 log.info("Message arrived at peer. tradeId={}, message{}", id, message);
+                                trade.setState(Trade.State.SELLER_AS_MAKER_SENT_FIAT_PAYMENT_RECEIPT_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
                                 log.info("Message stored in mailbox. tradeId={}, message{}", id, message);
+                                trade.setState(Trade.State.SELLER_AS_MAKER_SENT_FIAT_PAYMENT_RECEIPT_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onFault(String errorMessage) {
-                                appendToErrorMessage("PayoutTxFinalizedMessage sending failed. errorMessage=" + errorMessage);
+                                appendToErrorMessage("FinalizePayoutTxRequest sending failed. errorMessage=" + errorMessage);
                                 failed(errorMessage);
                             }
                         }
-                );*/
-                // state must not be set in onArrived or onStoredInMailbox handlers as we would get that 
-                // called delayed and would overwrite the broad cast state set by the next task
-                trade.setState(Trade.State.BUYER_STARTED_SEND_PAYOUT_TX);
+                );
             } else {
-                log.error("trade.getPayoutTx() = " + trade.getPayoutTx());
-                failed("PayoutTx is null");
+                log.error("trade.getTradingPeerAddress() = " + trade.getTradingPeerNodeAddress());
+                failed("A needed dependency is null");
             }
         } catch (Throwable t) {
             failed(t);

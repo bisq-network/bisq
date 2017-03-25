@@ -30,9 +30,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsMakerProcessPayoutTxFinalizedMessage extends TradeTask {
+public class SellerAsMaker___ProcessPayoutTxFinalizedMessage extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public SellerAsMakerProcessPayoutTxFinalizedMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerAsMaker___ProcessPayoutTxFinalizedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

@@ -24,11 +24,7 @@ import io.bisq.core.trade.SellerAsMakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.maker.*;
 import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
-import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesAndSignsDepositTx;
-import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerProcessPayoutTxFinalizedMessage;
-import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerSendFinalizePayoutTxRequest;
-import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerSignPayoutTx;
-import io.bisq.core.trade.protocol.tasks.shared.BroadcastPayoutTx;
+import io.bisq.core.trade.protocol.tasks.seller_as_maker.*;
 import io.bisq.core.util.Validator;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
@@ -65,7 +61,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                     },
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(BroadcastPayoutTx.class);  //TODO: locktime
+            taskRunner.addTasks(SellerAsMakerBroadcastPayoutTx.class);  //TODO: locktime
             taskRunner.run();
         }
     }
@@ -188,7 +184,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                     MakerVerifyTakerAccount.class,
                     MakerVerifyTakerFeePayment.class,
                     SellerAsMakerSignPayoutTx.class,  //TODO: locktime
-                    SellerAsMakerSendFinalizePayoutTxRequest.class  //TODO: locktime
+                    SellerAsMaker___SendFinalizePayoutTxRequest.class  //TODO: locktime
             );
             taskRunner.run();
         } else {
@@ -210,8 +206,8 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                SellerAsMakerProcessPayoutTxFinalizedMessage.class,
-                BroadcastPayoutTx.class  //TODO: locktime
+                SellerAsMaker___ProcessPayoutTxFinalizedMessage.class,
+                SellerAsMakerBroadcastPayoutTx.class  //TODO: locktime
         );
         taskRunner.run();
     }
