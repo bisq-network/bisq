@@ -109,7 +109,7 @@ public class TradeStatisticsManager {
 
                 dump();
             } else {
-                log.debug("We have already an item with the same offer ID. That might happen if both the offerer and the taker published the tradeStatistics");
+                log.debug("We have already an item with the same offer ID. That might happen if both the maker and the taker published the tradeStatistics");
             }
         }
     }

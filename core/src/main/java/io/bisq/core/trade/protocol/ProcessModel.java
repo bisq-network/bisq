@@ -27,7 +27,7 @@ import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.trade.OffererTrade;
+import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.User;
@@ -187,8 +187,8 @@ public class ProcessModel implements Model, Serializable {
     @Nullable
     public PaymentAccountPayload getPaymentAccountPayload(Trade trade) {
         PaymentAccount paymentAccount;
-        if (trade instanceof OffererTrade)
-            paymentAccount = user.getPaymentAccount(offer.getOffererPaymentAccountId());
+        if (trade instanceof MakerTrade)
+            paymentAccount = user.getPaymentAccount(offer.getMakerPaymentAccountId());
         else
             paymentAccount = user.getPaymentAccount(trade.getTakerPaymentAccountId());
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;

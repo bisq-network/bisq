@@ -52,7 +52,7 @@ public class Offer implements Serializable {
         AVAILABLE,
         NOT_AVAILABLE,
         REMOVED,
-        OFFERER_OFFLINE
+        MAKER_OFFLINE
     }
 
 
@@ -180,7 +180,7 @@ public class Offer implements Serializable {
 
         double factor = (double) takersTradePrice / (double) offerPrice.getValue();
         // We allow max. 1 % difference between own offerPayload price calculation and takers calculation.
-        // Market price might be different at offerer's and takers side so we need a bit of tolerance.
+        // Market price might be different at maker's and takers side so we need a bit of tolerance.
         // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations
         // from one provider.
         if (Math.abs(1 - factor) > 0.01) {
@@ -367,16 +367,16 @@ public class Offer implements Serializable {
         return offerPayload.getMarketPriceMargin();
     }
 
-    public NodeAddress getOffererNodeAddress() {
-        return offerPayload.getOffererNodeAddress();
+    public NodeAddress getMakerNodeAddress() {
+        return offerPayload.getMakerNodeAddress();
     }
 
     public PubKeyRing getPubKeyRing() {
         return offerPayload.getPubKeyRing();
     }
 
-    public String getOffererPaymentAccountId() {
-        return offerPayload.getOffererPaymentAccountId();
+    public String getMakerPaymentAccountId() {
+        return offerPayload.getMakerPaymentAccountId();
     }
 
     public String getOfferFeePaymentTxId() {

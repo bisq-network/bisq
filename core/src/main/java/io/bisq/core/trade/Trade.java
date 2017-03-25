@@ -74,11 +74,11 @@ public abstract class Trade implements Tradable, Model {
 
         TAKER_FEE_PAID(Phase.TAKER_FEE_PAID),
 
-        OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST(Phase.DEPOSIT_REQUESTED),
+        MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST(Phase.DEPOSIT_REQUESTED),
         TAKER_PUBLISHED_DEPOSIT_TX(Phase.DEPOSIT_PAID),
         DEPOSIT_SEEN_IN_NETWORK(Phase.DEPOSIT_PAID), // triggered by balance update, used only in error cases
         TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG(Phase.DEPOSIT_PAID),
-        OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG(Phase.DEPOSIT_PAID),
+        MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG(Phase.DEPOSIT_PAID),
         DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN(Phase.DEPOSIT_PAID),
 
         BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED(Phase.FIAT_SENT),
@@ -86,7 +86,7 @@ public abstract class Trade implements Tradable, Model {
         SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG(Phase.FIAT_SENT),
 
         SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT(Phase.FIAT_RECEIVED),
-        SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG(Phase.FIAT_RECEIVED),
+        SELLER_AS_MAKER_SENT_FIAT_PAYMENT_RECEIPT_MSG(Phase.FIAT_RECEIVED),
         BUYER_RECEIVED_FIAT_PAYMENT_RECEIPT_MSG(Phase.FIAT_RECEIVED),
 
         SELLER_COMMITTED_PAYOUT_TX(Phase.PAYOUT_PAID), //new TODO needed?
@@ -177,7 +177,7 @@ public abstract class Trade implements Tradable, Model {
     private String contractAsJson;
     private byte[] contractHash;
     private String takerContractSignature;
-    private String offererContractSignature;
+    private String makerContractSignature;
     private Transaction payoutTx;
     //TODO: locktime
     //   private long lockTimeAsBlockHeight;
@@ -195,7 +195,7 @@ public abstract class Trade implements Tradable, Model {
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // offerer
+    // maker
     protected Trade(Offer offer, Coin txFee, Coin takeOfferFee, Storage<? extends TradableList> storage) {
         this.offer = offer;
         this.txFee = txFee;
@@ -532,13 +532,13 @@ public abstract class Trade implements Tradable, Model {
         return takerContractSignature;
     }
 
-    public void setOffererContractSignature(String offererContractSignature) {
-        this.offererContractSignature = offererContractSignature;
+    public void setMakerContractSignature(String makerContractSignature) {
+        this.makerContractSignature = makerContractSignature;
     }
 
     @Nullable
-    public String getOffererContractSignature() {
-        return offererContractSignature;
+    public String getMakerContractSignature() {
+        return makerContractSignature;
     }
 
     public void setContractAsJson(String contractAsJson) {
@@ -692,8 +692,8 @@ public abstract class Trade implements Tradable, Model {
                 "\n\tcontract=" + contract +
                 "\n\ttakerContractSignature.hashCode()='" + (takerContractSignature != null ?
                 takerContractSignature.hashCode() : "") + '\'' +
-                "\n\toffererContractSignature.hashCode()='" + (offererContractSignature != null ?
-                offererContractSignature.hashCode() : "") + '\'' +
+                "\n\tmakerContractSignature.hashCode()='" + (makerContractSignature != null ?
+                makerContractSignature.hashCode() : "") + '\'' +
                 "\n\tpayoutTx=" + payoutTx +
                /* "\n\tlockTimeAsBlockHeight=" + lockTimeAsBlockHeight +*/
                 "\n\tarbitratorNodeAddress=" + arbitratorNodeAddress +

@@ -284,7 +284,7 @@ public class DisputeManager {
                 disputeFromOpener.getTradeId(),
                 pubKeyRing.hashCode(),
                 !disputeFromOpener.isDisputeOpenerIsBuyer(),
-                !disputeFromOpener.isDisputeOpenerIsOfferer(),
+                !disputeFromOpener.isDisputeOpenerIsMaker(),
                 pubKeyRing,
                 disputeFromOpener.getTradeDate(),
                 contractFromOpener,
@@ -294,7 +294,7 @@ public class DisputeManager {
                 disputeFromOpener.getDepositTxId(),
                 disputeFromOpener.getPayoutTxId(),
                 disputeFromOpener.getContractAsJson(),
-                disputeFromOpener.getOffererContractSignature(),
+                disputeFromOpener.getMakerContractSignature(),
                 disputeFromOpener.getTakerContractSignature(),
                 disputeFromOpener.getArbitratorPubKeyRing(),
                 disputeFromOpener.isSupportTicket()

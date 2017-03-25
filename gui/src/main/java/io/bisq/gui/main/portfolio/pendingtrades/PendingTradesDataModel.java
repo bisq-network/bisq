@@ -83,7 +83,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Trade> tradesListChangeListener;
-    private boolean isOfferer;
+    private boolean isMaker;
 
     final ObjectProperty<PendingTradesListItem> selectedItemProperty = new SimpleObjectProperty<>();
     public final StringProperty txId = new SimpleStringProperty();
@@ -212,22 +212,22 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     boolean isBuyer() {
-        return (isOfferer(getOffer()) && isBuyOffer())
-                || (!isOfferer(getOffer()) && !isBuyOffer());
+        return (isMaker(getOffer()) && isBuyOffer())
+                || (!isMaker(getOffer()) && !isBuyOffer());
     }
 
-    boolean isOfferer(Offer offer) {
+    boolean isMaker(Offer offer) {
         return tradeManager.isMyOffer(offer);
     }
 
-    private boolean isOfferer() {
-        return isOfferer;
+    private boolean isMaker() {
+        return isMaker;
     }
 
     Coin getTotalFees() {
         Trade trade = getTrade();
         if (trade != null) {
-            if (isOfferer()) {
+            if (isMaker()) {
                 Offer offer = trade.getOffer();
                 return offer.getCreateOfferFee().add(offer.getTxFee());
             } else {
@@ -244,8 +244,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public Offer.Direction getDirection(Offer offer) {
-        isOfferer = tradeManager.isMyOffer(offer);
-        return isOfferer ? offer.getDirection() : offer.getMirroredDirection();
+        isMaker = tradeManager.isMyOffer(offer);
+        return isMaker ? offer.getDirection() : offer.getMirroredDirection();
     }
 
     void addBlockChainListener(BlockChainListener blockChainListener) {
@@ -310,7 +310,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private void doSelectItem(PendingTradesListItem item) {
         if (item != null) {
             Trade trade = item.getTrade();
-            isOfferer = tradeManager.isMyOffer(trade.getOffer());
+            isMaker = tradeManager.isMyOffer(trade.getOffer());
             if (trade.getDepositTx() != null)
                 txId.set(trade.getDepositTx().getHashAsString());
             else
@@ -386,8 +386,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
-                    trade.getOffer().getDirection() == Offer.Direction.BUY ? isOfferer : !isOfferer,
-                    isOfferer,
+                    trade.getOffer().getDirection() == Offer.Direction.BUY ? isMaker : !isMaker,
+                    isMaker,
                     keyRing.getPubKeyRing(),
                     trade.getDate(),
                     trade.getContract(),
@@ -397,7 +397,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     depositTxHashAsString,
                     payoutTxHashAsString,
                     trade.getContractAsJson(),
-                    trade.getOffererContractSignature(),
+                    trade.getMakerContractSignature(),
                     trade.getTakerContractSignature(),
                     acceptedArbitratorByAddress.getPubKeyRing(),
                     isSupportTicket

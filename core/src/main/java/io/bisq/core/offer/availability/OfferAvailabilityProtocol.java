@@ -85,7 +85,7 @@ public class OfferAvailabilityProtocol {
         model.offer.setState(Offer.State.UNDEFINED);
 
         model.p2PService.addDecryptedDirectMessageListener(decryptedDirectMessageListener);
-        model.setPeerNodeAddress(model.offer.getOffererNodeAddress());
+        model.setPeerNodeAddress(model.offer.getMakerNodeAddress());
 
         taskRunner = new TaskRunner<>(model,
                 () -> log.debug("sequence at sendOfferAvailabilityRequest completed"),
@@ -135,7 +135,7 @@ public class OfferAvailabilityProtocol {
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {
                 log.debug("Timeout reached at " + this);
-                model.offer.setState(Offer.State.OFFERER_OFFLINE);
+                model.offer.setState(Offer.State.MAKER_OFFLINE);
                 errorMessageHandler.handleErrorMessage("Timeout reached: Peer has not responded.");
             }, TIMEOUT_SEC);
         } else {

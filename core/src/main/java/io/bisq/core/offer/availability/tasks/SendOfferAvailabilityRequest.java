@@ -49,7 +49,7 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
 
                         @Override
                         public void onFault() {
-                            model.offer.setState(Offer.State.OFFERER_OFFLINE);
+                            model.offer.setState(Offer.State.MAKER_OFFLINE);
                         }
                     }
             );

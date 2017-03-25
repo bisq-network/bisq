@@ -316,9 +316,9 @@ message OfferPayload {
     double market_price_margin = 16;
     int64 amount = 17;
     int64 min_amount = 18;
-    NodeAddress offerer_node_address = 19;
+    NodeAddress maker_node_address = 19;
     PubKeyRing pub_key_ring = 20;
-    string offerer_payment_account_id = 21;
+    string maker_payment_account_id = 21;
     string offer_fee_payment_tx_id = 22;
     string version_nr = 23;
     int64 block_height_at_offer_creation = 24;
@@ -434,7 +434,7 @@ message Dispute {
     string id = 2;
     int32 trader_id = 3;
     bool dispute_opener_is_buyer = 4;
-    bool dispute_opener_is_offerer = 5;
+    bool dispute_opener_is_maker = 5;
     int64 opening_date = 6;
     PubKeyRing trader_pub_key_ring = 7;
     int64 trade_date = 8;
@@ -445,7 +445,7 @@ message Dispute {
     string deposit_tx_id = 13;
     string payout_tx_id = 14;
     string contract_as_json = 15;
-    string offerer_contract_signature = 16;
+    string maker_contract_signature = 16;
     string taker_contract_signature = 17;
     PubKeyRing arbitrator_pub_key_ring = 18;
     bool is_support_ticket = 19;
@@ -466,18 +466,18 @@ message Contract {
     int64 trade_price = 3;
     string take_offer_fee_tx_id = 4;
     NodeAddress arbitrator_node_address = 5;
-    bool is_buyer_offerer_and_seller_taker = 6;
-    string offerer_account_id = 7;
+    bool is_buyer_maker_and_seller_taker = 6;
+    string maker_account_id = 7;
     string taker_account_id = 8;
-    PaymentAccountPayload offerer_payment_account_payload = 9;
+    PaymentAccountPayload maker_payment_account_payload = 9;
     PaymentAccountPayload taker_payment_account_payload = 10;
-    PubKeyRing offerer_pub_key_ring = 11;
+    PubKeyRing maker_pub_key_ring = 11;
     PubKeyRing taker_pub_key_ring = 12;
     NodeAddress buyer_node_address = 13;
     NodeAddress seller_node_address = 14;
-    string offerer_payout_address_string = 15;
+    string maker_payout_address_string = 15;
     string taker_payout_address_string = 16;
-    bytes offerer_btc_pub_key = 17;
+    bytes maker_btc_pub_key = 17;
     bytes taker_btc_pub_key = 18;
 }
 
@@ -588,14 +588,14 @@ message FinalizePayoutTxRequest {
 message PublishDepositTxRequest {
     int32 message_version = 1;
     string trade_id = 2;
-    PaymentAccountPayload offerer_payment_account_payload = 3;
-    string offerer_account_id = 4;
-    string offerer_contract_as_json = 5;
-    string offerer_contract_signature = 6;
-    string offerer_payout_address_string = 7;
+    PaymentAccountPayload maker_payment_account_payload = 3;
+    string maker_account_id = 4;
+    string maker_contract_as_json = 5;
+    string maker_contract_signature = 6;
+    string maker_payout_address_string = 7;
     bytes prepared_deposit_tx = 8;
-    repeated RawTransactionInput offerer_inputs = 9;
-    bytes offerer_multi_sig_pub_key = 10;
+    repeated RawTransactionInput maker_inputs = 9;
+    bytes maker_multi_sig_pub_key = 10;
     NodeAddress sender_node_address = 11;
     string uid = 12;
 }

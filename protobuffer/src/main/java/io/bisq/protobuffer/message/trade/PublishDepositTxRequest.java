@@ -47,44 +47,44 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
 
     private static final Logger log = LoggerFactory.getLogger(PublishDepositTxRequest.class);
 
-    public final PaymentAccountPayload offererPaymentAccountPayload;
-    public final String offererAccountId;
-    public final String offererContractAsJson;
-    public final String offererContractSignature;
-    public final String offererPayoutAddressString;
+    public final PaymentAccountPayload makerPaymentAccountPayload;
+    public final String makerAccountId;
+    public final String makerContractAsJson;
+    public final String makerContractSignature;
+    public final String makerPayoutAddressString;
     public final byte[] preparedDepositTx;
-    public final List<RawTransactionInput> offererInputs;
-    public final byte[] offererMultiSigPubKey;
+    public final List<RawTransactionInput> makerInputs;
+    public final byte[] makerMultiSigPubKey;
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
     public PublishDepositTxRequest(String tradeId,
-                                   PaymentAccountPayload offererPaymentAccountPayload,
-                                   String offererAccountId,
-                                   byte[] offererMultiSigPubKey,
-                                   String offererContractAsJson,
-                                   String offererContractSignature,
-                                   String offererPayoutAddressString,
+                                   PaymentAccountPayload makerPaymentAccountPayload,
+                                   String makerAccountId,
+                                   byte[] makerMultiSigPubKey,
+                                   String makerContractAsJson,
+                                   String makerContractSignature,
+                                   String makerPayoutAddressString,
                                    byte[] preparedDepositTx,
-                                   List<RawTransactionInput> offererInputs,
+                                   List<RawTransactionInput> makerInputs,
                                    NodeAddress senderNodeAddress,
                                    String uid) {
         super(tradeId);
-        this.offererPaymentAccountPayload = offererPaymentAccountPayload;
-        this.offererAccountId = offererAccountId;
-        this.offererMultiSigPubKey = offererMultiSigPubKey;
-        this.offererContractAsJson = offererContractAsJson;
-        this.offererContractSignature = offererContractSignature;
-        this.offererPayoutAddressString = offererPayoutAddressString;
+        this.makerPaymentAccountPayload = makerPaymentAccountPayload;
+        this.makerAccountId = makerAccountId;
+        this.makerMultiSigPubKey = makerMultiSigPubKey;
+        this.makerContractAsJson = makerContractAsJson;
+        this.makerContractSignature = makerContractSignature;
+        this.makerPayoutAddressString = makerPayoutAddressString;
         this.preparedDepositTx = preparedDepositTx;
-        this.offererInputs = offererInputs;
+        this.makerInputs = makerInputs;
         this.senderNodeAddress = senderNodeAddress;
         this.uid = uid;
 
-        log.trace("offererPaymentAccount size " + Utilities.serialize(offererPaymentAccountPayload).length);
-        log.trace("offererTradeWalletPubKey size " + offererMultiSigPubKey.length);
+        log.trace("makerPaymentAccount size " + Utilities.serialize(makerPaymentAccountPayload).length);
+        log.trace("makerTradeWalletPubKey size " + makerMultiSigPubKey.length);
         log.trace("preparedDepositTx size " + preparedDepositTx.length);
-        log.trace("offererInputs size " + Utilities.serialize(new ArrayList<>(offererInputs)).length);
+        log.trace("makerInputs size " + Utilities.serialize(new ArrayList<>(makerInputs)).length);
     }
 
     @Override
@@ -93,29 +93,29 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
         return baseEnvelope.setPublishDepositTxRequest(baseEnvelope.getPublishDepositTxRequestBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)
-                .setOffererPaymentAccountPayload((PB.PaymentAccountPayload) offererPaymentAccountPayload.toProto())
-                .setOffererAccountId(offererAccountId)
-                .setOffererMultiSigPubKey(ByteString.copyFrom(offererMultiSigPubKey))
-                .setOffererContractAsJson(offererContractAsJson)
-                .setOffererContractSignature(offererContractSignature)
-                .setOffererPayoutAddressString(offererPayoutAddressString)
+                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProto())
+                .setMakerAccountId(makerAccountId)
+                .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
+                .setMakerContractAsJson(makerContractAsJson)
+                .setMakerContractSignature(makerContractSignature)
+                .setMakerPayoutAddressString(makerPayoutAddressString)
                 .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
                 .setSenderNodeAddress(senderNodeAddress.toProto())
                 .setUid(uid)
-                .addAllOffererInputs(offererInputs.stream().map(rawTransactionInput -> rawTransactionInput.toProto()).collect(Collectors.toList()))).build();
+                .addAllMakerInputs(makerInputs.stream().map(rawTransactionInput -> rawTransactionInput.toProto()).collect(Collectors.toList()))).build();
     }
 
     @Override
     public String toString() {
         return "PublishDepositTxRequest{" +
-                "offererPaymentAccountPayload=" + offererPaymentAccountPayload +
-                ", offererAccountId='" + offererAccountId + '\'' +
-                ", offererContractAsJson='" + offererContractAsJson + '\'' +
-                ", offererContractSignature='" + offererContractSignature + '\'' +
-                ", offererPayoutAddressString='" + offererPayoutAddressString + '\'' +
+                "makerPaymentAccountPayload=" + makerPaymentAccountPayload +
+                ", makerAccountId='" + makerAccountId + '\'' +
+                ", makerContractAsJson='" + makerContractAsJson + '\'' +
+                ", makerContractSignature='" + makerContractSignature + '\'' +
+                ", makerPayoutAddressString='" + makerPayoutAddressString + '\'' +
                 ", preparedDepositTx=" + Arrays.toString(preparedDepositTx) +
-                ", offererInputs=" + offererInputs +
-                ", offererMultiSigPubKey=" + Arrays.toString(offererMultiSigPubKey) +
+                ", makerInputs=" + makerInputs +
+                ", makerMultiSigPubKey=" + Arrays.toString(makerMultiSigPubKey) +
                 "} " + super.toString();
     }
 

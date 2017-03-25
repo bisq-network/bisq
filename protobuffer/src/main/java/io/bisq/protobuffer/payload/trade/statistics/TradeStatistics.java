@@ -184,9 +184,9 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     }
 
 
-    // We don't include the pubKeyRing as both traders might publish it if the offerer uses an old
-    // version and update later (taker publishes first, then later offerer)
-    // We also don't include the trade date as that is set locally and different for offerer and taker
+    // We don't include the pubKeyRing as both traders might publish it if the maker uses an old
+    // version and update later (taker publishes first, then later maker)
+    // We also don't include the trade date as that is set locally and different for maker and taker
     @Override
     public int hashCode() {
         int result;

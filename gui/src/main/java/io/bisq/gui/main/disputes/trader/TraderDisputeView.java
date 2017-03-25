@@ -1181,7 +1181,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    if (item.isDisputeOpenerIsOfferer())
+                                    if (item.isDisputeOpenerIsMaker())
                                         setText(item.isDisputeOpenerIsBuyer() ? Res.get("support.buyerOfferer") : Res.get("support.sellerOfferer"));
                                     else
                                         setText(item.isDisputeOpenerIsBuyer() ? Res.get("support.buyerTaker") : Res.get("support.sellerTaker"));

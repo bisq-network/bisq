@@ -22,7 +22,8 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.trade.SellerAsTakerTrade;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.protocol.tasks.seller.*;
+import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
+import io.bisq.core.trade.protocol.tasks.seller_as_taker.*;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
@@ -97,14 +98,14 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                VerifyMakerAccount.class,
-                VerifyMakerFeePayment.class,
-                SelectArbitrator.class,
-                LoadCreateOfferFeeTx.class,
-                CreateTakeOfferFeeTx.class,
-                BroadcastTakeOfferFeeTx.class,
-                TakerAsSellerCreatesDepositTxInputs.class,
-                SendPayDepositRequest.class
+                TakerVerifyMakerAccount.class,
+                TakerVerifyMakerFeePayment.class,
+                TakerSelectArbitrator.class,
+                TakerLoadMakerFeeTx.class,
+                TakerCreateTakerFeeTx.class,
+                TakerBroadcastTakerFeeTx.class,
+                SellerAsTakerCreatesDepositTxInputs.class,
+                TakerSendPayDepositRequest.class
         );
         startTimeout();
         taskRunner.run();
@@ -126,13 +127,13 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                ProcessPublishDepositTxRequest.class,
-                VerifyMakerAccount.class,
-                VerifyMakerFeePayment.class,
-                VerifyAndSignContract.class,
-                SignAndPublishDepositTxAsSeller.class,
-                SendDepositTxPublishedMessage.class,
-                PublishTradeStatistics.class
+                TakerProcessPublishDepositTxRequest.class,
+                TakerVerifyMakerAccount.class,
+                TakerVerifyMakerFeePayment.class,
+                TakerVerifyAndSignContract.class,
+                SellerAsTakerSignAndPublishDepositTx.class,
+                TakerSendDepositTxPublishedMessage.class,
+                TakerPublishTradeStatistics.class
         );
         taskRunner.run();
     }
@@ -150,9 +151,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 () -> handleTaskRunnerSuccess("FiatTransferStartedMessage"),
                 this::handleTaskRunnerFault);
 
-        taskRunner.addTasks(ProcessFiatTransferStartedMessage.class,
-                VerifyMakerAccount.class,
-                VerifyMakerFeePayment.class);
+        taskRunner.addTasks(SellerProcessFiatTransferStartedMessage.class,
+                TakerVerifyMakerAccount.class,
+                TakerVerifyMakerFeePayment.class);
         taskRunner.run();
     }
 
@@ -165,8 +166,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     @Override
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         //TODO check states
-        if (sellerAsTakerTrade.getState().ordinal() <= Trade.State.SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG.ordinal()) {
-            if (sellerAsTakerTrade.getState() == Trade.State.SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG)
+        if (sellerAsTakerTrade.getState().ordinal() <= Trade.State.SELLER_AS_MAKER_SENT_FIAT_PAYMENT_RECEIPT_MSG.ordinal()) {
+            if (sellerAsTakerTrade.getState() == Trade.State.SELLER_AS_MAKER_SENT_FIAT_PAYMENT_RECEIPT_MSG)
                 log.warn("onFiatPaymentReceived called twice. " +
                         "That is expected if the app starts up and the other peer has still not continued.");
 
@@ -183,8 +184,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                     });
 
             taskRunner.addTasks(
-                    VerifyMakerAccount.class,
-                    VerifyMakerFeePayment.class,
+                    TakerVerifyMakerAccount.class,
+                    TakerVerifyMakerFeePayment.class,
                     SellerAsTakerSignAndFinalizePayoutTx.class,
                     SellerAsTakerBroadcastPayoutTx.class,
                     SellerAsTakerSendPayoutTxPublishedMessage.class

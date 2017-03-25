@@ -153,7 +153,7 @@ public class NotificationCenter {
         } else {
             if (tradeManager.isBuyer(trade.getOffer())) {
                 switch (tradeState) {
-                    case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
+                    case MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
                         message = Res.get("notification.trade.accepted", Res.get("shared.seller"));
                         break;
                     case DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN:
@@ -162,7 +162,7 @@ public class NotificationCenter {
                 }
             } else {
                 switch (tradeState) {
-                    case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
+                    case MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
                         message = Res.get("notification.trade.accepted", Res.get("shared.buyer"));
                         break;
                     case SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG:

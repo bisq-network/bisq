@@ -101,10 +101,10 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final double marketPriceMargin;
     private final long amount;
     private final long minAmount;
-    private final NodeAddress offererNodeAddress;
+    private final NodeAddress makerNodeAddress;
     @JsonExclude
     private final PubKeyRing pubKeyRing;
-    private final String offererPaymentAccountId;
+    private final String makerPaymentAccountId;
 
     // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
     @Setter
@@ -152,7 +152,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
      *
      * @param id
      * @param date                       date of OfferPayload creation, can be null in which case the current date/time will be used.
-     * @param offererNodeAddress
+     * @param makerNodeAddress
      * @param pubKeyRing
      * @param direction
      * @param price
@@ -165,7 +165,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
      * @param arbitratorNodeAddresses
      * @param mediatorNodeAddresses
      * @param paymentMethodId
-     * @param offererPaymentAccountId
+     * @param makerPaymentAccountId
      * @param offerFeePaymentTxId
      * @param countryCode
      * @param acceptedCountryCodes
@@ -190,7 +190,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     @SuppressWarnings("JavaDoc")
     public OfferPayload(String id,
                         long date,
-                        NodeAddress offererNodeAddress,
+                        NodeAddress makerNodeAddress,
                         PubKeyRing pubKeyRing,
                         Direction direction,
                         long price,
@@ -203,7 +203,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                         List<NodeAddress> arbitratorNodeAddresses,
                         List<NodeAddress> mediatorNodeAddresses,
                         String paymentMethodId,
-                        String offererPaymentAccountId,
+                        String makerPaymentAccountId,
                         @Nullable String offerFeePaymentTxId,
                         @Nullable String countryCode,
                         @Nullable List<String> acceptedCountryCodes,
@@ -227,7 +227,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
         this.id = id;
         this.date = date;
-        this.offererNodeAddress = offererNodeAddress;
+        this.makerNodeAddress = makerNodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.direction = direction;
         this.price = price;
@@ -240,7 +240,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.arbitratorNodeAddresses = arbitratorNodeAddresses;
         this.mediatorNodeAddresses = mediatorNodeAddresses;
         this.paymentMethodId = paymentMethodId;
-        this.offererPaymentAccountId = offererPaymentAccountId;
+        this.makerPaymentAccountId = makerPaymentAccountId;
         this.offerFeePaymentTxId = offerFeePaymentTxId;
         this.countryCode = countryCode;
         this.acceptedCountryCodes = acceptedCountryCodes;
@@ -272,7 +272,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
     @Override
     public NodeAddress getOwnerNodeAddress() {
-        return offererNodeAddress;
+        return makerNodeAddress;
     }
 
     @Override
@@ -308,9 +308,9 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setMarketPriceMargin(marketPriceMargin)
                 .setAmount(amount)
                 .setMinAmount(minAmount)
-                .setOffererNodeAddress(offererNodeAddress.toProto())
+                .setMakerNodeAddress(makerNodeAddress.toProto())
                 .setPubKeyRing(pubKeyRing.toProto())
-                .setOffererPaymentAccountId(offererPaymentAccountId)
+                .setMakerPaymentAccountId(makerPaymentAccountId)
                 .setVersionNr(versionNr)
                 .setBlockHeightAtOfferCreation(blockHeightAtOfferCreation)
                 .setTxFee(txFee)

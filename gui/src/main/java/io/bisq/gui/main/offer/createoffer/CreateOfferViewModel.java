@@ -84,7 +84,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     // If we would change the price representation in the domain we would not be backward compatible
     final StringProperty price = new SimpleStringProperty();
 
-    // Positive % value means always a better price form the offerer's perspective: 
+    // Positive % value means always a better price form the maker's perspective: 
     // Buyer (with fiat): lower price as market
     // Buyer (with altcoin): higher (display) price as market (display price is inverted)
     final StringProperty marketPriceMargin = new SimpleStringProperty();

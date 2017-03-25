@@ -99,7 +99,7 @@ public class SellerStep3View extends TradeStepView {
 
             } else if (state == Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT && confirmButton.isDisabled()) {
                 showStatusInfo();
-            } else if (state == Trade.State.SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG) {
+            } else if (state == Trade.State.SELLER_AS_MAKER_SENT_FIAT_PAYMENT_RECEIPT_MSG) {
                 hideStatusInfo();
             }
         });

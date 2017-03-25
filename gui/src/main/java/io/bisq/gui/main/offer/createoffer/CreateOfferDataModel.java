@@ -244,7 +244,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         if (!preferences.getUseStickyMarketPrice())
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
-        // The offerer only pays the mining fee for the trade fee tx (not the mining fee for other trade txs). 
+        // The maker only pays the mining fee for the trade fee tx (not the mining fee for other trade txs). 
         // A typical trade fee tx has about 226 bytes (if one input). We use 400 as a safe value.
         // We cannot use tx size calculation as we do not know initially how the input is funded. And we require the
         // fee for getting the funds needed.
@@ -531,7 +531,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void calculateTotalToPay() {
-        // Offerer does not pay the tx fee for the trade txs because the mining fee might be different when offerer 
+        // Maker does not pay the tx fee for the trade txs because the mining fee might be different when maker 
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (direction != null && amount.get() != null && createOfferFeeAsCoin != null) {

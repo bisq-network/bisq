@@ -22,7 +22,12 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.trade.BuyerAsTakerTrade;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.protocol.tasks.buyer.*;
+import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendFiatTransferStartedMessage;
+import io.bisq.core.trade.protocol.tasks.buyer.ProcessFinalizePayoutTxRequest;
+import io.bisq.core.trade.protocol.tasks.buyer.SendPayoutTxFinalizedMessage;
+import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositTxInputs;
+import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndFinalizePayoutTx;
+import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndPublishDepositTx;
 import io.bisq.core.trade.protocol.tasks.shared.BroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.protobuffer.message.Message;
@@ -95,12 +100,12 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                SelectArbitrator.class,
-                LoadCreateOfferFeeTx.class,
-                CreateTakeOfferFeeTx.class,
-                BroadcastTakeOfferFeeTx.class,
-                TakerCreatesDepositTxInputsAsBuyer.class,
-                SendPayDepositRequest.class
+                TakerSelectArbitrator.class,
+                TakerLoadMakerFeeTx.class,
+                TakerCreateTakerFeeTx.class,
+                TakerBroadcastTakerFeeTx.class,
+                BuyerAsTakerCreatesDepositTxInputs.class,
+                TakerSendPayDepositRequest.class
         );
         startTimeout();
         taskRunner.run();
@@ -120,13 +125,13 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 () -> handleTaskRunnerSuccess("PublishDepositTxRequest"),
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
-                ProcessPublishDepositTxRequest.class,
-                VerifyMakerAccount.class,
-                VerifyMakerFeePayment.class,
-                VerifyAndSignContract.class,
+                TakerProcessPublishDepositTxRequest.class,
+                TakerVerifyMakerAccount.class,
+                TakerVerifyMakerFeePayment.class,
+                TakerVerifyAndSignContract.class,
                 BuyerAsTakerSignAndPublishDepositTx.class,
-                SendDepositTxPublishedMessage.class,
-                PublishTradeStatistics.class
+                TakerSendDepositTxPublishedMessage.class,
+                TakerPublishTradeStatistics.class
         );
         taskRunner.run();
     }
@@ -156,9 +161,9 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                         handleTaskRunnerFault(errorMessage);
                     });
             taskRunner.addTasks(
-                    VerifyMakerAccount.class,
-                    VerifyMakerFeePayment.class,
-                    SendFiatTransferStartedMessage.class
+                    TakerVerifyMakerAccount.class,
+                    TakerVerifyMakerFeePayment.class,
+                    BuyerSendFiatTransferStartedMessage.class
             );
             taskRunner.run();
         } else {

@@ -231,7 +231,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addTitledGroupBg(gridPane, ++rowIndex, 16, Res.get("disputeSummaryWindow.title"));
         addLabelTextField(gridPane, rowIndex, Res.getWithCol("shared.tradeId"), dispute.getShortTradeId(), Layout.FIRST_ROW_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), formatter.formatDateTime(dispute.getOpeningDate()));
-        if (dispute.isDisputeOpenerIsOfferer()) {
+        if (dispute.isDisputeOpenerIsMaker()) {
             if (dispute.isDisputeOpenerIsBuyer())
                 role = Res.get("support.buyerOfferer");
             else

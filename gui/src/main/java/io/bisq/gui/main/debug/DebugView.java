@@ -26,13 +26,22 @@ import io.bisq.core.offer.placeoffer.tasks.AddOfferToRemoteOfferBook;
 import io.bisq.core.offer.placeoffer.tasks.BroadcastCreateOfferFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.CreateOfferFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.ValidateOffer;
-import io.bisq.core.trade.protocol.BuyerAsOffererProtocol;
+import io.bisq.core.trade.protocol.BuyerAsMakerProtocol;
 import io.bisq.core.trade.protocol.BuyerAsTakerProtocol;
-import io.bisq.core.trade.protocol.SellerAsOffererProtocol;
+import io.bisq.core.trade.protocol.SellerAsMakerProtocol;
 import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
-import io.bisq.core.trade.protocol.tasks.buyer.*;
-import io.bisq.core.trade.protocol.tasks.offerer.*;
-import io.bisq.core.trade.protocol.tasks.seller.*;
+import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendFiatTransferStartedMessage;
+import io.bisq.core.trade.protocol.tasks.buyer.ProcessFinalizePayoutTxRequest;
+import io.bisq.core.trade.protocol.tasks.buyer.SendPayoutTxFinalizedMessage;
+import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
+import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndFinalizePayoutTx;
+import io.bisq.core.trade.protocol.tasks.maker.*;
+import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
+import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerProcessPayoutTxFinalizedMessage;
+import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerSendFinalizePayoutTxRequest;
+import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerSignPayoutTx;
+import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
+import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
 import io.bisq.core.trade.protocol.tasks.shared.BroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.gui.common.view.FxmlView;
@@ -85,20 +94,20 @@ public class DebugView extends InitializableView {
 
                         
                         /*---- Protocol ----*/
-                        BuyerAsOffererProtocol.class,
-                        ProcessPayDepositRequest.class,
-                        VerifyArbitrationSelection.class,
-                        VerifyTakerAccount.class,
-                        CreateAndSignContract.class,
-                        OffererAsBuyerCreatesAndSignsDepositTx.class,
-                        LoadTakeOfferFeeTx.class,
-                        SetupDepositBalanceListener.class,
-                        SendPublishDepositTxRequest.class,
+                        BuyerAsMakerProtocol.class,
+                        MakerProcessPayDepositRequest.class,
+                        MakerVerifyArbitrationSelection.class,
+                        MakerVerifyTakerAccount.class,
+                        MakerCreateAndSignContract.class,
+                        BuyerAsMakerCreatesAndSignsDepositTx.class,
+                        MakerLoadTakeOfferFeeTx.class,
+                        MakerSetupDepositBalanceListener.class,
+                        MakerSendPublishDepositTxRequest.class,
 
-                        ProcessDepositTxPublishedMessage.class,
+                        MakerProcessDepositTxPublishedMessage.class,
 
-                        VerifyTakerFeePayment.class,
-                        SendFiatTransferStartedMessage.class,
+                        MakerVerifyTakerFeePayment.class,
+                        BuyerSendFiatTransferStartedMessage.class,
 
                         ProcessFinalizePayoutTxRequest.class,
                         BuyerAsTakerSignAndFinalizePayoutTx.class,
@@ -109,25 +118,25 @@ public class DebugView extends InitializableView {
 
                         /*---- Protocol ----*/
                         SellerAsTakerProtocol.class,
-                        SelectArbitrator.class,
-                        CreateTakeOfferFeeTx.class,
-                        BroadcastTakeOfferFeeTx.class,
-                        TakerAsSellerCreatesDepositTxInputs.class,
-                        SendPayDepositRequest.class,
+                        TakerSelectArbitrator.class,
+                        TakerCreateTakerFeeTx.class,
+                        TakerBroadcastTakerFeeTx.class,
+                        SellerAsTakerCreatesDepositTxInputs.class,
+                        TakerSendPayDepositRequest.class,
 
-                        ProcessPublishDepositTxRequest.class,
-                        VerifyMakerAccount.class,
-                        VerifyAndSignContract.class,
-                        SignAndPublishDepositTxAsSeller.class,
-                        SendDepositTxPublishedMessage.class,
+                        TakerProcessPublishDepositTxRequest.class,
+                        TakerVerifyMakerAccount.class,
+                        TakerVerifyAndSignContract.class,
+                        SellerAsTakerSignAndPublishDepositTx.class,
+                        TakerSendDepositTxPublishedMessage.class,
 
-                        ProcessFiatTransferStartedMessage.class,
+                        SellerProcessFiatTransferStartedMessage.class,
 
-                        VerifyMakerFeePayment.class,
-                        SignPayoutTx.class,
-                        SellerAsOffererSendFinalizePayoutTxRequest.class,
+                        TakerVerifyMakerFeePayment.class,
+                        SellerAsMakerSignPayoutTx.class,
+                        SellerAsMakerSendFinalizePayoutTxRequest.class,
 
-                        ProcessPayoutTxFinalizedMessage.class,
+                        SellerAsMakerProcessPayoutTxFinalizedMessage.class,
                         BroadcastPayoutTx.class,
                         Boolean.class /* used as separator*/
                 )
@@ -135,21 +144,21 @@ public class DebugView extends InitializableView {
         final ObservableList<Class> items2 = FXCollections.observableArrayList(Arrays.asList(
                         /*---- Protocol ----*/
                         BuyerAsTakerProtocol.class,
-                        SelectArbitrator.class,
-                        CreateTakeOfferFeeTx.class,
-                        BroadcastTakeOfferFeeTx.class,
-                        TakerAsSellerCreatesDepositTxInputs.class,
-                        SendPayDepositRequest.class,
+                        TakerSelectArbitrator.class,
+                        TakerCreateTakerFeeTx.class,
+                        TakerBroadcastTakerFeeTx.class,
+                        SellerAsTakerCreatesDepositTxInputs.class,
+                        TakerSendPayDepositRequest.class,
 
-                        ProcessPublishDepositTxRequest.class,
-                        VerifyMakerAccount.class,
-                        VerifyAndSignContract.class,
-                        SignAndPublishDepositTxAsSeller.class,
-                        SendDepositTxPublishedMessage.class,
+                        TakerProcessPublishDepositTxRequest.class,
+                        TakerVerifyMakerAccount.class,
+                        TakerVerifyAndSignContract.class,
+                        SellerAsTakerSignAndPublishDepositTx.class,
+                        TakerSendDepositTxPublishedMessage.class,
 
-                        VerifyMakerFeePayment.class,
-                        SignPayoutTx.class,
-                        SendFiatTransferStartedMessage.class,
+                        TakerVerifyMakerFeePayment.class,
+                        SellerAsMakerSignPayoutTx.class,
+                        BuyerSendFiatTransferStartedMessage.class,
 
                         ProcessFinalizePayoutTxRequest.class,
                         BuyerAsTakerSignAndFinalizePayoutTx.class,
@@ -159,24 +168,24 @@ public class DebugView extends InitializableView {
                         
                         
                          /*---- Protocol ----*/
-                        SellerAsOffererProtocol.class,
-                        ProcessPayDepositRequest.class,
-                        VerifyArbitrationSelection.class,
-                        VerifyTakerAccount.class,
-                        CreateAndSignContract.class,
-                        OffererAsBuyerCreatesAndSignsDepositTx.class,
-                        SetupDepositBalanceListener.class,
-                        SendPublishDepositTxRequest.class,
+                        SellerAsMakerProtocol.class,
+                        MakerProcessPayDepositRequest.class,
+                        MakerVerifyArbitrationSelection.class,
+                        MakerVerifyTakerAccount.class,
+                        MakerCreateAndSignContract.class,
+                        BuyerAsMakerCreatesAndSignsDepositTx.class,
+                        MakerSetupDepositBalanceListener.class,
+                        MakerSendPublishDepositTxRequest.class,
 
-                        ProcessDepositTxPublishedMessage.class,
+                        MakerProcessDepositTxPublishedMessage.class,
 
-                        ProcessFiatTransferStartedMessage.class,
+                        SellerProcessFiatTransferStartedMessage.class,
 
-                        VerifyTakerFeePayment.class,
-                        SignPayoutTx.class,
-                        SellerAsOffererSendFinalizePayoutTxRequest.class,
+                        MakerVerifyTakerFeePayment.class,
+                        SellerAsMakerSignPayoutTx.class,
+                        SellerAsMakerSendFinalizePayoutTxRequest.class,
 
-                        ProcessPayoutTxFinalizedMessage.class,
+                        SellerAsMakerProcessPayoutTxFinalizedMessage.class,
                         BroadcastPayoutTx.class,
                         Boolean.class /* used as separator*/
                 )

@@ -17,6 +17,7 @@
 
 package io.bisq.common.locale;
 
+import io.bisq.common.app.DevEnv;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -70,6 +71,9 @@ public class Res {
         try {
             return resourceBundle.getString(key);
         } catch (MissingResourceException e) {
+            if (DevEnv.DEV_MODE)
+                throw new RuntimeException("Missing resource for key: " + key);
+            
             log.warn("Missing resource for key: " + key);
             return key;
         }

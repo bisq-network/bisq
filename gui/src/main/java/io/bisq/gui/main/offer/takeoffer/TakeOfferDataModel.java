@@ -173,7 +173,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
                 getBuyerSecurityDeposit() :
                 getSellerSecurityDeposit();
 
-        // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer
+        // Taker pays 2 times the tx fee because the mining fee might be different when maker created the offer
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the takeOfferFee and not visible to the trader
 
@@ -362,7 +362,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     void calculateTotalToPay() {
-        // Taker pays 2 times the tx fee because the mining fee might be different when offerer created the offer
+        // Taker pays 2 times the tx fee because the mining fee might be different when maker created the offer
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (offer != null && amountAsCoin.get() != null && takerFeeAsCoin != null) {
@@ -438,7 +438,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return true;
     }
 
-    boolean wouldCreateDustForOfferer() {
+    boolean wouldCreateDustForMaker() {
         //noinspection SimplifiableIfStatement
         if (amountAsCoin.get() != null && offer != null) {
             Coin customAmount = offer.getAmount().subtract(amountAsCoin.get());

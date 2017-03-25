@@ -51,23 +51,23 @@ public final class Contract implements Payload {
     private final long tradePrice;
     public final String takeOfferFeeTxID;
     public final NodeAddress arbitratorNodeAddress;
-    private final boolean isBuyerOffererAndSellerTaker;
-    private final String offererAccountId;
+    private final boolean isBuyerMakerAndSellerTaker;
+    private final String makerAccountId;
     private final String takerAccountId;
-    private final PaymentAccountPayload offererPaymentAccountPayload;
+    private final PaymentAccountPayload makerPaymentAccountPayload;
     private final PaymentAccountPayload takerPaymentAccountPayload;
     @JsonExclude
-    private final PubKeyRing offererPubKeyRing;
+    private final PubKeyRing makerPubKeyRing;
     @JsonExclude
     private final PubKeyRing takerPubKeyRing;
     @Getter
     private final NodeAddress buyerNodeAddress;
     @Getter
     private final NodeAddress sellerNodeAddress;
-    private final String offererPayoutAddressString;
+    private final String makerPayoutAddressString;
     private final String takerPayoutAddressString;
     @JsonExclude
-    private final byte[] offererMultiSigPubKey;
+    private final byte[] makerMultiSigPubKey;
     @JsonExclude
     private final byte[] takerMultiSigPubKey;
 
@@ -78,16 +78,16 @@ public final class Contract implements Payload {
                     NodeAddress buyerNodeAddress,
                     NodeAddress sellerNodeAddress,
                     NodeAddress arbitratorNodeAddress,
-                    boolean isBuyerOffererAndSellerTaker,
-                    String offererAccountId,
+                    boolean isBuyerMakerAndSellerTaker,
+                    String makerAccountId,
                     String takerAccountId,
-                    PaymentAccountPayload offererPaymentAccountPayload,
+                    PaymentAccountPayload makerPaymentAccountPayload,
                     PaymentAccountPayload takerPaymentAccountPayload,
-                    PubKeyRing offererPubKeyRing,
+                    PubKeyRing makerPubKeyRing,
                     PubKeyRing takerPubKeyRing,
-                    String offererPayoutAddressString,
+                    String makerPayoutAddressString,
                     String takerPayoutAddressString,
-                    byte[] offererMultiSigPubKey,
+                    byte[] makerMultiSigPubKey,
                     byte[] takerMultiSigPubKey) {
         this.offerPayload = offerPayload;
         this.tradePrice = tradePrice.getValue();
@@ -96,72 +96,72 @@ public final class Contract implements Payload {
         this.tradeAmount = tradeAmount.value;
         this.takeOfferFeeTxID = takeOfferFeeTxID;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
-        this.isBuyerOffererAndSellerTaker = isBuyerOffererAndSellerTaker;
-        this.offererAccountId = offererAccountId;
+        this.isBuyerMakerAndSellerTaker = isBuyerMakerAndSellerTaker;
+        this.makerAccountId = makerAccountId;
         this.takerAccountId = takerAccountId;
-        this.offererPaymentAccountPayload = offererPaymentAccountPayload;
+        this.makerPaymentAccountPayload = makerPaymentAccountPayload;
         this.takerPaymentAccountPayload = takerPaymentAccountPayload;
-        this.offererPubKeyRing = offererPubKeyRing;
+        this.makerPubKeyRing = makerPubKeyRing;
         this.takerPubKeyRing = takerPubKeyRing;
-        this.offererPayoutAddressString = offererPayoutAddressString;
+        this.makerPayoutAddressString = makerPayoutAddressString;
         this.takerPayoutAddressString = takerPayoutAddressString;
-        this.offererMultiSigPubKey = offererMultiSigPubKey;
+        this.makerMultiSigPubKey = makerMultiSigPubKey;
         this.takerMultiSigPubKey = takerMultiSigPubKey;
 
         // PaymentMethod need to be the same
-        Preconditions.checkArgument(offererPaymentAccountPayload.getPaymentMethodId()
+        Preconditions.checkArgument(makerPaymentAccountPayload.getPaymentMethodId()
                         .equals(takerPaymentAccountPayload.getPaymentMethodId()),
                 "payment methods of maker and taker must be the same.\n" +
-                        "offererPaymentMethodId=" + offererPaymentAccountPayload.getPaymentMethodId() + "\n" +
+                        "makerPaymentMethodId=" + makerPaymentAccountPayload.getPaymentMethodId() + "\n" +
                         "takerPaymentMethodId=" + takerPaymentAccountPayload.getPaymentMethodId());
     }
 
-    public boolean isBuyerOffererAndSellerTaker() {
-        return isBuyerOffererAndSellerTaker;
+    public boolean isBuyerMakerAndSellerTaker() {
+        return isBuyerMakerAndSellerTaker;
     }
 
     public String getBuyerAccountId() {
-        return isBuyerOffererAndSellerTaker ? offererAccountId : takerAccountId;
+        return isBuyerMakerAndSellerTaker ? makerAccountId : takerAccountId;
     }
 
     public String getSellerAccountId() {
-        return isBuyerOffererAndSellerTaker ? takerAccountId : offererAccountId;
+        return isBuyerMakerAndSellerTaker ? takerAccountId : makerAccountId;
     }
 
     public String getBuyerPayoutAddressString() {
-        return isBuyerOffererAndSellerTaker ? offererPayoutAddressString : takerPayoutAddressString;
+        return isBuyerMakerAndSellerTaker ? makerPayoutAddressString : takerPayoutAddressString;
     }
 
     public String getSellerPayoutAddressString() {
-        return isBuyerOffererAndSellerTaker ? takerPayoutAddressString : offererPayoutAddressString;
+        return isBuyerMakerAndSellerTaker ? takerPayoutAddressString : makerPayoutAddressString;
     }
 
     public PubKeyRing getBuyerPubKeyRing() {
-        return isBuyerOffererAndSellerTaker ? offererPubKeyRing : takerPubKeyRing;
+        return isBuyerMakerAndSellerTaker ? makerPubKeyRing : takerPubKeyRing;
     }
 
     public PubKeyRing getSellerPubKeyRing() {
-        return isBuyerOffererAndSellerTaker ? takerPubKeyRing : offererPubKeyRing;
+        return isBuyerMakerAndSellerTaker ? takerPubKeyRing : makerPubKeyRing;
     }
 
     public byte[] getBuyerMultiSigPubKey() {
-        return isBuyerOffererAndSellerTaker ? offererMultiSigPubKey : takerMultiSigPubKey;
+        return isBuyerMakerAndSellerTaker ? makerMultiSigPubKey : takerMultiSigPubKey;
     }
 
     public byte[] getSellerMultiSigPubKey() {
-        return isBuyerOffererAndSellerTaker ? takerMultiSigPubKey : offererMultiSigPubKey;
+        return isBuyerMakerAndSellerTaker ? takerMultiSigPubKey : makerMultiSigPubKey;
     }
 
     public PaymentAccountPayload getBuyerPaymentAccountPayload() {
-        return isBuyerOffererAndSellerTaker ? offererPaymentAccountPayload : takerPaymentAccountPayload;
+        return isBuyerMakerAndSellerTaker ? makerPaymentAccountPayload : takerPaymentAccountPayload;
     }
 
     public PaymentAccountPayload getSellerPaymentAccountPayload() {
-        return isBuyerOffererAndSellerTaker ? takerPaymentAccountPayload : offererPaymentAccountPayload;
+        return isBuyerMakerAndSellerTaker ? takerPaymentAccountPayload : makerPaymentAccountPayload;
     }
 
     public String getPaymentMethodId() {
-        return offererPaymentAccountPayload.getPaymentMethodId();
+        return makerPaymentAccountPayload.getPaymentMethodId();
     }
 
     public Coin getTradeAmount() {
@@ -181,18 +181,18 @@ public final class Contract implements Payload {
                 .setTradePrice(tradePrice)
                 .setTakeOfferFeeTxId(takeOfferFeeTxID)
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProto())
-                .setIsBuyerOffererAndSellerTaker(isBuyerOffererAndSellerTaker)
-                .setOffererAccountId(offererAccountId)
+                .setIsBuyerMakerAndSellerTaker(isBuyerMakerAndSellerTaker)
+                .setMakerAccountId(makerAccountId)
                 .setTakerAccountId(takerAccountId)
-                .setOffererPaymentAccountPayload((PB.PaymentAccountPayload) offererPaymentAccountPayload.toProto())
+                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProto())
                 .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProto())
-                .setOffererPubKeyRing(offererPubKeyRing.toProto())
+                .setMakerPubKeyRing(makerPubKeyRing.toProto())
                 .setTakerPubKeyRing(takerPubKeyRing.toProto())
                 .setBuyerNodeAddress(buyerNodeAddress.toProto())
                 .setSellerNodeAddress(sellerNodeAddress.toProto())
-                .setOffererPayoutAddressString(offererPayoutAddressString)
+                .setMakerPayoutAddressString(makerPayoutAddressString)
                 .setTakerPayoutAddressString(takerPayoutAddressString)
-                .setOffererBtcPubKey(ByteString.copyFrom(offererMultiSigPubKey))
+                .setMakerBtcPubKey(ByteString.copyFrom(makerMultiSigPubKey))
                 .setTakerBtcPubKey(ByteString.copyFrom(takerMultiSigPubKey)).build();
     }
 
@@ -204,18 +204,18 @@ public final class Contract implements Payload {
                 "\n\ttradePrice=" + tradePrice +
                 "\n\ttakeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
                 "\n\tarbitratorAddress=" + arbitratorNodeAddress +
-                "\n\tisBuyerOffererAndSellerTaker=" + isBuyerOffererAndSellerTaker +
-                "\n\toffererAccountId='" + offererAccountId + '\'' +
+                "\n\tisBuyerMakerAndSellerTaker=" + isBuyerMakerAndSellerTaker +
+                "\n\tmakerAccountId='" + makerAccountId + '\'' +
                 "\n\ttakerAccountId='" + takerAccountId + '\'' +
-                "\n\toffererPaymentAccountPayload=" + offererPaymentAccountPayload +
+                "\n\tmakerPaymentAccountPayload=" + makerPaymentAccountPayload +
                 "\n\ttakerPaymentAccountPayload=" + takerPaymentAccountPayload +
-                "\n\toffererPubKeyRing=" + offererPubKeyRing +
+                "\n\tmakerPubKeyRing=" + makerPubKeyRing +
                 "\n\ttakerPubKeyRing=" + takerPubKeyRing +
                 "\n\tbuyerAddress=" + buyerNodeAddress +
                 "\n\tsellerAddress=" + sellerNodeAddress +
-                "\n\toffererPayoutAddressString='" + offererPayoutAddressString + '\'' +
+                "\n\tmakerPayoutAddressString='" + makerPayoutAddressString + '\'' +
                 "\n\ttakerPayoutAddressString='" + takerPayoutAddressString + '\'' +
-                "\n\toffererMultiSigPubKey=" + Hex.toHexString(offererMultiSigPubKey) +
+                "\n\tmakerMultiSigPubKey=" + Hex.toHexString(makerMultiSigPubKey) +
                 "\n\ttakerMultiSigPubKey=" + Hex.toHexString(takerMultiSigPubKey) +
                 "\n\tBuyerMultiSigPubKey=" + Hex.toHexString(getBuyerMultiSigPubKey()) +
                 "\n\tSellerMultiSigPubKey=" + Hex.toHexString(getSellerMultiSigPubKey()) +

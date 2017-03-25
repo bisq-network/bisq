@@ -215,7 +215,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         Contract contract = trade.getContract();
         if (contract != null) {
             Offer offer = trade.getOffer();
-            return formatter.getRole(contract.isBuyerOffererAndSellerTaker(), dataModel.isOfferer(offer), offer.getCurrencyCode());
+            return formatter.getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
         } else {
             return "";
         }
@@ -326,11 +326,11 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
 
             case TAKER_FEE_PAID:
-            case OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST:
+            case MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST:
             case TAKER_PUBLISHED_DEPOSIT_TX:
             case DEPOSIT_SEEN_IN_NETWORK:
             case TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG:
-            case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
+            case MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
                 sellerState.set(WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
                 buyerState.set(BuyerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
                 break;
@@ -348,7 +348,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT:  // we stick with the state until we get the msg sent success
                 sellerState.set(REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED);
                 break;
-            case SELLER_AS_OFFERER_SENT_FIAT_PAYMENT_RECEIPT_MSG: // todo remove?
+            case SELLER_AS_MAKER_SENT_FIAT_PAYMENT_RECEIPT_MSG: // todo remove?
                 sellerState.set(WAIT_FOR_PAYOUT_TX);
                 break;
             case BUYER_RECEIVED_FIAT_PAYMENT_RECEIPT_MSG:

@@ -217,18 +217,18 @@ public class ProtoBufferUtilities {
     }
 
     private static Message getPublishDepositTxRequest(PB.PublishDepositTxRequest publishDepositTxRequest) {
-        List<RawTransactionInput> rawTransactionInputs = publishDepositTxRequest.getOffererInputsList().stream()
+        List<RawTransactionInput> rawTransactionInputs = publishDepositTxRequest.getMakerInputsList().stream()
                 .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
                         rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
                 .collect(Collectors.toList());
 
         return new PublishDepositTxRequest(publishDepositTxRequest.getTradeId(),
-                getPaymentAccountPayload(publishDepositTxRequest.getOffererPaymentAccountPayload()),
-                publishDepositTxRequest.getOffererAccountId(),
-                publishDepositTxRequest.getOffererMultiSigPubKey().toByteArray(),
-                publishDepositTxRequest.getOffererContractAsJson(),
-                publishDepositTxRequest.getOffererContractSignature(),
-                publishDepositTxRequest.getOffererPayoutAddressString(),
+                getPaymentAccountPayload(publishDepositTxRequest.getMakerPaymentAccountPayload()),
+                publishDepositTxRequest.getMakerAccountId(),
+                publishDepositTxRequest.getMakerMultiSigPubKey().toByteArray(),
+                publishDepositTxRequest.getMakerContractAsJson(),
+                publishDepositTxRequest.getMakerContractSignature(),
+                publishDepositTxRequest.getMakerPayoutAddressString(),
                 publishDepositTxRequest.getPreparedDepositTx().toByteArray(),
                 rawTransactionInputs,
                 getNodeAddress(publishDepositTxRequest.getSenderNodeAddress()),
@@ -297,10 +297,10 @@ public class ProtoBufferUtilities {
 
     private static Dispute getDispute(PB.Dispute dispute) {
         return new Dispute(dispute.getTradeId(), dispute.getTraderId(),
-                dispute.getDisputeOpenerIsBuyer(), dispute.getDisputeOpenerIsOfferer(),
+                dispute.getDisputeOpenerIsBuyer(), dispute.getDisputeOpenerIsMaker(),
                 getPubKeyRing(dispute.getTraderPubKeyRing()), new Date(dispute.getTradeDate()), getContract(dispute.getContract()),
                 dispute.getContractHash().toByteArray(), dispute.getDepositTxSerialized().toByteArray(), dispute.getPayoutTxSerialized().toByteArray(),
-                dispute.getDepositTxId(), dispute.getPayoutTxId(), dispute.getContractAsJson(), dispute.getOffererContractSignature(),
+                dispute.getDepositTxId(), dispute.getPayoutTxId(), dispute.getContractAsJson(), dispute.getMakerContractSignature(),
                 dispute.getTakerContractSignature(), getPubKeyRing(dispute.getArbitratorPubKeyRing()), dispute.getIsSupportTicket());
 
     }
@@ -313,16 +313,16 @@ public class ProtoBufferUtilities {
                 getNodeAddress(contract.getBuyerNodeAddress()),
                 getNodeAddress(contract.getSellerNodeAddress()),
                 getNodeAddress(contract.getArbitratorNodeAddress()),
-                contract.getIsBuyerOffererAndSellerTaker(),
-                contract.getOffererAccountId(),
+                contract.getIsBuyerMakerAndSellerTaker(),
+                contract.getMakerAccountId(),
                 contract.getTakerAccountId(),
-                getPaymentAccountPayload(contract.getOffererPaymentAccountPayload()),
+                getPaymentAccountPayload(contract.getMakerPaymentAccountPayload()),
                 getPaymentAccountPayload(contract.getTakerPaymentAccountPayload()),
-                getPubKeyRing(contract.getOffererPubKeyRing()),
+                getPubKeyRing(contract.getMakerPubKeyRing()),
                 getPubKeyRing(contract.getTakerPubKeyRing()),
-                contract.getOffererPayoutAddressString(),
+                contract.getMakerPayoutAddressString(),
                 contract.getTakerPayoutAddressString(),
-                contract.getOffererBtcPubKey().toByteArray(),
+                contract.getMakerBtcPubKey().toByteArray(),
                 contract.getTakerBtcPubKey().toByteArray());
     }
 
@@ -479,7 +479,7 @@ public class ProtoBufferUtilities {
 
         return new OfferPayload(pbOffer.getId(),
                 pbOffer.getDate(),
-                getNodeAddress(pbOffer.getOffererNodeAddress()),
+                getNodeAddress(pbOffer.getMakerNodeAddress()),
                 getPubKeyRing(pbOffer.getPubKeyRing()),
                 getDirection(pbOffer.getDirection()),
                 pbOffer.getPrice(),
@@ -492,7 +492,7 @@ public class ProtoBufferUtilities {
                 arbitratorNodeAddresses,
                 mediatorNodeAddresses,
                 pbOffer.getPaymentMethodId(),
-                pbOffer.getOffererPaymentAccountId(),
+                pbOffer.getMakerPaymentAccountId(),
                 offerFeePaymentTxId,
                 countryCode,
                 acceptedCountryCodes,

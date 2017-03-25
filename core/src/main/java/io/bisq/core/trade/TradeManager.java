@@ -269,16 +269,16 @@ public class TradeManager {
             PayDepositRequest payDepositRequest = (PayDepositRequest) message;
             Trade trade;
             if (offer.isBuyOffer())
-                trade = new BuyerAsOffererTrade(offer, Coin.valueOf(payDepositRequest.txFee),
+                trade = new BuyerAsMakerTrade(offer, Coin.valueOf(payDepositRequest.txFee),
                         Coin.valueOf(payDepositRequest.takeOfferFee), tradableListStorage);
             else
-                trade = new SellerAsOffererTrade(offer, Coin.valueOf(payDepositRequest.txFee),
+                trade = new SellerAsMakerTrade(offer, Coin.valueOf(payDepositRequest.txFee),
                         Coin.valueOf(payDepositRequest.takeOfferFee), tradableListStorage);
 
             trade.setStorage(tradableListStorage);
             initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
             trades.add(trade);
-            ((OffererTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
+            ((MakerTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
         } else {
             // TODO respond
             //(RequestDepositTxInputsMessage)message.
@@ -467,7 +467,7 @@ public class TradeManager {
     }
 
     public boolean isBuyer(Offer offer) {
-        // If I am the offerer, we use the offer direction, otherwise the mirrored direction
+        // If I am the maker, we use the offer direction, otherwise the mirrored direction
         if (isMyOffer(offer))
             return offer.isBuyOffer();
         else

@@ -105,11 +105,11 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
         boolean isPaymentAccountUsed = openOfferManager.getOpenOffers().stream()
-                .filter(o -> o.getOffer().getOffererPaymentAccountId().equals(paymentAccount.getId()))
+                .filter(o -> o.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()))
                 .findAny()
                 .isPresent();
         isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTrades().stream()
-                .filter(t -> t.getOffer().getOffererPaymentAccountId().equals(paymentAccount.getId()) ||
+                .filter(t -> t.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()) ||
                         paymentAccount.getId().equals(t.getTakerPaymentAccountId()))
                 .findAny()
                 .isPresent();

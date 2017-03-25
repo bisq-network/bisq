@@ -255,7 +255,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             Res.get("takeOffer.validation.amountLargerThanOfferAmount")));
 
-                if (dataModel.wouldCreateDustForOfferer())
+                if (dataModel.wouldCreateDustForMaker())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
             }
@@ -298,7 +298,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
                 takeOfferRequested = false;
                 break;
-            case OFFERER_OFFLINE:
+            case MAKER_OFFLINE:
                 if (takeOfferRequested)
                     offerWarning.set(Res.get("takeOffer.failed.offererNotOnline"));
                 else
@@ -355,7 +355,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         if (trade.getState() == Trade.State.TAKER_PUBLISHED_DEPOSIT_TX
                 || trade.getState() == Trade.State.DEPOSIT_SEEN_IN_NETWORK
                 || trade.getState() == Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG
-                || trade.getState() == Trade.State.OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG) {
+                || trade.getState() == Trade.State.MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG) {
             if (trade.getDepositTx() != null) {
                 if (takeOfferSucceededHandler != null)
                     takeOfferSucceededHandler.run();
@@ -373,7 +373,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 && dataModel.isMinAmountLessOrEqualAmount()
                 && !dataModel.isAmountLargerThanOfferAmount()
                 && isOfferAvailable.get()
-                && !dataModel.wouldCreateDustForOfferer();
+                && !dataModel.wouldCreateDustForMaker();
         isNextButtonDisabled.set(!inputDataValid);
         // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
         // isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || notSufficientFees);
@@ -424,7 +424,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 if (connection.getPeersNodeAddressOptional().isPresent() &&
-                        connection.getPeersNodeAddressOptional().get().equals(offer.getOffererNodeAddress())) {
+                        connection.getPeersNodeAddressOptional().get().equals(offer.getMakerNodeAddress())) {
                     offerWarning.set(Res.get("takeOffer.warning.connectionToPeerLost"));
                     updateSpinnerInfo();
                 }
