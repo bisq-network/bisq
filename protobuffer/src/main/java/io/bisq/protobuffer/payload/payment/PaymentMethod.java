@@ -116,7 +116,6 @@ public final class PaymentMethod implements Persistable, Comparable {
     ));
 
     private final String id;
-    // private long lockTime;
     private long maxTradePeriod;
     private long maxTradeLimit;
 

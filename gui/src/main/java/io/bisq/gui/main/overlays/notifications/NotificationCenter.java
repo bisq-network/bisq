@@ -96,7 +96,8 @@ public class NotificationCenter {
                     if (disputeStateSubscriptionsMap.containsKey(tradeId)) {
                         log.debug("We have already an entry in disputeStateSubscriptionsMap.");
                     } else {
-                        Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), disputeState -> onDisputeStateChanged(trade, disputeState));
+                        Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
+                                disputeState -> onDisputeStateChanged(trade, disputeState));
                         disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
                     }
 

@@ -770,7 +770,6 @@ public abstract class Trade implements Tradable, Model {
                 "\n\tmakerContractSignature.hashCode()='" + (makerContractSignature != null ?
                 makerContractSignature.hashCode() : "") + '\'' +
                 "\n\tpayoutTx=" + payoutTx +
-               /* "\n\tlockTimeAsBlockHeight=" + lockTimeAsBlockHeight +*/
                 "\n\tarbitratorNodeAddress=" + arbitratorNodeAddress +
                 "\n\ttakerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 "\n\ttxFee='" + txFee.toFriendlyString() + '\'' +

@@ -298,7 +298,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             if (model.showAllTradeCurrenciesProperty.get())
                 createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC"));
             else if (selectedTradeCurrency instanceof FiatCurrency)
-                createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC") +
+                createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC") + " " +
                         (direction == Offer.Direction.BUY ?
                                 Res.get("offerbook.buyWithOtherCurrency", code) :
                                 Res.get("offerbook.sellForOtherCurrency", code)));
