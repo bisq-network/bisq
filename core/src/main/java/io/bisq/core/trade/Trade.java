@@ -381,7 +381,7 @@ public abstract class Trade implements Tradable, Model {
 
             if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
                 tradeProtocol.completed();
-            
+
             if (changed)
                 persist();
         } else {
@@ -666,15 +666,9 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public byte[] getArbitratorPubKey() {
-        //TODO check if it still makes sense to keep it?
-        // Prior to v0.4.8.4 we did not store the arbitratorBtcPubKey in the trade object so we need to support the 
-        // previously used version as well and request the arbitrator from the user object (but that caused sometimes a bug when 
-        // the client did not get delivered an arbitrator from the P2P network).
-        if (arbitratorBtcPubKey == null) {
-            Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
-            checkNotNull(arbitrator, "arbitrator must not be null");
-            arbitratorBtcPubKey = arbitrator.getBtcPubKey();
-        }
+        Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
+        checkNotNull(arbitrator, "arbitrator must not be null");
+        arbitratorBtcPubKey = arbitrator.getBtcPubKey();
 
         checkNotNull(arbitratorBtcPubKey, "ArbitratorPubKey must not be null");
         return arbitratorBtcPubKey;

@@ -64,18 +64,25 @@ public final class Alert {
     }
 
     @VisibleForTesting
-    protected boolean isNewVersion(String appVersion) {
-        // Usually we use 3 digits (0.4.8) but to support also 4 digits in case of hotfixes (0.4.8.1) we 
-        // add a 0 at all 3 digit versions to allow correct comparison: 0.4.8 -> 480; 0.4.8.1 -> 481; 481 > 480
-        String myVersionString = appVersion.replace(".", "");
-        if (myVersionString.length() == 3)
-            myVersionString += "0";
-        int versionNum = Integer.valueOf(myVersionString);
+    protected boolean isNewVersion(String myVersion) {
+        // We need to support different version usages (0.5, 0.5.1, 0.5.1.1.1, 0.5.10.1)
+        // So we fill up the right part up to 8 digits 0.5 -> 05000000, 0.5.1.1.1 -> 05111000
+        // that should handle all cases.
+        // TODO make it more elegant and add tests :-)
 
-        String alertVersionString = alertVO.getVersion().replace(".", "");
-        if (alertVersionString.length() == 3)
-            alertVersionString += "0";
-        int alertVersionNum = Integer.valueOf(alertVersionString);
-        return versionNum < alertVersionNum;
+        // In case the input comes in a corrupted format we don't want to screw up teh app
+        try {
+            String myVersionString = myVersion.replace(".", "");
+            while (myVersionString.length() < 9)
+                myVersionString += "0";
+            int myVersionNum = Integer.valueOf(myVersionString);
+            String alertVersionString = alertVO.getVersion().replace(".", "");
+            while (alertVersionString.length() < 9)
+                alertVersionString += "0";
+            int alertVersionNum = Integer.valueOf(alertVersionString);
+            return myVersionNum < alertVersionNum;
+        } catch (Throwable t) {
+            return false;
+        }
     }
 }

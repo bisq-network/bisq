@@ -317,12 +317,6 @@
             <version>8.0.0</version>
         </dependency>
 
-        <!-- <dependency>
-             <groupId>org.fxmisc.richtext</groupId>
-             <artifactId>richtextfx</artifactId>
-             <version>0.4.1</version>
-         </dependency>-->
-
         <dependency>
             <groupId>com.googlecode.jcsv</groupId>
             <artifactId>jcsv</artifactId>

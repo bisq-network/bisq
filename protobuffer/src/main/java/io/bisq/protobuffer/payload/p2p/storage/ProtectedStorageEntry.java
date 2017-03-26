@@ -80,9 +80,7 @@ public class ProtectedStorageEntry implements Payload {
 
     public void checkCreationTimeStamp() {
         // We don't allow creation date in the future, but we cannot be too strict as clocks are not synced
-        // The 0 test is needed to be backward compatible as creationTimeStamp (timeStamp) was transient before 0.4.7
-        // TODO "|| creationTimeStamp == 0" can removed after we don't support 0.4.6 anymore
-        if (creationTimeStamp > System.currentTimeMillis() || creationTimeStamp == 0)
+        if (creationTimeStamp > System.currentTimeMillis())
             creationTimeStamp = System.currentTimeMillis();
     }
 

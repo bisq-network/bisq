@@ -40,8 +40,7 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
             OfferAvailabilityResponse offerAvailabilityResponse = model.getMessage();
 
             if (model.offer.getState() != Offer.State.REMOVED) {
-                // TODO: isAvailable is kept for backward compatibility. Can be removed once everyone is on v0.4.9
-                if (offerAvailabilityResponse.isAvailable || offerAvailabilityResponse.availabilityResult == AvailabilityResult.AVAILABLE) {
+                if (offerAvailabilityResponse.availabilityResult == AvailabilityResult.AVAILABLE) {
                     model.offer.setState(Offer.State.AVAILABLE);
                 } else {
                     model.offer.setState(Offer.State.NOT_AVAILABLE);
