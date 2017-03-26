@@ -272,7 +272,9 @@ public class Offer implements Serializable {
     }
 
     public PaymentMethod getPaymentMethod() {
-        return PaymentMethod.getPaymentMethodById(offerPayload.getPaymentMethodId());
+        return new PaymentMethod(offerPayload.getPaymentMethodId(),
+                offerPayload.getMaxTradePeriod(),
+                Coin.valueOf(offerPayload.getMaxTradeLimit()));
     }
 
     // utils
@@ -312,6 +314,10 @@ public class Offer implements Serializable {
         return errorMessageProperty;
     }
 
+    public String getErrorMessage() {
+        return errorMessageProperty.get();
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegate Getter (boilerplate code generated via IntelliJ generate delegte feature)
@@ -443,7 +449,7 @@ public class Offer implements Serializable {
 
         if (offerPayload != null ? !offerPayload.equals(offer.offerPayload) : offer.offerPayload != null) return false;
         if (state != offer.state) return false;
-        return !(errorMessageProperty != null ? !errorMessageProperty.equals(offer.errorMessageProperty) : offer.errorMessageProperty != null);
+        return !(getErrorMessage() != null ? !getErrorMessage().equals(offer.getErrorMessage()) : offer.getErrorMessage() != null);
 
     }
 
@@ -451,16 +457,16 @@ public class Offer implements Serializable {
     public int hashCode() {
         int result = offerPayload != null ? offerPayload.hashCode() : 0;
         result = 31 * result + (state != null ? state.hashCode() : 0);
-        result = 31 * result + (errorMessageProperty != null ? errorMessageProperty.hashCode() : 0);
+        result = 31 * result + (getErrorMessage() != null ? getErrorMessage().hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "Offer{" +
-                "offerPayload=" + offerPayload +
+                "getErrorMessage()='" + getErrorMessage() + '\'' +
                 ", state=" + state +
-                ", errorMessageProperty=" + errorMessageProperty +
+                ", offerPayload=" + offerPayload +
                 '}';
     }
 }

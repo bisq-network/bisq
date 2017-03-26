@@ -35,7 +35,7 @@ public final class SepaAccount extends CountryBasedPaymentAccount implements Ban
     }
 
     @Override
-    protected PaymentAccountPayload setPayload() {
+    protected PaymentAccountPayload getPayload() {
         return new SepaAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod(),
                 CountryUtil.getAllSepaCountries(Preferences.getDefaultLocale()));
     }

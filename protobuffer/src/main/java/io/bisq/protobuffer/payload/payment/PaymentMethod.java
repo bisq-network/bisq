@@ -34,11 +34,11 @@ import java.util.List;
 import java.util.Optional;
 
 // Don't use Enum as it breaks serialisation when changing entries and we want to stay flexible here
-@Slf4j
-@Getter
+
 @EqualsAndHashCode
+@Getter
 @ToString
-//TODO: locktime
+@Slf4j
 public final class PaymentMethod implements Persistable, Comparable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -118,21 +118,24 @@ public final class PaymentMethod implements Persistable, Comparable {
     private final String id;
     // private long lockTime;
     private long maxTradePeriod;
-    private Coin maxTradeLimit;
+    private long maxTradeLimit;
 
     /**
-     * @param id
-     *                       against charge back risk. If Bank do the charge back quickly the Arbitrator and the seller can push another
+     * @param id             against charge back risk. If Bank do the charge back quickly the Arbitrator and the seller can push another
      *                       double spend tx to invalidate the time locked payout tx. For the moment we set all to 0 but will have it in
      *                       place when needed.
      * @param maxTradePeriod The min. period a trader need to wait until he gets displayed the contact form for opening a dispute.
      * @param maxTradeLimit  The max. allowed trade amount in Bitcoin for that payment method (depending on charge back risk)
      */
-    public PaymentMethod(String id,/* long lockTime,*/ long maxTradePeriod, Coin maxTradeLimit) {
+    public PaymentMethod(String id, long maxTradePeriod, @NotNull Coin maxTradeLimit) {
         this.id = id;
-        // this.lockTime = lockTime;
         this.maxTradePeriod = maxTradePeriod;
-        this.maxTradeLimit = maxTradeLimit;
+        this.maxTradeLimit = maxTradeLimit.value;
+    }
+
+    // Used for dummy entries in payment methods list (SHOW_ALL)
+    public PaymentMethod(String id) {
+        this(id, 0, Coin.ZERO);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -141,7 +144,6 @@ public final class PaymentMethod implements Persistable, Comparable {
 
             // In case we update those values we want that the persisted accounts get updated as well
             PaymentMethod paymentMethod = PaymentMethod.getPaymentMethodById(id);
-            // this.lockTime = paymentMethod.getLockTime();
             this.maxTradePeriod = paymentMethod.getMaxTradePeriod();
             this.maxTradeLimit = paymentMethod.getMaxTradeLimit();
         } catch (Throwable t) {
@@ -155,6 +157,10 @@ public final class PaymentMethod implements Persistable, Comparable {
             return paymentMethodOptional.get();
         else
             return new PaymentMethod(Res.get("shared.na"), DAY, Coin.parseCoin("0"));
+    }
+
+    public Coin getMaxTradeLimitAsCoin() {
+        return Coin.valueOf(maxTradeLimit);
     }
 
     @Override

@@ -18,18 +18,10 @@
 package io.bisq.gui.main.offer.offerbook;
 
 import io.bisq.core.offer.Offer;
-import lombok.EqualsAndHashCode;
+import lombok.Value;
 
-@EqualsAndHashCode
+@Value
 public class OfferBookListItem {
     private final Offer offer;
-
-    public OfferBookListItem(Offer offer) {
-        this.offer = offer;
-    }
-
-    public Offer getOffer() {
-        return offer;
-    }
 }
 

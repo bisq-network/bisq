@@ -34,7 +34,7 @@ public final class ClearXchangeAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountPayload setPayload() {
+    protected PaymentAccountPayload getPayload() {
         return new ClearXchangeAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 

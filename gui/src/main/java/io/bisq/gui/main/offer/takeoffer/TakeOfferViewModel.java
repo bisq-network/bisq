@@ -173,7 +173,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 errorMessage.set(newValue);
         };
         offer.errorMessageProperty().addListener(offerErrorListener);
-        errorMessage.set(offer.errorMessageProperty().get());
+        errorMessage.set(offer.getErrorMessage());
 
         btcValidator.setMaxValueInBitcoin(offer.getAmount());
     }
@@ -192,7 +192,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             trade.stateProperty().addListener(tradeStateListener);
             applyTradeState(trade.getState());
             trade.errorMessageProperty().addListener(tradeErrorListener);
-            applyTradeErrorMessage(trade.errorMessageProperty().get());
+            applyTradeErrorMessage(trade.getErrorMessage());
             takeOfferCompleted.set(true);
         });
 

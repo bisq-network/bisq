@@ -544,7 +544,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             if (newValue && DevEnv.DEV_MODE) {
                 close();
             } else //noinspection ConstantConditions,ConstantConditions
-                if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
+                if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
                     String key = "takeOfferSuccessInfo";
                     if (preferences.showAgain(key)) {
                         UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))

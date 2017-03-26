@@ -33,7 +33,7 @@ public final class CryptoCurrencyAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountPayload setPayload() {
+    protected PaymentAccountPayload getPayload() {
         return new CryptoCurrencyAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 

@@ -164,13 +164,8 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     @Override
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (sellerAsMakerTrade.getState().ordinal() <= Trade.State.SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG.ordinal()) {
-            if (sellerAsMakerTrade.getState() == Trade.State.SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG)
-                log.warn("onFiatPaymentReceived called twice. " +
-                        "That is expected if the app starts up and the other peer has still not continued.");
-
+        if (trade.isFiatSent() && !trade.isFiatReceived()) {
             sellerAsMakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
-
             TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsMakerTrade,
                     () -> {
                         resultHandler.handleResult();

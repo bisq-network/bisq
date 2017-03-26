@@ -378,6 +378,10 @@ public abstract class Trade implements Tradable, Model {
             this.state = state;
             stateProperty.set(state);
             statePhaseProperty.set(state.getPhase());
+
+            if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
+                tradeProtocol.completed();
+            
             if (changed)
                 persist();
         } else {
@@ -515,6 +519,10 @@ public abstract class Trade implements Tradable, Model {
         return halfTradePeriodDate;
     }
 
+    public boolean hasFailed() {
+        return errorMessageProperty().get() != null;
+    }
+
     public ReadOnlyObjectProperty<State> stateProperty() {
         return stateProperty;
     }
@@ -639,6 +647,10 @@ public abstract class Trade implements Tradable, Model {
 
     public ReadOnlyStringProperty errorMessageProperty() {
         return errorMessageProperty;
+    }
+
+    public String getErrorMessage() {
+        return errorMessageProperty.get();
     }
 
     public NodeAddress getArbitratorNodeAddress() {

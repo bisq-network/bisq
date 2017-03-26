@@ -35,6 +35,14 @@ public class PaymentAccountUtil {
         return result;
     }
 
+    // TODO might be used to show more details if we get payment methods updates with diff. limits
+    public static String getInfoForMismatchingPaymentMethodLimits(Offer offer, PaymentAccount paymentAccount) {
+        // dont translate atm as it is not used so far in the UI just for logs
+        return "Payment methods have different trade limits or trade periods.\n" +
+                "Our local Payment method: " + paymentAccount.getPaymentMethod().toString() + "\n" +
+                "Payment method from offer: " + offer.getPaymentMethod().toString();
+    }
+
     //TODO not tested with all combinations yet....
     public static boolean isPaymentAccountValidForOffer(Offer offer, PaymentAccount paymentAccount) {
         // check if we have  a matching currency
@@ -44,6 +52,12 @@ public class PaymentAccountUtil {
             return false;
 
         // check if we have a matching payment method or if its a bank account payment method which is treated special
+        final boolean arePaymentMethodsEqual = paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod());
+
+        if (!arePaymentMethodsEqual &&
+                paymentAccount.getPaymentMethod().getId().equals(offer.getPaymentMethod().getId()))
+            log.warn(getInfoForMismatchingPaymentMethodLimits(offer, paymentAccount));
+
         if (paymentAccount instanceof CountryBasedPaymentAccount) {
             CountryBasedPaymentAccount countryBasedPaymentAccount = (CountryBasedPaymentAccount) paymentAccount;
 
@@ -54,7 +68,7 @@ public class PaymentAccountUtil {
                 return false;
 
             if (paymentAccount instanceof SepaAccount || offer.getPaymentMethod().equals(PaymentMethod.SEPA)) {
-                return paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod());
+                return arePaymentMethodsEqual;
             } else if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK) ||
                     offer.getPaymentMethod().equals(PaymentMethod.SPECIFIC_BANKS)) {
 
@@ -86,7 +100,7 @@ public class PaymentAccountUtil {
             }
 
         } else {
-            return paymentAccount.getPaymentMethod().equals(offer.getPaymentMethod());
+            return arePaymentMethodsEqual;
         }
     }
 

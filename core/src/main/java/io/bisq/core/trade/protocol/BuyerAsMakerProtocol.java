@@ -156,13 +156,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     // User clicked the "bank transfer started" button
     @Override
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (buyerAsMakerTrade.getState().ordinal() <= Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
-            if (buyerAsMakerTrade.getState() == Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG)
-                log.warn("onFiatPaymentStarted called twice. " +
-                        "That is expected if the app starts up and the other peer has still not continued.");
-
+        if (trade.isDepositConfirmed() && !trade.isFiatSent()) {
             buyerAsMakerTrade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
-
             TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
                     () -> {
                         resultHandler.handleResult();
@@ -181,9 +176,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
             );
             taskRunner.run();
         } else {
-            log.warn("onFiatPaymentStarted called twice. " +
-                    "That should not happen.\n" +
-                    "state=" + buyerAsMakerTrade.getState());
+            log.warn("onFiatPaymentStarted called twice. tradeState=" + trade.getState());
         }
     }
 

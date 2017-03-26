@@ -33,7 +33,7 @@ public final class CashDepositAccount extends CountryBasedPaymentAccount impleme
     }
 
     @Override
-    protected PaymentAccountPayload setPayload() {
+    protected PaymentAccountPayload getPayload() {
         return new CashDepositAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 

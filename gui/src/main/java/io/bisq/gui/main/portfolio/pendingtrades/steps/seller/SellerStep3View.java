@@ -64,37 +64,7 @@ public class SellerStep3View extends TradeStepView {
 
         tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
             if (trade.isFiatSent() && !trade.isFiatReceived()) {
-                PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
-                String key = "confirmPayment" + trade.getId();
-                String message;
-                String tradeVolumeWithCode = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
-                String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale());
-                String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
-                String id = trade.getShortId();
-                if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
-                    String address = ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress();
-                    message = Res.get("portfolio.pending.step3_seller.altcoin", part1, currencyName, address, tradeVolumeWithCode, currencyName);
-                } else {
-                    if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
-                        message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);
-                    else
-                        message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
-
-                    String part = Res.get("portfolio.pending.step3_seller.openDispute");
-                    if (paymentAccountPayload instanceof CashDepositAccountPayload)
-                        message = message + Res.get("portfolio.pending.step3_seller.cash", part);
-
-                    Optional<String> optionalHolderName = getOptionalHolderName();
-                    if (optionalHolderName.isPresent()) {
-                        message = message + Res.get("portfolio.pending.step3_seller.bankCheck" + optionalHolderName.get(), part);
-                    }
-                }
-                if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
-                    preferences.dontShowAgain(key, true);
-                    new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
-                            .attention(message)
-                            .show();
-                }
+                showPopup();
             } else if (trade.isFiatReceived()) {
                 busyAnimation.stop();
                 switch (state) {
@@ -111,8 +81,7 @@ public class SellerStep3View extends TradeStepView {
                         statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
                         break;
                     case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
-                        statusLabel.setText(Res.get("shared.messageSendingFailed",
-                                trade.errorMessageProperty().get()));
+                        // We get a popup and the trade closed, so we dont need to show anything here
                         break;
                 }
             }
@@ -274,6 +243,41 @@ public class SellerStep3View extends TradeStepView {
         }
     }
 
+
+    private void showPopup() {
+        PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+        String key = "confirmPayment" + trade.getId();
+        String message;
+        String tradeVolumeWithCode = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
+        String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale());
+        String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
+        String id = trade.getShortId();
+        if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
+            String address = ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress();
+            message = Res.get("portfolio.pending.step3_seller.altcoin", part1, currencyName, address, tradeVolumeWithCode, currencyName);
+        } else {
+            if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
+                message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);
+            else
+                message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
+
+            String part = Res.get("portfolio.pending.step3_seller.openDispute");
+            if (paymentAccountPayload instanceof CashDepositAccountPayload)
+                message = message + Res.get("portfolio.pending.step3_seller.cash", part);
+
+            Optional<String> optionalHolderName = getOptionalHolderName();
+            if (optionalHolderName.isPresent()) {
+                message = message + Res.get("portfolio.pending.step3_seller.bankCheck" + optionalHolderName.get(), part);
+            }
+        }
+        if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
+            preferences.dontShowAgain(key, true);
+            new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
+                    .attention(message)
+                    .show();
+        }
+    }
+    
     private void confirmPaymentReceived() {
         confirmButton.setDisable(true);
 

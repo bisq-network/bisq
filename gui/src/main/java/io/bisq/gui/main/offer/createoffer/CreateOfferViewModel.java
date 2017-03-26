@@ -177,7 +177,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     protected void activate() {
         if (DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
-                amount.set("1");
+                amount.set("0.01");
                 minAmount.set(amount.get());
                 UserThread.runAfter(() -> {
                     price.set("1000");
@@ -491,7 +491,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     boolean initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         boolean result = dataModel.initWithData(direction, tradeCurrency);
         if (dataModel.paymentAccount != null)
-            btcValidator.setMaxValueInBitcoin(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimit());
+            btcValidator.setMaxValueInBitcoin(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin());
 
         return result;
     }
@@ -547,7 +547,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
-        btcValidator.setMaxValueInBitcoin(paymentAccount.getPaymentMethod().getMaxTradeLimit());
+        btcValidator.setMaxValueInBitcoin(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin());
         dataModel.onPaymentAccountSelected(paymentAccount);
         if (amount.get() != null)
             amountValidationResult.set(isBtcInputValid(amount.get()));

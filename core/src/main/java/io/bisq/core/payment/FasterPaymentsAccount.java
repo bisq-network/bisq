@@ -34,7 +34,7 @@ public final class FasterPaymentsAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountPayload setPayload() {
+    protected PaymentAccountPayload getPayload() {
         return new FasterPaymentsAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 

@@ -136,7 +136,7 @@ public abstract class PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"),
                 Res.get("payment.maxPeriodAndLimit",
                         getTimeText(hours),
-                        formatter.formatCoinWithCode(paymentAccount.getPaymentMethod().getMaxTradeLimit())));
+                        formatter.formatCoinWithCode(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin())));
     }
 
     abstract protected void autoFillNameTextField();

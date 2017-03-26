@@ -381,7 +381,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG in mailbox
             case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG failed
                 // We delay the UI switch to give a chance to see the delivery result
-                UserThread.runAfter(() -> buyerState.set(BuyerState.STEP3), 2);
+                UserThread.runAfter(() -> buyerState.set(BuyerState.STEP3), 1);
                 break;
 
             // seller step 3
@@ -398,7 +398,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG mailbox
             case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG failed
                 // We delay the UI switch to give a chance to see the delivery result
-                UserThread.runAfter(() -> sellerState.set(SellerState.STEP4), 2);
+                UserThread.runAfter(() -> sellerState.set(SellerState.STEP4), 1);
                 break;
 
             // buyer step 4

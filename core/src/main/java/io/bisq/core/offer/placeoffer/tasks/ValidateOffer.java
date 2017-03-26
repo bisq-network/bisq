@@ -75,13 +75,11 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkArgument(offer.getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0,
                     "MinAmount is less then "
                             + Restrictions.MIN_TRADE_AMOUNT.toFriendlyString());
-            Preconditions.checkArgument(offer.getAmount().compareTo(offer.getPaymentMethod().getMaxTradeLimit()) <= 0,
+            Preconditions.checkArgument(offer.getAmount().compareTo(offer.getPaymentMethod().getMaxTradeLimitAsCoin()) <= 0,
                     "Amount is larger then "
-                            + offer.getPaymentMethod().getMaxTradeLimit().toFriendlyString());
+                            + offer.getPaymentMethod().getMaxTradeLimitAsCoin().toFriendlyString());
             checkArgument(offer.getAmount().compareTo(offer.getMinAmount()) >= 0, "MinAmount is larger then Amount");
 
-
-            //
             checkNotNull(offer.getPrice(), "Price is null");
             checkArgument(offer.getPrice().isPositive(),
                     "Price must be positive. price=" + offer.getPrice().toFriendlyString());

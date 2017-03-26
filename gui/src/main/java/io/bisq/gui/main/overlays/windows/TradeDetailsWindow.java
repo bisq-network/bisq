@@ -175,7 +175,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 disputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId() != null;
         if (showDisputedTx)
             rows++;
-        if (trade.errorMessageProperty().get() != null)
+        if (trade.hasFailed())
             rows += 2;
         if (trade.getTradingPeerNodeAddress() != null)
             rows++;
@@ -273,9 +273,9 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             });
         }
 
-        if (trade.errorMessageProperty().get() != null) {
+        if (trade.hasFailed()) {
             textArea = addLabelTextArea(gridPane, ++rowIndex, Res.get("shared.errorMessage"), "").second;
-            textArea.setText(trade.errorMessageProperty().get());
+            textArea.setText(trade.getErrorMessage());
             textArea.setEditable(false);
 
             IntegerProperty count = new SimpleIntegerProperty(20);

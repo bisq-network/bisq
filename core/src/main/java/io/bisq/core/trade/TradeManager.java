@@ -196,8 +196,10 @@ public class TradeManager {
         for (Trade trade : trades) {
             trade.setStorage(tradableListStorage);
 
-            if (trade.isDepositPublished() || (trade.isTakerFeePublished() && trade.errorMessageProperty().get() == null)) {
-                initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
+            if (trade.isDepositPublished() ||
+                    (trade.isTakerFeePublished() && !trade.hasFailed())) {
+                initTrade(trade, trade.getProcessModel().getUseSavingsWallet(),
+                        trade.getProcessModel().getFundsNeededForTrade());
                 trade.updateDepositTxFromWallet();
                 tradesForStatistics.add(trade);
             } else if (trade.isTakerFeePublished()) {
@@ -382,8 +384,10 @@ public class TradeManager {
     // Trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
-        String fromAddress = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString();
+    public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey,
+                                  Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
+        String fromAddress = walletService.getOrCreateAddressEntry(trade.getId(),
+                AddressEntry.Context.TRADE_PAYOUT).getAddressString();
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
