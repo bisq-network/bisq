@@ -69,7 +69,10 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
                     "sellerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
             Coin sellerInput = Coin.valueOf(sellerInputs.stream().mapToLong(input -> input.value).sum());
+
             sellerMultiSigAddressEntry.setCoinLockedInMultiSig(sellerInput.subtract(trade.getTxFee().multiply(2)));
+            walletService.saveAddressEntryList();
+            
             TradingPeer tradingPeer = processModel.tradingPeer;
             Transaction depositTx = processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
                     true,

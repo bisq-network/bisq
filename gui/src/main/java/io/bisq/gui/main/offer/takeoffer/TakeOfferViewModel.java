@@ -17,6 +17,7 @@
 
 package io.bisq.gui.main.offer.takeoffer;
 
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
@@ -322,20 +323,17 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 case PREPARATION:
                     appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;
-                case TAKER_FEE_PAID:
+                case TAKER_FEE_PUBLISHED:
                     appendMsg = Res.get("takeOffer.error.feePaid");
                     break;
-                case DEPOSIT_PAID:
+                case DEPOSIT_PUBLISHED:
                 case FIAT_SENT:
                 case FIAT_RECEIVED:
                     appendMsg = Res.get("takeOffer.error.depositPublished");
                     break;
-                case PAYOUT_PAID:
+                case PAYOUT_PUBLISHED:
                 case WITHDRAWN:
                     appendMsg = Res.get("takeOffer.error.payoutPublished");
-                    break;
-                case DISPUTE:
-                    appendMsg = Res.get("takeOffer.error.disputed");
                     break;
             }
             this.errorMessage.set(errorMessage + appendMsg);
@@ -352,10 +350,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void applyTradeState(Trade.State tradeState) {
         log.debug("applyTradeState state = " + tradeState);
 
-        if (trade.getState() == Trade.State.TAKER_PUBLISHED_DEPOSIT_TX
-                || trade.getState() == Trade.State.DEPOSIT_SEEN_IN_NETWORK
-                || trade.getState() == Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG
-                || trade.getState() == Trade.State.MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG) {
+        if (trade.isDepositPublished()) {
             if (trade.getDepositTx() != null) {
                 if (takeOfferSucceededHandler != null)
                     takeOfferSucceededHandler.run();
@@ -363,7 +358,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 showTransactionPublishedScreen.set(true);
                 updateSpinnerInfo();
             } else {
-                log.error("trade.getDepositTx() == null. That must not happen");
+                final String msg = "trade.getDepositTx() must not be null.";
+                if (DevEnv.DEV_MODE)
+                    throw new RuntimeException(msg);
+                log.error(msg);
             }
         }
     }

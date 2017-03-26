@@ -26,9 +26,9 @@ import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
-public class TakerBroadcastTakerFeeTx extends TradeTask {
+public class TakerPublishTakerFeeTx extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public TakerBroadcastTakerFeeTx(TaskRunner taskHandler, Trade trade) {
+    public TakerPublishTakerFeeTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -42,7 +42,7 @@ public class TakerBroadcastTakerFeeTx extends TradeTask {
                         public void onSuccess(Transaction transaction) {
                             log.debug("Trading fee published successfully. Transaction ID = " + transaction.getHashAsString());
 
-                            trade.setState(Trade.State.TAKER_FEE_PAID);
+                            trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
                             complete();
                         }
 

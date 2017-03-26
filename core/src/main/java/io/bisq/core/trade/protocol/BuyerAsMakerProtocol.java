@@ -21,11 +21,10 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.trade.BuyerAsMakerTrade;
 import io.bisq.core.trade.Trade;
+import io.bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendFiatTransferStartedMessage;
-import io.bisq.core.trade.protocol.tasks.buyer.BuyerSetupListenerForPayoutTx;
+import io.bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
 import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
-import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerMightBroadcastPayoutTx;
-import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerProcessPayoutTxPublishedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx;
 import io.bisq.core.trade.protocol.tasks.maker.*;
 import io.bisq.core.util.Validator;
@@ -54,32 +53,26 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
         this.buyerAsMakerTrade = trade;
 
-        Trade.State tradeState = trade.getState();
-        Trade.Phase phase = tradeState.getPhase();
-        //TODO test case
-        if (trade.getPayoutTx() != null &&
-                (phase == Trade.Phase.FIAT_RECEIVED || phase == Trade.Phase.PAYOUT_PAID) &&
-                tradeState != Trade.State.PAYOUT_BROAD_CASTED) {
+        Trade.Phase phase = trade.getState().getPhase();
+        if (phase == Trade.Phase.TAKER_FEE_PUBLISHED) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
-                        handleTaskRunnerSuccess("BuyerAsMakerMightBroadcastPayoutTx");
+                        handleTaskRunnerSuccess("MakerSetupDepositTxListener");
                         processModel.onComplete();
                     },
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(BuyerAsMakerMightBroadcastPayoutTx.class);
+            taskRunner.addTasks(MakerSetupDepositTxListener.class);
             taskRunner.run();
-        } else if (trade.getPayoutTx() == null && tradeState == Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG
-                && phase != Trade.Phase.PAYOUT_PAID) {
-            //TODO test case
+        } else if (trade.isFiatSent() && !trade.isPayoutPublished()) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
-                        handleTaskRunnerSuccess("SetupListenerForPayoutTx");
+                        handleTaskRunnerSuccess("BuyerSetupPayoutTxListener");
                         processModel.onComplete();
                     },
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(BuyerSetupListenerForPayoutTx.class);
+            taskRunner.addTasks(BuyerSetupPayoutTxListener.class);
             taskRunner.run();
         }
     }
@@ -127,9 +120,10 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 MakerVerifyTakerFeePayment.class,
                 MakerCreateAndSignContract.class,
                 BuyerAsMakerCreatesAndSignsDepositTx.class,
-                MakerSetupDepositBalanceListener.class,
+                MakerSetupDepositTxListener.class,
                 MakerSendPublishDepositTxRequest.class
         );
+
         startTimeout();
         taskRunner.run();
     }
@@ -167,7 +161,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 log.warn("onFiatPaymentStarted called twice. " +
                         "That is expected if the app starts up and the other peer has still not continued.");
 
-            buyerAsMakerTrade.setState(Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED);
+            buyerAsMakerTrade.setState(Trade.State.BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED);
 
             TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
                     () -> {
@@ -183,7 +177,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                     MakerVerifyTakerFeePayment.class,
                     BuyerAsMakerSignPayoutTx.class,
                     BuyerSendFiatTransferStartedMessage.class,
-                    BuyerSetupListenerForPayoutTx.class
+                    BuyerSetupPayoutTxListener.class
             );
             taskRunner.run();
         } else {
@@ -199,20 +193,19 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
-        log.debug("handle RequestFinalizePayoutTxMessage called");
+        log.debug("handle PayoutTxPublishedMessage called");
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
                 () -> {
-                    handleTaskRunnerSuccess("handle FinalizePayoutTxRequest");
+                    handleTaskRunnerSuccess("handle PayoutTxPublishedMessage");
                     processModel.onComplete();
                 },
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                BuyerAsMakerProcessPayoutTxPublishedMessage.class,
-                BuyerAsMakerMightBroadcastPayoutTx.class
+                BuyerProcessPayoutTxPublishedMessage.class
         );
         taskRunner.run();
     }

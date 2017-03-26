@@ -28,6 +28,7 @@ import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.trade.TradeMessage;
 import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import javafx.beans.value.ChangeListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
@@ -40,6 +41,7 @@ public abstract class TradeProtocol {
 
     protected final ProcessModel processModel;
     private final DecryptedDirectMessageListener decryptedDirectMessageListener;
+    private final ChangeListener<Trade.State> stateChangeListener;
     protected Trade trade;
     private Timer timeoutTimer;
 
@@ -75,6 +77,12 @@ public abstract class TradeProtocol {
             //}
         };
         processModel.getP2PService().addDecryptedDirectMessageListener(decryptedDirectMessageListener);
+
+        stateChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue.getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED && trade instanceof MakerTrade)
+                processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
+        };
+        trade.stateProperty().addListener(stateChangeListener);
     }
 
     public void completed() {
@@ -88,6 +96,7 @@ public abstract class TradeProtocol {
     private void cleanup() {
         log.debug("cleanup " + this);
         stopTimeout();
+        trade.stateProperty().removeListener(stateChangeListener);
         // We removed that from here earlier as it broke the trade process in some non critical error cases.
         // But it should be actually removed...
         processModel.getP2PService().removeDecryptedDirectMessageListener(decryptedDirectMessageListener);
@@ -111,7 +120,7 @@ public abstract class TradeProtocol {
         timeoutTimer = UserThread.runAfter(() -> {
             log.error("Timeout reached. TradeID=" + trade.getId());
             trade.setErrorMessage("A timeout occurred.");
-            cleanupTradable();
+            cleanupTradableOnFault();
             cleanup();
         }, TIMEOUT_SEC);
     }
@@ -129,27 +138,28 @@ public abstract class TradeProtocol {
 
     protected void handleTaskRunnerFault(String errorMessage) {
         log.error(errorMessage);
-        cleanupTradable();
+        cleanupTradableOnFault();
         cleanup();
     }
 
-    private void cleanupTradable() {
-        Trade.State tradeState = trade.getState();
-        log.debug("cleanupTradable tradeState=" + tradeState);
-        boolean isMakerTrade = trade instanceof MakerTrade;
-        if (isMakerTrade && (tradeState == Trade.State.MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST || tradeState == Trade.State.DEPOSIT_SEEN_IN_NETWORK))
-            processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
-
-        //boolean isTakerTrade = trade instanceof TakerTrade;
-
-        // if (isTakerTrade) {
+    private void cleanupTradableOnFault() {
+        final Trade.State state = trade.getState();
+        log.debug("cleanupTradable tradeState=" + state);
         TradeManager tradeManager = processModel.getTradeManager();
-        if (tradeState.getPhase() == Trade.Phase.PREPARATION) {
+        final Trade.Phase phase = state.getPhase();
+
+        if (trade.isInPreparation()) {
+            // no funds left. we just clean up the trade list
             tradeManager.removePreparedTrade(trade);
-        } else if (tradeState.getPhase() == Trade.Phase.TAKER_FEE_PAID) {
-            tradeManager.addTradeToFailedTrades(trade);
-            processModel.getWalletService().swapAnyTradeEntryContextToAvailableEntry(trade.getId());
+        } else {
+            // we have either as taker the fee paid or as maker the publishDepositTx request sent,
+            // so the maker has his offer closed and therefor its for both a failed trade
+            if (trade.isTakerFeePublished() && !trade.isWithdrawn())
+                tradeManager.addTradeToFailedTrades(trade);
+
+            // if we have not the deposit already published we swap reserved funds to available funds
+            if (!trade.isDepositPublished())
+                processModel.getWalletService().swapAnyTradeEntryContextToAvailableEntry(trade.getId());
         }
-        // }
     }
 }

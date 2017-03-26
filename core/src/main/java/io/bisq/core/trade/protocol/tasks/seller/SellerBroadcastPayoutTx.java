@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.trade.protocol.tasks.seller_as_taker;
+package io.bisq.core.trade.protocol.tasks.seller;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.taskrunner.TaskRunner;
@@ -29,9 +29,9 @@ import org.jetbrains.annotations.NotNull;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsTakerBroadcastPayoutTx extends TradeTask {
+public class SellerBroadcastPayoutTx extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public SellerAsTakerBroadcastPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SellerBroadcastPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -47,14 +47,14 @@ public class SellerAsTakerBroadcastPayoutTx extends TradeTask {
             if (confidenceType.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
                     confidenceType.equals(TransactionConfidence.ConfidenceType.PENDING)) {
                 log.debug("payoutTx was already published. confidenceType:" + confidenceType);
-                trade.setState(Trade.State.PAYOUT_BROAD_CASTED);
+                trade.setState(Trade.State.SELLER_PUBLISHED_PAYOUT_TX);
                 complete();
             } else {
                 processModel.getTradeWalletService().broadcastTx(payoutTx, new FutureCallback<Transaction>() {
                     @Override
                     public void onSuccess(Transaction transaction) {
                         log.debug("BroadcastTx succeeded. Transaction:" + transaction);
-                        trade.setState(Trade.State.PAYOUT_BROAD_CASTED);
+                        trade.setState(Trade.State.SELLER_PUBLISHED_PAYOUT_TX);
                         complete();
                     }
 

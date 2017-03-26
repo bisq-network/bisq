@@ -843,7 +843,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         nextButton = tuple.first;
         editOfferElements.add(nextButton);
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
-        //UserThread.runAfter(() -> nextButton.requestFocus(), 100, TimeUnit.MILLISECONDS);
         cancelButton1 = tuple.second;
         editOfferElements.add(cancelButton1);
         cancelButton1.setDefaultButton(false);

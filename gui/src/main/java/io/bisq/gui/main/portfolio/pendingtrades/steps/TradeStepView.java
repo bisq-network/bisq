@@ -408,7 +408,7 @@ public abstract class TradeStepView extends AnchorPane {
                 case NORMAL:
                     break;
                 case HALF_REACHED:
-                    if (trade.getState().getPhase().ordinal() < Trade.Phase.FIAT_RECEIVED.ordinal())
+                    if (!trade.isFiatReceived())
                         showWarning();
                     else
                         removeWarning();

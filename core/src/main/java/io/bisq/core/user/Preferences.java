@@ -322,7 +322,7 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
-    public void resetDontShowAgainForType() {
+    public void resetDontShowAgain() {
         dontShowAgainMap.clear();
         storage.queueUpForSave();
     }

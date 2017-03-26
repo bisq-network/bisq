@@ -205,8 +205,7 @@ public class WalletConfig extends AbstractIdleService {
      */
     public WalletConfig connectToLocalHost() {
         try {
-            final InetAddress localHost = InetAddress.getLocalHost();
-            return setPeerNodes(new PeerAddress(localHost, params.getPort()));
+            return setPeerNodes(new PeerAddress(InetAddress.getLocalHost(), params.getPort()));
         } catch (UnknownHostException e) {
             // Borked machine with no loopback adapter configured properly.
             throw new RuntimeException(e);
@@ -476,8 +475,9 @@ public class WalletConfig extends AbstractIdleService {
                 Futures.addCallback(vPeerGroup.startAsync(), new FutureCallback() {
                     @Override
                     public void onSuccess(@Nullable Object result) {
-                        final PeerEventListener l = downloadListener == null ? new DownloadProgressTracker() : downloadListener;
-                        vPeerGroup.startBlockChainDownload(l);
+                        final PeerEventListener listener = downloadListener == null ?
+                                new DownloadProgressTracker() : downloadListener;
+                        vPeerGroup.startBlockChainDownload(listener);
                     }
 
                     @Override

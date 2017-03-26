@@ -15,22 +15,22 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.trade.protocol.tasks.buyer_as_taker;
+package io.bisq.core.trade.protocol.tasks.seller;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import io.bisq.network.p2p.SendMailboxMessageListener;
 import io.bisq.protobuffer.message.trade.PayoutTxPublishedMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
 
 @Slf4j
-// TODO remove 
-// TODO: locktime
-public class BuyerAsTaker___SendPayoutTxFinalizedMessage extends TradeTask {
+// TODO remove
+public class SellerSendPayoutTxPublishedMessage extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public BuyerAsTaker___SendPayoutTxFinalizedMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerSendPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -47,7 +47,8 @@ public class BuyerAsTaker___SendPayoutTxFinalizedMessage extends TradeTask {
                         UUID.randomUUID().toString()
                 );
                 log.info("Send message to peer. tradeId={}, message{}", id, message);
-               /* processModel.getP2PService().sendEncryptedMailboxMessage(
+                trade.setState(Trade.State.SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG);
+                processModel.getP2PService().sendEncryptedMailboxMessage(
                         trade.getTradingPeerNodeAddress(),
                         processModel.tradingPeer.getPubKeyRing(),
                         message,
@@ -55,25 +56,25 @@ public class BuyerAsTaker___SendPayoutTxFinalizedMessage extends TradeTask {
                             @Override
                             public void onArrived() {
                                 log.info("Message arrived at peer. tradeId={}, message{}", id, message);
+                                trade.setState(Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
                                 log.info("Message stored in mailbox. tradeId={}, message{}", id, message);
+                                trade.setState(Trade.State.SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onFault(String errorMessage) {
-                                appendToErrorMessage("PayoutTxFinalizedMessage sending failed. errorMessage=" + errorMessage);
+                                trade.setState(Trade.State.SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG);
+                                appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
                                 failed(errorMessage);
                             }
                         }
-                );*/
-                // state must not be set in onArrived or onStoredInMailbox handlers as we would get that 
-                // called delayed and would overwrite the broad cast state set by the next task
-                trade.setState(Trade.State.BUYER_STARTED_SEND_PAYOUT_TX);
+                );
             } else {
                 log.error("trade.getPayoutTx() = " + trade.getPayoutTx());
                 failed("PayoutTx is null");

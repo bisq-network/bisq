@@ -65,7 +65,10 @@ public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
             checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
             AddressEntry buyerMultiSigAddressEntry = addressEntryOptional.get();
             Coin buyerInput = Coin.valueOf(buyerInputs.stream().mapToLong(input -> input.value).sum());
+
             buyerMultiSigAddressEntry.setCoinLockedInMultiSig(buyerInput.subtract(trade.getTxFee().multiply(2)));
+            walletService.saveAddressEntryList();
+            
             TradingPeer tradingPeer = processModel.tradingPeer;
             byte[] buyerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(buyerMultiSigPubKey, buyerMultiSigAddressEntry.getPubKey()),

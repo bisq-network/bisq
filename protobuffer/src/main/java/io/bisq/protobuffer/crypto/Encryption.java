@@ -55,6 +55,7 @@ public class Encryption {
             log.trace("Generate msgEncryptionKeyPair needed {} ms", System.currentTimeMillis() - ts);
             return keyPair;
         } catch (Throwable e) {
+            log.error(e.toString());
             e.printStackTrace();
             throw new RuntimeException("Could not create key.");
         }
@@ -104,6 +105,7 @@ public class Encryption {
                 outputStream.flush();
                 payloadWithHmac = outputStream.toByteArray().clone();
             } catch (IOException | NoSuchProviderException e) {
+                log.error(e.toString());
                 e.printStackTrace();
                 throw new RuntimeException("Could not create hmac");
             } finally {
@@ -115,6 +117,7 @@ public class Encryption {
                 }
             }
         } catch (Throwable e) {
+            log.error(e.toString());
             e.printStackTrace();
             throw new RuntimeException("Could not create hmac");
         }
@@ -127,6 +130,7 @@ public class Encryption {
             byte[] hmacTest = getHmac(message, secretKey);
             return Arrays.equals(hmacTest, hmac);
         } catch (Throwable e) {
+            log.error(e.toString());
             e.printStackTrace();
             throw new RuntimeException("Could not create cipher");
         }

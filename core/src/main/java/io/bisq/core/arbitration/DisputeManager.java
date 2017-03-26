@@ -649,7 +649,7 @@ public class DisputeManager {
                                         contract.getSellerMultiSigPubKey(),
                                         disputeResult.getArbitratorPubKey()
                                 );
-                                Transaction committedDisputedPayoutTx = tradeWalletService.addTransactionToWallet(signedDisputedPayoutTx);
+                                Transaction committedDisputedPayoutTx = tradeWalletService.addTxToWallet(signedDisputedPayoutTx);
                                 log.debug("broadcast committedDisputedPayoutTx");
                                 tradeWalletService.broadcastTx(committedDisputedPayoutTx, new FutureCallback<Transaction>() {
                                     @Override
@@ -723,7 +723,7 @@ public class DisputeManager {
         if (disputeOptional.isPresent()) {
             cleanupRetryMap(uid);
 
-            Transaction walletTx = tradeWalletService.addTransactionToWallet(peerPublishedPayoutTxMessage.transaction);
+            Transaction walletTx = tradeWalletService.addTxToWallet(peerPublishedPayoutTxMessage.transaction);
             disputeOptional.get().setDisputePayoutTxId(walletTx.getHashAsString());
             BtcWalletService.printTx("Disputed payoutTx received from peer", walletTx);
             tradeManager.closeDisputedTrade(tradeId);

@@ -182,7 +182,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 UserThread.runAfter(() -> {
                     price.set("1000");
                     onFocusOutPriceAsPercentageTextField(true, false);
-                }, 1);
+                }, 200, TimeUnit.MILLISECONDS);
 
                 setAmountToModel();
                 setMinAmountToModel();
@@ -515,7 +515,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 updateSpinnerInfo();
 
                 resultHandler.run();
-            }, 30);
+            }, 60);
         }
         errorMessageListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {

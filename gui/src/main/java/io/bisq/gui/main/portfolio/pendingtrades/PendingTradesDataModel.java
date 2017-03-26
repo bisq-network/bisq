@@ -52,10 +52,10 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import org.bitcoinj.core.BlockChainListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -89,6 +89,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final StringProperty txId = new SimpleStringProperty();
     public final Preferences preferences;
     private boolean activated;
+    private ChangeListener<Trade.State> tradeStateChangeListener;
+    private Trade selectedTrade;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -248,23 +250,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return isMaker ? offer.getDirection() : offer.getMirroredDirection();
     }
 
-    void addBlockChainListener(BlockChainListener blockChainListener) {
-        tradeWalletService.addBlockChainListener(blockChainListener);
-    }
-
-    void removeBlockChainListener(BlockChainListener blockChainListener) {
-        tradeWalletService.removeBlockChainListener(blockChainListener);
-    }
-
-    //TODO: locktime
-    public long getLockTime() {
-        return /*getTrade() != null ? getTrade().getLockTimeAsBlockHeight() :*/ 0;
-    }
-
-    public int getBestChainHeight() {
-        return tradeWalletService.getBestChainHeight();
-    }
-
     @Nullable
     public PaymentAccountPayload getSellersPaymentAccountPayload() {
         if (getTrade() != null && getTrade().getContract() != null)
@@ -308,15 +293,28 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void doSelectItem(PendingTradesListItem item) {
+        if (selectedTrade != null)
+            selectedTrade.stateProperty().removeListener(tradeStateChangeListener);
+
         if (item != null) {
-            Trade trade = item.getTrade();
-            isMaker = tradeManager.isMyOffer(trade.getOffer());
-            if (trade.getDepositTx() != null)
-                txId.set(trade.getDepositTx().getHashAsString());
+            selectedTrade = item.getTrade();
+            tradeStateChangeListener = (observable, oldValue, newValue) -> {
+                if (selectedTrade.getDepositTx() != null) {
+                    txId.set(selectedTrade.getDepositTx().getHashAsString());
+                    notificationCenter.setSelectedTradeId(selectedTrade.getId());
+                    selectedTrade.stateProperty().removeListener(tradeStateChangeListener);
+                }
+            };
+            selectedTrade.stateProperty().addListener(tradeStateChangeListener);
+            isMaker = tradeManager.isMyOffer(selectedTrade.getOffer());
+            if (selectedTrade.getDepositTx() != null)
+                txId.set(selectedTrade.getDepositTx().getHashAsString());
             else
                 txId.set("");
-            notificationCenter.setSelectedTradeId(trade.getId());
+            notificationCenter.setSelectedTradeId(selectedTrade.getId());
         } else {
+            selectedTrade = null;
+            txId.set("");
             notificationCenter.setSelectedTradeId(null);
         }
         selectedItemProperty.set(item);

@@ -21,7 +21,6 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple3;
-import io.bisq.core.trade.Trade;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
@@ -62,8 +61,7 @@ public class BuyerStep2View extends TradeStepView {
         //TODO we get called twice, check why
         if (tradeStatePropertySubscription == null) {
             tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
-                if (state == Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN) {
-
+                if (trade.isDepositConfirmed() && !trade.isFiatSent()) {
                     PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                     if (paymentAccountPayload != null) {
                         String paymentDetailsForTradePopup = paymentAccountPayload.getPaymentDetailsForTradePopup();
@@ -120,10 +118,25 @@ public class BuyerStep2View extends TradeStepView {
                                     .show();
                         }
                     }
-                } else if (state == Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED && confirmButton.isDisabled()) {
-                    showStatusInfo();
-                } else if (state == Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG) {
-                    hideStatusInfo();
+                } else if (trade.isFiatSent()) {
+                    busyAnimation.stop();
+                    switch (state) {
+                        case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED:
+                        case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
+                            busyAnimation.play();
+                            statusLabel.setText(Res.get("shared.sendingConfirmation"));
+                            break;
+                        case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:
+                            statusLabel.setText(Res.get("shared.messageArrived"));
+                            break;
+                        case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:
+                            statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
+                            break;
+                        case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:
+                            statusLabel.setText(Res.get("shared.messageSendingFailed",
+                                    trade.errorMessageProperty().get()));
+                            break;
+                    }
                 }
             });
         }
@@ -133,7 +146,7 @@ public class BuyerStep2View extends TradeStepView {
     public void deactivate() {
         super.deactivate();
 
-        hideStatusInfo();
+        busyAnimation.stop();
         if (tradeStatePropertySubscription != null) {
             tradeStatePropertySubscription.unsubscribe();
             tradeStatePropertySubscription = null;
@@ -221,8 +234,6 @@ public class BuyerStep2View extends TradeStepView {
         confirmButton.setOnAction(e -> onPaymentStarted());
         busyAnimation = tuple3.second;
         statusLabel = tuple3.third;
-
-        hideStatusInfo();
     }
 
 
@@ -301,7 +312,6 @@ public class BuyerStep2View extends TradeStepView {
 
     private void confirmPaymentStarted() {
         confirmButton.setDisable(true);
-        showStatusInfo();
         model.dataModel.onPaymentStarted(() -> {
             // In case the first send failed we got the support button displayed. 
             // If it succeeds at a second try we remove the support button again.
@@ -310,18 +320,8 @@ public class BuyerStep2View extends TradeStepView {
             //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
             confirmButton.setDisable(false);
-            hideStatusInfo();
+            busyAnimation.stop();
             new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
-    }
-
-    private void showStatusInfo() {
-        busyAnimation.play();
-        statusLabel.setText(Res.get("shared.sendingConfirmation"));
-    }
-
-    private void hideStatusInfo() {
-        busyAnimation.stop();
-        statusLabel.setText("");
     }
 }

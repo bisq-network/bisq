@@ -460,7 +460,7 @@ public abstract class WalletService {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction getTransactionFromSerializedTx(byte[] tx) {
+    public Transaction getTxFromSerializedTx(byte[] tx) {
         return new Transaction(params, tx);
     }
 

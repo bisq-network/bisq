@@ -21,15 +21,18 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.data.PreparedDepositTxAndMakerInputs;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.protobuffer.crypto.Hash;
+import io.bisq.protobuffer.payload.btc.RawTransactionInput;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -47,47 +50,67 @@ public class SellerAsMakerCreatesAndSignsDepositTx extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Coin sellerInputAmount = trade.getOffer().getSellerSecurityDeposit()
-                    .add(trade.getTradeAmount());
-            Coin msOutputAmount = sellerInputAmount
-                    .add(trade.getTxFee())
-                    .add(trade.getOffer().getBuyerSecurityDeposit());
 
+            BtcWalletService walletService = processModel.getWalletService();
+            String id = processModel.getOffer().getId();
+            TradingPeer tradingPeer = processModel.tradingPeer;
+            final Offer offer = trade.getOffer();
+
+            // params
+            final boolean makerIsBuyer = false;
+
+            final byte[] contractHash = Hash.getHash(trade.getContractAsJson());
+            trade.setContractHash(contractHash);
             log.debug("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"
                     + trade.getContractAsJson()
                     + "\n------------------------------------------------------------\n");
 
-            byte[] contractHash = Hash.getHash(trade.getContractAsJson());
-            trade.setContractHash(contractHash);
-            BtcWalletService walletService = processModel.getWalletService();
-            String id = processModel.getOffer().getId();
+            final Coin makerInputAmount = offer.getSellerSecurityDeposit().add(trade.getTradeAmount());
+            Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id,
+                    AddressEntry.Context.MULTI_SIG);
+            checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
+            AddressEntry makerMultiSigAddressEntry = addressEntryOptional.get();
+            makerMultiSigAddressEntry.setCoinLockedInMultiSig(makerInputAmount);
+            walletService.saveAddressEntryList();
 
-            Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
-            checkArgument(addressEntryOptional.isPresent(), "addressEntry must be set here.");
-            AddressEntry sellerMultiSigAddressEntry = addressEntryOptional.get();
-            sellerMultiSigAddressEntry.setCoinLockedInMultiSig(sellerInputAmount);
-            byte[] sellerMultiSigPubKey = processModel.getMyMultiSigPubKey();
-            checkArgument(Arrays.equals(sellerMultiSigPubKey,
-                            sellerMultiSigAddressEntry.getPubKey()),
-                    "sellerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
+            final Coin msOutputAmount = makerInputAmount
+                    .add(trade.getTxFee())
+                    .add(offer.getBuyerSecurityDeposit());
 
-            Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-            Address makerChangeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
-            TradingPeer tradingPeer = processModel.tradingPeer;
+            final List<RawTransactionInput> takerRawTransactionInputs = tradingPeer.getRawTransactionInputs();
+
+            final long takerChangeOutputValue = tradingPeer.getChangeOutputValue();
+
+            final String takerChangeAddressString = tradingPeer.getChangeOutputAddress();
+
+            final Address makerAddress = walletService.getOrCreateAddressEntry(id,
+                    AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+
+            final Address makerChangeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
+
+            final byte[] buyerPubKey = tradingPeer.getMultiSigPubKey();
+
+            final byte[] sellerPubKey = processModel.getMyMultiSigPubKey();
+            checkArgument(Arrays.equals(sellerPubKey,
+                            makerMultiSigAddressEntry.getPubKey()),
+                    "sellerPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
+
+            final byte[] arbitratorPubKey = trade.getArbitratorPubKey();
+
             PreparedDepositTxAndMakerInputs result = processModel.getTradeWalletService().makerCreatesAndSignsDepositTx(
-                    false,
+                    makerIsBuyer,
                     contractHash,
-                    sellerInputAmount,
+                    makerInputAmount,
                     msOutputAmount,
-                    tradingPeer.getRawTransactionInputs(),
-                    tradingPeer.getChangeOutputValue(),
-                    tradingPeer.getChangeOutputAddress(),
+                    takerRawTransactionInputs,
+                    takerChangeOutputValue,
+                    takerChangeAddressString,
                     makerAddress,
                     makerChangeAddress,
-                    tradingPeer.getMultiSigPubKey(),
-                    sellerMultiSigPubKey,
-                    trade.getArbitratorPubKey());
+                    buyerPubKey,
+                    sellerPubKey,
+                    arbitratorPubKey);
 
             processModel.setPreparedDepositTx(result.depositTransaction);
             processModel.setRawTransactionInputs(result.rawMakerInputs);

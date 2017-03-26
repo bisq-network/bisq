@@ -22,8 +22,12 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.trade.SellerAsTakerTrade;
 import io.bisq.core.trade.Trade;
+import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
-import io.bisq.core.trade.protocol.tasks.seller_as_taker.*;
+import io.bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
+import io.bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
+import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
+import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
@@ -48,22 +52,6 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         this.sellerAsTakerTrade = trade;
 
         processModel.tradingPeer.setPubKeyRing(trade.getOffer().getPubKeyRing());
-
-        Trade.State tradeState = trade.getState();
-        Trade.Phase phase = tradeState.getPhase();
-        if (trade.getPayoutTx() != null &&
-                (phase == Trade.Phase.FIAT_RECEIVED || phase == Trade.Phase.PAYOUT_PAID) &&
-                tradeState != Trade.State.PAYOUT_BROAD_CASTED) {
-            TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                    () -> {
-                        handleTaskRunnerSuccess("SellerAsTakerBroadcastPayoutTx");
-                        processModel.onComplete();
-                    },
-                    this::handleTaskRunnerFault);
-
-            taskRunner.addTasks(SellerAsTakerBroadcastPayoutTx.class);
-            taskRunner.run();
-        }
     }
 
 
@@ -102,7 +90,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 TakerVerifyMakerFeePayment.class,
                 TakerSelectArbitrator.class,
                 TakerCreateTakerFeeTx.class,
-                TakerBroadcastTakerFeeTx.class,
+                TakerPublishTakerFeeTx.class,
                 SellerAsTakerCreatesDepositTxInputs.class,
                 TakerSendPayDepositRequest.class
         );
@@ -165,12 +153,12 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     @Override
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         //TODO check states
-        if (sellerAsTakerTrade.getState().ordinal() <= Trade.State.SELLER_AS_MAKER_SENT_FIAT_PAYMENT_RECEIPT_MSG.ordinal()) {
-            if (sellerAsTakerTrade.getState() == Trade.State.SELLER_AS_MAKER_SENT_FIAT_PAYMENT_RECEIPT_MSG)
+        if (sellerAsTakerTrade.getState().ordinal() <= Trade.State.SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG.ordinal()) {
+            if (sellerAsTakerTrade.getState() == Trade.State.SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG)
                 log.warn("onFiatPaymentReceived called twice. " +
                         "That is expected if the app starts up and the other peer has still not continued.");
 
-            sellerAsTakerTrade.setState(Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT);
+            sellerAsTakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
 
             TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                     () -> {
@@ -185,9 +173,9 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
             taskRunner.addTasks(
                     TakerVerifyMakerAccount.class,
                     TakerVerifyMakerFeePayment.class,
-                    SellerAsTakerSignAndFinalizePayoutTx.class,
-                    SellerAsTakerBroadcastPayoutTx.class,
-                    SellerAsTakerSendPayoutTxPublishedMessage.class
+                    SellerSignAndFinalizePayoutTx.class,
+                    SellerBroadcastPayoutTx.class,
+                    SellerSendPayoutTxPublishedMessage.class
             );
             taskRunner.run();
         } else {

@@ -546,7 +546,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         sortMarketCurrenciesNumericallyCheckBox.setSelected(preferences.getSortMarketCurrenciesNumerically());
         sortMarketCurrenciesNumericallyCheckBox.setOnAction(e -> preferences.setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumericallyCheckBox.isSelected()));
 
-        resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgainForType());
+        resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgain());
 
         autoSelectArbitratorsCheckBox.setSelected(preferences.getAutoSelectArbitrators());
         autoSelectArbitratorsCheckBox.setOnAction(e -> preferences.setAutoSelectArbitrators(autoSelectArbitratorsCheckBox.isSelected()));

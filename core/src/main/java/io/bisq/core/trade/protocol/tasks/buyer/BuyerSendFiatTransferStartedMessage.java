@@ -51,6 +51,7 @@ public class BuyerSendFiatTransferStartedMessage extends TradeTask {
                     UUID.randomUUID().toString()
             );
             log.info("Send message to peer. tradeId={}, message{}", id, message);
+            trade.setState(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
             processModel.getP2PService().sendEncryptedMailboxMessage(
                     trade.getTradingPeerNodeAddress(),
                     processModel.tradingPeer.getPubKeyRing(),
@@ -59,20 +60,21 @@ public class BuyerSendFiatTransferStartedMessage extends TradeTask {
                         @Override
                         public void onArrived() {
                             log.info("Message arrived at peer. tradeId={}, message{}", id, message);
-                            trade.setState(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
+                            trade.setState(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
                             complete();
                         }
 
                         @Override
                         public void onStoredInMailbox() {
                             log.info("Message stored in mailbox. tradeId={}, message{}", id, message);
-                            trade.setState(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
+                            trade.setState(Trade.State.BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG);
                             complete();
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
-                            appendToErrorMessage("FiatTransferStartedMessage sending failed");
+                            trade.setState(Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG);
+                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
                             failed(errorMessage);
                         }
                     }

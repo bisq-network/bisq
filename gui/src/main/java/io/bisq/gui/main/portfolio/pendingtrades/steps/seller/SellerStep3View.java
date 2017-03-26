@@ -21,7 +21,6 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple3;
-import io.bisq.core.trade.Trade;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
@@ -64,7 +63,7 @@ public class SellerStep3View extends TradeStepView {
         super.activate();
 
         tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
-            if (state == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG) {
+            if (trade.isFiatSent() && !trade.isFiatReceived()) {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                 String key = "confirmPayment" + trade.getId();
                 String message;
@@ -96,11 +95,26 @@ public class SellerStep3View extends TradeStepView {
                             .attention(message)
                             .show();
                 }
-
-            } else if (state == Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT && confirmButton.isDisabled()) {
-                showStatusInfo();
-            } else if (state == Trade.State.SELLER_AS_MAKER_SENT_FIAT_PAYMENT_RECEIPT_MSG) {
-                hideStatusInfo();
+            } else if (trade.isFiatReceived()) {
+                busyAnimation.stop();
+                switch (state) {
+                    case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
+                    case SELLER_PUBLISHED_PAYOUT_TX:
+                    case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
+                        busyAnimation.play();
+                        statusLabel.setText(Res.get("shared.sendingConfirmation"));
+                        break;
+                    case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG:
+                        statusLabel.setText(Res.get("shared.messageArrived"));
+                        break;
+                    case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG:
+                        statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
+                        break;
+                    case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
+                        statusLabel.setText(Res.get("shared.messageSendingFailed",
+                                trade.errorMessageProperty().get()));
+                        break;
+                }
             }
         });
     }
@@ -113,8 +127,7 @@ public class SellerStep3View extends TradeStepView {
             tradeStatePropertySubscription.unsubscribe();
             tradeStatePropertySubscription = null;
         }
-
-        hideStatusInfo();
+        busyAnimation.stop();
     }
 
 
@@ -174,8 +187,6 @@ public class SellerStep3View extends TradeStepView {
         confirmButton.setOnAction(e -> onPaymentReceived());
         busyAnimation = tuple.second;
         statusLabel = tuple.third;
-
-        hideStatusInfo();
     }
 
 
@@ -265,7 +276,6 @@ public class SellerStep3View extends TradeStepView {
 
     private void confirmPaymentReceived() {
         confirmButton.setDisable(true);
-        showStatusInfo();
 
         model.dataModel.onFiatPaymentReceived(() -> {
             // In case the first send failed we got the support button displayed. 
@@ -275,21 +285,10 @@ public class SellerStep3View extends TradeStepView {
             //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
             confirmButton.setDisable(false);
-            hideStatusInfo();
+            busyAnimation.stop();
             new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
-
-    private void showStatusInfo() {
-        busyAnimation.play();
-        statusLabel.setText(Res.get("shared.sendingConfirmation"));
-    }
-
-    private void hideStatusInfo() {
-        busyAnimation.stop();
-        statusLabel.setText("");
-    }
-
 
     private Optional<String> getOptionalHolderName() {
         Contract contract = trade.getContract();

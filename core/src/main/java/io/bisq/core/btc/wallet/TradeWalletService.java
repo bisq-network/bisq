@@ -606,14 +606,12 @@ public class TradeWalletService {
      * @throws AddressFormatException
      * @throws TransactionVerificationException
      */
-    //TODO: locktime
     public byte[] sellerSignsPayoutTx(Transaction depositTx,
                                       Coin buyerPayoutAmount,
                                       Coin sellerPayoutAmount,
                                       String buyerPayoutAddressString,
                                       String sellerPayoutAddressString,
                                       DeterministicKey multiSigKeyPair,
-                                      /*long lockTime,*/
                                       byte[] buyerPubKey,
                                       byte[] sellerPubKey,
                                       byte[] arbitratorPubKey)
@@ -625,7 +623,6 @@ public class TradeWalletService {
         log.trace("buyerPayoutAddressString " + buyerPayoutAddressString);
         log.trace("sellerPayoutAddressString " + sellerPayoutAddressString);
         log.trace("multiSigKeyPair (not displayed for security reasons)");
-      /*  log.trace("lockTime " + lockTime);*/
         log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
         log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
         log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
@@ -633,9 +630,7 @@ public class TradeWalletService {
                 buyerPayoutAmount,
                 sellerPayoutAmount,
                 buyerPayoutAddressString,
-                sellerPayoutAddressString/*,
-                lockTime*/
-        );
+                sellerPayoutAddressString);
         // MS redeemScript
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         // MS output from prev. tx is index 0
@@ -752,7 +747,6 @@ public class TradeWalletService {
      * @throws TransactionVerificationException
      * @throws WalletException
      */
-    //TODO: locktime
     public Transaction buyerSignsAndFinalizesPayoutTx(Transaction depositTx,
                                                       byte[] sellerSignature,
                                                       Coin buyerPayoutAmount,
@@ -760,7 +754,6 @@ public class TradeWalletService {
                                                       String buyerPayoutAddressString,
                                                       String sellerPayoutAddressString,
                                                       DeterministicKey multiSigKeyPair,
-                                                     /* long lockTime,*/
                                                       byte[] buyerPubKey,
                                                       byte[] sellerPubKey,
                                                       byte[] arbitratorPubKey)
@@ -774,7 +767,6 @@ public class TradeWalletService {
         log.trace("buyerPayoutAddressString " + buyerPayoutAddressString);
         log.trace("sellerPayoutAddressString " + sellerPayoutAddressString);
         log.trace("multiSigKeyPair (not displayed for security reasons)");
-        /*log.trace("lockTime " + lockTime);*/
         log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
         log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
         log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
@@ -783,8 +775,7 @@ public class TradeWalletService {
                 buyerPayoutAmount,
                 sellerPayoutAmount,
                 buyerPayoutAddressString,
-                sellerPayoutAddressString/*,
-                lockTime*/);
+                sellerPayoutAddressString);
         // MS redeemScript
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         // MS output from prev. tx is index 0
@@ -811,8 +802,6 @@ public class TradeWalletService {
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         input.verify(input.getConnectedOutput());
 
-        // As we use lockTime the tx will not be relayed as it is not considered standard.
-        // We need to broadcast on our own when we reahced the block height. Both peers will do the broadcast.
         return payoutTx;
     }
 
@@ -1085,7 +1074,7 @@ public class TradeWalletService {
      * @return The transaction we added to the wallet, which is different as the one we passed as argument!
      * @throws VerificationException
      */
-    public Transaction addTransactionToWallet(Transaction transaction) throws VerificationException {
+    public Transaction addTxToWallet(Transaction transaction) throws VerificationException {
         Log.traceCall("transaction " + transaction.toString());
 
         // We need to recreate the transaction otherwise we get a null pointer... 
@@ -1102,7 +1091,7 @@ public class TradeWalletService {
      * @return The transaction we added to the wallet, which is different as the one we passed as argument!
      * @throws VerificationException
      */
-    public Transaction addTransactionToWallet(byte[] serializedTransaction) throws VerificationException {
+    public Transaction addTxToWallet(byte[] serializedTransaction) throws VerificationException {
         Log.traceCall();
 
         // We need to recreate the tx otherwise we get a null pointer... 
@@ -1123,37 +1112,6 @@ public class TradeWalletService {
     public Transaction getWalletTx(Sha256Hash txId) throws VerificationException {
         checkNotNull(wallet);
         return wallet.getTransaction(txId);
-    }
-
-    /**
-     * Returns the height of the last seen best-chain block. Can be 0 if a wallet is brand new or -1 if the wallet
-     * is old and doesn't have that data.
-     */
-    public int getLastBlockSeenHeight() {
-        checkNotNull(wallet);
-        return wallet.getLastBlockSeenHeight();
-    }
-
-    //TODO: check transaction.getLockTime() ???
-    //TODO: locktime
-    public ListenableFuture<StoredBlock> getBlockHeightFuture(Transaction transaction) {
-        checkNotNull(walletConfig);
-        return walletConfig.chain().getHeightFuture((int) transaction.getLockTime());
-    }
-
-    public int getBestChainHeight() {
-        checkNotNull(walletConfig);
-        return walletConfig.chain().getBestChainHeight();
-    }
-
-    public void addBlockChainListener(BlockChainListener blockChainListener) {
-        checkNotNull(walletConfig);
-        walletConfig.chain().addListener(blockChainListener);
-    }
-
-    public void removeBlockChainListener(BlockChainListener blockChainListener) {
-        checkNotNull(walletConfig);
-        walletConfig.chain().removeListener(blockChainListener);
     }
 
 
@@ -1210,24 +1168,16 @@ public class TradeWalletService {
         return ScriptBuilder.createP2SHOutputScript(getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey));
     }
 
-    //TODO: locktime
     private Transaction createPayoutTx(Transaction depositTx,
                                        Coin buyerPayoutAmount,
                                        Coin sellerPayoutAmount,
                                        String buyerAddressString,
-                                       String sellerAddressString/*,
-                                       long lockTime*/) throws AddressFormatException {
+                                       String sellerAddressString) throws AddressFormatException {
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction transaction = new Transaction(params);
         transaction.addInput(p2SHMultiSigOutput);
         transaction.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
         transaction.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
-        /*if (lockTime != 0) {
-            log.debug("We use a lockTime of " + lockTime);
-            // When using lockTime we need to set sequenceNumber to 0 
-            transaction.getInputs().stream().forEach(i -> i.setSequenceNumber(0));
-            transaction.setLockTime(lockTime);
-        }*/
         return transaction;
     }
 

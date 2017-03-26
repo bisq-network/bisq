@@ -19,7 +19,6 @@ package io.bisq.core.trade.protocol.tasks.maker;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.core.util.Validator;
@@ -48,14 +47,11 @@ public class MakerProcessDepositTxPublishedMessage extends TradeTask {
             checkArgument(message.depositTx != null);
 
             // To access tx confidence we need to add that tx into our wallet.
-            Transaction transactionFromSerializedTx = processModel.getWalletService().getTransactionFromSerializedTx(message.depositTx);
+            Transaction txFromSerializedTx = processModel.getWalletService().getTxFromSerializedTx(message.depositTx);
             // update with full tx
-            Transaction walletTx = processModel.getTradeWalletService().addTransactionToWallet(transactionFromSerializedTx);
+            Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(txFromSerializedTx);
             trade.setDepositTx(walletTx);
             BtcWalletService.printTx("depositTx received from peer", walletTx);
-
-            if (trade instanceof MakerTrade)
-                processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

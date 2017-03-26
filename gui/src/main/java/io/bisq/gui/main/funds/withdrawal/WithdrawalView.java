@@ -210,7 +210,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
                     List<Trade> trades = new ArrayList<>(tradeManager.getTrades());
                     trades.stream()
-                            .filter(trade -> trade.getState().getPhase() == Trade.Phase.PAYOUT_PAID)
+                            .filter(Trade::isPayoutPublished)
                             .forEach(trade -> {
                                 if (walletService.getBalanceForAddress(walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT).getAddress()).isZero())
                                     tradeManager.addTradeToClosedTrades(trade);

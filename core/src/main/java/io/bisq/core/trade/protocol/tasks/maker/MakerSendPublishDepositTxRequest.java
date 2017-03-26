@@ -22,7 +22,7 @@ import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.network.p2p.SendDirectMessageListener;
+import io.bisq.network.p2p.SendMailboxMessageListener;
 import io.bisq.protobuffer.message.trade.PublishDepositTxRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,7 +54,7 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                             addressEntryOptional.get().getPubKey()),
                     "makerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
-            PublishDepositTxRequest tradeMessage = new PublishDepositTxRequest(
+            PublishDepositTxRequest message = new PublishDepositTxRequest(
                     processModel.getId(),
                     processModel.getPaymentAccountPayload(trade),
                     processModel.getAccountId(),
@@ -67,26 +67,36 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                     processModel.getMyNodeAddress(),
                     UUID.randomUUID().toString()
             );
+            trade.setState(Trade.State.MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST);
 
-            processModel.getP2PService().sendEncryptedDirectMessage(
+            processModel.getP2PService().sendEncryptedMailboxMessage(
                     trade.getTradingPeerNodeAddress(),
                     processModel.tradingPeer.getPubKeyRing(),
-                    tradeMessage,
-                    new SendDirectMessageListener() {
+                    message,
+                    new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
-                            log.trace("Message arrived at peer.");
-                            trade.setState(Trade.State.MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST);
+                            log.info("Message arrived at peer. tradeId={}, message{}", id, message);
+                            trade.setState(Trade.State.MAKER_SAW_ARRIVED_PUBLISH_DEPOSIT_TX_REQUEST);
                             complete();
                         }
 
                         @Override
-                        public void onFault() {
-                            appendToErrorMessage("PublishDepositTxRequest sending failed");
-                            failed();
+                        public void onStoredInMailbox() {
+                            log.info("Message stored in mailbox. tradeId={}, message{}", id, message);
+                            trade.setState(Trade.State.MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST);
+                            complete();
+                        }
+
+                        @Override
+                        public void onFault(String errorMessage) {
+                            trade.setState(Trade.State.MAKER_SEND_FAILED_PUBLISH_DEPOSIT_TX_REQUEST);
+                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
+                            failed(errorMessage);
                         }
                     }
             );
+
         } catch (Throwable t) {
             failed(t);
         }

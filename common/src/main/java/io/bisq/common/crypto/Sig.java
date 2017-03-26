@@ -52,6 +52,7 @@ public class Sig {
             return keyPair;
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
+            log.error(e.toString());
             throw new RuntimeException("Could not create key.");
         }
     }

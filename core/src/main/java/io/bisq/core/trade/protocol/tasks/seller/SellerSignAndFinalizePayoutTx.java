@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.trade.protocol.tasks.buyer_as_taker;
+package io.bisq.core.trade.protocol.tasks.seller;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
@@ -29,12 +29,16 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
+import java.util.Arrays;
+
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BuyerAsTakerSignAndFinalizePayoutTx extends TradeTask {
+public class SellerSignAndFinalizePayoutTx extends TradeTask {
+
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public BuyerAsTakerSignAndFinalizePayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SellerSignAndFinalizePayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -42,33 +46,46 @@ public class BuyerAsTakerSignAndFinalizePayoutTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
+
             Offer offer = trade.getOffer();
-            Coin sellerPayoutAmount = offer.getSellerSecurityDeposit();
-            Coin buyerPayoutAmount = offer.getBuyerSecurityDeposit().add(trade.getTradeAmount());
+            TradingPeer tradingPeer = processModel.tradingPeer;
             BtcWalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
-            String buyerPayoutAddressString = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).getAddressString();
-            byte[] buyerMultiSigPubKey = processModel.getMyMultiSigPubKey();
-            DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(id, buyerMultiSigPubKey);
-            TradingPeer tradingPeer = processModel.tradingPeer;
-            //TODO: locktime  
-            Transaction transaction = processModel.getTradeWalletService().buyerSignsAndFinalizesPayoutTx(
+
+            final byte[] buyerSignature = tradingPeer.getSignature();
+
+            Coin buyerPayoutAmount = offer.getBuyerSecurityDeposit().add(trade.getTradeAmount());
+            Coin sellerPayoutAmount = offer.getSellerSecurityDeposit();
+
+            final String buyerPayoutAddressString = tradingPeer.getPayoutAddressString();
+            String sellerPayoutAddressString = walletService.getOrCreateAddressEntry(id,
+                    AddressEntry.Context.TRADE_PAYOUT).getAddressString();
+
+            final byte[] buyerMultiSigPubKey = tradingPeer.getMultiSigPubKey();
+            byte[] sellerMultiSigPubKey = processModel.getMyMultiSigPubKey();
+
+            checkArgument(Arrays.equals(sellerMultiSigPubKey,
+                            walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey()),
+                    "sellerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
+
+            DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(id, sellerMultiSigPubKey);
+
+            Transaction transaction = processModel.getTradeWalletService().sellerSignsAndFinalizesPayoutTx(
                     trade.getDepositTx(),
-                    tradingPeer.getSignature(),
+                    buyerSignature,
                     buyerPayoutAmount,
                     sellerPayoutAmount,
                     buyerPayoutAddressString,
-                    tradingPeer.getPayoutAddressString(),
+                    sellerPayoutAddressString,
                     multiSigKeyPair,
-                   /* trade.getLockTimeAsBlockHeight(),*/
                     buyerMultiSigPubKey,
-                    tradingPeer.getMultiSigPubKey(),
+                    sellerMultiSigPubKey,
                     trade.getArbitratorPubKey()
             );
 
             trade.setPayoutTx(transaction);
-            trade.setState(Trade.State.BUYER_AS_TAKER_COMMITTED_PAYOUT_TX);
 
             complete();
         } catch (Throwable t) {

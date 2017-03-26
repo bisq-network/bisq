@@ -104,8 +104,8 @@ public class KeyStorage {
                 PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
                 privateKey = keyFactory.generatePrivate(privateKeySpec);
             } catch (InvalidKeySpecException | IOException e) {
-                e.printStackTrace();
                 log.error(e.getMessage());
+                e.printStackTrace();
                 throw new RuntimeException("Could not load key " + keyEntry.toString(), e);
             }
 
@@ -148,8 +148,8 @@ public class KeyStorage {
         try (FileOutputStream fos = new FileOutputStream(storageDir + "/" + name + ".key")) {
             fos.write(pkcs8EncodedKeySpec.getEncoded());
         } catch (IOException e) {
+            log.error(e.toString());
             e.printStackTrace();
-            log.error(e.getMessage());
             throw new RuntimeException("Could not save key " + name, e);
         }
     }

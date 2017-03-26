@@ -43,7 +43,7 @@ public class TakerSendDepositTxPublishedMessage extends TradeTask {
                         trade.getDepositTx().bitcoinSerialize(),
                         processModel.getMyNodeAddress(),
                         UUID.randomUUID().toString());
-
+                trade.setState(Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
                 processModel.getP2PService().sendEncryptedMailboxMessage(
                         trade.getTradingPeerNodeAddress(),
                         processModel.tradingPeer.getPubKeyRing(),
@@ -52,20 +52,21 @@ public class TakerSendDepositTxPublishedMessage extends TradeTask {
                             @Override
                             public void onArrived() {
                                 log.info("Message arrived at peer. tradeId={}, message{}", id, message);
-                                trade.setState(Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
+                                trade.setState(Trade.State.TAKER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
                                 log.info("Message stored in mailbox. tradeId={}, message{}", id, message);
-                                trade.setState(Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
+                                trade.setState(Trade.State.TAKER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onFault(String errorMessage) {
-                                appendToErrorMessage("DepositTxPublishedMessage sending failed");
+                                trade.setState(Trade.State.TAKER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG);
+                                appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
                                 failed();
                             }
                         }

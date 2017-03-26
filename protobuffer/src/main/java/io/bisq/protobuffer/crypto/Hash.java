@@ -43,6 +43,7 @@ public class Hash {
             return digest.digest();
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             log.error("Could not create MessageDigest for hash. " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }

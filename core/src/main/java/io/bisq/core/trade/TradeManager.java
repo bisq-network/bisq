@@ -196,11 +196,11 @@ public class TradeManager {
         for (Trade trade : trades) {
             trade.setStorage(tradableListStorage);
 
-            if (trade.isDepositPaid() || (trade.isTakerFeePaid() && trade.errorMessageProperty().get() == null)) {
+            if (trade.isDepositPublished() || (trade.isTakerFeePublished() && trade.errorMessageProperty().get() == null)) {
                 initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
                 trade.updateDepositTxFromWallet();
                 tradesForStatistics.add(trade);
-            } else if (trade.isTakerFeePaid()) {
+            } else if (trade.isTakerFeePublished()) {
                 addTradeToFailedTradesList.add(trade);
             } else {
                 removePreparedTradeList.add(trade);
@@ -432,6 +432,8 @@ public class TradeManager {
 
     private void removeTrade(Trade trade) {
         trades.remove(trade);
+
+        // we only swap if we have not an open offer (in case the removeTrade happened at the trade preparation phase)
         if (!openOfferManager.findOpenOffer(trade.getId()).isPresent())
             walletService.swapAnyTradeEntryContextToAvailableEntry(trade.getId());
     }
@@ -488,7 +490,6 @@ public class TradeManager {
 
     public Stream<Trade> getLockedTradeStream() {
         return getTrades().stream()
-                .filter(trade -> trade.getState().getPhase().ordinal() >= Trade.Phase.DEPOSIT_PAID.ordinal() &&
-                        trade.getState().getPhase().ordinal() < Trade.Phase.PAYOUT_PAID.ordinal());
+                .filter(trade -> trade.isDepositPublished() && !trade.isPayoutPublished());
     }
 }

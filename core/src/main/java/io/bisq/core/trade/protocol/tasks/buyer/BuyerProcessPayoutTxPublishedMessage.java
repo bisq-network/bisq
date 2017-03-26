@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.trade.protocol.tasks.buyer_as_maker;
+package io.bisq.core.trade.protocol.tasks.buyer;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -30,9 +30,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BuyerAsMakerProcessPayoutTxPublishedMessage extends TradeTask {
+public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public BuyerAsMakerProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public BuyerProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -45,7 +45,7 @@ public class BuyerAsMakerProcessPayoutTxPublishedMessage extends TradeTask {
             Validator.checkTradeId(processModel.getId(), message);
             checkNotNull(message);
             checkArgument(message.payoutTx != null);
-            Transaction walletTx = processModel.getTradeWalletService().addTransactionToWallet(message.payoutTx);
+            Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(message.payoutTx);
             trade.setPayoutTx(walletTx);
             BtcWalletService.printTx("payoutTx received from peer", walletTx);
 
@@ -54,7 +54,7 @@ public class BuyerAsMakerProcessPayoutTxPublishedMessage extends TradeTask {
 
             removeMailboxMessageAfterProcessing();
 
-            trade.setState(Trade.State.BUYER_RECEIVED_AND_COMMITTED_PAYOUT_TX);
+            trade.setState(Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
 
             complete();
         } catch (Throwable t) {
