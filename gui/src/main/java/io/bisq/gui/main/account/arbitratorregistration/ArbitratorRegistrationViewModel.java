@@ -146,6 +146,8 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
         if (allDataValid) {
             AddressEntry arbitratorDepositAddressEntry = walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR);
             String registrationSignature = arbitratorManager.signStorageSignaturePubKey(registrationKey);
+            // TODO not impl in UI    
+            String emailAddress = null;
             Arbitrator arbitrator = new Arbitrator(
                     p2PService.getAddress(),
                     arbitratorDepositAddressEntry.getPubKey(),
@@ -155,6 +157,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                     new Date(),
                     registrationKey.getPubKey(),
                     registrationSignature,
+                    emailAddress,
                     null
             );
 

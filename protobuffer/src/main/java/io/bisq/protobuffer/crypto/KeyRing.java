@@ -19,63 +19,52 @@ package io.bisq.protobuffer.crypto;
 
 import io.bisq.common.crypto.Sig;
 import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.openpgp.PGPKeyPair;
+import org.bouncycastle.openpgp.PGPPublicKey;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.security.KeyPair;
 
+@Getter
+@EqualsAndHashCode
+@Slf4j
 public class KeyRing {
     private final KeyPair signatureKeyPair;
     private final KeyPair encryptionKeyPair;
     private final PubKeyRing pubKeyRing;
+
+    // We generate by default a PGP keypair but the user can set his own if he prefers.
+    // Not impl. yet but prepared in data structure
+    @Setter
+    @Nullable
+    // TODO  remove Nullable once impl.
+    private PGPKeyPair pgpKeyPair;
 
     @Inject
     public KeyRing(KeyStorage keyStorage) {
         if (keyStorage.allKeyFilesExist()) {
             signatureKeyPair = keyStorage.loadKeyPair(KeyStorage.KeyEntry.MSG_SIGNATURE);
             encryptionKeyPair = keyStorage.loadKeyPair(KeyStorage.KeyEntry.MSG_ENCRYPTION);
+
+            // TODO not impl
+            pgpKeyPair = keyStorage.loadPgpKeyPair(KeyStorage.KeyEntry.PGP);
         } else {
             // First time we create key pairs
             signatureKeyPair = Sig.generateKeyPair();
             encryptionKeyPair = Encryption.generateKeyPair();
+
+            // TODO not impl
+            pgpKeyPair = PGP.generateKeyPair();
             keyStorage.saveKeyRing(this);
         }
-
-        pubKeyRing = new PubKeyRing(signatureKeyPair.getPublic(), encryptionKeyPair.getPublic());
-    }
-
-    public KeyPair getSignatureKeyPair() {
-        return signatureKeyPair;
-    }
-
-    public KeyPair getEncryptionKeyPair() {
-        return encryptionKeyPair;
-    }
-
-    public PubKeyRing getPubKeyRing() {
-        return pubKeyRing;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof KeyRing)) return false;
-
-        KeyRing keyRing = (KeyRing) o;
-
-        if (signatureKeyPair != null ? !signatureKeyPair.equals(keyRing.signatureKeyPair) : keyRing.signatureKeyPair != null)
-            return false;
-        if (encryptionKeyPair != null ? !encryptionKeyPair.equals(keyRing.encryptionKeyPair) : keyRing.encryptionKeyPair != null)
-            return false;
-        return !(pubKeyRing != null ? !pubKeyRing.equals(keyRing.pubKeyRing) : keyRing.pubKeyRing != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = signatureKeyPair != null ? signatureKeyPair.hashCode() : 0;
-        result = 31 * result + (encryptionKeyPair != null ? encryptionKeyPair.hashCode() : 0);
-        result = 31 * result + (pubKeyRing != null ? pubKeyRing.hashCode() : 0);
-        return result;
+        // TODO  remove Nullable once impl.
+        final PGPPublicKey pgpPublicKey = pgpKeyPair != null ? pgpKeyPair.getPublicKey() : null;
+        pubKeyRing = new PubKeyRing(signatureKeyPair.getPublic(), encryptionKeyPair.getPublic(), pgpPublicKey);
     }
 
     @Override

@@ -611,6 +611,7 @@ public class ProtoBufferUtilities {
                         null : arbitrator.getExtraDataMapMap();
                 List<String> strings = arbitrator.getLanguageCodesList().stream().collect(Collectors.toList());
                 Date date = new Date(arbitrator.getRegistrationDate());
+                String emailAddress = arbitrator.getEmailAddress().isEmpty() ? null : arbitrator.getEmailAddress();
                 storagePayload = new Arbitrator(getNodeAddress(arbitrator.getNodeAddress()),
                         arbitrator.getBtcPubKey().toByteArray(),
                         arbitrator.getBtcAddress(),
@@ -619,6 +620,7 @@ public class ProtoBufferUtilities {
                         date,
                         arbitrator.getRegistrationPubKey().toByteArray(),
                         arbitrator.getRegistrationSignature(),
+                        emailAddress,
                         extraDataMapMap);
                 break;
             case MEDIATOR:
@@ -627,12 +629,14 @@ public class ProtoBufferUtilities {
                         null : mediator.getExtraDataMapMap();
                 strings = mediator.getLanguageCodesList().stream().collect(Collectors.toList());
                 date = new Date(mediator.getRegistrationDate());
+                emailAddress = mediator.getEmailAddress().isEmpty() ? null : mediator.getEmailAddress();
                 storagePayload = new Mediator(getNodeAddress(mediator.getNodeAddress()),
                         getPubKeyRing(mediator.getPubKeyRing()),
                         strings,
                         date,
                         mediator.getRegistrationPubKey().toByteArray(),
                         mediator.getRegistrationSignature(),
+                        emailAddress,
                         extraDataMapMap);
                 break;
             case FILTER:
@@ -685,7 +689,8 @@ public class ProtoBufferUtilities {
                         protoTrade.getTradeDate(),
                         protoTrade.getDepositTxId(),
                         new PubKeyRing(protoTrade.getPubKeyRing().getSignaturePubKeyBytes().toByteArray(),
-                                protoTrade.getPubKeyRing().getEncryptionPubKeyBytes().toByteArray()),
+                                protoTrade.getPubKeyRing().getEncryptionPubKeyBytes().toByteArray(),
+                                protoTrade.getPubKeyRing().getPgpPubKeyAsPem()),
                         extraDataMapMap);
                 break;
             case MAILBOX_STORAGE_PAYLOAD:
@@ -715,7 +720,8 @@ public class ProtoBufferUtilities {
     @NotNull
     private static PubKeyRing getPubKeyRing(PB.PubKeyRing pubKeyRing) {
         return new PubKeyRing(pubKeyRing.getSignaturePubKeyBytes().toByteArray(),
-                pubKeyRing.getEncryptionPubKeyBytes().toByteArray());
+                pubKeyRing.getEncryptionPubKeyBytes().toByteArray(),
+                pubKeyRing.getPgpPubKeyAsPem());
     }
 
     private static NodeAddress getNodeAddress(PB.NodeAddress protoNode) {

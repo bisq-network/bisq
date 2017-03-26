@@ -20,10 +20,12 @@ package io.bisq.protobuffer.crypto;
 import com.google.inject.Inject;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
+import org.bouncycastle.openpgp.PGPKeyPair;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Named;
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,7 +47,9 @@ public class KeyStorage {
 
     public enum KeyEntry {
         MSG_SIGNATURE("sig", Sig.KEY_ALGO),
-        MSG_ENCRYPTION("enc", Encryption.ASYM_KEY_ALGO);
+        MSG_ENCRYPTION("enc", Encryption.ASYM_KEY_ALGO),
+        // TODO not impl
+        PGP("pgp", null);
 
         private final String fileName;
         private final String algorithm;
@@ -87,6 +91,13 @@ public class KeyStorage {
     private boolean fileExists(KeyEntry keyEntry) {
         return new File(storageDir + "/" + keyEntry.getFileName() + ".key").exists();
     }
+
+    // TODO not impl
+    @Nullable
+    public PGPKeyPair loadPgpKeyPair(KeyEntry keyEntry) {
+        return null;
+    }
+
 
     public KeyPair loadKeyPair(KeyEntry keyEntry) {
         FileUtil.rollingBackup(storageDir, keyEntry.getFileName() + ".key", 20);

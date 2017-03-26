@@ -22,12 +22,17 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.crypto.Encryption;
+import io.bisq.protobuffer.crypto.PGP;
 import io.bisq.protobuffer.payload.Payload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.util.encoders.Hex;
+import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.security.KeyFactory;
@@ -50,23 +55,34 @@ public final class PubKeyRing implements Payload {
     // Payload
     private final byte[] signaturePubKeyBytes;
     private final byte[] encryptionPubKeyBytes;
+    private String pgpPubKeyAsPem;
 
     // Domain
     @Getter
     transient private PublicKey signaturePubKey;
     @Getter
     transient private PublicKey encryptionPubKey;
+    @Getter
+    @Nullable
+    // TODO  remove Nullable once impl.
+    transient private PGPPublicKey pgpPubKey;
 
-    public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey) {
+    public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey, @Nullable PGPPublicKey pgpPubKey) {
         this.signaturePubKey = signaturePubKey;
         this.encryptionPubKey = encryptionPubKey;
+        this.pgpPubKey = pgpPubKey;
+
         this.signaturePubKeyBytes = new X509EncodedKeySpec(signaturePubKey.getEncoded()).getEncoded();
         this.encryptionPubKeyBytes = new X509EncodedKeySpec(encryptionPubKey.getEncoded()).getEncoded();
+
+        //TODO not impl yet
+        pgpPubKeyAsPem = PGP.getPEMFromPubKey(pgpPubKey);
     }
 
-    public PubKeyRing(byte[] signaturePubKeyBytes, byte[] encryptionPubKeyBytes) {
+    public PubKeyRing(byte[] signaturePubKeyBytes, byte[] encryptionPubKeyBytes, @NotNull String pgpPubKeyAsPem) {
         this.signaturePubKeyBytes = signaturePubKeyBytes;
         this.encryptionPubKeyBytes = encryptionPubKeyBytes;
+        this.pgpPubKeyAsPem = pgpPubKeyAsPem;
         init();
     }
 
@@ -85,6 +101,14 @@ public final class PubKeyRing implements Payload {
                     .generatePublic(new X509EncodedKeySpec(signaturePubKeyBytes));
             encryptionPubKey = KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC")
                     .generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
+
+            try {
+                this.pgpPubKey = PGP.getPubKeyFromPEM(pgpPubKeyAsPem);
+            } catch (IOException | PGPException e) {
+                log.error(e.toString());
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -93,8 +117,11 @@ public final class PubKeyRing implements Payload {
 
     @Override
     public PB.PubKeyRing toProto() {
-        return PB.PubKeyRing.newBuilder().setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes))
-                .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes)).build();
+        return PB.PubKeyRing.newBuilder()
+                .setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes))
+                .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes))
+                .setPgpPubKeyAsPem(pgpPubKeyAsPem)
+                .build();
     }
 
     // Hex
@@ -103,6 +130,7 @@ public final class PubKeyRing implements Payload {
         return "PubKeyRing{" +
                 "signaturePubKeyHex=" + Hex.toHexString(signaturePubKeyBytes) +
                 ", encryptionPubKeyHex=" + Hex.toHexString(encryptionPubKeyBytes) +
+                ", pgpPubKeyAsString=" + pgpPubKeyAsPem +
                 '}';
     }
 }

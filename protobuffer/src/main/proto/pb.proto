@@ -215,10 +215,11 @@ message Arbitrator {
     int64 registration_date = 3;
     string registration_signature = 4;
     bytes registration_pub_key = 5;
-    map<string, string> extra_data_map = 6;
-    PubKeyRing pub_key_ring = 7;
-    bytes btc_pub_key = 8;
-    string btc_address = 9;
+    PubKeyRing pub_key_ring = 6;
+    bytes btc_pub_key = 7;
+    string btc_address = 8;
+    string email_address = 9;
+    map<string, string> extra_data_map = 10;
 }
 
 message Mediator {
@@ -227,8 +228,9 @@ message Mediator {
     int64 registration_date = 3;
     string registration_signature = 4;
     bytes registration_pub_key = 5;
-    map<string, string> extra_data_map = 6;
-    PubKeyRing pub_key_ring = 7;
+    PubKeyRing pub_key_ring = 6;
+    string email_address = 7;
+    map<string, string> extra_data_map = 8;
 }
 
 message Filter {
@@ -458,6 +460,7 @@ message Dispute {
 message PubKeyRing {
     bytes signature_pub_key_bytes = 1;
     bytes encryption_pub_key_bytes = 2;
+    string pgp_pub_key_as_pem = 3;
 }
 
 message Contract {

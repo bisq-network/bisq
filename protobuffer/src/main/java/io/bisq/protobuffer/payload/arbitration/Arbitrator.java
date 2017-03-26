@@ -55,6 +55,9 @@ public final class Arbitrator implements StoragePayload {
     private final long registrationDate;
     private final String registrationSignature;
     private final byte[] registrationPubKey;
+    @Nullable
+    private final String emailAddress;
+    
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
     // field in a class would break that hash and therefore break the storage mechanism.
@@ -70,12 +73,14 @@ public final class Arbitrator implements StoragePayload {
                       Date registrationDate,
                       byte[] registrationPubKey,
                       String registrationSignature,
+                      @Nullable String emailAddress,
                       @Nullable Map<String, String> extraDataMap) {
         this.nodeAddress = nodeAddress;
         this.btcPubKey = btcPubKey;
         this.btcAddress = btcAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;
+        this.emailAddress = emailAddress;
         this.registrationDate = registrationDate.getTime();
         this.registrationPubKey = registrationPubKey;
         this.registrationSignature = registrationSignature;
@@ -104,6 +109,7 @@ public final class Arbitrator implements StoragePayload {
                 .setRegistrationSignature(registrationSignature)
                 .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
+        Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
         return PB.StoragePayload.newBuilder().setArbitrator(builder).build();
     }
 
