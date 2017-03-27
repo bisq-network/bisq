@@ -9,6 +9,7 @@ import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.crypto.NetworkCryptoUtils;
 import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.Broadcaster;
@@ -106,7 +107,7 @@ public class P2PDataStorageTest {
         assertEquals(1, dataStorage1.getMap().size());
 
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = NetworkCryptoUtils.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedStorageEntry dataToRemove = new ProtectedStorageEntry(data.getStoragePayload(), data.ownerPubKey, newSequenceNumber, signature);
         assertTrue(dataStorage1.remove(dataToRemove, null, true));
@@ -126,7 +127,7 @@ public class P2PDataStorageTest {
         data.toProto().writeTo(byteOutputStream);
         ProtectedStorageEntry protectedStorageEntry = ProtoBufferUtilities.getProtectedStorageEntry(PB.ProtectedStorageEntry.parseFrom(new ByteArrayInputStream(byteOutputStream.toByteArray())));
 
-        assertTrue(Arrays.equals(EncryptionService.getHash(data.getStoragePayload()), EncryptionService.getHash(protectedStorageEntry.getStoragePayload())));
+        assertTrue(Arrays.equals(NetworkCryptoUtils.getHash(data.getStoragePayload()), NetworkCryptoUtils.getHash(protectedStorageEntry.getStoragePayload())));
         assertTrue(data.equals(protectedStorageEntry));
         assertTrue(checkSignature(protectedStorageEntry));
     }
@@ -197,13 +198,13 @@ public class P2PDataStorageTest {
 
     private void setSignature(ProtectedStorageEntry entry) throws CryptoException {
         int newSequenceNumber = entry.sequenceNumber;
-        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = NetworkCryptoUtils.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         entry.signature = signature;
     }
 
     private boolean checkSignature(ProtectedStorageEntry entry) throws CryptoException {
-        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), entry.sequenceNumber));
+        byte[] hashOfDataAndSeqNr = NetworkCryptoUtils.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), entry.sequenceNumber));
         return dataStorage1.checkSignature(entry.ownerPubKey, hashOfDataAndSeqNr, entry.signature);
     }
 }

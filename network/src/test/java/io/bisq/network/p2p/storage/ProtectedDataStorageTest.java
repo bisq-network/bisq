@@ -6,6 +6,7 @@ import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.crypto.NetworkCryptoUtils;
 import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.PeerManager;
@@ -104,7 +105,7 @@ public class ProtectedDataStorageTest {
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = NetworkCryptoUtils.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedStorageEntry dataToRemove = new ProtectedStorageEntry(data.getStoragePayload(), data.ownerPubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null, true));

@@ -62,7 +62,7 @@ import io.bisq.gui.main.overlays.windows.DisplayAlertMessageWindow;
 import io.bisq.gui.main.overlays.windows.TacWindow;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.crypto.NetworkCryptoUtils;
 import io.bisq.network.p2p.P2PServiceListener;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
@@ -579,9 +579,9 @@ public class MainViewModel implements ViewModel {
                     log.trace("Run crypto test");
                     // just use any simple dummy msg
                     Ping payload = new Ping(1, 1);
-                    SealedAndSignedVO sealedAndSignedVO = EncryptionService.encryptHybridWithSignature(payload,
+                    SealedAndSignedVO sealedAndSignedVO = NetworkCryptoUtils.encryptHybridWithSignature(payload,
                             keyRingVO.getSignatureKeyPair(), keyRingVO.getPubKeyRingVO().getEncryptionPubKey());
-                    DecryptedDataTuple tuple = EncryptionService.decryptHybridWithSignature(sealedAndSignedVO, keyRingVO.getEncryptionKeyPair().getPrivate());
+                    DecryptedDataTuple tuple = NetworkCryptoUtils.decryptHybridWithSignature(sealedAndSignedVO, keyRingVO.getEncryptionKeyPair().getPrivate());
                     if (tuple.payload instanceof Ping &&
                             ((Ping) tuple.payload).nonce == payload.nonce &&
                             ((Ping) tuple.payload).lastRoundTripTime == payload.lastRoundTripTime) {

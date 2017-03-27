@@ -56,7 +56,7 @@ import java.security.cert.CertificateException;
 import java.util.Random;
 import java.util.UUID;
 
-import static io.bisq.network.crypto.EncryptionService.decryptHybridWithSignature;
+import static io.bisq.network.crypto.NetworkCryptoUtils.decryptHybridWithSignature;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -113,7 +113,7 @@ public class EncryptionServiceTests {
             Ping payload = new Ping(new Random().nextInt(), 10);
             SealedAndSignedVO sealedAndSignedVO = null;
             try {
-                sealedAndSignedVO = EncryptionService.encryptHybridWithSignature(payload,
+                sealedAndSignedVO = NetworkCryptoUtils.encryptHybridWithSignature(payload,
                         keyRingVO.getSignatureKeyPair(), keyRingVO.getPubKeyRingVO().getEncryptionPubKey());
             } catch (CryptoException e) {
                 log.error("encryptHybridWithSignature failed");
