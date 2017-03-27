@@ -223,7 +223,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         fillPaymentAccounts();
 
-        PaymentAccount account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
+        PaymentAccount account;
+        PaymentAccount lastSelectedPaymentAccount = preferences.getSelectedPaymentAccountForCreateOffer();
+        if (lastSelectedPaymentAccount != null && user.getPaymentAccounts().contains(lastSelectedPaymentAccount))
+            account = lastSelectedPaymentAccount;
+        else
+            account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
+
         if (account != null && isNotUSBankAccount(account)) {
             paymentAccount = account;
             this.tradeCurrency = tradeCurrency;
@@ -327,7 +333,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         long upperClosePrice = 0;
         String hashOfChallenge = null;
         HashMap<String, String> extraDataMap = null;
-        
+
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.MAX_BUYER_SECURITY_DEPOSIT) <= 0,
                 "securityDeposit must be not exceed " +
@@ -382,13 +388,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
-        if (paymentAccount != null) {
-
-            if (!this.paymentAccount.equals(paymentAccount)) {
-                volume.set(null);
-                price.set(null);
-                marketPriceMargin = 0;
-            }
+        if (paymentAccount != null && !this.paymentAccount.equals(paymentAccount)) {
+            volume.set(null);
+            price.set(null);
+            marketPriceMargin = 0;
+            preferences.setSelectedPaymentAccountForCreateOffer(paymentAccount);
             this.paymentAccount = paymentAccount;
         }
     }
@@ -616,7 +620,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     private boolean isNotUSBankAccount(PaymentAccount paymentAccount) {
         //noinspection SimplifiableIfStatement
-        if (paymentAccount instanceof SameCountryRestrictedBankAccount && paymentAccount.getPaymentAccountPayload() instanceof BankAccountPayload)
+        if (paymentAccount instanceof SameCountryRestrictedBankAccount &&
+                paymentAccount.getPaymentAccountPayload() instanceof BankAccountPayload)
             return !((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
         else
             return true;

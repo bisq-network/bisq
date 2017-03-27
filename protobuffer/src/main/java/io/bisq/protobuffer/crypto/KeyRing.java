@@ -67,6 +67,7 @@ public class KeyRing {
         pubKeyRing = new PubKeyRing(signatureKeyPair.getPublic(), encryptionKeyPair.getPublic(), pgpPublicKey);
     }
 
+    // Don't print keys for security reasons
     @Override
     public String toString() {
         return "KeyRing{" +
