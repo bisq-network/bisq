@@ -197,7 +197,6 @@ public class MainViewModel implements ViewModel {
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.disputeManager = disputeManager;
-        Refac
         this.preferences = preferences;
         this.alertManager = alertManager;
         this.privateNotificationManager = privateNotificationManager;
