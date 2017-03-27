@@ -7,5 +7,6 @@ public enum AvailabilityResult {
     PRICE_OUT_OF_TOLERANCE,
     MARKET_PRICE_NOT_AVAILABLE,
     NO_ARBITRATORS,
+    NO_MEDIATORS,
     USER_IGNORED
 }

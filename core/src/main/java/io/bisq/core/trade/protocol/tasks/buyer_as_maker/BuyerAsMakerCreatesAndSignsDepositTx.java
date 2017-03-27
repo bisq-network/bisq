@@ -96,7 +96,7 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
 
             final byte[] sellerPubKey = tradingPeer.getMultiSigPubKey();
 
-            final byte[] arbitratorPubKey = trade.getArbitratorPubKey();
+            final byte[] arbitratorBtcPubKey = trade.getArbitratorBtcPubKey();
 
             PreparedDepositTxAndMakerInputs result = processModel.getTradeWalletService().makerCreatesAndSignsDepositTx(
                     makerIsBuyer,
@@ -110,7 +110,7 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     makerChangeAddress,
                     buyerPubKey,
                     sellerPubKey,
-                    arbitratorPubKey);
+                    arbitratorBtcPubKey);
 
             processModel.setPreparedDepositTx(result.depositTransaction);
             processModel.setRawTransactionInputs(result.rawMakerInputs);

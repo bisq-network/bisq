@@ -90,7 +90,7 @@ public class DebugView extends InitializableView {
                         /*---- Protocol ----*/
                         BuyerAsMakerProtocol.class,
                         MakerProcessPayDepositRequest.class,
-                        MakerVerifyArbitrationSelection.class,
+                        MakerVerifyArbitratorSelection.class,
                         MakerVerifyTakerAccount.class,
                         MakerCreateAndSignContract.class,
                         BuyerAsMakerCreatesAndSignsDepositTx.class,
@@ -150,7 +150,7 @@ public class DebugView extends InitializableView {
                          /*---- Protocol ----*/
                         SellerAsMakerProtocol.class,
                         MakerProcessPayDepositRequest.class,
-                        MakerVerifyArbitrationSelection.class,
+                        MakerVerifyArbitratorSelection.class,
                         MakerVerifyTakerAccount.class,
                         MakerCreateAndSignContract.class,
                         BuyerAsMakerCreatesAndSignsDepositTx.class,

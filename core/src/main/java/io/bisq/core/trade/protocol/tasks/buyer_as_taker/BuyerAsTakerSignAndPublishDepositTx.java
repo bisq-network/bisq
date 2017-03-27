@@ -82,7 +82,7 @@ public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
                     tradingPeer.getRawTransactionInputs(),
                     buyerMultiSigPubKey,
                     tradingPeer.getMultiSigPubKey(),
-                    trade.getArbitratorPubKey(),
+                    trade.getArbitratorBtcPubKey(),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {

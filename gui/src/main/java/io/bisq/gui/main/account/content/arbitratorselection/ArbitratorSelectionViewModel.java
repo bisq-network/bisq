@@ -98,13 +98,21 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     }
 
     void onAddArbitrator(Arbitrator arbitrator) {
-        if (!arbitratorIsTrader(arbitrator))
+        if (!arbitratorIsTrader(arbitrator)) {
             user.addAcceptedArbitrator(arbitrator);
+
+            // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
+            user.addAcceptedMediator(ArbitratorManager.getMediator(arbitrator));
+        }
     }
 
     void onRemoveArbitrator(Arbitrator arbitrator) {
-        if (arbitrator != null)
+        if (arbitrator != null) {
             user.removeAcceptedArbitrator(arbitrator);
+
+            // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
+            user.removeAcceptedMediator(ArbitratorManager.getMediator(arbitrator));
+        }
     }
 
     public boolean isDeselectAllowed(ArbitratorListItem arbitratorListItem) {

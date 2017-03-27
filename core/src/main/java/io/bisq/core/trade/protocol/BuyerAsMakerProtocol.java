@@ -115,7 +115,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 this::handleTaskRunnerFault);
         taskRunner.addTasks(
                 MakerProcessPayDepositRequest.class,
-                MakerVerifyArbitrationSelection.class,
+                MakerVerifyArbitratorSelection.class,
+                MakerVerifyMediatorSelection.class,
                 MakerVerifyTakerAccount.class,
                 MakerVerifyTakerFeePayment.class,
                 MakerCreateAndSignContract.class,

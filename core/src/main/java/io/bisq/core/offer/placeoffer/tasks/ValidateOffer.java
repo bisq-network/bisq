@@ -88,6 +88,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
                     "Date must not be 0. date=" + offer.getDate().toString());
 
             checkNotNull(offer.getArbitratorNodeAddresses(), "Arbitrator is null");
+            checkNotNull(offer.getMediatorNodeAddresses(), "Mediator is null");
             checkNotNull(offer.getCurrencyCode(), "Currency is null");
             checkNotNull(offer.getDirection(), "Direction is null");
             checkNotNull(offer.getId(), "Id is null");

@@ -82,7 +82,7 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
                     multiSigKeyPair,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey,
-                    trade.getArbitratorPubKey()
+                    trade.getArbitratorBtcPubKey()
             );
 
             trade.setPayoutTx(transaction);

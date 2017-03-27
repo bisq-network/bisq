@@ -21,7 +21,7 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.protocol.ArbitrationSelectionRule;
+import io.bisq.core.trade.protocol.ArbitratorSelectionRule;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.core.user.User;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
@@ -45,7 +45,8 @@ public class TakerCreateTakerFeeTx extends TradeTask {
             runInterceptHook();
 
             User user = processModel.getUser();
-            NodeAddress selectedArbitratorNodeAddress = ArbitrationSelectionRule.select(user.getAcceptedArbitratorAddresses(), processModel.getOffer());
+            NodeAddress selectedArbitratorNodeAddress = ArbitratorSelectionRule.select(user.getAcceptedArbitratorAddresses(),
+                    processModel.getOffer());
             log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
             Arbitrator selectedArbitrator = user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
             checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateTakeOfferFeeTx");

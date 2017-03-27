@@ -30,17 +30,19 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class ArbitrationSelectionRule {
-    public static NodeAddress select(List<NodeAddress> acceptedArbitratorNodeAddresses, Offer offer) {
+public class MediatorSelectionRule {
+    public static NodeAddress select(List<NodeAddress> acceptedMediatorNodeAddresses, Offer offer) {
         List<NodeAddress> candidates = new ArrayList<>();
-        for (NodeAddress offerArbitratorNodeAddress : offer.getArbitratorNodeAddresses()) {
-            candidates.addAll(acceptedArbitratorNodeAddresses.stream().filter(offerArbitratorNodeAddress::equals).collect(Collectors.toList()));
+        for (NodeAddress offerMediatorNodeAddress : offer.getMediatorNodeAddresses()) {
+            candidates.addAll(acceptedMediatorNodeAddresses.stream()
+                    .filter(offerMediatorNodeAddress::equals)
+                    .collect(Collectors.toList()));
         }
         checkArgument(candidates.size() > 0, "candidates.size() <= 0");
 
         int index = Math.abs(Arrays.hashCode(Sha256Hash.hash(offer.getId().getBytes()))) % candidates.size();
-        NodeAddress selectedArbitrator = candidates.get(index);
-        log.debug("selectedArbitrator " + selectedArbitrator);
-        return selectedArbitrator;
+        NodeAddress selectedMediator = candidates.get(index);
+        log.debug("selectedMediator " + selectedMediator);
+        return selectedMediator;
     }
 }

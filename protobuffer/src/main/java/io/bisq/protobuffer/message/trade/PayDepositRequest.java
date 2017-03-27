@@ -56,7 +56,9 @@ public final class PayDepositRequest extends TradeMessage {
     public final String takerAccountId;
     public final String takeOfferFeeTxId;
     public final List<NodeAddress> acceptedArbitratorNodeAddresses;
+    public final List<NodeAddress> acceptedMediatorNodeAddresses;
     public final NodeAddress arbitratorNodeAddress;
+    public final NodeAddress mediatorNodeAddress;
     private final NodeAddress senderNodeAddress;
 
     public PayDepositRequest(NodeAddress senderNodeAddress,
@@ -75,7 +77,9 @@ public final class PayDepositRequest extends TradeMessage {
                              String takerAccountId,
                              String takeOfferFeeTxId,
                              List<NodeAddress> acceptedArbitratorNodeAddresses,
-                             NodeAddress arbitratorNodeAddress) {
+                             List<NodeAddress> acceptedMediatorNodeAddresses,
+                             NodeAddress arbitratorNodeAddress,
+                             NodeAddress mediatorNodeAddress) {
         super(tradeId);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
@@ -92,7 +96,9 @@ public final class PayDepositRequest extends TradeMessage {
         this.takerAccountId = takerAccountId;
         this.takeOfferFeeTxId = takeOfferFeeTxId;
         this.acceptedArbitratorNodeAddresses = acceptedArbitratorNodeAddresses;
+        this.acceptedMediatorNodeAddresses = acceptedMediatorNodeAddresses;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
+        this.mediatorNodeAddress = mediatorNodeAddress;
     }
 
     @Override
@@ -115,7 +121,10 @@ public final class PayDepositRequest extends TradeMessage {
                 .setTakeOfferFeeTxId(takeOfferFeeTxId)
                 .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream()
                         .map(nodeAddress -> nodeAddress.toProto()).collect(Collectors.toList()))
+                .addAllAcceptedMediatorNodeAddresses(acceptedMediatorNodeAddresses.stream()
+                        .map(nodeAddress -> nodeAddress.toProto()).collect(Collectors.toList()))
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProto())
+                .setMediatorNodeAddress(mediatorNodeAddress.toProto())
                 .setSenderNodeAddress(senderNodeAddress.toProto());
         Optional.ofNullable(changeOutputAddress).ifPresent(builderForValue::setChangeOutputAddress);
         return baseEnvelope.setPayDepositRequest(builderForValue).build();
@@ -139,7 +148,9 @@ public final class PayDepositRequest extends TradeMessage {
                 ", takerAccountId='" + takerAccountId + '\'' +
                 ", takeOfferFeeTxId='" + takeOfferFeeTxId + '\'' +
                 ", acceptedArbitratorNodeAddresses=" + acceptedArbitratorNodeAddresses +
+                ", acceptedMediatorNodeAddresses=" + acceptedMediatorNodeAddresses +
                 ", arbitratorNodeAddress=" + arbitratorNodeAddress +
+                ", mediatorNodeAddress=" + mediatorNodeAddress +
                 ", senderNodeAddress=" + senderNodeAddress +
                 "} " + super.toString();
     }

@@ -51,6 +51,7 @@ public final class Contract implements Payload {
     private final long tradePrice;
     public final String takeOfferFeeTxID;
     public final NodeAddress arbitratorNodeAddress;
+    public final NodeAddress mediatorNodeAddress;
     private final boolean isBuyerMakerAndSellerTaker;
     private final String makerAccountId;
     private final String takerAccountId;
@@ -78,6 +79,7 @@ public final class Contract implements Payload {
                     NodeAddress buyerNodeAddress,
                     NodeAddress sellerNodeAddress,
                     NodeAddress arbitratorNodeAddress,
+                    NodeAddress mediatorNodeAddress,
                     boolean isBuyerMakerAndSellerTaker,
                     String makerAccountId,
                     String takerAccountId,
@@ -96,6 +98,7 @@ public final class Contract implements Payload {
         this.tradeAmount = tradeAmount.value;
         this.takeOfferFeeTxID = takeOfferFeeTxID;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
+        this.mediatorNodeAddress = mediatorNodeAddress;
         this.isBuyerMakerAndSellerTaker = isBuyerMakerAndSellerTaker;
         this.makerAccountId = makerAccountId;
         this.takerAccountId = takerAccountId;
@@ -181,6 +184,7 @@ public final class Contract implements Payload {
                 .setTradePrice(tradePrice)
                 .setTakeOfferFeeTxId(takeOfferFeeTxID)
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProto())
+                .setMediatorNodeAddress(mediatorNodeAddress.toProto())
                 .setIsBuyerMakerAndSellerTaker(isBuyerMakerAndSellerTaker)
                 .setMakerAccountId(makerAccountId)
                 .setTakerAccountId(takerAccountId)
@@ -204,6 +208,7 @@ public final class Contract implements Payload {
                 "\n\ttradePrice=" + tradePrice +
                 "\n\ttakeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
                 "\n\tarbitratorAddress=" + arbitratorNodeAddress +
+                "\n\tmediatorNodeAddress=" + mediatorNodeAddress +
                 "\n\tisBuyerMakerAndSellerTaker=" + isBuyerMakerAndSellerTaker +
                 "\n\tmakerAccountId='" + makerAccountId + '\'' +
                 "\n\ttakerAccountId='" + takerAccountId + '\'' +

@@ -73,6 +73,7 @@ public class ProcessModel implements Model, Serializable {
     private byte[] payoutTxSignature;
 
     private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
+    private List<NodeAddress> takerAcceptedMediatorNodeAddresses;
 
     // that is used to store temp. the peers address when we get an incoming message before the message is verified.
     // After successful verified we copy that over to the trade.tradingPeerAddress
@@ -229,6 +230,14 @@ public class ProcessModel implements Model, Serializable {
 
     public List<NodeAddress> getTakerAcceptedArbitratorNodeAddresses() {
         return takerAcceptedArbitratorNodeAddresses;
+    }
+
+    public void setTakerAcceptedMediatorNodeAddresses(List<NodeAddress> takerAcceptedMediatorNodeAddresses) {
+        this.takerAcceptedMediatorNodeAddresses = takerAcceptedMediatorNodeAddresses;
+    }
+
+    public List<NodeAddress> getTakerAcceptedMediatorNodeAddresses() {
+        return takerAcceptedMediatorNodeAddresses;
     }
 
     public void setTempTradingPeerNodeAddress(NodeAddress tempTradingPeerNodeAddress) {

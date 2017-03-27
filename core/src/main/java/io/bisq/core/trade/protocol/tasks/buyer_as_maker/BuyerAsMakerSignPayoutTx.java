@@ -73,7 +73,7 @@ public class BuyerAsMakerSignPayoutTx extends TradeTask {
                     buyerMultiSigKeyPair,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey,
-                    trade.getArbitratorPubKey());
+                    trade.getArbitratorBtcPubKey());
 
           /*  
             DeterministicKey multiSigKeyPair,

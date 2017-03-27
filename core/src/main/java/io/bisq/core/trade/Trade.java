@@ -41,6 +41,7 @@ import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
+import io.bisq.protobuffer.payload.arbitration.Mediator;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.trade.Contract;
 import javafx.beans.property.*;
@@ -219,6 +220,7 @@ public abstract class Trade implements Tradable, Model {
     private String makerContractSignature;
     private Transaction payoutTx;
     private NodeAddress arbitratorNodeAddress;
+    private NodeAddress mediatorNodeAddress;
     private byte[] arbitratorBtcPubKey;
     private String takerPaymentAccountId;
     private String errorMessage;
@@ -372,7 +374,7 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {
-        log.error("Trade.setState: " + state);
+        log.info("Trade.setState: " + state);
         if (state.getPhase().ordinal() >= this.state.getPhase().ordinal()) {
             boolean changed = this.state != state;
             this.state = state;
@@ -665,7 +667,7 @@ public abstract class Trade implements Tradable, Model {
         arbitratorBtcPubKey = arbitrator.getBtcPubKey();
     }
 
-    public byte[] getArbitratorPubKey() {
+    public byte[] getArbitratorBtcPubKey() {
         Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
         checkNotNull(arbitrator, "arbitrator must not be null");
         arbitratorBtcPubKey = arbitrator.getBtcPubKey();
@@ -673,6 +675,18 @@ public abstract class Trade implements Tradable, Model {
         checkNotNull(arbitratorBtcPubKey, "ArbitratorPubKey must not be null");
         return arbitratorBtcPubKey;
     }
+
+    public NodeAddress getMediatorNodeAddress() {
+        return mediatorNodeAddress;
+    }
+
+    public void applyMediatorNodeAddress(NodeAddress mediatorNodeAddress) {
+        this.mediatorNodeAddress = mediatorNodeAddress;
+
+        Mediator mediator = processModel.getUser().getAcceptedMediatorByAddress(mediatorNodeAddress);
+        checkNotNull(mediator, "mediator must not be null");
+    }
+
 
     public String getTakerPaymentAccountId() {
         return takerPaymentAccountId;
@@ -765,6 +779,7 @@ public abstract class Trade implements Tradable, Model {
                 makerContractSignature.hashCode() : "") + '\'' +
                 "\n\tpayoutTx=" + payoutTx +
                 "\n\tarbitratorNodeAddress=" + arbitratorNodeAddress +
+                "\n\tmediatorNodeAddress=" + mediatorNodeAddress +
                 "\n\ttakerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 "\n\ttxFee='" + txFee.toFriendlyString() + '\'' +
                 "\n\ttakeOfferFee='" + takeOfferFee.toFriendlyString() + '\'' +

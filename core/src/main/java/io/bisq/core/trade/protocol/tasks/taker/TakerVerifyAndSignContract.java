@@ -82,6 +82,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     buyerNodeAddress,
                     sellerNodeAddress,
                     trade.getArbitratorNodeAddress(),
+                    trade.getMediatorNodeAddress(),
                     isBuyerMakerAndSellerTaker,
                     maker.getAccountId(),
                     processModel.getAccountId(),

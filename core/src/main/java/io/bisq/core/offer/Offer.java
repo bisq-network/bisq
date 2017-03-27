@@ -335,6 +335,10 @@ public class Offer implements Serializable {
         return offerPayload.getArbitratorNodeAddresses();
     }
 
+    public List<NodeAddress> getMediatorNodeAddresses() {
+        return offerPayload.getMediatorNodeAddresses();
+    }
+
     @Nullable
     public List<String> getAcceptedBankIds() {
         return offerPayload.getAcceptedBankIds();

@@ -482,7 +482,8 @@ message Contract {
     string taker_payout_address_string = 16;
     bytes maker_btc_pub_key = 17;
     bytes taker_btc_pub_key = 18;
-}
+    NodeAddress mediator_node_address = 19;
+    }
 
 message PeerOpenedDisputeMessage {
     Dispute dispute = 1;
@@ -512,8 +513,10 @@ message PayDepositRequest {
     string taker_account_id = 13;
     string take_offer_fee_tx_id = 14;
     repeated NodeAddress accepted_arbitrator_node_addresses = 15;
-    NodeAddress arbitrator_node_address = 16;
-    NodeAddress sender_node_address = 17;
+    repeated NodeAddress accepted_mediator_node_addresses = 16;
+    NodeAddress arbitrator_node_address = 17;
+    NodeAddress mediator_node_address = 18;
+    NodeAddress sender_node_address = 19;
 }
 
 message RawTransactionInput {
@@ -566,7 +569,8 @@ enum AvailabilityResult {
     PRICE_OUT_OF_TOLERANCE = 3;
     MARKET_PRICE_NOT_AVAILABLE = 4;
     NO_ARBITRATORS = 5;
-    USER_IGNORED = 6;
+    NO_MEDIATORS = 6;
+    USER_IGNORED = 7;
 }
 
 

@@ -240,7 +240,9 @@ public class ProtoBufferUtilities {
                 .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
                         rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
                 .collect(Collectors.toList());
-        List<NodeAddress> nodeAddresses = payDepositRequest.getAcceptedArbitratorNodeAddressesList().stream()
+        List<NodeAddress> arbitratorNodeAddresses = payDepositRequest.getAcceptedArbitratorNodeAddressesList().stream()
+                .map(ProtoBufferUtilities::getNodeAddress).collect(Collectors.toList());
+        List<NodeAddress> mediatorNodeAddresses = payDepositRequest.getAcceptedMediatorNodeAddressesList().stream()
                 .map(ProtoBufferUtilities::getNodeAddress).collect(Collectors.toList());
         return new PayDepositRequest(getNodeAddress(payDepositRequest.getSenderNodeAddress()),
                 payDepositRequest.getTradeId(),
@@ -256,8 +258,10 @@ public class ProtoBufferUtilities {
                 getPaymentAccountPayload(payDepositRequest.getTakerPaymentAccountPayload()),
                 payDepositRequest.getTakerAccountId(),
                 payDepositRequest.getTakeOfferFeeTxId(),
-                nodeAddresses,
-                getNodeAddress(payDepositRequest.getArbitratorNodeAddress()));
+                arbitratorNodeAddresses,
+                mediatorNodeAddresses,
+                getNodeAddress(payDepositRequest.getArbitratorNodeAddress()),
+                getNodeAddress(payDepositRequest.getMediatorNodeAddress()));
     }
 
     private static Message getPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
@@ -313,6 +317,7 @@ public class ProtoBufferUtilities {
                 getNodeAddress(contract.getBuyerNodeAddress()),
                 getNodeAddress(contract.getSellerNodeAddress()),
                 getNodeAddress(contract.getArbitratorNodeAddress()),
+                getNodeAddress(contract.getMediatorNodeAddress()),
                 contract.getIsBuyerMakerAndSellerTaker(),
                 contract.getMakerAccountId(),
                 contract.getTakerAccountId(),

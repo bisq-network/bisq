@@ -63,7 +63,7 @@ public class BuyerSetupPayoutTxListener extends TradeTask {
                     walletService.addAddressConfidenceListener(listener);
 
                     tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), newValue -> {
-                        log.error("BuyerSetupListenerForPayoutTx tradeStateSubscription tradeState=" + newValue);
+                        log.debug("BuyerSetupListenerForPayoutTx tradeStateSubscription tradeState=" + newValue);
                         if (trade.isPayoutPublished()) {
                             walletService.removeAddressConfidenceListener(listener);
                             // hack to remove tradeStateSubscription at callback
@@ -81,7 +81,7 @@ public class BuyerSetupPayoutTxListener extends TradeTask {
     }
 
     private boolean isInNetwork(TransactionConfidence confidence) {
-        log.error("onTransactionConfidenceChanged " + confidence);
+        log.debug("onTransactionConfidenceChanged " + confidence);
         return confidence != null &&
                 (confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) ||
                         confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING));

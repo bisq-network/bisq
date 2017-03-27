@@ -70,7 +70,9 @@ public class TakerSendPayDepositRequest extends TradeTask {
                     processModel.getAccountId(),
                     trade.getTakeOfferFeeTxId(),
                     new ArrayList<>(processModel.getUser().getAcceptedArbitratorAddresses()),
-                    trade.getArbitratorNodeAddress()
+                    new ArrayList<>(processModel.getUser().getAcceptedMediatorAddresses()),
+                    trade.getArbitratorNodeAddress(),
+                    trade.getMediatorNodeAddress()
             );
             processModel.setMyMultiSigPubKey(takerMultiSigPubKey);
 

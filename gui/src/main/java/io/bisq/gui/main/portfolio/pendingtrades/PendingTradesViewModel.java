@@ -381,7 +381,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG in mailbox
             case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG failed
                 // We delay the UI switch to give a chance to see the delivery result
-                UserThread.runAfter(() -> buyerState.set(BuyerState.STEP3), 1);
+                UserThread.runAfter(() -> {
+                    // We might get a higher state set quickly (startup - stored state, then new state) 
+                    // and then we don't want to switch back
+                    if (buyerState.get() == null || buyerState.get().ordinal() < BuyerState.STEP3.ordinal())
+                        buyerState.set(BuyerState.STEP3);
+                }, 1);
                 break;
 
             // seller step 3
@@ -398,7 +403,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG mailbox
             case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG failed
                 // We delay the UI switch to give a chance to see the delivery result
-                UserThread.runAfter(() -> sellerState.set(SellerState.STEP4), 1);
+                UserThread.runAfter(() -> {
+                    // We might get a higher state set quickly (startup - stored state, then new state) 
+                    // and then we don't want to switch back
+                    if (sellerState.get() == null || sellerState.get().ordinal() < SellerState.STEP4.ordinal())
+                        sellerState.set(SellerState.STEP4);
+                }, 1);
                 break;
 
             // buyer step 4

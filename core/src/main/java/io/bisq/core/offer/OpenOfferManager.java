@@ -370,6 +370,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     final Offer offer = openOfferOptional.get().getOffer();
                     if (!preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent()) {
                         availabilityResult = AvailabilityResult.AVAILABLE;
+
+                        // TODO mediators not impl yet
                         List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
                             // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference 

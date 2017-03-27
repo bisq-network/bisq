@@ -104,7 +104,8 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
         taskRunner.addTasks(
                 MakerProcessPayDepositRequest.class,
-                MakerVerifyArbitrationSelection.class,
+                MakerVerifyArbitratorSelection.class,
+                MakerVerifyMediatorSelection.class,
                 MakerVerifyTakerAccount.class,
                 MakerVerifyTakerFeePayment.class,
                 MakerCreateAndSignContract.class,

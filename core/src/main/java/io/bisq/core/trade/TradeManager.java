@@ -485,8 +485,10 @@ public class TradeManager {
     }
 
     public Stream<AddressEntry> getAddressEntriesForAvailableBalanceStream() {
-        Stream<AddressEntry> availableOrPayout = Stream.concat(walletService.getAddressEntries(AddressEntry.Context.TRADE_PAYOUT).stream(), walletService.getFundedAvailableAddressEntries().stream());
-        Stream<AddressEntry> available = Stream.concat(availableOrPayout, walletService.getAddressEntries(AddressEntry.Context.ARBITRATOR).stream());
+        Stream<AddressEntry> availableOrPayout = Stream.concat(walletService.getAddressEntries(AddressEntry.Context.TRADE_PAYOUT)
+                .stream(), walletService.getFundedAvailableAddressEntries().stream());
+        Stream<AddressEntry> available = Stream.concat(availableOrPayout,
+                walletService.getAddressEntries(AddressEntry.Context.ARBITRATOR).stream());
         available = Stream.concat(available, walletService.getAddressEntries(AddressEntry.Context.OFFER_FUNDING).stream());
         return available
                 .filter(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()).isPositive());

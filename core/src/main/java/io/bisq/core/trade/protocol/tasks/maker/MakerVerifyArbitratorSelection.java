@@ -19,15 +19,15 @@ package io.bisq.core.trade.protocol.tasks.maker;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.protocol.ArbitrationSelectionRule;
+import io.bisq.core.trade.protocol.ArbitratorSelectionRule;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MakerVerifyArbitrationSelection extends TradeTask {
+public class MakerVerifyArbitratorSelection extends TradeTask {
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public MakerVerifyArbitrationSelection(TaskRunner taskHandler, Trade trade) {
+    public MakerVerifyArbitratorSelection(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -36,7 +36,7 @@ public class MakerVerifyArbitrationSelection extends TradeTask {
         try {
             runInterceptHook();
 
-            if (trade.getArbitratorNodeAddress().equals(ArbitrationSelectionRule.select(
+            if (trade.getArbitratorNodeAddress().equals(ArbitratorSelectionRule.select(
                     processModel.getTakerAcceptedArbitratorNodeAddresses(),
                     processModel.getOffer())))
                 complete();

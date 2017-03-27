@@ -27,12 +27,12 @@ import io.bisq.protobuffer.payload.btc.RawTransactionInput;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import lombok.EqualsAndHashCode;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -113,9 +113,9 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 ", makerContractAsJson='" + makerContractAsJson + '\'' +
                 ", makerContractSignature='" + makerContractSignature + '\'' +
                 ", makerPayoutAddressString='" + makerPayoutAddressString + '\'' +
-                ", preparedDepositTx=" + Arrays.toString(preparedDepositTx) +
+                ", preparedDepositTx=" + Hex.toHexString(preparedDepositTx) +
                 ", makerInputs=" + makerInputs +
-                ", makerMultiSigPubKey=" + Arrays.toString(makerMultiSigPubKey) +
+                ", makerMultiSigPubKey=" + Hex.toHexString(makerMultiSigPubKey) +
                 "} " + super.toString();
     }
 

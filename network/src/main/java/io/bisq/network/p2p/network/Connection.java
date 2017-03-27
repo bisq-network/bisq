@@ -223,7 +223,7 @@ public class Connection implements MessageListener {
                                 peersNodeAddress, uid, Utilities.toTruncatedString(message), envelope.getSerializedSize());
                     }
 
-                    if (!stopped && envelope != null) {
+                    if (!stopped) {
                         protoOutputStreamLock.lock();
                         envelope.writeDelimitedTo(protoOutputStream);
                         protoOutputStream.flush();
@@ -234,8 +234,6 @@ public class Connection implements MessageListener {
                         // We don't want to get the activity ts updated by ping/pong msg
                         if (!(message instanceof KeepAliveMessage))
                             statistic.updateLastActivityTimestamp();
-                    } else {
-                        log.error("Stopped: {} or envelope is null {}", stopped, envelope);
                     }
                 } catch (IOException e) {
                     // an exception lead to a shutdown
@@ -751,7 +749,7 @@ public class Connection implements MessageListener {
                         }
 
                         // Reading the protobuffer message from the inputstream
-                        PB.Envelope envelope = null;
+                        PB.Envelope envelope;
                         try {
 //                            if (protoInputStream.available() > 0) {
                             envelope = PB.Envelope.parseDelimitedFrom(protoInputStream);
@@ -759,8 +757,8 @@ public class Connection implements MessageListener {
 //                                return;
 //                            }
 
-                            if (envelope == null) {
-                                log.debug("Envelope is null, available={}", protoInputStream.available());
+                            if (!sharedModel.stopped && envelope == null) {
+                                log.error("Envelope is null, available={}", protoInputStream.available());
                                 reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                                 return;
                             }

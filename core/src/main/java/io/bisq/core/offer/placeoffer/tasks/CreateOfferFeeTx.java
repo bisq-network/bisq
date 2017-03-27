@@ -23,7 +23,7 @@ import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.placeoffer.PlaceOfferModel;
-import io.bisq.core.trade.protocol.ArbitrationSelectionRule;
+import io.bisq.core.trade.protocol.ArbitratorSelectionRule;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.bitcoinj.core.Address;
@@ -47,7 +47,8 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
         try {
             runInterceptHook();
 
-            NodeAddress selectedArbitratorNodeAddress = ArbitrationSelectionRule.select(model.user.getAcceptedArbitratorAddresses(), model.offer);
+            NodeAddress selectedArbitratorNodeAddress = ArbitratorSelectionRule.select(model.user.getAcceptedArbitratorAddresses(),
+                    model.offer);
             log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
             Arbitrator selectedArbitrator = model.user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
             checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateOfferFeeTx");

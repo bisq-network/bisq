@@ -331,7 +331,17 @@ public final class User implements Persistable {
             return null;
     }
 
-    @org.jetbrains.annotations.Nullable
+    public Mediator getAcceptedMediatorByAddress(NodeAddress nodeAddress) {
+        Optional<Mediator> mediatorOptionalOptional = acceptedMediators.stream()
+                .filter(e -> e.getNodeAddress().equals(nodeAddress))
+                .findFirst();
+        if (mediatorOptionalOptional.isPresent())
+            return mediatorOptionalOptional.get();
+        else
+            return null;
+    }
+
+    @Nullable
     public Filter getDevelopersFilter() {
         return developersFilter;
     }

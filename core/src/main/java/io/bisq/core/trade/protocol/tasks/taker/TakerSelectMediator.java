@@ -19,14 +19,14 @@ package io.bisq.core.trade.protocol.tasks.taker;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.protocol.ArbitratorSelectionRule;
+import io.bisq.core.trade.protocol.MediatorSelectionRule;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class TakerSelectArbitrator extends TradeTask {
+public class TakerSelectMediator extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public TakerSelectArbitrator(TaskRunner taskHandler, Trade trade) {
+    public TakerSelectMediator(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -35,7 +35,8 @@ public class TakerSelectArbitrator extends TradeTask {
         try {
             runInterceptHook();
 
-            trade.applyArbitratorNodeAddress(ArbitratorSelectionRule.select(processModel.getUser().getAcceptedArbitratorAddresses(), processModel.getOffer()));
+            trade.applyMediatorNodeAddress(MediatorSelectionRule.select(processModel.getUser().getAcceptedMediatorAddresses(),
+                    processModel.getOffer()));
 
             complete();
         } catch (Throwable t) {
