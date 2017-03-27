@@ -37,6 +37,7 @@ import org.bitcoinj.params.TestNet3Params;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.Optional;
 
 /**
  * Every trade use a addressEntry with a dedicated address for all transactions related to the trade.
@@ -167,13 +168,15 @@ public final class AddressEntry implements Persistable {
 
     @Override
     public Message toProtobuf() {
-        return Messages.AddressEntry.newBuilder()
-                .setOfferId(offerId)
+        Messages.AddressEntry.Builder builder = Messages.AddressEntry.newBuilder()
                 .setContext(Messages.AddressEntry.Context.valueOf(context.name()))
                 .setPubkey(ByteString.copyFrom(pubKey))
                 .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
-                .setParamId(paramId)
-                .setCoinLockedInMultiSig(Messages.Coin.newBuilder().setValue(coinLockedInMultiSig.getValue()))
-                .build();
+                .setParamId(paramId);
+        Optional.ofNullable(offerId).ifPresent(builder::setOfferId);
+        Optional.ofNullable(coinLockedInMultiSig).ifPresent(coinLockedInMultiSig -> {
+            builder.setCoinLockedInMultiSig(Messages.Coin.newBuilder().setValue(coinLockedInMultiSig.getValue()));
+        });
+        return builder.build();
     }
 }

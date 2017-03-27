@@ -1000,6 +1000,7 @@ message Trade {
     string taker_payment_account_id = 24;
     string error_message = 25;
 }
+
 message BuyerTrade {
 }
 message BuyerAsOffererTrade {

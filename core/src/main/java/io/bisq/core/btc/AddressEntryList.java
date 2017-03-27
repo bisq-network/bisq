@@ -114,10 +114,10 @@ public final class AddressEntryList implements Persistable {
 
     @Override
     public Message toProtobuf() {
-        return Messages.AddressEntryList.newBuilder()
+        return Messages.DiskEnvelope.newBuilder().setAddressEntryList(Messages.AddressEntryList.newBuilder()
                 .addAllAddressEntry(getAddressEntryList().stream()
                         .map(addressEntry -> ((Messages.AddressEntry) addressEntry.toProtobuf()))
-                        .collect(Collectors.toList()))
+                        .collect(Collectors.toList())))
                 .build();
     }
 }

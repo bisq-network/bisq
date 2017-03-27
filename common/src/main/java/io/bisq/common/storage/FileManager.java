@@ -17,8 +17,10 @@
 
 package io.bisq.common.storage;
 
+import com.google.protobuf.Message;
 import io.bisq.common.UserThread;
 import io.bisq.common.io.LookAheadObjectInputStream;
+import io.bisq.common.persistance.Persistable;
 import io.bisq.common.util.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -172,6 +174,16 @@ public class FileManager<T> {
         FileOutputStream fileOutputStream = null;
         ObjectOutputStream objectOutputStream = null;
         PrintWriter printWriter = null;
+
+        // is it a protobuffer thing?
+
+        Message message = null;
+        try {
+            message = ((Persistable) serializable).toProtobuf();
+        } catch(Throwable e) {
+            log.info("Not protobufferable: {} {}", serializable.getClass().getSimpleName(), e.getMessage());
+        }
+
         try {
             if (!dir.exists())
                 if (!dir.mkdir())
@@ -183,6 +195,20 @@ public class FileManager<T> {
                 // When we dump json files we don't want to safe it as java serialized string objects, so we use PrintWriter instead.
                 printWriter = new PrintWriter(tempFile);
                 printWriter.println(((PlainTextWrapper) serializable).plainText);
+            } else if (message != null) {
+                fileOutputStream = new FileOutputStream(tempFile);
+
+                log.info("Writing protobuffer to disc");
+                message.writeTo(fileOutputStream);
+
+                // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
+                // to not write through to physical media for at least a few seconds, but this is the best we can do.
+                fileOutputStream.flush();
+                fileOutputStream.getFD().sync();
+
+                // Close resources before replacing file with temp file because otherwise it causes problems on windows
+                // when rename temp file
+                fileOutputStream.close();
             } else {
                 // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
                 // and we need to close it
