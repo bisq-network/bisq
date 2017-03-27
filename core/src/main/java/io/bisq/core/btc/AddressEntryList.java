@@ -22,7 +22,7 @@ import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.storage.Storage;
-import io.bisq.wire.proto.Messages;
+import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -114,9 +114,9 @@ public final class AddressEntryList implements Persistable {
 
     @Override
     public Message toProtobuf() {
-        return Messages.DiskEnvelope.newBuilder().setAddressEntryList(Messages.AddressEntryList.newBuilder()
+        return PB.DiskEnvelope.newBuilder().setAddressEntryList(PB.AddressEntryList.newBuilder()
                 .addAllAddressEntry(getAddressEntryList().stream()
-                        .map(addressEntry -> ((Messages.AddressEntry) addressEntry.toProtobuf()))
+                        .map(addressEntry -> ((PB.AddressEntry) addressEntry.toProtobuf()))
                         .collect(Collectors.toList())))
                 .build();
     }

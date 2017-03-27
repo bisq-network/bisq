@@ -198,7 +198,7 @@ public class TradeManager {
 
             if (trade.isDepositPublished() ||
                     (trade.isTakerFeePublished() && !trade.hasFailed())) {
-                initTrade(trade, trade.getProcessModel().getUseSavingsWallet(),
+                initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
                         trade.getProcessModel().getFundsNeededForTrade());
                 trade.updateDepositTxFromWallet();
                 tradesForStatistics.add(trade);
