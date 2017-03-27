@@ -21,7 +21,9 @@ package io.bisq.network.crypto;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Hash;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
+import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
@@ -34,8 +36,6 @@ import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
 import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
 import io.bisq.protobuffer.payload.crypto.SealedAndSignedPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.vo.crypto.KeyRingVO;
-import io.bisq.vo.crypto.PubKeyRingVO;
 import io.bisq.vo.crypto.SealedAndSignedVO;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
@@ -67,7 +67,7 @@ public class EncryptionServiceTests {
     public ExpectedException thrown = ExpectedException.none();
 
     private PubKeyRingVO pubKeyRingVO;
-    private KeyRingVO keyRingVO;
+    private KeyRing keyRing;
     private File dir;
 
     @Before
@@ -77,8 +77,8 @@ public class EncryptionServiceTests {
         dir.delete();
         dir.mkdir();
         KeyStorage keyStorage = new KeyStorage(dir);
-        keyRingVO = new KeyRingVO(keyStorage);
-        pubKeyRingVO = keyRingVO.getPubKeyRingVO();
+        keyRing = new KeyRing(keyStorage);
+        pubKeyRingVO = keyRing.getPubKeyRingVO();
     }
 
     @After
@@ -88,7 +88,7 @@ public class EncryptionServiceTests {
 
     @Test
     public void testDecryptAndVerifyMessage() throws CryptoException {
-        EncryptionService encryptionService = new EncryptionService(keyRingVO);
+        EncryptionService encryptionService = new EncryptionService(keyRing);
         final PrivateNotificationPayload privateNotification = new PrivateNotificationPayload("test");
         privateNotification.setSigAndPubKey("", pubKeyRingVO.getSignaturePubKey());
         final NodeAddress nodeAddress = new NodeAddress("localhost", 2222);
@@ -114,14 +114,14 @@ public class EncryptionServiceTests {
             SealedAndSignedVO sealedAndSignedVO = null;
             try {
                 sealedAndSignedVO = NetworkCryptoUtils.encryptHybridWithSignature(payload,
-                        keyRingVO.getSignatureKeyPair(), keyRingVO.getPubKeyRingVO().getEncryptionPubKey());
+                        keyRing.getSignatureKeyPair(), keyRing.getPubKeyRingVO().getEncryptionPubKey());
             } catch (CryptoException e) {
                 log.error("encryptHybridWithSignature failed");
                 e.printStackTrace();
                 assertTrue(false);
             }
             try {
-                DecryptedDataTuple tuple = decryptHybridWithSignature(sealedAndSignedVO, keyRingVO.getEncryptionKeyPair().getPrivate());
+                DecryptedDataTuple tuple = decryptHybridWithSignature(sealedAndSignedVO, keyRing.getEncryptionKeyPair().getPrivate());
                 assertEquals(((Ping) tuple.payload).nonce, payload.nonce);
             } catch (CryptoException e) {
                 log.error("decryptHybridWithSignature failed");

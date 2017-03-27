@@ -20,7 +20,6 @@ package io.bisq.common.crypto;
 
 import com.google.inject.Inject;
 import io.bisq.common.storage.FileUtil;
-import io.bisq.vo.crypto.KeyRingVO;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -147,9 +146,9 @@ public class KeyStorage {
         }
     }
 
-    public void saveKeyRing(KeyRingVO keyRingVO) {
-        savePrivateKey(keyRingVO.getSignatureKeyPair().getPrivate(), KeyEntry.MSG_SIGNATURE.getFileName());
-        savePrivateKey(keyRingVO.getEncryptionKeyPair().getPrivate(), KeyEntry.MSG_ENCRYPTION.getFileName());
+    public void saveKeyRing(KeyRing keyRing) {
+        savePrivateKey(keyRing.getSignatureKeyPair().getPrivate(), KeyEntry.MSG_SIGNATURE.getFileName());
+        savePrivateKey(keyRing.getEncryptionKeyPair().getPrivate(), KeyEntry.MSG_ENCRYPTION.getFileName());
     }
 
     private void savePrivateKey(PrivateKey privateKey, String name) {

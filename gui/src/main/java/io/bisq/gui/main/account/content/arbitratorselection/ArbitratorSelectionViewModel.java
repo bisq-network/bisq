@@ -18,6 +18,7 @@
 package io.bisq.gui.main.account.content.arbitratorselection;
 
 import com.google.inject.Inject;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.user.Preferences;
@@ -26,7 +27,6 @@ import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.vo.crypto.KeyRingVO;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
@@ -37,7 +37,7 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     private final User user;
     private final ArbitratorManager arbitratorManager;
     private final Preferences preferences;
-    private final KeyRingVO keyRingVO;
+    private final KeyRing keyRing;
     private final BSFormatter formatter;
     final ObservableList<String> languageCodes = FXCollections.observableArrayList();
     final ObservableList<ArbitratorListItem> arbitratorListItems = FXCollections.observableArrayList();
@@ -46,11 +46,11 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
 
     @Inject
     public ArbitratorSelectionViewModel(User user, ArbitratorManager arbitratorManager, Preferences preferences,
-                                        KeyRingVO keyRingVO, BSFormatter formatter) {
+                                        KeyRing keyRing, BSFormatter formatter) {
         this.user = user;
         this.arbitratorManager = arbitratorManager;
         this.preferences = preferences;
-        this.keyRingVO = keyRingVO;
+        this.keyRing = keyRing;
         this.formatter = formatter;
 
         arbitratorMapChangeListener = change -> applyArbitratorMap();
@@ -129,7 +129,7 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     }
 
     public boolean arbitratorIsTrader(Arbitrator arbitrator) {
-        return keyRingVO.getPubKeyRingVO().equals(arbitrator.getPubKeyRingPayload().get());
+        return keyRing.getPubKeyRingVO().equals(arbitrator.getPubKeyRingPayload().get());
     }
 
     public boolean hasMatchingLanguage(Arbitrator arbitrator) {

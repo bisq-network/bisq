@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.Res;
@@ -50,7 +51,6 @@ import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.trade.Contract;
 import io.bisq.protobuffer.persistence.arbitration.DisputeList;
-import io.bisq.vo.crypto.KeyRingVO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.AddressFormatException;
@@ -76,7 +76,7 @@ public class DisputeManager {
     private final ClosedTradableManager closedTradableManager;
     private final OpenOfferManager openOfferManager;
     private final P2PService p2PService;
-    private final KeyRingVO keyRingVO;
+    private final KeyRing keyRing;
     private final Storage<DisputeList<Dispute>> disputeStorage;
     private final DisputeList<Dispute> disputes;
     transient private final ObservableList<Dispute> disputesObservableList;
@@ -99,7 +99,7 @@ public class DisputeManager {
                           TradeManager tradeManager,
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
-                          KeyRingVO keyRingVO,
+                          KeyRing keyRing,
                           @Named(Storage.DIR_KEY) File storageDir) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
@@ -107,7 +107,7 @@ public class DisputeManager {
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.openOfferManager = openOfferManager;
-        this.keyRingVO = keyRingVO;
+        this.keyRing = keyRing;
 
         disputeStorage = new Storage<>(storageDir);
         disputes = new DisputeList<>(disputeStorage);
@@ -221,7 +221,7 @@ public class DisputeManager {
 
                 DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                         dispute.getTradeId(),
-                        keyRingVO.getPubKeyRingVO().hashCode(),
+                        keyRing.getPubKeyRingVO().hashCode(),
                         false,
                         Res.get("support.systemMsg", sysMsg),
                         null,
@@ -307,7 +307,7 @@ public class DisputeManager {
                     : Res.get("support.peerOpenedDispute", disputeInfo);
             DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                     dispute.getTradeId(),
-                    keyRingVO.getPubKeyRingVO().hashCode(),
+                    keyRing.getPubKeyRingVO().hashCode(),
                     false,
                     Res.get("support.systemMsg", sysMsg),
                     null,
@@ -608,7 +608,7 @@ public class DisputeManager {
                 // more BTC as he has deposited
                 final Contract contract = dispute.getContract();
 
-                boolean isBuyer = keyRingVO.getPubKeyRingVO().equals(contract.getBuyerPubKeyRingPayload().get());
+                boolean isBuyer = keyRing.getPubKeyRingVO().equals(contract.getBuyerPubKeyRingPayload().get());
                 DisputeResult.Winner publisher = disputeResult.getWinner();
 
                 // Sometimes the user who receives the trade amount is never online, so we might want to
@@ -759,11 +759,11 @@ public class DisputeManager {
     }
 
     public boolean isTrader(Dispute dispute) {
-        return keyRingVO.getPubKeyRingVO().equals(dispute.getTraderPubKeyRingPayload().get());
+        return keyRing.getPubKeyRingVO().equals(dispute.getTraderPubKeyRingPayload().get());
     }
 
     private boolean isArbitrator(Dispute dispute) {
-        return keyRingVO.getPubKeyRingVO().equals(dispute.getArbitratorPubKeyRingPayload().get());
+        return keyRing.getPubKeyRingVO().equals(dispute.getArbitratorPubKeyRingPayload().get());
     }
 
     private boolean isArbitrator(DisputeResult disputeResult) {

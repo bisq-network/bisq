@@ -18,12 +18,12 @@
 package io.bisq.core.trade.closed;
 
 import com.google.inject.Inject;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.TradableList;
-import io.bisq.vo.crypto.KeyRingVO;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +35,11 @@ import java.util.Optional;
 public class ClosedTradableManager {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradableManager.class);
     private final TradableList<Tradable> closedTrades;
-    private final KeyRingVO keyRingVO;
+    private final KeyRing keyRing;
 
     @Inject
-    public ClosedTradableManager(KeyRingVO keyRingVO, PriceFeedService priceFeedService, @Named(Storage.DIR_KEY) File storageDir) {
-        this.keyRingVO = keyRingVO;
+    public ClosedTradableManager(KeyRing keyRing, PriceFeedService priceFeedService, @Named(Storage.DIR_KEY) File storageDir) {
+        this.keyRing = keyRing;
         final Storage<TradableList<Tradable>> tradableListStorage = new Storage<>(storageDir);
         // The ClosedTrades object can become a few MB so we don't keep so many backups
         tradableListStorage.setNumMaxBackupFiles(3);
@@ -52,7 +52,7 @@ public class ClosedTradableManager {
     }
 
     public boolean wasMyOffer(Offer offer) {
-        return offer.isMyOffer(keyRingVO);
+        return offer.isMyOffer(keyRing);
     }
 
     public ObservableList<Tradable> getClosedTrades() {

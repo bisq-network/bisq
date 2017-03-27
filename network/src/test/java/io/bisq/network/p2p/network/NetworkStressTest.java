@@ -3,7 +3,9 @@ package io.bisq.network.p2p.network;
 import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
+import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.common.util.Tuple3;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.crypto.EncryptionService;
@@ -14,8 +16,6 @@ import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.message.p2p.DirectMessage;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.vo.crypto.KeyRingVO;
-import io.bisq.vo.crypto.PubKeyRingVO;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -382,11 +382,11 @@ public class NetworkStressTest {
 
         // peer keys
         final KeyStorage peerKeyStorage = new KeyStorage(peerKeysDir);
-        final KeyRingVO peerKeyRingVO = new KeyRingVO(peerKeyStorage);
-        final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRingVO);
+        final KeyRing peerKeyRing = new KeyRing(peerKeyStorage);
+        final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing);
 
         return new P2PService(seedNodesRepository, port, peerTorDir, useLocalhostForP2P,
-                REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir, null, null, null, new Clock(), null, peerEncryptionService, peerKeyRingVO);
+                REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir, null, null, null, new Clock(), null, peerEncryptionService, peerKeyRing);
     }
 
     // ## TEST SETUP: P2P service listener classes

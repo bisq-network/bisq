@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.user.Preferences;
@@ -32,7 +33,6 @@ import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.arbitration.Mediator;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
-import io.bisq.vo.crypto.KeyRingVO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import org.bitcoinj.core.ECKey;
@@ -88,7 +88,7 @@ public class ArbitratorManager {
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private final KeyRingVO keyRingVO;
+    private final KeyRing keyRing;
     private final ArbitratorService arbitratorService;
     private final User user;
     private final Preferences preferences;
@@ -102,8 +102,8 @@ public class ArbitratorManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorManager(KeyRingVO keyRingVO, ArbitratorService arbitratorService, User user, Preferences preferences) {
-        this.keyRingVO = keyRingVO;
+    public ArbitratorManager(KeyRing keyRing, ArbitratorService arbitratorService, User user, Preferences preferences) {
+        this.keyRing = keyRing;
         this.arbitratorService = arbitratorService;
         this.user = user;
         this.preferences = preferences;
@@ -256,7 +256,7 @@ public class ArbitratorManager {
     // An invited arbitrator will sign at registration his storageSignaturePubKey with that private key and attach the signature and pubKey to his data.
     // Other users will check the signature with the list of public keys hardcoded in the app.
     public String signStorageSignaturePubKey(ECKey key) {
-        String keyToSignAsHex = Utils.HEX.encode(keyRingVO.getPubKeyRingVO().getSignaturePubKey().getEncoded());
+        String keyToSignAsHex = Utils.HEX.encode(keyRing.getPubKeyRingVO().getSignaturePubKey().getEncoded());
         return key.signMessage(keyToSignAsHex);
     }
 

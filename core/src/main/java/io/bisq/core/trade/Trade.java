@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.storage.Storage;
@@ -43,7 +44,6 @@ import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.arbitration.Mediator;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.trade.Contract;
-import io.bisq.vo.crypto.KeyRingVO;
 import javafx.beans.property.*;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -284,7 +284,7 @@ public abstract class Trade implements Tradable, Model {
                      OpenOfferManager openOfferManager,
                      User user,
                      FilterManager filterManager,
-                     KeyRingVO keyRingVO,
+                     KeyRing keyRing,
                      boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
         Log.traceCall();
@@ -297,7 +297,7 @@ public abstract class Trade implements Tradable, Model {
                 arbitratorManager,
                 user,
                 filterManager,
-                keyRingVO,
+                keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
 

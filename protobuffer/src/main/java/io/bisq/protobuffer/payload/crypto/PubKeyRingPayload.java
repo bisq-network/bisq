@@ -17,9 +17,9 @@
 
 package io.bisq.protobuffer.payload.crypto;
 
+import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.protobuffer.crypto.PubKeyRingProto;
 import io.bisq.protobuffer.payload.Payload;
-import io.bisq.vo.crypto.PubKeyRingVO;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 

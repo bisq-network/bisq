@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
@@ -21,7 +22,6 @@ import io.bisq.protobuffer.payload.offer.OfferPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
 import io.bisq.vo.alert.AlertVO;
-import io.bisq.vo.crypto.KeyRingVO;
 import lombok.extern.slf4j.Slf4j;
 import mockit.Mocked;
 import mockit.integration.junit4.JMockit;
@@ -53,7 +53,7 @@ public class P2PDataStorageTest {
     private EncryptionService encryptionService1, encryptionService2;
     private P2PDataStorage dataStorage1;
     private KeyPair storageSignatureKeyPair1, storageSignatureKeyPair2;
-    private KeyRingVO keyRingVO1, keyRingVO2;
+    private KeyRing keyRing1, keyRing2;
     private StoragePayload storagePayload;
     private File dir1;
     private File dir2;
@@ -73,14 +73,14 @@ public class P2PDataStorageTest {
         dir2.delete();
         dir2.mkdir();
 
-        keyRingVO1 = new KeyRingVO(new KeyStorage(dir1));
-        storageSignatureKeyPair1 = keyRingVO1.getSignatureKeyPair();
-        encryptionService1 = new EncryptionService(keyRingVO1);
+        keyRing1 = new KeyRing(new KeyStorage(dir1));
+        storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
+        encryptionService1 = new EncryptionService(keyRing1);
 
         // for mailbox
-        keyRingVO2 = new KeyRingVO(new KeyStorage(dir2));
-        storageSignatureKeyPair2 = keyRingVO2.getSignatureKeyPair();
-        encryptionService2 = new EncryptionService(keyRingVO2);
+        keyRing2 = new KeyRing(new KeyStorage(dir2));
+        storageSignatureKeyPair2 = keyRing2.getSignatureKeyPair();
+        encryptionService2 = new EncryptionService(keyRing2);
         dataStorage1 = new P2PDataStorage(broadcaster, networkNode, dir1);
     }
 
@@ -156,7 +156,7 @@ public class P2PDataStorageTest {
         return new OfferPayload("id",
                 System.currentTimeMillis(),
                 nodeAddress4,
-                new PubKeyRingPayload(keyRingVO1.getPubKeyRingVO()),
+                new PubKeyRingPayload(keyRing1.getPubKeyRingVO()),
                 OfferPayload.Direction.BUY,
                 1200,
                 1.5,

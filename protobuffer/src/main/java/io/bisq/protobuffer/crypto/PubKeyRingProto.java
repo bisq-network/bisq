@@ -18,9 +18,9 @@
 package io.bisq.protobuffer.crypto;
 
 import com.google.protobuf.ByteString;
+import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.Marshaller;
-import io.bisq.vo.crypto.PubKeyRingVO;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class PubKeyRingProto implements Marshaller {
 
     @Delegate
-    private PubKeyRingVO pubKeyRingVO;
+    protected PubKeyRingVO pubKeyRingVO;
 
     public PubKeyRingVO get() {
         return pubKeyRingVO;

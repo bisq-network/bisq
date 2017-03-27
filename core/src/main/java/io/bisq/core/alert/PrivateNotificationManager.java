@@ -20,6 +20,8 @@ package io.bisq.core.alert;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bisq.common.app.DevEnv;
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.SendMailboxMessageListener;
@@ -28,8 +30,6 @@ import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.alert.PrivateNotificationMessage;
 import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.vo.crypto.KeyRingVO;
-import io.bisq.vo.crypto.PubKeyRingVO;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -48,7 +48,7 @@ public class PrivateNotificationManager {
     private static final Logger log = LoggerFactory.getLogger(PrivateNotificationManager.class);
 
     private final P2PService p2PService;
-    private final KeyRingVO keyRingVO;
+    private final KeyRing keyRing;
     private final ObjectProperty<PrivateNotificationPayload> privateNotificationMessageProperty = new SimpleObjectProperty<>();
 
     // Pub key for developer global privateNotification message
@@ -65,9 +65,9 @@ public class PrivateNotificationManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PrivateNotificationManager(P2PService p2PService, KeyRingVO keyRingVO, @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
+    public PrivateNotificationManager(P2PService p2PService, KeyRing keyRing, @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
-        this.keyRingVO = keyRingVO;
+        this.keyRing = keyRing;
 
         if (!ignoreDevMsg) {
             this.p2PService.addDecryptedDirectMessageListener(this::handleMessage);
@@ -132,7 +132,7 @@ public class PrivateNotificationManager {
     private void signAndAddSignatureToPrivateNotificationMessage(PrivateNotificationPayload privateNotification) {
         String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.message.getBytes());
         String signatureAsBase64 = privateNotificationSigningKey.signMessage(privateNotificationMessageAsHex);
-        privateNotification.setSigAndPubKey(signatureAsBase64, keyRingVO.getSignatureKeyPair().getPublic());
+        privateNotification.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
     }
 
     private boolean verifySignature(PrivateNotificationPayload privateNotification) {

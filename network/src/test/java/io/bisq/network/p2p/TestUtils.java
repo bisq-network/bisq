@@ -1,11 +1,11 @@
 package io.bisq.network.p2p;
 
 import io.bisq.common.Clock;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.vo.crypto.KeyRingVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,7 +119,7 @@ public class TestUtils {
         return seedNode;
     }
 
-    public static P2PService getAndAuthenticateP2PService(int port, EncryptionService encryptionService, KeyRingVO keyRingVO,
+    public static P2PService getAndAuthenticateP2PService(int port, EncryptionService encryptionService, KeyRing keyRing,
                                                           boolean useLocalhostForP2P, Set<NodeAddress> seedNodes)
             throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
@@ -132,7 +132,7 @@ public class TestUtils {
         }
 
         P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhostForP2P,
-                2, P2PService.MAX_CONNECTIONS_DEFAULT, new File("dummy"), null, null, null, new Clock(), null, encryptionService, keyRingVO);
+                2, P2PService.MAX_CONNECTIONS_DEFAULT, new File("dummy"), null, null, null, new Clock(), null, encryptionService, keyRing);
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {

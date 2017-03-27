@@ -1,6 +1,7 @@
 package io.bisq.protobuffer;
 
 import com.google.protobuf.ByteString;
+import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Price;
@@ -45,7 +46,6 @@ import io.bisq.protobuffer.payload.payment.*;
 import io.bisq.protobuffer.payload.trade.Contract;
 import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
 import io.bisq.vo.alert.AlertVO;
-import io.bisq.vo.crypto.PubKeyRingVO;
 import io.bisq.vo.crypto.SealedAndSignedVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.WriterOutputStream;

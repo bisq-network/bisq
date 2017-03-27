@@ -1,7 +1,6 @@
 package io.bisq.common.crypto;
 
 import io.bisq.common.storage.FileUtil;
-import io.bisq.vo.crypto.KeyRingVO;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -17,7 +16,7 @@ import java.security.cert.CertificateException;
 
 public class EncryptionTest {
     private static final Logger log = LoggerFactory.getLogger(EncryptionTest.class);
-    private KeyRingVO keyRingVO;
+    private KeyRing keyRing;
     private File dir;
 
     @Before
@@ -27,7 +26,7 @@ public class EncryptionTest {
         dir.delete();
         dir.mkdir();
         KeyStorage keyStorage = new KeyStorage(dir);
-        keyRingVO = new KeyRingVO(keyStorage);
+        keyRing = new KeyRing(keyStorage);
     }
 
     @After

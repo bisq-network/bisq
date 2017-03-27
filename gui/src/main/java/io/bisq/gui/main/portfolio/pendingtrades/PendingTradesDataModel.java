@@ -19,6 +19,7 @@ package io.bisq.gui.main.portfolio.pendingtrades;
 
 import com.google.inject.Inject;
 import io.bisq.common.app.Log;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
@@ -48,7 +49,6 @@ import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.arbitration.Dispute;
 import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
-import io.bisq.vo.crypto.KeyRingVO;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -75,7 +75,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private final TradeWalletService tradeWalletService;
     private final FeeService feeService;
     private final User user;
-    private final KeyRingVO keyRingVO;
+    private final KeyRing keyRing;
     public final DisputeManager disputeManager;
     private final P2PService p2PService;
     public final Navigation navigation;
@@ -99,15 +99,24 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesDataModel(TradeManager tradeManager, BtcWalletService btcWalletService, TradeWalletService tradeWalletService, FeeService feeService,
-                                  User user, KeyRingVO keyRingVO, DisputeManager disputeManager, Preferences preferences, P2PService p2PService,
-                                  Navigation navigation, WalletPasswordWindow walletPasswordWindow, NotificationCenter notificationCenter) {
+    public PendingTradesDataModel(TradeManager tradeManager,
+                                  BtcWalletService btcWalletService,
+                                  TradeWalletService tradeWalletService,
+                                  FeeService feeService,
+                                  User user,
+                                  KeyRing keyRing,
+                                  DisputeManager disputeManager,
+                                  Preferences preferences,
+                                  P2PService p2PService,
+                                  Navigation navigation,
+                                  WalletPasswordWindow walletPasswordWindow,
+                                  NotificationCenter notificationCenter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
         this.tradeWalletService = tradeWalletService;
         this.feeService = feeService;
         this.user = user;
-        this.keyRingVO = keyRingVO;
+        this.keyRing = keyRing;
         this.disputeManager = disputeManager;
         this.preferences = preferences;
         this.p2PService = p2PService;
@@ -384,10 +393,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             checkNotNull(acceptedArbitratorByAddress, "acceptedArbitratorByAddress must no tbe null");
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
                     trade.getId(),
-                    keyRingVO.getPubKeyRingVO().hashCode(), // traderId
+                    keyRing.getPubKeyRingVO().hashCode(), // traderId
                     trade.getOffer().getDirection() == Offer.Direction.BUY ? isMaker : !isMaker,
                     isMaker,
-                    new PubKeyRingPayload(keyRingVO.getPubKeyRingVO()),
+                    new PubKeyRingPayload(keyRing.getPubKeyRingVO()),
                     trade.getDate(),
                     trade.getContract(),
                     trade.getContractHash(),

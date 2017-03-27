@@ -24,6 +24,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.alert.PrivateNotificationManager;
@@ -52,7 +53,6 @@ import io.bisq.protobuffer.payload.arbitration.Dispute;
 import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.trade.Contract;
-import io.bisq.vo.crypto.KeyRingVO;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -97,7 +97,7 @@ import java.util.concurrent.TimeUnit;
 public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     private final DisputeManager disputeManager;
-    protected final KeyRingVO keyRingVO;
+    protected final KeyRing keyRing;
     private final TradeManager tradeManager;
     private final Stage stage;
     protected final BSFormatter formatter;
@@ -143,11 +143,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TraderDisputeView(DisputeManager disputeManager, KeyRingVO keyRingVO, TradeManager tradeManager, Stage stage,
-                             BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow, PrivateNotificationManager privateNotificationManager,
-                             ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow, P2PService p2PService) {
+    public TraderDisputeView(DisputeManager disputeManager, KeyRing keyRing,
+                             TradeManager tradeManager, Stage stage,
+                             BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
+                             PrivateNotificationManager privateNotificationManager,
+                             ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow,
+                             P2PService p2PService) {
         this.disputeManager = disputeManager;
-        this.keyRingVO = keyRingVO;
+        this.keyRing = keyRing;
         this.tradeManager = tradeManager;
         this.stage = stage;
         this.formatter = formatter;
@@ -409,7 +412,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     protected void applyFilteredListPredicate(String filterString) {
         // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)
-        filteredList.setPredicate(dispute -> !dispute.getArbitratorPubKeyRingPayload().equals(keyRingVO.getPubKeyRingVO()));
+        filteredList.setPredicate(dispute -> !dispute.getArbitratorPubKeyRingPayload().equals(keyRing.getPubKeyRingVO()));
     }
 
 

@@ -19,6 +19,7 @@ package io.bisq.gui.main.dao.compensation.create;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.InsufficientFundsException;
@@ -38,7 +39,6 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.payload.dao.compensation.CompensationRequestPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.vo.crypto.KeyRingVO;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -81,7 +81,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
     @Inject
     private CreateCompensationRequestView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService, FeeService feeService,
-                                          CompensationRequestManager compensationRequestManager, P2PService p2PService, KeyRingVO keyRingVO, BSFormatter btcFormatter) {
+                                          CompensationRequestManager compensationRequestManager, P2PService p2PService, KeyRing keyRing, BSFormatter btcFormatter) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
@@ -89,7 +89,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
         this.p2PService = p2PService;
         this.btcFormatter = btcFormatter;
 
-        p2pStorageSignaturePubKey = keyRingVO.getPubKeyRingVO().getSignaturePubKey();
+        p2pStorageSignaturePubKey = keyRing.getPubKeyRingVO().getSignaturePubKey();
     }
 
 

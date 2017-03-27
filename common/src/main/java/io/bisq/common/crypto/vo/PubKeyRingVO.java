@@ -15,12 +15,12 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.vo.crypto;
+package io.bisq.common.crypto.vo;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Encryption;
+import io.bisq.common.crypto.PGP;
 import io.bisq.common.crypto.Sig;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openpgp.PGPException;
@@ -30,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -38,29 +37,28 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
-/**
- * Same as KeyRing but with public keys only.
- * Used to send public keys over the wire to other peer.
- */
-
-// TODO remove Serializable, apply final and Value , serialVersionUID
-@Getter
-@EqualsAndHashCode
 @Slf4j
+// TODO remove Serializable/serialVersionUID after PB refactoring
 public final class PubKeyRingVO implements Serializable {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
+    @Getter
     private final byte[] signaturePubKeyBytes;
+    @Getter
     private final byte[] encryptionPubKeyBytes;
+    @Getter
     private final String pgpPubKeyAsPem;
+
+    @Nullable
     private PublicKey signaturePubKey;
+    @Nullable
     private PublicKey encryptionPubKey;
     @Nullable
     // TODO  remove Nullable once impl.
     private PGPPublicKey pgpPubKey;
 
-    public PubKeyRingVO(PublicKey signaturePubKey, PublicKey encryptionPubKey, @Nullable PGPPublicKey pgpPubKey) {
+    public PubKeyRingVO(@NotNull PublicKey signaturePubKey, @NotNull PublicKey encryptionPubKey, @Nullable PGPPublicKey pgpPubKey) {
         this.signaturePubKey = signaturePubKey;
         this.encryptionPubKey = encryptionPubKey;
         this.pgpPubKey = pgpPubKey;
@@ -76,36 +74,72 @@ public final class PubKeyRingVO implements Serializable {
         this.signaturePubKeyBytes = signaturePubKeyBytes;
         this.encryptionPubKeyBytes = encryptionPubKeyBytes;
         this.pgpPubKeyAsPem = pgpPubKeyAsPem;
-        init();
     }
 
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            init();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
-    }
-
-    private void init() {
-        try {
-            signaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC")
-                    .generatePublic(new X509EncodedKeySpec(signaturePubKeyBytes));
-            encryptionPubKey = KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC")
-                    .generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
-
+    @NotNull
+    public PublicKey getSignaturePubKey() {
+        if (signaturePubKey == null) {
             try {
-                this.pgpPubKey = io.bisq.common.crypto.PGP.getPubKeyFromPEM(pgpPubKeyAsPem);
-            } catch (IOException | PGPException e) {
-                log.error(e.toString());
+                signaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC")
+                        .generatePublic(new X509EncodedKeySpec(getSignaturePubKeyBytes()));
+            } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
                 e.printStackTrace();
+                log.error(e.getMessage());
                 throw new RuntimeException(e);
             }
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
         }
+        return signaturePubKey;
+    }
+
+    @NotNull
+    public PublicKey getEncryptionPubKey() {
+        if (encryptionPubKey == null) {
+            try {
+                encryptionPubKey = KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC")
+                        .generatePublic(new X509EncodedKeySpec(getEncryptionPubKeyBytes()));
+            } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+                throw new RuntimeException(e);
+            }
+        }
+        return encryptionPubKey;
+    }
+
+    @Nullable
+    public PGPPublicKey getPgpPubKey() {
+        if (pgpPubKey == null) {
+            try {
+                pgpPubKey = PGP.getPubKeyFromPEM(getPgpPubKeyAsPem());
+            } catch (InvalidKeySpecException | NoSuchAlgorithmException | IOException | PGPException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+                throw new RuntimeException(e);
+            }
+        }
+        return pgpPubKey;
+    }
+
+    // Only use the raw data
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PubKeyRingVO that = (PubKeyRingVO) o;
+
+        if (!Arrays.equals(signaturePubKeyBytes, that.signaturePubKeyBytes)) return false;
+        if (!Arrays.equals(encryptionPubKeyBytes, that.encryptionPubKeyBytes)) return false;
+        return !(pgpPubKeyAsPem != null ? !pgpPubKeyAsPem.equals(that.pgpPubKeyAsPem) : that.pgpPubKeyAsPem != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = signaturePubKeyBytes != null ? Arrays.hashCode(signaturePubKeyBytes) : 0;
+        result = 31 * result + (encryptionPubKeyBytes != null ? Arrays.hashCode(encryptionPubKeyBytes) : 0);
+        result = 31 * result + (pgpPubKeyAsPem != null ? pgpPubKeyAsPem.hashCode() : 0);
+        return result;
     }
 
     // Hex

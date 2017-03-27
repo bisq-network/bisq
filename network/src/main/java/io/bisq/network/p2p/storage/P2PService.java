@@ -10,6 +10,8 @@ import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -40,8 +42,6 @@ import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.p2p.storage.MailboxStoragePayload;
 import io.bisq.protobuffer.payload.p2p.storage.ProtectedMailboxStorageEntry;
 import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
-import io.bisq.vo.crypto.KeyRingVO;
-import io.bisq.vo.crypto.PubKeyRingVO;
 import javafx.beans.property.*;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -73,7 +73,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private final Clock clock;
     //TODO optional can be removed as seednode are created with those objects now
     private final Optional<EncryptionService> optionalEncryptionService;
-    private final Optional<KeyRingVO> optionalKeyRingVO;
+    private final Optional<KeyRing> optionalKeyRingVO;
 
     // set in init
     private NetworkNode networkNode;
@@ -121,7 +121,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       Clock clock,
                       Socks5ProxyProvider socks5ProxyProvider,
                       @Nullable EncryptionService encryptionService,
-                      @Nullable KeyRingVO keyRingVO) {
+                      @Nullable KeyRing keyRing) {
         this(
                 seedNodesRepository,
                 port,
@@ -136,7 +136,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 clock,
                 socks5ProxyProvider,
                 encryptionService,
-                keyRingVO
+                keyRing
         );
     }
 
@@ -153,7 +153,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       Clock clock,
                       Socks5ProxyProvider socks5ProxyProvider,
                       @Nullable EncryptionService encryptionService,
-                      @Nullable KeyRingVO keyRingVO) {
+                      @Nullable KeyRing keyRing) {
         this.seedNodesRepository = seedNodesRepository;
         this.port = port;
         this.maxConnections = maxConnections;
@@ -162,7 +162,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         this.socks5ProxyProvider = socks5ProxyProvider;
 
         optionalEncryptionService = Optional.ofNullable(encryptionService);
-        optionalKeyRingVO = Optional.ofNullable(keyRingVO);
+        optionalKeyRingVO = Optional.ofNullable(keyRing);
 
         init(useLocalhostForP2P,
                 networkId,
@@ -877,7 +877,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     @VisibleForTesting
     @Nullable
-    public KeyRingVO getKeyRing() {
+    public KeyRing getKeyRing() {
         return optionalKeyRingVO.isPresent() ? optionalKeyRingVO.get() : null;
     }
 

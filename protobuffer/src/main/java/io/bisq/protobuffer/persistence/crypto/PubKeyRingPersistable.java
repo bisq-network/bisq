@@ -18,9 +18,9 @@
 package io.bisq.protobuffer.persistence.crypto;
 
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.protobuffer.crypto.PubKeyRingProto;
 import io.bisq.protobuffer.persistence.PersistableNew;
-import io.bisq.vo.crypto.PubKeyRingVO;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 

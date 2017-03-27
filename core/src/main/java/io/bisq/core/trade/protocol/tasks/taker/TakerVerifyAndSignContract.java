@@ -97,7 +97,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     takerMultiSigPubKey
             );
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = Sig.sign(processModel.getKeyRingVO().getSignatureKeyPair().getPrivate(), contractAsJson);
+            String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
             trade.setContract(contract);
             trade.setContractAsJson(contractAsJson);
             trade.setTakerContractSignature(signature);

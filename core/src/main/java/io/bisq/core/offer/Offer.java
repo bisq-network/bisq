@@ -1,5 +1,7 @@
 package io.bisq.core.offer;
 
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.CurrencyUtil;
@@ -17,8 +19,6 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.protobuffer.payload.offer.OfferPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentMethod;
-import io.bisq.vo.crypto.KeyRingVO;
-import io.bisq.vo.crypto.PubKeyRingVO;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -300,8 +300,8 @@ public class Offer implements Serializable {
         return getDirection() == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
     }
 
-    public boolean isMyOffer(KeyRingVO keyRingVO) {
-        return getPubKeyRingVO().equals(keyRingVO.getPubKeyRingVO());
+    public boolean isMyOffer(KeyRing keyRing) {
+        return getPubKeyRingVO().equals(keyRing.getPubKeyRingVO());
     }
 
 

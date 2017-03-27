@@ -18,6 +18,7 @@
 package io.bisq.gui.main.account.arbitratorregistration;
 
 import com.google.inject.Inject;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.LanguageUtil;
@@ -31,7 +32,6 @@ import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.vo.crypto.KeyRingVO;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
@@ -47,7 +47,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     private final User user;
     private final P2PService p2PService;
     private final BtcWalletService walletService;
-    private final KeyRingVO keyRingVO;
+    private final KeyRing keyRing;
 
     final BooleanProperty registrationEditDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty revokeButtonDisabled = new SimpleBooleanProperty(true);
@@ -70,12 +70,12 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                                            User user,
                                            P2PService p2PService,
                                            BtcWalletService walletService,
-                                           KeyRingVO keyRingVO) {
+                                           KeyRing keyRing) {
         this.arbitratorManager = arbitratorManager;
         this.user = user;
         this.p2PService = p2PService;
         this.walletService = walletService;
-        this.keyRingVO = keyRingVO;
+        this.keyRing = keyRing;
 
         arbitratorMapChangeListener = new MapChangeListener<NodeAddress, Arbitrator>() {
             @Override
@@ -153,7 +153,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                     p2PService.getAddress(),
                     arbitratorDepositAddressEntry.getPubKey(),
                     arbitratorDepositAddressEntry.getAddressString(),
-                    new PubKeyRingPayload(keyRingVO.getPubKeyRingVO()),
+                    new PubKeyRingPayload(keyRing.getPubKeyRingVO()),
                     new ArrayList<>(languageCodes),
                     new Date(),
                     registrationKey.getPubKey(),

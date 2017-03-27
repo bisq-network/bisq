@@ -15,12 +15,9 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.vo.crypto;
+package io.bisq.common.crypto;
 
-import io.bisq.common.crypto.Encryption;
-import io.bisq.common.crypto.KeyStorage;
-import io.bisq.common.crypto.PGP;
-import io.bisq.common.crypto.Sig;
+import io.bisq.common.crypto.vo.PubKeyRingVO;
 import lombok.Setter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +32,7 @@ import java.security.KeyPair;
 @Value
 @Slf4j
 @Immutable
-public class KeyRingVO {
+public class KeyRing {
     private final KeyPair signatureKeyPair;
     private final KeyPair encryptionKeyPair;
     private final PubKeyRingVO pubKeyRingVO;
@@ -48,7 +45,7 @@ public class KeyRingVO {
     private PGPKeyPair pgpKeyPair;
 
     @Inject
-    public KeyRingVO(KeyStorage keyStorage) {
+    public KeyRing(KeyStorage keyStorage) {
         if (keyStorage.allKeyFilesExist()) {
             signatureKeyPair = keyStorage.loadKeyPair(KeyStorage.KeyEntry.MSG_SIGNATURE);
             encryptionKeyPair = keyStorage.loadKeyPair(KeyStorage.KeyEntry.MSG_ENCRYPTION);

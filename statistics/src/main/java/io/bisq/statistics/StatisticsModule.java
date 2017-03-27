@@ -20,6 +20,7 @@ package io.bisq.statistics;
 import com.google.inject.Singleton;
 import io.bisq.common.Clock;
 import io.bisq.common.app.AppModule;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.AlertModule;
@@ -34,7 +35,6 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
-import io.bisq.vo.crypto.KeyRingVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -53,7 +53,7 @@ class StatisticsModule extends AppModule {
     @Override
     protected void configure() {
         bind(KeyStorage.class).in(Singleton.class);
-        bind(KeyRingVO.class).in(Singleton.class);
+        bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);

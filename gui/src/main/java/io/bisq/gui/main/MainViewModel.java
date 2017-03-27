@@ -25,6 +25,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
@@ -72,7 +73,6 @@ import io.bisq.protobuffer.crypto.DecryptedDataTuple;
 import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
 import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
 import io.bisq.protobuffer.payload.arbitration.Dispute;
-import io.bisq.vo.crypto.KeyRingVO;
 import io.bisq.vo.crypto.SealedAndSignedVO;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
@@ -119,7 +119,7 @@ public class MainViewModel implements ViewModel {
     private final Clock clock;
     private final FeeService feeService;
     private final DaoManager daoManager;
-    private final KeyRingVO keyRingVO;
+    private final KeyRing keyRing;
     private final BSFormatter formatter;
 
     // BTC network
@@ -184,7 +184,7 @@ public class MainViewModel implements ViewModel {
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
                          DaoManager daoManager,
-                         KeyRingVO keyRingVO,
+                         KeyRing keyRing,
                          BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
@@ -206,7 +206,7 @@ public class MainViewModel implements ViewModel {
         this.clock = clock;
         this.feeService = feeService;
         this.daoManager = daoManager;
-        this.keyRingVO = keyRingVO;
+        this.keyRing = keyRing;
         this.formatter = formatter;
 
         btcNetworkAsString = Res.get(preferences.getBitcoinNetwork().name()) +
@@ -580,8 +580,8 @@ public class MainViewModel implements ViewModel {
                     // just use any simple dummy msg
                     Ping payload = new Ping(1, 1);
                     SealedAndSignedVO sealedAndSignedVO = NetworkCryptoUtils.encryptHybridWithSignature(payload,
-                            keyRingVO.getSignatureKeyPair(), keyRingVO.getPubKeyRingVO().getEncryptionPubKey());
-                    DecryptedDataTuple tuple = NetworkCryptoUtils.decryptHybridWithSignature(sealedAndSignedVO, keyRingVO.getEncryptionKeyPair().getPrivate());
+                            keyRing.getSignatureKeyPair(), keyRing.getPubKeyRingVO().getEncryptionPubKey());
+                    DecryptedDataTuple tuple = NetworkCryptoUtils.decryptHybridWithSignature(sealedAndSignedVO, keyRing.getEncryptionKeyPair().getPrivate());
                     if (tuple.payload instanceof Ping &&
                             ((Ping) tuple.payload).nonce == payload.nonce &&
                             ((Ping) tuple.payload).lastRoundTripTime == payload.lastRoundTripTime) {
