@@ -1,29 +1,25 @@
 /*
- * This file is part of bisq.
+ * This file is part of Bitsquare.
  *
- * bisq is free software: you can redistribute it and/or modify it
+ * Bitsquare is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or (at
  * your option) any later version.
  *
- * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * Bitsquare is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
  * License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.protobuffer.payload.crypto;
+package io.bisq.vo.crypto;
 
-import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.Encryption;
 import io.bisq.common.crypto.Sig;
-import io.bisq.generated.protobuffer.PB;
-import io.bisq.protobuffer.crypto.Encryption;
-import io.bisq.protobuffer.crypto.PGP;
-import io.bisq.protobuffer.payload.Payload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -46,28 +43,24 @@ import java.security.spec.X509EncodedKeySpec;
  * Same as KeyRing but with public keys only.
  * Used to send public keys over the wire to other peer.
  */
-@Slf4j
+
+// TODO remove Serializable, apply final and Value , serialVersionUID
+@Getter
 @EqualsAndHashCode
-public final class PubKeyRing implements Payload {
-    // That object is sent over the wire, so we need to take care of version compatibility.
+@Slf4j
+public final class PubKeyRingVO implements Serializable {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    // Payload
     private final byte[] signaturePubKeyBytes;
     private final byte[] encryptionPubKeyBytes;
-    private String pgpPubKeyAsPem;
-
-    // Domain
-    @Getter
-    transient private PublicKey signaturePubKey;
-    @Getter
-    transient private PublicKey encryptionPubKey;
-    @Getter
+    private final String pgpPubKeyAsPem;
+    private PublicKey signaturePubKey;
+    private PublicKey encryptionPubKey;
     @Nullable
     // TODO  remove Nullable once impl.
-    transient private PGPPublicKey pgpPubKey;
+    private PGPPublicKey pgpPubKey;
 
-    public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey, @Nullable PGPPublicKey pgpPubKey) {
+    public PubKeyRingVO(PublicKey signaturePubKey, PublicKey encryptionPubKey, @Nullable PGPPublicKey pgpPubKey) {
         this.signaturePubKey = signaturePubKey;
         this.encryptionPubKey = encryptionPubKey;
         this.pgpPubKey = pgpPubKey;
@@ -76,10 +69,10 @@ public final class PubKeyRing implements Payload {
         this.encryptionPubKeyBytes = new X509EncodedKeySpec(encryptionPubKey.getEncoded()).getEncoded();
 
         //TODO not impl yet
-        pgpPubKeyAsPem = PGP.getPEMFromPubKey(pgpPubKey);
+        pgpPubKeyAsPem = io.bisq.common.crypto.PGP.getPEMFromPubKey(pgpPubKey);
     }
 
-    public PubKeyRing(byte[] signaturePubKeyBytes, byte[] encryptionPubKeyBytes, @NotNull String pgpPubKeyAsPem) {
+    public PubKeyRingVO(byte[] signaturePubKeyBytes, byte[] encryptionPubKeyBytes, @NotNull String pgpPubKeyAsPem) {
         this.signaturePubKeyBytes = signaturePubKeyBytes;
         this.encryptionPubKeyBytes = encryptionPubKeyBytes;
         this.pgpPubKeyAsPem = pgpPubKeyAsPem;
@@ -103,7 +96,7 @@ public final class PubKeyRing implements Payload {
                     .generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
 
             try {
-                this.pgpPubKey = PGP.getPubKeyFromPEM(pgpPubKeyAsPem);
+                this.pgpPubKey = io.bisq.common.crypto.PGP.getPubKeyFromPEM(pgpPubKeyAsPem);
             } catch (IOException | PGPException e) {
                 log.error(e.toString());
                 e.printStackTrace();
@@ -113,15 +106,6 @@ public final class PubKeyRing implements Payload {
             e.printStackTrace();
             log.error(e.getMessage());
         }
-    }
-
-    @Override
-    public PB.PubKeyRing toProto() {
-        return PB.PubKeyRing.newBuilder()
-                .setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes))
-                .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes))
-                .setPgpPubKeyAsPem(pgpPubKeyAsPem)
-                .build();
     }
 
     // Hex

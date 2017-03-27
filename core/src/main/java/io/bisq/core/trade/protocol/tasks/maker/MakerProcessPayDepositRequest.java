@@ -66,7 +66,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
 
             processModel.tradingPeer.setMultiSigPubKey(checkNotNull(payDepositRequest.takerMultiSigPubKey));
             processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(payDepositRequest.takerPayoutAddressString));
-            processModel.tradingPeer.setPubKeyRing(checkNotNull(payDepositRequest.takerPubKeyRing));
+            processModel.tradingPeer.setPubKeyRingPersistable(checkNotNull(payDepositRequest.takerPubKeyRingPayload.get()));
 
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(payDepositRequest.takerAccountId));
             trade.setTakeOfferFeeTxId(nonEmptyStringOf(payDepositRequest.takeOfferFeeTxId));

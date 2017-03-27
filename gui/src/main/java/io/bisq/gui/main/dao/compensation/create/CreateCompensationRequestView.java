@@ -36,9 +36,9 @@ import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.dao.compensation.CompensationRequestPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import org.apache.commons.lang3.StringUtils;
@@ -81,7 +81,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
     @Inject
     private CreateCompensationRequestView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService, FeeService feeService,
-                                          CompensationRequestManager compensationRequestManager, P2PService p2PService, KeyRing keyRing, BSFormatter btcFormatter) {
+                                          CompensationRequestManager compensationRequestManager, P2PService p2PService, KeyRingVO keyRingVO, BSFormatter btcFormatter) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
@@ -89,7 +89,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
         this.p2PService = p2PService;
         this.btcFormatter = btcFormatter;
 
-        p2pStorageSignaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
+        p2pStorageSignaturePubKey = keyRingVO.getPubKeyRingVO().getSignaturePubKey();
     }
 
 

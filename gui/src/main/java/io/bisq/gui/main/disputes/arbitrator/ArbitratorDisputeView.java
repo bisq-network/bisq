@@ -27,7 +27,7 @@ import io.bisq.gui.main.overlays.windows.DisputeSummaryWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.stage.Stage;
 
 import javax.inject.Inject;
@@ -37,10 +37,10 @@ import javax.inject.Inject;
 public class ArbitratorDisputeView extends TraderDisputeView {
 
     @Inject
-    public ArbitratorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
+    public ArbitratorDisputeView(DisputeManager disputeManager, KeyRingVO keyRingVO, TradeManager tradeManager, Stage stage,
                                  BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow, PrivateNotificationManager privateNotificationManager,
                                  ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow, P2PService p2PService) {
-        super(disputeManager, keyRing, tradeManager, stage, formatter,
+        super(disputeManager, keyRingVO, tradeManager, stage, formatter,
                 disputeSummaryWindow, privateNotificationManager, contractWindow, tradeDetailsWindow, p2PService);
     }
 
@@ -56,7 +56,7 @@ public class ArbitratorDisputeView extends TraderDisputeView {
     protected void applyFilteredListPredicate(String filterString) {
         // If in arbitrator view we must only display disputes where we are selected as arbitrator (must not receive others anyway)
         filteredList.setPredicate(dispute ->
-                dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()) &&
+                dispute.getArbitratorPubKeyRingPayload().get().equals(keyRingVO.getPubKeyRingVO()) &&
                         (filterString.isEmpty() ||
                                 (dispute.getId().contains(filterString) ||
                                         (!dispute.isClosed() && filterString.toLowerCase().equals("open")) ||

@@ -14,11 +14,11 @@ import io.bisq.core.offer.availability.OfferAvailabilityModel;
 import io.bisq.core.offer.availability.OfferAvailabilityProtocol;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.offer.OfferPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentMethod;
+import io.bisq.vo.crypto.KeyRingVO;
+import io.bisq.vo.crypto.PubKeyRingVO;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -300,8 +300,8 @@ public class Offer implements Serializable {
         return getDirection() == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
     }
 
-    public boolean isMyOffer(KeyRing keyRing) {
-        return getPubKeyRing().equals(keyRing.getPubKeyRing());
+    public boolean isMyOffer(KeyRingVO keyRingVO) {
+        return getPubKeyRing().equals(keyRingVO.getPubKeyRingVO());
     }
 
 
@@ -381,8 +381,8 @@ public class Offer implements Serializable {
         return offerPayload.getMakerNodeAddress();
     }
 
-    public PubKeyRing getPubKeyRing() {
-        return offerPayload.getPubKeyRing();
+    public PubKeyRingVO getPubKeyRing() {
+        return offerPayload.getPubKeyRingPayload().get();
     }
 
     public String getMakerPaymentAccountId() {

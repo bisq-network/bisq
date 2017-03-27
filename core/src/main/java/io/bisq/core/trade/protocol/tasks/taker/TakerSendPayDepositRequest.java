@@ -24,6 +24,7 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.network.p2p.SendDirectMessageListener;
 import io.bisq.protobuffer.message.trade.PayDepositRequest;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -65,7 +66,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
                     processModel.getChangeOutputAddress(),
                     takerMultiSigPubKey,
                     takerPayoutAddressString,
-                    processModel.getPubKeyRing(),
+                    new PubKeyRingPayload(processModel.getPubKeyRing()),
                     processModel.getPaymentAccountPayload(trade),
                     processModel.getAccountId(),
                     trade.getTakeOfferFeeTxId(),

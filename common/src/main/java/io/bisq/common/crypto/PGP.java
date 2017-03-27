@@ -15,7 +15,7 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.protobuffer.crypto;
+package io.bisq.common.crypto;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.bcpg.BCPGKey;
@@ -38,7 +38,6 @@ import java.util.Iterator;
 
 @Slf4j
 public class PGP {
-
     // TODO not tested yet, remove Nullable once impl.
     // PEM encoding
     @Nullable

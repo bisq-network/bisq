@@ -27,6 +27,7 @@ import io.bisq.core.trade.BuyerAsMakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import io.bisq.protobuffer.payload.trade.Contract;
@@ -79,15 +80,15 @@ public class MakerCreateAndSignContract extends TradeTask {
                     taker.getAccountId(),
                     makerPaymentAccountPayload,
                     takerPaymentAccountPayload,
-                    processModel.getPubKeyRing(),
-                    taker.getPubKeyRing(),
+                    new PubKeyRingPayload(processModel.getPubKeyRing()),
+                    new PubKeyRingPayload(taker.getPubKeyRing()),
                     takerAddressEntry.getAddressString(),
                     taker.getPayoutAddressString(),
                     makerMultiSigPubKey,
                     taker.getMultiSigPubKey()
             );
             String contractAsJson = Utilities.objectToJson(contract);
-            String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
+            String signature = Sig.sign(processModel.getKeyRingVO().getSignatureKeyPair().getPrivate(), contractAsJson);
 
             trade.setContract(contract);
             trade.setContractAsJson(contractAsJson);

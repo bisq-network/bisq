@@ -3,6 +3,7 @@ package io.bisq.network.p2p.network;
 import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.util.Tuple3;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.crypto.EncryptionService;
@@ -10,12 +11,11 @@ import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.crypto.KeyStorage;
 import io.bisq.protobuffer.message.p2p.DirectMessage;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.vo.crypto.KeyRingVO;
+import io.bisq.vo.crypto.PubKeyRingVO;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -161,7 +161,7 @@ public class NetworkStressTest {
     /**
      * A list of peer node's public key rings.
      */
-    private final List<PubKeyRing> peerPKRings = new ArrayList<>();
+    private final List<PubKeyRingVO> peerPKRings = new ArrayList<>();
 
     /**
      * Number of direct network_messages to be sent by each peer.
@@ -299,7 +299,7 @@ public class NetworkStressTest {
             // create, save and start peer
             final P2PService peer = createPeerNode(p, peerPort);
             //noinspection ConstantConditions
-            peerPKRings.add(peer.getKeyRing().getPubKeyRing());
+            peerPKRings.add(peer.getKeyRing().getPubKeyRingVO());
             peerNodes.add(peer);
             peer.start(new PeerServiceListener(
                     localServicesLatch, localServicesFailed, prelimDataLatch, bootstrapLatch));
@@ -382,11 +382,11 @@ public class NetworkStressTest {
 
         // peer keys
         final KeyStorage peerKeyStorage = new KeyStorage(peerKeysDir);
-        final KeyRing peerKeyRing = new KeyRing(peerKeyStorage);
-        final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing);
+        final KeyRingVO peerKeyRingVO = new KeyRingVO(peerKeyStorage);
+        final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRingVO);
 
         return new P2PService(seedNodesRepository, port, peerTorDir, useLocalhostForP2P,
-                REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir, null, null, null, new Clock(), null, peerEncryptionService, peerKeyRing);
+                REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir, null, null, null, new Clock(), null, peerEncryptionService, peerKeyRingVO);
     }
 
     // ## TEST SETUP: P2P service listener classes

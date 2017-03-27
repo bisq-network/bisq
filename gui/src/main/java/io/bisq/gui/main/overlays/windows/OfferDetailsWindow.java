@@ -37,8 +37,8 @@ import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.payment.PaymentMethod;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -61,7 +61,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private final BSFormatter formatter;
     protected final Preferences preferences;
     private final User user;
-    private final KeyRing keyRing;
+    private final KeyRingVO keyRingVO;
     private final Navigation navigation;
     private Offer offer;
     private Coin tradeAmount;
@@ -76,11 +76,11 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferDetailsWindow(BSFormatter formatter, Preferences preferences, User user, KeyRing keyRing, Navigation navigation) {
+    public OfferDetailsWindow(BSFormatter formatter, Preferences preferences, User user, KeyRingVO keyRingVO, Navigation navigation) {
         this.formatter = formatter;
         this.preferences = preferences;
         this.user = user;
-        this.keyRing = keyRing;
+        this.keyRingVO = keyRingVO;
         this.navigation = navigation;
         type = Type.Confirmation;
     }
@@ -221,7 +221,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         final boolean isSpecificBanks = paymentMethod.equals(PaymentMethod.SPECIFIC_BANKS);
         final boolean isNationalBanks = paymentMethod.equals(PaymentMethod.NATIONAL_BANK);
         final boolean isSepa = paymentMethod.equals(PaymentMethod.SEPA);
-        if (offer.isMyOffer(keyRing) && makerPaymentAccountId != null && paymentAccount != null) {
+        if (offer.isMyOffer(keyRingVO) && makerPaymentAccountId != null && paymentAccount != null) {
             addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.myTradingAccount"), paymentAccount.getAccountName());
         } else {
             final String method = Res.get(paymentMethod.getId());

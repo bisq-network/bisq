@@ -20,19 +20,24 @@ package io.bisq.network.crypto;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.Hash;
+import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.protobuffer.crypto.*;
+import io.bisq.protobuffer.crypto.DecryptedDataTuple;
+import io.bisq.protobuffer.crypto.ProtoCryptoUtil;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.alert.PrivateNotificationMessage;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
 import io.bisq.protobuffer.message.p2p.PrefixedSealedAndSignedMessage;
 import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
 import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
-import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
+import io.bisq.protobuffer.payload.crypto.SealedAndSignedPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.vo.crypto.KeyRingVO;
+import io.bisq.vo.crypto.PubKeyRingVO;
+import io.bisq.vo.crypto.SealedAndSignedVO;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -62,8 +67,8 @@ public class EncryptionServiceTests {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    private PubKeyRing pubKeyRing;
-    private KeyRing keyRing;
+    private PubKeyRingVO pubKeyRingVO;
+    private KeyRingVO keyRingVO;
     private File dir;
 
     @Before
@@ -73,8 +78,8 @@ public class EncryptionServiceTests {
         dir.delete();
         dir.mkdir();
         KeyStorage keyStorage = new KeyStorage(dir);
-        keyRing = new KeyRing(keyStorage);
-        pubKeyRing = keyRing.getPubKeyRing();
+        keyRingVO = new KeyRingVO(keyStorage);
+        pubKeyRingVO = keyRingVO.getPubKeyRingVO();
     }
 
     @After
@@ -84,18 +89,18 @@ public class EncryptionServiceTests {
 
     @Test
     public void testDecryptAndVerifyMessage() throws CryptoException {
-        EncryptionService encryptionService = new EncryptionService(keyRing);
+        EncryptionService encryptionService = new EncryptionService(keyRingVO);
         final PrivateNotificationPayload privateNotification = new PrivateNotificationPayload("test");
-        privateNotification.setSigAndPubKey("", pubKeyRing.getSignaturePubKey());
+        privateNotification.setSigAndPubKey("", pubKeyRingVO.getSignaturePubKey());
         final NodeAddress nodeAddress = new NodeAddress("localhost", 2222);
         PrivateNotificationMessage data = new PrivateNotificationMessage(privateNotification,
                 nodeAddress,
                 UUID.randomUUID().toString());
         PrefixedSealedAndSignedMessage encrypted = new PrefixedSealedAndSignedMessage(nodeAddress,
-                encryptionService.encryptAndSign(pubKeyRing, data),
+                new SealedAndSignedPayload(encryptionService.encryptAndSign(pubKeyRingVO, data)),
                 Hash.getHash("localhost"),
                 UUID.randomUUID().toString());
-        DecryptedMsgWithPubKey decrypted = encryptionService.decryptAndVerify(encrypted.sealedAndSigned);
+        DecryptedMsgWithPubKey decrypted = encryptionService.decryptAndVerify(encrypted.sealedAndSignedPayload.get());
         assertEquals(data.privateNotificationPayload.message,
                 ((PrivateNotificationMessage) decrypted.message).privateNotificationPayload.message);
     }
@@ -107,17 +112,17 @@ public class EncryptionServiceTests {
         log.trace("start ");
         for (int i = 0; i < 100; i++) {
             Ping payload = new Ping(new Random().nextInt(), 10);
-            SealedAndSigned sealedAndSigned = null;
+            SealedAndSignedVO sealedAndSignedVO = null;
             try {
-                sealedAndSigned = Encryption.encryptHybridWithSignature(payload,
-                        keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
+                sealedAndSignedVO = ProtoCryptoUtil.encryptHybridWithSignature(payload,
+                        keyRingVO.getSignatureKeyPair(), keyRingVO.getPubKeyRingVO().getEncryptionPubKey());
             } catch (CryptoException e) {
                 log.error("encryptHybridWithSignature failed");
                 e.printStackTrace();
                 assertTrue(false);
             }
             try {
-                DecryptedDataTuple tuple = decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
+                DecryptedDataTuple tuple = decryptHybridWithSignature(sealedAndSignedVO, keyRingVO.getEncryptionKeyPair().getPrivate());
                 assertEquals(((Ping) tuple.payload).nonce, payload.nonce);
             } catch (CryptoException e) {
                 log.error("decryptHybridWithSignature failed");

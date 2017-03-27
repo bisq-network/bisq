@@ -20,6 +20,7 @@ package io.bisq.gui.app;
 import com.google.inject.Singleton;
 import io.bisq.common.Clock;
 import io.bisq.common.app.AppModule;
+import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.AlertModule;
 import io.bisq.core.app.BisqEnvironment;
@@ -36,8 +37,7 @@ import io.bisq.gui.common.view.CachingViewLoader;
 import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.crypto.KeyStorage;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +61,7 @@ class BisqAppModule extends AppModule {
     protected void configure() {
         bind(CachingViewLoader.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);
-        bind(KeyRing.class).in(Singleton.class);
+        bind(KeyRingVO.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
         bind(NotificationCenter.class).in(Singleton.class);

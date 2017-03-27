@@ -28,9 +28,10 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
@@ -46,7 +47,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     private final User user;
     private final P2PService p2PService;
     private final BtcWalletService walletService;
-    private final KeyRing keyRing;
+    private final KeyRingVO keyRingVO;
 
     final BooleanProperty registrationEditDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty revokeButtonDisabled = new SimpleBooleanProperty(true);
@@ -69,12 +70,12 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                                            User user,
                                            P2PService p2PService,
                                            BtcWalletService walletService,
-                                           KeyRing keyRing) {
+                                           KeyRingVO keyRingVO) {
         this.arbitratorManager = arbitratorManager;
         this.user = user;
         this.p2PService = p2PService;
         this.walletService = walletService;
-        this.keyRing = keyRing;
+        this.keyRingVO = keyRingVO;
 
         arbitratorMapChangeListener = new MapChangeListener<NodeAddress, Arbitrator>() {
             @Override
@@ -152,7 +153,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                     p2PService.getAddress(),
                     arbitratorDepositAddressEntry.getPubKey(),
                     arbitratorDepositAddressEntry.getAddressString(),
-                    keyRing.getPubKeyRing(),
+                    new PubKeyRingPayload(keyRingVO.getPubKeyRingVO()),
                     new ArrayList<>(languageCodes),
                     new Date(),
                     registrationKey.getPubKey(),

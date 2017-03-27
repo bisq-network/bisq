@@ -28,11 +28,11 @@ import io.bisq.core.user.User;
 import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.arbitration.Mediator;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import org.bitcoinj.core.ECKey;
@@ -88,7 +88,7 @@ public class ArbitratorManager {
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private final KeyRing keyRing;
+    private final KeyRingVO keyRingVO;
     private final ArbitratorService arbitratorService;
     private final User user;
     private final Preferences preferences;
@@ -102,8 +102,8 @@ public class ArbitratorManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorManager(KeyRing keyRing, ArbitratorService arbitratorService, User user, Preferences preferences) {
-        this.keyRing = keyRing;
+    public ArbitratorManager(KeyRingVO keyRingVO, ArbitratorService arbitratorService, User user, Preferences preferences) {
+        this.keyRingVO = keyRingVO;
         this.arbitratorService = arbitratorService;
         this.user = user;
         this.preferences = preferences;
@@ -169,7 +169,7 @@ public class ArbitratorManager {
         arbitratorsObservableMap.clear();
         Map<NodeAddress, Arbitrator> filtered = map.values().stream()
                 .filter(e -> isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()))
-                        && verifySignature(e.getPubKeyRing().getSignaturePubKey(), e.getRegistrationPubKey(), e.getRegistrationSignature()))
+                        && verifySignature(e.getPubKeyRingPayload().getSignaturePubKey(), e.getRegistrationPubKey(), e.getRegistrationSignature()))
                 .collect(Collectors.toMap(Arbitrator::getNodeAddress, Function.identity()));
 
         arbitratorsObservableMap.putAll(filtered);
@@ -211,7 +211,7 @@ public class ArbitratorManager {
     @NotNull
     public static Mediator getMediator(Arbitrator arbitrator) {
         return new Mediator(arbitrator.getNodeAddress(),
-                arbitrator.getPubKeyRing(),
+                arbitrator.getPubKeyRingPayload(),
                 arbitrator.getLanguageCodes(),
                 new Date(arbitrator.getRegistrationDate()),
                 arbitrator.getRegistrationPubKey(),
@@ -256,7 +256,7 @@ public class ArbitratorManager {
     // An invited arbitrator will sign at registration his storageSignaturePubKey with that private key and attach the signature and pubKey to his data.
     // Other users will check the signature with the list of public keys hardcoded in the app.
     public String signStorageSignaturePubKey(ECKey key) {
-        String keyToSignAsHex = Utils.HEX.encode(keyRing.getPubKeyRing().getSignaturePubKey().getEncoded());
+        String keyToSignAsHex = Utils.HEX.encode(keyRingVO.getPubKeyRingVO().getSignaturePubKey().getEncoded());
         return key.signMessage(keyToSignAsHex);
     }
 

@@ -51,7 +51,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
         this.buyerAsTakerTrade = trade;
 
-        processModel.tradingPeer.setPubKeyRing(trade.getOffer().getPubKeyRing());
+        processModel.tradingPeer.setPubKeyRingPersistable(trade.getOffer().getPubKeyRing());
 
         Trade.Phase phase = trade.getState().getPhase();
         if (trade.isFiatSent() && !trade.isPayoutPublished()) {

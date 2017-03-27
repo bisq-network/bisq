@@ -15,11 +15,10 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.wire.payload.payment;
+package io.bisq.protobuffer.payload.payment;
 
 import com.google.protobuf.util.JsonFormat;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.protobuffer.payload.payment.OKPayAccountPayload;
 import org.junit.Test;
 
 import java.io.IOException;

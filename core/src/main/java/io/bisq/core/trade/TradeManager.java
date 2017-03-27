@@ -46,12 +46,13 @@ import io.bisq.network.p2p.DecryptedDirectMessageListener;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.trade.PayDepositRequest;
 import io.bisq.protobuffer.message.trade.TradeMessage;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
@@ -81,7 +82,7 @@ public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
     private final User user;
-    private final KeyRing keyRing;
+    private final KeyRingVO keyRingVO;
     private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private final OpenOfferManager openOfferManager;
@@ -105,7 +106,7 @@ public class TradeManager {
 
     @Inject
     public TradeManager(User user,
-                        KeyRing keyRing,
+                        KeyRingVO keyRingVO,
                         BtcWalletService walletService,
                         TradeWalletService tradeWalletService,
                         OpenOfferManager openOfferManager,
@@ -118,7 +119,7 @@ public class TradeManager {
                         TradeStatisticsManager tradeStatisticsManager,
                         @Named(Storage.DIR_KEY) File storageDir) {
         this.user = user;
-        this.keyRing = keyRing;
+        this.keyRingVO = keyRingVO;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
         this.openOfferManager = openOfferManager;
@@ -234,7 +235,7 @@ public class TradeManager {
                     trade.getTradeAmount(),
                     trade.getDate(),
                     (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                    keyRing.getPubKeyRing());
+                    new PubKeyRingPayload(keyRingVO.getPubKeyRingVO()));
             tradeStatisticsManager.add(tradeStatistics, true);
 
             // We only republish trades from last 10 days
@@ -298,7 +299,7 @@ public class TradeManager {
                 openOfferManager,
                 user,
                 filterManager,
-                keyRing,
+                keyRingVO,
                 useSavingsWallet,
                 fundsNeededForTrade);
     }
@@ -375,7 +376,7 @@ public class TradeManager {
     private OfferAvailabilityModel getOfferAvailabilityModel(Offer offer) {
         return new OfferAvailabilityModel(
                 offer,
-                keyRing.getPubKeyRing(),
+                keyRingVO.getPubKeyRingVO(),
                 p2PService);
     }
 
@@ -469,7 +470,7 @@ public class TradeManager {
     }
 
     public boolean isMyOffer(Offer offer) {
-        return offer.isMyOffer(keyRing);
+        return offer.isMyOffer(keyRingVO);
     }
 
     public boolean isBuyer(Offer offer) {

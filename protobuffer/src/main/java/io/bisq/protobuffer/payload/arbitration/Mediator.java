@@ -21,7 +21,7 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.payload.StoragePayload;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -47,7 +47,7 @@ public final class Mediator implements StoragePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
 
     // Payload
-    private final PubKeyRing pubKeyRing;
+    private final PubKeyRingPayload pubKeyRingPayload;
     private final NodeAddress nodeAddress;
     private final List<String> languageCodes;
     private final long registrationDate;
@@ -64,7 +64,7 @@ public final class Mediator implements StoragePayload {
 
     // Called from domain and PB
     public Mediator(NodeAddress nodeAddress,
-                    PubKeyRing pubKeyRing,
+                    PubKeyRingPayload pubKeyRingPayload,
                     List<String> languageCodes,
                     Date registrationDate,
                     byte[] registrationPubKey,
@@ -72,7 +72,7 @@ public final class Mediator implements StoragePayload {
                     @Nullable String emailAddress,
                     @Nullable Map<String, String> extraDataMap) {
         this.nodeAddress = nodeAddress;
-        this.pubKeyRing = pubKeyRing;
+        this.pubKeyRingPayload = pubKeyRingPayload;
         this.languageCodes = languageCodes;
         this.emailAddress = emailAddress;
         this.registrationDate = registrationDate.getTime();
@@ -88,13 +88,13 @@ public final class Mediator implements StoragePayload {
 
     @Override
     public PublicKey getOwnerPubKey() {
-        return pubKeyRing.getSignaturePubKey();
+        return pubKeyRingPayload.getSignaturePubKey();
     }
 
     @Override
     public PB.StoragePayload toProto() {
         final PB.Mediator.Builder builder = PB.Mediator.newBuilder()
-                .setPubKeyRing(pubKeyRing.toProto())
+                .setPubKeyRingPayload(pubKeyRingPayload.toProto())
                 .setNodeAddress(nodeAddress.toProto())
                 .addAllLanguageCodes(languageCodes)
                 .setRegistrationDate(registrationDate)

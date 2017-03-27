@@ -25,10 +25,10 @@ import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.filter.Filter;
 import io.bisq.protobuffer.payload.filter.PaymentAccountFilter;
 import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -48,7 +48,7 @@ public class FilterManager {
     private static final Logger log = LoggerFactory.getLogger(FilterManager.class);
 
     private final P2PService p2PService;
-    private final KeyRing keyRing;
+    private final KeyRingVO keyRingVO;
     private final User user;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
 
@@ -63,10 +63,10 @@ public class FilterManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FilterManager(P2PService p2PService, KeyRing keyRing, User user,
+    public FilterManager(P2PService p2PService, KeyRingVO keyRingVO, User user,
                          @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
-        this.keyRing = keyRing;
+        this.keyRingVO = keyRingVO;
         this.user = user;
 
         if (!ignoreDevMsg) {
@@ -150,7 +150,7 @@ public class FilterManager {
     }
 
     private void signAndAddSignatureToFilter(Filter filter) {
-        filter.setSigAndPubKey(filterSigningKey.signMessage(getHexFromData(filter)), keyRing.getSignatureKeyPair().getPublic());
+        filter.setSigAndPubKey(filterSigningKey.signMessage(getHexFromData(filter)), keyRingVO.getSignatureKeyPair().getPublic());
     }
 
     private boolean verifySignature(Filter filter) {

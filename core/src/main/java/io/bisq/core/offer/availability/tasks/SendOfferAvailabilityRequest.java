@@ -23,6 +23,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.availability.OfferAvailabilityModel;
 import io.bisq.network.p2p.SendDirectMessageListener;
 import io.bisq.protobuffer.message.offer.OfferAvailabilityRequest;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,9 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
 
             model.p2PService.sendEncryptedDirectMessage(model.getPeerNodeAddress(),
                     model.offer.getPubKeyRing(),
-                    new OfferAvailabilityRequest(model.offer.getId(), model.pubKeyRing, model.getTakersTradePrice()),
+                    new OfferAvailabilityRequest(model.offer.getId(),
+                            new PubKeyRingPayload(model.pubKeyRingVO),
+                            model.getTakersTradePrice()),
                     new SendDirectMessageListener() {
                         @Override
                         public void onArrived() {

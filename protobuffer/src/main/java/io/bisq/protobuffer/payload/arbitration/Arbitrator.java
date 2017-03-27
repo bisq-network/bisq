@@ -21,7 +21,7 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.payload.StoragePayload;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -48,7 +48,7 @@ public final class Arbitrator implements StoragePayload {
 
     // Payload
     private final byte[] btcPubKey;
-    private final PubKeyRing pubKeyRing;
+    private final PubKeyRingPayload pubKeyRingPayload;
     private final NodeAddress nodeAddress;
     private final List<String> languageCodes;
     private final String btcAddress;
@@ -68,7 +68,7 @@ public final class Arbitrator implements StoragePayload {
     public Arbitrator(NodeAddress nodeAddress,
                       byte[] btcPubKey,
                       String btcAddress,
-                      PubKeyRing pubKeyRing,
+                      PubKeyRingPayload pubKeyRingPayload,
                       List<String> languageCodes,
                       Date registrationDate,
                       byte[] registrationPubKey,
@@ -78,7 +78,7 @@ public final class Arbitrator implements StoragePayload {
         this.nodeAddress = nodeAddress;
         this.btcPubKey = btcPubKey;
         this.btcAddress = btcAddress;
-        this.pubKeyRing = pubKeyRing;
+        this.pubKeyRingPayload = pubKeyRingPayload;
         this.languageCodes = languageCodes;
         this.emailAddress = emailAddress;
         this.registrationDate = registrationDate.getTime();
@@ -94,14 +94,14 @@ public final class Arbitrator implements StoragePayload {
 
     @Override
     public PublicKey getOwnerPubKey() {
-        return pubKeyRing.getSignaturePubKey();
+        return pubKeyRingPayload.getSignaturePubKey();
     }
 
     @Override
     public PB.StoragePayload toProto() {
         final PB.Arbitrator.Builder builder = PB.Arbitrator.newBuilder()
                 .setBtcPubKey(ByteString.copyFrom(btcPubKey))
-                .setPubKeyRing(pubKeyRing.toProto())
+                .setPubKeyRingPayload(pubKeyRingPayload.toProto())
                 .setNodeAddress(nodeAddress.toProto())
                 .addAllLanguageCodes(languageCodes)
                 .setBtcAddress(btcAddress)

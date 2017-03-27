@@ -24,12 +24,12 @@ import io.bisq.common.persistance.Persistable;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.arbitration.Mediator;
 import io.bisq.protobuffer.payload.filter.Filter;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.persistence.alert.AlertPersistable;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -87,7 +87,7 @@ public final class User implements Persistable {
 
 
     @Inject
-    public User(Storage<User> storage, KeyRing keyRing) throws NoSuchAlgorithmException {
+    public User(Storage<User> storage, KeyRingVO keyRingVO) throws NoSuchAlgorithmException {
         this.storage = storage;
 
         User persisted = storage.initAndGetPersisted(this);
@@ -116,7 +116,7 @@ public final class User implements Persistable {
             displayedPersistableAlert = persisted.getDisplayedPersistableAlert();
             developersFilter = persisted.getDevelopersFilter();
         } else {
-            accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
+            accountID = String.valueOf(Math.abs(keyRingVO.getPubKeyRingVO().hashCode()));
 
             acceptedLanguageLocaleCodes.add(LanguageUtil.getDefaultLanguageLocaleAsCode(Preferences.getDefaultLocale()));
             String english = LanguageUtil.getEnglishLanguageLocaleCode();

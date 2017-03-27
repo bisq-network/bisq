@@ -24,9 +24,9 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
@@ -37,7 +37,7 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     private final User user;
     private final ArbitratorManager arbitratorManager;
     private final Preferences preferences;
-    private final KeyRing keyRing;
+    private final KeyRingVO keyRingVO;
     private final BSFormatter formatter;
     final ObservableList<String> languageCodes = FXCollections.observableArrayList();
     final ObservableList<ArbitratorListItem> arbitratorListItems = FXCollections.observableArrayList();
@@ -46,11 +46,11 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
 
     @Inject
     public ArbitratorSelectionViewModel(User user, ArbitratorManager arbitratorManager, Preferences preferences,
-                                        KeyRing keyRing, BSFormatter formatter) {
+                                        KeyRingVO keyRingVO, BSFormatter formatter) {
         this.user = user;
         this.arbitratorManager = arbitratorManager;
         this.preferences = preferences;
-        this.keyRing = keyRing;
+        this.keyRingVO = keyRingVO;
         this.formatter = formatter;
 
         arbitratorMapChangeListener = change -> applyArbitratorMap();
@@ -129,7 +129,7 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     }
 
     public boolean arbitratorIsTrader(Arbitrator arbitrator) {
-        return keyRing.getPubKeyRing().equals(arbitrator.getPubKeyRing());
+        return keyRingVO.getPubKeyRingVO().equals(arbitrator.getPubKeyRingPayload().get());
     }
 
     public boolean hasMatchingLanguage(Arbitrator arbitrator) {

@@ -44,12 +44,12 @@ import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.SendDirectMessageListener;
 import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.offer.OfferAvailabilityRequest;
 import io.bisq.protobuffer.message.offer.OfferAvailabilityResponse;
 import io.bisq.protobuffer.payload.offer.AvailabilityResult;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
@@ -74,7 +74,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevEnv.STRESS_TEST_MODE ? 20 : 20);
     private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevEnv.STRESS_TEST_MODE ? 4 : 4);
 
-    private final KeyRing keyRing;
+    private final KeyRingVO keyRingVO;
     private final User user;
     private final P2PService p2PService;
     private final BtcWalletService walletService;
@@ -94,7 +94,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OpenOfferManager(KeyRing keyRing,
+    public OpenOfferManager(KeyRingVO keyRingVO,
                             User user,
                             P2PService p2PService,
                             BtcWalletService walletService,
@@ -104,7 +104,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             PriceFeedService priceFeedService,
                             Preferences preferences,
                             @Named(Storage.DIR_KEY) File storageDir) {
-        this.keyRing = keyRing;
+        this.keyRingVO = keyRingVO;
         this.user = user;
         this.p2PService = p2PService;
         this.walletService = walletService;
@@ -332,7 +332,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isMyOffer(Offer offer) {
-        return offer.isMyOffer(keyRing);
+        return offer.isMyOffer(keyRingVO);
     }
 
     public ObservableList<OpenOffer> getOpenOffers() {
@@ -406,7 +406,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
             try {
                 p2PService.sendEncryptedDirectMessage(sender,
-                        message.getPubKeyRing(),
+                        message.getPubKeyRing().get(),
                         new OfferAvailabilityResponse(message.offerId, availabilityResult),
                         new SendDirectMessageListener() {
                             @Override

@@ -69,12 +69,12 @@ import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.ConnectionListener;
 import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.crypto.DecryptedDataTuple;
-import io.bisq.protobuffer.crypto.Encryption;
-import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.crypto.ProtoCryptoUtil;
 import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
 import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
 import io.bisq.protobuffer.payload.arbitration.Dispute;
-import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
+import io.bisq.vo.crypto.KeyRingVO;
+import io.bisq.vo.crypto.SealedAndSignedVO;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -120,7 +120,7 @@ public class MainViewModel implements ViewModel {
     private final Clock clock;
     private final FeeService feeService;
     private final DaoManager daoManager;
-    private final KeyRing keyRing;
+    private final KeyRingVO keyRingVO;
     private final BSFormatter formatter;
 
     // BTC network
@@ -185,7 +185,7 @@ public class MainViewModel implements ViewModel {
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
                          DaoManager daoManager,
-                         KeyRing keyRing,
+                         KeyRingVO keyRingVO,
                          BSFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
@@ -197,6 +197,7 @@ public class MainViewModel implements ViewModel {
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.disputeManager = disputeManager;
+        Refac
         this.preferences = preferences;
         this.alertManager = alertManager;
         this.privateNotificationManager = privateNotificationManager;
@@ -207,7 +208,7 @@ public class MainViewModel implements ViewModel {
         this.clock = clock;
         this.feeService = feeService;
         this.daoManager = daoManager;
-        this.keyRing = keyRing;
+        this.keyRingVO = keyRingVO;
         this.formatter = formatter;
 
         btcNetworkAsString = Res.get(preferences.getBitcoinNetwork().name()) +
@@ -580,9 +581,9 @@ public class MainViewModel implements ViewModel {
                     log.trace("Run crypto test");
                     // just use any simple dummy msg
                     Ping payload = new Ping(1, 1);
-                    SealedAndSigned sealedAndSigned = Encryption.encryptHybridWithSignature(payload,
-                            keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
-                    DecryptedDataTuple tuple = EncryptionService.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
+                    SealedAndSignedVO sealedAndSignedVO = ProtoCryptoUtil.encryptHybridWithSignature(payload,
+                            keyRingVO.getSignatureKeyPair(), keyRingVO.getPubKeyRingVO().getEncryptionPubKey());
+                    DecryptedDataTuple tuple = EncryptionService.decryptHybridWithSignature(sealedAndSignedVO, keyRingVO.getEncryptionKeyPair().getPrivate());
                     if (tuple.payload instanceof Ping &&
                             ((Ping) tuple.payload).nonce == payload.nonce &&
                             ((Ping) tuple.payload).lastRoundTripTime == payload.lastRoundTripTime) {

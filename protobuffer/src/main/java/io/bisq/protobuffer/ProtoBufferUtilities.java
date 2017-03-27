@@ -29,8 +29,8 @@ import io.bisq.protobuffer.payload.alert.AlertPayload;
 import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
 import io.bisq.protobuffer.payload.arbitration.*;
 import io.bisq.protobuffer.payload.btc.RawTransactionInput;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
-import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
+import io.bisq.protobuffer.payload.crypto.SealedAndSignedPayload;
 import io.bisq.protobuffer.payload.dao.compensation.CompensationRequestPayload;
 import io.bisq.protobuffer.payload.filter.Filter;
 import io.bisq.protobuffer.payload.filter.PaymentAccountFilter;
@@ -45,6 +45,8 @@ import io.bisq.protobuffer.payload.payment.*;
 import io.bisq.protobuffer.payload.trade.Contract;
 import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
 import io.bisq.vo.alert.AlertVO;
+import io.bisq.vo.crypto.PubKeyRingVO;
+import io.bisq.vo.crypto.SealedAndSignedVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.WriterOutputStream;
 import org.bitcoinj.core.Coin;
@@ -186,7 +188,8 @@ public class ProtoBufferUtilities {
 
     private static Message getOfferAvailabilityRequest(PB.Envelope envelope) {
         PB.OfferAvailabilityRequest msg = envelope.getOfferAvailabilityRequest();
-        return new OfferAvailabilityRequest(msg.getOfferId(), getPubKeyRing(msg.getPubKeyRing()), msg.getTakersTradePrice());
+        return new OfferAvailabilityRequest(msg.getOfferId(), getPubKeyRingPayload(msg.getPubKeyRingPayload()),
+                msg.getTakersTradePrice());
 
     }
 
@@ -254,7 +257,7 @@ public class ProtoBufferUtilities {
                 payDepositRequest.getChangeOutputAddress(),
                 payDepositRequest.getTakerMultiSigPubKey().toByteArray(),
                 payDepositRequest.getTakerPayoutAddressString(),
-                getPubKeyRing(payDepositRequest.getTakerPubKeyRing()),
+                getPubKeyRingPayload(payDepositRequest.getTakerPubKeyRingPayload()),
                 getPaymentAccountPayload(payDepositRequest.getTakerPaymentAccountPayload()),
                 payDepositRequest.getTakerAccountId(),
                 payDepositRequest.getTakeOfferFeeTxId(),
@@ -300,12 +303,23 @@ public class ProtoBufferUtilities {
     }
 
     private static Dispute getDispute(PB.Dispute dispute) {
-        return new Dispute(dispute.getTradeId(), dispute.getTraderId(),
-                dispute.getDisputeOpenerIsBuyer(), dispute.getDisputeOpenerIsMaker(),
-                getPubKeyRing(dispute.getTraderPubKeyRing()), new Date(dispute.getTradeDate()), getContract(dispute.getContract()),
-                dispute.getContractHash().toByteArray(), dispute.getDepositTxSerialized().toByteArray(), dispute.getPayoutTxSerialized().toByteArray(),
-                dispute.getDepositTxId(), dispute.getPayoutTxId(), dispute.getContractAsJson(), dispute.getMakerContractSignature(),
-                dispute.getTakerContractSignature(), getPubKeyRing(dispute.getArbitratorPubKeyRing()), dispute.getIsSupportTicket());
+        return new Dispute(dispute.getTradeId(),
+                dispute.getTraderId(),
+                dispute.getDisputeOpenerIsBuyer(),
+                dispute.getDisputeOpenerIsMaker(),
+                getPubKeyRingPayload(dispute.getTraderPubKeyRingPayload()),
+                new Date(dispute.getTradeDate()),
+                getContract(dispute.getContract()),
+                dispute.getContractHash().toByteArray(),
+                dispute.getDepositTxSerialized().toByteArray(),
+                dispute.getPayoutTxSerialized().toByteArray(),
+                dispute.getDepositTxId(),
+                dispute.getPayoutTxId(),
+                dispute.getContractAsJson(),
+                dispute.getMakerContractSignature(),
+                dispute.getTakerContractSignature(),
+                getPubKeyRingPayload(dispute.getArbitratorPubKeyRingPayload()),
+                dispute.getIsSupportTicket());
 
     }
 
@@ -323,8 +337,8 @@ public class ProtoBufferUtilities {
                 contract.getTakerAccountId(),
                 getPaymentAccountPayload(contract.getMakerPaymentAccountPayload()),
                 getPaymentAccountPayload(contract.getTakerPaymentAccountPayload()),
-                getPubKeyRing(contract.getMakerPubKeyRing()),
-                getPubKeyRing(contract.getTakerPubKeyRing()),
+                getPubKeyRingPayload(contract.getMakerPubKeyRingPayload()),
+                getPubKeyRingPayload(contract.getTakerPubKeyRingPayload()),
                 contract.getMakerPayoutAddressString(),
                 contract.getTakerPayoutAddressString(),
                 contract.getMakerBtcPubKey().toByteArray(),
@@ -485,7 +499,7 @@ public class ProtoBufferUtilities {
         return new OfferPayload(pbOffer.getId(),
                 pbOffer.getDate(),
                 getNodeAddress(pbOffer.getMakerNodeAddress()),
-                getPubKeyRing(pbOffer.getPubKeyRing()),
+                getPubKeyRingPayload(pbOffer.getPubKeyRingPayload()),
                 getDirection(pbOffer.getDirection()),
                 pbOffer.getPrice(),
                 pbOffer.getMarketPriceMargin(),
@@ -620,7 +634,7 @@ public class ProtoBufferUtilities {
                 storagePayload = new Arbitrator(getNodeAddress(arbitrator.getNodeAddress()),
                         arbitrator.getBtcPubKey().toByteArray(),
                         arbitrator.getBtcAddress(),
-                        getPubKeyRing(arbitrator.getPubKeyRing()),
+                        getPubKeyRingPayload(arbitrator.getPubKeyRingPayload()),
                         strings,
                         date,
                         arbitrator.getRegistrationPubKey().toByteArray(),
@@ -636,7 +650,7 @@ public class ProtoBufferUtilities {
                 date = new Date(mediator.getRegistrationDate());
                 emailAddress = mediator.getEmailAddress().isEmpty() ? null : mediator.getEmailAddress();
                 storagePayload = new Mediator(getNodeAddress(mediator.getNodeAddress()),
-                        getPubKeyRing(mediator.getPubKeyRing()),
+                        getPubKeyRingPayload(mediator.getPubKeyRingPayload()),
                         strings,
                         date,
                         mediator.getRegistrationPubKey().toByteArray(),
@@ -693,9 +707,7 @@ public class ProtoBufferUtilities {
                         protoTrade.getTradeAmount(),
                         protoTrade.getTradeDate(),
                         protoTrade.getDepositTxId(),
-                        new PubKeyRing(protoTrade.getPubKeyRing().getSignaturePubKeyBytes().toByteArray(),
-                                protoTrade.getPubKeyRing().getEncryptionPubKeyBytes().toByteArray(),
-                                protoTrade.getPubKeyRing().getPgpPubKeyAsPem()),
+                        getPubKeyRingPayload(protoTrade.getPubKeyRingPayload()),
                         extraDataMapMap);
                 break;
             case MAILBOX_STORAGE_PAYLOAD:
@@ -723,10 +735,10 @@ public class ProtoBufferUtilities {
     }
 
     @NotNull
-    private static PubKeyRing getPubKeyRing(PB.PubKeyRing pubKeyRing) {
-        return new PubKeyRing(pubKeyRing.getSignaturePubKeyBytes().toByteArray(),
-                pubKeyRing.getEncryptionPubKeyBytes().toByteArray(),
-                pubKeyRing.getPgpPubKeyAsPem());
+    private static PubKeyRingPayload getPubKeyRingPayload(PB.PubKeyRingPayload pubKeyRingPayload) {
+        return new PubKeyRingPayload(new PubKeyRingVO(pubKeyRingPayload.getSignaturePubKeyBytes().toByteArray(),
+                pubKeyRingPayload.getEncryptionPubKeyBytes().toByteArray(),
+                pubKeyRingPayload.getPgpPubKeyAsPem()));
     }
 
     private static NodeAddress getNodeAddress(PB.NodeAddress protoNode) {
@@ -755,10 +767,16 @@ public class ProtoBufferUtilities {
     private static PrefixedSealedAndSignedMessage getPrefixedSealedAndSignedMessage(PB.PrefixedSealedAndSignedMessage msg) {
         NodeAddress nodeAddress;
         nodeAddress = new NodeAddress(msg.getNodeAddress().getHostName(), msg.getNodeAddress().getPort());
-        SealedAndSigned sealedAndSigned = new SealedAndSigned(msg.getSealedAndSigned().getEncryptedSecretKey().toByteArray(),
-                msg.getSealedAndSigned().getEncryptedPayloadWithHmac().toByteArray(),
-                msg.getSealedAndSigned().getSignature().toByteArray(), msg.getSealedAndSigned().getSigPublicKeyBytes().toByteArray());
-        return new PrefixedSealedAndSignedMessage(nodeAddress, sealedAndSigned, msg.getAddressPrefixHash().toByteArray(), msg.getUid());
+        final PB.SealedAndSignedPayload pbSealedAndSignedPayload = msg.getSealedAndSignedPayload();
+        SealedAndSignedVO sealedAndSignedVO = new SealedAndSignedVO(
+                pbSealedAndSignedPayload.getEncryptedSecretKey().toByteArray(),
+                pbSealedAndSignedPayload.getEncryptedPayloadWithHmac().toByteArray(),
+                pbSealedAndSignedPayload.getSignature().toByteArray(),
+                pbSealedAndSignedPayload.getSigPublicKeyBytes().toByteArray());
+        return new PrefixedSealedAndSignedMessage(nodeAddress,
+                new SealedAndSignedPayload(sealedAndSignedVO),
+                msg.getAddressPrefixHash().toByteArray(),
+                msg.getUid());
     }
 
     @NotNull
@@ -766,8 +784,7 @@ public class ProtoBufferUtilities {
         HashSet<ProtectedStorageEntry> set = new HashSet<>(
                 envelope.getGetDataResponse().getDataSetList()
                         .stream()
-                        .map(protectedStorageEntry ->
-                                getProtectedOrMailboxStorageEntry(protectedStorageEntry)).collect(Collectors.toList()));
+                        .map(ProtoBufferUtilities::getProtectedOrMailboxStorageEntry).collect(Collectors.toList()));
         return new GetDataResponse(set, envelope.getGetDataResponse().getRequestNonce(), envelope.getGetDataResponse().getIsGetUpdatedDataResponse());
     }
 

@@ -41,16 +41,16 @@ import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.SendMailboxMessageListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.arbitration.*;
 import io.bisq.protobuffer.payload.arbitration.Attachment;
 import io.bisq.protobuffer.payload.arbitration.Dispute;
 import io.bisq.protobuffer.payload.arbitration.DisputeResult;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.trade.Contract;
 import io.bisq.protobuffer.persistence.arbitration.DisputeList;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.AddressFormatException;
@@ -76,7 +76,7 @@ public class DisputeManager {
     private final ClosedTradableManager closedTradableManager;
     private final OpenOfferManager openOfferManager;
     private final P2PService p2PService;
-    private final KeyRing keyRing;
+    private final KeyRingVO keyRingVO;
     private final Storage<DisputeList<Dispute>> disputeStorage;
     private final DisputeList<Dispute> disputes;
     transient private final ObservableList<Dispute> disputesObservableList;
@@ -99,7 +99,7 @@ public class DisputeManager {
                           TradeManager tradeManager,
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
-                          KeyRing keyRing,
+                          KeyRingVO keyRingVO,
                           @Named(Storage.DIR_KEY) File storageDir) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
@@ -107,7 +107,7 @@ public class DisputeManager {
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.openOfferManager = openOfferManager;
-        this.keyRing = keyRing;
+        this.keyRingVO = keyRingVO;
 
         disputeStorage = new Storage<>(storageDir);
         disputes = new DisputeList<>(disputeStorage);
@@ -221,7 +221,7 @@ public class DisputeManager {
 
                 DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                         dispute.getTradeId(),
-                        keyRing.getPubKeyRing().hashCode(),
+                        keyRingVO.getPubKeyRingVO().hashCode(),
                         false,
                         Res.get("support.systemMsg", sysMsg),
                         null,
@@ -239,7 +239,7 @@ public class DisputeManager {
                 }
 
                 p2PService.sendEncryptedMailboxMessage(dispute.getContract().arbitratorNodeAddress,
-                        dispute.getArbitratorPubKeyRing(),
+                        dispute.getArbitratorPubKeyRingPayload().get(),
                         new OpenNewDisputeMessage(dispute, p2PService.getAddress(),
                                 UUID.randomUUID().toString()),
                         new SendMailboxMessageListener() {
@@ -278,14 +278,15 @@ public class DisputeManager {
     // arbitrator sends that to trading peer when he received openDispute request
     private void sendPeerOpenedDisputeMessage(Dispute disputeFromOpener) {
         Contract contractFromOpener = disputeFromOpener.getContract();
-        PubKeyRing pubKeyRing = disputeFromOpener.isDisputeOpenerIsBuyer() ? contractFromOpener.getSellerPubKeyRing() : contractFromOpener.getBuyerPubKeyRing();
+        PubKeyRingPayload pubKeyRingPayload = disputeFromOpener.isDisputeOpenerIsBuyer() ?
+                contractFromOpener.getSellerPubKeyRingPayload() : contractFromOpener.getBuyerPubKeyRingPayload();
         Dispute dispute = new Dispute(
                 disputeStorage,
                 disputeFromOpener.getTradeId(),
-                pubKeyRing.hashCode(),
+                pubKeyRingPayload.hashCode(),
                 !disputeFromOpener.isDisputeOpenerIsBuyer(),
                 !disputeFromOpener.isDisputeOpenerIsMaker(),
-                pubKeyRing,
+                pubKeyRingPayload,
                 disputeFromOpener.getTradeDate(),
                 contractFromOpener,
                 disputeFromOpener.getContractHash(),
@@ -296,7 +297,7 @@ public class DisputeManager {
                 disputeFromOpener.getContractAsJson(),
                 disputeFromOpener.getMakerContractSignature(),
                 disputeFromOpener.getTakerContractSignature(),
-                disputeFromOpener.getArbitratorPubKeyRing(),
+                disputeFromOpener.getArbitratorPubKeyRingPayload(),
                 disputeFromOpener.isSupportTicket()
         );
         final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
@@ -306,7 +307,7 @@ public class DisputeManager {
                     : Res.get("support.peerOpenedDispute", disputeInfo);
             DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                     dispute.getTradeId(),
-                    keyRing.getPubKeyRing().hashCode(),
+                    keyRingVO.getPubKeyRingVO().hashCode(),
                     false,
                     Res.get("support.systemMsg", sysMsg),
                     null,
@@ -323,11 +324,13 @@ public class DisputeManager {
 
             // we mirrored dispute already!
             Contract contract = dispute.getContract();
-            PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerPubKeyRing() : contract.getSellerPubKeyRing();
-            NodeAddress peerNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
+            PubKeyRingPayload peersPubKeyRingPayload = dispute.isDisputeOpenerIsBuyer() ?
+                    contract.getBuyerPubKeyRingPayload() : contract.getSellerPubKeyRingPayload();
+            NodeAddress peerNodeAddress = dispute.isDisputeOpenerIsBuyer() ?
+                    contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
             log.trace("sendPeerOpenedDisputeMessage to peerAddress " + peerNodeAddress);
             p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
-                    peersPubKeyRing,
+                    peersPubKeyRingPayload.get(),
                     new PeerOpenedDisputeMessage(dispute,
                             p2PService.getAddress(),
                             UUID.randomUUID().toString()),
@@ -358,7 +361,7 @@ public class DisputeManager {
     public DisputeCommunicationMessage sendDisputeDirectMessage(Dispute dispute, String text, ArrayList<Attachment> attachments) {
         DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                 dispute.getTradeId(),
-                dispute.getTraderPubKeyRing().hashCode(),
+                dispute.getTraderPubKeyRingPayload().hashCode(),
                 isTrader(dispute),
                 text,
                 null,
@@ -370,28 +373,28 @@ public class DisputeManager {
         );
         
         disputeCommunicationMessage.addAllAttachments(attachments);
-        PubKeyRing receiverPubKeyRing = null;
+        PubKeyRingPayload receiverPubKeyRingPayload = null;
         NodeAddress peerNodeAddress = null;
         if (isTrader(dispute)) {
             dispute.addDisputeMessage(disputeCommunicationMessage);
-            receiverPubKeyRing = dispute.getArbitratorPubKeyRing();
+            receiverPubKeyRingPayload = dispute.getArbitratorPubKeyRingPayload();
             peerNodeAddress = dispute.getContract().arbitratorNodeAddress;
         } else if (isArbitrator(dispute)) {
             if (!disputeCommunicationMessage.isSystemMessage())
                 dispute.addDisputeMessage(disputeCommunicationMessage);
-            receiverPubKeyRing = dispute.getTraderPubKeyRing();
+            receiverPubKeyRingPayload = dispute.getTraderPubKeyRingPayload();
             Contract contract = dispute.getContract();
-            if (contract.getBuyerPubKeyRing().equals(receiverPubKeyRing))
+            if (contract.getBuyerPubKeyRingPayload().equals(receiverPubKeyRingPayload))
                 peerNodeAddress = contract.getBuyerNodeAddress();
             else
                 peerNodeAddress = contract.getSellerNodeAddress();
         } else {
             log.error("That must not happen. Trader cannot communicate to other trader.");
         }
-        if (receiverPubKeyRing != null) {
+        if (receiverPubKeyRingPayload != null) {
             log.trace("sendDisputeDirectMessage to peerAddress " + peerNodeAddress);
             p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
-                    receiverPubKeyRing,
+                    receiverPubKeyRingPayload.get(),
                     disputeCommunicationMessage,
                     new SendMailboxMessageListener() {
                         @Override
@@ -419,7 +422,7 @@ public class DisputeManager {
     public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
         DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                 dispute.getTradeId(),
-                dispute.getTraderPubKeyRing().hashCode(),
+                dispute.getTraderPubKeyRingPayload().hashCode(),
                 false,
                 text,
                 null,
@@ -435,12 +438,12 @@ public class DisputeManager {
 
         NodeAddress peerNodeAddress;
         Contract contract = dispute.getContract();
-        if (contract.getBuyerPubKeyRing().equals(dispute.getTraderPubKeyRing()))
+        if (contract.getBuyerPubKeyRingPayload().equals(dispute.getTraderPubKeyRingPayload()))
             peerNodeAddress = contract.getBuyerNodeAddress();
         else
             peerNodeAddress = contract.getSellerNodeAddress();
         p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
-                dispute.getTraderPubKeyRing(),
+                dispute.getTraderPubKeyRingPayload().get(),
                 new DisputeResultMessage(disputeResult, p2PService.getAddress(),
                         UUID.randomUUID().toString()),
                 new SendMailboxMessageListener() {
@@ -464,11 +467,13 @@ public class DisputeManager {
 
     // winner (or buyer in case of 50/50) sends tx to other peer
     private void sendPeerPublishedPayoutTxMessage(Transaction transaction, Dispute dispute, Contract contract) {
-        PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
-        NodeAddress peerNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerNodeAddress() : contract.getBuyerNodeAddress();
+        PubKeyRingPayload peersPubKeyRingPayload = dispute.isDisputeOpenerIsBuyer() ?
+                contract.getSellerPubKeyRingPayload() : contract.getBuyerPubKeyRingPayload();
+        NodeAddress peerNodeAddress = dispute.isDisputeOpenerIsBuyer() ?
+                contract.getSellerNodeAddress() : contract.getBuyerNodeAddress();
         log.trace("sendPeerPublishedPayoutTxMessage to peerAddress " + peerNodeAddress);
         p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
-                peersPubKeyRing,
+                peersPubKeyRingPayload.get(),
                 new PeerPublishedPayoutTxMessage(transaction.bitcoinSerialize(),
                         dispute.getTradeId(),
                         p2PService.getAddress(),
@@ -603,7 +608,7 @@ public class DisputeManager {
                 // more BTC as he has deposited
                 final Contract contract = dispute.getContract();
 
-                boolean isBuyer = keyRing.getPubKeyRing().equals(contract.getBuyerPubKeyRing());
+                boolean isBuyer = keyRingVO.getPubKeyRingVO().equals(contract.getBuyerPubKeyRingPayload().get());
                 DisputeResult.Winner publisher = disputeResult.getWinner();
 
                 // Sometimes the user who receives the trade amount is never online, so we might want to
@@ -754,11 +759,11 @@ public class DisputeManager {
     }
 
     public boolean isTrader(Dispute dispute) {
-        return keyRing.getPubKeyRing().equals(dispute.getTraderPubKeyRing());
+        return keyRingVO.getPubKeyRingVO().equals(dispute.getTraderPubKeyRingPayload().get());
     }
 
     private boolean isArbitrator(Dispute dispute) {
-        return keyRing.getPubKeyRing().equals(dispute.getArbitratorPubKeyRing());
+        return keyRingVO.getPubKeyRingVO().equals(dispute.getArbitratorPubKeyRingPayload().get());
     }
 
     private boolean isArbitrator(DisputeResult disputeResult) {

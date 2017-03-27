@@ -15,28 +15,30 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.protobuffer.crypto;
+package io.bisq.vo.crypto;
 
+import io.bisq.common.crypto.Encryption;
+import io.bisq.common.crypto.KeyStorage;
+import io.bisq.common.crypto.PGP;
 import io.bisq.common.crypto.Sig;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.Setter;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPPublicKey;
 
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 import javax.inject.Inject;
 import java.security.KeyPair;
 
-@Getter
-@EqualsAndHashCode
+@Value
 @Slf4j
-public class KeyRing {
+@Immutable
+public class KeyRingVO {
     private final KeyPair signatureKeyPair;
     private final KeyPair encryptionKeyPair;
-    private final PubKeyRing pubKeyRing;
+    private final PubKeyRingVO pubKeyRingVO;
 
     // We generate by default a PGP keypair but the user can set his own if he prefers.
     // Not impl. yet but prepared in data structure
@@ -46,7 +48,7 @@ public class KeyRing {
     private PGPKeyPair pgpKeyPair;
 
     @Inject
-    public KeyRing(KeyStorage keyStorage) {
+    public KeyRingVO(KeyStorage keyStorage) {
         if (keyStorage.allKeyFilesExist()) {
             signatureKeyPair = keyStorage.loadKeyPair(KeyStorage.KeyEntry.MSG_SIGNATURE);
             encryptionKeyPair = keyStorage.loadKeyPair(KeyStorage.KeyEntry.MSG_ENCRYPTION);
@@ -64,7 +66,7 @@ public class KeyRing {
         }
         // TODO  remove Nullable once impl.
         final PGPPublicKey pgpPublicKey = pgpKeyPair != null ? pgpKeyPair.getPublicKey() : null;
-        pubKeyRing = new PubKeyRing(signatureKeyPair.getPublic(), encryptionKeyPair.getPublic(), pgpPublicKey);
+        pubKeyRingVO = new PubKeyRingVO(signatureKeyPair.getPublic(), encryptionKeyPair.getPublic(), pgpPublicKey);
     }
 
     // Don't print keys for security reasons
@@ -73,7 +75,7 @@ public class KeyRing {
         return "KeyRing{" +
                 "signatureKeyPair.hashCode()=" + signatureKeyPair.hashCode() +
                 ", encryptionKeyPair.hashCode()=" + encryptionKeyPair.hashCode() +
-                ", pubKeyRing.hashCode()=" + pubKeyRing.hashCode() +
+                ", pubKeyRing.hashCode()=" + pubKeyRingVO.hashCode() +
                 '}';
     }
 }

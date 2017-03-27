@@ -1,10 +1,7 @@
-package io.bisq.wire.crypto;
+package io.bisq.common.crypto;
 
-import io.bisq.common.crypto.CryptoException;
-import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.crypto.KeyStorage;
+import io.bisq.vo.crypto.KeyRingVO;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -24,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 public class SigTest {
     private static final Logger log = LoggerFactory.getLogger(SigTest.class);
-    private KeyRing keyRing;
+    private KeyRingVO keyRingVO;
     private File dir;
 
     @Before
@@ -34,7 +31,7 @@ public class SigTest {
         dir.delete();
         dir.mkdir();
         KeyStorage keyStorage = new KeyStorage(dir);
-        keyRing = new KeyRing(keyStorage);
+        keyRingVO = new KeyRingVO(keyStorage);
     }
 
     @After
@@ -51,14 +48,14 @@ public class SigTest {
             String msg = String.valueOf(new Random().nextInt());
             String sig = null;
             try {
-                sig = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), msg);
+                sig = Sig.sign(keyRingVO.getSignatureKeyPair().getPrivate(), msg);
             } catch (CryptoException e) {
                 log.error("sign failed");
                 e.printStackTrace();
                 assertTrue(false);
             }
             try {
-                assertTrue(Sig.verify(keyRing.getSignatureKeyPair().getPublic(), msg, sig));
+                assertTrue(Sig.verify(keyRingVO.getSignatureKeyPair().getPublic(), msg, sig));
             } catch (CryptoException e) {
                 log.error("verify failed");
                 e.printStackTrace();

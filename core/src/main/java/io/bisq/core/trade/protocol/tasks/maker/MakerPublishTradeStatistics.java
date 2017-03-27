@@ -20,6 +20,7 @@ package io.bisq.core.trade.protocol.tasks.maker;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
 
 public class MakerPublishTradeStatistics extends TradeTask {
@@ -37,7 +38,7 @@ public class MakerPublishTradeStatistics extends TradeTask {
                     trade.getTradeAmount(),
                     trade.getDate(),
                     (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                    processModel.getPubKeyRing());
+                    new PubKeyRingPayload(processModel.getPubKeyRing()));
             processModel.getP2PService().addData(tradeStatistics, true);
             complete();
         } catch (Throwable t) {

@@ -39,11 +39,11 @@ import io.bisq.core.trade.protocol.TradeProtocol;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.arbitration.Mediator;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.trade.Contract;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.beans.property.*;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -284,7 +284,7 @@ public abstract class Trade implements Tradable, Model {
                      OpenOfferManager openOfferManager,
                      User user,
                      FilterManager filterManager,
-                     KeyRing keyRing,
+                     KeyRingVO keyRingVO,
                      boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
         Log.traceCall();
@@ -297,7 +297,7 @@ public abstract class Trade implements Tradable, Model {
                 arbitratorManager,
                 user,
                 filterManager,
-                keyRing,
+                keyRingVO,
                 useSavingsWallet,
                 fundsNeededForTrade);
 
@@ -374,7 +374,7 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {
-        log.info("Trade.setState: " + state);
+        log.info("state={}, id=", state, getShortId());
         if (state.getPhase().ordinal() >= this.state.getPhase().ordinal()) {
             boolean changed = this.state != state;
             this.state = state;

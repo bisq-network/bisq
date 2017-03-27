@@ -20,6 +20,7 @@ package io.bisq.core.trade.protocol.tasks.taker;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,7 +48,7 @@ public class TakerPublishTradeStatistics extends TradeTask {
                                 trade.getTradeAmount(),
                                 trade.getDate(),
                                 (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                                processModel.getPubKeyRing());
+                                new PubKeyRingPayload(processModel.getPubKeyRing()));
 
                         final List<Integer> requiredCapabilities = tradeStatistics.getRequiredCapabilities();
                         final List<Integer> supportedCapabilities = c.getSupportedCapabilities();

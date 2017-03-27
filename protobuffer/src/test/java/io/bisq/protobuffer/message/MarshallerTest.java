@@ -1,4 +1,4 @@
-package io.bisq.wire.message;
+package io.bisq.protobuffer.message;
 
 import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;

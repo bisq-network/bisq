@@ -22,7 +22,7 @@ import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.payload.btc.RawTransactionInput;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import lombok.EqualsAndHashCode;
@@ -51,7 +51,7 @@ public final class PayDepositRequest extends TradeMessage {
     @Nullable
     public final String changeOutputAddress;
     public final String takerPayoutAddressString;
-    public final PubKeyRing takerPubKeyRing;
+    public final PubKeyRingPayload takerPubKeyRingPayload;
     public final PaymentAccountPayload takerPaymentAccountPayload;
     public final String takerAccountId;
     public final String takeOfferFeeTxId;
@@ -72,7 +72,7 @@ public final class PayDepositRequest extends TradeMessage {
                              String changeOutputAddress,
                              byte[] takerMultiSigPubKey,
                              String takerPayoutAddressString,
-                             PubKeyRing takerPubKeyRing,
+                             PubKeyRingPayload takerPubKeyRingPayload,
                              PaymentAccountPayload takerPaymentAccountPayload,
                              String takerAccountId,
                              String takeOfferFeeTxId,
@@ -90,7 +90,7 @@ public final class PayDepositRequest extends TradeMessage {
         this.changeOutputValue = changeOutputValue;
         this.changeOutputAddress = changeOutputAddress;
         this.takerPayoutAddressString = takerPayoutAddressString;
-        this.takerPubKeyRing = takerPubKeyRing;
+        this.takerPubKeyRingPayload = takerPubKeyRingPayload;
         this.takerMultiSigPubKey = takerMultiSigPubKey;
         this.takerPaymentAccountPayload = takerPaymentAccountPayload;
         this.takerAccountId = takerAccountId;
@@ -115,7 +115,7 @@ public final class PayDepositRequest extends TradeMessage {
                         .map(rawTransactionInput -> rawTransactionInput.toProto()).collect(Collectors.toList()))
                 .setChangeOutputValue(changeOutputValue)
                 .setTakerPayoutAddressString(takerPayoutAddressString)
-                .setTakerPubKeyRing(takerPubKeyRing.toProto())
+                .setTakerPubKeyRingPayload(takerPubKeyRingPayload.toProto())
                 .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProto())
                 .setTakerAccountId(takerAccountId)
                 .setTakeOfferFeeTxId(takeOfferFeeTxId)
@@ -143,7 +143,7 @@ public final class PayDepositRequest extends TradeMessage {
                 ", changeOutputValue=" + changeOutputValue +
                 ", changeOutputAddress='" + changeOutputAddress + '\'' +
                 ", takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
-                ", takerPubKeyRing=" + takerPubKeyRing +
+                ", takerPubKeyRing=" + takerPubKeyRingPayload +
                 ", takerPaymentAccountPayload=" + takerPaymentAccountPayload +
                 ", takerAccountId='" + takerAccountId + '\'' +
                 ", takeOfferFeeTxId='" + takeOfferFeeTxId + '\'' +

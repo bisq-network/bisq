@@ -15,14 +15,9 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.protobuffer.crypto;
+package io.bisq.common.crypto;
 
-import io.bisq.common.crypto.CryptoException;
-import io.bisq.common.crypto.Sig;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.spongycastle.util.encoders.Hex;
 
 import javax.crypto.Cipher;
@@ -35,9 +30,8 @@ import java.security.*;
 import java.util.Arrays;
 
 // TODO is Hmac needed/make sense?
+@Slf4j
 public class Encryption {
-    private static final Logger log = LoggerFactory.getLogger(Encryption.class);
-
     public static final String ASYM_KEY_ALGO = "RSA";
     private static final String ASYM_CIPHER = "RSA/None/OAEPWithSHA256AndMGF1Padding";
 
@@ -61,11 +55,6 @@ public class Encryption {
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Symmetric
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     private static byte[] encrypt(byte[] payload, SecretKey secretKey) throws CryptoException {
         try {
             Cipher cipher = Cipher.getInstance(SYM_CIPHER, "BC");
@@ -86,11 +75,6 @@ public class Encryption {
             throw new CryptoException(e);
         }
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Hmac
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private static byte[] getPayloadWithHmac(byte[] payload, SecretKey secretKey) {
         byte[] payloadWithHmac;
@@ -124,7 +108,6 @@ public class Encryption {
         return payloadWithHmac;
     }
 
-
     private static boolean verifyHmac(byte[] message, byte[] hmac, SecretKey secretKey) {
         try {
             byte[] hmacTest = getHmac(message, secretKey);
@@ -142,16 +125,7 @@ public class Encryption {
         return mac.doFinal(payload);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Symmetric with Hmac
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private static byte[] encryptPayloadWithHmac(Message object, SecretKey secretKey) throws CryptoException {
-        return encryptPayloadWithHmac(object.toProto().toByteArray(), secretKey);
-    }
-
-    private static byte[] encryptPayloadWithHmac(byte[] payload, SecretKey secretKey) throws CryptoException {
+    public static byte[] encryptPayloadWithHmac(byte[] payload, SecretKey secretKey) throws CryptoException {
         return encrypt(getPayloadWithHmac(payload, secretKey), secretKey);
     }
 
@@ -171,12 +145,7 @@ public class Encryption {
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Asymmetric
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private static byte[] encryptSecretKey(SecretKey secretKey, PublicKey publicKey) throws CryptoException {
+    public static byte[] encryptSecretKey(SecretKey secretKey, PublicKey publicKey) throws CryptoException {
         try {
             Cipher cipher = Cipher.getInstance(ASYM_CIPHER, "BC");
             cipher.init(Cipher.WRAP_MODE, publicKey);
@@ -198,44 +167,7 @@ public class Encryption {
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Hybrid with signature of asymmetric key
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * @param payload             The data to encrypt.
-     * @param signatureKeyPair    The key pair for signing.
-     * @param encryptionPublicKey The public key used for encryption.
-     * @return A SealedAndSigned object.
-     * @throws CryptoException
-     */
-    public static SealedAndSigned encryptHybridWithSignature(Message payload, KeyPair signatureKeyPair,
-                                                             PublicKey encryptionPublicKey)
-            throws CryptoException {
-        // Create a symmetric key
-        SecretKey secretKey = generateSecretKey();
-
-        // Encrypt secretKey with receiver's publicKey 
-        byte[] encryptedSecretKey = encryptSecretKey(secretKey, encryptionPublicKey);
-
-        // Encrypt with sym key payload with appended hmac
-        byte[] encryptedPayloadWithHmac = encryptPayloadWithHmac(payload, secretKey);
-
-        // sign hash of encryptedPayloadWithHmac
-        byte[] hash = Hash.getHash(encryptedPayloadWithHmac);
-        byte[] signature = Sig.sign(signatureKeyPair.getPrivate(), hash);
-
-        // Pack all together
-        return new SealedAndSigned(encryptedSecretKey, encryptedPayloadWithHmac, signature, signatureKeyPair.getPublic());
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private static SecretKey generateSecretKey() {
+    public static SecretKey generateSecretKey() {
         try {
             KeyGenerator keyPairGenerator = KeyGenerator.getInstance(SYM_KEY_ALGO, "BC");
             keyPairGenerator.init(256);

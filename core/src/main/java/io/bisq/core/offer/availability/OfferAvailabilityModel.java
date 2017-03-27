@@ -21,8 +21,8 @@ import io.bisq.common.taskrunner.Model;
 import io.bisq.core.offer.Offer;
 import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.message.offer.OfferAvailabilityResponse;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.vo.crypto.PubKeyRingVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,17 +30,17 @@ public class OfferAvailabilityModel implements Model {
     private static final Logger log = LoggerFactory.getLogger(OfferAvailabilityModel.class);
 
     public final Offer offer;
-    public final PubKeyRing pubKeyRing;
+    public final PubKeyRingVO pubKeyRingVO;
     public final P2PService p2PService;
 
     private NodeAddress peerNodeAddress;
     private OfferAvailabilityResponse message;
 
     public OfferAvailabilityModel(Offer offer,
-                                  PubKeyRing pubKeyRing,
+                                  PubKeyRingVO pubKeyRingVO,
                                   P2PService p2PService) {
         this.offer = offer;
-        this.pubKeyRing = pubKeyRing;
+        this.pubKeyRingVO = pubKeyRingVO;
         this.p2PService = p2PService;
     }
 

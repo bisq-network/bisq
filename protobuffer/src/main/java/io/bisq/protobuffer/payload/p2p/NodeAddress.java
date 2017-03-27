@@ -1,9 +1,9 @@
 package io.bisq.protobuffer.payload.p2p;
 
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.Hash;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.protobuffer.crypto.Hash;
 import io.bisq.protobuffer.payload.Payload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

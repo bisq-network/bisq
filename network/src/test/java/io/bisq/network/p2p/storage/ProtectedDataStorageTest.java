@@ -2,6 +2,7 @@ package io.bisq.network.p2p.storage;
 
 import io.bisq.common.UserThread;
 import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.network.crypto.EncryptionService;
@@ -9,12 +10,11 @@ import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.storage.mocks.MockData;
-import io.bisq.protobuffer.crypto.Hash;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.crypto.KeyStorage;
+import io.bisq.protobuffer.crypto.ProtoCryptoUtil;
 import io.bisq.protobuffer.message.p2p.storage.RefreshTTLMessage;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.vo.crypto.KeyRingVO;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -42,7 +42,7 @@ public class ProtectedDataStorageTest {
     private EncryptionService encryptionService1, encryptionService2;
     private P2PDataStorage dataStorage1;
     private KeyPair storageSignatureKeyPair1, storageSignatureKeyPair2;
-    private KeyRing keyRing1, keyRing2;
+    private KeyRingVO keyRingVO1, keyRingVO2;
     private MockData mockData;
     private final int sleepTime = 100;
     private File dir1;
@@ -61,21 +61,21 @@ public class ProtectedDataStorageTest {
         UserThread.setExecutor(Executors.newSingleThreadExecutor());
         P2PDataStorage.CHECK_TTL_INTERVAL_SEC = 500;
 
-        keyRing1 = new KeyRing(new KeyStorage(dir1));
+        keyRingVO1 = new KeyRingVO(new KeyStorage(dir1));
 
-        storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
-        encryptionService1 = new EncryptionService(keyRing1);
+        storageSignatureKeyPair1 = keyRingVO1.getSignatureKeyPair();
+        encryptionService1 = new EncryptionService(keyRingVO1);
         P2PService p2PService = TestUtils.getAndStartSeedNode(8001, useClearNet, seedNodes).getSeedNodeP2PService();
         networkNode1 = p2PService.getNetworkNode();
         peerManager1 = p2PService.getPeerManager();
         dataStorage1 = p2PService.getP2PDataStorage();
 
         // for mailbox
-        keyRing2 = new KeyRing(new KeyStorage(dir2));
-        storageSignatureKeyPair2 = keyRing2.getSignatureKeyPair();
-        encryptionService2 = new EncryptionService(keyRing2);
+        keyRingVO2 = new KeyRingVO(new KeyStorage(dir2));
+        storageSignatureKeyPair2 = keyRingVO2.getSignatureKeyPair();
+        encryptionService2 = new EncryptionService(keyRingVO2);
 
-        mockData = new MockData("mockData", keyRing1.getSignatureKeyPair().getPublic());
+        mockData = new MockData("mockData", keyRingVO1.getSignatureKeyPair().getPublic());
         Thread.sleep(sleepTime);
     }
 
@@ -105,7 +105,7 @@ public class ProtectedDataStorageTest {
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = ProtoCryptoUtil.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedStorageEntry dataToRemove = new ProtectedStorageEntry(data.getStoragePayload(), data.ownerPubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null, true));

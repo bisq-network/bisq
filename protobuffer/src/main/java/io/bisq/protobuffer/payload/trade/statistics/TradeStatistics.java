@@ -12,7 +12,7 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.payload.CapabilityRequiringPayload;
 import io.bisq.protobuffer.payload.LazyProcessedStoragePayload;
 import io.bisq.protobuffer.payload.PersistedStoragePayload;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.offer.OfferPayload;
 import lombok.Getter;
 import lombok.ToString;
@@ -53,7 +53,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
     public final String offerId;
     public final String depositTxId;
     @JsonExclude
-    public final PubKeyRing pubKeyRing;
+    public final PubKeyRingPayload pubKeyRingPayload;
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
     // field in a class would break that hash and therefore break the storage mechanism.
@@ -67,7 +67,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                            Coin tradeAmount,
                            Date tradeDate,
                            String depositTxId,
-                           PubKeyRing pubKeyRing) {
+                           PubKeyRingPayload pubKeyRingPayload) {
         this(offerPayload.getDirection(),
                 offerPayload.getBaseCurrencyCode(),
                 offerPayload.getCounterCurrencyCode(),
@@ -82,7 +82,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                 tradeAmount.value,
                 tradeDate.getTime(),
                 depositTxId,
-                pubKeyRing,
+                pubKeyRingPayload,
                 null);
     }
 
@@ -101,7 +101,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                            long tradeAmount,
                            long tradeDate,
                            String depositTxId,
-                           PubKeyRing pubKeyRing,
+                           PubKeyRingPayload pubKeyRingPayload,
                            @Nullable Map<String, String> extraDataMap) {
         this.direction = direction;
         this.baseCurrency = baseCurrency;
@@ -117,7 +117,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         this.tradeAmount = tradeAmount;
         this.tradeDate = tradeDate;
         this.depositTxId = depositTxId;
-        this.pubKeyRing = pubKeyRing;
+        this.pubKeyRingPayload = pubKeyRingPayload;
         this.extraDataMap = extraDataMap;
     }
 
@@ -128,7 +128,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
 
     @Override
     public PublicKey getOwnerPubKey() {
-        return pubKeyRing.getSignaturePubKey();
+        return pubKeyRingPayload.getSignaturePubKey();
     }
 
     @Override
@@ -178,13 +178,13 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
                 .setOfferMinAmount(offerMinAmount)
                 .setOfferId(offerId)
                 .setDepositTxId(depositTxId)
-                .setPubKeyRing(pubKeyRing.toProto());
+                .setPubKeyRingPayload(pubKeyRingPayload.toProto());
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
         return PB.StoragePayload.newBuilder().setTradeStatistics(builder).build();
     }
 
 
-    // We don't include the pubKeyRing as both traders might publish it if the maker uses an old
+    // We don't include the pubKeyRingPayload as both traders might publish it if the maker uses an old
     // version and update later (taker publishes first, then later maker)
     // We also don't include the trade date as that is set locally and different for maker and taker
     @Override

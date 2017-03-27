@@ -31,13 +31,13 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.message.trade.TradeMessage;
 import io.bisq.protobuffer.payload.btc.RawTransactionInput;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.filter.PaymentAccountFilter;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
+import io.bisq.vo.crypto.KeyRingVO;
+import io.bisq.vo.crypto.PubKeyRingVO;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -64,7 +64,7 @@ public class ProcessModel implements Model, Serializable {
     transient private Offer offer;
     transient private User user;
     transient private FilterManager filterManager;
-    transient private KeyRing keyRing;
+    transient private KeyRingVO keyRingVO;
     transient private P2PService p2PService;
 
     // Mutable
@@ -109,7 +109,7 @@ public class ProcessModel implements Model, Serializable {
                                          ArbitratorManager arbitratorManager,
                                          User user,
                                          FilterManager filterManager,
-                                         KeyRing keyRing,
+                                         KeyRingVO keyRingVO,
                                          boolean useSavingsWallet,
                                          Coin fundsNeededForTrade) {
         this.offer = offer;
@@ -120,7 +120,7 @@ public class ProcessModel implements Model, Serializable {
         this.arbitratorManager = arbitratorManager;
         this.user = user;
         this.filterManager = filterManager;
-        this.keyRing = keyRing;
+        this.keyRingVO = keyRingVO;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;
         this.fundsNeededForTrade = fundsNeededForTrade;
@@ -216,12 +216,12 @@ public class ProcessModel implements Model, Serializable {
         return p2PService;
     }
 
-    public PubKeyRing getPubKeyRing() {
-        return keyRing.getPubKeyRing();
+    public PubKeyRingVO getPubKeyRing() {
+        return keyRingVO.getPubKeyRingVO();
     }
 
-    public KeyRing getKeyRing() {
-        return keyRing;
+    public KeyRingVO getKeyRingVO() {
+        return keyRingVO;
     }
 
     public void setTakerAcceptedArbitratorNodeAddresses(List<NodeAddress> takerAcceptedArbitratorNodeAddresses) {

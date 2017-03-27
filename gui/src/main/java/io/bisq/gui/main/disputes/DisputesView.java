@@ -31,9 +31,9 @@ import io.bisq.gui.main.disputes.trader.TraderDisputeView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.portfolio.PortfolioView;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesView;
-import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;
@@ -54,7 +54,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     private final Navigation navigation;
     private final ArbitratorManager arbitratorManager;
     private final DisputeManager disputeManager;
-    private final KeyRing keyRing;
+    private final KeyRingVO keyRingVO;
     private final Preferences preferences;
 
     private Navigation.Listener navigationListener;
@@ -66,12 +66,12 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     @Inject
     public DisputesView(CachingViewLoader viewLoader, Navigation navigation,
                         ArbitratorManager arbitratorManager, DisputeManager disputeManager,
-                        KeyRing keyRing, Preferences preferences) {
+                        KeyRingVO keyRingVO, Preferences preferences) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.arbitratorManager = arbitratorManager;
         this.disputeManager = disputeManager;
-        this.keyRing = keyRing;
+        this.keyRingVO = keyRingVO;
         this.preferences = preferences;
     }
 
@@ -96,11 +96,11 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     private void updateArbitratorsDisputesTabDisableState() {
         boolean isActiveArbitrator = arbitratorManager.getArbitratorsObservableMap().values().stream()
-                .filter(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(keyRing.getPubKeyRing()))
+                .filter(e -> e.getPubKeyRingPayload() != null && e.getPubKeyRingPayload().get().equals(keyRingVO.getPubKeyRingVO()))
                 .findAny().isPresent();
 
         boolean hasDisputesAsArbitrator = disputeManager.getDisputesAsObservableList().stream()
-                .filter(d -> d.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()))
+                .filter(d -> d.getArbitratorPubKeyRingPayload().get().equals(keyRingVO.getPubKeyRingVO()))
                 .findAny().isPresent();
 
         if (arbitratorsDisputesTab == null && (isActiveArbitrator || hasDisputesAsArbitrator)) {

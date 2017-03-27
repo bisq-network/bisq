@@ -23,7 +23,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.TradableList;
 import io.bisq.core.trade.Trade;
-import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.vo.crypto.KeyRingVO;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +35,11 @@ import java.util.Optional;
 public class FailedTradesManager {
     private static final Logger log = LoggerFactory.getLogger(FailedTradesManager.class);
     private final TradableList<Trade> failedTrades;
-    private final KeyRing keyRing;
+    private final KeyRingVO keyRingVO;
 
     @Inject
-    public FailedTradesManager(KeyRing keyRing, PriceFeedService priceFeedService, @Named(Storage.DIR_KEY) File storageDir) {
-        this.keyRing = keyRing;
+    public FailedTradesManager(KeyRingVO keyRingVO, PriceFeedService priceFeedService, @Named(Storage.DIR_KEY) File storageDir) {
+        this.keyRingVO = keyRingVO;
         this.failedTrades = new TradableList<>(new Storage<>(storageDir), "FailedTrades");
         failedTrades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
     }
@@ -50,7 +50,7 @@ public class FailedTradesManager {
     }
 
     public boolean wasMyOffer(Offer offer) {
-        return offer.isMyOffer(keyRing);
+        return offer.isMyOffer(keyRingVO);
     }
 
     public ObservableList<Trade> getFailedTrades() {

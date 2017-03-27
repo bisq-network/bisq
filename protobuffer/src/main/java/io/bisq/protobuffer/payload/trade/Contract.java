@@ -24,7 +24,7 @@ import io.bisq.common.monetary.Price;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.payload.Payload;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.offer.OfferPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
@@ -58,9 +58,9 @@ public final class Contract implements Payload {
     private final PaymentAccountPayload makerPaymentAccountPayload;
     private final PaymentAccountPayload takerPaymentAccountPayload;
     @JsonExclude
-    private final PubKeyRing makerPubKeyRing;
+    private final PubKeyRingPayload makerPubKeyRingPayload;
     @JsonExclude
-    private final PubKeyRing takerPubKeyRing;
+    private final PubKeyRingPayload takerPubKeyRingPayload;
     @Getter
     private final NodeAddress buyerNodeAddress;
     @Getter
@@ -85,8 +85,8 @@ public final class Contract implements Payload {
                     String takerAccountId,
                     PaymentAccountPayload makerPaymentAccountPayload,
                     PaymentAccountPayload takerPaymentAccountPayload,
-                    PubKeyRing makerPubKeyRing,
-                    PubKeyRing takerPubKeyRing,
+                    PubKeyRingPayload makerPubKeyRingPayload,
+                    PubKeyRingPayload takerPubKeyRingPayload,
                     String makerPayoutAddressString,
                     String takerPayoutAddressString,
                     byte[] makerMultiSigPubKey,
@@ -104,8 +104,8 @@ public final class Contract implements Payload {
         this.takerAccountId = takerAccountId;
         this.makerPaymentAccountPayload = makerPaymentAccountPayload;
         this.takerPaymentAccountPayload = takerPaymentAccountPayload;
-        this.makerPubKeyRing = makerPubKeyRing;
-        this.takerPubKeyRing = takerPubKeyRing;
+        this.makerPubKeyRingPayload = makerPubKeyRingPayload;
+        this.takerPubKeyRingPayload = takerPubKeyRingPayload;
         this.makerPayoutAddressString = makerPayoutAddressString;
         this.takerPayoutAddressString = takerPayoutAddressString;
         this.makerMultiSigPubKey = makerMultiSigPubKey;
@@ -139,12 +139,12 @@ public final class Contract implements Payload {
         return isBuyerMakerAndSellerTaker ? takerPayoutAddressString : makerPayoutAddressString;
     }
 
-    public PubKeyRing getBuyerPubKeyRing() {
-        return isBuyerMakerAndSellerTaker ? makerPubKeyRing : takerPubKeyRing;
+    public PubKeyRingPayload getBuyerPubKeyRingPayload() {
+        return isBuyerMakerAndSellerTaker ? makerPubKeyRingPayload : takerPubKeyRingPayload;
     }
 
-    public PubKeyRing getSellerPubKeyRing() {
-        return isBuyerMakerAndSellerTaker ? takerPubKeyRing : makerPubKeyRing;
+    public PubKeyRingPayload getSellerPubKeyRingPayload() {
+        return isBuyerMakerAndSellerTaker ? takerPubKeyRingPayload : makerPubKeyRingPayload;
     }
 
     public byte[] getBuyerMultiSigPubKey() {
@@ -190,8 +190,8 @@ public final class Contract implements Payload {
                 .setTakerAccountId(takerAccountId)
                 .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProto())
                 .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProto())
-                .setMakerPubKeyRing(makerPubKeyRing.toProto())
-                .setTakerPubKeyRing(takerPubKeyRing.toProto())
+                .setMakerPubKeyRingPayload(makerPubKeyRingPayload.toProto())
+                .setTakerPubKeyRingPayload(takerPubKeyRingPayload.toProto())
                 .setBuyerNodeAddress(buyerNodeAddress.toProto())
                 .setSellerNodeAddress(sellerNodeAddress.toProto())
                 .setMakerPayoutAddressString(makerPayoutAddressString)
@@ -214,8 +214,8 @@ public final class Contract implements Payload {
                 "\n\ttakerAccountId='" + takerAccountId + '\'' +
                 "\n\tmakerPaymentAccountPayload=" + makerPaymentAccountPayload +
                 "\n\ttakerPaymentAccountPayload=" + takerPaymentAccountPayload +
-                "\n\tmakerPubKeyRing=" + makerPubKeyRing +
-                "\n\ttakerPubKeyRing=" + takerPubKeyRing +
+                "\n\tmakerPubKeyRingPayload=" + makerPubKeyRingPayload +
+                "\n\ttakerPubKeyRingPayload=" + takerPubKeyRingPayload +
                 "\n\tbuyerAddress=" + buyerNodeAddress +
                 "\n\tsellerAddress=" + sellerNodeAddress +
                 "\n\tmakerPayoutAddressString='" + makerPayoutAddressString + '\'' +
