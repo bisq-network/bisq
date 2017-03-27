@@ -92,7 +92,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkNotNull(offer.getCurrencyCode(), "Currency is null");
             checkNotNull(offer.getDirection(), "Direction is null");
             checkNotNull(offer.getId(), "Id is null");
-            checkNotNull(offer.getPubKeyRing(), "pubKeyRing is null");
+            checkNotNull(offer.getPubKeyRingVO(), "pubKeyRing is null");
             checkNotNull(offer.getMinAmount(), "MinAmount is null");
             checkNotNull(offer.getPrice(), "Price is null");
             checkNotNull(offer.getTxFee(), "txFee is null");

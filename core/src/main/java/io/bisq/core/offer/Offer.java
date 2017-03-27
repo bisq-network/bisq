@@ -301,7 +301,7 @@ public class Offer implements Serializable {
     }
 
     public boolean isMyOffer(KeyRingVO keyRingVO) {
-        return getPubKeyRing().equals(keyRingVO.getPubKeyRingVO());
+        return getPubKeyRingVO().equals(keyRingVO.getPubKeyRingVO());
     }
 
 
@@ -381,7 +381,7 @@ public class Offer implements Serializable {
         return offerPayload.getMakerNodeAddress();
     }
 
-    public PubKeyRingVO getPubKeyRing() {
+    public PubKeyRingVO getPubKeyRingVO() {
         return offerPayload.getPubKeyRingPayload().get();
     }
 

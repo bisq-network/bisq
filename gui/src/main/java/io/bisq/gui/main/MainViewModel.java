@@ -69,7 +69,6 @@ import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.ConnectionListener;
 import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.crypto.DecryptedDataTuple;
-import io.bisq.protobuffer.crypto.ProtoCryptoUtil;
 import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
 import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
 import io.bisq.protobuffer.payload.arbitration.Dispute;
@@ -580,7 +579,7 @@ public class MainViewModel implements ViewModel {
                     log.trace("Run crypto test");
                     // just use any simple dummy msg
                     Ping payload = new Ping(1, 1);
-                    SealedAndSignedVO sealedAndSignedVO = ProtoCryptoUtil.encryptHybridWithSignature(payload,
+                    SealedAndSignedVO sealedAndSignedVO = EncryptionService.encryptHybridWithSignature(payload,
                             keyRingVO.getSignatureKeyPair(), keyRingVO.getPubKeyRingVO().getEncryptionPubKey());
                     DecryptedDataTuple tuple = EncryptionService.decryptHybridWithSignature(sealedAndSignedVO, keyRingVO.getEncryptionKeyPair().getPrivate());
                     if (tuple.payload instanceof Ping &&

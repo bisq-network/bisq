@@ -24,9 +24,9 @@ import io.bisq.common.crypto.Hash;
 import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
+import io.bisq.protobuffer.Marshaller;
 import io.bisq.protobuffer.ProtoBufferUtilities;
 import io.bisq.protobuffer.crypto.DecryptedDataTuple;
-import io.bisq.protobuffer.crypto.ProtoCryptoUtil;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.vo.crypto.KeyRingVO;
 import io.bisq.vo.crypto.PubKeyRingVO;
@@ -34,7 +34,9 @@ import io.bisq.vo.crypto.SealedAndSignedVO;
 
 import javax.crypto.SecretKey;
 import javax.inject.Inject;
+import java.security.KeyPair;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 
 import static io.bisq.common.crypto.Encryption.decryptSecretKey;
 
@@ -46,8 +48,47 @@ public class EncryptionService {
         this.keyRingVO = keyRingVO;
     }
 
+    private static byte[] encryptPayloadWithHmac(Message object, SecretKey secretKey) throws CryptoException {
+        return Encryption.encryptPayloadWithHmac(object.toProto().toByteArray(), secretKey);
+    }
+
+    /**
+     * @param payload             The data to encrypt.
+     * @param signatureKeyPair    The key pair for signing.
+     * @param encryptionPublicKey The public key used for encryption.
+     * @return A SealedAndSigned object.
+     * @throws CryptoException
+     */
+    public static SealedAndSignedVO encryptHybridWithSignature(Message payload, KeyPair signatureKeyPair,
+                                                               PublicKey encryptionPublicKey)
+            throws CryptoException {
+        // Create a symmetric key
+        SecretKey secretKey = Encryption.generateSecretKey();
+
+        // Encrypt secretKey with receiver's publicKey 
+        byte[] encryptedSecretKey = Encryption.encryptSecretKey(secretKey, encryptionPublicKey);
+
+        // Encrypt with sym key payload with appended hmac
+        byte[] encryptedPayloadWithHmac = encryptPayloadWithHmac(payload, secretKey);
+
+        // sign hash of encryptedPayloadWithHmac
+        byte[] hash = Hash.getHash(encryptedPayloadWithHmac);
+        byte[] signature = Sig.sign(signatureKeyPair.getPrivate(), hash);
+
+        // Pack all together
+        return new SealedAndSignedVO(encryptedSecretKey, encryptedPayloadWithHmac, signature, signatureKeyPair.getPublic());
+    }
+
+    /**
+     * @param data Any serializable object. Will be converted into a byte array using Java serialisation.
+     * @return Hash of data
+     */
+    public static byte[] getHash(Marshaller data) {
+        return Hash.getHash((data.toProto()).toByteArray());
+    }
+
     public SealedAndSignedVO encryptAndSign(PubKeyRingVO pubKeyRingVO, Message message) throws CryptoException {
-        return ProtoCryptoUtil.encryptHybridWithSignature(message, keyRingVO.getSignatureKeyPair(), pubKeyRingVO.getEncryptionPubKey());
+        return encryptHybridWithSignature(message, keyRingVO.getSignatureKeyPair(), pubKeyRingVO.getEncryptionPubKey());
     }
 
     /**

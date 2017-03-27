@@ -13,7 +13,6 @@ import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.Broadcaster;
 import io.bisq.protobuffer.ProtoBufferUtilities;
-import io.bisq.protobuffer.crypto.ProtoCryptoUtil;
 import io.bisq.protobuffer.payload.StoragePayload;
 import io.bisq.protobuffer.payload.alert.AlertPayload;
 import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
@@ -107,7 +106,7 @@ public class P2PDataStorageTest {
         assertEquals(1, dataStorage1.getMap().size());
 
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = ProtoCryptoUtil.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedStorageEntry dataToRemove = new ProtectedStorageEntry(data.getStoragePayload(), data.ownerPubKey, newSequenceNumber, signature);
         assertTrue(dataStorage1.remove(dataToRemove, null, true));
@@ -127,7 +126,7 @@ public class P2PDataStorageTest {
         data.toProto().writeTo(byteOutputStream);
         ProtectedStorageEntry protectedStorageEntry = ProtoBufferUtilities.getProtectedStorageEntry(PB.ProtectedStorageEntry.parseFrom(new ByteArrayInputStream(byteOutputStream.toByteArray())));
 
-        assertTrue(Arrays.equals(ProtoCryptoUtil.getHash(data.getStoragePayload()), ProtoCryptoUtil.getHash(protectedStorageEntry.getStoragePayload())));
+        assertTrue(Arrays.equals(EncryptionService.getHash(data.getStoragePayload()), EncryptionService.getHash(protectedStorageEntry.getStoragePayload())));
         assertTrue(data.equals(protectedStorageEntry));
         assertTrue(checkSignature(protectedStorageEntry));
     }
@@ -198,13 +197,13 @@ public class P2PDataStorageTest {
 
     private void setSignature(ProtectedStorageEntry entry) throws CryptoException {
         int newSequenceNumber = entry.sequenceNumber;
-        byte[] hashOfDataAndSeqNr = ProtoCryptoUtil.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         entry.signature = signature;
     }
 
     private boolean checkSignature(ProtectedStorageEntry entry) throws CryptoException {
-        byte[] hashOfDataAndSeqNr = ProtoCryptoUtil.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), entry.sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), entry.sequenceNumber));
         return dataStorage1.checkSignature(entry.ownerPubKey, hashOfDataAndSeqNr, entry.signature);
     }
 }

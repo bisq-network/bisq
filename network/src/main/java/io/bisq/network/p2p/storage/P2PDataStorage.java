@@ -14,11 +14,11 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
+import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.BroadcastHandler;
 import io.bisq.network.p2p.peers.Broadcaster;
 import io.bisq.protobuffer.Marshaller;
-import io.bisq.protobuffer.crypto.ProtoCryptoUtil;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.storage.*;
 import io.bisq.protobuffer.payload.ExpirablePayload;
@@ -413,7 +413,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         else
             sequenceNumber = 1;
 
-        byte[] hashOfDataAndSeqNr = ProtoCryptoUtil.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new ProtectedStorageEntry(storagePayload, ownerStoragePubKey.getPublic(), sequenceNumber, signature);
     }
@@ -427,7 +427,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         else
             sequenceNumber = 1;
 
-        byte[] hashOfDataAndSeqNr = ProtoCryptoUtil.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new RefreshTTLMessage(hashOfDataAndSeqNr, signature, hashOfPayload.bytes, sequenceNumber);
     }
@@ -442,7 +442,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         else
             sequenceNumber = 1;
 
-        byte[] hashOfDataAndSeqNr = ProtoCryptoUtil.getHash(new DataAndSeqNrPair(expirableMailboxStoragePayload, sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(expirableMailboxStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(storageSignaturePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new ProtectedMailboxStorageEntry(expirableMailboxStoragePayload,
                 storageSignaturePubKey.getPublic(), sequenceNumber, signature, receiversPublicKey);
@@ -538,7 +538,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private boolean checkSignature(ProtectedStorageEntry protectedStorageEntry) {
-        byte[] hashOfDataAndSeqNr = ProtoCryptoUtil.getHash(new DataAndSeqNrPair(protectedStorageEntry.getStoragePayload(), protectedStorageEntry.sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(protectedStorageEntry.getStoragePayload(), protectedStorageEntry.sequenceNumber));
         return checkSignature(protectedStorageEntry.ownerPubKey, hashOfDataAndSeqNr, protectedStorageEntry.signature);
     }
 
@@ -610,7 +610,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private ByteArray getHashAsByteArray(ExpirablePayload data) {
-        return new ByteArray(ProtoCryptoUtil.getHash(data));
+        return new ByteArray(EncryptionService.getHash(data));
     }
 
     // Get a new map with entries older than PURGE_AGE_DAYS purged from the given map.

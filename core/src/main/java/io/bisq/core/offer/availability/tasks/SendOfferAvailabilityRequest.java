@@ -40,7 +40,7 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
             runInterceptHook();
 
             model.p2PService.sendEncryptedDirectMessage(model.getPeerNodeAddress(),
-                    model.offer.getPubKeyRing(),
+                    model.offer.getPubKeyRingVO(),
                     new OfferAvailabilityRequest(model.offer.getId(),
                             new PubKeyRingPayload(model.pubKeyRingVO),
                             model.getTakersTradePrice()),

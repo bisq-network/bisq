@@ -26,7 +26,6 @@ import io.bisq.common.storage.FileUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.protobuffer.crypto.DecryptedDataTuple;
-import io.bisq.protobuffer.crypto.ProtoCryptoUtil;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.alert.PrivateNotificationMessage;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
@@ -114,7 +113,7 @@ public class EncryptionServiceTests {
             Ping payload = new Ping(new Random().nextInt(), 10);
             SealedAndSignedVO sealedAndSignedVO = null;
             try {
-                sealedAndSignedVO = ProtoCryptoUtil.encryptHybridWithSignature(payload,
+                sealedAndSignedVO = EncryptionService.encryptHybridWithSignature(payload,
                         keyRingVO.getSignatureKeyPair(), keyRingVO.getPubKeyRingVO().getEncryptionPubKey());
             } catch (CryptoException e) {
                 log.error("encryptHybridWithSignature failed");
