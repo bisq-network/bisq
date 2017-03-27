@@ -17,15 +17,18 @@
 
 package io.bisq.provider.price;
 
-@SuppressWarnings("FieldCanBeLocal")
-public class PriceData {
-    public final String c; // currencyCode
-    public final double l; // last
-    public final long ts;  // timestamp
+import lombok.Value;
 
-    public PriceData(String currencyCode, double last, long ts) {
-        this.c = currencyCode;
-        this.l = last;
-        this.ts = ts;
+@SuppressWarnings("FieldCanBeLocal")
+@Value
+public class PriceData {
+    private final String currencyCode;
+    private final double price;
+    private final long timestampSec;
+
+    public PriceData(String currencyCode, double price, long timestampSec) {
+        this.currencyCode = currencyCode;
+        this.price = price;
+        this.timestampSec = timestampSec;
     }
 }

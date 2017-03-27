@@ -157,7 +157,7 @@ public class PriceRequestService {
         coinmarketcapTs = Instant.now().getEpochSecond();
 
         if (map.get("LTC") != null)
-            log.info("Coinmarketcap LTC (last): " + map.get("LTC").l);
+            log.info("Coinmarketcap LTC (last): " + map.get("LTC").getPrice());
 
         writeToJson();
     }
@@ -172,7 +172,7 @@ public class PriceRequestService {
         poloniexTs = Instant.now().getEpochSecond();
 
         if (poloniexMap.get("LTC") != null)
-            log.info("Poloniex LTC (last): " + poloniexMap.get("LTC").l);
+            log.info("Poloniex LTC (last): " + poloniexMap.get("LTC").getPrice());
 
         writeToJson();
     }
@@ -182,7 +182,7 @@ public class PriceRequestService {
         btcAverageLocalMap = btcAverageProvider.getLocal();
 
         if (btcAverageLocalMap.get("USD") != null)
-            log.info("BTCAverage local USD (last):" + btcAverageLocalMap.get("USD").l);
+            log.info("BTCAverage local USD (last):" + btcAverageLocalMap.get("USD").getPrice());
         log.info("requestBtcAverageLocalPrices took {} ms.", (System.currentTimeMillis() - ts));
 
         removeOutdatedPrices(allPricesMap);
@@ -196,7 +196,7 @@ public class PriceRequestService {
         Map<String, PriceData> map = btcAverageProvider.getGlobal();
 
         if (map.get("USD") != null)
-            log.info("BTCAverage global USD (last):" + map.get("USD").l);
+            log.info("BTCAverage global USD (last):" + map.get("USD").getPrice());
         log.info("requestBtcAverageGlobalPrices took {} ms.", (System.currentTimeMillis() - ts));
 
         removeOutdatedPrices(btcAverageLocalMap);
@@ -223,7 +223,7 @@ public class PriceRequestService {
         long now = Instant.now().getEpochSecond();
         long limit = now - MARKET_PRICE_TTL_SEC;
         Map<String, PriceData> filtered = map.entrySet().stream()
-                .filter(e -> e.getValue().ts > limit)
+                .filter(e -> e.getValue().getTimestampSec() > limit)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         map.clear();
         map.putAll(filtered);

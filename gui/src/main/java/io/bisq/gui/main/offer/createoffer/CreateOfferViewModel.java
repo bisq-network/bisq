@@ -281,7 +281,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     dataModel.calculateTotalToPay();
 
                     if (!inputIsMarketBasedPrice) {
-                        if (marketPrice != null) {
+                        if (marketPrice != null && marketPrice.isValid()) {
                             double marketPriceAsDouble = marketPrice.getPrice();
                             try {
                                 double priceAsDouble = formatter.parseNumberStringToDouble(price.get());
@@ -318,7 +318,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         } else {
                             final String currencyCode = dataModel.getTradeCurrencyCode().get();
                             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-                            if (marketPrice != null) {
+                            if (marketPrice != null && marketPrice.isValid()) {
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
                                 dataModel.updateTradeFee();

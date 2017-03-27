@@ -822,15 +822,9 @@ public class MainViewModel implements ViewModel {
             String currencyCode = item.currencyCode;
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             String priceString;
-            if (marketPrice != null) {
-                double price = marketPrice.getPrice();
-                if (price != 0) {
-                    priceString = formatter.formatMarketPrice(price, currencyCode);
-                    item.setIsPriceAvailable(true);
-                } else {
-                    priceString = Res.get("shared.na");
-                    item.setIsPriceAvailable(false);
-                }
+            if (marketPrice != null && marketPrice.isValid()) {
+                priceString = formatter.formatMarketPrice(marketPrice.getPrice(), currencyCode);
+                item.setIsPriceAvailable(true);
             } else {
                 priceString = Res.get("shared.na");
                 item.setIsPriceAvailable(false);

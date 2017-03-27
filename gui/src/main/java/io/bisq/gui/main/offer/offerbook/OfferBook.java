@@ -54,7 +54,7 @@ public class OfferBook {
             @Override
             public void onAdded(Offer offer) {
                 OfferBookListItem offerBookListItem = new OfferBookListItem(offer);
-                if (!offerBookListItems.contains(offerBookListItem)) {
+                if (!isOfferWithIdInList(offer)) {
                     offerBookListItems.add(offerBookListItem);
                     Log.logIfStressTests("OfferPayload added: No. of offers = " + offerBookListItems.size());
                 }
@@ -79,6 +79,10 @@ public class OfferBook {
                 }
             }
         });
+    }
+
+    private boolean isOfferWithIdInList(Offer offer) {
+        return offerBookListItems.stream().filter(o -> o.getOffer().getId().equals(offer.getId())).findAny().isPresent();
     }
 
     public ObservableList<OfferBookListItem> getOfferBookListItems() {
