@@ -19,9 +19,13 @@ package io.bisq.gui.main.portfolio.pendingtrades;
 
 import com.google.inject.Inject;
 import io.bisq.common.Clock;
+import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.trade.BuyerTrade;
+import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.user.User;
@@ -31,43 +35,46 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcAddressValidator;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.payload.payment.PaymentMethod;
-import io.bisq.wire.payload.trade.Contract;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.payload.trade.Contract;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
-import org.bitcoinj.core.BlockChainListener;
 import org.bitcoinj.core.Coin;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.stream.Collectors;
 
-import static io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel.SellerState.*;
+import static io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel.SellerState.UNDEFINED;
 
 public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataModel> implements ViewModel {
     private Subscription tradeStateSubscription;
+    @Nullable
+    private Trade trade;
+    private boolean isBuyerTrade;
+    private boolean isMakerTrade;
 
     interface State {
     }
 
     enum BuyerState implements State {
         UNDEFINED,
-        WAIT_FOR_BLOCKCHAIN_CONFIRMATION,
-        REQUEST_START_FIAT_PAYMENT,
-        WAIT_FOR_FIAT_PAYMENT_RECEIPT,
-        WAIT_FOR_BROADCAST_AFTER_UNLOCK,
-        REQUEST_WITHDRAWAL
+        TRADE_INITIATING,
+        STEP1,
+        STEP2,
+        STEP3,
+        STEP4
     }
 
     enum SellerState implements State {
         UNDEFINED,
-        WAIT_FOR_BLOCKCHAIN_CONFIRMATION,
-        WAIT_FOR_FIAT_PAYMENT_STARTED,
-        REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED,
-        WAIT_FOR_PAYOUT_TX,
-        WAIT_FOR_BROADCAST_AFTER_UNLOCK,
-        REQUEST_WITHDRAWAL
+        TRADE_INITIATING,
+        STEP1,
+        STEP2,
+        STEP3,
+        STEP4
     }
 
     public final BSFormatter formatter;
@@ -117,8 +124,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         if (tradeStateSubscription != null)
             tradeStateSubscription.unsubscribe();
 
-        if (selectedItem != null)
-            tradeStateSubscription = EasyBind.subscribe(selectedItem.getTrade().stateProperty(), this::onTradeStateChanged);
+        if (selectedItem != null) {
+            this.trade = selectedItem.getTrade();
+            isBuyerTrade = trade instanceof BuyerTrade;
+            isMakerTrade = trade instanceof MakerTrade;
+            tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), this::onTradeStateChanged);
+        }
     }
 
     @Override
@@ -215,7 +226,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         Contract contract = trade.getContract();
         if (contract != null) {
             Offer offer = trade.getOffer();
-            return formatter.getRole(contract.isBuyerOffererAndSellerTaker(), dataModel.isOfferer(offer), offer.getCurrencyCode());
+            return formatter.getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
         } else {
             return "";
         }
@@ -234,18 +245,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 result = method;
         }
         return result;
-    }
-
-    public void addBlockChainListener(BlockChainListener blockChainListener) {
-        dataModel.addBlockChainListener(blockChainListener);
-    }
-
-    public void removeBlockChainListener(BlockChainListener blockChainListener) {
-        dataModel.removeBlockChainListener(blockChainListener);
-    }
-
-    public long getLockTime() {
-        return dataModel.getLockTime();
     }
 
     public String getPaymentMethod() {
@@ -320,60 +319,116 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         // TODO what is first valid state for trade?
 
         switch (tradeState) {
+            // #################### Phase PREPARATION 
             case PREPARATION:
                 sellerState.set(UNDEFINED);
-                buyerState.set(PendingTradesViewModel.BuyerState.UNDEFINED);
+                buyerState.set(BuyerState.UNDEFINED);
                 break;
 
-            case TAKER_FEE_PAID:
-            case OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST:
+            // At first part maker/taker have different roles
+            // taker perspective
+            // #################### Phase TAKER_FEE_PAID 
+            case TAKER_PUBLISHED_TAKER_FEE_TX:
+
+                // PUBLISH_DEPOSIT_TX_REQUEST
+                // maker perspective
+            case MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST:
+            case MAKER_SAW_ARRIVED_PUBLISH_DEPOSIT_TX_REQUEST:
+            case MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST:
+            case MAKER_SEND_FAILED_PUBLISH_DEPOSIT_TX_REQUEST:
+
+                // taker perspective
+            case TAKER_RECEIVED_PUBLISH_DEPOSIT_TX_REQUEST:
+                // We don't have a UI state for that, we still have not a ready initiated trade
+                sellerState.set(UNDEFINED);
+                buyerState.set(BuyerState.UNDEFINED);
+                break;
+
+
+            // #################### Phase DEPOSIT_PAID 
             case TAKER_PUBLISHED_DEPOSIT_TX:
-            case DEPOSIT_SEEN_IN_NETWORK:
+
+                // DEPOSIT_TX_PUBLISHED_MSG
+                // taker perspective
             case TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG:
-            case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
-                sellerState.set(WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
-                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BLOCKCHAIN_CONFIRMATION);
+            case TAKER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG:
+            case TAKER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG:
+            case TAKER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG:
+
+                // maker perspective
+            case MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
+
+                // Alternatively the maker could have seen the deposit tx earlier before he received the DEPOSIT_TX_PUBLISHED_MSG
+            case MAKER_SAW_DEPOSIT_TX_IN_NETWORK:
+                buyerState.set(BuyerState.STEP1);
+                sellerState.set(SellerState.STEP1);
                 break;
 
+
+            // buyer and seller step 2
+            // #################### Phase DEPOSIT_CONFIRMED
             case DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN:
-                sellerState.set(WAIT_FOR_FIAT_PAYMENT_STARTED);
-                buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_START_FIAT_PAYMENT);
-            case BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED:  // we stick with the state until we get the msg sent success
-                buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_START_FIAT_PAYMENT);
+                sellerState.set(SellerState.STEP2);
+                buyerState.set(BuyerState.STEP2);
                 break;
-            case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
-                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_FIAT_PAYMENT_RECEIPT);
+
+            // buyer step 3
+            case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED: // UI action
+            case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG sent
+                // We don't switch the UI before we got the feedback of the msg delivery
                 break;
-            case SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG: // seller
-            case SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT:  // we stick with the state until we get the msg sent success
-                sellerState.set(REQUEST_CONFIRM_FIAT_PAYMENT_RECEIVED);
+            case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG arrived
+            case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG in mailbox
+            case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG failed
+                // We delay the UI switch to give a chance to see the delivery result
+                UserThread.runAfter(() -> {
+                    // We might get a higher state set quickly (startup - stored state, then new state) 
+                    // and then we don't want to switch back
+                    if (buyerState.get() == null || buyerState.get().ordinal() < BuyerState.STEP3.ordinal())
+                        buyerState.set(BuyerState.STEP3);
+                }, 1);
                 break;
-            case SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG:
-                sellerState.set(WAIT_FOR_PAYOUT_TX);
+
+            // seller step 3
+            case SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG: // FIAT_PAYMENT_INITIATED_MSG received
+                sellerState.set(SellerState.STEP3);
                 break;
-            case BUYER_RECEIVED_FIAT_PAYMENT_RECEIPT_MSG:
-            case BUYER_COMMITTED_PAYOUT_TX:
-            case BUYER_STARTED_SEND_PAYOUT_TX:
-                // TODO would need extra state for wait until msg arrived and PAYOUT_BROAD_CASTED gets called.
-                buyerState.set(PendingTradesViewModel.BuyerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
+
+            // seller step 4
+            case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:   // UI action
+            case SELLER_PUBLISHED_PAYOUT_TX: // payout tx broad casted
+            case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG sent
                 break;
-            case SELLER_RECEIVED_AND_COMMITTED_PAYOUT_TX:
-                sellerState.set(SellerState.WAIT_FOR_BROADCAST_AFTER_UNLOCK);
+            case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG arrived
+            case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG mailbox
+            case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG failed
+                // We delay the UI switch to give a chance to see the delivery result
+                UserThread.runAfter(() -> {
+                    // We might get a higher state set quickly (startup - stored state, then new state) 
+                    // and then we don't want to switch back
+                    if (sellerState.get() == null || sellerState.get().ordinal() < SellerState.STEP4.ordinal())
+                        sellerState.set(SellerState.STEP4);
+                }, 1);
                 break;
-            case PAYOUT_BROAD_CASTED:
-                sellerState.set(REQUEST_WITHDRAWAL);
-                buyerState.set(PendingTradesViewModel.BuyerState.REQUEST_WITHDRAWAL);
+
+            // buyer step 4
+            case BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG:
+                // Alternatively the maker could have seen the payout tx earlier before he received the PAYOUT_TX_PUBLISHED_MSG:
+            case BUYER_SAW_PAYOUT_TX_IN_NETWORK:
+                buyerState.set(BuyerState.STEP4);
                 break;
 
             case WITHDRAW_COMPLETED:
                 sellerState.set(UNDEFINED);
-                buyerState.set(PendingTradesViewModel.BuyerState.UNDEFINED);
+                buyerState.set(BuyerState.UNDEFINED);
                 break;
 
             default:
                 sellerState.set(UNDEFINED);
-                buyerState.set(PendingTradesViewModel.BuyerState.UNDEFINED);
+                buyerState.set(BuyerState.UNDEFINED);
                 log.warn("unhandled processState " + tradeState);
+                if (DevEnv.DEV_MODE)
+                    throw new RuntimeException("unhandled processState " + tradeState);
                 break;
         }
     }

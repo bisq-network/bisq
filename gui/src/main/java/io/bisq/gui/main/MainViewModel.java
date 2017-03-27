@@ -28,6 +28,7 @@ import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.alert.Alert;
 import io.bisq.core.alert.AlertManager;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.arbitration.ArbitratorManager;
@@ -67,14 +68,13 @@ import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.ConnectionListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.DecryptedDataTuple;
-import io.bisq.wire.crypto.Encryption;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.message.p2p.peers.keepalive.Ping;
-import io.bisq.wire.payload.alert.Alert;
-import io.bisq.wire.payload.alert.PrivateNotification;
-import io.bisq.wire.payload.arbitration.Dispute;
-import io.bisq.wire.payload.crypto.SealedAndSigned;
+import io.bisq.protobuffer.crypto.DecryptedDataTuple;
+import io.bisq.protobuffer.crypto.Encryption;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
+import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
+import io.bisq.protobuffer.payload.arbitration.Dispute;
+import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -668,7 +668,7 @@ public class MainViewModel implements ViewModel {
 
     private void updateTradePeriodState() {
         tradeManager.getTrades().stream().forEach(trade -> {
-            if (trade.getState().getPhase().ordinal() < Trade.Phase.PAYOUT_PAID.ordinal()) {
+            if (!trade.isPayoutPublished()) {
                 Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                 Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
                 if (maxTradePeriodDate != null && halfTradePeriodDate != null) {
@@ -822,15 +822,9 @@ public class MainViewModel implements ViewModel {
             String currencyCode = item.currencyCode;
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             String priceString;
-            if (marketPrice != null) {
-                double price = marketPrice.getPrice();
-                if (price != 0) {
-                    priceString = formatter.formatMarketPrice(price, currencyCode);
-                    item.setIsPriceAvailable(true);
-                } else {
-                    priceString = Res.get("shared.na");
-                    item.setIsPriceAvailable(false);
-                }
+            if (marketPrice != null && marketPrice.isValid()) {
+                priceString = formatter.formatMarketPrice(marketPrice.getPrice(), currencyCode);
+                item.setIsPriceAvailable(true);
             } else {
                 priceString = Res.get("shared.na");
                 item.setIsPriceAvailable(false);
@@ -887,11 +881,11 @@ public class MainViewModel implements ViewModel {
         user.setDisplayedAlert(alert);
         if (alert != null &&
                 !alreadyDisplayed &&
-                (!alert.isUpdateInfo || alert.isNewVersion()))
+                (!alert.isUpdateInfo() || alert.isNewVersion()))
             new DisplayAlertMessageWindow().alertMessage(alert).show();
     }
 
-    private void displayPrivateNotification(PrivateNotification privateNotification) {
+    private void displayPrivateNotification(PrivateNotificationPayload privateNotification) {
         new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
                 .attention(privateNotification.message)
                 .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")

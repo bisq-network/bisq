@@ -21,6 +21,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
+import io.bisq.core.payment.ClearXchangeAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
@@ -33,7 +34,7 @@ import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.*;
-import io.bisq.wire.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.geometry.VPos;
@@ -143,6 +144,19 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
+        if (paymentAccount instanceof ClearXchangeAccount) {
+            new Popup().information(Res.get("payment.clearXchange.info"))
+                    .width(900)
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .actionButtonText(Res.get("shared.iConfirm"))
+                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                    .show();
+        } else {
+            doSaveNewAccount(paymentAccount);
+        }
+    }
+
+    private void doSaveNewAccount(PaymentAccount paymentAccount) {
         if (!model.getPaymentAccounts().stream().filter(e -> {
             if (e.getAccountName() != null)
                 return e.getAccountName().equals(paymentAccount.getAccountName());

@@ -27,6 +27,7 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.Restrictions;
+import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.provider.fee.FeeService;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -38,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
@@ -155,6 +157,8 @@ public final class Preferences implements Persistable {
     private List<String> ignoreTradersList = new ArrayList<>();
     private String directoryChooserPath;
     private long buyerSecurityDepositAsLong = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT.value;
+    @Nullable
+    private PaymentAccount selectedPaymentAccountForCreateOffer;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -283,6 +287,8 @@ public final class Preferences implements Persistable {
                     Math.max(Restrictions.MIN_BUYER_SECURITY_DEPOSIT.value,
                             persisted.getBuyerSecurityDepositAsLong())
             );
+
+            selectedPaymentAccountForCreateOffer = persisted.getSelectedPaymentAccountForCreateOffer();
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies(Preferences.getDefaultLocale(), Preferences.getDefaultTradeCurrency()));
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
@@ -322,7 +328,7 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
-    public void resetDontShowAgainForType() {
+    public void resetDontShowAgain() {
         dontShowAgainMap.clear();
         storage.queueUpForSave();
     }
@@ -508,6 +514,11 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setSelectedPaymentAccountForCreateOffer(PaymentAccount paymentAccount) {
+        this.selectedPaymentAccountForCreateOffer = paymentAccount;
+        storage.queueUpForSave();
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -693,6 +704,11 @@ public final class Preferences implements Persistable {
         return userCountry;
     }
 
+    @Nullable
+    public PaymentAccount getSelectedPaymentAccountForCreateOffer() {
+        return selectedPaymentAccountForCreateOffer;
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

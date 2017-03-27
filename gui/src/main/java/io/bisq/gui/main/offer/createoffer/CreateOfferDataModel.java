@@ -44,9 +44,9 @@ import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.offer.OfferPayload;
-import io.bisq.wire.payload.payment.BankAccountPayload;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.offer.OfferPayload;
+import io.bisq.protobuffer.payload.payment.BankAccountPayload;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -223,7 +223,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         fillPaymentAccounts();
 
-        PaymentAccount account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
+        PaymentAccount account;
+        PaymentAccount lastSelectedPaymentAccount = preferences.getSelectedPaymentAccountForCreateOffer();
+        if (lastSelectedPaymentAccount != null && user.getPaymentAccounts().contains(lastSelectedPaymentAccount))
+            account = lastSelectedPaymentAccount;
+        else
+            account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
+
         if (account != null && isNotUSBankAccount(account)) {
             paymentAccount = account;
             this.tradeCurrency = tradeCurrency;
@@ -244,7 +250,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         if (!preferences.getUseStickyMarketPrice())
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
-        // The offerer only pays the mining fee for the trade fee tx (not the mining fee for other trade txs). 
+        // The maker only pays the mining fee for the trade fee tx (not the mining fee for other trade txs). 
         // A typical trade fee tx has about 226 bytes (if one input). We use 400 as a safe value.
         // We cannot use tx size calculation as we do not know initially how the input is funded. And we require the
         // fee for getting the funds needed.
@@ -315,17 +321,18 @@ class CreateOfferDataModel extends ActivatableDataModel {
         checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
 
-        long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimit().value;
+        long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimit();
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
 
         // reserved for future use cases
+        // Use null values if not set
         boolean isPrivateOffer = false;
-        String hashOfChallenge = "";
-        HashMap<String, String> extraDataMap = new HashMap<>();
         boolean useAutoClose = false;
         boolean useReOpenAfterAutoClose = false;
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
+        String hashOfChallenge = null;
+        HashMap<String, String> extraDataMap = null;
 
         Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.MAX_BUYER_SECURITY_DEPOSIT) <= 0,
@@ -347,6 +354,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 baseCurrencyCode,
                 counterCurrencyCode,
                 Lists.newArrayList(user.getAcceptedArbitratorAddresses()),
+                Lists.newArrayList(user.getAcceptedMediatorAddresses()),
                 paymentAccount.getPaymentMethod().getId(),
                 paymentAccount.getId(),
                 null,
@@ -380,13 +388,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
-        if (paymentAccount != null) {
-
-            if (!this.paymentAccount.equals(paymentAccount)) {
-                volume.set(null);
-                price.set(null);
-                marketPriceMargin = 0;
-            }
+        if (paymentAccount != null && !this.paymentAccount.equals(paymentAccount)) {
+            volume.set(null);
+            price.set(null);
+            marketPriceMargin = 0;
+            preferences.setSelectedPaymentAccountForCreateOffer(paymentAccount);
             this.paymentAccount = paymentAccount;
         }
     }
@@ -529,7 +535,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void calculateTotalToPay() {
-        // Offerer does not pay the tx fee for the trade txs because the mining fee might be different when offerer 
+        // Maker does not pay the tx fee for the trade txs because the mining fee might be different when maker 
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (direction != null && amount.get() != null && createOfferFeeAsCoin != null) {
@@ -614,7 +620,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     private boolean isNotUSBankAccount(PaymentAccount paymentAccount) {
         //noinspection SimplifiableIfStatement
-        if (paymentAccount instanceof SameCountryRestrictedBankAccount && paymentAccount.getPaymentAccountPayload() instanceof BankAccountPayload)
+        if (paymentAccount instanceof SameCountryRestrictedBankAccount &&
+                paymentAccount.getPaymentAccountPayload() instanceof BankAccountPayload)
             return !((SameCountryRestrictedBankAccount) paymentAccount).getCountryCode().equals("US");
         else
             return true;

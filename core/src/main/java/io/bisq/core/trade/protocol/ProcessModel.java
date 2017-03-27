@@ -26,18 +26,18 @@ import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.trade.OffererTrade;
+import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.message.trade.TradeMessage;
-import io.bisq.wire.payload.btc.RawTransactionInput;
-import io.bisq.wire.payload.crypto.PubKeyRing;
-import io.bisq.wire.payload.filter.PaymentAccountFilter;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.message.trade.TradeMessage;
+import io.bisq.protobuffer.payload.btc.RawTransactionInput;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.filter.PaymentAccountFilter;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -88,6 +88,7 @@ public class ProcessModel implements Model, Serializable {
     @Getter
     @Setter
     private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
+    private List<NodeAddress> takerAcceptedMediatorNodeAddresses;
 
     // that is used to store temp. the peers address when we get an incoming message before the message is verified.
     // After successful verified we copy that over to the trade.tradingPeerAddress
@@ -179,8 +180,8 @@ public class ProcessModel implements Model, Serializable {
     @Nullable
     public PaymentAccountPayload getPaymentAccountPayload(Trade trade) {
         PaymentAccount paymentAccount;
-        if (trade instanceof OffererTrade)
-            paymentAccount = user.getPaymentAccount(offer.getOffererPaymentAccountId());
+        if (trade instanceof MakerTrade)
+            paymentAccount = user.getPaymentAccount(offer.getMakerPaymentAccountId());
         else
             paymentAccount = user.getPaymentAccount(trade.getTakerPaymentAccountId());
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
@@ -209,6 +210,62 @@ public class ProcessModel implements Model, Serializable {
 
     public PubKeyRing getPubKeyRing() {
         return keyRing.getPubKeyRing();
+    }
+
+    public KeyRing getKeyRing() {
+        return keyRing;
+    }
+
+    public void setTakerAcceptedArbitratorNodeAddresses(List<NodeAddress> takerAcceptedArbitratorNodeAddresses) {
+        this.takerAcceptedArbitratorNodeAddresses = takerAcceptedArbitratorNodeAddresses;
+    }
+
+    public List<NodeAddress> getTakerAcceptedArbitratorNodeAddresses() {
+        return takerAcceptedArbitratorNodeAddresses;
+    }
+
+    public void setTakerAcceptedMediatorNodeAddresses(List<NodeAddress> takerAcceptedMediatorNodeAddresses) {
+        this.takerAcceptedMediatorNodeAddresses = takerAcceptedMediatorNodeAddresses;
+    }
+
+    public List<NodeAddress> getTakerAcceptedMediatorNodeAddresses() {
+        return takerAcceptedMediatorNodeAddresses;
+    }
+
+    public void setTempTradingPeerNodeAddress(NodeAddress tempTradingPeerNodeAddress) {
+        this.tempTradingPeerNodeAddress = tempTradingPeerNodeAddress;
+    }
+
+    public NodeAddress getTempTradingPeerNodeAddress() {
+        return tempTradingPeerNodeAddress;
+    }
+
+    public ArbitratorManager getArbitratorManager() {
+        return arbitratorManager;
+    }
+
+    public void setPreparedDepositTx(byte[] preparedDepositTx) {
+        this.preparedDepositTx = preparedDepositTx;
+    }
+
+    public byte[] getPreparedDepositTx() {
+        return preparedDepositTx;
+    }
+
+    public void setRawTransactionInputs(ArrayList<RawTransactionInput> rawTransactionInputs) {
+        this.rawTransactionInputs = rawTransactionInputs;
+    }
+
+    public ArrayList<RawTransactionInput> getRawTransactionInputs() {
+        return rawTransactionInputs;
+    }
+
+    public void setChangeOutputValue(long changeOutputValue) {
+        this.changeOutputValue = changeOutputValue;
+    }
+
+    public long getChangeOutputValue() {
+        return changeOutputValue;
     }
 
     public void setChangeOutputAddress(String changeOutputAddress) {

@@ -21,7 +21,6 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple3;
-import io.bisq.core.trade.Trade;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
@@ -30,8 +29,8 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bisq.gui.util.Layout;
-import io.bisq.wire.payload.payment.*;
-import io.bisq.wire.payload.trade.Contract;
+import io.bisq.protobuffer.payload.payment.*;
+import io.bisq.protobuffer.payload.trade.Contract;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
@@ -64,43 +63,27 @@ public class SellerStep3View extends TradeStepView {
         super.activate();
 
         tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
-            if (state == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG) {
-                PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
-                String key = "confirmPayment" + trade.getId();
-                String message;
-                String tradeVolumeWithCode = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
-                String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale());
-                String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
-                String id = trade.getShortId();
-                if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
-                    String address = ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress();
-                    message = Res.get("portfolio.pending.step3_seller.altcoin", part1, currencyName, address, tradeVolumeWithCode, currencyName);
-                } else {
-                    if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
-                        message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);
-                    else
-                        message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
-
-                    String part = Res.get("portfolio.pending.step3_seller.openDispute");
-                    if (paymentAccountPayload instanceof CashDepositAccountPayload)
-                        message = message + Res.get("portfolio.pending.step3_seller.cash", part);
-
-                    Optional<String> optionalHolderName = getOptionalHolderName();
-                    if (optionalHolderName.isPresent()) {
-                        message = message + Res.get("portfolio.pending.step3_seller.bankCheck" + optionalHolderName.get(), part);
-                    }
+            if (trade.isFiatSent() && !trade.isFiatReceived()) {
+                showPopup();
+            } else if (trade.isFiatReceived()) {
+                busyAnimation.stop();
+                switch (state) {
+                    case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
+                    case SELLER_PUBLISHED_PAYOUT_TX:
+                    case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
+                        busyAnimation.play();
+                        statusLabel.setText(Res.get("shared.sendingConfirmation"));
+                        break;
+                    case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG:
+                        statusLabel.setText(Res.get("shared.messageArrived"));
+                        break;
+                    case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG:
+                        statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
+                        break;
+                    case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
+                        // We get a popup and the trade closed, so we dont need to show anything here
+                        break;
                 }
-                if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
-                    preferences.dontShowAgain(key, true);
-                    new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
-                            .attention(message)
-                            .show();
-                }
-
-            } else if (state == Trade.State.SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT && confirmButton.isDisabled()) {
-                showStatusInfo();
-            } else if (state == Trade.State.SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG) {
-                hideStatusInfo();
             }
         });
     }
@@ -113,8 +96,7 @@ public class SellerStep3View extends TradeStepView {
             tradeStatePropertySubscription.unsubscribe();
             tradeStatePropertySubscription = null;
         }
-
-        hideStatusInfo();
+        busyAnimation.stop();
     }
 
 
@@ -174,8 +156,6 @@ public class SellerStep3View extends TradeStepView {
         confirmButton.setOnAction(e -> onPaymentReceived());
         busyAnimation = tuple.second;
         statusLabel = tuple.third;
-
-        hideStatusInfo();
     }
 
 
@@ -263,9 +243,43 @@ public class SellerStep3View extends TradeStepView {
         }
     }
 
+
+    private void showPopup() {
+        PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+        String key = "confirmPayment" + trade.getId();
+        String message;
+        String tradeVolumeWithCode = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
+        String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale());
+        String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
+        String id = trade.getShortId();
+        if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
+            String address = ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress();
+            message = Res.get("portfolio.pending.step3_seller.altcoin", part1, currencyName, address, tradeVolumeWithCode, currencyName);
+        } else {
+            if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
+                message = Res.get("portfolio.pending.step3_seller.postal", part1, tradeVolumeWithCode, id);
+            else
+                message = Res.get("portfolio.pending.step3_seller.bank", currencyName, tradeVolumeWithCode, id);
+
+            String part = Res.get("portfolio.pending.step3_seller.openDispute");
+            if (paymentAccountPayload instanceof CashDepositAccountPayload)
+                message = message + Res.get("portfolio.pending.step3_seller.cash", part);
+
+            Optional<String> optionalHolderName = getOptionalHolderName();
+            if (optionalHolderName.isPresent()) {
+                message = message + Res.get("portfolio.pending.step3_seller.bankCheck" + optionalHolderName.get(), part);
+            }
+        }
+        if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
+            preferences.dontShowAgain(key, true);
+            new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
+                    .attention(message)
+                    .show();
+        }
+    }
+    
     private void confirmPaymentReceived() {
         confirmButton.setDisable(true);
-        showStatusInfo();
 
         model.dataModel.onFiatPaymentReceived(() -> {
             // In case the first send failed we got the support button displayed. 
@@ -275,21 +289,10 @@ public class SellerStep3View extends TradeStepView {
             //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
             confirmButton.setDisable(false);
-            hideStatusInfo();
+            busyAnimation.stop();
             new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
-
-    private void showStatusInfo() {
-        busyAnimation.play();
-        statusLabel.setText(Res.get("shared.sendingConfirmation"));
-    }
-
-    private void hideStatusInfo() {
-        busyAnimation.stop();
-        statusLabel.setText("");
-    }
-
 
     private Optional<String> getOptionalHolderName() {
         Contract contract = trade.getContract();

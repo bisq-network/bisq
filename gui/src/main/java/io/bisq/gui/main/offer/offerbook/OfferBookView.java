@@ -43,7 +43,7 @@ import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
-import io.bisq.wire.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -298,7 +298,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             if (model.showAllTradeCurrenciesProperty.get())
                 createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC"));
             else if (selectedTradeCurrency instanceof FiatCurrency)
-                createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC") +
+                createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC") + " " +
                         (direction == Offer.Direction.BUY ?
                                 Res.get("offerbook.buyWithOtherCurrency", code) :
                                 Res.get("offerbook.sellForOtherCurrency", code)));

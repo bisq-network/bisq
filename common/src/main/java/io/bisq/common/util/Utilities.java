@@ -51,7 +51,6 @@ public class Utilities {
     private static final Logger log = LoggerFactory.getLogger(Utilities.class);
     private static long lastTimeStamp = System.currentTimeMillis();
     public static final String LB = System.getProperty("line.separator");
-    public static final String LB2 = LB + LB;
 
     // TODO check out Jackson lib
     public static String objectToJson(Object object) {

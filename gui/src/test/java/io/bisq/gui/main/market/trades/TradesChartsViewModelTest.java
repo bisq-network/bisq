@@ -2,8 +2,8 @@ package io.bisq.gui.main.market.trades;
 
 import io.bisq.common.monetary.Price;
 import io.bisq.gui.main.market.trades.charts.CandleData;
-import io.bisq.wire.payload.offer.OfferPayload;
-import io.bisq.wire.payload.trade.statistics.TradeStatistics;
+import io.bisq.protobuffer.payload.offer.OfferPayload;
+import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 import org.junit.Ignore;
@@ -50,6 +50,7 @@ public class TradesChartsViewModelTest {
                 0,
                 "BTC",
                 "USD",
+                null,
                 null,
                 null,
                 null,

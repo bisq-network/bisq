@@ -26,7 +26,7 @@ import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.user.Preferences;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.bitcoinj.core.Coin;
@@ -652,25 +652,25 @@ public class BSFormatter {
         }
     }
 
-    public String getRole(boolean isBuyerOffererAndSellerTaker, boolean isOfferer, String currencyCode) {
+    public String getRole(boolean isBuyerMakerAndSellerTaker, boolean isMaker, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String btc = "BTC";
-            if (isBuyerOffererAndSellerTaker)
-                return isOfferer ?
+            if (isBuyerMakerAndSellerTaker)
+                return isMaker ?
                         Res.get("formatter.asMaker", btc, Res.get("shared.buyer")) :
                         Res.get("formatter.asTaker", btc, Res.get("shared.seller"));
             else
-                return isOfferer ?
+                return isMaker ?
                         Res.get("formatter.asMaker", btc, Res.get("shared.seller")) :
                         Res.get("formatter.asTaker", btc, Res.get("shared.buyer"));
         } else {
             String btc = "BTC";
-            if (isBuyerOffererAndSellerTaker)
-                return isOfferer ?
+            if (isBuyerMakerAndSellerTaker)
+                return isMaker ?
                         Res.get("formatter.asMaker", currencyCode, Res.get("shared.seller")) :
                         Res.get("formatter.asTaker", currencyCode, Res.get("shared.buyer"));
             else
-                return isOfferer ?
+                return isMaker ?
                         Res.get("formatter.asMaker", currencyCode, Res.get("shared.buyer")) :
                         Res.get("formatter.asTaker", currencyCode, Res.get("shared.seller"));
         }

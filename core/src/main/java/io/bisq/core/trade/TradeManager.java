@@ -46,12 +46,12 @@ import io.bisq.network.p2p.DecryptedDirectMessageListener;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.message.Message;
-import io.bisq.wire.message.trade.PayDepositRequest;
-import io.bisq.wire.message.trade.TradeMessage;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.trade.statistics.TradeStatistics;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.message.Message;
+import io.bisq.protobuffer.message.trade.PayDepositRequest;
+import io.bisq.protobuffer.message.trade.TradeMessage;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
@@ -151,14 +151,7 @@ public class TradeManager {
                 log.trace("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMsgWithPubKey);
                 log.trace("onMailboxMessageAdded senderAddress: " + senderNodeAddress);
                 Message message = decryptedMsgWithPubKey.message;
-                if (message instanceof PayDepositRequest) {
-                    PayDepositRequest payDepositRequest = (PayDepositRequest) message;
-                    log.trace("Received payDepositRequest: " + payDepositRequest);
-                    if (payDepositRequest.getSenderNodeAddress().equals(senderNodeAddress))
-                        handleInitialTakeOfferRequest(payDepositRequest, senderNodeAddress);
-                    else
-                        log.warn("Peer address not matching for payDepositRequest");
-                } else if (message instanceof TradeMessage) {
+                if (message instanceof TradeMessage) {
                     log.trace("Received TradeMessage: " + message);
                     String tradeId = ((TradeMessage) message).tradeId;
                     Optional<Trade> tradeOptional = trades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
@@ -203,11 +196,13 @@ public class TradeManager {
         for (Trade trade : trades) {
             trade.setStorage(tradableListStorage);
 
-            if (trade.isDepositPaid() || (trade.isTakerFeePaid() && trade.errorMessageProperty().get() == null)) {
-                initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
+            if (trade.isDepositPublished() ||
+                    (trade.isTakerFeePublished() && !trade.hasFailed())) {
+                initTrade(trade, trade.getProcessModel().getUseSavingsWallet(),
+                        trade.getProcessModel().getFundsNeededForTrade());
                 trade.updateDepositTxFromWallet();
                 tradesForStatistics.add(trade);
-            } else if (trade.isTakerFeePaid()) {
+            } else if (trade.isTakerFeePublished()) {
                 addTradeToFailedTradesList.add(trade);
             } else {
                 removePreparedTradeList.add(trade);
@@ -276,14 +271,16 @@ public class TradeManager {
             PayDepositRequest payDepositRequest = (PayDepositRequest) message;
             Trade trade;
             if (offer.isBuyOffer())
-                trade = new BuyerAsOffererTrade(offer, payDepositRequest.txFee, payDepositRequest.takeOfferFee, tradableListStorage);
+                trade = new BuyerAsMakerTrade(offer, Coin.valueOf(payDepositRequest.txFee),
+                        Coin.valueOf(payDepositRequest.takeOfferFee), tradableListStorage);
             else
-                trade = new SellerAsOffererTrade(offer, payDepositRequest.txFee, payDepositRequest.takeOfferFee, tradableListStorage);
+                trade = new SellerAsMakerTrade(offer, Coin.valueOf(payDepositRequest.txFee),
+                        Coin.valueOf(payDepositRequest.takeOfferFee), tradableListStorage);
 
             trade.setStorage(tradableListStorage);
             initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
             trades.add(trade);
-            ((OffererTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
+            ((MakerTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
         } else {
             // TODO respond
             //(RequestDepositTxInputsMessage)message.
@@ -387,8 +384,10 @@ public class TradeManager {
     // Trade
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey, Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
-        String fromAddress = walletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT).getAddressString();
+    public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey,
+                                  Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
+        String fromAddress = walletService.getOrCreateAddressEntry(trade.getId(),
+                AddressEntry.Context.TRADE_PAYOUT).getAddressString();
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
@@ -437,6 +436,8 @@ public class TradeManager {
 
     private void removeTrade(Trade trade) {
         trades.remove(trade);
+
+        // we only swap if we have not an open offer (in case the removeTrade happened at the trade preparation phase)
         if (!openOfferManager.findOpenOffer(trade.getId()).isPresent())
             walletService.swapAnyTradeEntryContextToAvailableEntry(trade.getId());
     }
@@ -472,7 +473,7 @@ public class TradeManager {
     }
 
     public boolean isBuyer(Offer offer) {
-        // If I am the offerer, we use the offer direction, otherwise the mirrored direction
+        // If I am the maker, we use the offer direction, otherwise the mirrored direction
         if (isMyOffer(offer))
             return offer.isBuyOffer();
         else
@@ -484,8 +485,10 @@ public class TradeManager {
     }
 
     public Stream<AddressEntry> getAddressEntriesForAvailableBalanceStream() {
-        Stream<AddressEntry> availableOrPayout = Stream.concat(walletService.getAddressEntries(AddressEntry.Context.TRADE_PAYOUT).stream(), walletService.getFundedAvailableAddressEntries().stream());
-        Stream<AddressEntry> available = Stream.concat(availableOrPayout, walletService.getAddressEntries(AddressEntry.Context.ARBITRATOR).stream());
+        Stream<AddressEntry> availableOrPayout = Stream.concat(walletService.getAddressEntries(AddressEntry.Context.TRADE_PAYOUT)
+                .stream(), walletService.getFundedAvailableAddressEntries().stream());
+        Stream<AddressEntry> available = Stream.concat(availableOrPayout,
+                walletService.getAddressEntries(AddressEntry.Context.ARBITRATOR).stream());
         available = Stream.concat(available, walletService.getAddressEntries(AddressEntry.Context.OFFER_FUNDING).stream());
         return available
                 .filter(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()).isPositive());
@@ -493,7 +496,6 @@ public class TradeManager {
 
     public Stream<Trade> getLockedTradeStream() {
         return getTrades().stream()
-                .filter(trade -> trade.getState().getPhase().ordinal() >= Trade.Phase.DEPOSIT_PAID.ordinal() &&
-                        trade.getState().getPhase().ordinal() < Trade.Phase.PAYOUT_PAID.ordinal());
+                .filter(trade -> trade.isDepositPublished() && !trade.isPayoutPublished());
     }
 }

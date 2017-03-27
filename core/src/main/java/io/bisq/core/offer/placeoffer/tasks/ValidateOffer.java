@@ -24,7 +24,7 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.placeoffer.PlaceOfferModel;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.wire.message.trade.TradeMessage;
+import io.bisq.protobuffer.message.trade.TradeMessage;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,13 +75,11 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkArgument(offer.getMinAmount().compareTo(Restrictions.MIN_TRADE_AMOUNT) >= 0,
                     "MinAmount is less then "
                             + Restrictions.MIN_TRADE_AMOUNT.toFriendlyString());
-            Preconditions.checkArgument(offer.getAmount().compareTo(offer.getPaymentMethod().getMaxTradeLimit()) <= 0,
+            Preconditions.checkArgument(offer.getAmount().compareTo(offer.getPaymentMethod().getMaxTradeLimitAsCoin()) <= 0,
                     "Amount is larger then "
-                            + offer.getPaymentMethod().getMaxTradeLimit().toFriendlyString());
+                            + offer.getPaymentMethod().getMaxTradeLimitAsCoin().toFriendlyString());
             checkArgument(offer.getAmount().compareTo(offer.getMinAmount()) >= 0, "MinAmount is larger then Amount");
 
-
-            //
             checkNotNull(offer.getPrice(), "Price is null");
             checkArgument(offer.getPrice().isPositive(),
                     "Price must be positive. price=" + offer.getPrice().toFriendlyString());
@@ -90,6 +88,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
                     "Date must not be 0. date=" + offer.getDate().toString());
 
             checkNotNull(offer.getArbitratorNodeAddresses(), "Arbitrator is null");
+            checkNotNull(offer.getMediatorNodeAddresses(), "Mediator is null");
             checkNotNull(offer.getCurrencyCode(), "Currency is null");
             checkNotNull(offer.getDirection(), "Direction is null");
             checkNotNull(offer.getId(), "Id is null");

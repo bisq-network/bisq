@@ -61,10 +61,10 @@ public final class AltCoinAddressValidator extends InputValidator {
             switch (currencyCode) {
                 case "ETH":
                     // https://github.com/ethereum/web3.js/blob/master/lib/utils/utils.js#L403
-                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$")) {
+                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))                
                         return regexTestFailed;
-                    }
-                    return new ValidationResult(true);
+                    else
+                        return new ValidationResult(true);                
                 // Example for BTC, though for BTC we use the BitcoinJ library address check
                 case "BTC":
                     // taken form: https://stackoverflow.com/questions/21683680/regex-to-match-bitcoin-addresses

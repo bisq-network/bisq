@@ -17,13 +17,9 @@
 
 package io.bisq.core.payment;
 
-import io.bisq.wire.payload.payment.PaymentMethod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 
 public class PaymentAccountFactory {
-    private static final Logger log = LoggerFactory.getLogger(PaymentAccountFactory.class);
-
     public static PaymentAccount getPaymentAccount(PaymentMethod paymentMethod) {
         switch (paymentMethod.getId()) {
             case PaymentMethod.OK_PAY_ID:

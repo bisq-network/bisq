@@ -20,8 +20,8 @@ package io.bisq.core.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.persistance.Persistable;
-import io.bisq.wire.payload.payment.PaymentAccountPayload;
-import io.bisq.wire.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,8 +34,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-@ToString
 @EqualsAndHashCode
+@ToString
 @Slf4j
 public abstract class PaymentAccount implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -67,7 +67,7 @@ public abstract class PaymentAccount implements Persistable {
         this.paymentMethod = paymentMethod;
         id = UUID.randomUUID().toString();
         creationDate = new Date();
-        paymentAccountPayload = setPayload();
+        paymentAccountPayload = getPayload();
     }
 
 
@@ -103,9 +103,10 @@ public abstract class PaymentAccount implements Persistable {
             return null;
     }
 
-    protected abstract PaymentAccountPayload setPayload();
 
-    public String getPaymentDetails() {
-        return paymentAccountPayload.getPaymentDetails();
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getter, Setter
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected abstract PaymentAccountPayload getPayload();
 }

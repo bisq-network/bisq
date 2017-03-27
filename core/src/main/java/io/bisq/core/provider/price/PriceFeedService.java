@@ -165,7 +165,8 @@ public class PriceFeedService {
             if (cache.containsKey(currencyCode)) {
                 try {
                     MarketPrice marketPrice = cache.get(currencyCode);
-                    priceConsumer.accept(marketPrice.getPrice());
+                    if (marketPrice.isValid())
+                        priceConsumer.accept(marketPrice.getPrice());
                 } catch (Throwable t) {
                     log.warn("Error at applyPriceToConsumer " + t.getMessage());
                 }

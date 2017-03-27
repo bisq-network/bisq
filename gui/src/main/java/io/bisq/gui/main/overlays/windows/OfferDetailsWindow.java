@@ -37,8 +37,8 @@ import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -211,8 +211,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             }
         }
         final PaymentMethod paymentMethod = offer.getPaymentMethod();
-        final String offererPaymentAccountId = offer.getOffererPaymentAccountId();
-        final PaymentAccount paymentAccount = user.getPaymentAccount(offererPaymentAccountId);
+        final String makerPaymentAccountId = offer.getMakerPaymentAccountId();
+        final PaymentAccount paymentAccount = user.getPaymentAccount(makerPaymentAccountId);
         String bankId = offer.getBankId();
         if (bankId == null || bankId.equals("null"))
             bankId = "";
@@ -221,7 +221,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         final boolean isSpecificBanks = paymentMethod.equals(PaymentMethod.SPECIFIC_BANKS);
         final boolean isNationalBanks = paymentMethod.equals(PaymentMethod.NATIONAL_BANK);
         final boolean isSepa = paymentMethod.equals(PaymentMethod.SEPA);
-        if (offer.isMyOffer(keyRing) && offererPaymentAccountId != null && paymentAccount != null) {
+        if (offer.isMyOffer(keyRing) && makerPaymentAccountId != null && paymentAccount != null) {
             addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.myTradingAccount"), paymentAccount.getAccountName());
         } else {
             final String method = Res.get(paymentMethod.getId());
@@ -285,7 +285,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.getWithCol("shared.offerId"), offer.getId(),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.makersOnion"),
-                offer.getOffererNodeAddress().getFullAddress());
+                offer.getMakerNodeAddress().getFullAddress());
         addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.creationDate"),
                 formatter.formatDateTime(offer.getDate()));
         String value = Res.getWithColAndCap("shared.buyer") +

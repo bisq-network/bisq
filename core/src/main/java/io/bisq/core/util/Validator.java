@@ -17,7 +17,7 @@
 
 package io.bisq.core.util;
 
-import io.bisq.wire.message.trade.TradeMessage;
+import io.bisq.protobuffer.message.trade.TradeMessage;
 import org.bitcoinj.core.Coin;
 
 import static com.google.common.base.Preconditions.checkArgument;

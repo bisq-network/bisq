@@ -25,7 +25,7 @@ import io.bisq.core.payment.PaymentAccount;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;

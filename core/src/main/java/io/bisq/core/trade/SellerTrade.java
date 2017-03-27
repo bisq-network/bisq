@@ -23,7 +23,7 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.protocol.SellerProtocol;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,16 +59,5 @@ public abstract class SellerTrade extends Trade {
     public Coin getPayoutAmount() {
         return getOffer().getSellerSecurityDeposit();
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setter for Mutable objects
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void setState(State state) {
-        super.setState(state);
-
-        if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
-            tradeProtocol.completed();
-    }
 }
+

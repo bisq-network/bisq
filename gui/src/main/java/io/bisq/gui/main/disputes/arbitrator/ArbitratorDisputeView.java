@@ -27,7 +27,7 @@ import io.bisq.gui.main.overlays.windows.DisputeSummaryWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
+import io.bisq.protobuffer.crypto.KeyRing;
 import javafx.stage.Stage;
 
 import javax.inject.Inject;
@@ -59,6 +59,7 @@ public class ArbitratorDisputeView extends TraderDisputeView {
                 dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()) &&
                         (filterString.isEmpty() ||
                                 (dispute.getId().contains(filterString) ||
+                                        (!dispute.isClosed() && filterString.toLowerCase().equals("open")) ||
                                         formatter.formatDate(dispute.getOpeningDate()).contains(filterString)) ||
                                 getBuyerOnionAddressColumnLabel(dispute).contains(filterString) ||
                                 getSellerOnionAddressColumnLabel(dispute).contains(filterString)

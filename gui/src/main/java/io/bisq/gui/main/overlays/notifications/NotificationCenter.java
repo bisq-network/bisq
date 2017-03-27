@@ -5,8 +5,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
 import io.bisq.core.arbitration.DisputeManager;
-import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.TradeManager;
+import io.bisq.core.trade.*;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.main.MainView;
@@ -55,7 +54,7 @@ public class NotificationCenter {
     private final Navigation navigation;
 
     private final Map<String, Subscription> disputeStateSubscriptionsMap = new HashMap<>();
-    private final Map<String, Subscription> tradeStateSubscriptionsMap = new HashMap<>();
+    private final Map<String, Subscription> tradePhaseSubscriptionsMap = new HashMap<>();
     @Nullable
     private String selectedTradeId;
 
@@ -85,9 +84,9 @@ public class NotificationCenter {
                         disputeStateSubscriptionsMap.remove(tradeId);
                     }
 
-                    if (tradeStateSubscriptionsMap.containsKey(tradeId)) {
-                        tradeStateSubscriptionsMap.get(tradeId).unsubscribe();
-                        tradeStateSubscriptionsMap.remove(tradeId);
+                    if (tradePhaseSubscriptionsMap.containsKey(tradeId)) {
+                        tradePhaseSubscriptionsMap.get(tradeId).unsubscribe();
+                        tradePhaseSubscriptionsMap.remove(tradeId);
                     }
                 });
             }
@@ -97,15 +96,17 @@ public class NotificationCenter {
                     if (disputeStateSubscriptionsMap.containsKey(tradeId)) {
                         log.debug("We have already an entry in disputeStateSubscriptionsMap.");
                     } else {
-                        Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), disputeState -> onDisputeStateChanged(trade, disputeState));
+                        Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
+                                disputeState -> onDisputeStateChanged(trade, disputeState));
                         disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
                     }
 
-                    if (tradeStateSubscriptionsMap.containsKey(tradeId)) {
-                        log.debug("We have already an entry in tradeStateSubscriptionsMap.");
+                    if (tradePhaseSubscriptionsMap.containsKey(tradeId)) {
+                        log.debug("We have already an entry in tradePhaseSubscriptionsMap.");
                     } else {
-                        Subscription tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), tradeState -> onTradeStateChanged(trade, tradeState));
-                        tradeStateSubscriptionsMap.put(tradeId, tradeStateSubscription);
+                        Subscription tradePhaseSubscription = EasyBind.subscribe(trade.statePhaseProperty(),
+                                phase -> onTradePhaseChanged(trade, phase));
+                        tradePhaseSubscriptionsMap.put(tradeId, tradePhaseSubscription);
                     }
                 });
             }
@@ -113,13 +114,16 @@ public class NotificationCenter {
 
         tradeManager.getTrades().stream()
                 .forEach(trade -> {
-                    String tradeId = trade.getId();
-                    Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), disputeState -> onDisputeStateChanged(trade, disputeState));
-                    disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
+                            String tradeId = trade.getId();
+                            Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
+                                    disputeState -> onDisputeStateChanged(trade, disputeState));
+                            disputeStateSubscriptionsMap.put(tradeId, disputeStateSubscription);
 
-                    Subscription tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), tradeState -> onTradeStateChanged(trade, tradeState));
-                    tradeStateSubscriptionsMap.put(tradeId, tradeStateSubscription);
-                });
+                            Subscription tradePhaseSubscription = EasyBind.subscribe(trade.statePhaseProperty(),
+                                    phase -> onTradePhaseChanged(trade, phase));
+                            tradePhaseSubscriptionsMap.put(tradeId, tradePhaseSubscription);
+                        }
+                );
     }
 
 
@@ -145,35 +149,26 @@ public class NotificationCenter {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onTradeStateChanged(Trade trade, Trade.State tradeState) {
-        Log.traceCall(tradeState.toString());
+
+    private void onTradePhaseChanged(Trade trade, Trade.Phase phase) {
         String message = null;
-        if (tradeState == Trade.State.PAYOUT_BROAD_CASTED) {
+        if (trade.isPayoutPublished() && !trade.isWithdrawn()) {
             message = Res.get("notification.trade.completed");
         } else {
-            if (tradeManager.isBuyer(trade.getOffer())) {
-                switch (tradeState) {
-                    case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
-                        message = Res.get("notification.trade.accepted", Res.get("shared.seller"));
-                        break;
-                    case DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN:
-                        message = Res.get("notification.trade.confirmed");
-                        break;
-                }
-            } else {
-                switch (tradeState) {
-                    case OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
-                        message = Res.get("notification.trade.accepted", Res.get("shared.buyer"));
-                        break;
-                    case SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG:
-                        message = Res.get("notification.trade.paymentStarted");
-                        break;
-                }
+            if (trade instanceof MakerTrade &&
+                    phase.ordinal() == Trade.Phase.DEPOSIT_PUBLISHED.ordinal()) {
+                final String role = trade instanceof BuyerTrade ? Res.get("shared.seller") : Res.get("shared.buyer");
+                message = Res.get("notification.trade.accepted", role);
             }
+
+            if (trade instanceof BuyerTrade && phase.ordinal() == Trade.Phase.DEPOSIT_CONFIRMED.ordinal())
+                message = Res.get("notification.trade.confirmed");
+            else if (trade instanceof SellerTrade && phase.ordinal() == Trade.Phase.FIAT_SENT.ordinal())
+                message = Res.get("notification.trade.paymentStarted");
         }
 
         if (message != null) {
-            String key = tradeState.name() + trade.getId();
+            String key = "NotificationCenter_" + phase.name() + trade.getId();
             if (preferences.showAgain(key)) {
                 Notification notification = new Notification().tradeHeadLine(trade.getShortId()).message(message);
                 if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(PendingTradesView.class)) {

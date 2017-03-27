@@ -20,9 +20,9 @@ package io.bisq.core.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.core.user.Preferences;
-import io.bisq.wire.payload.payment.OKPayAccountPayload;
-import io.bisq.wire.payload.payment.PaymentAccountPayload;
-import io.bisq.wire.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.payload.payment.OKPayAccountPayload;
+import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ public final class OKPayAccount extends PaymentAccount {
     }
 
     @Override
-    protected PaymentAccountPayload setPayload() {
+    protected PaymentAccountPayload getPayload() {
         return new OKPayAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 

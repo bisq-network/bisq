@@ -28,14 +28,16 @@ import io.bisq.core.user.User;
 import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.arbitration.Arbitrator;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.arbitration.Arbitrator;
+import io.bisq.protobuffer.payload.arbitration.Mediator;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,6 +111,9 @@ public class ArbitratorManager {
         persistedAcceptedArbitrators = new ArrayList<>(user.getAcceptedArbitrators());
         user.clearAcceptedArbitrators();
 
+        // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
+        user.clearAcceptedMediators();
+
         arbitratorService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
@@ -165,17 +170,25 @@ public class ArbitratorManager {
         Map<NodeAddress, Arbitrator> filtered = map.values().stream()
                 .filter(e -> isPublicKeyInList(Utils.HEX.encode(e.getRegistrationPubKey()))
                         && verifySignature(e.getPubKeyRing().getSignaturePubKey(), e.getRegistrationPubKey(), e.getRegistrationSignature()))
-                .collect(Collectors.toMap(Arbitrator::getArbitratorNodeAddress, Function.identity()));
+                .collect(Collectors.toMap(Arbitrator::getNodeAddress, Function.identity()));
 
         arbitratorsObservableMap.putAll(filtered);
         arbitratorsObservableMap.values().stream()
                 .filter(arbitrator -> persistedAcceptedArbitrators.contains(arbitrator))
-                .forEach(user::addAcceptedArbitrator);
+                .forEach(a -> {
+                    user.addAcceptedArbitrator(a);
+                    user.addAcceptedMediator(getMediator(a)
+                    );
+                });
 
         if (preferences.getAutoSelectArbitrators()) {
             arbitratorsObservableMap.values().stream()
                     .filter(user::hasMatchingLanguage)
-                    .forEach(user::addAcceptedArbitrator);
+                    .forEach(a -> {
+                        user.addAcceptedArbitrator(a);
+                        user.addAcceptedMediator(getMediator(a)
+                        );
+                    });
         } else {
             // if we don't have any arbitrator we set all matching
             // we use a delay as we might get our matching arbitrator a bit delayed (first we get one we did not selected
@@ -184,15 +197,32 @@ public class ArbitratorManager {
                 if (user.getAcceptedArbitrators().isEmpty()) {
                     arbitratorsObservableMap.values().stream()
                             .filter(user::hasMatchingLanguage)
-                            .forEach(user::addAcceptedArbitrator);
+                            .forEach(a -> {
+                                user.addAcceptedArbitrator(a);
+                                user.addAcceptedMediator(getMediator(a)
+                                );
+                            });
                 }
             }, 100, TimeUnit.MILLISECONDS);
         }
     }
 
+    // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
+    @NotNull
+    public static Mediator getMediator(Arbitrator arbitrator) {
+        return new Mediator(arbitrator.getNodeAddress(),
+                arbitrator.getPubKeyRing(),
+                arbitrator.getLanguageCodes(),
+                new Date(arbitrator.getRegistrationDate()),
+                arbitrator.getRegistrationPubKey(),
+                arbitrator.getRegistrationSignature(),
+                arbitrator.getEmailAddress(),
+                arbitrator.getExtraDataMap());
+    }
+
     public void addArbitrator(Arbitrator arbitrator, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         user.setRegisteredArbitrator(arbitrator);
-        arbitratorsObservableMap.put(arbitrator.getArbitratorNodeAddress(), arbitrator);
+        arbitratorsObservableMap.put(arbitrator.getNodeAddress(), arbitrator);
         arbitratorService.addArbitrator(arbitrator,
                 () -> {
                     log.debug("Arbitrator successfully saved in P2P network");
@@ -208,7 +238,7 @@ public class ArbitratorManager {
         Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
         if (registeredArbitrator != null) {
             user.setRegisteredArbitrator(null);
-            arbitratorsObservableMap.remove(registeredArbitrator.getArbitratorNodeAddress());
+            arbitratorsObservableMap.remove(registeredArbitrator.getNodeAddress());
             arbitratorService.removeArbitrator(registeredArbitrator,
                     () -> {
                         log.debug("Arbitrator successfully removed from P2P network");

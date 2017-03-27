@@ -17,6 +17,7 @@
 
 package io.bisq.gui.main.offer.takeoffer;
 
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
@@ -36,8 +37,8 @@ import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.ConnectionListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.payload.arbitration.Arbitrator;
-import io.bisq.wire.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.payload.arbitration.Arbitrator;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
@@ -172,7 +173,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 errorMessage.set(newValue);
         };
         offer.errorMessageProperty().addListener(offerErrorListener);
-        errorMessage.set(offer.errorMessageProperty().get());
+        errorMessage.set(offer.getErrorMessage());
 
         btcValidator.setMaxValueInBitcoin(offer.getAmount());
     }
@@ -191,7 +192,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             trade.stateProperty().addListener(tradeStateListener);
             applyTradeState(trade.getState());
             trade.errorMessageProperty().addListener(tradeErrorListener);
-            applyTradeErrorMessage(trade.errorMessageProperty().get());
+            applyTradeErrorMessage(trade.getErrorMessage());
             takeOfferCompleted.set(true);
         });
 
@@ -255,7 +256,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             Res.get("takeOffer.validation.amountLargerThanOfferAmount")));
 
-                if (dataModel.wouldCreateDustForOfferer())
+                if (dataModel.wouldCreateDustForMaker())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
             }
@@ -298,7 +299,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
                 takeOfferRequested = false;
                 break;
-            case OFFERER_OFFLINE:
+            case MAKER_OFFLINE:
                 if (takeOfferRequested)
                     offerWarning.set(Res.get("takeOffer.failed.offererNotOnline"));
                 else
@@ -322,20 +323,17 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 case PREPARATION:
                     appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;
-                case TAKER_FEE_PAID:
+                case TAKER_FEE_PUBLISHED:
                     appendMsg = Res.get("takeOffer.error.feePaid");
                     break;
-                case DEPOSIT_PAID:
+                case DEPOSIT_PUBLISHED:
                 case FIAT_SENT:
                 case FIAT_RECEIVED:
                     appendMsg = Res.get("takeOffer.error.depositPublished");
                     break;
-                case PAYOUT_PAID:
+                case PAYOUT_PUBLISHED:
                 case WITHDRAWN:
                     appendMsg = Res.get("takeOffer.error.payoutPublished");
-                    break;
-                case DISPUTE:
-                    appendMsg = Res.get("takeOffer.error.disputed");
                     break;
             }
             this.errorMessage.set(errorMessage + appendMsg);
@@ -352,10 +350,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void applyTradeState(Trade.State tradeState) {
         log.debug("applyTradeState state = " + tradeState);
 
-        if (trade.getState() == Trade.State.TAKER_PUBLISHED_DEPOSIT_TX
-                || trade.getState() == Trade.State.DEPOSIT_SEEN_IN_NETWORK
-                || trade.getState() == Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG
-                || trade.getState() == Trade.State.OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG) {
+        if (trade.isDepositPublished()) {
             if (trade.getDepositTx() != null) {
                 if (takeOfferSucceededHandler != null)
                     takeOfferSucceededHandler.run();
@@ -363,7 +358,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 showTransactionPublishedScreen.set(true);
                 updateSpinnerInfo();
             } else {
-                log.error("trade.getDepositTx() == null. That must not happen");
+                final String msg = "trade.getDepositTx() must not be null.";
+                if (DevEnv.DEV_MODE)
+                    throw new RuntimeException(msg);
+                log.error(msg);
             }
         }
     }
@@ -373,7 +371,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 && dataModel.isMinAmountLessOrEqualAmount()
                 && !dataModel.isAmountLargerThanOfferAmount()
                 && isOfferAvailable.get()
-                && !dataModel.wouldCreateDustForOfferer();
+                && !dataModel.wouldCreateDustForMaker();
         isNextButtonDisabled.set(!inputDataValid);
         // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
         // isTakeOfferButtonDisabled.set(takeOfferRequested || !inputDataValid || notSufficientFees);
@@ -424,7 +422,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 if (connection.getPeersNodeAddressOptional().isPresent() &&
-                        connection.getPeersNodeAddressOptional().get().equals(offer.getOffererNodeAddress())) {
+                        connection.getPeersNodeAddressOptional().get().equals(offer.getMakerNodeAddress())) {
                     offerWarning.set(Res.get("takeOffer.warning.connectionToPeerLost"));
                     updateSpinnerInfo();
                 }

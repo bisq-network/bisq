@@ -21,7 +21,6 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple3;
-import io.bisq.core.trade.Trade;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
@@ -31,7 +30,7 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bisq.gui.util.Layout;
-import io.bisq.wire.payload.payment.*;
+import io.bisq.protobuffer.payload.payment.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
@@ -62,68 +61,26 @@ public class BuyerStep2View extends TradeStepView {
         //TODO we get called twice, check why
         if (tradeStatePropertySubscription == null) {
             tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
-                if (state == Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN) {
-
-                    PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
-                    if (paymentAccountPayload != null) {
-                        String paymentDetailsForTradePopup = paymentAccountPayload.getPaymentDetailsForTradePopup();
-                        String key = "startPayment" + trade.getId();
-                        String message = Res.get("portfolio.pending.step2.confReached");
-                        String copyPaste = Res.get("portfolio.pending.step2_buyer.copyPaste");
-                        String refTextWarn = Res.get("portfolio.pending.step2_buyer.refTextWarn");
-                        String accountDetails = Res.get("portfolio.pending.step2_buyer.accountDetails");
-                        String tradeId = Res.get("portfolio.pending.step2_buyer.tradeId");
-                        String assign = Res.get("portfolio.pending.step2_buyer.assign");
-                        String fees = Res.get("portfolio.pending.step2_buyer.fees");
-                        String id = trade.getShortId();
-                        String amount = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
-                        if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload)
-                            message += Res.get("portfolio.pending.step2_buyer.altcoin",
-                                    CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale()),
-                                    amount) +
-                                    accountDetails +
-                                    paymentDetailsForTradePopup + ".\n\n" +
-                                    copyPaste;
-                        else if (paymentAccountPayload instanceof CashDepositAccountPayload)
-                            message += Res.get("portfolio.pending.step2_buyer.cash",
-                                    amount) +
-                                    accountDetails +
-                                    paymentDetailsForTradePopup + ".\n" +
-                                    copyPaste + "\n\n" +
-                                    tradeId + id +
-                                    assign +
-                                    refTextWarn + "\n\n" +
-                                    fees + "\n\n" +
-                                    Res.get("portfolio.pending.step2_buyer.cash.extra");
-                        else if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
-                            message += Res.get("portfolio.pending.step2_buyer.postal", amount) +
-                                    accountDetails +
-                                    paymentDetailsForTradePopup + ".\n" +
-                                    copyPaste + "\n\n" +
-                                    tradeId + id +
-                                    assign +
-                                    refTextWarn;
-                        else
-                            message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
-                                    accountDetails +
-                                    paymentDetailsForTradePopup + ".\n" +
-                                    copyPaste + "\n\n" +
-                                    tradeId + id +
-                                    assign +
-                                    refTextWarn + "\n\n" +
-                                    fees;
-
-                        if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
-                            preferences.dontShowAgain(key, true);
-                            new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
-                                    .attention(message)
-                                    .show();
-                        }
+                if (trade.isDepositConfirmed() && !trade.isFiatSent()) {
+                    showPopup();
+                } else if (trade.isFiatSent()) {
+                    busyAnimation.stop();
+                    switch (state) {
+                        case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED:
+                        case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
+                            busyAnimation.play();
+                            statusLabel.setText(Res.get("shared.sendingConfirmation"));
+                            break;
+                        case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:
+                            statusLabel.setText(Res.get("shared.messageArrived"));
+                            break;
+                        case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:
+                            statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
+                            break;
+                        case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:
+                            // We get a popup and the trade closed, so we dont need to show anything here
+                            break;
                     }
-                } else if (state == Trade.State.BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED && confirmButton.isDisabled()) {
-                    showStatusInfo();
-                } else if (state == Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG) {
-                    hideStatusInfo();
                 }
             });
         }
@@ -133,7 +90,8 @@ public class BuyerStep2View extends TradeStepView {
     public void deactivate() {
         super.deactivate();
 
-        hideStatusInfo();
+        busyAnimation.stop();
+
         if (tradeStatePropertySubscription != null) {
             tradeStatePropertySubscription.unsubscribe();
             tradeStatePropertySubscription = null;
@@ -203,8 +161,9 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = CashDepositForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
-                String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress", CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(),
-                        Preferences.getDefaultLocale()));
+                String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",
+                        CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(),
+                                Preferences.getDefaultLocale()));
                 gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);
                 break;
             default:
@@ -212,17 +171,17 @@ public class BuyerStep2View extends TradeStepView {
         }
 
         if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload))
-            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
+            addLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+                    Res.getWithCol("shared.reasonForPayment"), model.dataModel.getReference());
 
         GridPane.setRowSpan(accountTitledGroupBg, gridRow - 3);
 
-        Tuple3<Button, BusyAnimation, Label> tuple3 = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow, Res.get("portfolio.pending.step2_buyer.paymentStarted"));
+        Tuple3<Button, BusyAnimation, Label> tuple3 = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
+                Res.get("portfolio.pending.step2_buyer.paymentStarted"));
         confirmButton = tuple3.first;
         confirmButton.setOnAction(e -> onPaymentStarted());
         busyAnimation = tuple3.second;
         statusLabel = tuple3.third;
-
-        hideStatusInfo();
     }
 
 
@@ -233,7 +192,9 @@ public class BuyerStep2View extends TradeStepView {
     @Override
     protected String getWarningText() {
         setWarningHeadline();
-        return Res.get("portfolio.pending.step2_buyer.warn", model.dataModel.getCurrencyCode(), model.getDateForOpenDispute());
+        return Res.get("portfolio.pending.step2_buyer.warn",
+                model.dataModel.getCurrencyCode(),
+                model.getDateForOpenDispute());
     }
 
 
@@ -285,8 +246,9 @@ public class BuyerStep2View extends TradeStepView {
         if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
             Popup popup = new Popup();
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
-                    .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg", CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(),
-                            Preferences.getDefaultLocale())))
+                    .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg",
+                            CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(),
+                                    Preferences.getDefaultLocale())))
                     .width(700)
                     .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.yes"))
                     .onAction(this::confirmPaymentStarted)
@@ -301,7 +263,6 @@ public class BuyerStep2View extends TradeStepView {
 
     private void confirmPaymentStarted() {
         confirmButton.setDisable(true);
-        showStatusInfo();
         model.dataModel.onPaymentStarted(() -> {
             // In case the first send failed we got the support button displayed. 
             // If it succeeds at a second try we remove the support button again.
@@ -310,18 +271,67 @@ public class BuyerStep2View extends TradeStepView {
             //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
             confirmButton.setDisable(false);
-            hideStatusInfo();
+            busyAnimation.stop();
             new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 
-    private void showStatusInfo() {
-        busyAnimation.play();
-        statusLabel.setText(Res.get("shared.sendingConfirmation"));
-    }
+    private void showPopup() {
+        PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+        if (paymentAccountPayload != null) {
+            String paymentDetailsForTradePopup = paymentAccountPayload.getPaymentDetailsForTradePopup();
+            String key = "startPayment" + trade.getId();
+            String message = Res.get("portfolio.pending.step2.confReached");
+            String copyPaste = Res.get("portfolio.pending.step2_buyer.copyPaste");
+            String refTextWarn = Res.get("portfolio.pending.step2_buyer.refTextWarn");
+            String accountDetails = Res.get("portfolio.pending.step2_buyer.accountDetails");
+            String tradeId = Res.get("portfolio.pending.step2_buyer.tradeId");
+            String assign = Res.get("portfolio.pending.step2_buyer.assign");
+            String fees = Res.get("portfolio.pending.step2_buyer.fees");
+            String id = trade.getShortId();
+            String amount = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
+            if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload)
+                message += Res.get("portfolio.pending.step2_buyer.altcoin",
+                        CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale()),
+                        amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n\n" +
+                        copyPaste;
+            else if (paymentAccountPayload instanceof CashDepositAccountPayload)
+                message += Res.get("portfolio.pending.step2_buyer.cash",
+                        amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n" +
+                        copyPaste + "\n\n" +
+                        tradeId + id +
+                        assign +
+                        refTextWarn + "\n\n" +
+                        fees + "\n\n" +
+                        Res.get("portfolio.pending.step2_buyer.cash.extra");
+            else if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
+                message += Res.get("portfolio.pending.step2_buyer.postal", amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n" +
+                        copyPaste + "\n\n" +
+                        tradeId + id +
+                        assign +
+                        refTextWarn;
+            else
+                message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
+                        accountDetails +
+                        paymentDetailsForTradePopup + ".\n" +
+                        copyPaste + "\n\n" +
+                        tradeId + id +
+                        assign +
+                        refTextWarn + "\n\n" +
+                        fees;
 
-    private void hideStatusInfo() {
-        busyAnimation.stop();
-        statusLabel.setText("");
+            if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
+                preferences.dontShowAgain(key, true);
+                new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
+                        .attention(message)
+                        .show();
+            }
+        }
     }
 }

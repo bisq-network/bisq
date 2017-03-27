@@ -50,6 +50,7 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.*;
@@ -124,6 +125,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     //  private MonadicBinding<Boolean> noSufficientFeeBinding;
     private Subscription cancelButton2StyleSubscription;
     private VBox priceAsPercentageInputBox;
+    private boolean clearXchangeWarningDisplayed;
     private TextField buyerSecurityDepositTextField, sellerSecurityDepositTextField;
     private Label buyerSecurityDepositBtcLabel, sellerSecurityDepositBtcLabel;
 
@@ -202,6 +204,17 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
        /* if (DevFlags.DEV_MODE)
             UserThread.runAfter(() -> onShowPayFundsScreen(), 200, TimeUnit.MILLISECONDS);*/
+
+        maybeShowClearXchangeWarning();
+    }
+
+    private void maybeShowClearXchangeWarning() {
+        if (model.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
+                !clearXchangeWarningDisplayed) {
+            clearXchangeWarningDisplayed = true;
+            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(preferences),
+                    500, TimeUnit.MILLISECONDS);
+        }
     }
 
     @Override
@@ -531,7 +544,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             if (newValue && DevEnv.DEV_MODE) {
                 close();
             } else //noinspection ConstantConditions,ConstantConditions
-                if (newValue && model.getTrade() != null && model.getTrade().errorMessageProperty().get() == null) {
+                if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
                     String key = "takeOfferSuccessInfo";
                     if (preferences.showAgain(key)) {
                         UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
@@ -653,7 +666,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         });
         paymentAccountsComboBox.setVisible(false);
         paymentAccountsComboBox.setManaged(false);
-        paymentAccountsComboBox.setOnAction(e -> model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem()));
+        paymentAccountsComboBox.setOnAction(e -> {
+            maybeShowClearXchangeWarning();
+            model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem());
+        });
 
         Tuple2<Label, TextField> tuple2 = FormBuilder.addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.paymentMethod"), "", Layout.FIRST_ROW_DISTANCE);
         paymentMethodLabel = tuple2.first;

@@ -21,6 +21,7 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.monetary.Price;
@@ -38,10 +39,11 @@ import io.bisq.core.trade.protocol.TradeProtocol;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.arbitration.Arbitrator;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.trade.Contract;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.arbitration.Arbitrator;
+import io.bisq.protobuffer.payload.arbitration.Mediator;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.trade.Contract;
 import javafx.beans.property.*;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -70,53 +72,98 @@ public abstract class Trade implements Tradable, Model {
     private static final Logger log = LoggerFactory.getLogger(Trade.class);
 
     public enum State {
+        // #################### Phase PREPARATION 
+        // When trade protocol starts no funds are on stake
         PREPARATION(Phase.PREPARATION),
 
-        TAKER_FEE_PAID(Phase.TAKER_FEE_PAID),
+        // At first part maker/taker have different roles
+        // taker perspective
+        // #################### Phase TAKER_FEE_PAID 
+        TAKER_PUBLISHED_TAKER_FEE_TX(Phase.TAKER_FEE_PUBLISHED),
 
-        OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST(Phase.DEPOSIT_REQUESTED),
-        TAKER_PUBLISHED_DEPOSIT_TX(Phase.DEPOSIT_PAID),
-        DEPOSIT_SEEN_IN_NETWORK(Phase.DEPOSIT_PAID), // triggered by balance update, used only in error cases
-        TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG(Phase.DEPOSIT_PAID),
-        OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG(Phase.DEPOSIT_PAID),
-        DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN(Phase.DEPOSIT_PAID),
+        // PUBLISH_DEPOSIT_TX_REQUEST
+        // maker perspective
+        MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
+        MAKER_SAW_ARRIVED_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
+        MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
+        MAKER_SEND_FAILED_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
 
-        BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED(Phase.FIAT_SENT),
+        // taker perspective
+        TAKER_RECEIVED_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
+
+
+        // #################### Phase DEPOSIT_PAID 
+        TAKER_PUBLISHED_DEPOSIT_TX(Phase.DEPOSIT_PUBLISHED),
+
+
+        // DEPOSIT_TX_PUBLISHED_MSG
+        // taker perspective
+        TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG(Phase.DEPOSIT_PUBLISHED),
+        TAKER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG(Phase.DEPOSIT_PUBLISHED),
+        TAKER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG(Phase.DEPOSIT_PUBLISHED),
+        TAKER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG(Phase.DEPOSIT_PUBLISHED),
+
+        // maker perspective
+        MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG(Phase.DEPOSIT_PUBLISHED),
+
+        // Alternatively the maker could have seen the deposit tx earlier before he received the DEPOSIT_TX_PUBLISHED_MSG
+        MAKER_SAW_DEPOSIT_TX_IN_NETWORK(Phase.DEPOSIT_PUBLISHED),
+
+
+        // #################### Phase DEPOSIT_CONFIRMED
+        DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN(Phase.DEPOSIT_CONFIRMED),
+
+
+        // #################### Phase FIAT_SENT
+        BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED(Phase.FIAT_SENT),
         BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG(Phase.FIAT_SENT),
+        BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG(Phase.FIAT_SENT),
+        BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG(Phase.FIAT_SENT),
+        BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG(Phase.FIAT_SENT),
+
         SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG(Phase.FIAT_SENT),
 
-        SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT(Phase.FIAT_RECEIVED),
-        SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG(Phase.FIAT_RECEIVED),
-        BUYER_RECEIVED_FIAT_PAYMENT_RECEIPT_MSG(Phase.FIAT_RECEIVED),
+        // #################### Phase FIAT_RECEIVED
+        SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT(Phase.FIAT_RECEIVED),
 
-        BUYER_COMMITTED_PAYOUT_TX(Phase.PAYOUT_PAID), //TODO needed?
-        BUYER_STARTED_SEND_PAYOUT_TX(Phase.PAYOUT_PAID), // not from the success/arrived handler!
-        SELLER_RECEIVED_AND_COMMITTED_PAYOUT_TX(Phase.PAYOUT_PAID),
-        PAYOUT_BROAD_CASTED(Phase.PAYOUT_PAID),
+        // #################### Phase PAYOUT_PAID
+        SELLER_PUBLISHED_PAYOUT_TX(Phase.PAYOUT_PUBLISHED),
 
+        SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
+        SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
+        SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
+        SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
+
+
+        BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG(Phase.PAYOUT_PUBLISHED),
+        // Alternatively the maker could have seen the payout tx earlier before he received the PAYOUT_TX_PUBLISHED_MSG
+        BUYER_SAW_PAYOUT_TX_IN_NETWORK(Phase.PAYOUT_PUBLISHED),
+
+
+        // #################### Phase WITHDRAWN
         WITHDRAW_COMPLETED(Phase.WITHDRAWN);
 
         public Phase getPhase() {
             return phase;
         }
 
+        @NotNull
         private final Phase phase;
 
-        State(Phase phase) {
+        State(@NotNull Phase phase) {
             this.phase = phase;
         }
     }
 
     public enum Phase {
         PREPARATION,
-        TAKER_FEE_PAID,
-        DEPOSIT_REQUESTED,
-        DEPOSIT_PAID,
+        TAKER_FEE_PUBLISHED,
+        DEPOSIT_PUBLISHED,
+        DEPOSIT_CONFIRMED,
         FIAT_SENT,
         FIAT_RECEIVED,
-        PAYOUT_PAID,
-        WITHDRAWN,
-        DISPUTE
+        PAYOUT_PUBLISHED,
+        WITHDRAWN
     }
 
     public enum DisputeState {
@@ -139,6 +186,7 @@ public abstract class Trade implements Tradable, Model {
 
     // Transient/Immutable
     transient private ObjectProperty<State> stateProperty;
+    transient private ObjectProperty<Phase> statePhaseProperty;
     transient private ObjectProperty<DisputeState> disputeStateProperty;
     transient private ObjectProperty<TradePeriodState> tradePeriodStateProperty;
     // Trades are saved in the TradeList
@@ -169,10 +217,10 @@ public abstract class Trade implements Tradable, Model {
     private String contractAsJson;
     private byte[] contractHash;
     private String takerContractSignature;
-    private String offererContractSignature;
+    private String makerContractSignature;
     private Transaction payoutTx;
-    private long lockTimeAsBlockHeight;
     private NodeAddress arbitratorNodeAddress;
+    private NodeAddress mediatorNodeAddress;
     private byte[] arbitratorBtcPubKey;
     private String takerPaymentAccountId;
     private String errorMessage;
@@ -186,7 +234,7 @@ public abstract class Trade implements Tradable, Model {
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // offerer
+    // maker
     protected Trade(Offer offer, Coin txFee, Coin takeOfferFee, Storage<? extends TradableList> storage) {
         this.offer = offer;
         this.txFee = txFee;
@@ -264,6 +312,7 @@ public abstract class Trade implements Tradable, Model {
 
     protected void initStateProperties() {
         stateProperty = new SimpleObjectProperty<>(state);
+        statePhaseProperty = new SimpleObjectProperty<>(state.phase);
         disputeStateProperty = new SimpleObjectProperty<>(disputeState);
         tradePeriodStateProperty = new SimpleObjectProperty<>(tradePeriodState);
     }
@@ -326,11 +375,24 @@ public abstract class Trade implements Tradable, Model {
 
     public void setState(State state) {
         log.info("Trade.setState: " + state);
-        boolean changed = this.state != state;
-        this.state = state;
-        stateProperty.set(state);
-        if (changed)
-            persist();
+        if (state.getPhase().ordinal() >= this.state.getPhase().ordinal()) {
+            boolean changed = this.state != state;
+            this.state = state;
+            stateProperty.set(state);
+            statePhaseProperty.set(state.getPhase());
+
+            if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
+                tradeProtocol.completed();
+
+            if (changed)
+                persist();
+        } else {
+            final String message = "we got a state change to a previous phase. that is likely a bug.\n" +
+                    "old state is: " + this.state + ". New state is: " + state;
+            log.error(message);
+            if (DevEnv.DEV_MODE)
+                throw new RuntimeException(message);
+        }
     }
 
     public void setDisputeState(DisputeState disputeState) {
@@ -358,12 +420,36 @@ public abstract class Trade implements Tradable, Model {
         return tradePeriodState;
     }
 
-    public boolean isTakerFeePaid() {
-        return state.getPhase() != null && state.getPhase().ordinal() >= Phase.TAKER_FEE_PAID.ordinal();
+    public boolean isInPreparation() {
+        return state.getPhase().ordinal() == Phase.PREPARATION.ordinal();
     }
 
-    public boolean isDepositPaid() {
-        return state.getPhase() != null && state.getPhase().ordinal() >= Phase.DEPOSIT_PAID.ordinal();
+    public boolean isTakerFeePublished() {
+        return state.getPhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
+    }
+
+    public boolean isDepositPublished() {
+        return state.getPhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
+    }
+
+    public boolean isDepositConfirmed() {
+        return state.getPhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
+    }
+
+    public boolean isFiatSent() {
+        return state.getPhase().ordinal() >= Phase.FIAT_SENT.ordinal();
+    }
+
+    public boolean isFiatReceived() {
+        return state.getPhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
+    }
+
+    public boolean isPayoutPublished() {
+        return state.getPhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
+    }
+
+    public boolean isWithdrawn() {
+        return state.getPhase().ordinal() == Phase.WITHDRAWN.ordinal();
     }
 
     public State getState() {
@@ -435,9 +521,16 @@ public abstract class Trade implements Tradable, Model {
         return halfTradePeriodDate;
     }
 
+    public boolean hasFailed() {
+        return errorMessageProperty().get() != null;
+    }
 
-    public ReadOnlyObjectProperty<? extends State> stateProperty() {
+    public ReadOnlyObjectProperty<State> stateProperty() {
         return stateProperty;
+    }
+
+    public ReadOnlyObjectProperty<Phase> statePhaseProperty() {
+        return statePhaseProperty;
     }
 
     public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
@@ -447,7 +540,6 @@ public abstract class Trade implements Tradable, Model {
     public ReadOnlyObjectProperty<Volume> tradeVolumeProperty() {
         return tradeVolumeProperty;
     }
-
 
     public ReadOnlyObjectProperty<DisputeState> disputeStateProperty() {
         return disputeStateProperty;
@@ -505,15 +597,6 @@ public abstract class Trade implements Tradable, Model {
         return takeOfferFee;
     }
 
-
-    public void setLockTimeAsBlockHeight(long lockTimeAsBlockHeight) {
-        this.lockTimeAsBlockHeight = lockTimeAsBlockHeight;
-    }
-
-    public long getLockTimeAsBlockHeight() {
-        return lockTimeAsBlockHeight;
-    }
-
     public void setTakerContractSignature(String takerSignature) {
         this.takerContractSignature = takerSignature;
     }
@@ -523,13 +606,13 @@ public abstract class Trade implements Tradable, Model {
         return takerContractSignature;
     }
 
-    public void setOffererContractSignature(String offererContractSignature) {
-        this.offererContractSignature = offererContractSignature;
+    public void setMakerContractSignature(String makerContractSignature) {
+        this.makerContractSignature = makerContractSignature;
     }
 
     @Nullable
-    public String getOffererContractSignature() {
-        return offererContractSignature;
+    public String getMakerContractSignature() {
+        return makerContractSignature;
     }
 
     public void setContractAsJson(String contractAsJson) {
@@ -554,7 +637,6 @@ public abstract class Trade implements Tradable, Model {
         this.payoutTx = payoutTx;
     }
 
-    // Not used now, but will be used in some reporting UI
     @Nullable
     public Transaction getPayoutTx() {
         return payoutTx;
@@ -569,6 +651,10 @@ public abstract class Trade implements Tradable, Model {
         return errorMessageProperty;
     }
 
+    public String getErrorMessage() {
+        return errorMessageProperty.get();
+    }
+
     public NodeAddress getArbitratorNodeAddress() {
         return arbitratorNodeAddress;
     }
@@ -581,19 +667,26 @@ public abstract class Trade implements Tradable, Model {
         arbitratorBtcPubKey = arbitrator.getBtcPubKey();
     }
 
-    public byte[] getArbitratorPubKey() {
-        // Prior to v0.4.8.4 we did not store the arbitratorBtcPubKey in the trade object so we need to support the 
-        // previously used version as well and request the arbitrator from the user object (but that caused sometimes a bug when 
-        // the client did not get delivered an arbitrator from the P2P network).
-        if (arbitratorBtcPubKey == null) {
-            Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
-            checkNotNull(arbitrator, "arbitrator must not be null");
-            arbitratorBtcPubKey = arbitrator.getBtcPubKey();
-        }
+    public byte[] getArbitratorBtcPubKey() {
+        Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
+        checkNotNull(arbitrator, "arbitrator must not be null");
+        arbitratorBtcPubKey = arbitrator.getBtcPubKey();
 
         checkNotNull(arbitratorBtcPubKey, "ArbitratorPubKey must not be null");
         return arbitratorBtcPubKey;
     }
+
+    public NodeAddress getMediatorNodeAddress() {
+        return mediatorNodeAddress;
+    }
+
+    public void applyMediatorNodeAddress(NodeAddress mediatorNodeAddress) {
+        this.mediatorNodeAddress = mediatorNodeAddress;
+
+        Mediator mediator = processModel.getUser().getAcceptedMediatorByAddress(mediatorNodeAddress);
+        checkNotNull(mediator, "mediator must not be null");
+    }
+
 
     public String getTakerPaymentAccountId() {
         return takerPaymentAccountId;
@@ -629,7 +722,7 @@ public abstract class Trade implements Tradable, Model {
         if (depositTx != null) {
             TransactionConfidence transactionConfidence = depositTx.getConfidence();
             log.debug("transactionConfidence " + transactionConfidence.getDepthInBlocks());
-            if (transactionConfidence.getDepthInBlocks() > 0) {
+            if (transactionConfidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
                 setConfirmedState();
             } else {
                 ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
@@ -649,7 +742,6 @@ public abstract class Trade implements Tradable, Model {
                     }
                 });
             }
-
         } else {
             log.error("depositTx == null. That must not happen.");
         }
@@ -658,8 +750,8 @@ public abstract class Trade implements Tradable, Model {
     abstract protected void createProtocol();
 
     private void setConfirmedState() {
-        // we oly apply the state if we are not already further in the process
-        if (state.ordinal() < State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN.ordinal())
+        // we only apply the state if we are not already further in the process
+        if (!isDepositConfirmed())
             setState(State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
     }
 
@@ -681,11 +773,13 @@ public abstract class Trade implements Tradable, Model {
                 "\n\tdepositTx=" + depositTx +
                 "\n\ttakeOfferFeeTxId=" + takeOfferFeeTxId +
                 "\n\tcontract=" + contract +
-                "\n\ttakerContractSignature.hashCode()='" + (takerContractSignature != null ? takerContractSignature.hashCode() : "") + '\'' +
-                "\n\toffererContractSignature.hashCode()='" + (offererContractSignature != null ? offererContractSignature.hashCode() : "") + '\'' +
+                "\n\ttakerContractSignature.hashCode()='" + (takerContractSignature != null ?
+                takerContractSignature.hashCode() : "") + '\'' +
+                "\n\tmakerContractSignature.hashCode()='" + (makerContractSignature != null ?
+                makerContractSignature.hashCode() : "") + '\'' +
                 "\n\tpayoutTx=" + payoutTx +
-                "\n\tlockTimeAsBlockHeight=" + lockTimeAsBlockHeight +
                 "\n\tarbitratorNodeAddress=" + arbitratorNodeAddress +
+                "\n\tmediatorNodeAddress=" + mediatorNodeAddress +
                 "\n\ttakerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 "\n\ttxFee='" + txFee.toFriendlyString() + '\'' +
                 "\n\ttakeOfferFee='" + takeOfferFee.toFriendlyString() + '\'' +

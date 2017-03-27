@@ -28,9 +28,9 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.arbitration.Arbitrator;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.arbitration.Arbitrator;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
@@ -146,6 +146,8 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
         if (allDataValid) {
             AddressEntry arbitratorDepositAddressEntry = walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR);
             String registrationSignature = arbitratorManager.signStorageSignaturePubKey(registrationKey);
+            // TODO not impl in UI    
+            String emailAddress = null;
             Arbitrator arbitrator = new Arbitrator(
                     p2PService.getAddress(),
                     arbitratorDepositAddressEntry.getPubKey(),
@@ -155,6 +157,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                     new Date(),
                     registrationKey.getPubKey(),
                     registrationSignature,
+                    emailAddress,
                     null
             );
 

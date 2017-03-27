@@ -1,6 +1,7 @@
 package io.bisq.network.p2p;
 
 import io.bisq.common.util.ByteArrayUtils;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
+@Slf4j
 public class Utils {
 
     public static int findFreeSystemPort() {
@@ -56,6 +58,7 @@ public class Utils {
                 int count = inflater.inflate(buf);
                 bos.write(buf, 0, count);
             } catch (DataFormatException e) {
+                log.error(e.toString());
                 e.printStackTrace();
                 throw new RuntimeException(e);
             }
@@ -63,6 +66,7 @@ public class Utils {
         try {
             bos.close();
         } catch (IOException e) {
+            log.error(e.toString());
             e.printStackTrace();
             throw new RuntimeException(e);
         }

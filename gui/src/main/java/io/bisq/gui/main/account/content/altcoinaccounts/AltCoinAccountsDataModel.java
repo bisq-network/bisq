@@ -29,7 +29,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.wire.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
@@ -105,11 +105,11 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
         boolean isPaymentAccountUsed = openOfferManager.getOpenOffers().stream()
-                .filter(o -> o.getOffer().getOffererPaymentAccountId().equals(paymentAccount.getId()))
+                .filter(o -> o.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()))
                 .findAny()
                 .isPresent();
         isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTrades().stream()
-                .filter(t -> t.getOffer().getOffererPaymentAccountId().equals(paymentAccount.getId()) ||
+                .filter(t -> t.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()) ||
                         paymentAccount.getId().equals(t.getTakerPaymentAccountId()))
                 .findAny()
                 .isPresent();

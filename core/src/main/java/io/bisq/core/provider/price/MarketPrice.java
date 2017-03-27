@@ -1,49 +1,25 @@
 package io.bisq.core.provider.price;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Value;
 
+import java.time.Instant;
+
+@Value
 public class MarketPrice {
-    private static final Logger log = LoggerFactory.getLogger(MarketPrice.class);
-    public final String currencyCode;
-    public final double last;
+    private static final long MARKET_PRICE_MAX_AGE_SEC = 1800;  // 30 min
 
-    public MarketPrice(String currencyCode, double last) {
+    private final String currencyCode;
+    private final double price;
+    private final long timestampSec;
+
+    public MarketPrice(String currencyCode, double price, long timestampSec) {
         this.currencyCode = currencyCode;
-        this.last = last;
+        this.price = price;
+        this.timestampSec = timestampSec;
     }
 
-    public double getPrice() {
-        return last;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof MarketPrice)) return false;
-
-        MarketPrice that = (MarketPrice) o;
-
-        if (Double.compare(that.last, last) != 0) return false;
-        return !(currencyCode != null ? !currencyCode.equals(that.currencyCode) : that.currencyCode != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result;
-        long temp;
-        result = currencyCode != null ? currencyCode.hashCode() : 0;
-        temp = Double.doubleToLongBits(last);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "MarketPrice{" +
-                "currencyCode='" + currencyCode + '\'' +
-                ", last='" + last + '\'' +
-                '}';
+    public boolean isValid() {
+        long limit = Instant.now().getEpochSecond() - MARKET_PRICE_MAX_AGE_SEC;
+        return timestampSec > limit && price > 0;
     }
 }

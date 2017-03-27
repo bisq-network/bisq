@@ -32,9 +32,9 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.Transitions;
-import io.bisq.wire.payload.arbitration.Dispute;
-import io.bisq.wire.payload.arbitration.DisputeResult;
-import io.bisq.wire.payload.trade.Contract;
+import io.bisq.protobuffer.payload.arbitration.Dispute;
+import io.bisq.protobuffer.payload.arbitration.DisputeResult;
+import io.bisq.protobuffer.payload.trade.Contract;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -231,7 +231,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addTitledGroupBg(gridPane, ++rowIndex, 16, Res.get("disputeSummaryWindow.title"));
         addLabelTextField(gridPane, rowIndex, Res.getWithCol("shared.tradeId"), dispute.getShortTradeId(), Layout.FIRST_ROW_DISTANCE);
         addLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), formatter.formatDateTime(dispute.getOpeningDate()));
-        if (dispute.isDisputeOpenerIsOfferer()) {
+        if (dispute.isDisputeOpenerIsMaker()) {
             if (dispute.isDisputeOpenerIsBuyer())
                 role = Res.get("support.buyerOfferer");
             else

@@ -19,10 +19,9 @@
         </dependency>
         <dependency>
             <groupId>io.bisq</groupId>
-            <artifactId>wire</artifactId>
+            <artifactId>protobuffer</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-
         <dependency>
             <groupId>io.bisq</groupId>
             <artifactId>jtorproxy</artifactId>

@@ -27,6 +27,7 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
+import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -131,28 +132,53 @@ class SpreadViewModel extends ActivatableViewModel {
             Price bestBuyOfferPrice = buyOffers.isEmpty() ? null : buyOffers.get(0).getPrice();
             if (bestBuyOfferPrice != null && bestSellOfferPrice != null) {
                 MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-                if (isFiatCurrency)
-                    spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
-                else
-                    spread = bestBuyOfferPrice.subtract(bestSellOfferPrice);
 
-                // TODO maybe show extra colums with spread and use real amount diff 
-                // not % based. e.g. diff between best buy and sell offer (of small amounts its a smaller gain)
-                
-                if (spread != null && marketPrice != null) {
-                    double marketPriceAsDouble = marketPrice.getPrice();
-                    final double precision = isFiatCurrency ?
-                            Math.pow(10, Fiat.SMALLEST_UNIT_EXPONENT) :
-                            Math.pow(10, Altcoin.SMALLEST_UNIT_EXPONENT);
+                // There have been some bug reports that an offer caused an overflow exception.
+                // We never found out which offer it was. So add here a try/catch to get better info if it 
+                // happens again
+                try {
+                    if (isFiatCurrency)
+                        spread = bestSellOfferPrice.subtract(bestBuyOfferPrice);
+                    else
+                        spread = bestBuyOfferPrice.subtract(bestSellOfferPrice);
 
-                    BigDecimal marketPriceAsBigDecimal = BigDecimal.valueOf(marketPriceAsDouble)
-                            .multiply(BigDecimal.valueOf(precision));
-                    // We multiply with 10000 because we use precision of 2 at % (100.00%)
-                    double result = BigDecimal.valueOf(spread.getValue())
-                            .multiply(BigDecimal.valueOf(10000))
-                            .divide(marketPriceAsBigDecimal, RoundingMode.HALF_UP)
-                            .doubleValue() / 10000;
-                    percentage = formatter.formatPercentagePrice(result);
+                    // TODO maybe show extra colums with spread and use real amount diff 
+                    // not % based. e.g. diff between best buy and sell offer (of small amounts its a smaller gain)
+
+                    if (spread != null && marketPrice != null && marketPrice.isValid()) {
+                        double marketPriceAsDouble = marketPrice.getPrice();
+                        final double precision = isFiatCurrency ?
+                                Math.pow(10, Fiat.SMALLEST_UNIT_EXPONENT) :
+                                Math.pow(10, Altcoin.SMALLEST_UNIT_EXPONENT);
+
+                        BigDecimal marketPriceAsBigDecimal = BigDecimal.valueOf(marketPriceAsDouble)
+                                .multiply(BigDecimal.valueOf(precision));
+                        // We multiply with 10000 because we use precision of 2 at % (100.00%)
+                        double result = BigDecimal.valueOf(spread.getValue())
+                                .multiply(BigDecimal.valueOf(10000))
+                                .divide(marketPriceAsBigDecimal, RoundingMode.HALF_UP)
+                                .doubleValue() / 10000;
+                        percentage = formatter.formatPercentagePrice(result);
+                    }
+                } catch (Throwable t) {
+                    try {
+                        // Don't translate msg. It is just for rare error cases and can be removed probably later if 
+                        // that error never gets reported again.
+                        String msg = "An error occurred at the spread calculation.\n" +
+                                "Error msg: " + t.toString() + "\n" +
+                                "Details of offer data: \n" +
+                                "bestSellOfferPrice: " + bestSellOfferPrice.getValue() + "\n" +
+                                "bestBuyOfferPrice: " + bestBuyOfferPrice.getValue() + "\n" +
+                                "sellOffer getCurrencyCode: " + sellOffers.get(0).getCurrencyCode() + "\n" +
+                                "buyOffer getCurrencyCode: " + buyOffers.get(0).getCurrencyCode() + "\n\n" +
+                                "Please copy and paste this data and send it to the developers so they can investigate the issue.";
+                        new Popup<>().error(msg).show();
+                        log.error(t.toString());
+                        t.printStackTrace();
+                    } catch (Throwable t2) {
+                        log.error(t2.toString());
+                        t2.printStackTrace();
+                    }
                 }
             }
 

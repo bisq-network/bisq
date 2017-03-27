@@ -44,12 +44,12 @@ import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.SendDirectMessageListener;
 import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.message.Message;
-import io.bisq.wire.message.offer.OfferAvailabilityRequest;
-import io.bisq.wire.message.offer.OfferAvailabilityResponse;
-import io.bisq.wire.payload.offer.AvailabilityResult;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.message.Message;
+import io.bisq.protobuffer.message.offer.OfferAvailabilityRequest;
+import io.bisq.protobuffer.message.offer.OfferAvailabilityResponse;
+import io.bisq.protobuffer.payload.offer.AvailabilityResult;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
@@ -368,27 +368,26 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             if (openOfferOptional.isPresent()) {
                 if (openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
                     final Offer offer = openOfferOptional.get().getOffer();
-                    if (!preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent()) {
+                    if (!preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent()) {
                         availabilityResult = AvailabilityResult.AVAILABLE;
+
+                        // TODO mediators not impl yet
                         List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
-                            // We need to be backward compatible. takersTradePrice was not used before 0.4.9.
-                            if (message.takersTradePrice > 0) {
-                                // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference 
-                                // in trade price between the peers. Also here poor connectivity might cause market price API connection 
-                                // losses and therefore an outdated market price.
-                                try {
-                                    offer.checkTradePriceTolerance(message.takersTradePrice);
-                                } catch (TradePriceOutOfToleranceException e) {
-                                    log.warn("Trade price check failed because takers price is outside out tolerance.");
-                                    availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
-                                } catch (MarketPriceNotAvailableException e) {
-                                    log.warn(e.getMessage());
-                                    availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
-                                } catch (Throwable e) {
-                                    log.warn("Trade price check failed. " + e.getMessage());
-                                    availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
-                                }
+                            // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference 
+                            // in trade price between the peers. Also here poor connectivity might cause market price API connection 
+                            // losses and therefore an outdated market price.
+                            try {
+                                offer.checkTradePriceTolerance(message.takersTradePrice);
+                            } catch (TradePriceOutOfToleranceException e) {
+                                log.warn("Trade price check failed because takers price is outside out tolerance.");
+                                availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
+                            } catch (MarketPriceNotAvailableException e) {
+                                log.warn(e.getMessage());
+                                availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
+                            } catch (Throwable e) {
+                                log.warn("Trade price check failed. " + e.getMessage());
+                                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
                             }
                         } else {
                             log.warn("acceptedArbitrators is null or empty: acceptedArbitrators=" + acceptedArbitrators);

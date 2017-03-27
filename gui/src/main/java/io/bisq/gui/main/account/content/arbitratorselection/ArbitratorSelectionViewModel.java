@@ -24,9 +24,9 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.arbitration.Arbitrator;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.arbitration.Arbitrator;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
@@ -98,13 +98,21 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     }
 
     void onAddArbitrator(Arbitrator arbitrator) {
-        if (!arbitratorIsTrader(arbitrator))
+        if (!arbitratorIsTrader(arbitrator)) {
             user.addAcceptedArbitrator(arbitrator);
+
+            // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
+            user.addAcceptedMediator(ArbitratorManager.getMediator(arbitrator));
+        }
     }
 
     void onRemoveArbitrator(Arbitrator arbitrator) {
-        if (arbitrator != null)
+        if (arbitrator != null) {
             user.removeAcceptedArbitrator(arbitrator);
+
+            // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
+            user.removeAcceptedMediator(ArbitratorManager.getMediator(arbitrator));
+        }
     }
 
     public boolean isDeselectAllowed(ArbitratorListItem arbitratorListItem) {

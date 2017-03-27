@@ -42,8 +42,8 @@ import io.bisq.gui.main.settings.preferences.PreferencesView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -90,7 +90,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     // If id is empty string we ignore filter (display all methods)
 
-    PaymentMethod selectedPaymentMethod = new PaymentMethod(GUIUtil.SHOW_ALL_FLAG, 0, 0, null);
+    PaymentMethod selectedPaymentMethod = new PaymentMethod(GUIUtil.SHOW_ALL_FLAG);
 
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private boolean isTabSelected;
@@ -258,7 +258,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     ObservableList<PaymentMethod> getPaymentMethods() {
         ObservableList<PaymentMethod> list = FXCollections.observableArrayList(PaymentMethod.ALL_VALUES);
-        list.add(0, new PaymentMethod(GUIUtil.SHOW_ALL_FLAG, 0, 0, null));
+        list.add(0, new PaymentMethod(GUIUtil.SHOW_ALL_FLAG));
         return list;
     }
 
@@ -404,7 +404,8 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean hasPaymentAccountForCurrency() {
-        return (showAllTradeCurrenciesProperty.get() && !user.getPaymentAccounts().isEmpty()) || user.hasPaymentAccountForCurrency(selectedTradeCurrency);
+        return (showAllTradeCurrenciesProperty.get() && !user.getPaymentAccounts().isEmpty()) ||
+                user.hasPaymentAccountForCurrency(selectedTradeCurrency);
     }
 
     boolean hasAcceptedArbitrators() {
@@ -444,7 +445,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isIgnored(Offer offer) {
-        return preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent();
+        return preferences.getIgnoreTradersList().stream().filter(i -> i.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix())).findAny().isPresent();
     }
 
     boolean isOfferBanned(Offer offer) {
@@ -458,7 +459,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     boolean isNodeBanned(Offer offer) {
         return filterManager.getFilter() != null &&
                 filterManager.getFilter().bannedNodeAddress.stream()
-                        .filter(e -> e.equals(offer.getOffererNodeAddress().getHostNameWithoutPostFix()))
+                        .filter(e -> e.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix()))
                         .findAny()
                         .isPresent();
     }
@@ -480,7 +481,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                 .filter(e -> {
                     final NodeAddress tradingPeerNodeAddress = e instanceof Trade ? ((Trade) e).getTradingPeerNodeAddress() : null;
                     return tradingPeerNodeAddress != null &&
-                            tradingPeerNodeAddress.hostName.equals(offer.getOffererNodeAddress().hostName);
+                            tradingPeerNodeAddress.hostName.equals(offer.getMakerNodeAddress().hostName);
                 })
                 .collect(Collectors.toSet())
                 .size();

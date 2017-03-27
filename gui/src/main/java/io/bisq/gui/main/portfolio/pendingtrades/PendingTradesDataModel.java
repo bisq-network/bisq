@@ -44,18 +44,18 @@ import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.SelectDepositTxWindow;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.arbitration.Arbitrator;
-import io.bisq.wire.payload.arbitration.Dispute;
-import io.bisq.wire.payload.payment.PaymentAccountPayload;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.arbitration.Arbitrator;
+import io.bisq.protobuffer.payload.arbitration.Dispute;
+import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import org.bitcoinj.core.BlockChainListener;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.spongycastle.crypto.params.KeyParameter;
@@ -83,12 +83,14 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Trade> tradesListChangeListener;
-    private boolean isOfferer;
+    private boolean isMaker;
 
     final ObjectProperty<PendingTradesListItem> selectedItemProperty = new SimpleObjectProperty<>();
     public final StringProperty txId = new SimpleStringProperty();
     public final Preferences preferences;
     private boolean activated;
+    private ChangeListener<Trade.State> tradeStateChangeListener;
+    private Trade selectedTrade;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -212,22 +214,22 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     boolean isBuyer() {
-        return (isOfferer(getOffer()) && isBuyOffer())
-                || (!isOfferer(getOffer()) && !isBuyOffer());
+        return (isMaker(getOffer()) && isBuyOffer())
+                || (!isMaker(getOffer()) && !isBuyOffer());
     }
 
-    boolean isOfferer(Offer offer) {
+    boolean isMaker(Offer offer) {
         return tradeManager.isMyOffer(offer);
     }
 
-    private boolean isOfferer() {
-        return isOfferer;
+    private boolean isMaker() {
+        return isMaker;
     }
 
     Coin getTotalFees() {
         Trade trade = getTrade();
         if (trade != null) {
-            if (isOfferer()) {
+            if (isMaker()) {
                 Offer offer = trade.getOffer();
                 return offer.getCreateOfferFee().add(offer.getTxFee());
             } else {
@@ -244,24 +246,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public Offer.Direction getDirection(Offer offer) {
-        isOfferer = tradeManager.isMyOffer(offer);
-        return isOfferer ? offer.getDirection() : offer.getMirroredDirection();
-    }
-
-    void addBlockChainListener(BlockChainListener blockChainListener) {
-        tradeWalletService.addBlockChainListener(blockChainListener);
-    }
-
-    void removeBlockChainListener(BlockChainListener blockChainListener) {
-        tradeWalletService.removeBlockChainListener(blockChainListener);
-    }
-
-    public long getLockTime() {
-        return getTrade() != null ? getTrade().getLockTimeAsBlockHeight() : 0;
-    }
-
-    public int getBestChainHeight() {
-        return tradeWalletService.getBestChainHeight();
+        isMaker = tradeManager.isMyOffer(offer);
+        return isMaker ? offer.getDirection() : offer.getMirroredDirection();
     }
 
     @Nullable
@@ -307,15 +293,28 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void doSelectItem(PendingTradesListItem item) {
+        if (selectedTrade != null)
+            selectedTrade.stateProperty().removeListener(tradeStateChangeListener);
+
         if (item != null) {
-            Trade trade = item.getTrade();
-            isOfferer = tradeManager.isMyOffer(trade.getOffer());
-            if (trade.getDepositTx() != null)
-                txId.set(trade.getDepositTx().getHashAsString());
+            selectedTrade = item.getTrade();
+            tradeStateChangeListener = (observable, oldValue, newValue) -> {
+                if (selectedTrade.getDepositTx() != null) {
+                    txId.set(selectedTrade.getDepositTx().getHashAsString());
+                    notificationCenter.setSelectedTradeId(selectedTrade.getId());
+                    selectedTrade.stateProperty().removeListener(tradeStateChangeListener);
+                }
+            };
+            selectedTrade.stateProperty().addListener(tradeStateChangeListener);
+            isMaker = tradeManager.isMyOffer(selectedTrade.getOffer());
+            if (selectedTrade.getDepositTx() != null)
+                txId.set(selectedTrade.getDepositTx().getHashAsString());
             else
                 txId.set("");
-            notificationCenter.setSelectedTradeId(trade.getId());
+            notificationCenter.setSelectedTradeId(selectedTrade.getId());
         } else {
+            selectedTrade = null;
+            txId.set("");
             notificationCenter.setSelectedTradeId(null);
         }
         selectedItemProperty.set(item);
@@ -385,8 +384,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
-                    trade.getOffer().getDirection() == Offer.Direction.BUY ? isOfferer : !isOfferer,
-                    isOfferer,
+                    trade.getOffer().getDirection() == Offer.Direction.BUY ? isMaker : !isMaker,
+                    isMaker,
                     keyRing.getPubKeyRing(),
                     trade.getDate(),
                     trade.getContract(),
@@ -396,7 +395,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     depositTxHashAsString,
                     payoutTxHashAsString,
                     trade.getContractAsJson(),
-                    trade.getOffererContractSignature(),
+                    trade.getMakerContractSignature(),
                     trade.getTakerContractSignature(),
                     acceptedArbitratorByAddress.getPubKeyRing(),
                     isSupportTicket

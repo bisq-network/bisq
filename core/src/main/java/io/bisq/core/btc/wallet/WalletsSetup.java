@@ -154,8 +154,7 @@ public class WalletsSetup {
                 final PeerGroup peerGroup = walletConfig.peerGroup();
 
                 // We don't want to get our node white list polluted with nodes from AddressMessage calls.
-                if (preferences.getBitcoinNodes() != null && !preferences.getBitcoinNodes().isEmpty()
-                        )
+                if (preferences.getBitcoinNodes() != null && !preferences.getBitcoinNodes().isEmpty())
                     peerGroup.setAddPeersFromAddressMessage(false);
 
                 peerGroup.addEventListener(new PeerEventListener() {
@@ -423,7 +422,7 @@ public class WalletsSetup {
         checkNotNull(seed, "Seed must be not be null.");
 
         backupWallets();
-        
+
         Context ctx = Context.get();
         new Thread(() -> {
             try {

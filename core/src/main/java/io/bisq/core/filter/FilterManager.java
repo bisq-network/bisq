@@ -22,13 +22,13 @@ import com.google.inject.name.Named;
 import io.bisq.common.app.DevEnv;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.user.User;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.filter.Filter;
-import io.bisq.wire.payload.filter.PaymentAccountFilter;
-import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
-import io.bisq.wire.proto.Messages;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.filter.Filter;
+import io.bisq.protobuffer.payload.filter.PaymentAccountFilter;
+import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -164,7 +164,7 @@ public class FilterManager {
     }
 
     private String getHexFromData(Filter filter) {
-        Messages.Filter.Builder builder = Messages.Filter.newBuilder().addAllBannedNodeAddress(filter.bannedNodeAddress)
+        PB.Filter.Builder builder = PB.Filter.newBuilder().addAllBannedNodeAddress(filter.bannedNodeAddress)
                 .addAllBannedOfferIds(filter.bannedOfferIds)
                 .addAllBannedPaymentAccounts(filter.bannedPaymentAccounts.stream()
                         .map(PaymentAccountFilter::toProtoBuf)

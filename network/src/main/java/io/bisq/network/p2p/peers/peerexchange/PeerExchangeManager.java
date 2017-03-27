@@ -6,10 +6,10 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.PeerManager;
-import io.bisq.wire.message.Message;
-import io.bisq.wire.message.p2p.peers.peerexchange.GetPeersRequest;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.p2p.peers.peerexchange.Peer;
+import io.bisq.protobuffer.message.Message;
+import io.bisq.protobuffer.message.p2p.peers.peerexchange.GetPeersRequest;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.p2p.peers.peerexchange.Peer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

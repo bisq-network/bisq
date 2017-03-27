@@ -11,9 +11,9 @@ import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.user.Preferences;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.payload.StoragePayload;
-import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
-import io.bisq.wire.payload.trade.statistics.TradeStatistics;
+import io.bisq.protobuffer.payload.StoragePayload;
+import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import org.slf4j.Logger;
@@ -52,6 +52,8 @@ public class TradeStatisticsManager {
     }
 
     private void init(P2PService p2PService) {
+        statisticsStorage.setNumMaxBackupFiles(1);
+        
         if (dumpStatistics) {
             this.statisticsJsonStorage.initWithFileName("trade_statistics.json");
 
@@ -107,7 +109,7 @@ public class TradeStatisticsManager {
 
                 dump();
             } else {
-                log.debug("We have already an item with the same offer ID. That might happen if both the offerer and the taker published the tradeStatistics");
+                log.debug("We have already an item with the same offer ID. That might happen if both the maker and the taker published the tradeStatistics");
             }
         }
     }

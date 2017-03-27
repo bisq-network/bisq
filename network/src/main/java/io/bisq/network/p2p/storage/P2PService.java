@@ -27,20 +27,20 @@ import io.bisq.network.p2p.peers.getdata.RequestDataManager;
 import io.bisq.network.p2p.peers.keepalive.KeepAliveManager;
 import io.bisq.network.p2p.peers.peerexchange.PeerExchangeManager;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.message.Message;
-import io.bisq.wire.message.p2p.DirectMessage;
-import io.bisq.wire.message.p2p.MailboxMessage;
-import io.bisq.wire.message.p2p.PrefixedSealedAndSignedMessage;
-import io.bisq.wire.message.p2p.storage.AddDataMessage;
-import io.bisq.wire.message.p2p.storage.BroadcastMessage;
-import io.bisq.wire.message.p2p.storage.RefreshTTLMessage;
-import io.bisq.wire.payload.StoragePayload;
-import io.bisq.wire.payload.crypto.PubKeyRing;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.p2p.storage.MailboxStoragePayload;
-import io.bisq.wire.payload.p2p.storage.ProtectedMailboxStorageEntry;
-import io.bisq.wire.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.message.Message;
+import io.bisq.protobuffer.message.p2p.DirectMessage;
+import io.bisq.protobuffer.message.p2p.MailboxMessage;
+import io.bisq.protobuffer.message.p2p.PrefixedSealedAndSignedMessage;
+import io.bisq.protobuffer.message.p2p.storage.AddDataMessage;
+import io.bisq.protobuffer.message.p2p.storage.BroadcastMessage;
+import io.bisq.protobuffer.message.p2p.storage.RefreshTTLMessage;
+import io.bisq.protobuffer.payload.StoragePayload;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.p2p.storage.MailboxStoragePayload;
+import io.bisq.protobuffer.payload.p2p.storage.ProtectedMailboxStorageEntry;
+import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
 import javafx.beans.property.*;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -499,9 +499,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             log.debug("\n\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n" +
                     "Encrypt message:\nmessage={}"
                     + "\nEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE\n", message);
-            PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(networkNode.getNodeAddress(),
+            PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
+                    networkNode.getNodeAddress(),
                     optionalEncryptionService.get().encryptAndSign(pubKeyRing, message),
-                    peersNodeAddress.getAddressPrefixHash());
+                    peersNodeAddress.getAddressPrefixHash(),
+                    UUID.randomUUID().toString());
             SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, prefixedSealedAndSignedMessage);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
@@ -589,7 +591,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
                             networkNode.getNodeAddress(),
                             optionalEncryptionService.get().encryptAndSign(peersPubKeyRing, message),
-                            peersNodeAddress.getAddressPrefixHash());
+                            peersNodeAddress.getAddressPrefixHash(),
+                            UUID.randomUUID().toString());
                     SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, prefixedSealedAndSignedMessage);
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
@@ -661,7 +664,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                 // TODO We could check for a certain threshold of no. of incoming network_messages of the same msg
                                 // to see how well it is propagated. BitcoinJ uses such an approach for tx propagation.
                                 UserThread.runAfter(() -> {
-                                    log.info("Broadcasted to first peer (with 3 sec. delayed):  Message = {}", Utilities.toTruncatedString(message));
+                                    log.info("Broadcasted to first peer (3 sec. ago):  Message = {}", Utilities.toTruncatedString(message));
                                     sendMailboxMessageListener.onStoredInMailbox();
                                 }, 3);
                             }

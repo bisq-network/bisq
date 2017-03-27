@@ -46,13 +46,13 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.message.arbitration.DisputeCommunicationMessage;
-import io.bisq.wire.payload.arbitration.Attachment;
-import io.bisq.wire.payload.arbitration.Dispute;
-import io.bisq.wire.payload.crypto.PubKeyRing;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.trade.Contract;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.message.arbitration.DisputeCommunicationMessage;
+import io.bisq.protobuffer.payload.arbitration.Attachment;
+import io.bisq.protobuffer.payload.arbitration.Dispute;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.trade.Contract;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -603,7 +603,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
             disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessagesAsObservableList();
             SortedList<DisputeCommunicationMessage> sortedList = new SortedList<>(disputeCommunicationMessages);
-            sortedList.setComparator((o1, o2) -> o1.getDate().compareTo(o2.getDate()));
+            sortedList.setComparator((o1, o2) -> new Date(o1.getDate()).compareTo(new Date(o2.getDate())));
             messageListView = new ListView<>(sortedList);
             messageListView.setId("message-list-view");
 
@@ -813,7 +813,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 }
 
                                 AnchorPane.setBottomAnchor(statusIcon, 7d);
-                                headerLabel.setText(formatter.formatDateTime(item.getDate()));
+                                headerLabel.setText(formatter.formatDateTime(new Date(item.getDate())));
                                 messageLabel.setText(item.getMessage());
                                 attachmentsBox.getChildren().clear();
                                 if (item.getAttachments().size() > 0) {
@@ -1181,7 +1181,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    if (item.isDisputeOpenerIsOfferer())
+                                    if (item.isDisputeOpenerIsMaker())
                                         setText(item.isDisputeOpenerIsBuyer() ? Res.get("support.buyerOfferer") : Res.get("support.sellerOfferer"));
                                     else
                                         setText(item.isDisputeOpenerIsBuyer() ? Res.get("support.buyerTaker") : Res.get("support.sellerTaker"));

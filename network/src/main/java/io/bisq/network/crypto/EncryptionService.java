@@ -20,22 +20,22 @@ package io.bisq.network.crypto;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.wire.ProtoBufferUtilities;
-import io.bisq.wire.crypto.DecryptedDataTuple;
-import io.bisq.wire.crypto.Encryption;
-import io.bisq.wire.crypto.Hash;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.message.Message;
-import io.bisq.wire.payload.crypto.PubKeyRing;
-import io.bisq.wire.payload.crypto.SealedAndSigned;
-import io.bisq.wire.proto.Messages;
+import io.bisq.protobuffer.ProtoBufferUtilities;
+import io.bisq.protobuffer.crypto.DecryptedDataTuple;
+import io.bisq.protobuffer.crypto.Encryption;
+import io.bisq.protobuffer.crypto.Hash;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.message.Message;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
 
 import javax.crypto.SecretKey;
 import javax.inject.Inject;
 import java.security.PrivateKey;
 
-import static io.bisq.wire.crypto.Encryption.decryptSecretKey;
+import static io.bisq.protobuffer.crypto.Encryption.decryptSecretKey;
 
 public class EncryptionService {
     private final KeyRing keyRing;
@@ -66,7 +66,7 @@ public class EncryptionService {
         Message decryptedPayload = null;
         try {
             decryptedPayload = ProtoBufferUtilities
-                    .fromProtoBuf(Messages.Envelope.parseFrom(Encryption.decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey))).get();
+                    .fromProtoBuf(PB.Envelope.parseFrom(Encryption.decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey))).get();
         } catch (InvalidProtocolBufferException e) {
             throw new CryptoException("Unable to parse protobuffer message.", e);
         }

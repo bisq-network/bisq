@@ -22,7 +22,7 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.availability.OfferAvailabilityModel;
 import io.bisq.network.p2p.SendDirectMessageListener;
-import io.bisq.wire.message.offer.OfferAvailabilityRequest;
+import io.bisq.protobuffer.message.offer.OfferAvailabilityRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,7 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
 
                         @Override
                         public void onFault() {
-                            model.offer.setState(Offer.State.OFFERER_OFFLINE);
+                            model.offer.setState(Offer.State.MAKER_OFFLINE);
                         }
                     }
             );

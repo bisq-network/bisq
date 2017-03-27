@@ -303,6 +303,7 @@ public abstract class WalletService {
     // TransactionConfidence
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Nullable
     public TransactionConfidence getConfidenceForAddress(Address address) {
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
         if (wallet != null) {
@@ -361,7 +362,7 @@ public abstract class WalletService {
         return mergedOutputs;
     }
 
-
+    @Nullable
     protected TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
         TransactionConfidence transactionConfidence = null;
         for (TransactionConfidence confidence : transactionConfidenceList) {
@@ -459,7 +460,7 @@ public abstract class WalletService {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction getTransactionFromSerializedTx(byte[] tx) {
+    public Transaction getTxFromSerializedTx(byte[] tx) {
         return new Transaction(params, tx);
     }
 

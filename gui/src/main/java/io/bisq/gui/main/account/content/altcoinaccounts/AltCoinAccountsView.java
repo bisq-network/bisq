@@ -37,7 +37,7 @@ import io.bisq.gui.util.ImageUtil;
 import io.bisq.gui.util.Layout;
 import io.bisq.gui.util.validation.AltCoinAddressValidator;
 import io.bisq.gui.util.validation.InputValidator;
-import io.bisq.wire.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.VPos;
 import javafx.scene.control.Button;

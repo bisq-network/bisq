@@ -22,12 +22,14 @@ import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.alert.Alert;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.alert.Alert;
-import io.bisq.wire.payload.arbitration.Arbitrator;
-import io.bisq.wire.payload.filter.Filter;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.arbitration.Arbitrator;
+import io.bisq.protobuffer.payload.arbitration.Mediator;
+import io.bisq.protobuffer.payload.filter.Filter;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.persistence.alert.AlertPersistable;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -64,14 +66,20 @@ public final class User implements Persistable {
     private Set<PaymentAccount> paymentAccounts = new HashSet<>();
     private PaymentAccount currentPaymentAccount;
     private List<String> acceptedLanguageLocaleCodes = new ArrayList<>();
-    private Alert developersAlert;
-    private Alert displayedAlert;
+    @Nullable
+    private AlertPersistable developersPersistableAlert;
+    @Nullable
+    private AlertPersistable displayedPersistableAlert;
     @Nullable
     private Filter developersFilter;
 
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
+    private List<Mediator> acceptedMediators = new ArrayList<>();
+
     @Nullable
     private Arbitrator registeredArbitrator;
+    @Nullable
+    private Mediator registeredMediator;
 
     // Observable wrappers
     transient final private ObservableSet<PaymentAccount> paymentAccountsAsObservable = FXCollections.observableSet(paymentAccounts);
@@ -99,9 +107,13 @@ public final class User implements Persistable {
             acceptedLanguageLocaleCodes = persisted.getAcceptedLanguageLocaleCodes();
             if (persisted.getAcceptedArbitrators() != null)
                 acceptedArbitrators = persisted.getAcceptedArbitrators();
+            if (persisted.getAcceptedMediators() != null)
+                acceptedMediators = persisted.getAcceptedMediators();
+
             registeredArbitrator = persisted.getRegisteredArbitrator();
-            developersAlert = persisted.getDevelopersAlert();
-            displayedAlert = persisted.getDisplayedAlert();
+            registeredMediator = persisted.getRegisteredMediator();
+            developersPersistableAlert = persisted.getDevelopersPersistableAlert();
+            displayedPersistableAlert = persisted.getDisplayedPersistableAlert();
             developersFilter = persisted.getDevelopersFilter();
         } else {
             accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
@@ -112,6 +124,7 @@ public final class User implements Persistable {
                 acceptedLanguageLocaleCodes.add(english);
 
             acceptedArbitrators = new ArrayList<>();
+            acceptedMediators = new ArrayList<>();
         }
         storage.queueUpForSave();
 
@@ -187,8 +200,20 @@ public final class User implements Persistable {
         }
     }
 
+    public void addAcceptedMediator(Mediator mediator) {
+        if (!acceptedMediators.contains(mediator) && !isMyOwnRegisteredMediator(mediator)) {
+            boolean changed = acceptedMediators.add(mediator);
+            if (changed)
+                storage.queueUpForSave();
+        }
+    }
+
     public boolean isMyOwnRegisteredArbitrator(Arbitrator arbitrator) {
         return arbitrator.equals(registeredArbitrator);
+    }
+
+    public boolean isMyOwnRegisteredMediator(Mediator mediator) {
+        return mediator.equals(registeredMediator);
     }
 
     public void removeAcceptedArbitrator(Arbitrator arbitrator) {
@@ -202,15 +227,32 @@ public final class User implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void removeAcceptedMediator(Mediator mediator) {
+        boolean changed = acceptedMediators.remove(mediator);
+        if (changed)
+            storage.queueUpForSave();
+    }
+
+    public void clearAcceptedMediators() {
+        acceptedMediators.clear();
+        storage.queueUpForSave();
+    }
+
     public void setRegisteredArbitrator(@Nullable Arbitrator arbitrator) {
         this.registeredArbitrator = arbitrator;
         storage.queueUpForSave();
     }
 
-    public void setDevelopersFilter(Filter developersFilter) {
+    public void setRegisteredMediator(@Nullable Mediator mediator) {
+        this.registeredMediator = mediator;
+        storage.queueUpForSave();
+    }
+
+    public void setDevelopersFilter(@Nullable Filter developersFilter) {
         this.developersFilter = developersFilter;
         storage.queueUpForSave();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -254,32 +296,34 @@ public final class User implements Persistable {
         return registeredArbitrator;
     }
 
+    @Nullable
+    public Mediator getRegisteredMediator() {
+        return registeredMediator;
+    }
+
     public List<Arbitrator> getAcceptedArbitrators() {
         return acceptedArbitrators;
     }
 
     public List<NodeAddress> getAcceptedArbitratorAddresses() {
-        return acceptedArbitrators.stream().map(Arbitrator::getArbitratorNodeAddress).collect(Collectors.toList());
+        return acceptedArbitrators.stream().map(Arbitrator::getNodeAddress).collect(Collectors.toList());
+    }
+
+    public List<Mediator> getAcceptedMediators() {
+        return acceptedMediators;
+    }
+
+    public List<NodeAddress> getAcceptedMediatorAddresses() {
+        return acceptedMediators.stream().map(Mediator::getNodeAddress).collect(Collectors.toList());
     }
 
     public List<String> getAcceptedLanguageLocaleCodes() {
         return acceptedLanguageLocaleCodes != null ? acceptedLanguageLocaleCodes : new ArrayList<>();
     }
 
- /*   public List<String> getArbitratorAddresses(List<String> idList) {
-        List<String> receiverAddresses = new ArrayList<>();
-        for (Arbitrator arbitrator : getAcceptedArbitrators()) {
-            for (String id : idList) {
-                if (id.equals(arbitrator.getId()))
-                    receiverAddresses.add(arbitrator.getBtcAddress());
-            }
-        }
-        return receiverAddresses;
-    }*/
-
     public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
         Optional<Arbitrator> arbitratorOptional = acceptedArbitrators.stream()
-                .filter(e -> e.getArbitratorNodeAddress().equals(nodeAddress))
+                .filter(e -> e.getNodeAddress().equals(nodeAddress))
                 .findFirst();
         if (arbitratorOptional.isPresent())
             return arbitratorOptional.get();
@@ -287,7 +331,17 @@ public final class User implements Persistable {
             return null;
     }
 
-    @org.jetbrains.annotations.Nullable
+    public Mediator getAcceptedMediatorByAddress(NodeAddress nodeAddress) {
+        Optional<Mediator> mediatorOptionalOptional = acceptedMediators.stream()
+                .filter(e -> e.getNodeAddress().equals(nodeAddress))
+                .findFirst();
+        if (mediatorOptionalOptional.isPresent())
+            return mediatorOptionalOptional.get();
+        else
+            return null;
+    }
+
+    @Nullable
     public Filter getDevelopersFilter() {
         return developersFilter;
     }
@@ -331,22 +385,39 @@ public final class User implements Persistable {
         return findFirstPaymentAccountWithCurrency(tradeCurrency) != null;
     }
 
-    public void setDevelopersAlert(Alert developersAlert) {
-        this.developersAlert = developersAlert;
+    public void setDevelopersAlert(@Nullable Alert alert) {
+        if (alert != null)
+            this.developersPersistableAlert = new AlertPersistable(alert.getAlertVO());
+        else
+            this.developersPersistableAlert = null;
         storage.queueUpForSave();
     }
 
+    @Nullable
     public Alert getDevelopersAlert() {
-        return developersAlert;
+        return developersPersistableAlert != null ? new Alert(developersPersistableAlert.getAlertVO()) : null;
     }
 
-    public void setDisplayedAlert(Alert displayedAlert) {
-        this.displayedAlert = displayedAlert;
+    public void setDisplayedAlert(@Nullable Alert alert) {
+        if (alert != null)
+            this.displayedPersistableAlert = new AlertPersistable(alert.getAlertVO());
+        else
+            this.displayedPersistableAlert = null;
         storage.queueUpForSave();
     }
 
+    @Nullable
     public Alert getDisplayedAlert() {
-        return displayedAlert;
+        return displayedPersistableAlert != null ? new Alert(displayedPersistableAlert.getAlertVO()) : null;
     }
 
+    @Nullable
+    private AlertPersistable getDevelopersPersistableAlert() {
+        return developersPersistableAlert;
+    }
+
+    @Nullable
+    private AlertPersistable getDisplayedPersistableAlert() {
+        return displayedPersistableAlert;
+    }
 }

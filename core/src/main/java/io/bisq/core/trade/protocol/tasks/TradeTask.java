@@ -22,13 +22,11 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.ProcessModel;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.wire.message.p2p.MailboxMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.bisq.protobuffer.message.p2p.MailboxMessage;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class TradeTask extends Task<Trade> {
-    private static final Logger log = LoggerFactory.getLogger(TradeTask.class);
-
     protected final ProcessModel processModel;
     protected final Trade trade;
 

@@ -40,12 +40,13 @@
 
     <modules>
         <module>common</module>
+        <module>vo</module>
+        <module>protobuffer</module>
+        <module>network</module>
         <module>core</module>
         <module>jsocks</module>
         <module>jtorctl</module>
         <module>jtorproxy</module>
-        <module>wire</module>
-        <module>network</module>
         <module>gui</module>
         <module>seednode</module>
         <module>statistics</module>
@@ -98,7 +99,7 @@
         <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
-            <version>0.13.1.10</version>
+            <version>0.13.1.11</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>
@@ -131,6 +132,18 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
             <version>1.53</version>
+        </dependency>
+
+        <!-- We need both bcpg-jdk15on and bcpg-jdk16 -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpg-jdk15on</artifactId>
+            <version>1.56</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpg-jdk16</artifactId>
+            <version>1.46</version>
         </dependency>
 
         <!--http-->
@@ -237,47 +250,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <profiles>
-        <profile>
-            <id>update-protobuf</id>
-            <activation>
-                <property>
-                    <name>updateProtobuf</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-antrun-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>compile-protoc</id>
-                                <phase>generate-sources</phase>
-                                <configuration>
-                                    <tasks>
-                                        <path id="proto.path">
-                                            <fileset dir="wire/src/main/proto">
-                                                <include name="**/*.proto"/>
-                                            </fileset>
-                                        </path>
-                                        <pathconvert pathsep=" " property="proto.files" refid="proto.path"/>
-                                        <exec executable="protoc" failonerror="true">
-                                            <arg value="--java_out=./wire/src/main/java"/>
-                                            <arg value="-Iwire/src/main/proto"/>
-                                            <arg line="${proto.files}"/>
-                                        </exec>
-                                    </tasks>
-                                </configuration>
-                                <goals>
-                                    <goal>run</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>

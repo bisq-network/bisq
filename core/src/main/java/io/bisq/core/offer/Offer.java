@@ -14,11 +14,11 @@ import io.bisq.core.offer.availability.OfferAvailabilityModel;
 import io.bisq.core.offer.availability.OfferAvailabilityProtocol;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
-import io.bisq.wire.crypto.KeyRing;
-import io.bisq.wire.payload.crypto.PubKeyRing;
-import io.bisq.wire.payload.offer.OfferPayload;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.offer.OfferPayload;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -52,7 +52,7 @@ public class Offer implements Serializable {
         AVAILABLE,
         NOT_AVAILABLE,
         REMOVED,
-        OFFERER_OFFLINE
+        MAKER_OFFLINE
     }
 
 
@@ -135,7 +135,7 @@ public class Offer implements Serializable {
         if (offerPayload.isUseMarketBasedPrice()) {
             checkNotNull(priceFeedService, "priceFeed must not be null");
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-            if (marketPrice != null) {
+            if (marketPrice != null && marketPrice.isValid()) {
                 double factor;
                 double marketPriceMargin = offerPayload.getMarketPriceMargin();
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
@@ -171,16 +171,16 @@ public class Offer implements Serializable {
 
     public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException,
             MarketPriceNotAvailableException, IllegalArgumentException {
-        checkArgument(takersTradePrice > 0, "takersTradePrice must be positive");
         Price tradePrice = Price.valueOf(getCurrencyCode(), takersTradePrice);
         Price offerPrice = getPrice();
-
         if (offerPrice == null)
             throw new MarketPriceNotAvailableException("Market price required for calculating trade price is not available.");
 
+        checkArgument(takersTradePrice > 0, "takersTradePrice must be positive");
+        
         double factor = (double) takersTradePrice / (double) offerPrice.getValue();
         // We allow max. 1 % difference between own offerPayload price calculation and takers calculation.
-        // Market price might be different at offerer's and takers side so we need a bit of tolerance.
+        // Market price might be different at maker's and takers side so we need a bit of tolerance.
         // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations
         // from one provider.
         if (Math.abs(1 - factor) > 0.01) {
@@ -272,7 +272,9 @@ public class Offer implements Serializable {
     }
 
     public PaymentMethod getPaymentMethod() {
-        return PaymentMethod.getPaymentMethodById(offerPayload.getPaymentMethodId());
+        return new PaymentMethod(offerPayload.getPaymentMethodId(),
+                offerPayload.getMaxTradePeriod(),
+                Coin.valueOf(offerPayload.getMaxTradeLimit()));
     }
 
     // utils
@@ -312,6 +314,10 @@ public class Offer implements Serializable {
         return errorMessageProperty;
     }
 
+    public String getErrorMessage() {
+        return errorMessageProperty.get();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegate Getter (boilerplate code generated via IntelliJ generate delegate feature)
@@ -327,6 +333,10 @@ public class Offer implements Serializable {
 
     public List<NodeAddress> getArbitratorNodeAddresses() {
         return offerPayload.getArbitratorNodeAddresses();
+    }
+
+    public List<NodeAddress> getMediatorNodeAddresses() {
+        return offerPayload.getMediatorNodeAddresses();
     }
 
     @Nullable
@@ -367,16 +377,16 @@ public class Offer implements Serializable {
         return offerPayload.getMarketPriceMargin();
     }
 
-    public NodeAddress getOffererNodeAddress() {
-        return offerPayload.getOffererNodeAddress();
+    public NodeAddress getMakerNodeAddress() {
+        return offerPayload.getMakerNodeAddress();
     }
 
     public PubKeyRing getPubKeyRing() {
         return offerPayload.getPubKeyRing();
     }
 
-    public String getOffererPaymentAccountId() {
-        return offerPayload.getOffererPaymentAccountId();
+    public String getMakerPaymentAccountId() {
+        return offerPayload.getMakerPaymentAccountId();
     }
 
     public String getOfferFeePaymentTxId() {
@@ -443,7 +453,7 @@ public class Offer implements Serializable {
 
         if (offerPayload != null ? !offerPayload.equals(offer.offerPayload) : offer.offerPayload != null) return false;
         if (state != offer.state) return false;
-        return !(errorMessageProperty != null ? !errorMessageProperty.equals(offer.errorMessageProperty) : offer.errorMessageProperty != null);
+        return !(getErrorMessage() != null ? !getErrorMessage().equals(offer.getErrorMessage()) : offer.getErrorMessage() != null);
 
     }
 
@@ -451,16 +461,16 @@ public class Offer implements Serializable {
     public int hashCode() {
         int result = offerPayload != null ? offerPayload.hashCode() : 0;
         result = 31 * result + (state != null ? state.hashCode() : 0);
-        result = 31 * result + (errorMessageProperty != null ? errorMessageProperty.hashCode() : 0);
+        result = 31 * result + (getErrorMessage() != null ? getErrorMessage().hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "Offer{" +
-                "offerPayload=" + offerPayload +
+                "getErrorMessage()='" + getErrorMessage() + '\'' +
                 ", state=" + state +
-                ", errorMessageProperty=" + errorMessageProperty +
+                ", offerPayload=" + offerPayload +
                 '}';
     }
 }

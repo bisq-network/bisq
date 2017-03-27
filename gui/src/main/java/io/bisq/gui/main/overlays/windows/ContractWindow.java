@@ -27,10 +27,10 @@ import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
-import io.bisq.wire.payload.arbitration.Dispute;
-import io.bisq.wire.payload.payment.PaymentAccountPayload;
-import io.bisq.wire.payload.payment.PaymentMethod;
-import io.bisq.wire.payload.trade.Contract;
+import io.bisq.protobuffer.payload.arbitration.Dispute;
+import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
+import io.bisq.protobuffer.payload.payment.PaymentMethod;
+import io.bisq.protobuffer.payload.trade.Contract;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -190,7 +190,10 @@ public class ContractWindow extends Overlay<ContractWindow> {
         viewContractButton.setDefaultButton(false);
         viewContractButton.setOnAction(e -> {
             TextArea textArea = new TextArea();
-            textArea.setText(dispute.getContractAsJson());
+            String contractAsJson = dispute.getContractAsJson();
+            contractAsJson += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getBuyerMultiSigPubKey());
+            contractAsJson += "\nSellerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getSellerMultiSigPubKey());
+            textArea.setText(contractAsJson);
             textArea.setPrefHeight(50);
             textArea.setEditable(false);
             textArea.setWrapText(true);

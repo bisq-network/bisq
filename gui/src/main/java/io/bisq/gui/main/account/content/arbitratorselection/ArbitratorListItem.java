@@ -18,7 +18,7 @@
 package io.bisq.gui.main.account.content.arbitratorselection;
 
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.wire.payload.arbitration.Arbitrator;
+import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
@@ -35,7 +35,7 @@ public class ArbitratorListItem {
     }
 
     public String getAddressString() {
-        return arbitrator != null ? arbitrator.getArbitratorNodeAddress().getFullAddress() : "";
+        return arbitrator != null ? arbitrator.getNodeAddress().getFullAddress() : "";
     }
 
     public String getLanguageCodes() {

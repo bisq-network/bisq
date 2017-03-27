@@ -9,7 +9,7 @@ import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.util.Utilities;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.TorNode;
 import org.jetbrains.annotations.NotNull;

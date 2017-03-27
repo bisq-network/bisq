@@ -21,18 +21,18 @@ package io.bisq.network.crypto;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.storage.FileUtil;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.wire.crypto.*;
-import io.bisq.wire.message.Message;
-import io.bisq.wire.message.alert.PrivateNotificationMessage;
-import io.bisq.wire.message.p2p.MailboxMessage;
-import io.bisq.wire.message.p2p.PrefixedSealedAndSignedMessage;
-import io.bisq.wire.message.p2p.peers.keepalive.Ping;
-import io.bisq.wire.payload.alert.PrivateNotification;
-import io.bisq.wire.payload.crypto.PubKeyRing;
-import io.bisq.wire.payload.crypto.SealedAndSigned;
-import io.bisq.wire.payload.p2p.NodeAddress;
-import io.bisq.wire.proto.Messages;
+import io.bisq.protobuffer.crypto.*;
+import io.bisq.protobuffer.message.Message;
+import io.bisq.protobuffer.message.alert.PrivateNotificationMessage;
+import io.bisq.protobuffer.message.p2p.MailboxMessage;
+import io.bisq.protobuffer.message.p2p.PrefixedSealedAndSignedMessage;
+import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
+import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -85,17 +85,19 @@ public class EncryptionServiceTests {
     @Test
     public void testDecryptAndVerifyMessage() throws CryptoException {
         EncryptionService encryptionService = new EncryptionService(keyRing);
-        final PrivateNotification privateNotification = new PrivateNotification("test");
+        final PrivateNotificationPayload privateNotification = new PrivateNotificationPayload("test");
         privateNotification.setSigAndPubKey("", pubKeyRing.getSignaturePubKey());
         final NodeAddress nodeAddress = new NodeAddress("localhost", 2222);
         PrivateNotificationMessage data = new PrivateNotificationMessage(privateNotification,
-                nodeAddress);
+                nodeAddress,
+                UUID.randomUUID().toString());
         PrefixedSealedAndSignedMessage encrypted = new PrefixedSealedAndSignedMessage(nodeAddress,
                 encryptionService.encryptAndSign(pubKeyRing, data),
-                Hash.getHash("localhost"));
+                Hash.getHash("localhost"),
+                UUID.randomUUID().toString());
         DecryptedMsgWithPubKey decrypted = encryptionService.decryptAndVerify(encrypted.sealedAndSigned);
-        assertEquals(data.privateNotification.message,
-                ((PrivateNotificationMessage) decrypted.message).privateNotification.message);
+        assertEquals(data.privateNotificationPayload.message,
+                ((PrivateNotificationMessage) decrypted.message).privateNotificationPayload.message);
     }
 
 
@@ -139,8 +141,8 @@ public class EncryptionServiceTests {
         }
 
         @Override
-        public Messages.Envelope toProtoBuf() {
-            return Messages.Envelope.newBuilder().setPing(Messages.Ping.newBuilder().setNonce(nonce)).build();
+        public PB.Envelope toProto() {
+            return PB.Envelope.newBuilder().setPing(PB.Ping.newBuilder().setNonce(nonce)).build();
         }
     }
 }
@@ -171,7 +173,7 @@ final class TestMessage implements MailboxMessage {
     }
 
     @Override
-    public Messages.Envelope toProtoBuf() {
+    public PB.Envelope toProto() {
         throw new NotImplementedException();
     }
 }

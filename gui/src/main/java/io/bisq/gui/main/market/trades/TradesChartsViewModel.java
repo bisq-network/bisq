@@ -36,7 +36,7 @@ import io.bisq.gui.main.settings.preferences.PreferencesView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.CurrencyListItem;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.wire.payload.trade.statistics.TradeStatistics;
+import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;

@@ -292,7 +292,8 @@ public class BtcWalletService extends WalletService {
         if (addressEntry.isPresent()) {
             return addressEntry.get();
         } else {
-            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context, offerId));
+            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(),
+                    wallet.getParams(), context, offerId));
             saveAddressEntryList();
             return entry;
         }

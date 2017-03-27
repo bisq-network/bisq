@@ -20,7 +20,10 @@ package io.bisq.gui.main.portfolio.pendingtrades;
 import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeWizardItem;
-import io.bisq.gui.main.portfolio.pendingtrades.steps.buyer.*;
+import io.bisq.gui.main.portfolio.pendingtrades.steps.buyer.BuyerStep1View;
+import io.bisq.gui.main.portfolio.pendingtrades.steps.buyer.BuyerStep2View;
+import io.bisq.gui.main.portfolio.pendingtrades.steps.buyer.BuyerStep3View;
+import io.bisq.gui.main.portfolio.pendingtrades.steps.buyer.BuyerStep4View;
 import org.fxmisc.easybind.EasyBind;
 
 public class BuyerSubView extends TradeSubView {
@@ -28,7 +31,6 @@ public class BuyerSubView extends TradeSubView {
     private TradeWizardItem step2;
     private TradeWizardItem step3;
     private TradeWizardItem step4;
-    private TradeWizardItem step5;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -51,22 +53,12 @@ public class BuyerSubView extends TradeSubView {
         step1 = new TradeWizardItem(BuyerStep1View.class, Res.get("portfolio.pending.step1.waitForConf"));
         step2 = new TradeWizardItem(BuyerStep2View.class, Res.get("portfolio.pending.step2_buyer.startPayment"));
         step3 = new TradeWizardItem(BuyerStep3View.class, Res.get("portfolio.pending.step3_buyer.waitPaymentArrived"));
-        step4 = new TradeWizardItem(BuyerStep4View.class, Res.get("portfolio.pending.step4.waitPaymentUnlocked"));
-        step5 = new TradeWizardItem(BuyerStep5View.class, Res.get("portfolio.pending.step5.completed"));
+        step4 = new TradeWizardItem(BuyerStep4View.class, Res.get("portfolio.pending.step5.completed"));
 
-        if (model.getLockTime() > 0) {
-            addWizardsToGridPane(step1);
-            addWizardsToGridPane(step2);
-            addWizardsToGridPane(step3);
-            addWizardsToGridPane(step4);
-            addWizardsToGridPane(step5);
-
-        } else {
-            addWizardsToGridPane(step1);
-            addWizardsToGridPane(step2);
-            addWizardsToGridPane(step3);
-            addWizardsToGridPane(step5);
-        }
+        addWizardsToGridPane(step1);
+        addWizardsToGridPane(step2);
+        addWizardsToGridPane(step3);
+        addWizardsToGridPane(step4);
     }
 
 
@@ -84,35 +76,27 @@ public class BuyerSubView extends TradeSubView {
             step2.setDisabled();
             step3.setDisabled();
             step4.setDisabled();
-            step5.setDisabled();
 
             switch (buyerState) {
                 case UNDEFINED:
                     break;
-                case WAIT_FOR_BLOCKCHAIN_CONFIRMATION:
+                case STEP1:
                     showItem(step1);
                     break;
-                case REQUEST_START_FIAT_PAYMENT:
+                case STEP2:
                     step1.setCompleted();
                     showItem(step2);
                     break;
-                case WAIT_FOR_FIAT_PAYMENT_RECEIPT:
+                case STEP3:
                     step1.setCompleted();
                     step2.setCompleted();
                     showItem(step3);
                     break;
-                case WAIT_FOR_BROADCAST_AFTER_UNLOCK:
+                case STEP4:
                     step1.setCompleted();
                     step2.setCompleted();
                     step3.setCompleted();
                     showItem(step4);
-                    break;
-                case REQUEST_WITHDRAWAL:
-                    step1.setCompleted();
-                    step2.setCompleted();
-                    step3.setCompleted();
-                    step4.setCompleted();
-                    showItem(step5);
                     break;
                 default:
                     log.warn("unhandled buyerState " + buyerState);

@@ -24,9 +24,9 @@ import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.network.p2p.SendMailboxMessageListener;
-import io.bisq.wire.payload.alert.PrivateNotification;
-import io.bisq.wire.payload.crypto.PubKeyRing;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -55,7 +55,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface SendPrivateNotificationHandler {
-        boolean handle(PrivateNotification privateNotification, PubKeyRing pubKeyRing, NodeAddress nodeAddress, String privKey, SendMailboxMessageListener sendMailboxMessageListener);
+        boolean handle(PrivateNotificationPayload privateNotification, PubKeyRing pubKeyRing, NodeAddress nodeAddress, String privKey, SendMailboxMessageListener sendMailboxMessageListener);
     }
 
 
@@ -122,7 +122,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         sendButton.setOnAction(e -> {
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                 if (!sendPrivateNotificationHandler.handle(
-                        new PrivateNotification(alertMessageTextArea.getText()),
+                        new PrivateNotificationPayload(alertMessageTextArea.getText()),
                         pubKeyRing,
                         nodeAddress,
                         keyInputTextField.getText(),

@@ -19,8 +19,8 @@ package io.bisq.network.p2p;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
-import io.bisq.wire.message.Message;
 import lombok.EqualsAndHashCode;
+import io.bisq.protobuffer.message.Message;
 
 import java.security.PublicKey;
 

@@ -21,8 +21,8 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.wire.payload.arbitration.Arbitrator;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.arbitration.Arbitrator;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +91,7 @@ public class ArbitratorService {
 
         Map<NodeAddress, Arbitrator> map = new HashMap<>();
         for (Arbitrator arbitrator : arbitratorSet) {
-            NodeAddress arbitratorNodeAddress = arbitrator.getArbitratorNodeAddress();
+            NodeAddress arbitratorNodeAddress = arbitrator.getNodeAddress();
             if (!map.containsKey(arbitratorNodeAddress))
                 map.put(arbitratorNodeAddress, arbitrator);
             else

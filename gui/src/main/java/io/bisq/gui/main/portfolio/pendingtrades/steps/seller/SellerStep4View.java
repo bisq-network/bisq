@@ -17,6 +17,7 @@
 
 package io.bisq.gui.main.portfolio.pendingtrades.steps.seller;
 
+import io.bisq.common.locale.Res;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.buyer.BuyerStep4View;
 
@@ -29,6 +30,14 @@ public class SellerStep4View extends BuyerStep4View {
     public SellerStep4View(PendingTradesViewModel model) {
         super(model);
     }
+
+    @Override
+    protected String getBtcTradeAmountLabel() {
+        return Res.get("portfolio.pending.step5_seller.sold");
+    }
+
+    @Override
+    protected String getFiatTradeAmountLabel() {
+        return Res.get("portfolio.pending.step5_seller.received");
+    }
 }
-
-

@@ -23,7 +23,7 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.protocol.BuyerProtocol;
-import io.bisq.wire.payload.p2p.NodeAddress;
+import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +35,7 @@ public abstract class BuyerTrade extends Trade {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(BuyerAsOffererTrade.class);
+    private static final Logger log = LoggerFactory.getLogger(BuyerAsMakerTrade.class);
 
     BuyerTrade(Offer offer, Coin tradeAmount, Coin txFee, Coin takeOfferFee, long tradePrice, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
         super(offer, tradeAmount, txFee, takeOfferFee, tradePrice, tradingPeerNodeAddress, storage);
@@ -61,18 +61,6 @@ public abstract class BuyerTrade extends Trade {
         checkNotNull(getTradeAmount(), "Invalid state: getTradeAmount() = null");
 
         return getOffer().getBuyerSecurityDeposit().add(getTradeAmount());
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setter for Mutable objects
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void setState(State state) {
-        super.setState(state);
-
-        if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
-            tradeProtocol.completed();
     }
 
 }

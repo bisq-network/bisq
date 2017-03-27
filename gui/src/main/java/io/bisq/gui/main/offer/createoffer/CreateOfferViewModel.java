@@ -19,6 +19,7 @@ package io.bisq.gui.main.offer.createoffer;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
@@ -52,6 +53,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+import java.util.concurrent.TimeUnit;
 
 import static javafx.beans.binding.Bindings.createStringBinding;
 
@@ -82,7 +84,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     // If we would change the price representation in the domain we would not be backward compatible
     final StringProperty price = new SimpleStringProperty();
 
-    // Positive % value means always a better price form the offerer's perspective: 
+    // Positive % value means always a better price form the maker's perspective: 
     // Buyer (with fiat): lower price as market
     // Buyer (with altcoin): higher (display) price as market (display price is inverted)
     final StringProperty marketPriceMargin = new SimpleStringProperty();
@@ -173,14 +175,14 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     @Override
     protected void activate() {
-       /* if (DevEnv.DEV_MODE) {
+        if (DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
-                amount.set("1");
+                amount.set("0.01");
                 minAmount.set(amount.get());
                 UserThread.runAfter(() -> {
                     price.set("1000");
                     onFocusOutPriceAsPercentageTextField(true, false);
-                }, 1);
+                }, 200, TimeUnit.MILLISECONDS);
 
                 setAmountToModel();
                 setMinAmountToModel();
@@ -191,7 +193,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 updateButtonDisableState();
                 updateSpinnerInfo();
             }, 10, TimeUnit.MILLISECONDS);
-        }*/
+        }
 
         addBindings();
         addListeners();
@@ -279,7 +281,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     dataModel.calculateTotalToPay();
 
                     if (!inputIsMarketBasedPrice) {
-                        if (marketPrice != null) {
+                        if (marketPrice != null && marketPrice.isValid()) {
                             double marketPriceAsDouble = marketPrice.getPrice();
                             try {
                                 double priceAsDouble = formatter.parseNumberStringToDouble(price.get());
@@ -316,7 +318,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         } else {
                             final String currencyCode = dataModel.getTradeCurrencyCode().get();
                             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-                            if (marketPrice != null) {
+                            if (marketPrice != null && marketPrice.isValid()) {
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
                                 dataModel.updateTradeFee();
@@ -489,7 +491,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     boolean initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
         boolean result = dataModel.initWithData(direction, tradeCurrency);
         if (dataModel.paymentAccount != null)
-            btcValidator.setMaxValueInBitcoin(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimit());
+            btcValidator.setMaxValueInBitcoin(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin());
 
         return result;
     }
@@ -513,7 +515,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 updateSpinnerInfo();
 
                 resultHandler.run();
-            }, 30);
+            }, 60);
         }
         errorMessageListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -545,7 +547,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
-        btcValidator.setMaxValueInBitcoin(paymentAccount.getPaymentMethod().getMaxTradeLimit());
+        btcValidator.setMaxValueInBitcoin(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin());
         dataModel.onPaymentAccountSelected(paymentAccount);
         if (amount.get() != null)
             amountValidationResult.set(isBtcInputValid(amount.get()));

@@ -26,14 +26,16 @@ import io.bisq.core.offer.placeoffer.tasks.AddOfferToRemoteOfferBook;
 import io.bisq.core.offer.placeoffer.tasks.BroadcastCreateOfferFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.CreateOfferFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.ValidateOffer;
-import io.bisq.core.trade.protocol.BuyerAsOffererProtocol;
+import io.bisq.core.trade.protocol.BuyerAsMakerProtocol;
 import io.bisq.core.trade.protocol.BuyerAsTakerProtocol;
-import io.bisq.core.trade.protocol.SellerAsOffererProtocol;
+import io.bisq.core.trade.protocol.SellerAsMakerProtocol;
 import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
-import io.bisq.core.trade.protocol.tasks.buyer.*;
-import io.bisq.core.trade.protocol.tasks.offerer.*;
-import io.bisq.core.trade.protocol.tasks.seller.*;
-import io.bisq.core.trade.protocol.tasks.shared.BroadcastAfterLockTime;
+import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendFiatTransferStartedMessage;
+import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
+import io.bisq.core.trade.protocol.tasks.maker.*;
+import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
+import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
+import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.common.view.InitializableView;
@@ -63,6 +65,7 @@ public class DebugView extends InitializableView {
     public DebugView() {
     }
 
+    //TODO not updated yes with new protocol!
     @Override
     public void initialize() {
         titledGroupBg.setText("Intercept task");
@@ -85,99 +88,81 @@ public class DebugView extends InitializableView {
 
                         
                         /*---- Protocol ----*/
-                        BuyerAsOffererProtocol.class,
-                        ProcessPayDepositRequest.class,
-                        VerifyArbitrationSelection.class,
-                        VerifyTakerAccount.class,
-                        CreateAndSignContract.class,
-                        OffererCreatesAndSignsDepositTxAsBuyer.class,
-                        LoadTakeOfferFeeTx.class,
-                        SetupDepositBalanceListener.class,
-                        SendPublishDepositTxRequest.class,
+                        BuyerAsMakerProtocol.class,
+                        MakerProcessPayDepositRequest.class,
+                        MakerVerifyArbitratorSelection.class,
+                        MakerVerifyTakerAccount.class,
+                        MakerCreateAndSignContract.class,
+                        BuyerAsMakerCreatesAndSignsDepositTx.class,
+                        MakerSetupDepositTxListener.class,
+                        MakerSendPublishDepositTxRequest.class,
 
-                        ProcessDepositTxPublishedMessage.class,
+                        MakerProcessDepositTxPublishedMessage.class,
 
-                        VerifyTakeOfferFeePayment.class,
-                        SendFiatTransferStartedMessage.class,
+                        MakerVerifyTakerFeePayment.class,
+                        BuyerSendFiatTransferStartedMessage.class,
 
-                        ProcessFinalizePayoutTxRequest.class,
-                        SignAndFinalizePayoutTx.class,
-                        SendPayoutTxFinalizedMessage.class,
-                        BroadcastAfterLockTime.class,
                         Boolean.class, /* used as separator*/
                         
 
                         /*---- Protocol ----*/
                         SellerAsTakerProtocol.class,
-                        SelectArbitrator.class,
-                        CreateTakeOfferFeeTx.class,
-                        BroadcastTakeOfferFeeTx.class,
-                        TakerCreatesDepositTxInputsAsSeller.class,
-                        SendPayDepositRequest.class,
+                        TakerSelectArbitrator.class,
+                        TakerCreateTakerFeeTx.class,
+                        TakerPublishTakerFeeTx.class,
+                        SellerAsTakerCreatesDepositTxInputs.class,
+                        TakerSendPayDepositRequest.class,
 
-                        ProcessPublishDepositTxRequest.class,
-                        VerifyOffererAccount.class,
-                        VerifyAndSignContract.class,
-                        SignAndPublishDepositTxAsSeller.class,
-                        SendDepositTxPublishedMessage.class,
+                        TakerProcessPublishDepositTxRequest.class,
+                        TakerVerifyMakerAccount.class,
+                        TakerVerifyAndSignContract.class,
+                        SellerAsTakerSignAndPublishDepositTx.class,
+                        TakerSendDepositTxPublishedMessage.class,
 
-                        ProcessFiatTransferStartedMessage.class,
+                        SellerProcessFiatTransferStartedMessage.class,
 
-                        VerifyOfferFeePayment.class,
-                        SignPayoutTx.class,
-                        SendFinalizePayoutTxRequest.class,
+                        TakerVerifyMakerFeePayment.class,
 
-                        ProcessPayoutTxFinalizedMessage.class,
-                        BroadcastAfterLockTime.class,
                         Boolean.class /* used as separator*/
                 )
         );
         final ObservableList<Class> items2 = FXCollections.observableArrayList(Arrays.asList(
                         /*---- Protocol ----*/
                         BuyerAsTakerProtocol.class,
-                        SelectArbitrator.class,
-                        CreateTakeOfferFeeTx.class,
-                        BroadcastTakeOfferFeeTx.class,
-                        TakerCreatesDepositTxInputsAsSeller.class,
-                        SendPayDepositRequest.class,
+                        TakerSelectArbitrator.class,
+                        TakerCreateTakerFeeTx.class,
+                        TakerPublishTakerFeeTx.class,
+                        SellerAsTakerCreatesDepositTxInputs.class,
+                        TakerSendPayDepositRequest.class,
 
-                        ProcessPublishDepositTxRequest.class,
-                        VerifyOffererAccount.class,
-                        VerifyAndSignContract.class,
-                        SignAndPublishDepositTxAsSeller.class,
-                        SendDepositTxPublishedMessage.class,
+                        TakerProcessPublishDepositTxRequest.class,
+                        TakerVerifyMakerAccount.class,
+                        TakerVerifyAndSignContract.class,
+                        SellerAsTakerSignAndPublishDepositTx.class,
+                        TakerSendDepositTxPublishedMessage.class,
 
-                        VerifyOfferFeePayment.class,
-                        SignPayoutTx.class,
-                        SendFiatTransferStartedMessage.class,
+                        TakerVerifyMakerFeePayment.class,
+                        BuyerSendFiatTransferStartedMessage.class,
 
-                        ProcessFinalizePayoutTxRequest.class,
-                        SignAndFinalizePayoutTx.class,
-                        SendPayoutTxFinalizedMessage.class,
-                        BroadcastAfterLockTime.class,
                         Boolean.class, /* used as separator*/
                         
                         
                          /*---- Protocol ----*/
-                        SellerAsOffererProtocol.class,
-                        ProcessPayDepositRequest.class,
-                        VerifyArbitrationSelection.class,
-                        VerifyTakerAccount.class,
-                        CreateAndSignContract.class,
-                        OffererCreatesAndSignsDepositTxAsBuyer.class,
-                        SetupDepositBalanceListener.class,
-                        SendPublishDepositTxRequest.class,
+                        SellerAsMakerProtocol.class,
+                        MakerProcessPayDepositRequest.class,
+                        MakerVerifyArbitratorSelection.class,
+                        MakerVerifyTakerAccount.class,
+                        MakerCreateAndSignContract.class,
+                        BuyerAsMakerCreatesAndSignsDepositTx.class,
+                        MakerSetupDepositTxListener.class,
+                        MakerSendPublishDepositTxRequest.class,
 
-                        ProcessDepositTxPublishedMessage.class,
+                        MakerProcessDepositTxPublishedMessage.class,
 
-                        ProcessFiatTransferStartedMessage.class,
+                        SellerProcessFiatTransferStartedMessage.class,
 
-                        VerifyTakeOfferFeePayment.class,
-                        SignPayoutTx.class,
-                        SendFinalizePayoutTxRequest.class,
+                        MakerVerifyTakerFeePayment.class,
 
-                        ProcessPayoutTxFinalizedMessage.class,
-                        BroadcastAfterLockTime.class,
                         Boolean.class /* used as separator*/
                 )
         );
