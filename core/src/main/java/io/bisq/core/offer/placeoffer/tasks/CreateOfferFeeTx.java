@@ -19,13 +19,13 @@ package io.bisq.core.offer.placeoffer.tasks;
 
 import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
+import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.placeoffer.PlaceOfferModel;
 import io.bisq.core.trade.protocol.ArbitratorSelectionRule;
-import io.bisq.protobuffer.payload.arbitration.Arbitrator;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.network.p2p.NodeAddress;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;

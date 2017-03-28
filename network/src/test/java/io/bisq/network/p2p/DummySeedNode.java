@@ -11,7 +11,6 @@ import io.bisq.common.util.Utilities;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.p2p.peers.BanList;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -19,10 +19,10 @@ package io.bisq.core.payment;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
+import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.payment.payload.SwishAccountPayload;
 import io.bisq.core.user.Preferences;
-import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
-import io.bisq.protobuffer.payload.payment.PaymentMethod;
-import io.bisq.protobuffer.payload.payment.SwishAccountPayload;
 
 public final class SwishAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.

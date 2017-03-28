@@ -18,8 +18,8 @@
 package io.bisq.core.trade.protocol;
 
 
-import io.bisq.protobuffer.message.trade.TradeMessage;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.core.trade.messages.TradeMessage;
+import io.bisq.network.p2p.NodeAddress;
 
 public interface MakerProtocol {
     void handleTakeOfferRequest(TradeMessage message, NodeAddress taker);

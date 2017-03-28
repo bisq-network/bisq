@@ -18,11 +18,11 @@
 package io.bisq.core.trade.protocol.tasks.taker;
 
 import io.bisq.common.taskrunner.TaskRunner;
+import io.bisq.core.filter.PaymentAccountFilter;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.Trade;
+import io.bisq.core.trade.messages.PublishDepositTxRequest;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.protobuffer.message.trade.PublishDepositTxRequest;
-import io.bisq.protobuffer.payload.filter.PaymentAccountFilter;
-import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;

@@ -17,6 +17,7 @@
 
 package io.bisq.gui.main.disputes.arbitrator;
 
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.trade.TradeManager;
@@ -27,7 +28,6 @@ import io.bisq.gui.main.overlays.windows.DisputeSummaryWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
 import javafx.stage.Stage;
 
 import javax.inject.Inject;

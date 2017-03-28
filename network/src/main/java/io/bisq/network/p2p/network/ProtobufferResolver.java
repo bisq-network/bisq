@@ -18,7 +18,7 @@
 package io.bisq.network.p2p.network;
 
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.protobuffer.message.Message;
+import io.bisq.network.p2p.Message;
 
 import java.util.Optional;
 

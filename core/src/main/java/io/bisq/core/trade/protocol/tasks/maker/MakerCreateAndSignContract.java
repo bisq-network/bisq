@@ -23,13 +23,13 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.BuyerAsMakerTrade;
+import io.bisq.core.trade.Contract;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
-import io.bisq.protobuffer.payload.trade.Contract;
+import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;

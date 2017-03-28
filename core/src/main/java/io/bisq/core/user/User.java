@@ -18,18 +18,18 @@
 package io.bisq.core.user;
 
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.Alert;
+import io.bisq.core.alert.AlertPersistable;
+import io.bisq.core.arbitration.Arbitrator;
+import io.bisq.core.arbitration.Mediator;
+import io.bisq.core.filter.Filter;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.payload.arbitration.Arbitrator;
-import io.bisq.protobuffer.payload.arbitration.Mediator;
-import io.bisq.protobuffer.payload.filter.Filter;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.persistence.alert.AlertPersistable;
+import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;

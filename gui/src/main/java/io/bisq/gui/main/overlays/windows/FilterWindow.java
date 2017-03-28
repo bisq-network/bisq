@@ -19,12 +19,12 @@ package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
+import io.bisq.core.filter.Filter;
 import io.bisq.core.filter.FilterManager;
+import io.bisq.core.filter.PaymentAccountFilter;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
-import io.bisq.protobuffer.payload.filter.Filter;
-import io.bisq.protobuffer.payload.filter.PaymentAccountFilter;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;

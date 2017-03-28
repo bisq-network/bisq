@@ -25,11 +25,11 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
+import io.bisq.core.offer.messages.OfferAvailabilityResponse;
+import io.bisq.core.offer.messages.OfferMessage;
 import io.bisq.core.util.Validator;
 import io.bisq.network.p2p.DecryptedDirectMessageListener;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.offer.OfferAvailabilityResponse;
-import io.bisq.protobuffer.message.offer.OfferMessage;
+import io.bisq.network.p2p.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

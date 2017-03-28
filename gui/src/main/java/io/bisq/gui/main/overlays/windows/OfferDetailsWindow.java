@@ -18,6 +18,7 @@
 package io.bisq.gui.main.overlays.windows;
 
 import com.google.common.base.Joiner;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.BankUtil;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.common.locale.Res;
@@ -25,6 +26,7 @@ import io.bisq.common.monetary.Price;
 import io.bisq.common.util.Tuple3;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.Navigation;
@@ -37,8 +39,6 @@ import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;

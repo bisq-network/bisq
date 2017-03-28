@@ -19,7 +19,6 @@ package io.bisq.core.alert;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.bisq.common.app.Version;
-import io.bisq.vo.alert.AlertVO;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

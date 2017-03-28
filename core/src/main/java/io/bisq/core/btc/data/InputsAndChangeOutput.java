@@ -17,8 +17,6 @@
 
 package io.bisq.core.btc.data;
 
-import io.bisq.protobuffer.payload.btc.RawTransactionInput;
-
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 

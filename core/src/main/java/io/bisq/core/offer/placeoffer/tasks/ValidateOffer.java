@@ -24,7 +24,7 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.placeoffer.PlaceOfferModel;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.protobuffer.message.trade.TradeMessage;
+import io.bisq.core.trade.messages.TradeMessage;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

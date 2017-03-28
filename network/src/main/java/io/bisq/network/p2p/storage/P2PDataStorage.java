@@ -1,6 +1,7 @@
 package io.bisq.network.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
+import io.bisq.common.Marshaller;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
@@ -14,21 +15,14 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
+import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.BroadcastHandler;
 import io.bisq.network.p2p.peers.Broadcaster;
-import io.bisq.protobuffer.Marshaller;
-import io.bisq.protobuffer.crypto.Hash;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.p2p.storage.*;
-import io.bisq.protobuffer.payload.ExpirablePayload;
-import io.bisq.protobuffer.payload.PersistedStoragePayload;
-import io.bisq.protobuffer.payload.RequiresOwnerIsOnlinePayload;
-import io.bisq.protobuffer.payload.StoragePayload;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.payload.p2p.storage.MailboxStoragePayload;
-import io.bisq.protobuffer.payload.p2p.storage.ProtectedMailboxStorageEntry;
-import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.network.p2p.storage.messages.*;
+import io.bisq.network.p2p.storage.payload.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -413,7 +407,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         else
             sequenceNumber = 1;
 
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new ProtectedStorageEntry(storagePayload, ownerStoragePubKey.getPublic(), sequenceNumber, signature);
     }
@@ -427,7 +421,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         else
             sequenceNumber = 1;
 
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new RefreshTTLMessage(hashOfDataAndSeqNr, signature, hashOfPayload.bytes, sequenceNumber);
     }
@@ -442,7 +436,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         else
             sequenceNumber = 1;
 
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(expirableMailboxStoragePayload, sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(expirableMailboxStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(storageSignaturePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new ProtectedMailboxStorageEntry(expirableMailboxStoragePayload,
                 storageSignaturePubKey.getPublic(), sequenceNumber, signature, receiversPublicKey);
@@ -538,7 +532,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private boolean checkSignature(ProtectedStorageEntry protectedStorageEntry) {
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(protectedStorageEntry.getStoragePayload(), protectedStorageEntry.sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(protectedStorageEntry.getStoragePayload(), protectedStorageEntry.sequenceNumber));
         return checkSignature(protectedStorageEntry.ownerPubKey, hashOfDataAndSeqNr, protectedStorageEntry.signature);
     }
 
@@ -610,7 +604,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private ByteArray getHashAsByteArray(ExpirablePayload data) {
-        return new ByteArray(Hash.getHash(data));
+        return new ByteArray(EncryptionService.getHash(data));
     }
 
     // Get a new map with entries older than PURGE_AGE_DAYS purged from the given map.

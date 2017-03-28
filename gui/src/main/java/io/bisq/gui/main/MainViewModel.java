@@ -25,13 +25,17 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.SealedAndSigned;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.alert.AlertManager;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.alert.PrivateNotificationPayload;
 import io.bisq.core.arbitration.ArbitratorManager;
+import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.listeners.BalanceListener;
@@ -62,19 +66,14 @@ import io.bisq.gui.main.overlays.windows.DisplayAlertMessageWindow;
 import io.bisq.gui.main.overlays.windows.TacWindow;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.network.crypto.DecryptedDataTuple;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.P2PServiceListener;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.ConnectionListener;
-import io.bisq.protobuffer.crypto.DecryptedDataTuple;
-import io.bisq.protobuffer.crypto.Encryption;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.message.p2p.peers.keepalive.Ping;
-import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
-import io.bisq.protobuffer.payload.arbitration.Dispute;
-import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
+import io.bisq.network.p2p.peers.keepalive.messages.Ping;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -582,7 +581,7 @@ public class MainViewModel implements ViewModel {
                     log.trace("Run crypto test");
                     // just use any simple dummy msg
                     Ping payload = new Ping(1, 1);
-                    SealedAndSigned sealedAndSigned = Encryption.encryptHybridWithSignature(payload,
+                    SealedAndSigned sealedAndSigned = EncryptionService.encryptHybridWithSignature(payload,
                             keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
                     DecryptedDataTuple tuple = encryptionService.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
                     if (tuple.payload instanceof Ping &&

@@ -19,15 +19,15 @@ package io.bisq.core.trade.protocol;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
+import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.network.p2p.DecryptedDirectMessageListener;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.trade.TradeMessage;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.value.ChangeListener;
 import lombok.extern.slf4j.Slf4j;
 

@@ -18,12 +18,12 @@
 package io.bisq.core.trade.failed;
 
 import com.google.inject.Inject;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.TradableList;
 import io.bisq.core.trade.Trade;
-import io.bisq.protobuffer.crypto.KeyRing;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

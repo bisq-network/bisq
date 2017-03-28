@@ -3,7 +3,7 @@ package io.bisq.core.offer;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
-import io.bisq.protobuffer.payload.payment.PaymentMethod;
+import io.bisq.core.payment.payload.PaymentMethod;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;

@@ -2,20 +2,19 @@ package io.bisq.network.p2p.storage;
 
 import io.bisq.common.UserThread;
 import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.PeerManager;
+import io.bisq.network.p2p.storage.messages.RefreshTTLMessage;
 import io.bisq.network.p2p.storage.mocks.MockData;
-import io.bisq.protobuffer.crypto.Hash;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.crypto.KeyStorage;
-import io.bisq.protobuffer.message.p2p.storage.RefreshTTLMessage;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.*;
 import org.slf4j.Logger;
@@ -106,7 +105,7 @@ public class ProtectedDataStorageTest {
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedStorageEntry dataToRemove = new ProtectedStorageEntry(data.getStoragePayload(), data.ownerPubKey, newSequenceNumber, signature);
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null, true));

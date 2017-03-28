@@ -22,6 +22,10 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.trade.SellerAsMakerTrade;
 import io.bisq.core.trade.Trade;
+import io.bisq.core.trade.messages.DepositTxPublishedMessage;
+import io.bisq.core.trade.messages.FiatTransferStartedMessage;
+import io.bisq.core.trade.messages.PayDepositRequest;
+import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.maker.*;
 import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
@@ -29,13 +33,9 @@ import io.bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessa
 import io.bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesAndSignsDepositTx;
 import io.bisq.core.util.Validator;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.p2p.MailboxMessage;
-import io.bisq.protobuffer.message.trade.DepositTxPublishedMessage;
-import io.bisq.protobuffer.message.trade.FiatTransferStartedMessage;
-import io.bisq.protobuffer.message.trade.PayDepositRequest;
-import io.bisq.protobuffer.message.trade.TradeMessage;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.network.p2p.MailboxMessage;
+import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
