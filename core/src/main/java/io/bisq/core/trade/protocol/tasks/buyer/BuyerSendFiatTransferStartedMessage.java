@@ -21,7 +21,7 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.messages.FiatTransferStartedMessage;
+import io.bisq.core.trade.messages.FiatTransferStartedMsg;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.network.p2p.SendMailboxMessageListener;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,7 @@ public class BuyerSendFiatTransferStartedMessage extends TradeTask {
             final String id = processModel.getId();
             AddressEntry payoutAddressEntry = walletService.getOrCreateAddressEntry(id,
                     AddressEntry.Context.TRADE_PAYOUT);
-            final FiatTransferStartedMessage message = new FiatTransferStartedMessage(
+            final FiatTransferStartedMsg message = new FiatTransferStartedMsg(
                     id,
                     payoutAddressEntry.getAddressString(),
                     processModel.getMyNodeAddress(),

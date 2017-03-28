@@ -71,9 +71,9 @@ public class PrivateNotificationManager {
 
     private void handleMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress senderNodeAddress) {
         this.decryptedMsgWithPubKey = decryptedMsgWithPubKey;
-        Message message = decryptedMsgWithPubKey.message;
-        if (message instanceof PrivateNotificationMessage) {
-            PrivateNotificationMessage privateNotificationMessage = (PrivateNotificationMessage) message;
+        Msg msg = decryptedMsgWithPubKey.msg;
+        if (msg instanceof PrivateNotificationMsg) {
+            PrivateNotificationMsg privateNotificationMessage = (PrivateNotificationMsg) msg;
             log.trace("Received privateNotificationMessage: " + privateNotificationMessage);
             if (privateNotificationMessage.getSenderNodeAddress().equals(senderNodeAddress)) {
                 final PrivateNotificationPayload privateNotification = privateNotificationMessage.privateNotificationPayload;
@@ -101,7 +101,7 @@ public class PrivateNotificationManager {
             signAndAddSignatureToPrivateNotificationMessage(privateNotification);
             p2PService.sendEncryptedMailboxMessage(nodeAddress,
                     pubKeyRing,
-                    new PrivateNotificationMessage(privateNotification,
+                    new PrivateNotificationMsg(privateNotification,
                             p2PService.getNetworkNode().getNodeAddress(),
                             UUID.randomUUID().toString()),
                     sendMailboxMessageListener);

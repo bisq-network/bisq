@@ -23,8 +23,8 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.MailboxMessage;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.MailboxMsg;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import org.bouncycastle.util.encoders.Hex;
@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 // We use a MailboxMessage here because the taker has paid already the trade fee and it could be that 
 // we lost connection to him but we are complete on our side. So even if the peer is offline he can 
 // continue later to complete the deposit tx.
-public final class PublishDepositTxRequest extends TradeMessage implements MailboxMessage {
+public final class PublishDepositTxRequest extends TradeMsg implements MailboxMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -89,7 +89,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
         return baseEnvelope.setPublishDepositTxRequest(baseEnvelope.getPublishDepositTxRequestBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)

@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.PrefixedSealedAndSignedMessage;
+import io.bisq.network.p2p.PrefixedSealedAndSignedMsg;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public final class MailboxStoragePayload implements StoragePayload {
     /**
      * The encrypted and signed payload message
      */
-    public final PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage;
+    public final PrefixedSealedAndSignedMsg prefixedSealedAndSignedMessage;
 
     /**
      * Used for check if the add operation is permitted.
@@ -63,7 +63,7 @@ public final class MailboxStoragePayload implements StoragePayload {
     private Map<String, String> extraDataMap;
 
     // Called from domain
-    public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
+    public MailboxStoragePayload(PrefixedSealedAndSignedMsg prefixedSealedAndSignedMessage,
                                  PublicKey senderPubKeyForAddOperation,
                                  PublicKey receiverPubKeyForRemoveOperation) {
         this(prefixedSealedAndSignedMessage,
@@ -73,7 +73,7 @@ public final class MailboxStoragePayload implements StoragePayload {
     }
 
     // Called from PB
-    public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
+    public MailboxStoragePayload(PrefixedSealedAndSignedMsg prefixedSealedAndSignedMessage,
                                  byte[] senderPubKeyForAddOperationBytes,
                                  byte[] receiverPubKeyForRemoveOperationBytes,
                                  @Nullable Map<String, String> extraDataMap) {

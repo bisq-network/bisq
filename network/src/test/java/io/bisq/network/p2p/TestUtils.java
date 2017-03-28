@@ -173,7 +173,7 @@ public class TestUtils {
     public static ProtobufferResolver getProtobufferResolver() {
         return new ProtobufferResolver() {
             @Override
-            public Optional<Message> fromProto(PB.Envelope envelope) {
+            public Optional<Msg> fromProto(PB.Envelope envelope) {
                 return Optional.empty();
             }
         };

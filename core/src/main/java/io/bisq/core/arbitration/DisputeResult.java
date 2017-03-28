@@ -20,7 +20,7 @@ package io.bisq.core.arbitration;
 import com.google.protobuf.ByteString;
 import io.bisq.common.Payload;
 import io.bisq.common.app.Version;
-import io.bisq.core.arbitration.messages.DisputeCommunicationMessage;
+import io.bisq.core.arbitration.messages.DisputeCommunicationMsg;
 import io.bisq.generated.protobuffer.PB;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -67,7 +67,7 @@ public final class DisputeResult implements Payload {
     private boolean idVerification;
     private boolean screenCast;
     private String summaryNotes;
-    private DisputeCommunicationMessage disputeCommunicationMessage;
+    private DisputeCommunicationMsg disputeCommunicationMessage;
     private byte[] arbitratorSignature;
     private long buyerPayoutAmount;
     private long sellerPayoutAmount;
@@ -89,7 +89,7 @@ public final class DisputeResult implements Payload {
 
     public DisputeResult(String tradeId, int traderId, Winner winner,
                          int reasonOrdinal, boolean tamperProofEvidence, boolean idVerification, boolean screenCast,
-                         String summaryNotes, DisputeCommunicationMessage disputeCommunicationMessage,
+                         String summaryNotes, DisputeCommunicationMsg disputeCommunicationMessage,
                          byte[] arbitratorSignature, long buyerPayoutAmount, long sellerPayoutAmount,
                          byte[] arbitratorPubKey,
                          long closeDate, boolean isLoserPublisher) {
@@ -171,11 +171,11 @@ public final class DisputeResult implements Payload {
         return summaryNotesProperty;
     }
 
-    public void setDisputeCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
+    public void setDisputeCommunicationMessage(DisputeCommunicationMsg disputeCommunicationMessage) {
         this.disputeCommunicationMessage = disputeCommunicationMessage;
     }
 
-    public DisputeCommunicationMessage getDisputeCommunicationMessage() {
+    public DisputeCommunicationMsg getDisputeCommunicationMessage() {
         return disputeCommunicationMessage;
     }
 

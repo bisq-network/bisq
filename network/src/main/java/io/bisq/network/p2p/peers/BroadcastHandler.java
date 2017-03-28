@@ -10,7 +10,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.NetworkNode;
-import io.bisq.network.p2p.storage.messages.BroadcastMessage;
+import io.bisq.network.p2p.storage.messages.BroadcastMsg;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -40,11 +40,11 @@ public class BroadcastHandler implements PeerManager.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface Listener {
-        void onBroadcasted(BroadcastMessage message, int numOfCompletedBroadcasts);
+        void onBroadcasted(BroadcastMsg message, int numOfCompletedBroadcasts);
 
-        void onBroadcastedToFirstPeer(BroadcastMessage message);
+        void onBroadcastedToFirstPeer(BroadcastMsg message);
 
-        void onBroadcastCompleted(BroadcastMessage message, int numOfCompletedBroadcasts, int numOfFailedBroadcasts);
+        void onBroadcastCompleted(BroadcastMsg message, int numOfCompletedBroadcasts, int numOfFailedBroadcasts);
 
         void onBroadcastFailed(String errorMessage);
     }
@@ -60,7 +60,7 @@ public class BroadcastHandler implements PeerManager.Listener {
     private boolean stopped = false;
     private int numOfCompletedBroadcasts = 0;
     private int numOfFailedBroadcasts = 0;
-    private BroadcastMessage message;
+    private BroadcastMsg message;
     private ResultHandler resultHandler;
     @Nullable
     private Listener listener;
@@ -89,7 +89,7 @@ public class BroadcastHandler implements PeerManager.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void broadcast(BroadcastMessage message, @Nullable NodeAddress sender, ResultHandler resultHandler,
+    public void broadcast(BroadcastMsg message, @Nullable NodeAddress sender, ResultHandler resultHandler,
                           @Nullable Listener listener, boolean isDataOwner) {
         this.message = message;
         this.resultHandler = resultHandler;
@@ -142,7 +142,7 @@ public class BroadcastHandler implements PeerManager.Listener {
         }
     }
 
-    private void sendToPeer(Connection connection, BroadcastMessage message) {
+    private void sendToPeer(Connection connection, BroadcastMsg message) {
         String errorMessage = "Message not broadcasted because we have stopped the handler already.\n\t" +
                 "message = " + Utilities.toTruncatedString(message);
         if (!stopped) {

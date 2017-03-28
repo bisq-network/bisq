@@ -2,26 +2,26 @@ package io.bisq.network.p2p.storage.messages;
 
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 
 
-public final class RemoveMailboxDataMessage extends BroadcastMessage {
+public final class RemoveMailboxDataMsg extends BroadcastMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final ProtectedMailboxStorageEntry protectedMailboxStorageEntry;
 
-    public RemoveMailboxDataMessage(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
+    public RemoveMailboxDataMsg(ProtectedMailboxStorageEntry protectedMailboxStorageEntry) {
         this.protectedMailboxStorageEntry = protectedMailboxStorageEntry;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RemoveMailboxDataMessage)) return false;
+        if (!(o instanceof RemoveMailboxDataMsg)) return false;
 
-        RemoveMailboxDataMessage that = (RemoveMailboxDataMessage) o;
+        RemoveMailboxDataMsg that = (RemoveMailboxDataMsg) o;
 
         return !(protectedMailboxStorageEntry != null ? !protectedMailboxStorageEntry.equals(that.protectedMailboxStorageEntry) : that.protectedMailboxStorageEntry != null);
     }
@@ -40,7 +40,7 @@ public final class RemoveMailboxDataMessage extends BroadcastMessage {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
         return baseEnvelope.setRemoveMailboxDataMessage(PB.RemoveMailboxDataMessage.newBuilder()
                 .setProtectedStorageEntry(protectedMailboxStorageEntry.toProto())).build();
 

@@ -3,7 +3,7 @@ package io.bisq.network.p2p;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 
-public final class CloseConnectionMessage implements Message {
+public final class CloseConnectionMsg implements Msg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     // We dont use the Version.NETWORK_PROTOCOL_VERSION here as we report also compatibility issues and
     // a changed version would render that message invalid as well, so the peer cannot get notified about the problem.
@@ -12,7 +12,7 @@ public final class CloseConnectionMessage implements Message {
     private final int messageVersion = Version.getP2PMessageVersion();
     public final String reason;
 
-    public CloseConnectionMessage(String reason) {
+    public CloseConnectionMsg(String reason) {
         this.reason = reason;
     }
 

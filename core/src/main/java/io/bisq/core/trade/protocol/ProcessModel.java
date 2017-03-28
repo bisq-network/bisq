@@ -34,7 +34,7 @@ import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
-import io.bisq.core.trade.messages.TradeMessage;
+import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
@@ -69,7 +69,7 @@ public class ProcessModel implements Model, Serializable {
 
     // Mutable
     public final TradingPeer tradingPeer;
-    transient private TradeMessage tradeMessage;
+    transient private TradeMsg tradeMessage;
     private byte[] payoutTxSignature;
 
     private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
@@ -172,12 +172,12 @@ public class ProcessModel implements Model, Serializable {
     // Getter/Setter for Mutable objects
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setTradeMessage(TradeMessage tradeMessage) {
+    public void setTradeMessage(TradeMsg tradeMessage) {
         this.tradeMessage = tradeMessage;
     }
 
     @Nullable
-    public TradeMessage getTradeMessage() {
+    public TradeMsg getTradeMessage() {
         return tradeMessage;
     }
 

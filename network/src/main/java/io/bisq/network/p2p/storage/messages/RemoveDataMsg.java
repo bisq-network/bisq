@@ -2,25 +2,25 @@ package io.bisq.network.p2p.storage.messages;
 
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
-public final class RemoveDataMessage extends BroadcastMessage {
+public final class RemoveDataMsg extends BroadcastMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final ProtectedStorageEntry protectedStorageEntry;
 
-    public RemoveDataMessage(ProtectedStorageEntry protectedStorageEntry) {
+    public RemoveDataMsg(ProtectedStorageEntry protectedStorageEntry) {
         this.protectedStorageEntry = protectedStorageEntry;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RemoveDataMessage)) return false;
+        if (!(o instanceof RemoveDataMsg)) return false;
 
-        RemoveDataMessage that = (RemoveDataMessage) o;
+        RemoveDataMsg that = (RemoveDataMsg) o;
 
         return !(protectedStorageEntry != null ? !protectedStorageEntry.equals(that.protectedStorageEntry) : that.protectedStorageEntry != null);
 
@@ -40,7 +40,7 @@ public final class RemoveDataMessage extends BroadcastMessage {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
         return baseEnvelope.setRemoveDataMessage(PB.RemoveDataMessage.newBuilder()
                 .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProto())).build();
 

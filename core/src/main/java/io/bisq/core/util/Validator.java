@@ -17,7 +17,7 @@
 
 package io.bisq.core.util;
 
-import io.bisq.core.trade.messages.TradeMessage;
+import io.bisq.core.trade.messages.TradeMsg;
 import org.bitcoinj.core.Coin;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -51,7 +51,7 @@ public class Validator {
         return value;
     }
 
-    public static void checkTradeId(String tradeId, TradeMessage tradeMessage) {
+    public static void checkTradeId(String tradeId, TradeMsg tradeMessage) {
         checkArgument(tradeId.equals(tradeMessage.tradeId));
     }
 }

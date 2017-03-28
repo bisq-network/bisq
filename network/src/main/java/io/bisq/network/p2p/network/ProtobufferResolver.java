@@ -18,10 +18,10 @@
 package io.bisq.network.p2p.network;
 
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.Msg;
 
 import java.util.Optional;
 
 public interface ProtobufferResolver {
-    Optional<Message> fromProto(PB.Envelope envelope);
+    Optional<Msg> fromProto(PB.Envelope envelope);
 }

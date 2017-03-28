@@ -20,21 +20,21 @@ package io.bisq.core.arbitration.messages;
 import io.bisq.common.app.Version;
 import io.bisq.core.arbitration.DisputeResult;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
-public final class DisputeResultMessage extends DisputeMessage {
+public final class DisputeResultMsg extends DisputeMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final DisputeResult disputeResult;
     private final NodeAddress myNodeAddress;
 
-    public DisputeResultMessage(DisputeResult disputeResult, NodeAddress myNodeAddress, String uid) {
+    public DisputeResultMsg(DisputeResult disputeResult, NodeAddress myNodeAddress, String uid) {
         super(uid);
         this.disputeResult = disputeResult;
         this.myNodeAddress = myNodeAddress;
@@ -47,7 +47,7 @@ public final class DisputeResultMessage extends DisputeMessage {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
         return baseEnvelope.setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
                 .setDisputeResult(disputeResult.toProto())
                 .setMyNodeAddress(myNodeAddress.toProto())

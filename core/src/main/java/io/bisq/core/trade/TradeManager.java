@@ -40,7 +40,7 @@ import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.core.trade.handlers.TradeResultHandler;
 import io.bisq.core.trade.messages.PayDepositRequest;
-import io.bisq.core.trade.messages.TradeMessage;
+import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.User;
@@ -131,12 +131,12 @@ public class TradeManager {
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
             public void onDirectMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress peerNodeAddress) {
-                Message message = decryptedMsgWithPubKey.message;
+                Msg msg = decryptedMsgWithPubKey.msg;
 
                 // Handler for incoming initial network_messages from taker
-                if (message instanceof PayDepositRequest) {
-                    log.trace("Received PayDepositRequest: " + message);
-                    handleInitialTakeOfferRequest((PayDepositRequest) message, peerNodeAddress);
+                if (msg instanceof PayDepositRequest) {
+                    log.trace("Received PayDepositRequest: " + msg);
+                    handleInitialTakeOfferRequest((PayDepositRequest) msg, peerNodeAddress);
                 }
             }
         });
@@ -145,10 +145,10 @@ public class TradeManager {
             public void onMailboxMessageAdded(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress senderNodeAddress) {
                 log.trace("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMsgWithPubKey);
                 log.trace("onMailboxMessageAdded senderAddress: " + senderNodeAddress);
-                Message message = decryptedMsgWithPubKey.message;
-                if (message instanceof TradeMessage) {
-                    log.trace("Received TradeMessage: " + message);
-                    String tradeId = ((TradeMessage) message).tradeId;
+                Msg msg = decryptedMsgWithPubKey.msg;
+                if (msg instanceof TradeMsg) {
+                    log.trace("Received TradeMessage: " + msg);
+                    String tradeId = ((TradeMsg) msg).tradeId;
                     Optional<Trade> tradeOptional = trades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
                     // The mailbox message will be removed inside the tasks after they are processed successfully
                     if (tradeOptional.isPresent())
@@ -248,7 +248,7 @@ public class TradeManager {
         }
     }
 
-    private void handleInitialTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {
+    private void handleInitialTakeOfferRequest(TradeMsg message, NodeAddress peerNodeAddress) {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + peerNodeAddress);
         try {
             Validator.nonEmptyStringOf(message.tradeId);

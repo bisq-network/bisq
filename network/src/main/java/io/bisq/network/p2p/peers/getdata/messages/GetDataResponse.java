@@ -3,7 +3,7 @@ package io.bisq.network.p2p.peers.getdata.messages;
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.SupportedCapabilitiesMessage;
+import io.bisq.network.p2p.SupportedCapabilitiesMsg;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 
-public final class GetDataResponse implements SupportedCapabilitiesMessage {
+public final class GetDataResponse implements SupportedCapabilitiesMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private final int messageVersion = Version.getP2PMessageVersion();

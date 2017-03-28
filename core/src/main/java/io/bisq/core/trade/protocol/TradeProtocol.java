@@ -23,10 +23,10 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
-import io.bisq.core.trade.messages.TradeMessage;
+import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.network.p2p.DecryptedDirectMessageListener;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.value.ChangeListener;
 import lombok.extern.slf4j.Slf4j;
@@ -54,10 +54,10 @@ public abstract class TradeProtocol {
             PubKeyRing tradingPeerPubKeyRing = processModel.tradingPeer.getPubKeyRing();
             PublicKey signaturePubKey = decryptedMessageWithPubKey.signaturePubKey;
             if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
-                Message message = decryptedMessageWithPubKey.message;
-                log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + peersNodeAddress);
-                if (message instanceof TradeMessage) {
-                    TradeMessage tradeMessage = (TradeMessage) message;
+                Msg msg = decryptedMessageWithPubKey.msg;
+                log.trace("handleNewMessage: message = " + msg.getClass().getSimpleName() + " from " + peersNodeAddress);
+                if (msg instanceof TradeMsg) {
+                    TradeMsg tradeMessage = (TradeMsg) msg;
                     nonEmptyStringOf(tradeMessage.tradeId);
 
                     if (tradeMessage.tradeId.equals(processModel.getId()))
@@ -103,16 +103,16 @@ public abstract class TradeProtocol {
     }
 
     public void applyMailboxMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, Trade trade) {
-        log.debug("applyMailboxMessage " + decryptedMsgWithPubKey.message);
+        log.debug("applyMailboxMessage " + decryptedMsgWithPubKey.msg);
         if (decryptedMsgWithPubKey.signaturePubKey.equals(processModel.tradingPeer.getPubKeyRing().getSignaturePubKey()))
-            doApplyMailboxMessage(decryptedMsgWithPubKey.message, trade);
+            doApplyMailboxMessage(decryptedMsgWithPubKey.msg, trade);
         else
             log.error("SignaturePubKey in message does not match the SignaturePubKey we have stored to that trading peer.");
     }
 
-    protected abstract void doApplyMailboxMessage(Message message, Trade trade);
+    protected abstract void doApplyMailboxMessage(Msg msg, Trade trade);
 
-    protected abstract void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress);
+    protected abstract void doHandleDecryptedMessage(TradeMsg tradeMessage, NodeAddress peerNodeAddress);
 
     protected void startTimeout() {
         stopTimeout();

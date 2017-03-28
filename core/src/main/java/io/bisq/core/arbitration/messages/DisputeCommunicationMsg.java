@@ -20,7 +20,7 @@ package io.bisq.core.arbitration.messages;
 import io.bisq.common.app.Version;
 import io.bisq.core.arbitration.Attachment;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @ToString
 @Getter
 @Slf4j
-public final class DisputeCommunicationMessage extends DisputeMessage {
+public final class DisputeCommunicationMsg extends DisputeMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -63,16 +63,16 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     transient private BooleanProperty arrivedProperty = new SimpleBooleanProperty();
     transient private BooleanProperty storedInMailboxProperty = new SimpleBooleanProperty();
 
-    public DisputeCommunicationMessage(String tradeId,
-                                       int traderId,
-                                       boolean senderIsTrader,
-                                       String message,
-                                       @Nullable List<Attachment> attachments,
-                                       NodeAddress myNodeAddress,
-                                       long date,
-                                       boolean arrived,
-                                       boolean storedInMailbox,
-                                       String uid) {
+    public DisputeCommunicationMsg(String tradeId,
+                                   int traderId,
+                                   boolean senderIsTrader,
+                                   String message,
+                                   @Nullable List<Attachment> attachments,
+                                   NodeAddress myNodeAddress,
+                                   long date,
+                                   boolean arrived,
+                                   boolean storedInMailbox,
+                                   String uid) {
         super(uid);
         this.tradeId = tradeId;
         this.traderId = traderId;
@@ -133,7 +133,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
         return baseEnvelope.setDisputeCommunicationMessage(PB.DisputeCommunicationMessage.newBuilder()
                 .setDate(date)
                 .setTradeId(tradeId)

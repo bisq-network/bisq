@@ -17,5 +17,9 @@
 
 package io.bisq.network.p2p;
 
-public interface DirectMessage extends Message {
+
+public interface MailboxMsg extends DirectMsg {
+    NodeAddress getSenderNodeAddress();
+
+    String getUID();
 }

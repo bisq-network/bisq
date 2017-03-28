@@ -26,11 +26,11 @@ public final class DecryptedMsgWithPubKey implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    public final Message message;
+    public final Msg msg;
     public final PublicKey signaturePubKey;
 
-    public DecryptedMsgWithPubKey(Message message, PublicKey signaturePubKey) {
-        this.message = message;
+    public DecryptedMsgWithPubKey(Msg msg, PublicKey signaturePubKey) {
+        this.msg = msg;
         this.signaturePubKey = signaturePubKey;
     }
 
@@ -41,14 +41,14 @@ public final class DecryptedMsgWithPubKey implements Persistable {
 
         DecryptedMsgWithPubKey that = (DecryptedMsgWithPubKey) o;
 
-        if (message != null ? !message.equals(that.message) : that.message != null) return false;
+        if (msg != null ? !msg.equals(that.msg) : that.msg != null) return false;
         return !(signaturePubKey != null ? !signaturePubKey.equals(that.signaturePubKey) : that.signaturePubKey != null);
 
     }
 
     @Override
     public int hashCode() {
-        int result = message != null ? message.hashCode() : 0;
+        int result = msg != null ? msg.hashCode() : 0;
         result = 31 * result + (signaturePubKey != null ? signaturePubKey.hashCode() : 0);
         return result;
     }
@@ -56,7 +56,7 @@ public final class DecryptedMsgWithPubKey implements Persistable {
     @Override
     public String toString() {
         return "DecryptedMsgWithPubKey{" +
-                "message=" + message +
+                "message=" + msg +
                 ", signaturePubKey.hashCode()=" + signaturePubKey.hashCode() +
                 '}';
     }

@@ -15,31 +15,31 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.trade.messages;
+package io.bisq.core.arbitration.messages;
 
 import io.bisq.common.app.Version;
-import io.bisq.network.p2p.DirectMessage;
+import io.bisq.network.p2p.MailboxMsg;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import javax.annotation.concurrent.Immutable;
-
-
 @EqualsAndHashCode
 @ToString
-@Immutable
-public abstract class TradeMessage implements DirectMessage {
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
+public abstract class DisputeMsg implements MailboxMsg {
+    //TODO add serialVersionUID also in superclasses as changes would break compatibility
     private final int messageVersion = Version.getP2PMessageVersion();
-    public final String tradeId;
+    private final String uid;
 
-    protected TradeMessage(String tradeId) {
-        this.tradeId = tradeId;
+    public DisputeMsg(String uid) {
+        this.uid = uid;
     }
 
     @Override
     public int getMessageVersion() {
         return messageVersion;
+    }
+
+    @Override
+    public String getUID() {
+        return uid;
     }
 }

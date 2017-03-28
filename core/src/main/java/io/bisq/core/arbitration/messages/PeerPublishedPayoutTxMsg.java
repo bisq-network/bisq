@@ -17,26 +17,26 @@
 
 package io.bisq.core.arbitration.messages;
 
+import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
-import io.bisq.core.arbitration.Dispute;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
-@ToString
-public final class PeerOpenedDisputeMessage extends DisputeMessage {
+public final class PeerPublishedPayoutTxMsg extends DisputeMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public final Dispute dispute;
+    public final byte[] transaction;
+    public final String tradeId;
     private final NodeAddress myNodeAddress;
 
-    public PeerOpenedDisputeMessage(Dispute dispute, NodeAddress myNodeAddress, String uid) {
+    public PeerPublishedPayoutTxMsg(byte[] transaction, String tradeId, NodeAddress myNodeAddress, String uid) {
         super(uid);
-        this.dispute = dispute;
+        this.transaction = transaction;
+        this.tradeId = tradeId;
         this.myNodeAddress = myNodeAddress;
     }
 
@@ -47,10 +47,20 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
-        return baseEnvelope.setPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage.newBuilder()
-                .setDispute(dispute.toProto())
-                .setMyNodeAddress(myNodeAddress.toProto())
-                .setUid(getUID())).build();
+        PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
+        return baseEnvelope.setPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage.newBuilder()
+                .setTransaction(ByteString.copyFrom(transaction))
+                .setTradeId(tradeId)
+                .setMyNodeAddress(myNodeAddress.toProto())).build();
+    }
+
+    // transaction not displayed for privacy reasons...
+    @Override
+    public String toString() {
+        return "PeerPublishedPayoutTxMessage{" +
+                "transaction not displayed for privacy reasons..." +
+                ", tradeId='" + tradeId + '\'' +
+                ", myNodeAddress=" + myNodeAddress +
+                "} " + super.toString();
     }
 }

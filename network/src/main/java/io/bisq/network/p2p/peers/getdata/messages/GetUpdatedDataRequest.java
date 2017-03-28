@@ -4,14 +4,14 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
-import io.bisq.network.p2p.SendersNodeAddressMessage;
+import io.bisq.network.p2p.SendersNodeAddressMsg;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, GetDataRequest {
+public final class GetUpdatedDataRequest implements SendersNodeAddressMsg, GetDataRequest {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

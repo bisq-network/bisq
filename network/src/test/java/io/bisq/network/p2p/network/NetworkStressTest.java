@@ -556,9 +556,9 @@ public class NetworkStressTest {
 
             // Make the peer ready for receiving direct network_messages.
             srcPeer.addDecryptedDirectMessageListener((decryptedMsgWithPubKey, peerNodeAddress) -> {
-                if (!(decryptedMsgWithPubKey.message instanceof StressTestDirectMessage))
+                if (!(decryptedMsgWithPubKey.msg instanceof StressTestDirectMsg))
                     return;
-                StressTestDirectMessage directMessage = (StressTestDirectMessage) (decryptedMsgWithPubKey.message);
+                StressTestDirectMsg directMessage = (StressTestDirectMsg) (decryptedMsgWithPubKey.msg);
                 if ((directMessage.getData().equals("test/" + srcPeerAddress)))
                     receivedDirectLatch.countDown();
             });
@@ -583,7 +583,7 @@ public class NetworkStressTest {
                             final long sendMillis = System.currentTimeMillis();
                             srcPeer.sendEncryptedDirectMessage(
                                     dstPeerAddress, peerPKRings.get(dstPeerIdx),
-                                    new StressTestDirectMessage("test/" + dstPeerAddress),
+                                    new StressTestDirectMsg("test/" + dstPeerAddress),
                                     new SendDirectMessageListener() {
                                         @Override
                                         public void onArrived() {
@@ -682,7 +682,7 @@ public class NetworkStressTest {
                 final NodeAddress dstPeerAddress = peerAddr;
                 // ...and send a message to it.
                 onlinePeer.sendEncryptedMailboxMessage(dstPeerAddress, peerPKRings.get(dstPeerIdx),
-                        new StressTestMailboxMessage(onlinePeerAddress, "test/" + dstPeerAddress),
+                        new StressTestMailboxMsg(onlinePeerAddress, "test/" + dstPeerAddress),
                         new SendMailboxMessageListener() {  // checked in receiver
                             @Override
                             public void onArrived() {
@@ -740,9 +740,9 @@ public class NetworkStressTest {
     private void addMailboxListeners(P2PService peer, CountDownLatch receivedMailboxLatch) {
         class MailboxMessageListener implements DecryptedDirectMessageListener, DecryptedMailboxListener {
             private void handle(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
-                if (!(decryptedMsgWithPubKey.message instanceof StressTestMailboxMessage))
+                if (!(decryptedMsgWithPubKey.msg instanceof StressTestMailboxMsg))
                     return;
-                StressTestMailboxMessage msg = (StressTestMailboxMessage) (decryptedMsgWithPubKey.message);
+                StressTestMailboxMsg msg = (StressTestMailboxMsg) (decryptedMsgWithPubKey.msg);
                 if ((msg.getData().equals("test/" + peer.getAddress())))
                     countDownAndPrint(receivedMailboxLatch, 'm');
             }
@@ -806,13 +806,13 @@ public class NetworkStressTest {
 
 // # MESSAGE CLASSES
 
-final class StressTestDirectMessage implements DirectMessage {
+final class StressTestDirectMsg implements DirectMsg {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private final int messageVersion = Version.getP2PMessageVersion();
 
     private final String data;
 
-    StressTestDirectMessage(String data) {
+    StressTestDirectMsg(String data) {
         this.data = data;
     }
 
@@ -831,7 +831,7 @@ final class StressTestDirectMessage implements DirectMessage {
     }
 }
 
-final class StressTestMailboxMessage implements MailboxMessage {
+final class StressTestMailboxMsg implements MailboxMsg {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private final int messageVersion = Version.getP2PMessageVersion();
 
@@ -839,7 +839,7 @@ final class StressTestMailboxMessage implements MailboxMessage {
     private final NodeAddress senderNodeAddress;
     private final String data;
 
-    StressTestMailboxMessage(NodeAddress sender, String data) {
+    StressTestMailboxMsg(NodeAddress sender, String data) {
         this.senderNodeAddress = sender;
         this.data = data;
     }

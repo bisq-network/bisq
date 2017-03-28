@@ -18,15 +18,15 @@
 package io.bisq.network.crypto;
 
 
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.Msg;
 
 import java.security.PublicKey;
 
 public final class DecryptedDataTuple {
-    public final Message payload;
+    public final Msg payload;
     public final PublicKey sigPublicKey;
 
-    public DecryptedDataTuple(Message payload, PublicKey sigPublicKey) {
+    public DecryptedDataTuple(Msg payload, PublicKey sigPublicKey) {
         this.payload = payload;
         this.sigPublicKey = sigPublicKey;
     }

@@ -7,7 +7,7 @@ import io.bisq.generated.protobuffer.PB;
 
 import java.util.Arrays;
 
-public final class RefreshTTLMessage extends BroadcastMessage implements Marshaller {
+public final class RefreshTTLMsg extends BroadcastMsg implements Marshaller {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -18,10 +18,10 @@ public final class RefreshTTLMessage extends BroadcastMessage implements Marshal
     public final byte[] hashOfPayload;          // 32 bytes
     public final int sequenceNumber;            // 4 bytes
 
-    public RefreshTTLMessage(byte[] hashOfDataAndSeqNr,
-                             byte[] signature,
-                             byte[] hashOfPayload,
-                             int sequenceNumber) {
+    public RefreshTTLMsg(byte[] hashOfDataAndSeqNr,
+                         byte[] signature,
+                         byte[] hashOfPayload,
+                         int sequenceNumber) {
         this.hashOfDataAndSeqNr = hashOfDataAndSeqNr;
         this.signature = signature;
         this.hashOfPayload = hashOfPayload;

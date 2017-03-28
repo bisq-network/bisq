@@ -2,9 +2,9 @@ package io.bisq.network.p2p.peers.keepalive.messages;
 
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.Msg;
 
-public final class Pong extends KeepAliveMessage {
+public final class Pong extends KeepAliveMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -23,7 +23,7 @@ public final class Pong extends KeepAliveMessage {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
         return baseEnvelope.setPong(PB.Pong.newBuilder().setRequestNonce(requestNonce)).build();
     }
 }

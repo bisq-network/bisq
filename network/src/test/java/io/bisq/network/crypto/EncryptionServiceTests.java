@@ -25,8 +25,8 @@ import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.MailboxMessage;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.MailboxMsg;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
@@ -122,10 +122,10 @@ public class EncryptionServiceTests {
         log.trace("took " + (System.currentTimeMillis() - ts) + " ms.");
     }*/
 
-    private static class MockMessage implements Message {
+    private static class MockMsg implements Msg {
         public final int nonce;
 
-        public MockMessage(int nonce) {
+        public MockMsg(int nonce) {
             this.nonce = nonce;
         }
 
@@ -141,12 +141,12 @@ public class EncryptionServiceTests {
     }
 }
 
-final class TestMessage implements MailboxMessage {
+final class TestMsg implements MailboxMsg {
     public String data = "test";
     private final int messageVersion = Version.getP2PMessageVersion();
     private final String uid;
 
-    public TestMessage(String data) {
+    public TestMsg(String data) {
         this.data = data;
         uid = UUID.randomUUID().toString();
     }

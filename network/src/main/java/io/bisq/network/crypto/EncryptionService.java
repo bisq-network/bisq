@@ -22,7 +22,7 @@ import io.bisq.common.Marshaller;
 import io.bisq.common.crypto.*;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.network.ProtobufferResolver;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,8 +45,8 @@ public class EncryptionService {
         this.protobufferResolver = protobufferResolver;
     }
 
-    public SealedAndSigned encryptAndSign(PubKeyRing pubKeyRing, Message message) throws CryptoException {
-        return encryptHybridWithSignature(message, keyRing.getSignatureKeyPair(), pubKeyRing.getEncryptionPubKey());
+    public SealedAndSigned encryptAndSign(PubKeyRing pubKeyRing, Msg msg) throws CryptoException {
+        return encryptHybridWithSignature(msg, keyRing.getSignatureKeyPair(), pubKeyRing.getEncryptionPubKey());
     }
 
     /**
@@ -66,7 +66,7 @@ public class EncryptionService {
         try {
             final byte[] bytes = Encryption.decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey);
             final PB.Envelope envelope = PB.Envelope.parseFrom(bytes);
-            Message decryptedPayload = protobufferResolver.fromProto(envelope).get();
+            Msg decryptedPayload = protobufferResolver.fromProto(envelope).get();
             return new DecryptedDataTuple(decryptedPayload, sealedAndSigned.sigPublicKey);
         } catch (InvalidProtocolBufferException e) {
             throw new CryptoException("Unable to parse protobuffer message.", e);
@@ -77,16 +77,16 @@ public class EncryptionService {
     public DecryptedMsgWithPubKey decryptAndVerify(SealedAndSigned sealedAndSigned) throws CryptoException {
         DecryptedDataTuple decryptedDataTuple = decryptHybridWithSignature(sealedAndSigned,
                 keyRing.getEncryptionKeyPair().getPrivate());
-        if (decryptedDataTuple.payload instanceof Message) {
-            return new DecryptedMsgWithPubKey((Message) decryptedDataTuple.payload,
+        if (decryptedDataTuple.payload instanceof Msg) {
+            return new DecryptedMsgWithPubKey((Msg) decryptedDataTuple.payload,
                     decryptedDataTuple.sigPublicKey);
         } else {
             throw new CryptoException("decryptedPayloadWithPubKey.payload is not instance of Message");
         }
     }
 
-    private static byte[] encryptPayloadWithHmac(Message message, SecretKey secretKey) throws CryptoException {
-        return Encryption.encryptPayloadWithHmac(message.toProto().toByteArray(), secretKey);
+    private static byte[] encryptPayloadWithHmac(Msg msg, SecretKey secretKey) throws CryptoException {
+        return Encryption.encryptPayloadWithHmac(msg.toProto().toByteArray(), secretKey);
     }
 
     /**
@@ -96,7 +96,7 @@ public class EncryptionService {
      * @return A SealedAndSigned object.
      * @throws CryptoException
      */
-    public static SealedAndSigned encryptHybridWithSignature(Message payload, KeyPair signatureKeyPair,
+    public static SealedAndSigned encryptHybridWithSignature(Msg payload, KeyPair signatureKeyPair,
                                                              PublicKey encryptionPublicKey)
             throws CryptoException {
         // Create a symmetric key

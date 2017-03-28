@@ -6,7 +6,7 @@ import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.crypto.SealedAndSigned;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
-import io.bisq.network.p2p.PrefixedSealedAndSignedMessage;
+import io.bisq.network.p2p.PrefixedSealedAndSignedMsg;
 import io.bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -23,7 +23,7 @@ import java.security.cert.CertificateException;
 import java.util.UUID;
 
 @Slf4j
-public class AddDataMessageTest {
+public class AddDataMsgTest {
     private KeyRing keyRing1;
     private File dir1;
 
@@ -40,13 +40,13 @@ public class AddDataMessageTest {
     @Test
     public void toProtoBuf() throws Exception {
         SealedAndSigned sealedAndSigned = new SealedAndSigned(RandomUtils.nextBytes(10), RandomUtils.nextBytes(10), RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
-        PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(new NodeAddress("host", 1000), sealedAndSigned, RandomUtils.nextBytes(10),
+        PrefixedSealedAndSignedMsg prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMsg(new NodeAddress("host", 1000), sealedAndSigned, RandomUtils.nextBytes(10),
                 UUID.randomUUID().toString());
         MailboxStoragePayload mailboxStoragePayload = new MailboxStoragePayload(prefixedSealedAndSignedMessage,
                 keyRing1.getPubKeyRing().getSignaturePubKey(), keyRing1.getPubKeyRing().getSignaturePubKey());
         ProtectedStorageEntry protectedStorageEntry = new ProtectedMailboxStorageEntry(mailboxStoragePayload,
                 keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
-        AddDataMessage dataMessage1 = new AddDataMessage(protectedStorageEntry);
+        AddDataMsg dataMessage1 = new AddDataMsg(protectedStorageEntry);
         PB.Envelope envelope = dataMessage1.toProto();
 
         //TODO CoreProtobufferResolver is not accessible here

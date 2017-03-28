@@ -1,6 +1,6 @@
 package io.bisq.network.p2p;
 
 
-public interface SendersNodeAddressMessage extends Message {
+public interface SendersNodeAddressMsg extends Msg {
     NodeAddress getSenderNodeAddress();
 }

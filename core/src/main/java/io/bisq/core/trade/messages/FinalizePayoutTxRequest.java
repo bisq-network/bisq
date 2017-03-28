@@ -20,8 +20,8 @@ package io.bisq.core.trade.messages;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.MailboxMessage;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.MailboxMsg;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 
@@ -29,7 +29,7 @@ import javax.annotation.concurrent.Immutable;
 
 @EqualsAndHashCode(callSuper = true)
 @Immutable
-public final class FinalizePayoutTxRequest extends TradeMessage implements MailboxMessage {
+public final class FinalizePayoutTxRequest extends TradeMsg implements MailboxMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -62,7 +62,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Message.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
         return baseEnvelope.setFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest.newBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)

@@ -23,7 +23,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.arbitration.messages.DisputeCommunicationMessage;
+import io.bisq.core.arbitration.messages.DisputeCommunicationMsg;
 import io.bisq.core.trade.Contract;
 import io.bisq.generated.protobuffer.PB;
 import javafx.beans.property.*;
@@ -78,7 +78,7 @@ public final class Dispute implements Payload {
     private final PubKeyRing arbitratorPubKeyRing;
     private final boolean isSupportTicket;
 
-    private final ArrayList<DisputeCommunicationMessage> disputeCommunicationMessages = new ArrayList<>();
+    private final ArrayList<DisputeCommunicationMsg> disputeCommunicationMessages = new ArrayList<>();
 
     private boolean isClosed;
     @Nullable
@@ -89,7 +89,7 @@ public final class Dispute implements Payload {
 
     // Domain
     transient private Storage<DisputeList<Dispute>> storage;
-    transient private ObservableList<DisputeCommunicationMessage> observableList = FXCollections.observableArrayList(
+    transient private ObservableList<DisputeCommunicationMsg> observableList = FXCollections.observableArrayList(
             disputeCommunicationMessages);
     transient private BooleanProperty isClosedProperty = new SimpleBooleanProperty(isClosed);
     transient private ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
@@ -192,7 +192,7 @@ public final class Dispute implements Payload {
         disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
     }
 
-    public void addDisputeMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
+    public void addDisputeMessage(DisputeCommunicationMsg disputeCommunicationMessage) {
         if (!disputeCommunicationMessages.contains(disputeCommunicationMessage)) {
             disputeCommunicationMessages.add(disputeCommunicationMessage);
             observableList.add(disputeCommunicationMessage);
@@ -310,7 +310,7 @@ public final class Dispute implements Payload {
         return takerContractSignature;
     }
 
-    public ObservableList<DisputeCommunicationMessage> getDisputeCommunicationMessagesAsObservableList() {
+    public ObservableList<DisputeCommunicationMsg> getDisputeCommunicationMessagesAsObservableList() {
         return observableList;
     }
 

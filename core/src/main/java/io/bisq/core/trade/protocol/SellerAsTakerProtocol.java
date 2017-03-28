@@ -22,9 +22,9 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.trade.SellerAsTakerTrade;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.messages.FiatTransferStartedMessage;
+import io.bisq.core.trade.messages.FiatTransferStartedMsg;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
-import io.bisq.core.trade.messages.TradeMessage;
+import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
@@ -32,8 +32,8 @@ import io.bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
 import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
-import io.bisq.network.p2p.MailboxMessage;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.MailboxMsg;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,17 +60,17 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void doApplyMailboxMessage(Message message, Trade trade) {
+    public void doApplyMailboxMessage(Msg msg, Trade trade) {
         this.trade = trade;
 
-        if (message instanceof MailboxMessage) {
-            NodeAddress peerNodeAddress = ((MailboxMessage) message).getSenderNodeAddress();
-            if (message instanceof PublishDepositTxRequest)
-                handle((PublishDepositTxRequest) message, peerNodeAddress);
-            else if (message instanceof FiatTransferStartedMessage)
-                handle((FiatTransferStartedMessage) message, peerNodeAddress);
+        if (msg instanceof MailboxMsg) {
+            NodeAddress peerNodeAddress = ((MailboxMsg) msg).getSenderNodeAddress();
+            if (msg instanceof PublishDepositTxRequest)
+                handle((PublishDepositTxRequest) msg, peerNodeAddress);
+            else if (msg instanceof FiatTransferStartedMsg)
+                handle((FiatTransferStartedMsg) msg, peerNodeAddress);
             else
-                log.error("We received an unhandled MailboxMessage" + message.toString());
+                log.error("We received an unhandled MailboxMessage" + msg.toString());
         }
     }
 
@@ -131,7 +131,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // After peer has started Fiat tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(FiatTransferStartedMessage tradeMessage, NodeAddress sender) {
+    private void handle(FiatTransferStartedMsg tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -186,11 +186,11 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
+    protected void doHandleDecryptedMessage(TradeMsg tradeMessage, NodeAddress sender) {
         if (tradeMessage instanceof PublishDepositTxRequest) {
             handle((PublishDepositTxRequest) tradeMessage, sender);
-        } else if (tradeMessage instanceof FiatTransferStartedMessage) {
-            handle((FiatTransferStartedMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof FiatTransferStartedMsg) {
+            handle((FiatTransferStartedMsg) tradeMessage, sender);
         } else {
             log.error("Incoming message not supported. " + tradeMessage);
         }

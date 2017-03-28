@@ -6,7 +6,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
@@ -145,11 +145,11 @@ class PeerExchangeHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message, Connection connection) {
-        if (message instanceof GetPeersResponse) {
+    public void onMessage(Msg msg, Connection connection) {
+        if (msg instanceof GetPeersResponse) {
             if (!stopped) {
-                Log.traceCall(message.toString() + "\n\tconnection=" + connection);
-                GetPeersResponse getPeersResponse = (GetPeersResponse) message;
+                Log.traceCall(msg.toString() + "\n\tconnection=" + connection);
+                GetPeersResponse getPeersResponse = (GetPeersResponse) msg;
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
 

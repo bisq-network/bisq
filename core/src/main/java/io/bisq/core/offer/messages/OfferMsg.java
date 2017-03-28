@@ -18,12 +18,12 @@
 package io.bisq.core.offer.messages;
 
 import io.bisq.common.app.Version;
-import io.bisq.network.p2p.DirectMessage;
+import io.bisq.network.p2p.DirectMsg;
 
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public abstract class OfferMessage implements DirectMessage {
+public abstract class OfferMsg implements DirectMsg {
     //TODO add serialVersionUID also in superclasses as changes would break compatibility
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.getP2PMessageVersion();
@@ -31,7 +31,7 @@ public abstract class OfferMessage implements DirectMessage {
     private final int messageVersion = Version.getP2PMessageVersion();
     public final String offerId;
 
-    OfferMessage(String offerId) {
+    OfferMsg(String offerId) {
         this.offerId = offerId;
     }
 

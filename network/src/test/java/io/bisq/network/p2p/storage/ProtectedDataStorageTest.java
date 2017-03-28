@@ -12,7 +12,7 @@ import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.PeerManager;
-import io.bisq.network.p2p.storage.messages.RefreshTTLMessage;
+import io.bisq.network.p2p.storage.messages.RefreshTTLMsg;
 import io.bisq.network.p2p.storage.mocks.MockData;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -171,7 +171,7 @@ public class ProtectedDataStorageTest {
         log.debug("test 1");
         Assert.assertEquals(1, dataStorage1.getMap().size());
 
-        RefreshTTLMessage refreshTTLMessage = dataStorage1.getRefreshTTLMessage(mockData, storageSignatureKeyPair1);
+        RefreshTTLMsg refreshTTLMessage = dataStorage1.getRefreshTTLMessage(mockData, storageSignatureKeyPair1);
         Assert.assertTrue(dataStorage1.refreshTTL(refreshTTLMessage, null, true));
         Thread.sleep(P2PDataStorage.CHECK_TTL_INTERVAL_SEC);
         log.debug("test 2");

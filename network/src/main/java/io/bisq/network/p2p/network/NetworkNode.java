@@ -5,7 +5,7 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.util.Utilities;
-import io.bisq.network.p2p.Message;
+import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -66,8 +66,8 @@ public abstract class NetworkNode implements MessageListener {
     // when the events happen.
     abstract public void start(@Nullable SetupListener setupListener);
 
-    public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress, Message message) {
-        Log.traceCall("peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + Utilities.toTruncatedString(message));
+    public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress, Msg msg) {
+        Log.traceCall("peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + Utilities.toTruncatedString(msg));
         checkNotNull(peersNodeAddress, "peerAddress must not be null");
 
         Connection connection = getOutboundConnection(peersNodeAddress);
@@ -75,7 +75,7 @@ public abstract class NetworkNode implements MessageListener {
             connection = getInboundConnection(peersNodeAddress);
 
         if (connection != null) {
-            return sendMessage(connection, message);
+            return sendMessage(connection, msg);
         } else {
             log.debug("We have not found any connection for peerAddress {}.\n\t" +
                     "We will create a new outbound connection.", peersNodeAddress);
@@ -113,7 +113,7 @@ public abstract class NetworkNode implements MessageListener {
                         } catch (Throwable throwable) {
                             log.error("Error at closing socket " + throwable);
                         }
-                        existingConnection.sendMessage(message);
+                        existingConnection.sendMessage(msg);
                         return existingConnection;
                     } else {
                         final ConnectionListener connectionListener = new ConnectionListener() {
@@ -151,11 +151,11 @@ public abstract class NetworkNode implements MessageListener {
                                 + "\nmyNodeAddress=" + getNodeAddress()
                                 + "\npeersNodeAddress=" + peersNodeAddress
                                 + "\nuid=" + outboundConnection.getUid()
-                                + "\nmessage=" + message
+                                + "\nmessage=" + msg
                                 + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
                         // can take a while when using tor
-                        outboundConnection.sendMessage(message);
+                        outboundConnection.sendMessage(msg);
                         return outboundConnection;
                     }
                 } catch (Throwable throwable) {
@@ -224,12 +224,12 @@ public abstract class NetworkNode implements MessageListener {
     }
 
 
-    public SettableFuture<Connection> sendMessage(Connection connection, Message message) {
-        Log.traceCall("\n\tmessage=" + Utilities.toTruncatedString(message) + "\n\tconnection=" + connection);
+    public SettableFuture<Connection> sendMessage(Connection connection, Msg msg) {
+        Log.traceCall("\n\tmessage=" + Utilities.toTruncatedString(msg) + "\n\tconnection=" + connection);
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.getUid());
-            connection.sendMessage(message);
+            connection.sendMessage(msg);
             return connection;
         });
         final SettableFuture<Connection> resultFuture = SettableFuture.create();
@@ -305,8 +305,8 @@ public abstract class NetworkNode implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message, Connection connection) {
-        messageListeners.stream().forEach(e -> e.onMessage(message, connection));
+    public void onMessage(Msg msg, Connection connection) {
+        messageListeners.stream().forEach(e -> e.onMessage(msg, connection));
     }
 
 

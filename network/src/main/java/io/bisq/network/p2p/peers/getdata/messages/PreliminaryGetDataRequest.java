@@ -5,15 +5,15 @@ import io.bisq.common.Marshaller;
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.AnonymousMessage;
-import io.bisq.network.p2p.SupportedCapabilitiesMessage;
+import io.bisq.network.p2p.AnonymousMsg;
+import io.bisq.network.p2p.SupportedCapabilitiesMsg;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDataRequest, SupportedCapabilitiesMessage, Marshaller {
+public final class PreliminaryGetDataRequest implements AnonymousMsg, GetDataRequest, SupportedCapabilitiesMsg, Marshaller {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
