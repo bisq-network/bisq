@@ -43,6 +43,7 @@ public class FileManager<T> {
     private final long delay;
     private final Callable<Void> saveFileTask;
     private T serializable;
+    private boolean proto;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +53,7 @@ public class FileManager<T> {
     public FileManager(File dir, File storageFile, long delay) {
         this.dir = dir;
         this.storageFile = storageFile;
+        proto = serializable instanceof Persistable;
 
         executor = Utilities.getScheduledThreadPoolExecutor("FileManager", 1, 10, 5);
 
@@ -104,6 +106,15 @@ public class FileManager<T> {
 
     public synchronized T read(File file) throws IOException, ClassNotFoundException {
         log.debug("read" + file);
+        if (proto) {
+            log.info("it's proto");
+            try (final FileInputStream fileInputStream = new FileInputStream(file)) {
+                return (T) ((Persistable) serializable).getParser().parseFrom(fileInputStream);
+            } catch (Throwable t) {
+                log.error("Exception at proto read: " + t.getMessage());
+            }
+        }
+
         try (final FileInputStream fileInputStream = new FileInputStream(file);
              final ObjectInputStream objectInputStream = new LookAheadObjectInputStream(fileInputStream, false)) {
             return (T) objectInputStream.readObject();
@@ -180,7 +191,7 @@ public class FileManager<T> {
         Message message = null;
         try {
             message = ((Persistable) serializable).toProtobuf();
-        } catch(Throwable e) {
+        } catch (Throwable e) {
             log.info("Not protobufferable: {} {}", serializable.getClass().getSimpleName(), e.getMessage());
         }
 

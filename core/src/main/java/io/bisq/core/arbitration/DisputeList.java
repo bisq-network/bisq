@@ -20,7 +20,6 @@ package io.bisq.core.arbitration;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.storage.Storage;
-import io.bisq.protobuffer.payload.arbitration.Dispute;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.ToString;

@@ -519,7 +519,6 @@ message PayDepositRequest {
     NodeAddress sender_node_address = 19;
 }
 
-
 message Coin {
     int64 value = 1;
 }
@@ -747,7 +746,22 @@ message DiskEnvelope {
         PersistedPeers persisted_peers = 4;
         Preferences preferences = 5;
         User user = 6;
+        PersistedP2PStorageData persisted_p2p_storage_data = 7;
+        SequenceNumberMap sequence_number_map = 8;
     }
+}
+
+message PersistedP2PStorageData {
+    // TODO ???
+}
+
+message SequenceNumberMap {
+    map<string, MapValue> sequence_number_map = 1;
+}
+
+message MapValue {
+    int32 sequence_nr = 1;
+    int64 time_stamp = 2;
 }
 
 message AddressEntry {
@@ -760,12 +774,12 @@ message AddressEntry {
         TRADE_PAYOUT = 5;
     }
 
-    string offerId = 7;
+    string offer_id = 7;
     Context context = 8;
     bytes pubkey = 9;
-    bytes pubKeyHash = 10;
-    string paramId = 11;
-    Coin coinLockedInMultiSig = 12;
+    bytes pub_key_hash = 10;
+    string param_id = 11;
+    Coin coin_locked_in_multi_sig = 12;
 }
 
 message AddressEntryList {
@@ -817,11 +831,6 @@ message DisputeList {
     repeated Dispute dispute = 1;
 }
 
-message MapValue {
-    int32 sequenceNr = 1;
-    int64 timeStamp = 2;
-}
-
 message Navigation {
     ViewPath previous_path = 1;
 }
@@ -846,38 +855,38 @@ message PaymentMethod {
 
 message Preferences {
     // Persisted fields
-    string userLanguage = 1;
-    Country userCountry = 2;
-    string btcDenomination = 3;
-    bool useAnimations = 4;
-    repeated FiatCurrency fiatCurrencies = 5;
-    repeated CryptoCurrency cryptoCurrencies = 6;
-    BlockChainExplorer blockChainExplorerMainNet = 7;
-    BlockChainExplorer blockChainExplorerTestNet = 8;
-    string backupDirectory = 9;
-    bool autoSelectArbitrators = 10;
-    map<string, bool> dontShowAgainMap = 11;
-    bool tacAccepted = 12;
-    bool useTorForBitcoinJ = 13;
-    bool showOwnOffersInOfferBook = 14;
-    Locale preferredLocale = 15;
-    TradeCurrency preferredTradeCurrency = 16;
-    int64 withdrawalTxFeeInBytes = 17;
-    bool useCustomWithdrawalTxFee = 18;
-    double maxPriceDistanceInPercent = 19;
-    string offerBookChartScreenCurrencyCode = 20;
-    string tradeChartsScreenCurrencyCode = 21;
-    string buyScreenCurrencyCode = 22;
-    string sellScreenCurrencyCode = 23;
-    int32 tradeStatisticsTickUnitIndex = 24;
-    bool useStickyMarketPrice = 25;
-    bool sortMarketCurrenciesNumerically = 26;
-    bool usePercentageBasedPrice = 27;
-    map<string, string> peerTagMap = 28;
-    string bitcoinNodes = 29;
-    repeated string ignoreTradersList = 30;
-    string directoryChooserPath = 31;
-    int64 buyerSecurityDepositAsLong = 32;
+    string user_language = 1;
+    Country user_country = 2;
+    string btc_denomination = 3;
+    bool use_animations = 4;
+    repeated FiatCurrency fiat_currencies = 5;
+    repeated CryptoCurrency crypto_currencies = 6;
+    BlockChainExplorer block_chain_explorer_main_net = 7;
+    BlockChainExplorer block_chain_explorer_test_net = 8;
+    string backup_directory = 9;
+    bool auto_select_arbitrators = 10;
+    map<string, bool> dont_show_again_map = 11;
+    bool tac_accepted = 12;
+    bool use_tor_for_bitcoin_j = 13;
+    bool show_own_offers_in_offer_book = 14;
+    Locale preferred_locale = 15;
+    TradeCurrency preferred_trade_currency = 16;
+    int64 withdrawal_tx_fee_in_bytes = 17;
+    bool use_custom_withdrawal_tx_fee = 18;
+    double max_price_distance_in_percent = 19;
+    string offer_book_chart_screen_currency_code = 20;
+    string trade_charts_screen_currency_code = 21;
+    string buy_screen_currency_code = 22;
+    string sell_screen_currency_code = 23;
+    int32 trade_statistics_tick_unit_index = 24;
+    bool use_sticky_market_price = 25;
+    bool sort_market_currencies_numerically = 26;
+    bool use_percentage_based_price = 27;
+    map<string, string> peer_tag_map = 28;
+    string bitcoin_nodes = 29;
+    repeated string ignore_traders_list = 30;
+    string directory_chooser_path = 31;
+    int64 buyer_security_deposit_as_long = 32;
 }
 message Region {
     string code = 1;
@@ -1120,18 +1129,18 @@ message Transaction {
 }
 
 message ProcessModel {
-     TradingPeer tradingPeer = 1;
-     bytes payoutTxSignature = 2;
-     repeated NodeAddress takerAcceptedArbitratorNodeAddresses = 3;
-     NodeAddress tempTradingPeerNodeAddress = 4;
-     bytes preparedDepositTx = 5;
-     repeated RawTransactionInput rawTransactionInputs = 6;
-     int64 changeOutputValue = 7;
-     string changeOutputAddress = 8;
-     Transaction takeOfferFeeTx = 9;
-     bool useSavingsWallet = 10;
-     Coin fundsNeededForTrade = 11;
-     bytes myMultiSigPubKey = 12;
+     TradingPeer trading_peer = 1;
+     bytes payout_tx_signature = 2;
+     repeated NodeAddress taker_accepted_arbitrator_node_addresses = 3;
+     NodeAddress temp_trading_peer_node_address = 4;
+     bytes prepared_deposit_tx = 5;
+     repeated RawTransactionInput raw_transaction_inputs = 6;
+     int64 change_output_value = 7;
+     string change_output_address = 8;
+     Transaction take_offer_fee_tx = 9;
+     bool use_savings_wallet = 10;
+     Coin funds_needed_for_trade = 11;
+     bytes my_multi_sig_pub_key = 12;
 }
 
 message Offer {
@@ -1146,6 +1155,6 @@ message MockMailboxPayload {
 }
 
 message MockPayload {
-    string messageVersion = 1;
+    string message_version = 1;
     string msg = 2;
 }
