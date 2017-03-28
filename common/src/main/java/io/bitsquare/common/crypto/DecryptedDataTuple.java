@@ -32,7 +32,7 @@ public final class DecryptedDataTuple {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DecryptedDataTuple)) return false;
+        if (this.getClass() != o.getClass()) return false;
 
         DecryptedDataTuple that = (DecryptedDataTuple) o;
 
