@@ -70,8 +70,8 @@ public class AlertManager {
                 @Override
                 public void onAdded(ProtectedStorageEntry data) {
                     final StoragePayload storagePayload = data.getStoragePayload();
-                    if (storagePayload instanceof AlertPayload) {
-                        Alert alert = new Alert(((AlertPayload) storagePayload).getAlertVO());
+                    if (storagePayload instanceof Alert) {
+                        Alert alert = (Alert) storagePayload;
                         if (verifySignature(alert))
                             alertMessageProperty.set(alert);
                     }
@@ -80,9 +80,8 @@ public class AlertManager {
                 @Override
                 public void onRemoved(ProtectedStorageEntry data) {
                     final StoragePayload storagePayload = data.getStoragePayload();
-                    if (storagePayload instanceof AlertPayload) {
-                        Alert alert = new Alert(((AlertPayload) storagePayload).getAlertVO());
-                        if (verifySignature(alert))
+                    if (storagePayload instanceof Alert) {
+                        if (verifySignature((Alert) storagePayload))
                             alertMessageProperty.set(null);
                     }
                 }
@@ -108,7 +107,7 @@ public class AlertManager {
         if (isKeyValid) {
             signAndAddSignatureToAlertMessage(alert);
             user.setDevelopersAlert(alert);
-            boolean result = p2PService.addData(new AlertPayload(alert.getAlertVO()), true);
+            boolean result = p2PService.addData(alert, true);
             if (result) {
                 log.trace("Add alertMessage to network was successful. AlertMessage = " + alert);
             }
@@ -120,7 +119,7 @@ public class AlertManager {
     public boolean removeAlertMessageIfKeyIsValid(String privKeyString) {
         Alert alert = user.getDevelopersAlert();
         if (isKeyValid(privKeyString) && alert != null) {
-            if (p2PService.removeData(new AlertPayload(alert.getAlertVO()), true))
+            if (p2PService.removeData(alert, true))
                 log.trace("Remove alertMessage from network was successful. AlertMessage = " + alert);
 
             user.setDevelopersAlert(null);

@@ -6,8 +6,7 @@ import io.bisq.common.crypto.SealedAndSigned;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Price;
-import io.bisq.core.alert.AlertPayload;
-import io.bisq.core.alert.AlertVO;
+import io.bisq.core.alert.Alert;
 import io.bisq.core.alert.PrivateNotificationMessage;
 import io.bisq.core.alert.PrivateNotificationPayload;
 import io.bisq.core.arbitration.*;
@@ -605,12 +604,12 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
                 PB.AlertProto protoAlert = protoEntry.getAlertProto();
                 extraDataMapMap = CollectionUtils.isEmpty(protoAlert.getExtraDataMapMap()) ?
                         null : protoAlert.getExtraDataMapMap();
-                storagePayload = new AlertPayload(new AlertVO(protoAlert.getMessage(),
+                storagePayload = new Alert(protoAlert.getMessage(),
                         protoAlert.getIsUpdateInfo(),
                         protoAlert.getVersion(),
                         protoAlert.getStoragePublicKeyBytes().toByteArray(),
                         protoAlert.getSignatureAsBase64(),
-                        extraDataMapMap));
+                        extraDataMapMap);
                 break;
             case ARBITRATOR:
                 PB.Arbitrator arbitrator = protoEntry.getArbitrator();

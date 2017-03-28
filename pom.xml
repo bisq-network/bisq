@@ -40,8 +40,6 @@
 
     <modules>
         <module>common</module>
-        <module>vo</module>
-        <module>protobuffer</module>
         <module>network</module>
         <module>core</module>
         <module>jsocks</module>
