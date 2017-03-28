@@ -121,9 +121,11 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     // Dont set own listener as we need to control the order of the calls
     public void onSelectedItemChanged(PendingTradesListItem selectedItem) {
-        if (tradeStateSubscription != null)
+        if (tradeStateSubscription != null) {
             tradeStateSubscription.unsubscribe();
-
+            sellerState.set(SellerState.UNDEFINED);
+            buyerState.set(BuyerState.UNDEFINED);
+        }
         if (selectedItem != null) {
             this.trade = selectedItem.getTrade();
             isBuyerTrade = trade instanceof BuyerTrade;
@@ -387,13 +389,18 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG arrived
             case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG in mailbox
             case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG failed
-                // We delay the UI switch to give a chance to see the delivery result
-                UserThread.runAfter(() -> {
-                    // We might get a higher state set quickly (startup - stored state, then new state) 
-                    // and then we don't want to switch back
-                    if (buyerState.get() == null || buyerState.get().ordinal() < BuyerState.STEP3.ordinal())
-                        buyerState.set(BuyerState.STEP3);
-                }, 1);
+                // If we switch quickly we want to get to our state again without delay
+                if (buyerState.get() == null || buyerState.get() == BuyerState.UNDEFINED) {
+                    buyerState.set(BuyerState.STEP3);
+                } else {
+                    // We delay the UI switch to give a chance to see the delivery result
+                    UserThread.runAfter(() -> {
+                        // We might get a higher state set quickly (startup - stored state, then new state) 
+                        // and then we don't want to switch back
+                        if (buyerState.get() == null || buyerState.get().ordinal() < BuyerState.STEP3.ordinal())
+                            buyerState.set(BuyerState.STEP3);
+                    }, 1);
+                }
                 break;
 
             // seller step 3
@@ -415,16 +422,21 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG arrived
             case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG mailbox
             case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG failed
-                // We delay the UI switch to give a chance to see the delivery result
-                UserThread.runAfter(() -> {
-                    // We might get a higher state set quickly (startup - stored state, then new state) 
-                    // and then we don't want to switch back
-                    if (sellerState.get() == null || sellerState.get().ordinal() < SellerState.STEP4.ordinal())
-                        sellerState.set(SellerState.STEP4);
-                }, 1);
-                break;
+                // If we switch quickly we want to get to our state again without delay
+                if (sellerState.get() == null || sellerState.get() == UNDEFINED) {
+                    sellerState.set(SellerState.STEP4);
+                } else {
+                    // We delay the UI switch to give a chance to see the delivery result
+                    UserThread.runAfter(() -> {
+                        // We might get a higher state set quickly (startup - stored state, then new state) 
+                        // and then we don't want to switch back
+                        if (sellerState.get() == null || sellerState.get().ordinal() < SellerState.STEP4.ordinal())
+                            sellerState.set(SellerState.STEP4);
+                    }, 1);
+                    break;
+                }
 
-            // buyer step 4
+                // buyer step 4
             case BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG:
                 // Alternatively the maker could have seen the payout tx earlier before he received the PAYOUT_TX_PUBLISHED_MSG:
             case BUYER_SAW_PAYOUT_TX_IN_NETWORK:
