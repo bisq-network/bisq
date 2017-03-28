@@ -5,6 +5,7 @@ import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.PeerManager;
@@ -64,7 +65,7 @@ public class ProtectedDataStorageTest {
         keyRing1 = new KeyRing(new KeyStorage(dir1));
 
         storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
-        encryptionService1 = new EncryptionService(keyRing1);
+        encryptionService1 = new EncryptionService(keyRing1, TestUtils.getProtobufferResolver());
         P2PService p2PService = TestUtils.getAndStartSeedNode(8001, useClearNet, seedNodes).getSeedNodeP2PService();
         networkNode1 = p2PService.getNetworkNode();
         peerManager1 = p2PService.getPeerManager();
@@ -73,7 +74,7 @@ public class ProtectedDataStorageTest {
         // for mailbox
         keyRing2 = new KeyRing(new KeyStorage(dir2));
         storageSignatureKeyPair2 = keyRing2.getSignatureKeyPair();
-        encryptionService2 = new EncryptionService(keyRing2);
+        encryptionService2 = new EncryptionService(keyRing2, TestUtils.getProtobufferResolver());
 
         mockData = new MockData("mockData", keyRing1.getSignatureKeyPair().getPublic());
         Thread.sleep(sleepTime);

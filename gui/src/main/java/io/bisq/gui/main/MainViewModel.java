@@ -63,11 +63,11 @@ import io.bisq.gui.main.overlays.windows.TacWindow;
 import io.bisq.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.P2PServiceListener;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.ConnectionListener;
-import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.crypto.DecryptedDataTuple;
 import io.bisq.protobuffer.crypto.Encryption;
 import io.bisq.protobuffer.crypto.KeyRing;
@@ -120,6 +120,7 @@ public class MainViewModel implements ViewModel {
     private final Clock clock;
     private final FeeService feeService;
     private final DaoManager daoManager;
+    private EncryptionService encryptionService;
     private final KeyRing keyRing;
     private final BSFormatter formatter;
 
@@ -184,7 +185,7 @@ public class MainViewModel implements ViewModel {
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
-                         DaoManager daoManager,
+                         DaoManager daoManager, EncryptionService encryptionService,
                          KeyRing keyRing,
                          BSFormatter formatter) {
         this.walletsManager = walletsManager;
@@ -207,6 +208,7 @@ public class MainViewModel implements ViewModel {
         this.clock = clock;
         this.feeService = feeService;
         this.daoManager = daoManager;
+        this.encryptionService = encryptionService;
         this.keyRing = keyRing;
         this.formatter = formatter;
 
@@ -582,7 +584,7 @@ public class MainViewModel implements ViewModel {
                     Ping payload = new Ping(1, 1);
                     SealedAndSigned sealedAndSigned = Encryption.encryptHybridWithSignature(payload,
                             keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
-                    DecryptedDataTuple tuple = EncryptionService.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
+                    DecryptedDataTuple tuple = encryptionService.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
                     if (tuple.payload instanceof Ping &&
                             ((Ping) tuple.payload).nonce == payload.nonce &&
                             ((Ping) tuple.payload).lastRoundTripTime == payload.lastRoundTripTime) {

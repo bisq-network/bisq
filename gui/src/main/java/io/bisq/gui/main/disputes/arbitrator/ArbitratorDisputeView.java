@@ -26,7 +26,7 @@ import io.bisq.gui.main.overlays.windows.ContractWindow;
 import io.bisq.gui.main.overlays.windows.DisputeSummaryWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.network.p2p.P2PService;
 import io.bisq.protobuffer.crypto.KeyRing;
 import javafx.stage.Stage;
 

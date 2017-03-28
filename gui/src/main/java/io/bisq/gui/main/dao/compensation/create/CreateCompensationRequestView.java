@@ -35,7 +35,7 @@ import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.network.p2p.P2PService;
 import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.dao.compensation.CompensationRequestPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;

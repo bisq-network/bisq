@@ -52,8 +52,8 @@ public class TorNetworkNode extends NetworkNode {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TorNetworkNode(int servicePort, File torDir) {
-        super(servicePort);
+    public TorNetworkNode(int servicePort, File torDir, ProtobufferResolver protobufferResolver) {
+        super(servicePort, protobufferResolver);
         this.torDir = torDir;
     }
 

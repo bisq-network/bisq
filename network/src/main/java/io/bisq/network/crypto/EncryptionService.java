@@ -22,7 +22,7 @@ import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.protobuffer.ProtoBufferUtilities;
+import io.bisq.network.p2p.network.ProtobufferResolver;
 import io.bisq.protobuffer.crypto.DecryptedDataTuple;
 import io.bisq.protobuffer.crypto.Encryption;
 import io.bisq.protobuffer.crypto.Hash;
@@ -39,10 +39,12 @@ import static io.bisq.protobuffer.crypto.Encryption.decryptSecretKey;
 
 public class EncryptionService {
     private final KeyRing keyRing;
+    private ProtobufferResolver protobufferResolver;
 
     @Inject
-    public EncryptionService(KeyRing keyRing) {
+    public EncryptionService(KeyRing keyRing, ProtobufferResolver protobufferResolver) {
         this.keyRing = keyRing;
+        this.protobufferResolver = protobufferResolver;
     }
 
     public SealedAndSigned encryptAndSign(PubKeyRing pubKeyRing, Message message) throws CryptoException {
@@ -55,7 +57,7 @@ public class EncryptionService {
      * @return A DecryptedPayloadWithPubKey object.
      * @throws CryptoException
      */
-    public static DecryptedDataTuple decryptHybridWithSignature(SealedAndSigned sealedAndSigned, PrivateKey privateKey) throws CryptoException {
+    public DecryptedDataTuple decryptHybridWithSignature(SealedAndSigned sealedAndSigned, PrivateKey privateKey) throws CryptoException {
         SecretKey secretKey = decryptSecretKey(sealedAndSigned.encryptedSecretKey, privateKey);
         boolean isValid = Sig.verify(sealedAndSigned.sigPublicKey,
                 Hash.getHash(sealedAndSigned.encryptedPayloadWithHmac),
@@ -65,8 +67,8 @@ public class EncryptionService {
 
         Message decryptedPayload = null;
         try {
-            decryptedPayload = ProtoBufferUtilities
-                    .fromProtoBuf(PB.Envelope.parseFrom(Encryption.decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey))).get();
+            decryptedPayload = protobufferResolver.fromProto(PB.Envelope.parseFrom(
+                    Encryption.decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey))).get();
         } catch (InvalidProtocolBufferException e) {
             throw new CryptoException("Unable to parse protobuffer message.", e);
         }

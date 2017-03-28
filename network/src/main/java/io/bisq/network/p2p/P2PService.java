@@ -1,4 +1,4 @@
-package io.bisq.network.p2p.storage;
+package io.bisq.network.p2p;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
@@ -16,7 +16,6 @@ import io.bisq.common.util.Utilities;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.Socks5ProxyProvider;
 import io.bisq.network.crypto.EncryptionService;
-import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.BanList;
@@ -27,6 +26,8 @@ import io.bisq.network.p2p.peers.getdata.RequestDataManager;
 import io.bisq.network.p2p.peers.keepalive.KeepAliveManager;
 import io.bisq.network.p2p.peers.peerexchange.PeerExchangeManager;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
+import io.bisq.network.p2p.storage.HashMapChangedListener;
+import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.p2p.DirectMessage;
@@ -120,7 +121,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       Clock clock,
                       Socks5ProxyProvider socks5ProxyProvider,
                       @Nullable EncryptionService encryptionService,
-                      @Nullable KeyRing keyRing) {
+                      @Nullable KeyRing keyRing,
+                      ProtobufferResolver protobufferResolver) {
         this(
                 seedNodesRepository,
                 port,
@@ -135,7 +137,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 clock,
                 socks5ProxyProvider,
                 encryptionService,
-                keyRing
+                keyRing,
+                protobufferResolver
         );
     }
 
@@ -152,7 +155,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       Clock clock,
                       Socks5ProxyProvider socks5ProxyProvider,
                       @Nullable EncryptionService encryptionService,
-                      @Nullable KeyRing keyRing) {
+                      @Nullable KeyRing keyRing,
+                      ProtobufferResolver protobufferResolver) {
         this.seedNodesRepository = seedNodesRepository;
         this.port = port;
         this.maxConnections = maxConnections;
@@ -168,7 +172,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 storageDir,
                 seedNodes,
                 myAddress,
-                banList);
+                banList,
+                protobufferResolver);
     }
 
     private void init(boolean useLocalhostForP2P,
@@ -176,7 +181,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       File storageDir,
                       String seedNodes,
                       String myAddress,
-                      String banList) {
+                      String banList,
+                      ProtobufferResolver protobufferResolver) {
         if (!useLocalhostForP2P)
             FileUtil.rollingBackup(new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString()), "private_key", 20);
 
@@ -185,7 +191,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (myAddress != null && !myAddress.isEmpty())
             seedNodesRepository.setNodeAddressToExclude(new NodeAddress(myAddress));
 
-        networkNode = useLocalhostForP2P ? new LocalhostNetworkNode(port) : new TorNetworkNode(port, torDir);
+        networkNode = useLocalhostForP2P ?
+                new LocalhostNetworkNode(port, protobufferResolver) :
+                new TorNetworkNode(port, torDir, protobufferResolver);
         networkNode.addConnectionListener(this);
         networkNode.addMessageListener(this);
 

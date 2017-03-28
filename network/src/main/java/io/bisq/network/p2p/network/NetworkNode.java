@@ -34,6 +34,7 @@ public abstract class NetworkNode implements MessageListener {
     private static final int CREATE_SOCKET_TIMEOUT_MILLIS = 10000;
 
     final int servicePort;
+    private ProtobufferResolver protobufferResolver;
 
     private final CopyOnWriteArraySet<InboundConnection> inBoundConnections = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
@@ -52,8 +53,9 @@ public abstract class NetworkNode implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    NetworkNode(int servicePort) {
+    NetworkNode(int servicePort, ProtobufferResolver protobufferResolver) {
         this.servicePort = servicePort;
+        this.protobufferResolver = protobufferResolver;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -114,32 +116,35 @@ public abstract class NetworkNode implements MessageListener {
                         existingConnection.sendMessage(message);
                         return existingConnection;
                     } else {
+                        final ConnectionListener connectionListener = new ConnectionListener() {
+                            @Override
+                            public void onConnection(Connection connection) {
+                                if (!connection.isStopped()) {
+                                    outBoundConnections.add((OutboundConnection) connection);
+                                    printOutBoundConnections();
+                                    connectionListeners.stream().forEach(e -> e.onConnection(connection));
+                                }
+                            }
+
+                            @Override
+                            public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+                                log.trace("onDisconnect connectionListener\n\tconnection={}" + connection);
+                                outBoundConnections.remove(connection);
+                                printOutBoundConnections();
+                                connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
+                            }
+
+                            @Override
+                            public void onError(Throwable throwable) {
+                                log.error("new OutboundConnection.ConnectionListener.onError " + throwable.getMessage());
+                                connectionListeners.stream().forEach(e -> e.onError(throwable));
+                            }
+                        };
                         outboundConnection = new OutboundConnection(socket,
                                 NetworkNode.this,
-                                new ConnectionListener() {
-                                    @Override
-                                    public void onConnection(Connection connection) {
-                                        if (!connection.isStopped()) {
-                                            outBoundConnections.add((OutboundConnection) connection);
-                                            printOutBoundConnections();
-                                            connectionListeners.stream().forEach(e -> e.onConnection(connection));
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-                                        log.trace("onDisconnect connectionListener\n\tconnection={}" + connection);
-                                        outBoundConnections.remove(connection);
-                                        printOutBoundConnections();
-                                        connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
-                                    }
-
-                                    @Override
-                                    public void onError(Throwable throwable) {
-                                        log.error("new OutboundConnection.ConnectionListener.onError " + throwable.getMessage());
-                                        connectionListeners.stream().forEach(e -> e.onError(throwable));
-                                    }
-                                }, peersNodeAddress);
+                                connectionListener,
+                                peersNodeAddress,
+                                protobufferResolver);
 
                         log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "NetworkNode created new outbound connection:"
@@ -346,32 +351,34 @@ public abstract class NetworkNode implements MessageListener {
     }
 
     void startServer(ServerSocket serverSocket) {
+        final ConnectionListener connectionListener = new ConnectionListener() {
+            @Override
+            public void onConnection(Connection connection) {
+                if (!connection.isStopped()) {
+                    inBoundConnections.add((InboundConnection) connection);
+                    printInboundConnections();
+                    connectionListeners.stream().forEach(e -> e.onConnection(connection));
+                }
+            }
+
+            @Override
+            public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+                log.trace("onDisconnect at server socket connectionListener\n\tconnection={}" + connection);
+                inBoundConnections.remove(connection);
+                printInboundConnections();
+                connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                log.error("server.ConnectionListener.onError " + throwable.getMessage());
+                connectionListeners.stream().forEach(e -> e.onError(throwable));
+            }
+        };
         server = new Server(serverSocket,
                 NetworkNode.this,
-                new ConnectionListener() {
-                    @Override
-                    public void onConnection(Connection connection) {
-                        if (!connection.isStopped()) {
-                            inBoundConnections.add((InboundConnection) connection);
-                            printInboundConnections();
-                            connectionListeners.stream().forEach(e -> e.onConnection(connection));
-                        }
-                    }
-
-                    @Override
-                    public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-                        log.trace("onDisconnect at server socket connectionListener\n\tconnection={}" + connection);
-                        inBoundConnections.remove(connection);
-                        printInboundConnections();
-                        connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-                        log.error("server.ConnectionListener.onError " + throwable.getMessage());
-                        connectionListeners.stream().forEach(e -> e.onError(throwable));
-                    }
-                });
+                connectionListener,
+                protobufferResolver);
         executorService.submit(server);
     }
 

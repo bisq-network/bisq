@@ -23,6 +23,7 @@ import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
+import io.bisq.network.p2p.TestUtils;
 import io.bisq.protobuffer.crypto.*;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.alert.PrivateNotificationMessage;
@@ -52,7 +53,6 @@ import java.security.cert.CertificateException;
 import java.util.Random;
 import java.util.UUID;
 
-import static io.bisq.network.crypto.EncryptionService.decryptHybridWithSignature;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -84,7 +84,7 @@ public class EncryptionServiceTests {
 
     @Test
     public void testDecryptAndVerifyMessage() throws CryptoException {
-        EncryptionService encryptionService = new EncryptionService(keyRing);
+        EncryptionService encryptionService = new EncryptionService(keyRing, TestUtils.getProtobufferResolver());
         final PrivateNotificationPayload privateNotification = new PrivateNotificationPayload("test");
         privateNotification.setSigAndPubKey("", pubKeyRing.getSignaturePubKey());
         final NodeAddress nodeAddress = new NodeAddress("localhost", 2222);
@@ -117,7 +117,8 @@ public class EncryptionServiceTests {
                 assertTrue(false);
             }
             try {
-                DecryptedDataTuple tuple = decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
+                EncryptionService encryptionService = new EncryptionService(null, TestUtils.getProtobufferResolver());
+                DecryptedDataTuple tuple = encryptionService.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
                 assertEquals(((Ping) tuple.payload).nonce, payload.nonce);
             } catch (CryptoException e) {
                 log.error("decryptHybridWithSignature failed");

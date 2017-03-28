@@ -11,7 +11,6 @@ import io.bisq.common.util.Utilities;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.p2p.peers.BanList;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
-import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -189,7 +188,8 @@ public class DummySeedNode {
 
         seedNodesRepository.setNodeAddressToExclude(mySeedNodeAddress);
         seedNodeP2PService = new P2PService(seedNodesRepository, mySeedNodeAddress.port, maxConnections,
-                torDir, useLocalhostForP2P, networkId, storageDir, null, null, null, new Clock(), null, null, null);
+                torDir, useLocalhostForP2P, networkId, storageDir, null, null, null, new Clock(), null, null,
+                null, TestUtils.getProtobufferResolver());
         seedNodeP2PService.start(listener);
     }
 

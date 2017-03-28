@@ -9,7 +9,6 @@ import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
-import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.crypto.KeyStorage;
 import io.bisq.protobuffer.message.p2p.DirectMessage;
@@ -383,10 +382,11 @@ public class NetworkStressTest {
         // peer keys
         final KeyStorage peerKeyStorage = new KeyStorage(peerKeysDir);
         final KeyRing peerKeyRing = new KeyRing(peerKeyStorage);
-        final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing);
+        final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing, TestUtils.getProtobufferResolver());
 
         return new P2PService(seedNodesRepository, port, peerTorDir, useLocalhostForP2P,
-                REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir, null, null, null, new Clock(), null, peerEncryptionService, peerKeyRing);
+                REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir, null, null, null,
+                new Clock(), null, peerEncryptionService, peerKeyRing, TestUtils.getProtobufferResolver());
     }
 
     // ## TEST SETUP: P2P service listener classes

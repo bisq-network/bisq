@@ -1,16 +1,19 @@
 package io.bisq.network.p2p;
 
 import io.bisq.common.Clock;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.p2p.network.ProtobufferResolver;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
-import io.bisq.network.p2p.storage.P2PService;
 import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.security.*;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
@@ -132,7 +135,8 @@ public class TestUtils {
         }
 
         P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhostForP2P,
-                2, P2PService.MAX_CONNECTIONS_DEFAULT, new File("dummy"), null, null, null, new Clock(), null, encryptionService, keyRing);
+                2, P2PService.MAX_CONNECTIONS_DEFAULT, new File("dummy"), null, null, null,
+                new Clock(), null, encryptionService, keyRing, getProtobufferResolver());
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
@@ -166,5 +170,14 @@ public class TestUtils {
         latch.await();
         Thread.sleep(2000);
         return p2PService;
+    }
+
+    public static ProtobufferResolver getProtobufferResolver() {
+        return new ProtobufferResolver() {
+            @Override
+            public Optional<Message> fromProto(PB.Envelope envelope) {
+                return Optional.empty();
+            }
+        };
     }
 }

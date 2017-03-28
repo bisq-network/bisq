@@ -19,7 +19,7 @@ import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.network.p2p.BootstrapListener;
-import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.network.p2p.P2PService;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;

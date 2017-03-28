@@ -1,5 +1,6 @@
 package io.bisq.network.p2p.network;
 
+import io.bisq.network.p2p.TestUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -29,7 +30,7 @@ public class LocalhostNetworkNodeTest {
     @Test
     public void testMessage() throws InterruptedException, IOException {
         CountDownLatch msgLatch = new CountDownLatch(2);
-        LocalhostNetworkNode node1 = new LocalhostNetworkNode(9001);
+        LocalhostNetworkNode node1 = new LocalhostNetworkNode(9001, TestUtils.getProtobufferResolver());
         node1.addMessageListener((message, connection) -> {
             log.debug("onMessage node1 " + message);
             msgLatch.countDown();
@@ -53,7 +54,7 @@ public class LocalhostNetworkNodeTest {
             }
         });
 
-        LocalhostNetworkNode node2 = new LocalhostNetworkNode(9002);
+        LocalhostNetworkNode node2 = new LocalhostNetworkNode(9002, TestUtils.getProtobufferResolver());
         node2.addMessageListener((message, connection) -> {
             log.debug("onMessage node2 " + message);
             msgLatch.countDown();

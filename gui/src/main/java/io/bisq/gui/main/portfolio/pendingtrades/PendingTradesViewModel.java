@@ -34,7 +34,7 @@ import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcAddressValidator;
-import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.network.p2p.P2PService;
 import io.bisq.protobuffer.payload.payment.PaymentMethod;
 import io.bisq.protobuffer.payload.trade.Contract;
 import javafx.beans.property.*;

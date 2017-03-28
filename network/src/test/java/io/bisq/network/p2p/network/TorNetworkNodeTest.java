@@ -3,6 +3,7 @@ package io.bisq.network.p2p.network;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
+import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.mocks.MockPayload;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +36,7 @@ public class TorNetworkNodeTest {
     public void testTorNodeBeforeSecondReady() throws InterruptedException, IOException {
         latch = new CountDownLatch(1);
         int port = 9001;
-        TorNetworkNode node1 = new TorNetworkNode(port, new File("torNode_" + port));
+        TorNetworkNode node1 = new TorNetworkNode(port, new File("torNode_" + port), TestUtils.getProtobufferResolver());
         node1.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -56,7 +57,7 @@ public class TorNetworkNodeTest {
 
         latch = new CountDownLatch(1);
         int port2 = 9002;
-        TorNetworkNode node2 = new TorNetworkNode(port2, new File("torNode_" + port2));
+        TorNetworkNode node2 = new TorNetworkNode(port2, new File("torNode_" + port2), TestUtils.getProtobufferResolver());
         node2.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -112,7 +113,7 @@ public class TorNetworkNodeTest {
     public void testTorNodeAfterBothReady() throws InterruptedException, IOException {
         latch = new CountDownLatch(2);
         int port = 9001;
-        TorNetworkNode node1 = new TorNetworkNode(port, new File("torNode_" + port));
+        TorNetworkNode node1 = new TorNetworkNode(port, new File("torNode_" + port), TestUtils.getProtobufferResolver());
         node1.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {
@@ -132,7 +133,7 @@ public class TorNetworkNodeTest {
         });
 
         int port2 = 9002;
-        TorNetworkNode node2 = new TorNetworkNode(port2, new File("torNode_" + port));
+        TorNetworkNode node2 = new TorNetworkNode(port2, new File("torNode_" + port), TestUtils.getProtobufferResolver());
         node2.start(new SetupListener() {
             @Override
             public void onTorNodeReady() {

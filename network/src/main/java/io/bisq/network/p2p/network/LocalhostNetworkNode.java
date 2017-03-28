@@ -43,8 +43,8 @@ public class LocalhostNetworkNode extends NetworkNode {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public LocalhostNetworkNode(int port) {
-        super(port);
+    public LocalhostNetworkNode(int port, ProtobufferResolver protobufferResolver) {
+        super(port, protobufferResolver);
     }
 
     @Override

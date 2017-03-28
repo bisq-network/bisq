@@ -28,11 +28,13 @@ import io.bisq.core.btc.BitcoinModule;
 import io.bisq.core.dao.DaoModule;
 import io.bisq.core.filter.FilterModule;
 import io.bisq.core.offer.OfferModule;
+import io.bisq.core.p2p.network.CoreProtobufferResolver;
 import io.bisq.core.trade.TradeModule;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
+import io.bisq.network.p2p.network.ProtobufferResolver;
 import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.crypto.KeyStorage;
 import org.slf4j.Logger;
@@ -57,6 +59,7 @@ class StatisticsModule extends AppModule {
         bind(User.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
+        bind(ProtobufferResolver.class).to(CoreProtobufferResolver.class).in(Singleton.class);
 
         File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
         bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);
