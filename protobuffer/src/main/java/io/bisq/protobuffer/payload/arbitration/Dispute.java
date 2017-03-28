@@ -24,7 +24,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.message.arbitration.DisputeCommunicationMessage;
 import io.bisq.protobuffer.payload.Payload;
-import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.trade.Contract;
 import io.bisq.protobuffer.persistence.arbitration.DisputeList;
 import javafx.beans.property.*;
@@ -59,7 +59,7 @@ public final class Dispute implements Payload {
     private final boolean disputeOpenerIsBuyer;
     private final boolean disputeOpenerIsMaker;
     private final long openingDate;
-    private final PubKeyRingPayload traderPubKeyRingPayload;
+    private final PubKeyRing traderPubKeyRing;
     private final long tradeDate;
     private final Contract contract;
     private final byte[] contractHash;
@@ -76,7 +76,7 @@ public final class Dispute implements Payload {
     private final String makerContractSignature;
     @Nullable
     private final String takerContractSignature;
-    private final PubKeyRingPayload arbitratorPubKeyRingPayload;
+    private final PubKeyRing arbitratorPubKeyRing;
     private final boolean isSupportTicket;
 
     private final ArrayList<DisputeCommunicationMessage> disputeCommunicationMessages = new ArrayList<>();
@@ -105,7 +105,7 @@ public final class Dispute implements Payload {
                    int traderId,
                    boolean disputeOpenerIsBuyer,
                    boolean disputeOpenerIsMaker,
-                   PubKeyRingPayload traderPubKeyRingPayload,
+                   PubKeyRing traderPubKeyRing,
                    Date tradeDate,
                    Contract contract,
                    byte[] contractHash,
@@ -116,13 +116,13 @@ public final class Dispute implements Payload {
                    String contractAsJson,
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
-                   PubKeyRingPayload arbitratorPubKeyRingPayload,
+                   PubKeyRing arbitratorPubKeyRing,
                    boolean isSupportTicket) {
         this(tradeId,
                 traderId,
                 disputeOpenerIsBuyer,
                 disputeOpenerIsMaker,
-                traderPubKeyRingPayload,
+                traderPubKeyRing,
                 tradeDate,
                 contract,
                 contractHash,
@@ -133,7 +133,7 @@ public final class Dispute implements Payload {
                 contractAsJson,
                 makerContractSignature,
                 takerContractSignature,
-                arbitratorPubKeyRingPayload,
+                arbitratorPubKeyRing,
                 isSupportTicket);
         this.storage = storage;
     }
@@ -142,7 +142,7 @@ public final class Dispute implements Payload {
                    int traderId,
                    boolean disputeOpenerIsBuyer,
                    boolean disputeOpenerIsMaker,
-                   PubKeyRingPayload traderPubKeyRingPayload,
+                   PubKeyRing traderPubKeyRing,
                    Date tradeDate,
                    Contract contract,
                    byte[] contractHash,
@@ -153,13 +153,13 @@ public final class Dispute implements Payload {
                    String contractAsJson,
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
-                   PubKeyRingPayload arbitratorPubKeyRingPayload,
+                   PubKeyRing arbitratorPubKeyRing,
                    boolean isSupportTicket) {
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.disputeOpenerIsBuyer = disputeOpenerIsBuyer;
         this.disputeOpenerIsMaker = disputeOpenerIsMaker;
-        this.traderPubKeyRingPayload = traderPubKeyRingPayload;
+        this.traderPubKeyRing = traderPubKeyRing;
         this.tradeDate = tradeDate.getTime();
         this.contract = contract;
         this.contractHash = contractHash;
@@ -170,7 +170,7 @@ public final class Dispute implements Payload {
         this.contractAsJson = contractAsJson;
         this.makerContractSignature = makerContractSignature;
         this.takerContractSignature = takerContractSignature;
-        this.arbitratorPubKeyRingPayload = arbitratorPubKeyRingPayload;
+        this.arbitratorPubKeyRing = arbitratorPubKeyRing;
         this.isSupportTicket = isSupportTicket;
         this.openingDate = new Date().getTime();
 
@@ -269,8 +269,8 @@ public final class Dispute implements Payload {
         return new Date(openingDate);
     }
 
-    public PubKeyRingPayload getTraderPubKeyRingPayload() {
-        return traderPubKeyRingPayload;
+    public PubKeyRing getTraderPubKeyRing() {
+        return traderPubKeyRing;
     }
 
     public Contract getContract() {
@@ -323,8 +323,8 @@ public final class Dispute implements Payload {
         return isClosedProperty;
     }
 
-    public PubKeyRingPayload getArbitratorPubKeyRingPayload() {
-        return arbitratorPubKeyRingPayload;
+    public PubKeyRing getArbitratorPubKeyRing() {
+        return arbitratorPubKeyRing;
     }
 
     public ObjectProperty<DisputeResult> disputeResultProperty() {
@@ -358,7 +358,7 @@ public final class Dispute implements Payload {
                 ", disputeOpenerIsBuyer=" + disputeOpenerIsBuyer +
                 ", disputeOpenerIsMaker=" + disputeOpenerIsMaker +
                 ", openingDate=" + openingDate +
-                ", traderPubKeyRing=" + traderPubKeyRingPayload +
+                ", traderPubKeyRing=" + traderPubKeyRing +
                 ", tradeDate=" + tradeDate +
                 ", contract=" + contract +
                 ", contractHash=" + Hex.toHexString(contractHash) +
@@ -369,7 +369,7 @@ public final class Dispute implements Payload {
                 ", contractAsJson='" + contractAsJson + '\'' +
                 ", makerContractSignature='" + makerContractSignature + '\'' +
                 ", takerContractSignature='" + takerContractSignature + '\'' +
-                ", arbitratorPubKeyRing=" + arbitratorPubKeyRingPayload +
+                ", arbitratorPubKeyRing=" + arbitratorPubKeyRing +
                 ", isSupportTicket=" + isSupportTicket +
                 ", disputeCommunicationMessages=" + disputeCommunicationMessages +
                 ", isClosed=" + isClosed +
@@ -390,12 +390,12 @@ public final class Dispute implements Payload {
                 .setDisputeOpenerIsBuyer(disputeOpenerIsBuyer)
                 .setDisputeOpenerIsMaker(disputeOpenerIsMaker)
                 .setOpeningDate(openingDate)
-                .setTraderPubKeyRingPayload(traderPubKeyRingPayload.toProto())
+                .setTraderPubKeyRing(traderPubKeyRing.toProto())
                 .setTradeDate(tradeDate)
                 .setContract(contract.toProto())
                 .setContractHash(ByteString.copyFrom(contractHash))
                 .setContractAsJson(contractAsJson)
-                .setArbitratorPubKeyRingPayload(arbitratorPubKeyRingPayload.toProto())
+                .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProto())
                 .setIsSupportTicket(isSupportTicket)
                 .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream().map(
                         disputeCommunicationMessage -> disputeCommunicationMessage.toProto().getDisputeCommunicationMessage()).collect(Collectors.toList()))

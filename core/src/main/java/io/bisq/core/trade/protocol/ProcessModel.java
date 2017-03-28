@@ -18,8 +18,6 @@
 package io.bisq.core.trade.protocol;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.common.taskrunner.Model;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -33,8 +31,10 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.message.trade.TradeMessage;
 import io.bisq.protobuffer.payload.btc.RawTransactionInput;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.filter.PaymentAccountFilter;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
@@ -216,8 +216,8 @@ public class ProcessModel implements Model, Serializable {
         return p2PService;
     }
 
-    public PubKeyRingVO getPubKeyRing() {
-        return keyRing.getPubKeyRingVO();
+    public PubKeyRing getPubKeyRing() {
+        return keyRing.getPubKeyRing();
     }
 
     public KeyRing getKeyRing() {

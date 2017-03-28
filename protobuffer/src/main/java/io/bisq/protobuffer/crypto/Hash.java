@@ -15,10 +15,13 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.crypto;
+package io.bisq.protobuffer.crypto;
 
 import com.google.common.base.Charsets;
-import lombok.extern.slf4j.Slf4j;
+import com.google.protobuf.Message;
+import io.bisq.protobuffer.Marshaller;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
@@ -26,8 +29,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 
-@Slf4j
 public class Hash {
+    private static final Logger log = LoggerFactory.getLogger(Hash.class);
 
     /**
      * @param data Data as byte array
@@ -42,6 +45,20 @@ public class Hash {
             log.error("Could not create MessageDigest for hash. " + e.getMessage());
             e.printStackTrace();
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * @param data Any serializable object. Will be converted into a byte array using Java serialisation.
+     * @return Hash of data
+     */
+    public static byte[] getHash(Marshaller data) {
+        final Object marshalled = data.toProto();
+        if (marshalled instanceof Message) {
+            return getHash(((Message) marshalled).toByteArray());
+        } else {
+            log.error("data.marshal() does not deliver a object of tpye Message");
+            return new byte[]{};
         }
     }
 
@@ -68,5 +85,6 @@ public class Hash {
     public static byte[] getHash(Integer data) {
         return getHash(ByteBuffer.allocate(4).putInt(data).array());
     }
+
 }
 

@@ -24,7 +24,6 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Version;
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.alert.PrivateNotificationManager;
@@ -47,10 +46,11 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.message.arbitration.DisputeCommunicationMessage;
 import io.bisq.protobuffer.payload.arbitration.Attachment;
 import io.bisq.protobuffer.payload.arbitration.Dispute;
-import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.trade.Contract;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -143,12 +143,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TraderDisputeView(DisputeManager disputeManager, KeyRing keyRing,
-                             TradeManager tradeManager, Stage stage,
-                             BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
-                             PrivateNotificationManager privateNotificationManager,
-                             ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow,
-                             P2PService p2PService) {
+    public TraderDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
+                             BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow, PrivateNotificationManager privateNotificationManager,
+                             ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow, P2PService p2PService) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
         this.tradeManager = tradeManager;
@@ -310,14 +307,14 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 }
             } else if (new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN).match(event)) {
                 if (selectedDispute != null) {
-                    PubKeyRingPayload pubKeyRingPayload = selectedDispute.getTraderPubKeyRingPayload();
+                    PubKeyRing pubKeyRing = selectedDispute.getTraderPubKeyRing();
                     NodeAddress nodeAddress;
-                    if (pubKeyRingPayload.equals(selectedDispute.getContract().getBuyerPubKeyRingPayload()))
+                    if (pubKeyRing.equals(selectedDispute.getContract().getBuyerPubKeyRing()))
                         nodeAddress = selectedDispute.getContract().getBuyerNodeAddress();
                     else
                         nodeAddress = selectedDispute.getContract().getSellerNodeAddress();
 
-                    new SendPrivateNotificationWindow(pubKeyRingPayload.get(), nodeAddress)
+                    new SendPrivateNotificationWindow(pubKeyRing, nodeAddress)
                             .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                             .show();
                 }
@@ -412,7 +409,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     protected void applyFilteredListPredicate(String filterString) {
         // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)
-        filteredList.setPredicate(dispute -> !dispute.getArbitratorPubKeyRingPayload().equals(keyRing.getPubKeyRingVO()));
+        filteredList.setPredicate(dispute -> !dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()));
     }
 
 

@@ -22,7 +22,6 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.Storage;
@@ -45,6 +44,7 @@ import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.SendDirectMessageListener;
 import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.offer.OfferAvailabilityRequest;
 import io.bisq.protobuffer.message.offer.OfferAvailabilityResponse;
@@ -406,7 +406,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
             try {
                 p2PService.sendEncryptedDirectMessage(sender,
-                        message.getPubKeyRing().get(),
+                        message.getPubKeyRing(),
                         new OfferAvailabilityResponse(message.offerId, availabilityResult),
                         new SendDirectMessageListener() {
                             @Override

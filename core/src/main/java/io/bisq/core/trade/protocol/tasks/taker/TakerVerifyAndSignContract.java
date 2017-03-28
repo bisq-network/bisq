@@ -26,7 +26,6 @@ import io.bisq.core.trade.SellerAsTakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import io.bisq.protobuffer.payload.trade.Contract;
@@ -89,8 +88,8 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     processModel.getAccountId(),
                     makerPaymentAccountPayload,
                     takerPaymentAccountPayload,
-                    new PubKeyRingPayload(maker.getPubKeyRing()),
-                    new PubKeyRingPayload(processModel.getPubKeyRing()),
+                    maker.getPubKeyRing(),
+                    processModel.getPubKeyRing(),
                     maker.getPayoutAddressString(),
                     takerPayoutAddressString,
                     maker.getMultiSigPubKey(),

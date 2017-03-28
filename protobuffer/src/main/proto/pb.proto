@@ -174,10 +174,10 @@ message Payload {
         PrivateNotificationPayload private_notification_payload = 10;
         ProtectedStorageEntry protected_storage_entry = 11;
         ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 12;
-        PubKeyRingPayload pub_key_ring_payload = 13;
+        PubKeyRing pub_key_ring = 13;
         RawTransactionInput raw_transaction_input = 14;
         OfferPayload offer_payload = 15;
-        SealedAndSignedPayload sealed_and_signed_payload = 16;
+        SealedAndSigned Sealed_and_signed = 16;
     }
 }
 
@@ -215,7 +215,7 @@ message Arbitrator {
     int64 registration_date = 3;
     string registration_signature = 4;
     bytes registration_pub_key = 5;
-    PubKeyRingPayload pub_key_ring_payload = 6;
+    PubKeyRing pub_key_ring = 6;
     bytes btc_pub_key = 7;
     string btc_address = 8;
     string email_address = 9;
@@ -228,7 +228,7 @@ message Mediator {
     int64 registration_date = 3;
     string registration_signature = 4;
     bytes registration_pub_key = 5;
-    PubKeyRingPayload pub_key_ring_payload = 6;
+    PubKeyRing pub_key_ring = 6;
     string email_address = 7;
     map<string, string> extra_data_map = 8;
 }
@@ -284,7 +284,7 @@ message TradeStatistics {
     int64 offer_min_amount = 12;
     string offer_id = 13;
     string deposit_tx_id = 14;
-    PubKeyRingPayload pub_key_ring_payload = 15;
+    PubKeyRing pub_key_ring = 15;
     map<string, string> extra_data_map = 16;
 }
 message MailboxStoragePayload {
@@ -319,7 +319,7 @@ message OfferPayload {
     int64 amount = 17;
     int64 min_amount = 18;
     NodeAddress maker_node_address = 19;
-    PubKeyRingPayload pub_key_ring_payload = 20;
+    PubKeyRing pub_key_ring = 20;
     string maker_payment_account_id = 21;
     string offer_fee_payment_tx_id = 22;
     string version_nr = 23;
@@ -344,12 +344,12 @@ message OfferPayload {
 message PrefixedSealedAndSignedMessage {
     int64 message_version = 1;
     NodeAddress node_address = 2;
-    SealedAndSignedPayload sealed_and_signed_payload = 3;
+    SealedAndSigned sealed_and_signed = 3;
     bytes address_prefix_hash = 4;
     string uid = 5;
 }
 
-message SealedAndSignedPayload {
+message SealedAndSigned {
     bytes encrypted_secret_key = 1;
     bytes encrypted_payload_with_hmac = 2;
     bytes signature = 3;
@@ -438,7 +438,7 @@ message Dispute {
     bool dispute_opener_is_buyer = 4;
     bool dispute_opener_is_maker = 5;
     int64 opening_date = 6;
-    PubKeyRingPayload trader_pub_key_ring_payload = 7;
+    PubKeyRing trader_pub_key_ring = 7;
     int64 trade_date = 8;
     Contract contract = 9;
     bytes contract_hash = 10;
@@ -449,7 +449,7 @@ message Dispute {
     string contract_as_json = 15;
     string maker_contract_signature = 16;
     string taker_contract_signature = 17;
-    PubKeyRingPayload arbitrator_pub_key_ring_payload = 18;
+    PubKeyRing arbitrator_pub_key_ring = 18;
     bool is_support_ticket = 19;
     repeated DisputeCommunicationMessage dispute_communication_messages = 20;
     bool is_closed = 21;
@@ -457,7 +457,7 @@ message Dispute {
     string dispute_payout_tx_id = 23;
 }
 
-message PubKeyRingPayload {
+message PubKeyRing {
     bytes signature_pub_key_bytes = 1;
     bytes encryption_pub_key_bytes = 2;
     string pgp_pub_key_as_pem = 3;
@@ -474,8 +474,8 @@ message Contract {
     string taker_account_id = 8;
     PaymentAccountPayload maker_payment_account_payload = 9;
     PaymentAccountPayload taker_payment_account_payload = 10;
-    PubKeyRingPayload maker_pub_key_ring_payload = 11;
-    PubKeyRingPayload taker_pub_key_ring_payload = 12;
+    PubKeyRing maker_pub_key_ring = 11;
+    PubKeyRing taker_pub_key_ring = 12;
     NodeAddress buyer_node_address = 13;
     NodeAddress seller_node_address = 14;
     string maker_payout_address_string = 15;
@@ -508,7 +508,7 @@ message PayDepositRequest {
     int64 change_output_value = 8;
     string change_output_address = 9;
     string taker_payout_address_string = 10;
-    PubKeyRingPayload taker_pub_key_ring_payload = 11;
+    PubKeyRing taker_pub_key_ring = 11;
     PaymentAccountPayload taker_payment_account_payload = 12;
     string taker_account_id = 13;
     string take_offer_fee_tx_id = 14;
@@ -550,7 +550,7 @@ message PrivateNotificationPayload {
 message OfferAvailabilityRequest {
     int32 message_version = 1;
     string offer_id = 2;
-    PubKeyRingPayload pub_key_ring_payload = 3;
+    PubKeyRing pub_key_ring = 3;
     int64 takers_trade_price = 4;
     repeated int32 supported_capabilities = 5;
 }

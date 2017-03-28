@@ -17,7 +17,6 @@
 
 package io.bisq.gui.main.disputes.arbitrator;
 
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.trade.TradeManager;
@@ -28,6 +27,7 @@ import io.bisq.gui.main.overlays.windows.DisputeSummaryWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.protobuffer.crypto.KeyRing;
 import javafx.stage.Stage;
 
 import javax.inject.Inject;
@@ -56,7 +56,7 @@ public class ArbitratorDisputeView extends TraderDisputeView {
     protected void applyFilteredListPredicate(String filterString) {
         // If in arbitrator view we must only display disputes where we are selected as arbitrator (must not receive others anyway)
         filteredList.setPredicate(dispute ->
-                dispute.getArbitratorPubKeyRingPayload().get().equals(keyRing.getPubKeyRingVO()) &&
+                dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()) &&
                         (filterString.isEmpty() ||
                                 (dispute.getId().contains(filterString) ||
                                         (!dispute.isClosed() && filterString.toLowerCase().equals("open")) ||

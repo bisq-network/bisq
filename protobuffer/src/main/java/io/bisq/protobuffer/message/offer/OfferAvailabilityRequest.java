@@ -21,7 +21,7 @@ import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.message.p2p.SupportedCapabilitiesMessage;
-import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -32,14 +32,14 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private final PubKeyRingPayload pubKeyRingPayload;
+    private final PubKeyRing pubKeyRing;
     public final long takersTradePrice;
     @Nullable
     private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
-    public OfferAvailabilityRequest(String offerId, PubKeyRingPayload pubKeyRingPayload, long takersTradePrice) {
+    public OfferAvailabilityRequest(String offerId, PubKeyRing pubKeyRing, long takersTradePrice) {
         super(offerId);
-        this.pubKeyRingPayload = pubKeyRingPayload;
+        this.pubKeyRing = pubKeyRing;
         this.takersTradePrice = takersTradePrice;
     }
 
@@ -49,14 +49,14 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
         return supportedCapabilities;
     }
 
-    public PubKeyRingPayload getPubKeyRing() {
-        return pubKeyRingPayload;
+    public PubKeyRing getPubKeyRing() {
+        return pubKeyRing;
     }
 
     @Override
     public String toString() {
         return "OfferAvailabilityRequest{" +
-                "pubKeyRingPayload=" + pubKeyRingPayload +
+                "pubKeyRing=" + pubKeyRing +
                 "} " + super.toString();
     }
 
@@ -65,7 +65,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
         return PB.Envelope.newBuilder()
                 .setOfferAvailabilityRequest(PB.OfferAvailabilityRequest.newBuilder()
                         .setOfferId(offerId)
-                        .setPubKeyRingPayload(pubKeyRingPayload.toProto())
+                        .setPubKeyRing(pubKeyRing.toProto())
                         .setTakersTradePrice(takersTradePrice)
                         .addAllSupportedCapabilities(supportedCapabilities)).build();
     }

@@ -15,10 +15,10 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.crypto;
-
+package io.bisq.protobuffer.crypto;
 
 import com.google.inject.Inject;
+import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.jetbrains.annotations.NotNull;

@@ -4,20 +4,19 @@ import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import io.bisq.common.crypto.CryptoException;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.crypto.EncryptionService;
-import io.bisq.network.crypto.NetworkCryptoUtils;
 import io.bisq.network.p2p.TestUtils;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.Broadcaster;
 import io.bisq.protobuffer.ProtoBufferUtilities;
+import io.bisq.protobuffer.crypto.Hash;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.crypto.KeyStorage;
 import io.bisq.protobuffer.payload.StoragePayload;
 import io.bisq.protobuffer.payload.alert.AlertPayload;
-import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.offer.OfferPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
@@ -107,7 +106,7 @@ public class P2PDataStorageTest {
         assertEquals(1, dataStorage1.getMap().size());
 
         int newSequenceNumber = data.sequenceNumber + 1;
-        byte[] hashOfDataAndSeqNr = NetworkCryptoUtils.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(data.getStoragePayload(), newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         ProtectedStorageEntry dataToRemove = new ProtectedStorageEntry(data.getStoragePayload(), data.ownerPubKey, newSequenceNumber, signature);
         assertTrue(dataStorage1.remove(dataToRemove, null, true));
@@ -127,7 +126,7 @@ public class P2PDataStorageTest {
         data.toProto().writeTo(byteOutputStream);
         ProtectedStorageEntry protectedStorageEntry = ProtoBufferUtilities.getProtectedStorageEntry(PB.ProtectedStorageEntry.parseFrom(new ByteArrayInputStream(byteOutputStream.toByteArray())));
 
-        assertTrue(Arrays.equals(NetworkCryptoUtils.getHash(data.getStoragePayload()), NetworkCryptoUtils.getHash(protectedStorageEntry.getStoragePayload())));
+        assertTrue(Arrays.equals(Hash.getHash(data.getStoragePayload()), Hash.getHash(protectedStorageEntry.getStoragePayload())));
         assertTrue(data.equals(protectedStorageEntry));
         assertTrue(checkSignature(protectedStorageEntry));
     }
@@ -156,7 +155,7 @@ public class P2PDataStorageTest {
         return new OfferPayload("id",
                 System.currentTimeMillis(),
                 nodeAddress4,
-                new PubKeyRingPayload(keyRing1.getPubKeyRingVO()),
+                keyRing1.getPubKeyRing(),
                 OfferPayload.Direction.BUY,
                 1200,
                 1.5,
@@ -198,13 +197,13 @@ public class P2PDataStorageTest {
 
     private void setSignature(ProtectedStorageEntry entry) throws CryptoException {
         int newSequenceNumber = entry.sequenceNumber;
-        byte[] hashOfDataAndSeqNr = NetworkCryptoUtils.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), newSequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
         entry.signature = signature;
     }
 
     private boolean checkSignature(ProtectedStorageEntry entry) throws CryptoException {
-        byte[] hashOfDataAndSeqNr = NetworkCryptoUtils.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), entry.sequenceNumber));
+        byte[] hashOfDataAndSeqNr = Hash.getHash(new P2PDataStorage.DataAndSeqNrPair(entry.getStoragePayload(), entry.sequenceNumber));
         return dataStorage1.checkSignature(entry.ownerPubKey, hashOfDataAndSeqNr, entry.signature);
     }
 }

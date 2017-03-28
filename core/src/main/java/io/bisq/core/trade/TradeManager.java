@@ -20,7 +20,6 @@ package io.bisq.core.trade;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
@@ -47,10 +46,10 @@ import io.bisq.network.p2p.DecryptedDirectMessageListener;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
 import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.trade.PayDepositRequest;
 import io.bisq.protobuffer.message.trade.TradeMessage;
-import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
 import javafx.beans.property.BooleanProperty;
@@ -235,7 +234,7 @@ public class TradeManager {
                     trade.getTradeAmount(),
                     trade.getDate(),
                     (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                    new PubKeyRingPayload(keyRing.getPubKeyRingVO()));
+                    keyRing.getPubKeyRing());
             tradeStatisticsManager.add(tradeStatistics, true);
 
             // We only republish trades from last 10 days
@@ -376,7 +375,7 @@ public class TradeManager {
     private OfferAvailabilityModel getOfferAvailabilityModel(Offer offer) {
         return new OfferAvailabilityModel(
                 offer,
-                keyRing.getPubKeyRingVO(),
+                keyRing.getPubKeyRing(),
                 p2PService);
     }
 

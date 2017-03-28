@@ -315,7 +315,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     private void onTradeStateChanged(Trade.State tradeState) {
         Log.traceCall(tradeState.toString());
-        log.info("UI tradeState={}, id={}", tradeState, trade.getShortId());
+
         // TODO what is first valid state for trade?
 
         switch (tradeState) {
@@ -420,7 +420,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
             case WITHDRAW_COMPLETED:
                 sellerState.set(UNDEFINED);
-                buyerState.set(BuyerState.UNDEFINED); 
+                buyerState.set(BuyerState.UNDEFINED);
                 break;
 
             default:

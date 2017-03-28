@@ -19,7 +19,6 @@ package io.bisq.core.trade.protocol;
 
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
@@ -27,6 +26,7 @@ import io.bisq.network.p2p.DecryptedDirectMessageListener;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.trade.TradeMessage;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.beans.value.ChangeListener;
 import lombok.extern.slf4j.Slf4j;
@@ -51,9 +51,9 @@ public abstract class TradeProtocol {
 
         decryptedDirectMessageListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
             // We check the sig only as soon we have stored the peers pubKeyRing.
-            PubKeyRingVO tradingPeerPubKeyRingVO = processModel.tradingPeer.getPubKeyRing();
+            PubKeyRing tradingPeerPubKeyRing = processModel.tradingPeer.getPubKeyRing();
             PublicKey signaturePubKey = decryptedMessageWithPubKey.signaturePubKey;
-            if (tradingPeerPubKeyRingVO != null && signaturePubKey.equals(tradingPeerPubKeyRingVO.getSignaturePubKey())) {
+            if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
                 Message message = decryptedMessageWithPubKey.message;
                 log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + peersNodeAddress);
                 if (message instanceof TradeMessage) {

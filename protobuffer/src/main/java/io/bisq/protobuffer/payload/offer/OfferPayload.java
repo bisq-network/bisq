@@ -24,7 +24,7 @@ import io.bisq.common.util.JsonExclude;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.payload.RequiresOwnerIsOnlinePayload;
 import io.bisq.protobuffer.payload.StoragePayload;
-import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -103,7 +103,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final long minAmount;
     private final NodeAddress makerNodeAddress;
     @JsonExclude
-    private final PubKeyRingPayload pubKeyRingPayload;
+    private final PubKeyRing pubKeyRing;
     private final String makerPaymentAccountId;
 
     // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
@@ -153,7 +153,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
      * @param id
      * @param date                       date of OfferPayload creation, can be null in which case the current date/time will be used.
      * @param makerNodeAddress
-     * @param pubKeyRingPayload
+     * @param pubKeyRing
      * @param direction
      * @param price
      * @param marketPriceMargin
@@ -191,7 +191,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     public OfferPayload(String id,
                         long date,
                         NodeAddress makerNodeAddress,
-                        PubKeyRingPayload pubKeyRingPayload,
+                        PubKeyRing pubKeyRing,
                         Direction direction,
                         long price,
                         double marketPriceMargin,
@@ -228,7 +228,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.id = id;
         this.date = date;
         this.makerNodeAddress = makerNodeAddress;
-        this.pubKeyRingPayload = pubKeyRingPayload;
+        this.pubKeyRing = pubKeyRing;
         this.direction = direction;
         this.price = price;
         this.marketPriceMargin = marketPriceMargin;
@@ -277,7 +277,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
     @Override
     public PublicKey getOwnerPubKey() {
-        return pubKeyRingPayload.getSignaturePubKey();
+        return pubKeyRing.getSignaturePubKey();
     }
 
     @Override
@@ -309,7 +309,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setAmount(amount)
                 .setMinAmount(minAmount)
                 .setMakerNodeAddress(makerNodeAddress.toProto())
-                .setPubKeyRingPayload(pubKeyRingPayload.toProto())
+                .setPubKeyRing(pubKeyRing.toProto())
                 .setMakerPaymentAccountId(makerPaymentAccountId)
                 .setVersionNr(versionNr)
                 .setBlockHeightAtOfferCreation(blockHeightAtOfferCreation)

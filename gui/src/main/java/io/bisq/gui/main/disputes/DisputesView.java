@@ -18,7 +18,6 @@
 package io.bisq.gui.main.disputes;
 
 import io.bisq.common.app.DevEnv;
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.Res;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.DisputeManager;
@@ -32,6 +31,7 @@ import io.bisq.gui.main.disputes.trader.TraderDisputeView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.portfolio.PortfolioView;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesView;
+import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.beans.value.ChangeListener;
@@ -96,11 +96,11 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     private void updateArbitratorsDisputesTabDisableState() {
         boolean isActiveArbitrator = arbitratorManager.getArbitratorsObservableMap().values().stream()
-                .filter(e -> e.getPubKeyRingPayload() != null && e.getPubKeyRingPayload().get().equals(keyRing.getPubKeyRingVO()))
+                .filter(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(keyRing.getPubKeyRing()))
                 .findAny().isPresent();
 
         boolean hasDisputesAsArbitrator = disputeManager.getDisputesAsObservableList().stream()
-                .filter(d -> d.getArbitratorPubKeyRingPayload().get().equals(keyRing.getPubKeyRingVO()))
+                .filter(d -> d.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()))
                 .findAny().isPresent();
 
         if (arbitratorsDisputesTab == null && (isActiveArbitrator || hasDisputesAsArbitrator)) {

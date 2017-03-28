@@ -18,7 +18,6 @@
 package io.bisq.gui.main.account.arbitratorregistration;
 
 import com.google.inject.Inject;
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.LanguageUtil;
@@ -29,8 +28,8 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.arbitration.Arbitrator;
-import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -153,7 +152,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                     p2PService.getAddress(),
                     arbitratorDepositAddressEntry.getPubKey(),
                     arbitratorDepositAddressEntry.getAddressString(),
-                    new PubKeyRingPayload(keyRing.getPubKeyRingVO()),
+                    keyRing.getPubKeyRing(),
                     new ArrayList<>(languageCodes),
                     new Date(),
                     registrationKey.getPubKey(),

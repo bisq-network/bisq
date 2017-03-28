@@ -1,7 +1,5 @@
 package io.bisq.core.offer;
 
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.CurrencyUtil;
@@ -16,6 +14,8 @@ import io.bisq.core.offer.availability.OfferAvailabilityModel;
 import io.bisq.core.offer.availability.OfferAvailabilityProtocol;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.offer.OfferPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.payment.PaymentMethod;
@@ -301,7 +301,7 @@ public class Offer implements Serializable {
     }
 
     public boolean isMyOffer(KeyRing keyRing) {
-        return getPubKeyRingVO().equals(keyRing.getPubKeyRingVO());
+        return getPubKeyRing().equals(keyRing.getPubKeyRing());
     }
 
 
@@ -381,8 +381,8 @@ public class Offer implements Serializable {
         return offerPayload.getMakerNodeAddress();
     }
 
-    public PubKeyRingVO getPubKeyRingVO() {
-        return offerPayload.getPubKeyRingPayload().get();
+    public PubKeyRing getPubKeyRing() {
+        return offerPayload.getPubKeyRing();
     }
 
     public String getMakerPaymentAccountId() {

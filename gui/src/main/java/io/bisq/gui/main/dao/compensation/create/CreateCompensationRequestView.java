@@ -19,7 +19,6 @@ package io.bisq.gui.main.dao.compensation.create;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.app.Version;
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.InsufficientFundsException;
@@ -37,6 +36,7 @@ import io.bisq.gui.main.dao.compensation.CompensationRequestDisplay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.dao.compensation.CompensationRequestPayload;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.scene.control.Button;
@@ -89,7 +89,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
         this.p2PService = p2PService;
         this.btcFormatter = btcFormatter;
 
-        p2pStorageSignaturePubKey = keyRing.getPubKeyRingVO().getSignaturePubKey();
+        p2pStorageSignaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
     }
 
 

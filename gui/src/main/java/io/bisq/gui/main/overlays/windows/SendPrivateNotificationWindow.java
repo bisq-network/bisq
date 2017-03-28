@@ -18,7 +18,6 @@
 package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.common.app.DevEnv;
-import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.gui.components.InputTextField;
@@ -26,6 +25,7 @@ import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.network.p2p.SendMailboxMessageListener;
 import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -44,7 +44,7 @@ import static io.bisq.gui.util.FormBuilder.addLabelTextArea;
 public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificationWindow> {
     private static final Logger log = LoggerFactory.getLogger(SendPrivateNotificationWindow.class);
 
-    private final PubKeyRingVO pubKeyRingVO;
+    private final PubKeyRing pubKeyRing;
     private final NodeAddress nodeAddress;
     private Button sendButton;
     private SendPrivateNotificationHandler sendPrivateNotificationHandler;
@@ -55,7 +55,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface SendPrivateNotificationHandler {
-        boolean handle(PrivateNotificationPayload privateNotification, PubKeyRingVO pubKeyRingVO, NodeAddress nodeAddress, String privKey, SendMailboxMessageListener sendMailboxMessageListener);
+        boolean handle(PrivateNotificationPayload privateNotification, PubKeyRing pubKeyRing, NodeAddress nodeAddress, String privKey, SendMailboxMessageListener sendMailboxMessageListener);
     }
 
 
@@ -64,8 +64,8 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public SendPrivateNotificationWindow(PubKeyRingVO pubKeyRingVO, NodeAddress nodeAddress) {
-        this.pubKeyRingVO = pubKeyRingVO;
+    public SendPrivateNotificationWindow(PubKeyRing pubKeyRing, NodeAddress nodeAddress) {
+        this.pubKeyRing = pubKeyRing;
         this.nodeAddress = nodeAddress;
         type = Type.Attention;
     }
@@ -123,7 +123,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                 if (!sendPrivateNotificationHandler.handle(
                         new PrivateNotificationPayload(alertMessageTextArea.getText()),
-                        pubKeyRingVO,
+                        pubKeyRing,
                         nodeAddress,
                         keyInputTextField.getText(),
                         new SendMailboxMessageListener() {

@@ -3,9 +3,6 @@ package io.bisq.network.p2p.network;
 import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Version;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.KeyStorage;
-import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.common.util.Tuple3;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.crypto.EncryptionService;
@@ -13,8 +10,11 @@ import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.crypto.KeyStorage;
 import io.bisq.protobuffer.message.p2p.DirectMessage;
 import io.bisq.protobuffer.message.p2p.MailboxMessage;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -161,7 +161,7 @@ public class NetworkStressTest {
     /**
      * A list of peer node's public key rings.
      */
-    private final List<PubKeyRingVO> peerPKRings = new ArrayList<>();
+    private final List<PubKeyRing> peerPKRings = new ArrayList<>();
 
     /**
      * Number of direct network_messages to be sent by each peer.
@@ -299,7 +299,7 @@ public class NetworkStressTest {
             // create, save and start peer
             final P2PService peer = createPeerNode(p, peerPort);
             //noinspection ConstantConditions
-            peerPKRings.add(peer.getKeyRing().getPubKeyRingVO());
+            peerPKRings.add(peer.getKeyRing().getPubKeyRing());
             peerNodes.add(peer);
             peer.start(new PeerServiceListener(
                     localServicesLatch, localServicesFailed, prelimDataLatch, bootstrapLatch));

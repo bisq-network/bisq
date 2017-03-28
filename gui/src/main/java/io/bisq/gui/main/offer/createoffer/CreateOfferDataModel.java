@@ -21,7 +21,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
-import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
@@ -45,7 +44,7 @@ import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.payload.crypto.PubKeyRingPayload;
+import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.payload.offer.OfferPayload;
 import io.bisq.protobuffer.payload.payment.BankAccountPayload;
 import javafx.beans.property.*;
@@ -122,15 +121,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    CreateOfferDataModel(OpenOfferManager openOfferManager,
-                         BtcWalletService walletService,
-                         Preferences preferences,
-                         User user,
-                         KeyRing keyRing,
-                         P2PService p2PService,
-                         PriceFeedService priceFeedService,
-                         FeeService feeService,
-                         BSFormatter formatter) {
+    CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService walletService,
+                         Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService,
+                         FeeService feeService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.walletService = walletService;
         this.preferences = preferences;
@@ -351,7 +344,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         OfferPayload offerPayload = new OfferPayload(offerId,
                 new Date().getTime(),
                 p2PService.getAddress(),
-                new PubKeyRingPayload(keyRing.getPubKeyRingVO()),
+                keyRing.getPubKeyRing(),
                 OfferPayload.Direction.valueOf(direction.name()),
                 priceAsLong,
                 marketPriceMarginParam,

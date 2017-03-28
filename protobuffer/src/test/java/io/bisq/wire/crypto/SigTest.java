@@ -1,6 +1,10 @@
-package io.bisq.common.crypto;
+package io.bisq.wire.crypto;
 
+import io.bisq.common.crypto.CryptoException;
+import io.bisq.common.crypto.Sig;
 import io.bisq.common.storage.FileUtil;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.crypto.KeyStorage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;

@@ -18,11 +18,10 @@
 package io.bisq.core.trade.protocol;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.protobuffer.payload.btc.RawTransactionInput;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
-import io.bisq.protobuffer.persistence.crypto.PubKeyRingPersistable;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -44,7 +43,7 @@ public final class TradingPeer implements Persistable {
     private String contractAsJson;
     private String contractSignature;
     private byte[] signature;
-    private PubKeyRingPersistable pubKeyRingPersistable;
+    private PubKeyRing pubKeyRing;
     private byte[] multiSigPubKey;
     private List<RawTransactionInput> rawTransactionInputs;
     private long changeOutputValue;
@@ -129,12 +128,12 @@ public final class TradingPeer implements Persistable {
         return signature;
     }
 
-    public PubKeyRingVO getPubKeyRing() {
-        return pubKeyRingPersistable.get();
+    public PubKeyRing getPubKeyRing() {
+        return pubKeyRing;
     }
 
-    public void setPubKeyRingPersistable(PubKeyRingVO pubKeyRingVO) {
-        this.pubKeyRingPersistable = new PubKeyRingPersistable(pubKeyRingVO);
+    public void setPubKeyRing(PubKeyRing pubKeyRing) {
+        this.pubKeyRing = pubKeyRing;
     }
 
     public void setRawTransactionInputs(List<RawTransactionInput> rawTransactionInputs) {

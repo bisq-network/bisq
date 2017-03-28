@@ -1,18 +1,17 @@
 package io.bisq.network.p2p.storage.messages;
 
 import io.bisq.common.crypto.CryptoException;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.KeyStorage;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.ProtoBufferUtilities;
+import io.bisq.protobuffer.crypto.KeyRing;
+import io.bisq.protobuffer.crypto.KeyStorage;
 import io.bisq.protobuffer.message.p2p.PrefixedSealedAndSignedMessage;
 import io.bisq.protobuffer.message.p2p.storage.AddDataMessage;
-import io.bisq.protobuffer.payload.crypto.SealedAndSignedPayload;
+import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.bisq.protobuffer.payload.p2p.storage.MailboxStoragePayload;
 import io.bisq.protobuffer.payload.p2p.storage.ProtectedMailboxStorageEntry;
 import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
-import io.bisq.vo.crypto.SealedAndSignedVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -44,16 +43,13 @@ public class AddDataMessageTest {
 
     @Test
     public void toProtoBuf() throws Exception {
-        SealedAndSignedVO sealedAndSignedVO = new SealedAndSignedVO(RandomUtils.nextBytes(10), RandomUtils.nextBytes(10), RandomUtils.nextBytes(10), keyRing1.getPubKeyRingVO().getSignaturePubKey());
-        PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(
-                new NodeAddress("host", 1000),
-                new SealedAndSignedPayload(sealedAndSignedVO),
-                RandomUtils.nextBytes(10),
+        SealedAndSigned sealedAndSigned = new SealedAndSigned(RandomUtils.nextBytes(10), RandomUtils.nextBytes(10), RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
+        PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = new PrefixedSealedAndSignedMessage(new NodeAddress("host", 1000), sealedAndSigned, RandomUtils.nextBytes(10),
                 UUID.randomUUID().toString());
         MailboxStoragePayload mailboxStoragePayload = new MailboxStoragePayload(prefixedSealedAndSignedMessage,
-                keyRing1.getPubKeyRingVO().getSignaturePubKey(), keyRing1.getPubKeyRingVO().getSignaturePubKey());
+                keyRing1.getPubKeyRing().getSignaturePubKey(), keyRing1.getPubKeyRing().getSignaturePubKey());
         ProtectedStorageEntry protectedStorageEntry = new ProtectedMailboxStorageEntry(mailboxStoragePayload,
-                keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRingVO().getSignaturePubKey());
+                keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
         AddDataMessage dataMessage1 = new AddDataMessage(protectedStorageEntry);
         PB.Envelope envelope = dataMessage1.toProto();
         AddDataMessage dataMessage2 = (AddDataMessage) ProtoBufferUtilities.getAddDataMessage(envelope);

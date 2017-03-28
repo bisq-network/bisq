@@ -15,27 +15,28 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.crypto;
+package io.bisq.protobuffer.crypto;
 
-import io.bisq.common.crypto.vo.PubKeyRingVO;
+import io.bisq.common.crypto.Sig;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.Setter;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPPublicKey;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 import javax.inject.Inject;
 import java.security.KeyPair;
 
-@Value
+@Getter
+@EqualsAndHashCode
 @Slf4j
-@Immutable
 public class KeyRing {
     private final KeyPair signatureKeyPair;
     private final KeyPair encryptionKeyPair;
-    private final PubKeyRingVO pubKeyRingVO;
+    private final PubKeyRing pubKeyRing;
 
     // We generate by default a PGP keypair but the user can set his own if he prefers.
     // Not impl. yet but prepared in data structure
@@ -63,7 +64,7 @@ public class KeyRing {
         }
         // TODO  remove Nullable once impl.
         final PGPPublicKey pgpPublicKey = pgpKeyPair != null ? pgpKeyPair.getPublicKey() : null;
-        pubKeyRingVO = new PubKeyRingVO(signatureKeyPair.getPublic(), encryptionKeyPair.getPublic(), pgpPublicKey);
+        pubKeyRing = new PubKeyRing(signatureKeyPair.getPublic(), encryptionKeyPair.getPublic(), pgpPublicKey);
     }
 
     // Don't print keys for security reasons
@@ -72,7 +73,7 @@ public class KeyRing {
         return "KeyRing{" +
                 "signatureKeyPair.hashCode()=" + signatureKeyPair.hashCode() +
                 ", encryptionKeyPair.hashCode()=" + encryptionKeyPair.hashCode() +
-                ", pubKeyRing.hashCode()=" + pubKeyRingVO.hashCode() +
+                ", pubKeyRing.hashCode()=" + pubKeyRing.hashCode() +
                 '}';
     }
 }

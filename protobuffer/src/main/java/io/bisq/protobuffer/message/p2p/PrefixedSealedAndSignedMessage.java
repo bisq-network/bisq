@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.protobuffer.message.SendersNodeAddressMessage;
-import io.bisq.protobuffer.payload.crypto.SealedAndSignedPayload;
+import io.bisq.protobuffer.payload.crypto.SealedAndSigned;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import org.bouncycastle.util.encoders.Hex;
@@ -18,15 +18,15 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
 
     private final int messageVersion = Version.getP2PMessageVersion();
     private final NodeAddress senderNodeAddress;
-    public final SealedAndSignedPayload sealedAndSignedPayload;
+    public final SealedAndSigned sealedAndSigned;
     public final byte[] addressPrefixHash;
     private final String uid;
 
-    public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress, SealedAndSignedPayload sealedAndSignedPayload,
+    public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress, SealedAndSigned sealedAndSigned,
                                           byte[] addressPrefixHash, String uid) {
         checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at PrefixedSealedAndSignedMessage");
         this.senderNodeAddress = senderNodeAddress;
-        this.sealedAndSignedPayload = sealedAndSignedPayload;
+        this.sealedAndSigned = sealedAndSigned;
         this.addressPrefixHash = addressPrefixHash;
         this.uid = uid;
     }
@@ -51,7 +51,7 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
         return PB.Envelope.newBuilder().setPrefixedSealedAndSignedMessage(
                 PB.PrefixedSealedAndSignedMessage.newBuilder()
                         .setMessageVersion(messageVersion).setNodeAddress(senderNodeAddress.toProto())
-                        .setSealedAndSignedPayload(sealedAndSignedPayload.toProto())
+                        .setSealedAndSigned(sealedAndSigned.toProto())
                         .setAddressPrefixHash(ByteString.copyFrom(addressPrefixHash))
                         .setUid(uid)).build();
     }
@@ -62,7 +62,7 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
         return "PrefixedSealedAndSignedMessage{" +
                 "uid=" + uid +
                 ", messageVersion=" + messageVersion +
-                ", sealedAndSignedPayload=" + sealedAndSignedPayload +
+                ", sealedAndSigned=" + sealedAndSigned +
                 ", receiverAddressMaskHash=" + Hex.toHexString(addressPrefixHash) +
                 '}';
     }

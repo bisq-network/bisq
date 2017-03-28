@@ -20,15 +20,15 @@ package io.bisq.core.alert;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bisq.common.app.DevEnv;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.crypto.vo.PubKeyRingVO;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.SendMailboxMessageListener;
 import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.protobuffer.crypto.KeyRing;
 import io.bisq.protobuffer.message.Message;
 import io.bisq.protobuffer.message.alert.PrivateNotificationMessage;
 import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
+import io.bisq.protobuffer.payload.crypto.PubKeyRing;
 import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -100,13 +100,13 @@ public class PrivateNotificationManager {
         return privateNotificationMessageProperty;
     }
 
-    public boolean sendPrivateNotificationMessageIfKeyIsValid(PrivateNotificationPayload privateNotification, PubKeyRingVO pubKeyRingVO, NodeAddress nodeAddress,
+    public boolean sendPrivateNotificationMessageIfKeyIsValid(PrivateNotificationPayload privateNotification, PubKeyRing pubKeyRing, NodeAddress nodeAddress,
                                                               String privKeyString, SendMailboxMessageListener sendMailboxMessageListener) {
         boolean isKeyValid = isKeyValid(privKeyString);
         if (isKeyValid) {
             signAndAddSignatureToPrivateNotificationMessage(privateNotification);
             p2PService.sendEncryptedMailboxMessage(nodeAddress,
-                    pubKeyRingVO,
+                    pubKeyRing,
                     new PrivateNotificationMessage(privateNotification,
                             p2PService.getNetworkNode().getNodeAddress(),
                             UUID.randomUUID().toString()),
