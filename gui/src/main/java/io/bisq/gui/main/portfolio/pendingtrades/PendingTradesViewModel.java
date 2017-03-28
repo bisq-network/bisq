@@ -24,7 +24,9 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.BuyerTrade;
+import io.bisq.core.trade.Contract;
 import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.closed.ClosedTradableManager;
@@ -35,8 +37,6 @@ import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcAddressValidator;
 import io.bisq.network.p2p.P2PService;
-import io.bisq.protobuffer.payload.payment.PaymentMethod;
-import io.bisq.protobuffer.payload.trade.Contract;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import org.bitcoinj.core.Coin;
@@ -315,7 +315,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     private void onTradeStateChanged(Trade.State tradeState) {
         Log.traceCall(tradeState.toString());
-
+        log.info("UI tradeState={}, id={}",
+                tradeState,
+                trade != null ? trade.getShortId() : "trade is null");
         // TODO what is first valid state for trade?
 
         switch (tradeState) {
@@ -376,6 +378,11 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED: // UI action
             case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG sent
                 // We don't switch the UI before we got the feedback of the msg delivery
+
+                // Though at startup if we closed before shutdown so fast that we did not get one of the 
+                // following 3 states we need to set BuyerState.STEP3
+                if (buyerState.get() == null || buyerState.get() == BuyerState.UNDEFINED)
+                    buyerState.set(BuyerState.STEP3);
                 break;
             case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG arrived
             case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG in mailbox
@@ -398,6 +405,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:   // UI action
             case SELLER_PUBLISHED_PAYOUT_TX: // payout tx broad casted
             case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG sent
+                // We don't switch the UI before we got the feedback of the msg delivery
+
+                // Though at startup if we closed before shutdown so fast that we did not get one of the 
+                // following 3 states we need to set SellerState.STEP4
+                if (sellerState.get() == null || sellerState.get() == UNDEFINED)
+                    sellerState.set(SellerState.STEP4);
                 break;
             case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG arrived
             case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG mailbox
