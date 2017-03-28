@@ -20,9 +20,9 @@ package io.bisq.core.trade.protocol.tasks.maker;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
+import io.bisq.core.trade.messages.DepositTxPublishedMsg;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.core.util.Validator;
-import io.bisq.protobuffer.message.trade.DepositTxPublishedMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Transaction;
 
@@ -41,7 +41,7 @@ public class MakerProcessDepositTxPublishedMessage extends TradeTask {
         try {
             runInterceptHook();
             log.debug("current trade state " + trade.getState());
-            DepositTxPublishedMessage message = (DepositTxPublishedMessage) processModel.getTradeMessage();
+            DepositTxPublishedMsg message = (DepositTxPublishedMsg) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getId(), message);
             checkNotNull(message);
             checkArgument(message.depositTx != null);

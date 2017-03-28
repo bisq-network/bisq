@@ -45,7 +45,7 @@ import io.bisq.gui.main.settings.preferences.PreferencesView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.*;
-import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import org.bitcoinj.core.Address;

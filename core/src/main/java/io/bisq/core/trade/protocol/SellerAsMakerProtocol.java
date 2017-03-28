@@ -22,6 +22,10 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.trade.SellerAsMakerTrade;
 import io.bisq.core.trade.Trade;
+import io.bisq.core.trade.messages.DepositTxPublishedMsg;
+import io.bisq.core.trade.messages.FiatTransferStartedMsg;
+import io.bisq.core.trade.messages.PayDepositRequest;
+import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.trade.protocol.tasks.maker.*;
 import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
@@ -29,13 +33,9 @@ import io.bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessa
 import io.bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesAndSignsDepositTx;
 import io.bisq.core.util.Validator;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.p2p.MailboxMessage;
-import io.bisq.protobuffer.message.trade.DepositTxPublishedMessage;
-import io.bisq.protobuffer.message.trade.FiatTransferStartedMessage;
-import io.bisq.protobuffer.message.trade.PayDepositRequest;
-import io.bisq.protobuffer.message.trade.TradeMessage;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.network.p2p.MailboxMsg;
+import io.bisq.network.p2p.Msg;
+import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -74,16 +74,16 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void doApplyMailboxMessage(Message message, Trade trade) {
+    public void doApplyMailboxMessage(Msg msg, Trade trade) {
         this.trade = trade;
 
-        NodeAddress peerNodeAddress = ((MailboxMessage) message).getSenderNodeAddress();
-        if (message instanceof DepositTxPublishedMessage)
-            handle((DepositTxPublishedMessage) message, peerNodeAddress);
-        else if (message instanceof FiatTransferStartedMessage)
-            handle((FiatTransferStartedMessage) message, peerNodeAddress);
+        NodeAddress peerNodeAddress = ((MailboxMsg) msg).getSenderNodeAddress();
+        if (msg instanceof DepositTxPublishedMsg)
+            handle((DepositTxPublishedMsg) msg, peerNodeAddress);
+        else if (msg instanceof FiatTransferStartedMsg)
+            handle((FiatTransferStartedMsg) msg, peerNodeAddress);
         else
-            log.error("We received an unhandled MailboxMessage" + message.toString());
+            log.error("We received an unhandled MailboxMessage" + msg.toString());
     }
 
 
@@ -92,7 +92,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage message, NodeAddress sender) {
+    public void handleTakeOfferRequest(TradeMsg message, NodeAddress sender) {
         Validator.checkTradeId(processModel.getId(), message);
         checkArgument(message instanceof PayDepositRequest);
         processModel.setTradeMessage(message);
@@ -122,7 +122,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     // Incoming message handling 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(DepositTxPublishedMessage tradeMessage, NodeAddress sender) {
+    private void handle(DepositTxPublishedMsg tradeMessage, NodeAddress sender) {
         stopTimeout();
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
@@ -143,7 +143,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     // After peer has started Fiat tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(FiatTransferStartedMessage tradeMessage, NodeAddress sender) {
+    private void handle(FiatTransferStartedMsg tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -197,11 +197,11 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
-        if (tradeMessage instanceof DepositTxPublishedMessage) {
-            handle((DepositTxPublishedMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof FiatTransferStartedMessage) {
-            handle((FiatTransferStartedMessage) tradeMessage, sender);
+    protected void doHandleDecryptedMessage(TradeMsg tradeMessage, NodeAddress sender) {
+        if (tradeMessage instanceof DepositTxPublishedMsg) {
+            handle((DepositTxPublishedMsg) tradeMessage, sender);
+        } else if (tradeMessage instanceof FiatTransferStartedMsg) {
+            handle((FiatTransferStartedMsg) tradeMessage, sender);
         } else {
             log.error("Incoming tradeMessage not supported. " + tradeMessage);
         }

@@ -1,5 +1,7 @@
 package io.bisq.core.offer;
 
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.CurrencyUtil;
@@ -12,13 +14,10 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.exceptions.TradePriceOutOfToleranceException;
 import io.bisq.core.offer.availability.OfferAvailabilityModel;
 import io.bisq.core.offer.availability.OfferAvailabilityProtocol;
+import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
-import io.bisq.protobuffer.payload.offer.OfferPayload;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.payload.payment.PaymentMethod;
+import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.*;
 import lombok.Getter;
 import lombok.Setter;

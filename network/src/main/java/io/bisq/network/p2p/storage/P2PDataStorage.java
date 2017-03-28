@@ -1,6 +1,7 @@
 package io.bisq.network.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
+import io.bisq.common.Marshaller;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
@@ -14,22 +15,15 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
+import io.bisq.network.crypto.EncryptionService;
+import io.bisq.network.p2p.Msg;
+import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.BroadcastHandler;
 import io.bisq.network.p2p.peers.Broadcaster;
+import io.bisq.network.p2p.storage.messages.*;
+import io.bisq.network.p2p.storage.payload.*;
 import lombok.EqualsAndHashCode;
-import io.bisq.protobuffer.Marshaller;
-import io.bisq.protobuffer.crypto.Hash;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.p2p.storage.*;
-import io.bisq.protobuffer.payload.ExpirablePayload;
-import io.bisq.protobuffer.payload.PersistedStoragePayload;
-import io.bisq.protobuffer.payload.RequiresOwnerIsOnlinePayload;
-import io.bisq.protobuffer.payload.StoragePayload;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.payload.p2p.storage.MailboxStoragePayload;
-import io.bisq.protobuffer.payload.p2p.storage.ProtectedMailboxStorageEntry;
-import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,18 +159,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message, Connection connection) {
-        if (message instanceof BroadcastMessage) {
-            Log.traceCall(Utilities.toTruncatedString(message) + "\n\tconnection=" + connection);
+    public void onMessage(Msg msg, Connection connection) {
+        if (msg instanceof BroadcastMsg) {
+            Log.traceCall(Utilities.toTruncatedString(msg) + "\n\tconnection=" + connection);
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
-                if (message instanceof AddDataMessage) {
-                    add(((AddDataMessage) message).protectedStorageEntry, peersNodeAddress, null, false);
-                } else if (message instanceof RemoveDataMessage) {
-                    remove(((RemoveDataMessage) message).protectedStorageEntry, peersNodeAddress, false);
-                } else if (message instanceof RemoveMailboxDataMessage) {
-                    removeMailboxData(((RemoveMailboxDataMessage) message).protectedMailboxStorageEntry, peersNodeAddress, false);
-                } else if (message instanceof RefreshTTLMessage) {
-                    refreshTTL((RefreshTTLMessage) message, peersNodeAddress, false);
+                if (msg instanceof AddDataMsg) {
+                    add(((AddDataMsg) msg).protectedStorageEntry, peersNodeAddress, null, false);
+                } else if (msg instanceof RemoveDataMsg) {
+                    remove(((RemoveDataMsg) msg).protectedStorageEntry, peersNodeAddress, false);
+                } else if (msg instanceof RemoveMailboxDataMsg) {
+                    removeMailboxData(((RemoveMailboxDataMsg) msg).protectedMailboxStorageEntry, peersNodeAddress, false);
+                } else if (msg instanceof RefreshTTLMsg) {
+                    refreshTTL((RefreshTTLMsg) msg, peersNodeAddress, false);
                 }
             });
         }
@@ -293,7 +287,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 sequenceNumberMapStorage.queueUpForSave(new HashMap<>(sequenceNumberMap), 2000);
 
                 if (allowBroadcast)
-                    broadcast(new AddDataMessage(protectedStorageEntry), sender, listener, isDataOwner);
+                    broadcast(new AddDataMsg(protectedStorageEntry), sender, listener, isDataOwner);
             } else {
                 log.trace("We got that version of the data already, so we don't broadcast it.");
             }
@@ -303,7 +297,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         return result;
     }
 
-    public boolean refreshTTL(RefreshTTLMessage refreshTTLMessage, @Nullable NodeAddress sender, boolean isDataOwner) {
+    public boolean refreshTTL(RefreshTTLMsg refreshTTLMessage, @Nullable NodeAddress sender, boolean isDataOwner) {
         Log.traceCall();
 
         byte[] hashOfDataAndSeqNr = refreshTTLMessage.hashOfDataAndSeqNr;
@@ -366,7 +360,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
             sequenceNumberMapStorage.queueUpForSave(new HashMap<>(sequenceNumberMap), 300);
 
-            broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
+            broadcast(new RemoveDataMsg(protectedStorageEntry), sender, null, isDataOwner);
         } else {
             log.debug("remove failed");
         }
@@ -393,7 +387,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             sequenceNumberMap.put(hashOfData, new MapValue(protectedMailboxStorageEntry.sequenceNumber, System.currentTimeMillis()));
             sequenceNumberMapStorage.queueUpForSave(new HashMap<>(sequenceNumberMap), 300);
 
-            broadcast(new RemoveMailboxDataMessage(protectedMailboxStorageEntry), sender, null, isDataOwner);
+            broadcast(new RemoveMailboxDataMsg(protectedMailboxStorageEntry), sender, null, isDataOwner);
         } else {
             log.debug("removeMailboxData failed");
         }
@@ -414,12 +408,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         else
             sequenceNumber = 1;
 
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new ProtectedStorageEntry(storagePayload, ownerStoragePubKey.getPublic(), sequenceNumber, signature);
     }
 
-    public RefreshTTLMessage getRefreshTTLMessage(StoragePayload storagePayload, KeyPair ownerStoragePubKey)
+    public RefreshTTLMsg getRefreshTTLMessage(StoragePayload storagePayload, KeyPair ownerStoragePubKey)
             throws CryptoException {
         ByteArray hashOfPayload = getHashAsByteArray(storagePayload);
         int sequenceNumber;
@@ -428,9 +422,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         else
             sequenceNumber = 1;
 
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
-        return new RefreshTTLMessage(hashOfDataAndSeqNr, signature, hashOfPayload.bytes, sequenceNumber);
+        return new RefreshTTLMsg(hashOfDataAndSeqNr, signature, hashOfPayload.bytes, sequenceNumber);
     }
 
     public ProtectedMailboxStorageEntry getMailboxDataWithSignedSeqNr(MailboxStoragePayload expirableMailboxStoragePayload,
@@ -443,7 +437,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         else
             sequenceNumber = 1;
 
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(expirableMailboxStoragePayload, sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(expirableMailboxStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(storageSignaturePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new ProtectedMailboxStorageEntry(expirableMailboxStoragePayload,
                 storageSignaturePubKey.getPublic(), sequenceNumber, signature, receiversPublicKey);
@@ -539,7 +533,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private boolean checkSignature(ProtectedStorageEntry protectedStorageEntry) {
-        byte[] hashOfDataAndSeqNr = Hash.getHash(new DataAndSeqNrPair(protectedStorageEntry.getStoragePayload(), protectedStorageEntry.sequenceNumber));
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(protectedStorageEntry.getStoragePayload(), protectedStorageEntry.sequenceNumber));
         return checkSignature(protectedStorageEntry.ownerPubKey, hashOfDataAndSeqNr, protectedStorageEntry.signature);
     }
 
@@ -605,13 +599,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
     }
 
-    private void broadcast(BroadcastMessage message, @Nullable NodeAddress sender,
+    private void broadcast(BroadcastMsg message, @Nullable NodeAddress sender,
                            @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
         broadcaster.broadcast(message, sender, listener, isDataOwner);
     }
 
     private ByteArray getHashAsByteArray(ExpirablePayload data) {
-        return new ByteArray(Hash.getHash(data));
+        return new ByteArray(EncryptionService.getHash(data));
     }
 
     // Get a new map with entries older than PURGE_AGE_DAYS purged from the given map.

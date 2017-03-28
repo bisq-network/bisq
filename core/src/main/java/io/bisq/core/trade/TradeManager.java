@@ -20,6 +20,7 @@ package io.bisq.core.trade;
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
@@ -38,20 +39,14 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.core.trade.handlers.TradeResultHandler;
+import io.bisq.core.trade.messages.PayDepositRequest;
+import io.bisq.core.trade.messages.TradeMsg;
+import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.User;
 import io.bisq.core.util.Validator;
-import io.bisq.network.p2p.BootstrapListener;
-import io.bisq.network.p2p.DecryptedDirectMessageListener;
-import io.bisq.network.p2p.DecryptedMsgWithPubKey;
+import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
-import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.trade.PayDepositRequest;
-import io.bisq.protobuffer.message.trade.TradeMessage;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.payload.trade.statistics.TradeStatistics;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
@@ -136,12 +131,12 @@ public class TradeManager {
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
             public void onDirectMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress peerNodeAddress) {
-                Message message = decryptedMsgWithPubKey.message;
+                Msg msg = decryptedMsgWithPubKey.msg;
 
                 // Handler for incoming initial network_messages from taker
-                if (message instanceof PayDepositRequest) {
-                    log.trace("Received PayDepositRequest: " + message);
-                    handleInitialTakeOfferRequest((PayDepositRequest) message, peerNodeAddress);
+                if (msg instanceof PayDepositRequest) {
+                    log.trace("Received PayDepositRequest: " + msg);
+                    handleInitialTakeOfferRequest((PayDepositRequest) msg, peerNodeAddress);
                 }
             }
         });
@@ -150,10 +145,10 @@ public class TradeManager {
             public void onMailboxMessageAdded(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress senderNodeAddress) {
                 log.trace("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMsgWithPubKey);
                 log.trace("onMailboxMessageAdded senderAddress: " + senderNodeAddress);
-                Message message = decryptedMsgWithPubKey.message;
-                if (message instanceof TradeMessage) {
-                    log.trace("Received TradeMessage: " + message);
-                    String tradeId = ((TradeMessage) message).tradeId;
+                Msg msg = decryptedMsgWithPubKey.msg;
+                if (msg instanceof TradeMsg) {
+                    log.trace("Received TradeMessage: " + msg);
+                    String tradeId = ((TradeMsg) msg).tradeId;
                     Optional<Trade> tradeOptional = trades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
                     // The mailbox message will be removed inside the tasks after they are processed successfully
                     if (tradeOptional.isPresent())
@@ -253,7 +248,7 @@ public class TradeManager {
         }
     }
 
-    private void handleInitialTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {
+    private void handleInitialTakeOfferRequest(TradeMsg message, NodeAddress peerNodeAddress) {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + peerNodeAddress);
         try {
             Validator.nonEmptyStringOf(message.tradeId);

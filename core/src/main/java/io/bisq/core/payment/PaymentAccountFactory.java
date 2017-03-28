@@ -17,7 +17,7 @@
 
 package io.bisq.core.payment;
 
-import io.bisq.protobuffer.payload.payment.PaymentMethod;
+import io.bisq.core.payment.payload.PaymentMethod;
 
 public class PaymentAccountFactory {
     public static PaymentAccount getPaymentAccount(PaymentMethod paymentMethod) {

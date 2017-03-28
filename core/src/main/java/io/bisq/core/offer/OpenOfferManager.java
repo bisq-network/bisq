@@ -22,6 +22,7 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.Storage;
@@ -29,6 +30,8 @@ import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.exceptions.TradePriceOutOfToleranceException;
+import io.bisq.core.offer.messages.OfferAvailabilityRequest;
+import io.bisq.core.offer.messages.OfferAvailabilityResponse;
 import io.bisq.core.offer.placeoffer.PlaceOfferModel;
 import io.bisq.core.offer.placeoffer.PlaceOfferProtocol;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -38,18 +41,8 @@ import io.bisq.core.trade.handlers.TransactionResultHandler;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.core.util.Validator;
-import io.bisq.network.p2p.BootstrapListener;
-import io.bisq.network.p2p.DecryptedDirectMessageListener;
-import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.network.p2p.SendDirectMessageListener;
+import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.peers.PeerManager;
-import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.offer.OfferAvailabilityRequest;
-import io.bisq.protobuffer.message.offer.OfferAvailabilityResponse;
-import io.bisq.protobuffer.payload.offer.AvailabilityResult;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
@@ -63,7 +56,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.inject.internal.util.$Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 
 public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener {
@@ -191,9 +184,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         // Handler for incoming offer availability requests
         // We get an encrypted message but don't do the signature check as we don't know the peer yet.
         // A basic sig check is in done also at decryption time
-        Message message = decryptedMsgWithPubKey.message;
-        if (message instanceof OfferAvailabilityRequest)
-            handleOfferAvailabilityRequest((OfferAvailabilityRequest) message, peerNodeAddress);
+        Msg msg = decryptedMsgWithPubKey.msg;
+        if (msg instanceof OfferAvailabilityRequest)
+            handleOfferAvailabilityRequest((OfferAvailabilityRequest) msg, peerNodeAddress);
     }
 
 

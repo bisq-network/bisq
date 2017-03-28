@@ -24,11 +24,14 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.taskrunner.Model;
+import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
+import io.bisq.core.arbitration.Mediator;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
@@ -38,12 +41,8 @@ import io.bisq.core.trade.protocol.ProcessModel;
 import io.bisq.core.trade.protocol.TradeProtocol;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.payload.arbitration.Arbitrator;
-import io.bisq.protobuffer.payload.arbitration.Mediator;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.payload.trade.Contract;
+import io.bisq.network.p2p.NodeAddress;
+import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.*;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -374,7 +373,7 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {
-        log.info("Trade.setState: " + state);
+        log.info("Trade state={}, id={}", state, getShortId());
         if (state.getPhase().ordinal() >= this.state.getPhase().ordinal()) {
             boolean changed = this.state != state;
             this.state = state;

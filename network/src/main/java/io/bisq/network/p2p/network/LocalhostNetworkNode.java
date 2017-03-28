@@ -9,7 +9,7 @@ import com.msopentech.thali.java.toronionproxy.JavaOnionProxyManager;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.util.Utilities;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.network.p2p.NodeAddress;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.TorNode;
 import org.jetbrains.annotations.NotNull;
@@ -43,8 +43,8 @@ public class LocalhostNetworkNode extends NetworkNode {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public LocalhostNetworkNode(int port) {
-        super(port);
+    public LocalhostNetworkNode(int port, ProtobufferResolver protobufferResolver) {
+        super(port, protobufferResolver);
     }
 
     @Override

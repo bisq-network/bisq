@@ -25,11 +25,11 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
+import io.bisq.core.offer.messages.OfferAvailabilityResponse;
+import io.bisq.core.offer.messages.OfferMsg;
 import io.bisq.core.util.Validator;
 import io.bisq.network.p2p.DecryptedDirectMessageListener;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.offer.OfferAvailabilityResponse;
-import io.bisq.protobuffer.message.offer.OfferMessage;
+import io.bisq.network.p2p.Msg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,14 +57,14 @@ public class OfferAvailabilityProtocol {
         this.errorMessageHandler = errorMessageHandler;
 
         decryptedDirectMessageListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
-            Message message = decryptedMessageWithPubKey.message;
-            if (message instanceof OfferMessage) {
-                OfferMessage offerMessage = (OfferMessage) message;
+            Msg msg = decryptedMessageWithPubKey.msg;
+            if (msg instanceof OfferMsg) {
+                OfferMsg offerMessage = (OfferMsg) msg;
                 Validator.nonEmptyStringOf(offerMessage.offerId);
-                if (message instanceof OfferAvailabilityResponse
+                if (msg instanceof OfferAvailabilityResponse
                         && model.offer.getId().equals(offerMessage.offerId)) {
-                    log.trace("handle OfferAvailabilityResponse = " + message.getClass().getSimpleName() + " from " + peersNodeAddress);
-                    handle((OfferAvailabilityResponse) message);
+                    log.trace("handle OfferAvailabilityResponse = " + msg.getClass().getSimpleName() + " from " + peersNodeAddress);
+                    handle((OfferAvailabilityResponse) msg);
                 }
             }
         };

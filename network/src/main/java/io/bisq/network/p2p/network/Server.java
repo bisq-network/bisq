@@ -22,9 +22,14 @@ class Server implements Runnable {
     private final ServerSocket serverSocket;
     private final Set<Connection> connections = new CopyOnWriteArraySet<>();
     private volatile boolean stopped;
+    private ProtobufferResolver protobufferResolver;
 
 
-    public Server(ServerSocket serverSocket, MessageListener messageListener, ConnectionListener connectionListener) {
+    public Server(ServerSocket serverSocket,
+                  MessageListener messageListener,
+                  ConnectionListener connectionListener,
+                  ProtobufferResolver protobufferResolver) {
+        this.protobufferResolver = protobufferResolver;
         Log.traceCall();
         this.serverSocket = serverSocket;
         this.messageListener = messageListener;
@@ -43,7 +48,10 @@ class Server implements Runnable {
                     final Socket socket = serverSocket.accept();
                     if (!stopped && !Thread.currentThread().isInterrupted()) {
                         log.debug("Accepted new client on localPort/port " + socket.getLocalPort() + "/" + socket.getPort());
-                        InboundConnection connection = new InboundConnection(socket, messageListener, connectionListener);
+                        InboundConnection connection = new InboundConnection(socket,
+                                messageListener,
+                                connectionListener,
+                                protobufferResolver);
 
                         log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "Server created new inbound connection:"

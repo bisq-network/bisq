@@ -18,45 +18,76 @@
 package io.bisq.core.alert;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
-import io.bisq.vo.alert.AlertVO;
+import io.bisq.common.crypto.CryptoUtils;
+import io.bisq.generated.protobuffer.PB;
+import io.bisq.network.p2p.storage.payload.StoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode
+@Getter
 @ToString
 @Slf4j
-public final class Alert {
+public final class Alert implements StoragePayload {
+    //TODO remove after refact.
+    private static final long serialVersionUID = 1;
 
-    @Delegate
-    @Getter
-    private AlertVO alertVO;
+    private final String message;
+    private final String version;
+    private final boolean isUpdateInfo;
+
+    @Nullable
+    private String signatureAsBase64;
+    @Nullable
+    private PublicKey storagePublicKey;
+    @Nullable
+    private final byte[] storagePublicKeyBytes;
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // field in a class would break that hash and therefore break the storage mechanism.
+    @Nullable
+    private Map<String, String> extraDataMap;
+
+    // StoragePayload
+    private transient PublicKey ownerPubKey;
+
+
+    public Alert(String message,
+                 boolean isUpdateInfo,
+                 String version,
+                 @Nullable byte[] storagePublicKeyBytes,
+                 @Nullable String signatureAsBase64,
+                 @Nullable Map<String, String> extraDataMap) {
+        this.message = message;
+        this.isUpdateInfo = isUpdateInfo;
+        this.version = version;
+        this.storagePublicKeyBytes = storagePublicKeyBytes;
+        this.signatureAsBase64 = signatureAsBase64;
+        this.extraDataMap = extraDataMap;
+    }
 
     public Alert(String message,
                  boolean isUpdateInfo,
                  String version) {
-        //TODO builder pattern might be better
-        // Or refactor client code so it is not using a half baked object 
-        this.alertVO = new AlertVO(message, isUpdateInfo, version, null, null, null);
+        this(message, isUpdateInfo, version, null, null, null);
     }
 
-    public Alert(AlertVO alertVO) {
-        this.alertVO = alertVO;
-    }
 
     public void setSigAndPubKey(String signatureAsBase64, PublicKey storagePublicKey) {
-        this.alertVO = new AlertVO(alertVO.getMessage(),
-                alertVO.isUpdateInfo(),
-                alertVO.getVersion(),
-                new X509EncodedKeySpec(storagePublicKey.getEncoded()).getEncoded(),
-                signatureAsBase64,
-                alertVO.getExtraDataMap());
+        this.signatureAsBase64 = signatureAsBase64;
+        this.storagePublicKey = storagePublicKey;
     }
 
     public boolean isNewVersion() {
@@ -76,7 +107,7 @@ public final class Alert {
             while (myVersionString.length() < 9)
                 myVersionString += "0";
             int myVersionNum = Integer.valueOf(myVersionString);
-            String alertVersionString = alertVO.getVersion().replace(".", "");
+            String alertVersionString = getVersion().replace(".", "");
             while (alertVersionString.length() < 9)
                 alertVersionString += "0";
             int alertVersionNum = Integer.valueOf(alertVersionString);
@@ -84,5 +115,39 @@ public final class Alert {
         } catch (Throwable t) {
             return false;
         }
+    }
+
+    //StoragePayload
+    @Override
+    public long getTTL() {
+        return TimeUnit.DAYS.toMillis(30);
+    }
+
+    @Override
+    public PublicKey getOwnerPubKey() {
+        try {
+            checkNotNull(getStoragePublicKeyBytes(), "alertVO.getStoragePublicKeyBytes() must not be null");
+            if (ownerPubKey == null)
+                ownerPubKey = CryptoUtils.getPubKeyFromBytes(getStoragePublicKeyBytes());
+            return ownerPubKey;
+        } catch (Throwable t) {
+            log.error(t.toString());
+            return null;
+        }
+    }
+
+    //Marshaller
+    @Override
+    public PB.StoragePayload toProto() {
+        checkNotNull(getStoragePublicKeyBytes(), "storagePublicKeyBytes must not be null");
+        checkNotNull(getSignatureAsBase64(), "signatureAsBase64 must not be null");
+        final PB.AlertProto.Builder builder = PB.AlertProto.newBuilder()
+                .setMessage(getMessage())
+                .setVersion(getVersion())
+                .setIsUpdateInfo(isUpdateInfo())
+                .setSignatureAsBase64(getSignatureAsBase64())
+                .setStoragePublicKeyBytes(ByteString.copyFrom(getStoragePublicKeyBytes()));
+        Optional.ofNullable(getExtraDataMap()).ifPresent(builder::putAllExtraDataMap);
+        return PB.StoragePayload.newBuilder().setAlertProto(builder).build();
     }
 }

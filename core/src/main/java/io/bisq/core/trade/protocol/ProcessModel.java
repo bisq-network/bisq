@@ -18,28 +18,28 @@
 package io.bisq.core.trade.protocol;
 
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.taskrunner.Model;
 import io.bisq.core.arbitration.ArbitratorManager;
+import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
+import io.bisq.core.filter.PaymentAccountFilter;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.user.User;
-import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.message.trade.TradeMessage;
-import io.bisq.protobuffer.payload.btc.RawTransactionInput;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
-import io.bisq.protobuffer.payload.filter.PaymentAccountFilter;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.payload.payment.PaymentAccountPayload;
 import lombok.Getter;
 import lombok.Setter;
+import io.bisq.network.p2p.NodeAddress;
+import io.bisq.network.p2p.P2PService;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
@@ -80,7 +80,7 @@ public class ProcessModel implements Model, Serializable {
     // Mutable
     public final TradingPeer tradingPeer;
     @Setter
-    transient private TradeMessage tradeMessage;
+    transient private TradeMsg tradeMessage;
     @Getter
     @Setter
     private byte[] payoutTxSignature;
@@ -173,7 +173,7 @@ public class ProcessModel implements Model, Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Nullable
-    public TradeMessage getTradeMessage() {
+    public TradeMsg getTradeMessage() {
         return tradeMessage;
     }
 

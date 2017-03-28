@@ -51,7 +51,7 @@ import io.bisq.gui.main.debug.DebugView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.overlays.windows.*;
 import io.bisq.gui.util.ImageUtil;
-import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.network.p2p.P2PService;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Parent;

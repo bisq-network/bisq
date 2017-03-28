@@ -18,15 +18,15 @@
 package io.bisq.gui.main.account.content.arbitratorselection;
 
 import com.google.inject.Inject;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.LanguageUtil;
+import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.util.BSFormatter;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.payload.arbitration.Arbitrator;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.network.p2p.NodeAddress;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;

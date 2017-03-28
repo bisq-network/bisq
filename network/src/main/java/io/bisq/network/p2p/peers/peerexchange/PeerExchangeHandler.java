@@ -6,15 +6,15 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.network.p2p.Msg;
+import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.MessageListener;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.PeerManager;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.p2p.peers.peerexchange.GetPeersRequest;
-import io.bisq.protobuffer.message.p2p.peers.peerexchange.GetPeersResponse;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
+import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersResponse;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,11 +145,11 @@ class PeerExchangeHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message, Connection connection) {
-        if (message instanceof GetPeersResponse) {
+    public void onMessage(Msg msg, Connection connection) {
+        if (msg instanceof GetPeersResponse) {
             if (!stopped) {
-                Log.traceCall(message.toString() + "\n\tconnection=" + connection);
-                GetPeersResponse getPeersResponse = (GetPeersResponse) message;
+                Log.traceCall(msg.toString() + "\n\tconnection=" + connection);
+                GetPeersResponse getPeersResponse = (GetPeersResponse) msg;
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
 

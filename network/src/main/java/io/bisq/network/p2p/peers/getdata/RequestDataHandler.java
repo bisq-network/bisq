@@ -6,22 +6,22 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.network.p2p.Msg;
+import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.MessageListener;
 import io.bisq.network.p2p.network.NetworkNode;
 import io.bisq.network.p2p.peers.PeerManager;
+import io.bisq.network.p2p.peers.getdata.messages.GetDataRequest;
+import io.bisq.network.p2p.peers.getdata.messages.GetDataResponse;
+import io.bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
+import io.bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bisq.network.p2p.storage.P2PDataStorage;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.p2p.peers.getdata.GetDataRequest;
-import io.bisq.protobuffer.message.p2p.peers.getdata.GetDataResponse;
-import io.bisq.protobuffer.message.p2p.peers.getdata.GetUpdatedDataRequest;
-import io.bisq.protobuffer.message.p2p.peers.getdata.PreliminaryGetDataRequest;
-import io.bisq.protobuffer.payload.LazyProcessedStoragePayload;
-import io.bisq.protobuffer.payload.PersistedStoragePayload;
-import io.bisq.protobuffer.payload.StoragePayload;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.payload.p2p.storage.ProtectedStorageEntry;
+import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
+import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
+import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
+import io.bisq.network.p2p.storage.payload.StoragePayload;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -162,18 +162,18 @@ public class RequestDataHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message, Connection connection) {
+    public void onMessage(Msg msg, Connection connection) {
         if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
-            if (message instanceof GetDataResponse) {
-                Log.traceCall(message.toString() + "\n\tconnection=" + connection);
+            if (msg instanceof GetDataResponse) {
+                Log.traceCall(msg.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
-                    GetDataResponse getDataResponse = (GetDataResponse) message;
+                    GetDataResponse getDataResponse = (GetDataResponse) msg;
                     Map<String, Set<StoragePayload>> payloadByClassName = new HashMap<>();
                     final HashSet<ProtectedStorageEntry> dataSet = getDataResponse.dataSet;
                     dataSet.stream().forEach(e -> {
                         final StoragePayload storagePayload = e.getStoragePayload();
                         if (storagePayload == null) {
-                            log.warn("StoragePayload was null: {}", message.toString());
+                            log.warn("StoragePayload was null: {}", msg.toString());
                             return;
                         }
                         String className = storagePayload.getClass().getSimpleName();

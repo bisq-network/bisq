@@ -18,7 +18,9 @@
 package io.bisq.gui.main.disputes;
 
 import io.bisq.common.app.DevEnv;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.Res;
+import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.user.Preferences;
@@ -31,9 +33,7 @@ import io.bisq.gui.main.disputes.trader.TraderDisputeView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.main.portfolio.PortfolioView;
 import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesView;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.payload.arbitration.Arbitrator;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.fxml.FXML;

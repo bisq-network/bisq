@@ -21,8 +21,8 @@ import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.availability.OfferAvailabilityModel;
+import io.bisq.core.offer.messages.OfferAvailabilityRequest;
 import io.bisq.network.p2p.SendDirectMessageListener;
-import io.bisq.protobuffer.message.offer.OfferAvailabilityRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

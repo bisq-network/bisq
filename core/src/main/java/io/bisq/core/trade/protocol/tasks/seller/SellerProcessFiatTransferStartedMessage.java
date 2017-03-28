@@ -19,9 +19,9 @@ package io.bisq.core.trade.protocol.tasks.seller;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
+import io.bisq.core.trade.messages.FiatTransferStartedMsg;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.core.util.Validator;
-import io.bisq.protobuffer.message.trade.FiatTransferStartedMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -38,7 +38,7 @@ public class SellerProcessFiatTransferStartedMessage extends TradeTask {
         try {
             runInterceptHook();
             log.debug("current trade state " + trade.getState());
-            FiatTransferStartedMessage message = (FiatTransferStartedMessage) processModel.getTradeMessage();
+            FiatTransferStartedMsg message = (FiatTransferStartedMsg) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getId(), message);
             checkNotNull(message);
 

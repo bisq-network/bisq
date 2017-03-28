@@ -4,12 +4,11 @@ import com.google.common.base.Preconditions;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.network.p2p.Msg;
+import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.PeerManager;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.p2p.peers.peerexchange.GetPeersRequest;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.payload.p2p.peers.peerexchange.Peer;
+import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -145,9 +144,9 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message, Connection connection) {
-        if (message instanceof GetPeersRequest) {
-            Log.traceCall(message.toString() + "\n\tconnection=" + connection);
+    public void onMessage(Msg msg, Connection connection) {
+        if (msg instanceof GetPeersRequest) {
+            Log.traceCall(msg.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
@@ -167,7 +166,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                                 peerManager.handleConnectionFault(connection);
                             }
                         });
-                getPeersRequestHandler.handle((GetPeersRequest) message, connection);
+                getPeersRequestHandler.handle((GetPeersRequest) msg, connection);
             } else {
                 log.warn("We have stopped already. We ignore that onMessage call.");
             }

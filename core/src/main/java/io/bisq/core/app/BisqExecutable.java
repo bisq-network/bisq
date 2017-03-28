@@ -25,7 +25,7 @@ import io.bisq.core.dao.RpcOptionKeys;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.core.util.joptsimple.EnumValueConverter;
 import io.bisq.network.NetworkOptionKeys;
-import io.bisq.network.p2p.storage.P2PService;
+import io.bisq.network.p2p.P2PService;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;

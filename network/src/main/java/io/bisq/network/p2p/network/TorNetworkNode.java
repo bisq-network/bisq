@@ -11,8 +11,8 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.util.Utilities;
+import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.Utils;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import io.nucleo.net.HiddenServiceDescriptor;
 import io.nucleo.net.JavaTorNode;
 import io.nucleo.net.TorNode;
@@ -52,8 +52,8 @@ public class TorNetworkNode extends NetworkNode {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TorNetworkNode(int servicePort, File torDir) {
-        super(servicePort);
+    public TorNetworkNode(int servicePort, File torDir, ProtobufferResolver protobufferResolver) {
+        super(servicePort, protobufferResolver);
         this.torDir = torDir;
     }
 

@@ -18,9 +18,9 @@
 package io.bisq.core.trade;
 
 
-import io.bisq.protobuffer.message.trade.TradeMessage;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.core.trade.messages.TradeMsg;
+import io.bisq.network.p2p.NodeAddress;
 
 public interface MakerTrade {
-    void handleTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress);
+    void handleTakeOfferRequest(TradeMsg message, NodeAddress peerNodeAddress);
 }

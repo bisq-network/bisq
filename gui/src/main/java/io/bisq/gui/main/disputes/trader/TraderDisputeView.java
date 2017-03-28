@@ -24,10 +24,16 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.arbitration.Attachment;
+import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeManager;
+import io.bisq.core.arbitration.messages.DisputeCommunicationMsg;
+import io.bisq.core.trade.Contract;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.gui.common.view.ActivatableView;
@@ -44,15 +50,9 @@ import io.bisq.gui.main.overlays.windows.SendPrivateNotificationWindow;
 import io.bisq.gui.main.overlays.windows.TradeDetailsWindow;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
+import io.bisq.network.p2p.NodeAddress;
+import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Connection;
-import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.message.arbitration.DisputeCommunicationMessage;
-import io.bisq.protobuffer.payload.arbitration.Attachment;
-import io.bisq.protobuffer.payload.arbitration.Dispute;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.payload.trade.Contract;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -113,7 +113,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private SortedList<Dispute> sortedList;
 
     private Dispute selectedDispute;
-    private ListView<DisputeCommunicationMessage> messageListView;
+    private ListView<DisputeCommunicationMsg> messageListView;
     private TextArea inputTextArea;
     private AnchorPane messagesAnchorPane;
     private VBox messagesInputBox;
@@ -122,12 +122,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private ChangeListener<Boolean> arrivedPropertyListener;
     private ChangeListener<Boolean> storedInMailboxPropertyListener;
     @Nullable
-    private DisputeCommunicationMessage disputeCommunicationMessage;
-    private ListChangeListener<DisputeCommunicationMessage> disputeDirectMessageListListener;
+    private DisputeCommunicationMsg disputeCommunicationMessage;
+    private ListChangeListener<DisputeCommunicationMsg> disputeDirectMessageListListener;
     private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
     private Subscription selectedDisputeSubscription;
     private TableGroupHeadline tableGroupHeadline;
-    private ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages;
+    private ObservableList<DisputeCommunicationMsg> disputeCommunicationMessages;
     private Button sendButton;
     private Subscription inputTextAreaTextSubscription;
     private EventHandler<KeyEvent> keyEventEventHandler;
@@ -602,7 +602,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
 
             disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessagesAsObservableList();
-            SortedList<DisputeCommunicationMessage> sortedList = new SortedList<>(disputeCommunicationMessages);
+            SortedList<DisputeCommunicationMsg> sortedList = new SortedList<>(disputeCommunicationMessages);
             sortedList.setComparator((o1, o2) -> new Date(o1.getDate()).compareTo(new Date(o2.getDate())));
             messageListView = new ListView<>(sortedList);
             messageListView.setId("message-list-view");
@@ -675,10 +675,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 messagesAnchorPane.getChildren().addAll(tableGroupHeadline, messageListView);
             }
 
-            messageListView.setCellFactory(new Callback<ListView<DisputeCommunicationMessage>, ListCell<DisputeCommunicationMessage>>() {
+            messageListView.setCellFactory(new Callback<ListView<DisputeCommunicationMsg>, ListCell<DisputeCommunicationMsg>>() {
                 @Override
-                public ListCell<DisputeCommunicationMessage> call(ListView<DisputeCommunicationMessage> list) {
-                    return new ListCell<DisputeCommunicationMessage>() {
+                public ListCell<DisputeCommunicationMsg> call(ListView<DisputeCommunicationMsg> list) {
+                    return new ListCell<DisputeCommunicationMsg>() {
                         public ChangeListener<Boolean> sendMsgBusyAnimationListener;
                         final Pane bg = new Pane();
                         final ImageView arrow = new ImageView();
@@ -706,7 +706,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         }
 
                         @Override
-                        public void updateItem(final DisputeCommunicationMessage item, boolean empty) {
+                        public void updateItem(final DisputeCommunicationMsg item, boolean empty) {
                             super.updateItem(item, empty);
 
                             if (item != null && !empty) {

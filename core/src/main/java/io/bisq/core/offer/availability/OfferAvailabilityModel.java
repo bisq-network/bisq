@@ -17,12 +17,12 @@
 
 package io.bisq.core.offer.availability;
 
+import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.taskrunner.Model;
 import io.bisq.core.offer.Offer;
-import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.message.offer.OfferAvailabilityResponse;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.core.offer.messages.OfferAvailabilityResponse;
+import io.bisq.network.p2p.NodeAddress;
+import io.bisq.network.p2p.P2PService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -18,7 +18,7 @@
 package io.bisq.core.trade.protocol;
 
 import io.bisq.core.offer.Offer;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Sha256Hash;
 

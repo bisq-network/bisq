@@ -18,18 +18,17 @@
 package io.bisq.core.user;
 
 import io.bisq.common.app.Version;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.Alert;
+import io.bisq.core.arbitration.Arbitrator;
+import io.bisq.core.arbitration.Mediator;
+import io.bisq.core.filter.Filter;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.payload.arbitration.Arbitrator;
-import io.bisq.protobuffer.payload.arbitration.Mediator;
-import io.bisq.protobuffer.payload.filter.Filter;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.persistence.alert.AlertPersistable;
+import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -67,9 +66,9 @@ public final class User implements Persistable {
     private PaymentAccount currentPaymentAccount;
     private List<String> acceptedLanguageLocaleCodes = new ArrayList<>();
     @Nullable
-    private AlertPersistable developersPersistableAlert;
+    private Alert developersAlert;
     @Nullable
-    private AlertPersistable displayedPersistableAlert;
+    private Alert displayedAlert;
     @Nullable
     private Filter developersFilter;
 
@@ -112,8 +111,8 @@ public final class User implements Persistable {
 
             registeredArbitrator = persisted.getRegisteredArbitrator();
             registeredMediator = persisted.getRegisteredMediator();
-            developersPersistableAlert = persisted.getDevelopersPersistableAlert();
-            displayedPersistableAlert = persisted.getDisplayedPersistableAlert();
+            developersAlert = persisted.getDevelopersAlert();
+            displayedAlert = persisted.getDisplayedAlert();
             developersFilter = persisted.getDevelopersFilter();
         } else {
             accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
@@ -385,39 +384,23 @@ public final class User implements Persistable {
         return findFirstPaymentAccountWithCurrency(tradeCurrency) != null;
     }
 
-    public void setDevelopersAlert(@Nullable Alert alert) {
-        if (alert != null)
-            this.developersPersistableAlert = new AlertPersistable(alert.getAlertVO());
-        else
-            this.developersPersistableAlert = null;
+    public void setDevelopersAlert(@Nullable Alert developersAlert) {
+        this.developersAlert = developersAlert;
         storage.queueUpForSave();
     }
 
     @Nullable
     public Alert getDevelopersAlert() {
-        return developersPersistableAlert != null ? new Alert(developersPersistableAlert.getAlertVO()) : null;
+        return developersAlert;
     }
 
-    public void setDisplayedAlert(@Nullable Alert alert) {
-        if (alert != null)
-            this.displayedPersistableAlert = new AlertPersistable(alert.getAlertVO());
-        else
-            this.displayedPersistableAlert = null;
+    public void setDisplayedAlert(@Nullable Alert displayedAlert) {
+        this.displayedAlert = displayedAlert;
         storage.queueUpForSave();
     }
 
     @Nullable
     public Alert getDisplayedAlert() {
-        return displayedPersistableAlert != null ? new Alert(displayedPersistableAlert.getAlertVO()) : null;
-    }
-
-    @Nullable
-    private AlertPersistable getDevelopersPersistableAlert() {
-        return developersPersistableAlert;
-    }
-
-    @Nullable
-    private AlertPersistable getDisplayedPersistableAlert() {
-        return displayedPersistableAlert;
+        return displayedAlert;
     }
 }

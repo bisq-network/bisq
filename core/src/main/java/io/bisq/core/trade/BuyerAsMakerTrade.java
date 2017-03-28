@@ -20,10 +20,10 @@ package io.bisq.core.trade;
 import io.bisq.common.app.Version;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.trade.protocol.BuyerAsMakerProtocol;
 import io.bisq.core.trade.protocol.MakerProtocol;
-import io.bisq.protobuffer.message.trade.TradeMessage;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.network.p2p.NodeAddress;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +67,7 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage message, NodeAddress taker) {
+    public void handleTakeOfferRequest(TradeMsg message, NodeAddress taker) {
         ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(message, taker);
     }
 }

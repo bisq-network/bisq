@@ -23,7 +23,6 @@ import io.bisq.common.app.AppModule;
 import io.bisq.network.NetworkOptionKeys;
 import io.bisq.network.Socks5ProxyProvider;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
-import io.bisq.network.p2p.storage.P2PService;
 import org.springframework.core.env.Environment;
 
 import java.io.File;

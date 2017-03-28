@@ -18,14 +18,14 @@
 package io.bisq.core.trade.protocol.tasks.buyer_as_taker;
 
 import com.google.common.util.concurrent.FutureCallback;
+import io.bisq.common.crypto.Hash;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
-import io.bisq.protobuffer.crypto.Hash;
-import io.bisq.protobuffer.payload.btc.RawTransactionInput;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;

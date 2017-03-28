@@ -19,10 +19,9 @@ package io.bisq.core.arbitration;
 
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.network.p2p.NodeAddress;
+import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
-import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.payload.arbitration.Arbitrator;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

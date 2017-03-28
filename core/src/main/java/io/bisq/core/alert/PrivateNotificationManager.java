@@ -20,16 +20,10 @@ package io.bisq.core.alert;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bisq.common.app.DevEnv;
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.core.app.AppOptionKeys;
-import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.network.p2p.SendMailboxMessageListener;
-import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.crypto.KeyRing;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.alert.PrivateNotificationMessage;
-import io.bisq.protobuffer.payload.alert.PrivateNotificationPayload;
-import io.bisq.protobuffer.payload.crypto.PubKeyRing;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
+import io.bisq.network.p2p.*;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -77,9 +71,9 @@ public class PrivateNotificationManager {
 
     private void handleMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress senderNodeAddress) {
         this.decryptedMsgWithPubKey = decryptedMsgWithPubKey;
-        Message message = decryptedMsgWithPubKey.message;
-        if (message instanceof PrivateNotificationMessage) {
-            PrivateNotificationMessage privateNotificationMessage = (PrivateNotificationMessage) message;
+        Msg msg = decryptedMsgWithPubKey.msg;
+        if (msg instanceof PrivateNotificationMsg) {
+            PrivateNotificationMsg privateNotificationMessage = (PrivateNotificationMsg) msg;
             log.trace("Received privateNotificationMessage: " + privateNotificationMessage);
             if (privateNotificationMessage.getSenderNodeAddress().equals(senderNodeAddress)) {
                 final PrivateNotificationPayload privateNotification = privateNotificationMessage.privateNotificationPayload;
@@ -107,7 +101,7 @@ public class PrivateNotificationManager {
             signAndAddSignatureToPrivateNotificationMessage(privateNotification);
             p2PService.sendEncryptedMailboxMessage(nodeAddress,
                     pubKeyRing,
-                    new PrivateNotificationMessage(privateNotification,
+                    new PrivateNotificationMsg(privateNotification,
                             p2PService.getNetworkNode().getNodeAddress(),
                             UUID.randomUUID().toString()),
                     sendMailboxMessageListener);

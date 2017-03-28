@@ -3,13 +3,13 @@ package io.bisq.network.p2p.peers.getdata;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.network.p2p.Msg;
+import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.PeerManager;
+import io.bisq.network.p2p.peers.getdata.messages.GetDataRequest;
+import io.bisq.network.p2p.peers.peerexchange.Peer;
 import io.bisq.network.p2p.storage.P2PDataStorage;
-import io.bisq.protobuffer.message.Message;
-import io.bisq.protobuffer.message.p2p.peers.getdata.GetDataRequest;
-import io.bisq.protobuffer.payload.p2p.NodeAddress;
-import io.bisq.protobuffer.payload.p2p.peers.peerexchange.Peer;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -188,9 +188,9 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Message message, Connection connection) {
-        if (message instanceof GetDataRequest) {
-            Log.traceCall(message.toString() + "\n\tconnection=" + connection);
+    public void onMessage(Msg msg, Connection connection) {
+        if (msg instanceof GetDataRequest) {
+            Log.traceCall(msg.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
@@ -218,7 +218,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 }
                             });
                     getDataRequestHandlers.put(uid, getDataRequestHandler);
-                    getDataRequestHandler.handle((GetDataRequest) message, connection);
+                    getDataRequestHandler.handle((GetDataRequest) msg, connection);
                 } else {
                     log.warn("We have already a GetDataRequestHandler for that connection started. " +
                             "We start a cleanup timer if the handler has not closed by itself in between 2 minutes.");

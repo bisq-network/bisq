@@ -24,7 +24,9 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.BuyerTrade;
+import io.bisq.core.trade.Contract;
 import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.closed.ClosedTradableManager;
@@ -34,9 +36,7 @@ import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcAddressValidator;
-import io.bisq.network.p2p.storage.P2PService;
-import io.bisq.protobuffer.payload.payment.PaymentMethod;
-import io.bisq.protobuffer.payload.trade.Contract;
+import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.*;
 import javafx.beans.value.ChangeListener;
 import org.bitcoinj.core.Coin;
@@ -121,9 +121,11 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     // Dont set own listener as we need to control the order of the calls
     public void onSelectedItemChanged(PendingTradesListItem selectedItem) {
-        if (tradeStateSubscription != null)
+        if (tradeStateSubscription != null) {
             tradeStateSubscription.unsubscribe();
-
+            sellerState.set(SellerState.UNDEFINED);
+            buyerState.set(BuyerState.UNDEFINED);
+        }
         if (selectedItem != null) {
             this.trade = selectedItem.getTrade();
             isBuyerTrade = trade instanceof BuyerTrade;
@@ -315,7 +317,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     private void onTradeStateChanged(Trade.State tradeState) {
         Log.traceCall(tradeState.toString());
-
+        log.info("UI tradeState={}, id={}",
+                tradeState,
+                trade != null ? trade.getShortId() : "trade is null");
         // TODO what is first valid state for trade?
 
         switch (tradeState) {
@@ -376,17 +380,27 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED: // UI action
             case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG sent
                 // We don't switch the UI before we got the feedback of the msg delivery
+
+                // Though at startup if we closed before shutdown so fast that we did not get one of the 
+                // following 3 states we need to set BuyerState.STEP3
+                if (buyerState.get() == null || buyerState.get() == BuyerState.UNDEFINED)
+                    buyerState.set(BuyerState.STEP3);
                 break;
             case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG arrived
             case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG in mailbox
             case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG failed
-                // We delay the UI switch to give a chance to see the delivery result
-                UserThread.runAfter(() -> {
-                    // We might get a higher state set quickly (startup - stored state, then new state) 
-                    // and then we don't want to switch back
-                    if (buyerState.get() == null || buyerState.get().ordinal() < BuyerState.STEP3.ordinal())
-                        buyerState.set(BuyerState.STEP3);
-                }, 1);
+                // If we switch quickly we want to get to our state again without delay
+                if (buyerState.get() == null || buyerState.get() == BuyerState.UNDEFINED) {
+                    buyerState.set(BuyerState.STEP3);
+                } else {
+                    // We delay the UI switch to give a chance to see the delivery result
+                    UserThread.runAfter(() -> {
+                        // We might get a higher state set quickly (startup - stored state, then new state) 
+                        // and then we don't want to switch back
+                        if (buyerState.get() == null || buyerState.get().ordinal() < BuyerState.STEP3.ordinal())
+                            buyerState.set(BuyerState.STEP3);
+                    }, 1);
+                }
                 break;
 
             // seller step 3
@@ -398,20 +412,31 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:   // UI action
             case SELLER_PUBLISHED_PAYOUT_TX: // payout tx broad casted
             case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG sent
+                // We don't switch the UI before we got the feedback of the msg delivery
+
+                // Though at startup if we closed before shutdown so fast that we did not get one of the 
+                // following 3 states we need to set SellerState.STEP4
+                if (sellerState.get() == null || sellerState.get() == UNDEFINED)
+                    sellerState.set(SellerState.STEP4);
                 break;
             case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG arrived
             case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG mailbox
             case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG: // PAYOUT_TX_PUBLISHED_MSG failed
-                // We delay the UI switch to give a chance to see the delivery result
-                UserThread.runAfter(() -> {
-                    // We might get a higher state set quickly (startup - stored state, then new state) 
-                    // and then we don't want to switch back
-                    if (sellerState.get() == null || sellerState.get().ordinal() < SellerState.STEP4.ordinal())
-                        sellerState.set(SellerState.STEP4);
-                }, 1);
-                break;
+                // If we switch quickly we want to get to our state again without delay
+                if (sellerState.get() == null || sellerState.get() == UNDEFINED) {
+                    sellerState.set(SellerState.STEP4);
+                } else {
+                    // We delay the UI switch to give a chance to see the delivery result
+                    UserThread.runAfter(() -> {
+                        // We might get a higher state set quickly (startup - stored state, then new state) 
+                        // and then we don't want to switch back
+                        if (sellerState.get() == null || sellerState.get().ordinal() < SellerState.STEP4.ordinal())
+                            sellerState.set(SellerState.STEP4);
+                    }, 1);
+                    break;
+                }
 
-            // buyer step 4
+                // buyer step 4
             case BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG:
                 // Alternatively the maker could have seen the payout tx earlier before he received the PAYOUT_TX_PUBLISHED_MSG:
             case BUYER_SAW_PAYOUT_TX_IN_NETWORK:
