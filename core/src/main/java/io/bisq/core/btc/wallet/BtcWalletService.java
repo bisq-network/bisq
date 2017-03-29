@@ -31,6 +31,7 @@ import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.wallet.KeyBag;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class BtcWalletService extends WalletService {
+public class BtcWalletService extends WalletService implements KeyBagSupplier {
     private static final Logger log = LoggerFactory.getLogger(BtcWalletService.class);
 
     private final AddressEntryList addressEntryList;
@@ -110,6 +111,21 @@ public class BtcWalletService extends WalletService {
                 sb.toString() +
                 "All pubkeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // KeyBagSupplier
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public KeyBag getKeyBag() {
+        return wallet;
+    }
+
+    @Override
+    public boolean isKeyBagReady() {
+        return wallet != null;
     }
 
 

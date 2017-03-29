@@ -20,6 +20,7 @@ package io.bisq.core.btc;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.btc.wallet.KeyBagSupplier;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +31,14 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Every trade use a addressEntry with a dedicated address for all transactions related to the trade.
@@ -63,6 +68,8 @@ public final class AddressEntry implements Persistable {
     transient private DeterministicKey keyPair;
     @Nullable
     private final String offerId;
+    @Nullable
+    private KeyBagSupplier keyBagSupplier;
     private final Context context;
     private final byte[] pubKey;
     private final byte[] pubKeyHash;
@@ -80,7 +87,10 @@ public final class AddressEntry implements Persistable {
         this(keyPair, params, context, null);
     }
 
-    public AddressEntry(DeterministicKey keyPair, NetworkParameters params, Context context, @Nullable String offerId) {
+    public AddressEntry(@NotNull DeterministicKey keyPair,
+                        NetworkParameters params,
+                        Context context,
+                        @Nullable String offerId) {
         this.keyPair = keyPair;
         this.params = params;
         this.context = context;
@@ -88,6 +98,21 @@ public final class AddressEntry implements Persistable {
         paramId = params.getId();
         pubKey = keyPair.getPubKey();
         pubKeyHash = keyPair.getPubKeyHash();
+    }
+
+    // called from Resolver
+    public AddressEntry(byte[] pubKey,
+                        byte[] pubKeyHash,
+                        String paramId,
+                        Context context,
+                        @Nullable String offerId,
+                        @NotNull KeyBagSupplier keyBagSupplier) {
+        this.pubKey = pubKey;
+        this.pubKeyHash = pubKeyHash;
+        this.paramId = paramId;
+        this.context = context;
+        this.offerId = offerId;
+        this.keyBagSupplier = keyBagSupplier;
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -107,11 +132,26 @@ public final class AddressEntry implements Persistable {
     }
 
     // Set after wallet is ready 
+    //todo can be removed once keyBagSupplier is used
     public void setDeterministicKey(DeterministicKey deterministicKey) {
         this.keyPair = deterministicKey;
     }
 
-    public void setCoinLockedInMultiSig(Coin coinLockedInMultiSig) {
+    // getKeyPair must not be called before wallet is ready (in case we get the object recreated from disk deserialization)
+    // If the object is created at runtime it must be always constructed after wallet is ready.
+    @NotNull
+    public DeterministicKey getKeyPair() {
+        if (keyPair == null) {
+            checkNotNull(keyBagSupplier, "keyBagConsumer must not be null if keyPair is null (protobuffer case)");
+            checkNotNull(pubKeyHash, "pubKeyHash must not be null");
+            checkArgument(keyBagSupplier.isKeyBagReady(), "getKeyPair must nto be called before keybag is ready");
+            keyPair = (DeterministicKey) keyBagSupplier.getKeyBag().findKeyFromPubHash(pubKeyHash);
+            checkNotNull(keyPair, "keyPair must not be null");
+        }
+        return keyPair;
+    }
+
+    public void setCoinLockedInMultiSig(@NotNull Coin coinLockedInMultiSig) {
         this.coinLockedInMultiSig = coinLockedInMultiSig;
     }
 
