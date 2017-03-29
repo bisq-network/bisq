@@ -600,8 +600,8 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         StoragePayload storagePayload = null;
         Map<String, String> extraDataMapMap;
         switch (protoEntry.getMessageCase()) {
-            case ALERT_PROTO:
-                PB.AlertProto protoAlert = protoEntry.getAlertProto();
+            case ALERT:
+                PB.Alert protoAlert = protoEntry.getAlert();
                 extraDataMapMap = CollectionUtils.isEmpty(protoAlert.getExtraDataMapMap()) ?
                         null : protoAlert.getExtraDataMapMap();
                 storagePayload = new Alert(protoAlert.getMessage(),

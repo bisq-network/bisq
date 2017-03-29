@@ -189,7 +189,7 @@ message DataAndSeqNrPair {
 // start storagepayloads
 message StoragePayload {
     oneof message {
-        AlertProto alert_proto = 1;
+        Alert alert = 1;
         Arbitrator arbitrator = 2;
         Mediator mediator = 3;
         Filter filter = 4;
@@ -200,7 +200,7 @@ message StoragePayload {
     }
 }
 
-message AlertProto {
+message Alert {
     string message = 1;
     string version = 2;
     bool is_update_info = 3;
