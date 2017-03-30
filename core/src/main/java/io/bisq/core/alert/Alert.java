@@ -141,13 +141,13 @@ public final class Alert implements StoragePayload {
     public PB.StoragePayload toProto() {
         checkNotNull(getStoragePublicKeyBytes(), "storagePublicKeyBytes must not be null");
         checkNotNull(getSignatureAsBase64(), "signatureAsBase64 must not be null");
-        final PB.AlertProto.Builder builder = PB.AlertProto.newBuilder()
+        final PB.Alert.Builder builder = PB.Alert.newBuilder()
                 .setMessage(getMessage())
                 .setVersion(getVersion())
                 .setIsUpdateInfo(isUpdateInfo())
                 .setSignatureAsBase64(getSignatureAsBase64())
                 .setStoragePublicKeyBytes(ByteString.copyFrom(getStoragePublicKeyBytes()));
         Optional.ofNullable(getExtraDataMap()).ifPresent(builder::putAllExtraDataMap);
-        return PB.StoragePayload.newBuilder().setAlertProto(builder).build();
+        return PB.StoragePayload.newBuilder().setAlert(builder).build();
     }
 }

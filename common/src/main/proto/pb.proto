@@ -189,7 +189,7 @@ message DataAndSeqNrPair {
 // start storagepayloads
 message StoragePayload {
     oneof message {
-        AlertProto alert_proto = 1;
+        Alert alert = 1;
         Arbitrator arbitrator = 2;
         Mediator mediator = 3;
         Filter filter = 4;
@@ -200,7 +200,7 @@ message StoragePayload {
     }
 }
 
-message AlertProto {
+message Alert {
     string message = 1;
     string version = 2;
     bool is_update_info = 3;
@@ -1057,8 +1057,8 @@ message User {
     repeated PaymentAccount payment_accounts = 2;
     PaymentAccount current_payment_account = 3;
     repeated string accepted_language_locale_codes = 4;
-    AlertProto developers_alert = 5;
-    AlertProto displayed_alert = 6;
+    Alert developers_alert = 5;
+    Alert displayed_alert = 6;
     Filter developers_filter = 7;
     repeated Arbitrator accepted_arbitrators = 8;
     Arbitrator registered_arbitrator = 9;

@@ -11,7 +11,9 @@ import io.bisq.core.alert.PrivateNotificationMsg;
 import io.bisq.core.alert.PrivateNotificationPayload;
 import io.bisq.core.arbitration.*;
 import io.bisq.core.arbitration.messages.*;
+import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.data.RawTransactionInput;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.filter.Filter;
 import io.bisq.core.filter.PaymentAccountFilter;
@@ -52,6 +54,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
@@ -73,6 +76,13 @@ import static io.bisq.generated.protobuffer.PB.Envelope.MessageCase.*;
  */
 @Slf4j
 public class CoreProtobufferResolver implements ProtobufferResolver {
+    private BtcWalletService btcWalletService;
+
+    @Inject
+    public CoreProtobufferResolver(BtcWalletService btcWalletService) {
+        this.btcWalletService = btcWalletService;
+    }
+    
     @Override
     public Optional<Msg> fromProto(PB.Envelope envelope) {
         if (Objects.isNull(envelope)) {
@@ -95,6 +105,8 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        // todo just for testing... 
+        AddressEntry AddressEntry = new AddressEntry(null, null, null, null, null, btcWalletService);
 
         Msg result = null;
         switch (envelope.getMessageCase()) {
@@ -600,8 +612,8 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         StoragePayload storagePayload = null;
         Map<String, String> extraDataMapMap;
         switch (protoEntry.getMessageCase()) {
-            case ALERT_PROTO:
-                PB.AlertProto protoAlert = protoEntry.getAlertProto();
+            case ALERT:
+                PB.Alert protoAlert = protoEntry.getAlert();
                 extraDataMapMap = CollectionUtils.isEmpty(protoAlert.getExtraDataMapMap()) ?
                         null : protoAlert.getExtraDataMapMap();
                 storagePayload = new Alert(protoAlert.getMessage(),
