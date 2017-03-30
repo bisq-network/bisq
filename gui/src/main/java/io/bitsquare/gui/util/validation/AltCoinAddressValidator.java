@@ -21,8 +21,8 @@ package io.bitsquare.gui.util.validation;
 import io.bitsquare.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bitsquare.gui.util.validation.altcoins.OctocoinAddressValidator;
 import io.bitsquare.gui.util.validation.params.IOPParams;
+import io.bitsquare.gui.util.validation.params.OctocoinParams;
 import io.bitsquare.gui.util.validation.params.PivxParams;
-import io.bitsquare.gui.util.validation.params.OctcoinParams;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.params.MainNetParams;
@@ -60,11 +60,11 @@ public final class AltCoinAddressValidator extends InputValidator {
             switch (currencyCode) {
                 case "ETH":
                     // https://github.com/ethereum/web3.js/blob/master/lib/utils/utils.js#L403
-                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))                
+                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
                         return regexTestFailed;
                     else
-                        return new ValidationResult(true);                
-                // Example for BTC, though for BTC we use the BitcoinJ library address check
+                        return new ValidationResult(true);
+                    // Example for BTC, though for BTC we use the BitcoinJ library address check
                 case "BTC":
                     // taken form: https://stackoverflow.com/questions/21683680/regex-to-match-bitcoin-addresses
                     if (input.matches("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
@@ -80,8 +80,8 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } else {
                         return regexTestFailed;
                     }
-               case "PIVX":
-                if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                case "PIVX":
+                    if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (verifyChecksum(input)) {
                             try {
                                 new Address(PivxParams.get(), input);
@@ -112,7 +112,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                     }
                 case "888":
                     if (input.matches("^[8][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
-                        if (return OctocoinAddressValidator.ValidateAddress(input);) {
+                        if (OctocoinAddressValidator.ValidateAddress(input)) {
                             try {
                                 new Address(OctocoinParams.get(), input);
                                 return new ValidationResult(true);
