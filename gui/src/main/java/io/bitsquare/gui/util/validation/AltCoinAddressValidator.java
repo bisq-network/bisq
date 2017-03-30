@@ -111,7 +111,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     }
                 case "888":
-                    if (input.matches("^[8][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                    if (input.matches("^[83][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (OctocoinAddressValidator.ValidateAddress(input)) {
                             try {
                                 new Address(OctocoinParams.get(), input);
