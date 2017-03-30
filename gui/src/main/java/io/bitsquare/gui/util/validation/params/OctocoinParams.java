@@ -37,7 +37,7 @@ public class OctocoinParams extends NetworkParameters {
     public OctocoinParams() {
         super();
         addressHeader = 18;
-        p2shHeader = 4;
+        p2shHeader = 5;
         acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
     }
 
