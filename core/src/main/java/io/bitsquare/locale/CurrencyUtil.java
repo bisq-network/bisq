@@ -154,6 +154,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
+        result.add(new CryptoCurrency("888", "OctoCoin"));
         result.add(new CryptoCurrency("OK", "OKCash"));
         result.add(new CryptoCurrency("OMNI", "Omni"));
         result.add(new CryptoCurrency("OPAL", "Opal"));
