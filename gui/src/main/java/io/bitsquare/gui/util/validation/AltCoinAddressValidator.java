@@ -23,6 +23,7 @@ import io.bitsquare.gui.util.validation.altcoins.OctocoinAddressValidator;
 import io.bitsquare.gui.util.validation.params.IOPParams;
 import io.bitsquare.gui.util.validation.params.OctocoinParams;
 import io.bitsquare.gui.util.validation.params.PivxParams;
+import io.bitsquare.gui.util.validation.params.OctocoinParams;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.params.MainNetParams;
@@ -111,7 +112,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     }
                 case "888":
-                    if (input.matches("^[8][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                    if (input.matches("^[83][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (OctocoinAddressValidator.ValidateAddress(input)) {
                             try {
                                 new Address(OctocoinParams.get(), input);
