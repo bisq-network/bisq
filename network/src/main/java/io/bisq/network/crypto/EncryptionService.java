@@ -22,8 +22,8 @@ import io.bisq.common.Marshaller;
 import io.bisq.common.crypto.*;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.network.p2p.Msg;
-import io.bisq.network.p2p.network.ProtobufferResolver;
+import io.bisq.common.persistance.Msg;
+import io.bisq.common.persistance.ProtobufferResolver;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.crypto.SecretKey;

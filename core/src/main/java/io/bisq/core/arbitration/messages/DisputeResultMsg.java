@@ -20,7 +20,7 @@ package io.bisq.core.arbitration.messages;
 import io.bisq.common.app.Version;
 import io.bisq.core.arbitration.DisputeResult;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.Msg;
+import io.bisq.common.persistance.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

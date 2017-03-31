@@ -26,7 +26,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMsg;
-import io.bisq.network.p2p.Msg;
+import io.bisq.common.persistance.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;

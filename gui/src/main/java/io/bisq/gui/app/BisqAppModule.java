@@ -39,7 +39,7 @@ import io.bisq.gui.common.view.CachingViewLoader;
 import io.bisq.gui.main.overlays.notifications.NotificationCenter;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
-import io.bisq.network.p2p.network.ProtobufferResolver;
+import io.bisq.common.persistance.ProtobufferResolver;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

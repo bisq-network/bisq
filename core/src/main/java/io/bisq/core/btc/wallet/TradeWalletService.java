@@ -17,7 +17,6 @@
 
 package io.bisq.core.btc.wallet;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -48,15 +47,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.inject.internal.util.$Preconditions.checkArgument;
-import static com.google.inject.internal.util.$Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
 
 // TradeService handles all relevant transactions used in the trade process
 /*
-    To maintain a consistent tx structure we use that structure: 
+    To maintain a consistent tx structure we use that structure:
     Always buyers in/outputs/keys first then sellers in/outputs/keys the arbitrators outputs/keys.
-    
+
     Deposit tx:
     IN[0] buyer (mandatory) e.g. 0.1 BTC
     IN[...] optional additional buyer inputs (normally never used as we pay from trade fee tx and always have 1 output there)
@@ -67,30 +64,30 @@ import static com.google.inject.internal.util.$Preconditions.checkState;
     OUT[...] optional buyer change (normally never used as we pay from trade fee tx and always have 1 output there)
     OUT[...] optional seller change (normally never used as we pay from trade fee tx and always have 1 output there)
     FEE tx fee 0.0001 BTC
-    
+
     Payout tx:
     IN[0] Multisig output from deposit Tx (signed by buyer and trader)
     OUT[0] Buyer payout address
     OUT[1] Seller payout address
-    
-    We use 0 confirmation transactions to make the trade process practical from usability side. 
+
+    We use 0 confirmation transactions to make the trade process practical from usability side.
     There is no risk for double spends as the deposit transaction would become invalid if any preceding transaction would have been double spent.
-    If a preceding transaction in the chain will not make it into the same or earlier block as the deposit transaction the deposit transaction 
-    will be invalid as well. 
+    If a preceding transaction in the chain will not make it into the same or earlier block as the deposit transaction the deposit transaction
+    will be invalid as well.
     Though the deposit need 1 confirmation before the buyer starts the Fiat payment.
-    
+
     We have that chain of transactions:
     1. Deposit from external wallet to our trading wallet: Tx0 (0 conf)
     2. Create offer (or take offer) fee payment from Tx0 output: tx1 (0 conf)
     3. Deposit tx created with inputs from tx1 of both traders: Tx2 (here we wait for 1 conf)
-    
+
     Fiat transaction will not start before we get at least 1 confirmation for the deposit tx, then we can proceed.
     4. Payout tx with input from MS output and output to both traders: Tx3 (0 conf)
     5. Withdrawal to external wallet from Tx3: Tx4 (0 conf)
-    
-    After the payout transaction we also don't have issues with 0 conf or if not both tx (payout, withdrawal) make it into a block. 
+
+    After the payout transaction we also don't have issues with 0 conf or if not both tx (payout, withdrawal) make it into a block.
     Worst case is to rebroadcast the transactions (TODO: is not implemented yet).
-    
+
  */
 public class TradeWalletService {
     private static final Logger log = LoggerFactory.getLogger(TradeWalletService.class);
@@ -191,7 +188,7 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // We construct the deposit transaction in the way that the buyer is always the first entry (inputs, outputs, MS keys) and then the seller.
-    // In the creation of the deposit tx the taker/maker roles are the determining roles instead of buyer/seller. 
+    // In the creation of the deposit tx the taker/maker roles are the determining roles instead of buyer/seller.
     // In the payout tx is is the buyer/seller role. We keep the buyer/seller ordering over all transactions to not get confusion with ordering,
     // which is important to follow correctly specially for the order of the MS keys.
 
@@ -221,12 +218,12 @@ public class TradeWalletService {
 
         /*
          The tx we create has that structure:
-         
+
          IN[0]  any input > inputAmount (including tx fee) (unsigned)
          IN[1...n] optional inputs supported, but normally there is just 1 input (unsigned)
          OUT[0] dummyOutputAmount (inputAmount - tx fee)
          OUT[1] Optional Change = inputAmount - dummyOutputAmount - tx fee
-         
+
          We are only interested in the inputs and the optional change output.
          */
 
@@ -241,7 +238,7 @@ public class TradeWalletService {
         dummyTX.addOutput(dummyOutput);
 
         // Find the needed inputs to pay the output, optionally add 1 change output.
-        // Normally only 1 input and no change output is used, but we support multiple inputs and 1 change output. 
+        // Normally only 1 input and no change output is used, but we support multiple inputs and 1 change output.
         // Our spending transaction output is from the create offer fee payment.
         addAvailableInputsAndChangeOutputs(dummyTX, takersAddress, takersChangeAddress, txFee);
 
@@ -325,7 +322,7 @@ public class TradeWalletService {
 
         checkArgument(!takerRawTransactionInputs.isEmpty());
 
-        // First we construct a dummy TX to get the inputs and outputs we want to use for the real deposit tx. 
+        // First we construct a dummy TX to get the inputs and outputs we want to use for the real deposit tx.
         // Similar to the way we did in the createTakerDepositTxInputs method.
         Transaction dummyTx = new Transaction(params);
         TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, makerInputAmount, new ECKey().toAddress(params));
@@ -336,7 +333,7 @@ public class TradeWalletService {
         TransactionOutput makerOutput = null;
 
         // We don't support more then 1 optional change output
-        Preconditions.checkArgument(dummyTx.getOutputs().size() < 3, "dummyTx.getOutputs().size() >= 3");
+        checkArgument(dummyTx.getOutputs().size() < 3, "dummyTx.getOutputs().size() >= 3");
 
         // Only save change outputs, the dummy output is ignored (that's why we start with index 1)
         if (dummyTx.getOutputs().size() > 1)
@@ -391,26 +388,26 @@ public class TradeWalletService {
                     new Address(params, takerChangeAddressString));
 
         if (makerIsBuyer) {
-            // Add optional buyer outputs 
+            // Add optional buyer outputs
             if (makerOutput != null)
                 preparedDepositTx.addOutput(makerOutput);
 
-            // Add optional seller outputs 
+            // Add optional seller outputs
             if (takerTransactionOutput != null)
                 preparedDepositTx.addOutput(takerTransactionOutput);
         } else {
             // taker is buyer role
 
-            // Add optional seller outputs 
+            // Add optional seller outputs
             if (takerTransactionOutput != null)
                 preparedDepositTx.addOutput(takerTransactionOutput);
 
-            // Add optional buyer outputs 
+            // Add optional buyer outputs
             if (makerOutput != null)
                 preparedDepositTx.addOutput(makerOutput);
         }
 
-        // Sign inputs 
+        // Sign inputs
         int start = makerIsBuyer ? 0 : takerRawTransactionInputs.size();
         int end = makerIsBuyer ? makerInputs.size() : preparedDepositTx.getInputs().size();
         for (int i = start; i < end; i++) {
@@ -471,7 +468,7 @@ public class TradeWalletService {
         if (!makersDepositTx.getOutput(0).getScriptPubKey().equals(p2SHMultiSigOutputScript))
             throw new TransactionVerificationException("Maker's p2SHMultiSigOutputScript does not match to takers p2SHMultiSigOutputScript");
 
-        // The outpoints are not available from the serialized makersDepositTx, so we cannot use that tx directly, but we use it to construct a new 
+        // The outpoints are not available from the serialized makersDepositTx, so we cannot use that tx directly, but we use it to construct a new
         // depositTx
         Transaction depositTx = new Transaction(params);
 
@@ -481,7 +478,7 @@ public class TradeWalletService {
             for (int i = 0; i < buyerInputs.size(); i++)
                 depositTx.addInput(getTransactionInput(depositTx, getScriptProgram(makersDepositTx, i), buyerInputs.get(i)));
 
-            // Add seller inputs 
+            // Add seller inputs
             for (RawTransactionInput rawTransactionInput : sellerInputs)
                 depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, rawTransactionInput));
         } else {
@@ -490,7 +487,7 @@ public class TradeWalletService {
             for (RawTransactionInput rawTransactionInput : buyerInputs)
                 depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, rawTransactionInput));
 
-            // Add seller inputs 
+            // Add seller inputs
             // We grab the signature from the makersDepositTx and apply it to the new tx input
             for (int i = buyerInputs.size(), k = 0; i < makersDepositTx.getInputs().size(); i++, k++)
                 depositTx.addInput(getTransactionInput(depositTx, getScriptProgram(makersDepositTx, i), sellerInputs.get(k)));
@@ -509,7 +506,7 @@ public class TradeWalletService {
         makersDepositTx.getOutputs().forEach(depositTx::addOutput);
         //BtcWalletService.printTx("makersDepositTx", makersDepositTx);
 
-        // Sign inputs 
+        // Sign inputs
         int start = takerIsSeller ? buyerInputs.size() : 0;
         int end = takerIsSeller ? depositTx.getInputs().size() : buyerInputs.size();
         for (int i = start; i < end; i++) {
@@ -938,7 +935,7 @@ public class TradeWalletService {
     public Transaction addTxToWallet(Transaction transaction) throws VerificationException {
         Log.traceCall("transaction " + transaction.toString());
 
-        // We need to recreate the transaction otherwise we get a null pointer... 
+        // We need to recreate the transaction otherwise we get a null pointer...
         Transaction result = new Transaction(params, transaction.bitcoinSerialize());
         result.getConfidence(Context.get()).setSource(TransactionConfidence.Source.SELF);
 
@@ -955,7 +952,7 @@ public class TradeWalletService {
     public Transaction addTxToWallet(byte[] serializedTransaction) throws VerificationException {
         Log.traceCall();
 
-        // We need to recreate the tx otherwise we get a null pointer... 
+        // We need to recreate the tx otherwise we get a null pointer...
         Transaction transaction = new Transaction(params, serializedTransaction);
         transaction.getConfidence(Context.get()).setSource(TransactionConfidence.Source.NETWORK);
         log.trace("transaction from serializedTransaction: " + transaction.toString());
@@ -1007,11 +1004,11 @@ public class TradeWalletService {
     }
 
 
-    // Don't use ScriptBuilder.createRedeemScript and ScriptBuilder.createP2SHOutputScript as they use a sorting 
-    // (Collections.sort(pubKeys, ECKey.PUBKEY_COMPARATOR);) which can lead to a non-matching list of signatures with pubKeys and the executeMultiSig does 
-    // not iterate all possible combinations of sig/pubKeys leading to a verification fault. That nasty bug happens just randomly as the list after sorting 
+    // Don't use ScriptBuilder.createRedeemScript and ScriptBuilder.createP2SHOutputScript as they use a sorting
+    // (Collections.sort(pubKeys, ECKey.PUBKEY_COMPARATOR);) which can lead to a non-matching list of signatures with pubKeys and the executeMultiSig does
+    // not iterate all possible combinations of sig/pubKeys leading to a verification fault. That nasty bug happens just randomly as the list after sorting
     // might differ from the provided one or not.
-    // Changing the while loop in executeMultiSig to fix that does not help as the reference implementation seems to behave the same (not iterating all 
+    // Changing the while loop in executeMultiSig to fix that does not help as the reference implementation seems to behave the same (not iterating all
     // possibilities) .
     // Furthermore the executed list is reversed to the provided.
     // Best practice is to provide the list sorted by the least probable successful candidates first (arbitrator is first -> will be last in execution loop, so

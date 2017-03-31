@@ -110,12 +110,14 @@ public final class AddressEntry implements Persistable {
                         String paramId,
                         Context context,
                         @Nullable String offerId,
+                        @Nullable Coin coinLockedInMultiSig,
                         @NotNull KeyBagSupplier keyBagSupplier) {
         this.pubKey = pubKey;
         this.pubKeyHash = pubKeyHash;
         this.paramId = paramId;
         this.context = context;
         this.offerId = offerId;
+        this.coinLockedInMultiSig = coinLockedInMultiSig;
         this.keyBagSupplier = keyBagSupplier;
     }
 
@@ -210,7 +212,7 @@ public final class AddressEntry implements Persistable {
     public Message toProtobuf() {
         PB.AddressEntry.Builder builder = PB.AddressEntry.newBuilder()
                 .setContext(PB.AddressEntry.Context.valueOf(context.name()))
-                .setPubkey(ByteString.copyFrom(pubKey))
+                .setPubKey(ByteString.copyFrom(pubKey))
                 .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
                 .setParamId(paramId);
         Optional.ofNullable(offerId).ifPresent(builder::setOfferId);

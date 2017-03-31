@@ -26,6 +26,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.payment.PaymentAccount;
@@ -88,10 +89,11 @@ public class GUIUtil {
         }
     }
 
-    public static void exportAccounts(ArrayList<PaymentAccount> accounts, String fileName, Preferences preferences, Stage stage) {
+    public static void exportAccounts(ArrayList<PaymentAccount> accounts, String fileName,
+                                      Preferences preferences, Stage stage, ProtobufferResolver protobufferResolver) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
-            Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
+            Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), protobufferResolver);
             paymentAccountsStorage.initAndGetPersisted(accounts, fileName);
             paymentAccountsStorage.queueUpForSave();
             new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
@@ -100,7 +102,8 @@ public class GUIUtil {
         }
     }
 
-    public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage) {
+    public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage,
+                                      ProtobufferResolver protobufferResolver) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
         fileChooser.setTitle(Res.get("guiUtil.accountExport.selectPath", fileName));
@@ -110,7 +113,7 @@ public class GUIUtil {
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
-                Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
+                Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), protobufferResolver);
                 ArrayList<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();

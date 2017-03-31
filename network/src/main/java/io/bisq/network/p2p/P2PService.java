@@ -12,6 +12,8 @@ import io.bisq.common.app.Log;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.persistance.Msg;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -198,11 +200,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         else
             seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhostForP2P, networkId);
 
-        peerManager = new PeerManager(networkNode, maxConnections, seedNodeAddresses, storageDir, clock);
+        peerManager = new PeerManager(networkNode, maxConnections, seedNodeAddresses, storageDir, clock, protobufferResolver);
 
         broadcaster = new Broadcaster(networkNode, peerManager);
 
-        p2PDataStorage = new P2PDataStorage(broadcaster, networkNode, storageDir);
+        p2PDataStorage = new P2PDataStorage(broadcaster, networkNode, storageDir, protobufferResolver);
         p2PDataStorage.addHashMapChangedListener(this);
 
         requestDataManager = new RequestDataManager(networkNode, p2PDataStorage, peerManager, seedNodeAddresses, this);
@@ -432,7 +434,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 try {
                     PrefixedSealedAndSignedMsg prefixedSealedAndSignedMessage = (PrefixedSealedAndSignedMsg) msg;
                     if (verifyAddressPrefixHash(prefixedSealedAndSignedMessage)) {
-                        // We set connectionType to that connection to avoid that is get closed when 
+                        // We set connectionType to that connection to avoid that is get closed when
                         // we get too many connection attempts.
                         connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
@@ -683,7 +685,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                         @Override
                         public void onBroadcastFailed(String errorMessage) {
-                            // TODO investigate why not sending sendMailboxMessageListener.onFault. Related probably 
+                            // TODO investigate why not sending sendMailboxMessageListener.onFault. Related probably
                             // to the logic from BroadcastHandler.sendToPeer
                         }
                     };
@@ -712,7 +714,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         // We need to delay a bit to avoid that we remove our msg then get it from other peers again and reapply it again.
         // If we delay the removal we have better chances that repeated network_messages we got from other peers are already filtered
         // at the P2PService layer.
-        // Though we have to check in the client classes to not apply the same message again as there is no guarantee 
+        // Though we have to check in the client classes to not apply the same message again as there is no guarantee
         // when we would get a message again from the network.
         UserThread.runAfter(() -> {
             delayedRemoveEntryFromMailbox(decryptedMsgWithPubKey);

@@ -122,7 +122,7 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>3.0</version>
+            <version>4.1.0</version>
         </dependency>
 
         <!--crypto-->
@@ -165,7 +165,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>18.0</version>
+            <version>19.0</version>
         </dependency>
         <dependency>
             <groupId>org.fxmisc.easybind</groupId>
@@ -239,6 +239,12 @@
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java-util</artifactId>
             <version>3.2.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
             <scope>test</scope>
         </dependency>
         <dependency>

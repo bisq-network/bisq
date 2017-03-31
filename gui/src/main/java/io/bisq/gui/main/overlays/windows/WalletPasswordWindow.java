@@ -59,7 +59,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.inject.internal.util.$Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkArgument;
 import static io.bisq.gui.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 

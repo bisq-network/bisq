@@ -9,6 +9,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.ResourceNotFoundException;
 import io.bisq.common.storage.Storage;
@@ -16,7 +17,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.crypto.EncryptionService;
-import io.bisq.network.p2p.Msg;
+import io.bisq.common.persistance.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.BroadcastHandler;
@@ -68,14 +69,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public P2PDataStorage(Broadcaster broadcaster, NetworkNode networkNode, File storageDir) {
+    public P2PDataStorage(Broadcaster broadcaster, NetworkNode networkNode, File storageDir, ProtobufferResolver protobufferResolver) {
         this.broadcaster = broadcaster;
 
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
 
-        sequenceNumberMapStorage = new Storage<>(storageDir);
-        persistedEntryMapStorage = new Storage<>(storageDir);
+        sequenceNumberMapStorage = new Storage<>(storageDir, protobufferResolver);
+        persistedEntryMapStorage = new Storage<>(storageDir, protobufferResolver);
 
         init(storageDir);
     }
@@ -83,7 +84,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private void init(File storageDir) {
         sequenceNumberMapStorage.setNumMaxBackupFiles(5);
         persistedEntryMapStorage.setNumMaxBackupFiles(1);
-        
+
         HashMap<ByteArray, MapValue> persistedSequenceNumberMap = sequenceNumberMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName("SequenceNumberMap");
         if (persistedSequenceNumberMap != null)
             sequenceNumberMap = getPurgedSequenceNumberMap(persistedSequenceNumberMap);
@@ -125,11 +126,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     public void onBootstrapComplete() {
         removeExpiredEntriesTimer = UserThread.runPeriodically(() -> {
             log.trace("removeExpiredEntries");
-            // The moment when an object becomes expired will not be synchronous in the network and we could 
+            // The moment when an object becomes expired will not be synchronous in the network and we could
             // get add network_messages after the object has expired. To avoid repeated additions of already expired
-            // object when we get it sent from new peers, we don’t remove the sequence number from the map. 
-            // That way an ADD message for an already expired data will fail because the sequence number 
-            // is equal and not larger as expected. 
+            // object when we get it sent from new peers, we don’t remove the sequence number from the map.
+            // That way an ADD message for an already expired data will fail because the sequence number
+            // is equal and not larger as expected.
             Map<ByteArray, ProtectedStorageEntry> temp = new HashMap<>(map);
             Set<ProtectedStorageEntry> toRemoveSet = new HashSet<>();
             temp.entrySet().stream()
@@ -195,7 +196,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                             RequiresOwnerIsOnlinePayload requiresOwnerIsOnlinePayload = (RequiresOwnerIsOnlinePayload) expirablePayload;
                             NodeAddress ownerNodeAddress = requiresOwnerIsOnlinePayload.getOwnerNodeAddress();
                             if (ownerNodeAddress.equals(connection.getPeersNodeAddressOptional().get())) {
-                                // We have a RequiresLiveOwnerData data object with the node address of the 
+                                // We have a RequiresLiveOwnerData data object with the node address of the
                                 // disconnected peer. We remove that data from our map.
 
                                 // Check if we have the data (e.g. OfferPayload)
@@ -210,15 +211,15 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                             " / isIntended=" + closeConnectionReason.isIntended +
                                             " / peer=" + (connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get() : "PeersNode unknown"));
 
-                                    // We only set the data back by half of the TTL and remove the data only if is has 
-                                    // expired after tha back dating. 
-                                    // We might get connection drops which are not caused by the node going offline, so 
-                                    // we give more tolerance with that approach, giving the node the change to 
+                                    // We only set the data back by half of the TTL and remove the data only if is has
+                                    // expired after tha back dating.
+                                    // We might get connection drops which are not caused by the node going offline, so
+                                    // we give more tolerance with that approach, giving the node the change to
                                     // refresh the TTL with a refresh message.
-                                    // We observed those issues during stress tests, but it might have been caused by the 
+                                    // We observed those issues during stress tests, but it might have been caused by the
                                     // test set up (many nodes/connections over 1 router)
-                                    // TODO investigate what causes the disconnections. 
-                                    // Usually the are: SOCKET_TIMEOUT ,TERMINATED (EOFException) 
+                                    // TODO investigate what causes the disconnections.
+                                    // Usually the are: SOCKET_TIMEOUT ,TERMINATED (EOFException)
                                     protectedData.backDate();
                                     if (protectedData.isExpired())
                                         doRemoveProtectedExpirableData(protectedData, hashOfPayload);

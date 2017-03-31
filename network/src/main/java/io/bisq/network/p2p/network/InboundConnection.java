@@ -1,5 +1,7 @@
 package io.bisq.network.p2p.network;
 
+import io.bisq.common.persistance.ProtobufferResolver;
+
 import java.net.Socket;
 
 public class InboundConnection extends Connection {

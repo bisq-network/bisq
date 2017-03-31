@@ -36,7 +36,7 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
-import io.bisq.network.p2p.network.ProtobufferResolver;
+import io.bisq.common.persistance.ProtobufferResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;

@@ -18,6 +18,7 @@
 package io.bisq.network.p2p;
 
 import io.bisq.common.app.Version;
+import io.bisq.common.persistance.Msg;
 import io.bisq.common.persistance.Persistable;
 import lombok.EqualsAndHashCode;
 

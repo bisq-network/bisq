@@ -4,6 +4,7 @@ import io.bisq.common.Clock;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
@@ -87,14 +88,14 @@ public class PeerManager implements ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public PeerManager(NetworkNode networkNode, int maxConnections, Set<NodeAddress> seedNodeAddresses,
-                       File storageDir, Clock clock) {
+                       File storageDir, Clock clock, ProtobufferResolver protobufferResolver) {
         setConnectionLimits(maxConnections);
         this.networkNode = networkNode;
         this.clock = clock;
         // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
-        dbStorage = new Storage<>(storageDir);
+        dbStorage = new Storage<>(storageDir, protobufferResolver);
         HashSet<Peer> persistedPeers = dbStorage.initAndGetPersistedWithFileName("PersistedPeers");
         if (persistedPeers != null) {
             log.debug("We have persisted reported peers. persistedPeers.size()=" + persistedPeers.size());

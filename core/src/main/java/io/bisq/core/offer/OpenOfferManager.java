@@ -25,6 +25,8 @@ import io.bisq.common.app.Log;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.persistance.Msg;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -96,6 +98,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             ClosedTradableManager closedTradableManager,
                             PriceFeedService priceFeedService,
                             Preferences preferences,
+                            ProtobufferResolver protobufferResolver,
                             @Named(Storage.DIR_KEY) File storageDir) {
         this.keyRing = keyRing;
         this.user = user;
@@ -106,7 +109,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.closedTradableManager = closedTradableManager;
         this.preferences = preferences;
 
-        openOffersStorage = new Storage<>(storageDir);
+        openOffersStorage = new Storage<>(storageDir, protobufferResolver);
         openOffers = new TradableList<>(openOffersStorage, "OpenOffers");
         openOffers.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
 
@@ -207,7 +210,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         // but other peers have it already removed because of expired TTL.
         // Those other not directly connected peers would not get the broadcast of the new offer, as the first
         // connected peer (seed node) does nto broadcast if it has the data in the map.
-        // To update quickly to the whole network we repeat the republishOffers call after a few seconds when we 
+        // To update quickly to the whole network we repeat the republishOffers call after a few seconds when we
         // are better connected to the network. There is no guarantee that all peers will receive it but we have
         // also our periodic timer, so after that longer interval the offer should be available to all peers.
         if (retryRepublishOffersTimer == null)
@@ -367,8 +370,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         // TODO mediators not impl yet
                         List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
-                            // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference 
-                            // in trade price between the peers. Also here poor connectivity might cause market price API connection 
+                            // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
+                            // in trade price between the peers. Also here poor connectivity might cause market price API connection
                             // losses and therefore an outdated market price.
                             try {
                                 offer.checkTradePriceTolerance(message.takersTradePrice);
@@ -441,9 +444,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 final OpenOffer openOffer = openOffersList.get(i);
                 UserThread.runAfterRandomDelay(() -> {
                     if (openOffers.contains(openOffer)) {
-                        // The openOffer.getId().contains("_") check is because there was once a version 
+                        // The openOffer.getId().contains("_") check is because there was once a version
                         // where we encoded the version nr in the offer id with a "_" as separator.
-                        // That caused several issues and was reverted. So if there are still old offers out with that 
+                        // That caused several issues and was reverted. So if there are still old offers out with that
                         // special offer ID format those must not be published as they cause failed taker attempts
                         // with lost taker fee.
                         String id = openOffer.getId();

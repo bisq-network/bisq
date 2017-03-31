@@ -27,6 +27,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.*;
@@ -59,9 +60,9 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-// Setup wallets and use WalletConfig for BitcoinJ wiring. 
-// Other like WalletConfig we are here always on the user thread. That is one reason why we do not 
-// merge WalletsSetup with WalletConfig to one class. 
+// Setup wallets and use WalletConfig for BitcoinJ wiring.
+// Other like WalletConfig we are here always on the user thread. That is one reason why we do not
+// merge WalletsSetup with WalletConfig to one class.
 public class WalletsSetup {
     private static final Logger log = LoggerFactory.getLogger(WalletsSetup.class);
 
@@ -97,6 +98,7 @@ public class WalletsSetup {
                         UserAgent userAgent,
                         Preferences preferences,
                         Socks5ProxyProvider socks5ProxyProvider,
+                        ProtobufferResolver protobufferResolver,
                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
                         @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
 
@@ -111,7 +113,7 @@ public class WalletsSetup {
         params = preferences.getBitcoinNetwork().getParameters();
         walletDir = new File(appDir, "bitcoin");
 
-        storage = new Storage<>(walletDir);
+        storage = new Storage<>(walletDir, protobufferResolver);
         Long nonce = storage.initAndGetPersistedWithFileName("BloomFilterNonce");
         if (nonce != null) {
             bloomFilterTweak = nonce;
@@ -148,7 +150,7 @@ public class WalletsSetup {
         walletConfig = new WalletConfig(params, socks5Proxy, walletDir, walletFileName, bsqWalletFileName) {
             @Override
             protected void onSetupCompleted() {
-                //We are here in the btcj thread Thread[ STARTING,5,main] 
+                //We are here in the btcj thread Thread[ STARTING,5,main]
                 super.onSetupCompleted();
 
                 final PeerGroup peerGroup = walletConfig.peerGroup();
@@ -286,28 +288,28 @@ public class WalletsSetup {
         // by getting the real pub keys by intersections of several filters sent at each startup.
         walletConfig.setBloomFilterTweak(bloomFilterTweak);
 
-        // Avoid the simple attack (see: https://jonasnick.github.io/blog/2015/02/12/privacy-in-bitcoinj/) due to the 
+        // Avoid the simple attack (see: https://jonasnick.github.io/blog/2015/02/12/privacy-in-bitcoinj/) due to the
         // default implementation using both pubkey and hash of pubkey. We have set a insertPubKey flag in BasicKeyChain to default false.
 
-        // Default only 266 keys are generated (2 * 100+33 -> 100 external and 100 internal keys + buffers of 30%). That would trigger new bloom filters when we are reaching 
+        // Default only 266 keys are generated (2 * 100+33 -> 100 external and 100 internal keys + buffers of 30%). That would trigger new bloom filters when we are reaching
         // the threshold. To avoid reaching the threshold we create much more keys which are unlikely to cause update of the
-        // filter for most users. With lookaheadSize of 500 we get 1333 keys (500*1.3=666 666 external and 666 internal keys) which should be enough for most users to 
+        // filter for most users. With lookaheadSize of 500 we get 1333 keys (500*1.3=666 666 external and 666 internal keys) which should be enough for most users to
         // never need to update a bloom filter, which would weaken privacy.
         // As we use 2 wallets (BTC, BSQ) we generate 1333 + 266 keys in total.
         walletConfig.setBtcWalletLookaheadSize(500);
         walletConfig.setBsqWalletLookaheadSize(100);
 
         // Calculation is derived from: https://www.reddit.com/r/Bitcoin/comments/2vrx6n/privacy_in_bitcoinj_android_wallet_multibit_hive/coknjuz
-        // No. of false positives (56M keys in the blockchain): 
+        // No. of false positives (56M keys in the blockchain):
         // First attempt for FP rate:
         // FP rate = 0,0001;  No. of false positives: 0,0001 * 56 000 000  = 5600
         // We have 1333keys: 1333 / (5600 + 1333) = 0.19 -> 19 % probability that a pub key is in our wallet
         // After tests I found out that the bandwidth consumption varies widely related to the generated filter.
         // About 20- 40 MB for upload and 30-130 MB for download at first start up (spv chain).
         // Afterwards its about 1 MB for upload and 20-80 MB for download.
-        // Probably better then a high FP rate would be to include foreign pubKeyHashes which are tested to not be used 
+        // Probably better then a high FP rate would be to include foreign pubKeyHashes which are tested to not be used
         // in many transactions. If we had a pool of 100 000 such keys (2 MB data dump) to random select 4000 we could mix it with our
-        // 1000 own keys and get a similar probability rate as with the current setup but less variation in bandwidth 
+        // 1000 own keys and get a similar probability rate as with the current setup but less variation in bandwidth
         // consumption.
 
         // For now to reduce risks with high bandwidth consumption we reduce the FP rate by half.

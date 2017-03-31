@@ -2,7 +2,7 @@ package io.bisq.network.p2p.peers.keepalive.messages;
 
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.Msg;
+import io.bisq.common.persistance.Msg;
 
 public final class Pong extends KeepAliveMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.

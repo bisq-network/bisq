@@ -10,6 +10,7 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.util.Utilities;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.Utils;

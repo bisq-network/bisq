@@ -17,16 +17,20 @@
 
 package io.bisq.common.storage;
 
+import com.google.inject.Inject;
 import com.google.protobuf.Message;
 import io.bisq.common.UserThread;
 import io.bisq.common.io.LookAheadObjectInputStream;
 import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.util.Utilities;
+import io.bisq.generated.protobuffer.PB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -43,17 +47,17 @@ public class FileManager<T> {
     private final long delay;
     private final Callable<Void> saveFileTask;
     private T serializable;
-    private boolean proto;
-
+    private ProtobufferResolver protobufferResolver;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public FileManager(File dir, File storageFile, long delay) {
+    @Inject
+    public FileManager(File dir, File storageFile, long delay, ProtobufferResolver protobufferResolver) {
         this.dir = dir;
         this.storageFile = storageFile;
-        proto = serializable instanceof Persistable;
+        this.protobufferResolver = protobufferResolver;
 
         executor = Utilities.getScheduledThreadPoolExecutor("FileManager", 1, 10, 5);
 
@@ -106,13 +110,17 @@ public class FileManager<T> {
 
     public synchronized T read(File file) throws IOException, ClassNotFoundException {
         log.debug("read" + file);
-        if (proto) {
-            log.info("it's proto");
-            try (final FileInputStream fileInputStream = new FileInputStream(file)) {
-                return (T) ((Persistable) serializable).getParser().parseFrom(fileInputStream);
-            } catch (Throwable t) {
-                log.error("Exception at proto read: " + t.getMessage());
-            }
+        Optional<Persistable> persistable = Optional.empty();
+
+        try (final FileInputStream fileInputStream = new FileInputStream(file)) {
+            persistable = protobufferResolver.fromProto(PB.DiskEnvelope.parseFrom(fileInputStream));
+        } catch (Throwable t) {
+            log.error("Exception at proto read: " + t.getMessage() + " " + file.getName());
+        }
+
+        if(persistable.isPresent()) {
+            log.error("Persistable found");
+            return (T) persistable.get();
         }
 
         try (final FileInputStream fileInputStream = new FileInputStream(file);
@@ -192,7 +200,7 @@ public class FileManager<T> {
         try {
             message = ((Persistable) serializable).toProtobuf();
         } catch (Throwable e) {
-            log.info("Not protobufferable: {} {}", serializable.getClass().getSimpleName(), e.getMessage());
+            log.info("Not protobufferable: {}, {}, {}", serializable.getClass().getSimpleName(), storageFile, e.getMessage());
         }
 
         try {

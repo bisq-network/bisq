@@ -175,7 +175,7 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
         // mining fee: BTC mining fee + optional burned BSQ fee (only if opReturnData != null)
 
         // In case of txs for burned BSQ fees we have no receiver output and it might be that there is no change outputs
-        // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input 
+        // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input
         // for BTC to force an additional change output.
 
         // safety check counter to avoid endless loops
@@ -232,7 +232,7 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
 
             resultTx = sendRequest.tx;
 
-            // We might have the rare case that both inputs matched the required fees, so both did not require 
+            // We might have the rare case that both inputs matched the required fees, so both did not require
             // a change output.
             // In such cases we need to add artificially a change output (OP_RETURN is not allowed as only output)
             forcedChangeValue = resultTx.getOutputs().size() == 0 ? Transaction.MIN_NONDUST_OUTPUT : Coin.ZERO;
@@ -266,7 +266,7 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Commit tx 
+    // Commit tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void commitTx(Transaction tx) {

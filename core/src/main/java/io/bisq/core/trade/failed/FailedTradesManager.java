@@ -19,6 +19,7 @@ package io.bisq.core.trade.failed;
 
 import com.google.inject.Inject;
 import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -38,9 +39,11 @@ public class FailedTradesManager {
     private final KeyRing keyRing;
 
     @Inject
-    public FailedTradesManager(KeyRing keyRing, PriceFeedService priceFeedService, @Named(Storage.DIR_KEY) File storageDir) {
+    public FailedTradesManager(KeyRing keyRing, PriceFeedService priceFeedService,
+                               ProtobufferResolver protobufferResolver,
+                               @Named(Storage.DIR_KEY) File storageDir) {
         this.keyRing = keyRing;
-        this.failedTrades = new TradableList<>(new Storage<>(storageDir), "FailedTrades");
+        this.failedTrades = new TradableList<>(new Storage<>(storageDir, protobufferResolver), "FailedTrades");
         failedTrades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
     }
 

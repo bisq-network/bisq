@@ -6,6 +6,8 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
+import io.bisq.common.persistance.Msg;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;

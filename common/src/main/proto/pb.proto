@@ -776,10 +776,14 @@ message AddressEntry {
 
     string offer_id = 7;
     Context context = 8;
-    bytes pubkey = 9;
+    bytes pub_key = 9;
     bytes pub_key_hash = 10;
     string param_id = 11;
     Coin coin_locked_in_multi_sig = 12;
+}
+
+message DeterministicKey {
+    bytes serialized = 1;
 }
 
 message AddressEntryList {

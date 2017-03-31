@@ -22,6 +22,7 @@ import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.btc.wallet.KeyBagSupplier;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
 import org.bitcoinj.core.Wallet;
@@ -43,13 +44,16 @@ public final class AddressEntryList implements Persistable {
     private static final Logger log = LoggerFactory.getLogger(AddressEntryList.class);
 
     final transient private Storage<AddressEntryList> storage;
+    @Getter
+    final transient private KeyBagSupplier keyBagSupplier;
     transient private Wallet wallet;
     @Getter
     private List<AddressEntry> addressEntryList = new ArrayList<>();
 
     @Inject
-    public AddressEntryList(Storage<AddressEntryList> storage) {
+    public AddressEntryList(Storage<AddressEntryList> storage, KeyBagSupplier keyBagSupplier) {
         this.storage = storage;
+        this.keyBagSupplier = keyBagSupplier;
     }
 
     public void onWalletReady(Wallet wallet) {

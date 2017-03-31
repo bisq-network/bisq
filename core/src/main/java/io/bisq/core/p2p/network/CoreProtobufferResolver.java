@@ -1,19 +1,24 @@
 package io.bisq.core.p2p.network;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.crypto.SealedAndSigned;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Price;
+import io.bisq.common.persistance.Msg;
+import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.alert.PrivateNotificationMsg;
 import io.bisq.core.alert.PrivateNotificationPayload;
 import io.bisq.core.arbitration.*;
 import io.bisq.core.arbitration.messages.*;
 import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.data.RawTransactionInput;
-import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.filter.Filter;
 import io.bisq.core.filter.PaymentAccountFilter;
@@ -27,10 +32,8 @@ import io.bisq.core.trade.messages.*;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.CloseConnectionMsg;
-import io.bisq.network.p2p.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.PrefixedSealedAndSignedMsg;
-import io.bisq.network.p2p.network.ProtobufferResolver;
 import io.bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import io.bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
@@ -48,15 +51,11 @@ import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.output.WriterOutputStream;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
 
-import javax.inject.Inject;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -76,13 +75,10 @@ import static io.bisq.generated.protobuffer.PB.Envelope.MessageCase.*;
  */
 @Slf4j
 public class CoreProtobufferResolver implements ProtobufferResolver {
-    private BtcWalletService btcWalletService;
 
     @Inject
-    public CoreProtobufferResolver(BtcWalletService btcWalletService) {
-        this.btcWalletService = btcWalletService;
-    }
-    
+    private Provider<AddressEntryList> addressEntryList;
+
     @Override
     public Optional<Msg> fromProto(PB.Envelope envelope) {
         if (Objects.isNull(envelope)) {
@@ -95,18 +91,6 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
             log.debug("Convert protobuffer envelope: {}", envelope.getMessageCase());
             log.trace("Convert protobuffer envelope: {}", envelope.toString());
         }
-        StringWriter stringWriter = new StringWriter();
-        WriterOutputStream writerOutputStream = new WriterOutputStream(stringWriter);
-
-        try {
-            envelope.writeTo(writerOutputStream);
-            writerOutputStream.flush();
-            stringWriter.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        // todo just for testing... 
-        AddressEntry AddressEntry = new AddressEntry(null, null, null, null, null, btcWalletService);
 
         Msg result = null;
         switch (envelope.getMessageCase()) {
@@ -869,4 +853,56 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
                         .stream()
                         .map(ByteString::toByteArray).collect(Collectors.toList()));
     }
+
+
+    //////////////////////////////// DISK /////////////////////////////////////
+
+    @Override
+    public Optional<Persistable> fromProto(PB.DiskEnvelope envelope) {
+        if (Objects.isNull(envelope)) {
+            log.warn("fromProtoBuf called with empty disk envelope.");
+            return Optional.empty();
+        }
+
+        log.debug("Convert protobuffer disk envelope: {}", envelope.getMessageCase());
+
+        Persistable result = null;
+        switch (envelope.getMessageCase()) {
+            case ADDRESS_ENTRY_LIST:
+                addToAddressEntryList(envelope);
+                result = addressEntryList.get();
+                break;
+                /*
+            case NAVIGATION:
+                result = getPing(envelope);
+                break;
+            case PERSISTED_PEERS:
+                result = getPing(envelope);
+                break;
+            case PREFERENCES:
+                result = getPing(envelope);
+                break;
+            case USER:
+                result = getPing(envelope);
+                break;
+            case PERSISTED_P2P_STORAGE_DATA:
+                result = getPing(envelope);
+                break;
+            case SEQUENCE_NUMBER_MAP:
+                result = getPing(envelope);
+                break;
+                */
+            default:
+                log.warn("Unknown message case:{}:{}", envelope.getMessageCase());
+        }
+        return Optional.ofNullable(result);
+    }
+
+    private void addToAddressEntryList(PB.DiskEnvelope envelope) {
+        envelope.getAddressEntryList().getAddressEntryList().stream().map(addressEntry -> addressEntryList.get().addAddressEntry(
+                new AddressEntry(addressEntry.getPubKey().toByteArray(), addressEntry.getPubKeyHash().toByteArray(), addressEntry.getParamId(), AddressEntry.Context.valueOf(addressEntry.getContext().name()),
+                        addressEntry.getOfferId(), Coin.valueOf(addressEntry.getCoinLockedInMultiSig().getValue()), addressEntryList.get().getKeyBagSupplier())));
+    }
+
+
 }

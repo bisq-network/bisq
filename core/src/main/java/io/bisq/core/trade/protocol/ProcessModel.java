@@ -88,7 +88,10 @@ public class ProcessModel implements Model, Serializable {
     @Getter
     @Setter
     private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
+    @Getter
+    @Setter
     private List<NodeAddress> takerAcceptedMediatorNodeAddresses;
+
 
     // that is used to store temp. the peers address when we get an incoming message before the message is verified.
     // After successful verified we copy that over to the trade.tradingPeerAddress
@@ -196,10 +199,6 @@ public class ProcessModel implements Model, Serializable {
         return payoutTxSignature;
     }
 
-    public void setPayoutTxSignature(byte[] payoutTxSignature) {
-        this.payoutTxSignature = payoutTxSignature;
-    }
-
     @Override
     public void persist() {
     }
@@ -210,62 +209,6 @@ public class ProcessModel implements Model, Serializable {
 
     public PubKeyRing getPubKeyRing() {
         return keyRing.getPubKeyRing();
-    }
-
-    public KeyRing getKeyRing() {
-        return keyRing;
-    }
-
-    public void setTakerAcceptedArbitratorNodeAddresses(List<NodeAddress> takerAcceptedArbitratorNodeAddresses) {
-        this.takerAcceptedArbitratorNodeAddresses = takerAcceptedArbitratorNodeAddresses;
-    }
-
-    public List<NodeAddress> getTakerAcceptedArbitratorNodeAddresses() {
-        return takerAcceptedArbitratorNodeAddresses;
-    }
-
-    public void setTakerAcceptedMediatorNodeAddresses(List<NodeAddress> takerAcceptedMediatorNodeAddresses) {
-        this.takerAcceptedMediatorNodeAddresses = takerAcceptedMediatorNodeAddresses;
-    }
-
-    public List<NodeAddress> getTakerAcceptedMediatorNodeAddresses() {
-        return takerAcceptedMediatorNodeAddresses;
-    }
-
-    public void setTempTradingPeerNodeAddress(NodeAddress tempTradingPeerNodeAddress) {
-        this.tempTradingPeerNodeAddress = tempTradingPeerNodeAddress;
-    }
-
-    public NodeAddress getTempTradingPeerNodeAddress() {
-        return tempTradingPeerNodeAddress;
-    }
-
-    public ArbitratorManager getArbitratorManager() {
-        return arbitratorManager;
-    }
-
-    public void setPreparedDepositTx(byte[] preparedDepositTx) {
-        this.preparedDepositTx = preparedDepositTx;
-    }
-
-    public byte[] getPreparedDepositTx() {
-        return preparedDepositTx;
-    }
-
-    public void setRawTransactionInputs(ArrayList<RawTransactionInput> rawTransactionInputs) {
-        this.rawTransactionInputs = rawTransactionInputs;
-    }
-
-    public ArrayList<RawTransactionInput> getRawTransactionInputs() {
-        return rawTransactionInputs;
-    }
-
-    public void setChangeOutputValue(long changeOutputValue) {
-        this.changeOutputValue = changeOutputValue;
-    }
-
-    public long getChangeOutputValue() {
-        return changeOutputValue;
     }
 
     public void setChangeOutputAddress(String changeOutputAddress) {
