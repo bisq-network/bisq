@@ -72,11 +72,11 @@ abstract public class BsqBlockchainService {
                                          String genesisTxId) throws BsqBlockchainException {
         try {
             BsqUTXOMap bsqUTXOMap = new BsqUTXOMap();
-            log.info("blockCount=" + chainHeadHeight);
+            log.info("chainHeadHeight=" + chainHeadHeight);
             long startTs = System.currentTimeMillis();
             for (int height = genesisBlockHeight; height <= chainHeadHeight; height++) {
                 Block btcdBlock = requestBlock(height);
-                log.info("height=" + height);
+                log.info("Current block height=" + height);
                 parseBlock(new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight()),
                         genesisBlockHeight,
                         genesisTxId,
@@ -211,6 +211,7 @@ abstract public class BsqBlockchainService {
             final int spendingTxOutputIndex = input.getSpendingTxOutputIndex();
             if (bsqUTXOMap.containsTuple(spendingTxId, spendingTxOutputIndex)) {
                 BsqUTXO bsqUTXO = bsqUTXOMap.getByTuple(spendingTxId, spendingTxOutputIndex);
+                log.debug("input value " + bsqUTXO.getValue());
                 availableValue = availableValue.add(bsqUTXO.getValue());
 
                 bsqUTXOMap.removeByTuple(spendingTxId, spendingTxOutputIndex);
@@ -228,22 +229,31 @@ abstract public class BsqBlockchainService {
             for (int outputIndex = 0; outputIndex < outputs.size(); outputIndex++) {
                 TxOutput txOutput = outputs.get(outputIndex);
 
-                availableValue = availableValue.subtract(txOutput.getValue());
-                if (!availableValue.isNegative()) {
-                    // We are spending available tokens
-                    BsqUTXO bsqUTXO = new BsqUTXO(txId,
-                            blockHeight,
-                            false,
-                            txOutput);
-                    bsqUTXOMap.putByTuple(txId, outputIndex, bsqUTXO);
-                } else {
-                    log.warn("We tried to spend more BSQ as we have in our inputs");
-                    // TODO report burnt BSQ
-
-                    // TODO: check if we should be more tolerant and use 
-                    // availableValue = availableValue.subtract(txOutput.getValue());
-                    // only temp and allow follow up outputs to use the left input.
+                if (availableValue.isZero()) {
+                    log.debug("We don't have anymore BSQ to spend");
                     break;
+                } else {
+                    availableValue = availableValue.subtract(txOutput.getValue());
+                    if (!availableValue.isNegative()) {
+                        // We are spending available tokens
+                        BsqUTXO bsqUTXO = new BsqUTXO(txId,
+                                blockHeight,
+                                false,
+                                txOutput);
+                        bsqUTXOMap.putByTuple(txId, outputIndex, bsqUTXO);
+
+                        if (availableValue.isZero()) {
+                            log.debug("We don't have anymore BSQ to spend");
+                            break;
+                        }
+                    } else {
+                        log.warn("We tried to spend more BSQ as we have in our inputs");
+                        // TODO report burnt BSQ
+                        // TODO: check if we should be more tolerant and use 
+                        // availableValue = availableValue.subtract(txOutput.getValue());
+                        // only temp and allow follow up outputs to use the left input.
+                        break;
+                    }
                 }
             }
 

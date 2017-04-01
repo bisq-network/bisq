@@ -29,6 +29,7 @@ import com.neemre.btcdcli4j.core.domain.Block;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
 import com.neemre.btcdcli4j.daemon.BtcdDaemonImpl;
 import com.neemre.btcdcli4j.daemon.event.BlockListener;
+import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Tuple2;
@@ -120,12 +121,17 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
 
         Futures.addCallback(future, new FutureCallback<BtcdClientImpl>() {
             public void onSuccess(BtcdClientImpl client) {
-                BsqBlockchainRpcService.this.client = client;
-                resultHandler.handleResult();
+                UserThread.execute(() -> {
+                    BsqBlockchainRpcService.this.client = client;
+                    resultHandler.handleResult();
+                });
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                errorMessageHandler.handleErrorMessage(throwable.getMessage());
+                UserThread.execute(() -> {
+                    log.error(throwable.toString());
+                    errorMessageHandler.handleErrorMessage(throwable.getMessage());
+                });
             }
         });
     }
