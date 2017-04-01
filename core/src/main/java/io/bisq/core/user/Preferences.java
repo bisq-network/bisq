@@ -17,6 +17,7 @@
 
 package io.bisq.core.user;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.*;
@@ -29,6 +30,7 @@ import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.provider.fee.FeeService;
+import io.bisq.generated.protobuffer.PB;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -43,6 +45,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class Preferences implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -518,7 +521,7 @@ public final class Preferences implements Persistable {
         this.selectedPaymentAccountForCreateOffer = paymentAccount;
         storage.queueUpForSave();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -708,7 +711,7 @@ public final class Preferences implements Persistable {
     public PaymentAccount getSelectedPaymentAccountForCreateOffer() {
         return selectedPaymentAccountForCreateOffer;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -743,5 +746,44 @@ public final class Preferences implements Persistable {
     private void updateDefaultLocale() {
         defaultLocale = new Locale(userLanguage, userCountry.code);
         Res.applyLocaleToResourceBundle(defaultLocale);
+    }
+
+
+    @Override
+    public Message toProtobuf() {
+        return PB.DiskEnvelope.newBuilder().setPreferences(PB.Preferences.newBuilder()
+                .setUserLanguage(userLanguage)
+                .setUserCountry((PB.Country) userCountry.toProtobuf())
+                .setBtcDenomination(btcDenomination)
+                .setUseAnimations(useAnimations)
+                .addAllFiatCurrencies(fiatCurrencies.stream().map(fiatCurrency -> ((PB.FiatCurrency) fiatCurrency.toProtobuf())).collect(Collectors.toList()))
+                .addAllCryptoCurrencies(cryptoCurrencies.stream().map(cryptoCurrency -> ((PB.CryptoCurrency) cryptoCurrency.toProtobuf())).collect(Collectors.toList()))
+                .setBlockChainExplorerMainNet((PB.BlockChainExplorer) blockChainExplorerMainNet.toProtobuf())
+                .setBlockChainExplorerTestNet((PB.BlockChainExplorer) blockChainExplorerTestNet.toProtobuf())
+                .setBackupDirectory(backupDirectory)
+                .setAutoSelectArbitrators(autoSelectArbitrators)
+                .putAllDontShowAgainMap(dontShowAgainMap)
+                .setTacAccepted(tacAccepted)
+                .setUseTorForBitcoinJ(useTorForBitcoinJ)
+                .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
+                .setPreferredLocale(PB.Locale.newBuilder().setCountry(preferredLocale.getCountry()).setLanguage(preferredLocale.getLanguage()).setVariant(preferredLocale.getVariant()))
+                .setPreferredTradeCurrency((PB.TradeCurrency) preferredTradeCurrency.toProtobuf())
+                .setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes)
+                .setMaxPriceDistanceInPercent(maxPriceDistanceInPercent)
+                .setOfferBookChartScreenCurrencyCode(offerBookChartScreenCurrencyCode)
+                .setTradeChartsScreenCurrencyCode(tradeChartsScreenCurrencyCode)
+                .setUseStickyMarketPrice(useStickyMarketPrice)
+                .setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically)
+                .setUsePercentageBasedPrice(usePercentageBasedPrice)
+                .putAllPeerTagMap(peerTagMap)
+                .setBitcoinNodes(bitcoinNodes)
+                .addAllIgnoreTradersList(ignoreTradersList)
+                .setDirectoryChooserPath(directoryChooserPath)
+                .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong)).build();
+    }
+
+    @Override
+    public Message fromProtobuf() {
+        return null;
     }
 }
