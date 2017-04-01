@@ -15,10 +15,18 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.tokens;
+package io.bisq.core.dao.blockchain;
 
-public abstract class TxService {
-    abstract public Tx getTx(String txId);
+import lombok.Value;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.script.Script;
 
-    abstract public void addTx(Tx tx);
+import java.util.List;
+
+@Value
+public class TxOutput {
+    private final int index;
+    private final Coin value;
+    private final List<String> addresses;
+    private final Script script;
 }

@@ -76,7 +76,7 @@ public class BisqEnvironment extends StandardEnvironment {
     private final String btcNetworkDir;
     private final String logLevel, providers;
     private BitcoinNetwork bitcoinNetwork;
-    private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword, rpcPort, rpcBlockPort, rpcWalletPort,
+    private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword, rpcPort, rpcBlockNotificationPort, rpcWalletNotificationPort,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress, socks5ProxyHttpAddress;
 
     public BitcoinNetwork getBitcoinNetwork() {
@@ -176,11 +176,11 @@ public class BisqEnvironment extends StandardEnvironment {
         rpcPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_PORT) ?
                 (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_PORT) :
                 "";
-        rpcBlockPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_BLOCK_PORT) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_BLOCK_PORT) :
+        rpcBlockNotificationPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) :
                 "";
-        rpcWalletPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_WALLET_PORT) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_WALLET_PORT) :
+        rpcWalletNotificationPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT) :
                 "";
 
         //BtcOptionKeys
@@ -257,8 +257,8 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(RpcOptionKeys.RPC_USER, rpcUser);
                 setProperty(RpcOptionKeys.RPC_PASSWORD, rpcPassword);
                 setProperty(RpcOptionKeys.RPC_PORT, rpcPort);
-                setProperty(RpcOptionKeys.RPC_BLOCK_PORT, rpcBlockPort);
-                setProperty(RpcOptionKeys.RPC_WALLET_PORT, rpcWalletPort);
+                setProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
+                setProperty(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT, rpcWalletNotificationPort);
 
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);

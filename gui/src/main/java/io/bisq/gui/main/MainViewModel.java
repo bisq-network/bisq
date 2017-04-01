@@ -43,7 +43,6 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.dao.DaoManager;
-import io.bisq.core.dao.blockchain.BsqBlockchainException;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
@@ -534,11 +533,7 @@ public class MainViewModel implements ViewModel {
 
         feeService.onAllServicesInitialized();
 
-        try {
-            daoManager.onAllServicesInitialized();
-        } catch (BsqBlockchainException e) {
-            new Popup<>().error(e.toString()).show();
-        }
+        daoManager.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
 
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();

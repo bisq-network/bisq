@@ -45,10 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.io.*;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -78,8 +75,8 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     public BsqBlockchainRpcService(@Named(RpcOptionKeys.RPC_USER) String rpcUser,
                                    @Named(RpcOptionKeys.RPC_PASSWORD) String rpcPassword,
                                    @Named(RpcOptionKeys.RPC_PORT) String rpcPort,
-                                   @Named(RpcOptionKeys.RPC_BLOCK_PORT) String rpcBlockPort,
-                                   @Named(RpcOptionKeys.RPC_WALLET_PORT) String rpcWalletPort) {
+                                   @Named(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort,
+                                   @Named(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT) String rpcWalletPort) {
         this.rpcUser = rpcUser;
         this.rpcPassword = rpcPassword;
         this.rpcPort = rpcPort;
@@ -116,7 +113,7 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
                 } catch (IOException | BitcoindException | CommunicationException e) {
                     throw new BsqBlockchainException(e.getMessage(), e);
                 }
-            } catch (URISyntaxException | IOException e) {
+            } catch (Throwable e) {
                 throw new BsqBlockchainException(e.getMessage(), e);
             }
         });
@@ -134,14 +131,13 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     }
 
     @Override
-    protected ListenableFuture<Tuple2<Map<String, Map<Integer, BsqUTXO>>, Integer>> syncFromGenesis(int genesisBlockHeight, String genesisTxId) {
+    protected ListenableFuture<Tuple2<BsqUTXOMap, Integer>> syncFromGenesis(int genesisBlockHeight, String genesisTxId) {
         return rpcRequestsExecutor.submit(() -> {
             long startTs = System.currentTimeMillis();
-            Map<String, Map<Integer, BsqUTXO>> utxoByTxIdMap = new HashMap<>();
             int chainHeadHeight = requestChainHeadHeight();
-            parseBlockchain(utxoByTxIdMap, chainHeadHeight, genesisBlockHeight, genesisTxId);
+            BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis(chainHeadHeight, genesisBlockHeight, genesisTxId);
             log.info("syncFromGenesis took {} ms", System.currentTimeMillis() - startTs);
-            return new Tuple2<>(utxoByTxIdMap, chainHeadHeight);
+            return new Tuple2<>(bsqUTXOMap, chainHeadHeight);
         });
     }
 
@@ -181,19 +177,19 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     }
 
     @Override
-    BsqTransaction requestTransaction(String txId) throws BsqBlockchainException {
+    Tx requestTransaction(String txId) throws BsqBlockchainException {
         try {
             RawTransaction rawTransaction = getRawTransaction(txId);
-            return new BsqTransaction(txId,
+            return new Tx(txId,
                     rawTransaction.getVIn()
                             .stream()
                             .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
-                            .map(rawInput -> new BsqTxInput(rawInput.getVOut(), rawInput.getTxId(), rawTransaction.getHex()))
+                            .map(rawInput -> new TxInput(rawInput.getVOut(), rawInput.getTxId(), rawTransaction.getHex()))
                             .collect(Collectors.toList()),
                     rawTransaction.getVOut()
                             .stream()
                             .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
-                            .map(e -> new BsqTxOutput(e.getN(),
+                            .map(e -> new TxOutput(e.getN(),
                                     Coin.valueOf(e.getValue().movePointRight(8).longValue()),
                                     e.getScriptPubKey().getAddresses(),
                                     e.getScriptPubKey().getHex() != null ? new Script(HEX.decode(e.getScriptPubKey().getHex())) : null))

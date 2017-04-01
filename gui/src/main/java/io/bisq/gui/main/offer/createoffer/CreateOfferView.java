@@ -1061,7 +1061,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void updateToggleButtons(boolean fixedPriceSelected) {
         int marketPriceAvailable = model.marketPriceAvailableProperty.get();
-        fixedPriceSelected |= marketPriceAvailable == 0;
+        fixedPriceSelected = fixedPriceSelected || (marketPriceAvailable == 0);
 
         if (marketPriceAvailable == 1) {
             model.dataModel.setUseMarketBasedPrice(!fixedPriceSelected);

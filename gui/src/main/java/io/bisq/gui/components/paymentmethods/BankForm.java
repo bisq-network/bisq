@@ -568,22 +568,22 @@ abstract class BankForm extends PaymentMethodForm {
         String countryCode = bankAccountPayload.getCountryCode();
         if (validatorsApplied && BankUtil.useValidation(countryCode)) {
             if (BankUtil.isBankNameRequired(countryCode))
-                result &= bankNameInputTextField.getValidator().validate(bankAccountPayload.getBankName()).isValid;
+                result = result && bankNameInputTextField.getValidator().validate(bankAccountPayload.getBankName()).isValid;
 
             if (BankUtil.isBankIdRequired(countryCode))
-                result &= bankIdInputTextField.getValidator().validate(bankAccountPayload.getBankId()).isValid;
+                result = result && bankIdInputTextField.getValidator().validate(bankAccountPayload.getBankId()).isValid;
 
             if (BankUtil.isBranchIdRequired(countryCode))
-                result &= branchIdInputTextField.getValidator().validate(bankAccountPayload.getBranchId()).isValid;
+                result = result && branchIdInputTextField.getValidator().validate(bankAccountPayload.getBranchId()).isValid;
 
             if (BankUtil.isAccountNrRequired(countryCode))
-                result &= accountNrInputTextField.getValidator().validate(bankAccountPayload.getAccountNr()).isValid;
+                result = result && accountNrInputTextField.getValidator().validate(bankAccountPayload.getAccountNr()).isValid;
 
             if (BankUtil.isAccountTypeRequired(countryCode))
-                result &= bankAccountPayload.getAccountType() != null;
+                result = result && bankAccountPayload.getAccountType() != null;
 
             if (useHolderID && BankUtil.isHolderIdRequired(countryCode))
-                result &= holderIdInputTextField.getValidator().validate(bankAccountPayload.getHolderTaxId()).isValid;
+                result = result && holderIdInputTextField.getValidator().validate(bankAccountPayload.getHolderTaxId()).isValid;
         }
         allInputsValid.set(result);
     }

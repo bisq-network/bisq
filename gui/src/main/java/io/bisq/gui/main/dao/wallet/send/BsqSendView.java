@@ -120,7 +120,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                                 btcFormatter.formatCoinWithCode(miningFee),
                                 CoinUtil.getFeePerByte(miningFee, txSize),
                                 txSize / 1000d,
-                                bsqFormatter.formatCoinWithCode(receiverAmount.subtract(miningFee))))
+                                bsqFormatter.formatCoinWithCode(receiverAmount)))
                         .actionButtonText(Res.get("shared.yes"))
                         .onAction(() -> {
                             try {
@@ -154,7 +154,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                     TransactionVerificationException | WalletException | InsufficientMoneyException e) {
                 log.error(e.toString());
                 e.printStackTrace();
-                new Popup<>().warning(e.toString());
+                new Popup<>().warning(e.toString()).show();
             }
         });
     }

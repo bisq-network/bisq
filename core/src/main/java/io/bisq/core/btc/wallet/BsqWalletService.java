@@ -25,7 +25,7 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
-import io.bisq.core.dao.blockchain.BsqUTXO;
+import io.bisq.core.dao.blockchain.BsqUTXOMap;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import org.bitcoinj.core.*;
@@ -36,9 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -149,20 +147,16 @@ public class BsqWalletService extends WalletService {
             if (resultHandler != null)
                 resultHandler.handleResult();
         } else {
-            bsqBlockchainManager.addUtxoListener(utxoByTxIdMap -> {
-                applyUtxoSetToUTXOProvider(utxoByTxIdMap);
+            bsqBlockchainManager.addUtxoListener(bsqUTXOMap -> {
+                applyUtxoSetToUTXOProvider(bsqUTXOMap);
                 if (resultHandler != null)
                     resultHandler.handleResult();
             });
         }
     }
 
-    private void applyUtxoSetToUTXOProvider(Map<String, Map<Integer, BsqUTXO>> utxoByTxIdMap) {
-        Set<BsqUTXO> utxoSet = new HashSet<>();
-        utxoByTxIdMap.entrySet().stream()
-                .forEach(e -> e.getValue().entrySet().stream()
-                        .forEach(u -> utxoSet.add(u.getValue())));
-        bsqCoinSelector.setUtxoSet(utxoSet);
+    private void applyUtxoSetToUTXOProvider(BsqUTXOMap bsqUTXOMap) {
+        bsqCoinSelector.setUtxoMap(bsqUTXOMap);
     }
 
 

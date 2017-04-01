@@ -18,9 +18,9 @@
 package io.bisq.core.dao;
 
 import com.google.inject.Inject;
+import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.btc.provider.squ.BsqUtxoFeedService;
 import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.dao.blockchain.BsqBlockchainException;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
@@ -36,6 +36,7 @@ public class DaoManager {
     private final BsqUtxoFeedService bsqUtxoFeedService;
     private final VotingManager voteManager;
     private final CompensationRequestManager compensationRequestManager;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -56,12 +57,12 @@ public class DaoManager {
         this.compensationRequestManager = compensationRequestManager;
     }
 
-    public void onAllServicesInitialized() throws BsqBlockchainException {
+    public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
         daoPeriodService.onAllServicesInitialized();
         bsqUtxoFeedService.onAllServicesInitialized();
         voteManager.onAllServicesInitialized();
         compensationRequestManager.onAllServicesInitialized();
-        bsqBlockchainManager.onAllServicesInitialized();
+        bsqBlockchainManager.onAllServicesInitialized(errorMessageHandler);
     }
 
 
@@ -72,16 +73,5 @@ public class DaoManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
 
 }

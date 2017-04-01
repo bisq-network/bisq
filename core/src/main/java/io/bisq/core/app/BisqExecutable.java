@@ -166,10 +166,10 @@ public abstract class BisqExecutable {
         parser.accepts(RpcOptionKeys.RPC_PORT,
                 description("Bitcoind rpc port", ""))
                 .withRequiredArg();
-        parser.accepts(RpcOptionKeys.RPC_BLOCK_PORT,
+        parser.accepts(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT,
                 description("Bitcoind rpc port for block notifications", ""))
                 .withRequiredArg();
-        parser.accepts(RpcOptionKeys.RPC_WALLET_PORT,
+        parser.accepts(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT,
                 description("Bitcoind rpc port for wallet notifications", ""))
                 .withRequiredArg();
 

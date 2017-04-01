@@ -15,26 +15,15 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.tokens;
+package io.bisq.core.dao.blockchain;
 
-import java.util.HashMap;
-import java.util.Map;
+import lombok.Value;
 
-class MockTxService extends TxService {
-    private Map<String, Tx> txMap = new HashMap<>();
+import java.util.List;
 
-    public MockTxService() {
-    }
-
-    public Tx getTx(String txId) {
-        return txMap.get(txId);
-    }
-
-    public void addTx(Tx tx) {
-        txMap.put(tx.id, tx);
-    }
-
-    public void cleanup() {
-        txMap = new HashMap<>();
-    }
+@Value
+public class Tx {
+    private final String id;
+    private final List<TxInput> inputs;
+    private final List<TxOutput> outputs;
 }

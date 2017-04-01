@@ -32,8 +32,17 @@ public class BsqBlockchainRpcServiceMain {
         Log.setLevel(Level.WARN);
 
         // regtest uses port 18332, mainnet 8332
-        BsqBlockchainRpcService blockchainRpcService = new BsqBlockchainRpcService(args[0], args[1], args[2], args[3], args[4]);
+        final String rpcUser = args[0];
+        final String rpcPassword = args[1];
+        final String rpcPort = args[2];
+        final String rpcBlockPort = args.length > 3 ? args[3] : "";
+        final String rpcWalletPort = args.length > 4 ? args[4] : "";
+        BsqBlockchainRpcService blockchainRpcService = new BsqBlockchainRpcService(rpcUser, rpcPassword,
+                rpcPort, rpcBlockPort, rpcWalletPort);
         BsqBlockchainManager bsqBlockchainManager = new BsqBlockchainManager(blockchainRpcService);
-        bsqBlockchainManager.onAllServicesInitialized();
+        bsqBlockchainManager.onAllServicesInitialized(errorMessage -> log.error(errorMessage));
+
+        while (true) {
+        }
     }
 }

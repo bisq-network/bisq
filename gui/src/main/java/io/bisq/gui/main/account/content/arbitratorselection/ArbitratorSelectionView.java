@@ -199,22 +199,23 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         GridPane.setHalignment(autoSelectAllMatchingCheckBox, HPos.LEFT);
         GridPane.setColumnIndex(autoSelectAllMatchingCheckBox, 0);
         GridPane.setMargin(autoSelectAllMatchingCheckBox, new Insets(0, -10, 0, -10));
-        autoSelectAllMatchingCheckBox.setOnAction(event -> model.setAutoSelectArbitrators(autoSelectAllMatchingCheckBox.isSelected()));
+        autoSelectAllMatchingCheckBox.setOnAction(event ->
+                model.setAutoSelectArbitrators(autoSelectAllMatchingCheckBox.isSelected()));
 
         TableColumn<ArbitratorListItem, String> dateColumn = new TableColumn<>(Res.get("account.arbitratorSelection.regDate"));
         dateColumn.setSortable(false);
-        dateColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getRegistrationDate()));
+        dateColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue().getRegistrationDate()));
         dateColumn.setMinWidth(140);
         dateColumn.setMaxWidth(140);
 
         TableColumn<ArbitratorListItem, String> nameColumn = new TableColumn<>(Res.get("shared.onionAddress"));
         nameColumn.setSortable(false);
-        nameColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getAddressString()));
+        nameColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue().getAddressString()));
         nameColumn.setMinWidth(90);
 
         TableColumn<ArbitratorListItem, String> languagesColumn = new TableColumn<>(Res.get("account.arbitratorSelection.languages"));
         languagesColumn.setSortable(false);
-        languagesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getLanguageCodes()));
+        languagesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue().getLanguageCodes()));
         languagesColumn.setMinWidth(130);
 
         TableColumn<ArbitratorListItem, ArbitratorListItem> selectionColumn = new TableColumn<ArbitratorListItem, ArbitratorListItem>(

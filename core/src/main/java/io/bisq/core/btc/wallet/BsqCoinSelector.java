@@ -18,6 +18,7 @@
 package io.bisq.core.btc.wallet;
 
 import io.bisq.core.dao.blockchain.BsqUTXO;
+import io.bisq.core.dao.blockchain.BsqUTXOMap;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
@@ -50,8 +51,8 @@ class BsqCoinSelector extends BisqDefaultCoinSelector {
         this.permitForeignPendingTx = permitForeignPendingTx;
     }
 
-    public void setUtxoSet(Set<BsqUTXO> utxoSet) {
-        utxoSet.stream().forEach(utxo -> {
+    public void setUtxoMap(BsqUTXOMap bsqUTXOMap) {
+        bsqUTXOMap.values().stream().forEach(utxo -> {
             Script script = utxo.getScript();
             if (!utxoSetByScriptMap.containsKey(script))
                 utxoSetByScriptMap.put(script, new HashSet<>());

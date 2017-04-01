@@ -17,26 +17,48 @@
 
 package io.bisq.core.dao.blockchain;
 
+import lombok.Value;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.UTXO;
-import org.bitcoinj.core.Utils;
 import org.bitcoinj.script.Script;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 // Estimation for UTXO set: 1 UTXO object has 78 byte
 // 1000 UTXOs - 10 000 UTXOs: 78kb -780kb
 
-public class BsqUTXO extends UTXO {
-    private static final Logger log = LoggerFactory.getLogger(BsqUTXO.class);
+@Value
+public class BsqUTXO {
+    private final String txId;
+    private final long index;
+    private final Coin value;
+    private final int height;
+    private final boolean isBsqCoinBase;
+    private final Script script;
+    private final String utxoId;
 
-    public BsqUTXO(String txId, long index, Coin value, int height, boolean coinBase, Script script, String address) {
-        super(Sha256Hash.wrap(Utils.HEX.decode(txId)), index, value, height, coinBase, script, address);
+    // Only at raw MS outputs addresses have more then 1 entry 
+    // We do not support raw MS for BSQ but lets see if is needed anyway, might be removed 
+    private final List<String> addresses;
+
+    private BsqUTXO(String txId, int index, Coin value, int height, boolean isBsqCoinBase, Script script, List<String> addresses) {
+        this.txId = txId;
+        this.index = index;
+        this.value = value;
+        this.height = height;
+        this.isBsqCoinBase = isBsqCoinBase;
+        this.script = script;
+        this.addresses = addresses;
+
+        utxoId = txId + ":" + index;
     }
 
-    @Override
-    public String toString() {
-        return String.format("value:%d, spending tx:%s at index:%d)", getValue().value, getHash(), getIndex());
+    public BsqUTXO(String txId, int height, boolean isBsqCoinBase, TxOutput output) {
+        this(txId,
+                output.getIndex(),
+                output.getValue(),
+                height,
+                isBsqCoinBase,
+                output.getScript(),
+                output.getAddresses());
     }
 }
