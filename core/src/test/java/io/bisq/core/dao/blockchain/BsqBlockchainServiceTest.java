@@ -20,7 +20,6 @@ package io.bisq.core.dao.blockchain;
 import com.neemre.btcdcli4j.core.BitcoindException;
 import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.domain.*;
-import io.bisq.common.util.Tuple2;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.junit.After;
@@ -63,9 +62,13 @@ public class BsqBlockchainServiceTest {
     public static final long ADDRESS_TX_2_VALUE = Coin.parseCoin("0.00001000").value;
 
     private MockBsqBlockchainService service;
+    private BsqUTXOMap bsqUTXOMap;
+    private BsqTXOMap bsqTXOMap;
 
     @Before
     public void setup() {
+        bsqUTXOMap = new BsqUTXOMap();
+        bsqTXOMap = new BsqTXOMap();
         service = new MockBsqBlockchainService();
     }
 
@@ -88,7 +91,7 @@ public class BsqBlockchainServiceTest {
 
         service.buildBlocks(BLOCK_0, BLOCK_0);
 
-        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis().second;
+        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis();
 
         BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
         BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(GEN_TX_ID, 1);
@@ -127,7 +130,7 @@ public class BsqBlockchainServiceTest {
 
         service.buildBlocks(BLOCK_0, BLOCK_1);
 
-        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis().second;
+        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis();
 
         BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
         BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(TX1_ID, 0);
@@ -179,7 +182,7 @@ public class BsqBlockchainServiceTest {
 
         service.buildBlocks(BLOCK_0, BLOCK_1);
 
-        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis().second;
+        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis();
 
         BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
         BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(TX2_ID, 0);
@@ -231,7 +234,7 @@ public class BsqBlockchainServiceTest {
 
         service.buildBlocks(BLOCK_0, BLOCK_2);
 
-        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis().second;
+        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis();
 
         BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
         BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(TX2_ID, 0);
@@ -285,7 +288,7 @@ public class BsqBlockchainServiceTest {
 
         service.buildBlocks(BLOCK_0, BLOCK_1);
 
-        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis().second;
+        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis();
 
         BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(TX2_ID, 0);
         assertEquals(bsqUTXO1.getUtxoId(), getUTXOId(TX2_ID, 0));
@@ -378,9 +381,11 @@ public class BsqBlockchainServiceTest {
     }
 
 
-    private Tuple2<Set<BsqBlock>, BsqUTXOMap> parseAllBlocksFromGenesis()
+    private BsqUTXOMap parseAllBlocksFromGenesis()
             throws BitcoindException, CommunicationException, BsqBlockchainException {
-        return service.parseAllBlocksFromGenesis(service.requestChainHeadHeight(),
+        return service.parseAllBlocksFromGenesis(bsqUTXOMap,
+                bsqTXOMap,
+                service.requestChainHeadHeight(),
                 BLOCK_0,
                 GEN_TX_ID);
     }

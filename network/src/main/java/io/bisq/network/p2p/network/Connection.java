@@ -762,9 +762,9 @@ public class Connection implements MessageListener {
                                 reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                                 return;
                             }
-                        } catch (IOException e) {
+                        } catch (Throwable t) {
                             if (!sharedModel.stopped) {
-                                log.error("Invalid data arrived at inputHandler of connection " + connection, e);
+                                log.error("Invalid data arrived at inputHandler of connection " + connection, t);
                                 reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                             }
                             return;

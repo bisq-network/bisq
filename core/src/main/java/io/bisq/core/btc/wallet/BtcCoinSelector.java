@@ -75,15 +75,14 @@ class BtcCoinSelector extends BisqDefaultCoinSelector {
     }
 
     @Override
-    protected boolean selectOutput(TransactionOutput transactionOutput) {
-        if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-            Address address = transactionOutput.getScriptPubKey().getToAddress(params);
-            log.trace(address.toString());
+    protected boolean selectOutput(TransactionOutput output) {
+        if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
+            Address address = WalletUtils.getAddressFromOutput(output);
 
             boolean matchesAddress = addresses.contains(address);
             if (!matchesAddress)
-                log.trace("No match found at matchesRequiredAddress address / addressEntry " +
-                        address.toString() + " / " + address.toString());
+                log.trace("addresses not containing address " +
+                        addresses + " / " + address.toString());
 
             return matchesAddress;
         } else {

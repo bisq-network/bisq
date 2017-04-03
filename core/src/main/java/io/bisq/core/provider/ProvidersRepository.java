@@ -38,6 +38,7 @@ public class ProvidersRepository {
                 //providers = "http://t4wlzy7l6k4hnolg.onion/, http://g27szt7aw2vrtowe.onion/";
             }
         }
+
         providerArray = providers.replace(" ", "").split(",");
         int index = new Random().nextInt(providerArray.length);
         baseUrl = providerArray[index];

@@ -23,7 +23,6 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.script.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +40,7 @@ class BsqCoinSelector extends BisqDefaultCoinSelector {
 
     private final boolean permitForeignPendingTx;
 
-    private final Map<Script, Set<BsqUTXO>> utxoSetByScriptMap = new HashMap<>();
+    private final Map<String, Set<BsqUTXO>> utxoSetByAddressMap = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -53,11 +52,11 @@ class BsqCoinSelector extends BisqDefaultCoinSelector {
 
     public void setUtxoMap(BsqUTXOMap bsqUTXOMap) {
         bsqUTXOMap.values().stream().forEach(utxo -> {
-            Script script = utxo.getScript();
-            if (!utxoSetByScriptMap.containsKey(script))
-                utxoSetByScriptMap.put(script, new HashSet<>());
+            String address = utxo.getAddress();
+            if (!utxoSetByAddressMap.containsKey(address))
+                utxoSetByAddressMap.put(address, new HashSet<>());
 
-            utxoSetByScriptMap.get(script).add(utxo);
+            utxoSetByAddressMap.get(address).add(utxo);
         });
     }
 
@@ -77,12 +76,11 @@ class BsqCoinSelector extends BisqDefaultCoinSelector {
     }
 
     @Override
-    protected boolean selectOutput(TransactionOutput transactionOutput) {
-        Script scriptPubKey = transactionOutput.getScriptPubKey();
-        if (scriptPubKey.isSentToAddress() || scriptPubKey.isPayToScriptHash()) {
-            return utxoSetByScriptMap.containsKey(scriptPubKey);
+    protected boolean selectOutput(TransactionOutput output) {
+        if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
+            return utxoSetByAddressMap.containsKey(WalletUtils.getAddressStringFromOutput(output));
         } else {
-            log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
+            log.warn("output.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
             return false;
         }
     }

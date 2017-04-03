@@ -27,7 +27,6 @@ import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.listeners.AddressConfidenceListener;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
-import io.bisq.core.dao.blockchain.TxOutput;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import org.bitcoinj.core.*;
@@ -206,32 +205,6 @@ public abstract class WalletService {
     // Sign tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    //TODOcheck with signTransactionInput
-   /* protected void signInput(Transaction transaction) throws SigningException {
-        List<TransactionInput> inputs = transaction.getInputs();
-
-        int inputIndex = transaction.getInputs().size() - 1;
-        TransactionInput input = transaction.getInput(inputIndex);
-
-        checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
-        Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
-        checkNotNull(wallet);
-        ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
-        checkNotNull(sigKey, "signInput: sigKey must not be null. input.getOutpoint()=" + input.getOutpoint().toString());
-        if (sigKey.isEncrypted())
-            checkNotNull(aesKey);
-        Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
-        ECKey.ECDSASignature signature = sigKey.sign(hash, aesKey);
-        TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);
-        if (scriptPubKey.isSentToRawPubKey()) {
-            input.setScriptSig(ScriptBuilder.createInputScript(txSig));
-        } else if (scriptPubKey.isSentToAddress()) {
-            input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
-        } else {
-            throw new SigningException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
-        }
-    }*/
-
     void signTransactionInput(Transaction tx, TransactionInput txIn, int index) {
         KeyBag maybeDecryptingKeyBag = new DecryptingKeyBag(wallet, aesKey);
         if (txIn.getConnectedOutput() != null) {
@@ -331,16 +304,12 @@ public abstract class WalletService {
     }
 
     protected TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
-        List<TransactionOutput> mergedOutputs = getOutputsWithConnectedOutputs(tx);
-        List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
-
-        mergedOutputs.stream().filter(e -> e.getScriptPubKey().isSentToAddress() ||
-                e.getScriptPubKey().isPayToScriptHash()).forEach(transactionOutput -> {
-            Address outputAddress = transactionOutput.getScriptPubKey().getToAddress(params);
-            if (address.equals(outputAddress)) {
-                transactionConfidenceList.add(tx.getConfidence());
-            }
-        });
+        List<TransactionConfidence> transactionConfidenceList = getOutputsWithConnectedOutputs(tx)
+                .stream()
+                .filter(WalletUtils::isOutputScriptConvertableToAddress)
+                .filter(output -> address.equals(WalletUtils.getAddressFromOutput(output)))
+                .map(o -> tx.getConfidence())
+                .collect(Collectors.toList());
         return getMostRecentConfidence(transactionConfidenceList);
     }
 
@@ -398,12 +367,10 @@ public abstract class WalletService {
 
     protected Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
         Coin balance = Coin.ZERO;
-        for (TransactionOutput transactionOutput : transactionOutputs) {
-            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-                if (addressOutput.equals(address))
-                    balance = balance.add(transactionOutput.getValue());
-            }
+        for (TransactionOutput output : transactionOutputs) {
+            if (WalletUtils.isOutputScriptConvertableToAddress(output) &&
+                    address.equals(WalletUtils.getAddressFromOutput(output)))
+                balance = balance.add(output.getValue());
         }
         return balance;
     }
@@ -412,12 +379,10 @@ public abstract class WalletService {
         List<TransactionOutput> transactionOutputs = new ArrayList<>();
         wallet.getTransactions(true).stream().forEach(t -> transactionOutputs.addAll(t.getOutputs()));
         int outputs = 0;
-        for (TransactionOutput transactionOutput : transactionOutputs) {
-            if (transactionOutput.getScriptPubKey().isSentToAddress() || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                Address addressOutput = transactionOutput.getScriptPubKey().getToAddress(params);
-                if (addressOutput.equals(address))
-                    outputs++;
-            }
+        for (TransactionOutput output : transactionOutputs) {
+            if (WalletUtils.isOutputScriptConvertableToAddress(output) &&
+                    address.equals(WalletUtils.getAddressFromOutput(output)))
+                outputs++;
         }
         return outputs;
     }
@@ -545,7 +510,7 @@ public abstract class WalletService {
         return transactionOutput.isMine(wallet);
     }
 
-    public boolean isTxOutputMine(TxOutput txOutput) {
+   /* public boolean isTxOutputMine(TxOutput txOutput) {
         try {
             Script script = txOutput.getScript();
             if (script.isSentToRawPubKey()) {
@@ -563,7 +528,7 @@ public abstract class WalletService {
             log.debug("Could not parse tx output script: {}", e.toString());
             return false;
         }
-    }
+    }*/
 
     public Coin getValueSentFromMeForTransaction(Transaction transaction) throws ScriptException {
         return transaction.getValueSentFromMe(wallet);

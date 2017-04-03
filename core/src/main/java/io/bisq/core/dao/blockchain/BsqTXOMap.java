@@ -20,36 +20,34 @@ package io.bisq.core.dao.blockchain;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class BsqUTXOMap {
+// Map of any ever existing TxOutput which was a valid BSQ
+@Slf4j
+public class BsqTXOMap {
     // We don't use a Lombok delegate here as we want control the access to our map
-    private ObservableMap<TxIdIndexTuple, BsqUTXO> map = FXCollections.observableHashMap();
+    private ObservableMap<TxIdIndexTuple, TxOutput> map = FXCollections.observableHashMap();
     private Set<String> txIdSet = new HashSet<>();
 
     public boolean containsTuple(String txId, int index) {
         return map.containsKey(new TxIdIndexTuple(txId, index));
     }
 
-    public Object add(BsqUTXO bsqUTXO) {
-        txIdSet.add(bsqUTXO.getTxId());
-        return map.put(new TxIdIndexTuple(bsqUTXO.getTxId(), bsqUTXO.getIndex()), bsqUTXO);
+    public Object add(TxOutput txOutput) {
+        txIdSet.add(txOutput.getTxId());
+        return map.put(new TxIdIndexTuple(txOutput.getTxId(), txOutput.getIndex()), txOutput);
     }
 
-    public BsqUTXO getByTuple(String txId, int index) {
+    public TxOutput getByTuple(String txId, int index) {
         return map.get(new TxIdIndexTuple(txId, index));
     }
 
-    public BsqUTXO removeByTuple(String txId, int index) {
-        txIdSet.remove(txId);
-        return map.remove(new TxIdIndexTuple(txId, index));
-    }
-
-    public void addListener(MapChangeListener<TxIdIndexTuple, BsqUTXO> listener) {
+    public void addListener(MapChangeListener<TxIdIndexTuple, TxOutput> listener) {
         map.addListener(listener);
     }
 
@@ -58,7 +56,7 @@ public class BsqUTXOMap {
         return "BsqUTXOMap " + map.toString();
     }
 
-    public Collection<BsqUTXO> values() {
+    public Collection<TxOutput> values() {
         return map.values();
     }
 
@@ -74,7 +72,7 @@ public class BsqUTXOMap {
         return map.size();
     }
 
-    public Set<Map.Entry<TxIdIndexTuple, BsqUTXO>> entrySet() {
+    public Set<Map.Entry<TxIdIndexTuple, TxOutput>> entrySet() {
         return map.entrySet();
     }
 }

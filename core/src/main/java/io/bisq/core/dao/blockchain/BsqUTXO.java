@@ -18,7 +18,7 @@
 package io.bisq.core.dao.blockchain;
 
 import lombok.Value;
-import org.bitcoinj.script.Script;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -26,52 +26,48 @@ import java.util.List;
 // 1000 UTXOs - 10 000 UTXOs: 78kb -780kb
 
 @Value
+@Slf4j
 public class BsqUTXO {
-    private final String txId;
-    private final long index;
-    private final long value;
     private final int height;
     private final boolean isBsqCoinBase;
-    private final Script script;
+    private final TxOutput output;
     private final String utxoId;
 
-    // Only at raw MS outputs addresses have more then 1 entry 
-    // We do not support raw MS for BSQ but lets see if is needed anyway, might be removed 
-    private final List<String> addresses;
-
-    private BsqUTXO(String txId, int index, long value, int height, boolean isBsqCoinBase, Script script, List<String> addresses) {
-        this.txId = txId;
-        this.index = index;
-        this.value = value;
+    public BsqUTXO(TxOutput output, int height, boolean isBsqCoinBase) {
         this.height = height;
         this.isBsqCoinBase = isBsqCoinBase;
-        this.script = script;
-        this.addresses = addresses;
+        this.output = output;
 
-        utxoId = txId + ":" + index;
+        utxoId = output.getTxId() + ":" + output.getIndex();
     }
 
-    public BsqUTXO(String txId, int height, boolean isBsqCoinBase, TxOutput output) {
-        this(txId,
-                output.getIndex(),
-                output.getValue(),
-                height,
-                isBsqCoinBase,
-                output.getScript(),
-                output.getAddresses());
+    public String getAddress() {
+        // Only at raw MS outputs addresses have more then 1 entry 
+        // We do not support raw MS for BSQ but lets see if is needed anyway, might be removed 
+        final List<String> addresses = output.getAddresses();
+        return addresses.size() == 1 ? addresses.get(0) : addresses.toString();
+    }
+
+    public long getValue() {
+        return output.getValue();
+    }
+
+    public String getTxId() {
+        return output.getTxId();
+    }
+
+    public int getIndex() {
+        return output.getIndex();
     }
 
     @Override
     public String toString() {
         return "BsqUTXO{" +
-                "\n     txId='" + txId + '\'' +
-                ",\n     index=" + index +
-                ",\n     value=" + value +
+                "\n     output='" + output + '\'' +
                 ",\n     height=" + height +
                 ",\n     isBsqCoinBase=" + isBsqCoinBase +
-                ",\n     script=" + script +
                 ",\n     utxoId='" + utxoId + '\'' +
-                ",\n     addresses=" + addresses +
                 "\n}";
     }
+
 }

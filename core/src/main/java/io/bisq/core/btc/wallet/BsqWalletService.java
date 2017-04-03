@@ -23,14 +23,11 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
-import io.bisq.core.dao.blockchain.BsqBlock;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.blockchain.BsqUTXOMap;
-import io.bisq.core.dao.blockchain.Tx;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,8 +37,11 @@ import org.bitcoinj.wallet.CoinSelection;
 import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -113,7 +113,7 @@ public class BsqWalletService extends WalletService {
 
             });
         });
-        bsqBlockchainManager.getBsqBlocks().addListener((ListChangeListener<BsqBlock>) c -> updateWalletBsqTransactions());
+        bsqBlockchainManager.getBsqUTXOMap().addListener(c -> updateWalletBsqTransactions());
     }
 
 
@@ -146,7 +146,7 @@ public class BsqWalletService extends WalletService {
 
     public void requestBsqUtxo(@Nullable ResultHandler resultHandler) {
         if (bsqBlockchainManager.isUtxoAvailable()) {
-            applyUtxoSetToUTXOProvider(bsqBlockchainManager.getUtxoByTxIdMap());
+            applyUtxoSetToUTXOProvider(bsqBlockchainManager.getBsqUTXOMap());
             if (resultHandler != null)
                 resultHandler.handleResult();
         } else {
@@ -163,14 +163,40 @@ public class BsqWalletService extends WalletService {
     }
 
     private void updateWalletBsqTransactions() {
-        Set<String> txIdsFromUTXOSet = bsqBlockchainManager.getBsqBlocks().stream()
-                .flatMap(bsqBlock -> bsqBlock.getTxByTxIdMap().values().stream())
-                .map(Tx::getId)
-                .collect(Collectors.toSet());
+        walletBsqTransactions.setAll(getTxsWithOutputsFoundInBsqTxo());
+    }
 
-        walletBsqTransactions.setAll(getTransactions(true).stream()
-                .filter(t -> txIdsFromUTXOSet.contains(t.getHashAsString()))
-                .collect(Collectors.toSet()));
+    private Set<Transaction> getTxsWithOutputsFoundInBsqTxo() {
+        return getTransactions(true).stream()
+                .flatMap(tx -> tx.getOutputs().stream())
+                .filter(out -> out.getParentTransaction() != null && bsqBlockchainManager.getBsqTXOMap()
+                        .containsTuple(out.getParentTransaction().getHashAsString(), out.getIndex()))
+                .map(TransactionOutput::getParentTransaction)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<Transaction> getInvalidBsqTransactions() {
+        Set<Transaction> txsWithOutputsFoundInBsqTxo = getTxsWithOutputsFoundInBsqTxo();
+        Set<Transaction> walletTxs = getTransactions(true).stream().collect(Collectors.toSet());
+        checkArgument(walletTxs.size() >= txsWithOutputsFoundInBsqTxo.size(),
+                "We cannot have more txsWithOutputsFoundInBsqTxo than walletTxs");
+        if (walletTxs.size() > txsWithOutputsFoundInBsqTxo.size()) {
+            Map<String, Transaction> map = walletTxs.stream()
+                    .collect(Collectors.toMap(Transaction::getHashAsString, Function.identity()));
+
+            Set<String> walletTxIds = walletTxs.stream()
+                    .map(Transaction::getHashAsString).collect(Collectors.toSet());
+            Set<String> bsqTxIds = txsWithOutputsFoundInBsqTxo.stream()
+                    .map(Transaction::getHashAsString).collect(Collectors.toSet());
+
+            walletTxIds.stream()
+                    .filter(bsqTxIds::contains)
+                    .forEach(map::remove);
+
+            return new HashSet<>(map.values());
+        } else {
+            return new HashSet<>();
+        }
     }
 
 

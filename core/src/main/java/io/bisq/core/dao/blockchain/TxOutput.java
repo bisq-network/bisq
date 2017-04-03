@@ -18,7 +18,7 @@
 package io.bisq.core.dao.blockchain;
 
 import lombok.Value;
-import org.bitcoinj.script.Script;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.util.List;
 
@@ -27,15 +27,16 @@ public class TxOutput {
     private final int index;
     private final long value;
     private final List<String> addresses;
-    private final Script script;
-
+    private final byte[] scriptProgramBytes;
+    private final String txId;
+    
     @Override
     public String toString() {
         return "TxOutput{" +
                 "\nindex=" + index +
                 ",\nvalue=" + value +
                 ",\naddresses=" + addresses +
-                ",\nscript=" + script +
+                ",\nscriptProgramBytes=" + Hex.toHexString(scriptProgramBytes) +
                 "}\n";
     }
 }

@@ -40,7 +40,7 @@ public class BsqBlockchainRpcServiceMain {
         BsqBlockchainRpcService blockchainRpcService = new BsqBlockchainRpcService(rpcUser, rpcPassword,
                 rpcPort, rpcBlockPort, rpcWalletPort);
         BsqBlockchainManager bsqBlockchainManager = new BsqBlockchainManager(blockchainRpcService);
-        bsqBlockchainManager.onAllServicesInitialized(errorMessage -> log.error(errorMessage));
+        bsqBlockchainManager.onAllServicesInitialized(log::error);
 
         while (true) {
         }

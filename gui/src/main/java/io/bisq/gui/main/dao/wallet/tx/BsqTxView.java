@@ -20,12 +20,15 @@ package io.bisq.gui.main.dao.wallet.tx;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
+import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressWithIconAndDirection;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.dao.wallet.BalanceUtil;
+import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.Layout;
@@ -54,6 +57,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private int gridRow = 0;
     private BsqFormatter bsqFormatter;
     private BsqWalletService bsqWalletService;
+    private BsqBlockchainManager bsqBlockchainManager;
+    private BtcWalletService btcWalletService;
     private BalanceUtil balanceUtil;
     private Preferences preferences;
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
@@ -67,9 +72,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     @Inject
     private BsqTxView(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
-                      BalanceUtil balanceUtil, Preferences preferences) {
+                      BsqBlockchainManager bsqBlockchainManager,
+                      BtcWalletService btcWalletService, BalanceUtil balanceUtil, Preferences preferences) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
+        this.bsqBlockchainManager = bsqBlockchainManager;
+        this.btcWalletService = btcWalletService;
         this.balanceUtil = balanceUtil;
         this.preferences = preferences;
     }
@@ -120,9 +128,22 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         observableList.forEach(BsqTxListItem::cleanup);
 
         Set<BsqTxListItem> list = bsqWalletService.getWalletBsqTransactions().stream()
-                .map(t -> new BsqTxListItem(t, bsqWalletService))
+                .map(t -> new BsqTxListItem(t, bsqWalletService, btcWalletService))
                 .collect(Collectors.toSet());
         observableList.setAll(list);
+
+        final Set<Transaction> invalidBsqTransactions = bsqWalletService.getInvalidBsqTransactions();
+        if (!invalidBsqTransactions.isEmpty() && bsqBlockchainManager.isUtxoAvailable()) {
+            Set<String> txIds = invalidBsqTransactions.stream().map(t -> t.getHashAsString()).collect(Collectors.toSet());
+            String key = "invalidBsqTransactionsWarning_" + txIds;
+            if (preferences.showAgain(key))
+                new Popup().warning("We detected invalid Bsq transactions.\n" +
+                        "This must not happen if you used the bisq application only to send or receive BSQ.\n\n" +
+                        "invalidBsqTransactionIds=" + txIds.toString())
+                        .width(800)
+                        .dontShowAgainId(key, preferences)
+                        .show();
+        }
     }
 
     private void addDateColumn() {

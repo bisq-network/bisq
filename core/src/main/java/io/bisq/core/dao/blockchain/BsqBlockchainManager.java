@@ -23,9 +23,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.util.Tuple3;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import io.bisq.common.util.Tuple2;
+import io.bisq.core.btc.wallet.WalletUtils;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -38,21 +37,24 @@ import java.util.Set;
 public class BsqBlockchainManager {
     private static final Logger log = LoggerFactory.getLogger(BsqBlockchainManager.class);
 
-    private final BsqBlockchainService blockchainService;
 
-    // regtest
-    public static final String GENESIS_TX_ID = "3bc7bc9484e112ec8ddd1a1c984379819245ac463b9ce40fa8b5bf771c0f9236";
-    public static final int GENESIS_BLOCK_HEIGHT = 102;
+    //mainnet
+    private static final String GENESIS_TX_ID = "cabbf6073aea8f22ec678e973ac30c6d8fc89321011da6a017f63e67b9f66667";
+    private static final int GENESIS_BLOCK_HEIGHT = 105301;
+    private static final String REG_TEST_GENESIS_TX_ID = "3bc7bc9484e112ec8ddd1a1c984379819245ac463b9ce40fa8b5bf771c0f9236";
+    private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 102;
 
-    private BsqUTXOMap utxoByTxIdMap;
-    private final List<BsqUTXOListener> bsqUTXOListeners = new ArrayList<>();
-    private boolean isUtxoAvailable;
+    @Getter
+    private final BsqUTXOMap bsqUTXOMap = new BsqUTXOMap();
+    @Getter
+    private final BsqTXOMap bsqTXOMap = new BsqTXOMap();
     @Getter
     private int chainHeadHeight;
-
-    // We prefer a list over a set. See: http://stackoverflow.com/questions/24799125/what-is-the-observableset-equivalent-for-setall-method-from-observablelist
     @Getter
-    private final ObservableList<BsqBlock> bsqBlocks = FXCollections.observableArrayList();
+    private boolean isUtxoAvailable;
+
+    private final BsqBlockchainService blockchainService;
+    private final List<BsqUTXOListener> bsqUTXOListeners = new ArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +66,6 @@ public class BsqBlockchainManager {
         this.blockchainService = blockchainService;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,10 +74,14 @@ public class BsqBlockchainManager {
         blockchainService.setup(this::setupComplete, errorMessageHandler);
     }
 
-    public BsqUTXOMap getUtxoByTxIdMap() {
-        return utxoByTxIdMap;
+
+    public Set<String> getUtxoTxIdSet() {
+        return bsqUTXOMap.getTxIdSet();
     }
 
+    public Set<String> getTxoTxIdSet() {
+        return bsqTXOMap.getTxIdSet();
+    }
 
     public void addUtxoListener(BsqUTXOListener bsqUTXOListener) {
         bsqUTXOListeners.add(bsqUTXOListener);
@@ -86,40 +91,33 @@ public class BsqBlockchainManager {
         bsqUTXOListeners.remove(bsqUTXOListener);
     }
 
-    public boolean isUtxoAvailable() {
-        return isUtxoAvailable;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupComplete() {
-        ListenableFuture<Tuple3<Set<BsqBlock>, BsqUTXOMap, Integer>> future =
-                blockchainService.syncFromGenesis(GENESIS_BLOCK_HEIGHT, GENESIS_TX_ID);
-        Futures.addCallback(future, new FutureCallback<Tuple3<Set<BsqBlock>, BsqUTXOMap, Integer>>() {
+        ListenableFuture<Tuple2<BsqUTXOMap, Integer>> future =
+                blockchainService.syncFromGenesis(bsqUTXOMap, bsqTXOMap, getGenesisBlockHeight(), getGenesisTxId());
+        Futures.addCallback(future, new FutureCallback<Tuple2<BsqUTXOMap, Integer>>() {
             @Override
-            public void onSuccess(Tuple3<Set<BsqBlock>, BsqUTXOMap, Integer> tuple) {
+            public void onSuccess(Tuple2<BsqUTXOMap, Integer> tuple) {
                 UserThread.execute(() -> {
-                    BsqBlockchainManager.this.bsqBlocks.setAll(tuple.first);
-                    BsqBlockchainManager.this.utxoByTxIdMap = tuple.second;
-                    chainHeadHeight = tuple.third;
+                    chainHeadHeight = tuple.second;
                     isUtxoAvailable = true;
-                    bsqUTXOListeners.stream().forEach(e -> e.onBsqUTXOChanged(utxoByTxIdMap));
-                    blockchainService.syncFromGenesisCompete(GENESIS_TX_ID,
-                            GENESIS_BLOCK_HEIGHT,
+                    bsqUTXOListeners.stream().forEach(e -> e.onBsqUTXOChanged(bsqUTXOMap));
+                    blockchainService.syncFromGenesisCompete(bsqUTXOMap, bsqTXOMap, getGenesisTxId(),
+                            getGenesisBlockHeight(),
                             btcdBlock -> {
                                 if (btcdBlock != null) {
                                     UserThread.execute(() -> {
                                         try {
                                             final BsqBlock bsqBlock = new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight());
                                             blockchainService.parseBlock(bsqBlock,
-                                                    GENESIS_BLOCK_HEIGHT,
-                                                    GENESIS_TX_ID,
-                                                    utxoByTxIdMap);
-                                            if (!BsqBlockchainManager.this.bsqBlocks.contains(bsqBlock))
-                                                BsqBlockchainManager.this.bsqBlocks.add(bsqBlock);
+                                                    getGenesisBlockHeight(),
+                                                    getGenesisTxId(),
+                                                    bsqUTXOMap,
+                                                    bsqTXOMap);
                                         } catch (BsqBlockchainException e) {
                                             //TODO
                                             e.printStackTrace();
@@ -135,5 +133,13 @@ public class BsqBlockchainManager {
                 UserThread.execute(() -> log.error("syncFromGenesis failed" + throwable.toString()));
             }
         });
+    }
+
+    private String getGenesisTxId() {
+        return WalletUtils.isRegTest() ? REG_TEST_GENESIS_TX_ID : GENESIS_TX_ID;
+    }
+
+    private int getGenesisBlockHeight() {
+        return WalletUtils.isRegTest() ? REG_TEST_GENESIS_BLOCK_HEIGHT : GENESIS_BLOCK_HEIGHT;
     }
 }

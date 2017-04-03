@@ -245,7 +245,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                 () -> UserThread.execute(() -> {
                     log.info("Wallets restored with seed words");
                     new Popup().feedback(Res.get("seed.restore.success"))
-                            .useShutDownButton();
+                            .useShutDownButton().show();
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());

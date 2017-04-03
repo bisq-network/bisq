@@ -21,6 +21,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.trade.Tradable;
@@ -90,9 +91,9 @@ class TransactionsListItem {
                         txFeeForBsqPayment = true;
                     } else {
                         direction = Res.get("funds.tx.direction.sentTo");
-                        if (output.getScriptPubKey().isSentToAddress()
-                                || output.getScriptPubKey().isPayToScriptHash()) {
-                            addressString = output.getScriptPubKey().getToAddress(btcWalletService.getParams()).toString();
+                        if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
+                            addressString = WalletUtils.getAddressStringFromOutput(output);
+                            break;
                         }
                     }
                 }
@@ -102,11 +103,10 @@ class TransactionsListItem {
             direction = Res.get("funds.tx.direction.receivedWith");
             received = true;
             for (TransactionOutput output : transaction.getOutputs()) {
-                if (!btcWalletService.isTransactionOutputMine(output)) {
-                    if (output.getScriptPubKey().isSentToAddress() ||
-                            output.getScriptPubKey().isPayToScriptHash()) {
-                        addressString = output.getScriptPubKey().getToAddress(btcWalletService.getParams()).toString();
-                    }
+                if (btcWalletService.isTransactionOutputMine(output) &&
+                        WalletUtils.isOutputScriptConvertableToAddress(output)) {
+                    addressString = WalletUtils.getAddressStringFromOutput(output);
+                    break;
                 }
             }
         } else {
@@ -119,9 +119,9 @@ class TransactionsListItem {
                         txFeeForBsqPayment = true;
                     } else {
                         outgoing = true;
-                        if (output.getScriptPubKey().isSentToAddress()
-                                || output.getScriptPubKey().isPayToScriptHash()) {
-                            addressString = output.getScriptPubKey().getToAddress(btcWalletService.getParams()).toString();
+                        if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
+                            addressString = WalletUtils.getAddressStringFromOutput(output);
+                            break;
                         }
                     }
                 }
@@ -206,7 +206,6 @@ class TransactionsListItem {
         date = transaction.getUpdateTime();
         dateString = formatter.formatDateTime(date);
     }
-
 
     public void cleanup() {
         btcWalletService.removeTxConfidenceListener(txConfidenceListener);

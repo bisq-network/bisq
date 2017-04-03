@@ -335,8 +335,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         // spending tx
                         // MS tx
                         candidates.addAll(transaction.getOutputs().stream()
-                                .filter(transactionOutput -> !btcWalletService.isTransactionOutputMine(transactionOutput))
-                                .filter(transactionOutput -> transactionOutput.getScriptPubKey().isPayToScriptHash())
+                                .filter(output -> !btcWalletService.isTransactionOutputMine(output))
+                                .filter(output -> output.getScriptPubKey().isPayToScriptHash())
                                 .map(transactionOutput -> transaction)
                                 .collect(Collectors.toList()));
                     }

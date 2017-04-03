@@ -33,7 +33,6 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Tuple2;
-import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.RpcOptionKeys;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -49,7 +48,6 @@ import java.io.*;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -114,9 +112,14 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
                     log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
                     return client;
                 } catch (IOException | BitcoindException | CommunicationException e) {
+                    log.error(e.toString());
+                    e.printStackTrace();
+                    log.error(e.getCause() != null ? e.getCause().toString() : "e.getCause()=null");
                     throw new BsqBlockchainException(e.getMessage(), e);
                 }
             } catch (Throwable e) {
+                log.error(e.toString());
+                e.printStackTrace();
                 throw new BsqBlockchainException(e.getMessage(), e);
             }
         });
@@ -139,18 +142,24 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     }
 
     @Override
-    protected ListenableFuture<Tuple3<Set<BsqBlock>, BsqUTXOMap, Integer>> syncFromGenesis(int genesisBlockHeight, String genesisTxId) {
+    protected ListenableFuture<Tuple2<BsqUTXOMap, Integer>> syncFromGenesis(BsqUTXOMap bsqUTXOMap,
+                                                                            BsqTXOMap bsqTXOMap,
+                                                                            int genesisBlockHeight,
+                                                                            String genesisTxId) {
         return rpcRequestsExecutor.submit(() -> {
             long startTs = System.currentTimeMillis();
             int chainHeadHeight = requestChainHeadHeight();
-            Tuple2<Set<BsqBlock>, BsqUTXOMap> tuple2 = parseAllBlocksFromGenesis(chainHeadHeight, genesisBlockHeight, genesisTxId);
+            parseAllBlocksFromGenesis(bsqUTXOMap, bsqTXOMap, chainHeadHeight, genesisBlockHeight, genesisTxId);
             log.info("syncFromGenesis took {} ms", System.currentTimeMillis() - startTs);
-            return new Tuple3<>(tuple2.first, tuple2.second, chainHeadHeight);
+            return new Tuple2<>(bsqUTXOMap, chainHeadHeight);
         });
     }
 
     @Override
-    protected void syncFromGenesisCompete(String genesisTxId, int genesisBlockHeight, Consumer<Block> onNewBlockHandler) {
+    protected void syncFromGenesisCompete(BsqUTXOMap bsqUTXOMap, BsqTXOMap bsqTXOMap,
+                                          String genesisTxId,
+                                          int genesisBlockHeight,
+                                          Consumer<Block> onNewBlockHandler) {
         daemon.addBlockListener(new BlockListener() {
             @Override
             public void blockDetected(Block block) {
@@ -196,10 +205,25 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
             final List<TxOutput> txOutputs = rawTransaction.getVOut()
                     .stream()
                     .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
-                    .map(e -> new TxOutput(e.getN(),
-                            e.getValue().movePointRight(8).longValue(),
-                            e.getScriptPubKey().getAddresses(),
-                            e.getScriptPubKey().getHex() != null ? new Script(HEX.decode(e.getScriptPubKey().getHex())) : null))
+                    .map(e -> {
+                        byte[] scriptProgramBytes = new byte[]{};
+                        try {
+                            scriptProgramBytes = e.getScriptPubKey().getHex() != null ?
+                                    new Script(HEX.decode(e.getScriptPubKey().getHex())).getProgram() : null;
+                        } catch (Throwable t) {
+                            // expected for tx: 0f8e9655b29d76c5e01147704a64faf95a9c90433baacdd39d4c1d2667e570a2
+                            log.error(e.getScriptPubKey().getAsm());
+                            log.error(e.getScriptPubKey().getHex());
+                            log.error(e.getScriptPubKey().toString());
+                            log.error(t.toString());
+                            t.printStackTrace();
+                        }
+                        return new TxOutput(e.getN(),
+                                e.getValue().movePointRight(8).longValue(),
+                                e.getScriptPubKey().getAddresses(),
+                                scriptProgramBytes,
+                                rawTransaction.getTxId());
+                    })
                     .collect(Collectors.toList());
 
             // rawTransaction.getTime() is in seconds but we keep it in ms internally

@@ -20,6 +20,8 @@ package io.bisq.gui.main.dao.wallet.tx;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
+import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.GUIUtil;
 import javafx.scene.control.Tooltip;
@@ -42,6 +44,7 @@ class BsqTxListItem {
     @Getter
     private final Transaction transaction;
     private BsqWalletService bsqWalletService;
+    private BtcWalletService btcWalletService;
     @Getter
     private final Date date;
     @Getter
@@ -61,9 +64,12 @@ class BsqTxListItem {
 
     private TxConfidenceListener txConfidenceListener;
 
-    public BsqTxListItem(Transaction transaction, BsqWalletService bsqWalletService) {
+    public BsqTxListItem(Transaction transaction,
+                         BsqWalletService bsqWalletService,
+                         BtcWalletService btcWalletService) {
         this.transaction = transaction;
         this.bsqWalletService = bsqWalletService;
+        this.btcWalletService = btcWalletService;
 
         txId = transaction.getHashAsString();
         date = transaction.getUpdateTime();
@@ -88,16 +94,32 @@ class BsqTxListItem {
             amount = Coin.ZERO;
             direction = "";
         }
-        String result = null;
+
+        String foreignReceiverAddress = null;
         for (TransactionOutput output : transaction.getOutputs()) {
-            if (!bsqWalletService.isTransactionOutputMine(output)) {
-                if (output.getScriptPubKey().isSentToAddress()
-                        || output.getScriptPubKey().isPayToScriptHash()) {
-                    result = output.getScriptPubKey().getToAddress(bsqWalletService.getParams()).toString();
+            if (!bsqWalletService.isTransactionOutputMine(output) &&
+                    !btcWalletService.isTransactionOutputMine(output) &&
+                    WalletUtils.isOutputScriptConvertableToAddress(output)) {
+                // We don't support send txs with multiple outputs to multiple receivers, so we can 
+                // assume that only one output is not from our own wallets.
+                foreignReceiverAddress = WalletUtils.getAddressStringFromOutput(output);
+                break;
+            }
+        }
+
+        // In the case we sent to ourselves (either to BSQ or BTC wallet) we show the first as the other is
+        // usually the change output.
+        String ownReceiverAddress = Res.get("shared.na");
+        if (foreignReceiverAddress != null) {
+            for (TransactionOutput output : transaction.getOutputs()) {
+                if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
+                    ownReceiverAddress = WalletUtils.getAddressStringFromOutput(output);
+                    break;
                 }
             }
         }
-        address = result != null ? result : "";
+
+        address = foreignReceiverAddress != null ? foreignReceiverAddress : ownReceiverAddress;
     }
 
     private void setupConfidence(BsqWalletService bsqWalletService) {
