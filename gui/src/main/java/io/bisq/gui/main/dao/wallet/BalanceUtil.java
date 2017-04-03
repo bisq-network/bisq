@@ -18,7 +18,6 @@
 package io.bisq.gui.main.dao.wallet;
 
 import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BsqFormatter;
 import javafx.scene.control.TextField;
 import org.bitcoinj.core.*;
@@ -49,6 +48,7 @@ public class BalanceUtil {
 
     public void setBalanceTextField(TextField balanceTextField) {
         this.balanceTextField = balanceTextField;
+        balanceTextField.setMouseTransparent(false);
     }
 
     public void initialize() {
@@ -91,8 +91,6 @@ public class BalanceUtil {
     private void requestUtxo() {
         bsqWalletService.requestBsqUtxo(() -> {
             balanceTextField.setText(formatter.formatCoinWithCode(bsqWalletService.getAvailableBalance()));
-        }, errorMessage -> {
-            new Popup<>().warning(errorMessage);
         });
     }
 

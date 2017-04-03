@@ -27,7 +27,7 @@ import io.bisq.gui.main.dao.DaoView;
 import io.bisq.gui.main.dao.wallet.dashboard.BsqDashboardView;
 import io.bisq.gui.main.dao.wallet.receive.BsqReceiveView;
 import io.bisq.gui.main.dao.wallet.send.BsqSendView;
-import io.bisq.gui.main.dao.wallet.tx.BsqTransactionsView;
+import io.bisq.gui.main.dao.wallet.tx.BsqTxView;
 import io.bisq.gui.util.Colors;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -78,7 +78,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"), BsqDashboardView.class, AwesomeIcon.DASHBOARD);
         send = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.send"), BsqSendView.class, AwesomeIcon.SIGNOUT);
         receive = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.receive"), BsqReceiveView.class, AwesomeIcon.SIGNIN);
-        transactions = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.transactions"), BsqTransactionsView.class, AwesomeIcon.TABLE);
+        transactions = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.transactions"), BsqTxView.class, AwesomeIcon.TABLE);
         leftVBox.getChildren().addAll(dashboard, send, receive, transactions);
     }
 
@@ -121,7 +121,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
         if (view instanceof BsqDashboardView) dashboard.setSelected(true);
         else if (view instanceof BsqSendView) send.setSelected(true);
         else if (view instanceof BsqReceiveView) receive.setSelected(true);
-        else if (view instanceof BsqTransactionsView) transactions.setSelected(true);
+        else if (view instanceof BsqTxView) transactions.setSelected(true);
     }
 
     public Class<? extends View> getSelectedViewClass() {

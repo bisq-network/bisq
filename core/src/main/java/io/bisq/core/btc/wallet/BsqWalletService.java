@@ -19,21 +19,25 @@ package io.bisq.core.btc.wallet;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
+import io.bisq.core.dao.blockchain.BsqBlock;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.blockchain.BsqUTXOMap;
+import io.bisq.core.dao.blockchain.Tx;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.CoinSelection;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -42,11 +46,13 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class BsqWalletService extends WalletService {
-    private static final Logger log = LoggerFactory.getLogger(BsqWalletService.class);
 
     private final BsqBlockchainManager bsqBlockchainManager;
     private final BsqCoinSelector bsqCoinSelector;
+    @Getter
+    private final ObservableList<Transaction> walletBsqTransactions = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,44 +79,41 @@ public class BsqWalletService extends WalletService {
             wallet.addEventListener(new AbstractWalletEventListener() {
                 @Override
                 public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                    onChange();
+                    //TODO do we need updateWalletBsqTransactions(); here?
                 }
 
                 @Override
                 public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                    onChange();
+                    //TODO do we need updateWalletBsqTransactions(); here?
                 }
 
                 @Override
                 public void onReorganize(Wallet wallet) {
-                    onChange();
+                    updateWalletBsqTransactions();
                 }
 
                 @Override
                 public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-                    onChange();
                 }
 
                 @Override
                 public void onKeysAdded(List<ECKey> keys) {
-                    onChange();
+                    updateWalletBsqTransactions();
                 }
 
                 @Override
                 public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                    onChange();
+                    updateWalletBsqTransactions();
                 }
 
                 @Override
                 public void onWalletChanged(Wallet wallet) {
-                    onChange();
+                    updateWalletBsqTransactions();
                 }
 
-                public void onChange() {
-                    // TODO
-                }
             });
         });
+        bsqBlockchainManager.getBsqBlocks().addListener((ListChangeListener<BsqBlock>) c -> updateWalletBsqTransactions());
     }
 
 
@@ -141,7 +144,7 @@ public class BsqWalletService extends WalletService {
     // UTXO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestBsqUtxo(@Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
+    public void requestBsqUtxo(@Nullable ResultHandler resultHandler) {
         if (bsqBlockchainManager.isUtxoAvailable()) {
             applyUtxoSetToUTXOProvider(bsqBlockchainManager.getUtxoByTxIdMap());
             if (resultHandler != null)
@@ -157,6 +160,17 @@ public class BsqWalletService extends WalletService {
 
     private void applyUtxoSetToUTXOProvider(BsqUTXOMap bsqUTXOMap) {
         bsqCoinSelector.setUtxoMap(bsqUTXOMap);
+    }
+
+    private void updateWalletBsqTransactions() {
+        Set<String> txIdsFromUTXOSet = bsqBlockchainManager.getBsqBlocks().stream()
+                .flatMap(bsqBlock -> bsqBlock.getTxByTxIdMap().values().stream())
+                .map(Tx::getId)
+                .collect(Collectors.toSet());
+
+        walletBsqTransactions.setAll(getTransactions(true).stream()
+                .filter(t -> txIdsFromUTXOSet.contains(t.getHashAsString()))
+                .collect(Collectors.toSet()));
     }
 
 

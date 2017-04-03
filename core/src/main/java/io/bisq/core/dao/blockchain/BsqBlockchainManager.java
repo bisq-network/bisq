@@ -23,13 +23,17 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.util.Tuple2;
+import io.bisq.common.util.Tuple3;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class BsqBlockchainManager {
     private static final Logger log = LoggerFactory.getLogger(BsqBlockchainManager.class);
@@ -37,13 +41,18 @@ public class BsqBlockchainManager {
     private final BsqBlockchainService blockchainService;
 
     // regtest
-    public static final String GENESIS_TX_ID = "c0ddf75202579fd43e0d5a41ac5bae05a6e8295633695af6c350b9100878c5e7";
+    public static final String GENESIS_TX_ID = "3bc7bc9484e112ec8ddd1a1c984379819245ac463b9ce40fa8b5bf771c0f9236";
     public static final int GENESIS_BLOCK_HEIGHT = 102;
 
-    protected BsqUTXOMap utxoByTxIdMap;
+    private BsqUTXOMap utxoByTxIdMap;
     private final List<BsqUTXOListener> bsqUTXOListeners = new ArrayList<>();
     private boolean isUtxoAvailable;
-    protected int chainHeadHeight;
+    @Getter
+    private int chainHeadHeight;
+
+    // We prefer a list over a set. See: http://stackoverflow.com/questions/24799125/what-is-the-observableset-equivalent-for-setall-method-from-observablelist
+    @Getter
+    private final ObservableList<BsqBlock> bsqBlocks = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -83,18 +92,19 @@ public class BsqBlockchainManager {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected methods
+    // private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void setupComplete() {
-        ListenableFuture<Tuple2<BsqUTXOMap, Integer>> future =
+    private void setupComplete() {
+        ListenableFuture<Tuple3<Set<BsqBlock>, BsqUTXOMap, Integer>> future =
                 blockchainService.syncFromGenesis(GENESIS_BLOCK_HEIGHT, GENESIS_TX_ID);
-        Futures.addCallback(future, new FutureCallback<Tuple2<BsqUTXOMap, Integer>>() {
+        Futures.addCallback(future, new FutureCallback<Tuple3<Set<BsqBlock>, BsqUTXOMap, Integer>>() {
             @Override
-            public void onSuccess(Tuple2<BsqUTXOMap, Integer> tuple) {
+            public void onSuccess(Tuple3<Set<BsqBlock>, BsqUTXOMap, Integer> tuple) {
                 UserThread.execute(() -> {
-                    BsqBlockchainManager.this.utxoByTxIdMap = tuple.first;
-                    chainHeadHeight = tuple.second;
+                    BsqBlockchainManager.this.bsqBlocks.setAll(tuple.first);
+                    BsqBlockchainManager.this.utxoByTxIdMap = tuple.second;
+                    chainHeadHeight = tuple.third;
                     isUtxoAvailable = true;
                     bsqUTXOListeners.stream().forEach(e -> e.onBsqUTXOChanged(utxoByTxIdMap));
                     blockchainService.syncFromGenesisCompete(GENESIS_TX_ID,
@@ -103,15 +113,17 @@ public class BsqBlockchainManager {
                                 if (btcdBlock != null) {
                                     UserThread.execute(() -> {
                                         try {
-                                            blockchainService.parseBlock(new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight()),
+                                            final BsqBlock bsqBlock = new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight());
+                                            blockchainService.parseBlock(bsqBlock,
                                                     GENESIS_BLOCK_HEIGHT,
                                                     GENESIS_TX_ID,
                                                     utxoByTxIdMap);
+                                            if (!BsqBlockchainManager.this.bsqBlocks.contains(bsqBlock))
+                                                BsqBlockchainManager.this.bsqBlocks.add(bsqBlock);
                                         } catch (BsqBlockchainException e) {
                                             //TODO
                                             e.printStackTrace();
                                         }
-                                        blockchainService.printUtxoMap(utxoByTxIdMap);
                                     });
                                 }
                             });
@@ -124,25 +136,4 @@ public class BsqBlockchainManager {
             }
         });
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public int getChainHeadHeight() {
-        return chainHeadHeight;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Setters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
 }

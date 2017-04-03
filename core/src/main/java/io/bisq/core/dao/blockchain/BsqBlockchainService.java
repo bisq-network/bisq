@@ -27,7 +27,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Tuple2;
-import org.bitcoinj.core.Coin;
+import io.bisq.common.util.Tuple3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +56,7 @@ abstract public class BsqBlockchainService {
 
     abstract void setup(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
 
-    abstract ListenableFuture<Tuple2<BsqUTXOMap, Integer>> syncFromGenesis(int genesisBlockHeight, String genesisTxId);
+    abstract ListenableFuture<Tuple3<Set<BsqBlock>, BsqUTXOMap, Integer>> syncFromGenesis(int genesisBlockHeight, String genesisTxId);
 
     abstract void syncFromGenesisCompete(String genesisTxId, int genesisBlockHeight, Consumer<Block> onNewBlockHandler);
 
@@ -67,24 +67,27 @@ abstract public class BsqBlockchainService {
     abstract Tx requestTransaction(String txId) throws BsqBlockchainException;
 
     @VisibleForTesting
-    BsqUTXOMap parseAllBlocksFromGenesis(int chainHeadHeight,
-                                         int genesisBlockHeight,
-                                         String genesisTxId) throws BsqBlockchainException {
+    Tuple2<Set<BsqBlock>, BsqUTXOMap> parseAllBlocksFromGenesis(int chainHeadHeight,
+                                                                int genesisBlockHeight,
+                                                                String genesisTxId) throws BsqBlockchainException {
         try {
             BsqUTXOMap bsqUTXOMap = new BsqUTXOMap();
+            Set<BsqBlock> blocks = new HashSet<>();
             log.info("chainHeadHeight=" + chainHeadHeight);
             long startTs = System.currentTimeMillis();
             for (int height = genesisBlockHeight; height <= chainHeadHeight; height++) {
                 Block btcdBlock = requestBlock(height);
                 log.info("Current block height=" + height);
-                parseBlock(new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight()),
+                final BsqBlock bsqBlock = new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight());
+                blocks.add(bsqBlock);
+                parseBlock(bsqBlock,
                         genesisBlockHeight,
                         genesisTxId,
                         bsqUTXOMap);
+                log.info(bsqUTXOMap.toString());
             }
-            printUtxoMap(bsqUTXOMap);
             log.info("Took {} ms", System.currentTimeMillis() - startTs);
-            return bsqUTXOMap;
+            return new Tuple2<>(blocks, bsqUTXOMap);
         } catch (Throwable t) {
             throw new BsqBlockchainException(t.getMessage(), t);
         }
@@ -110,9 +113,6 @@ abstract public class BsqBlockchainService {
             txByTxIdMap.entrySet().stream()
                     .filter(entry -> entry.getKey().equals(genesisTxId))
                     .forEach(entry -> parseGenesisTx(entry.getValue(), blockHeight, bsqUTXOMap));
-
-            // We need to remove the genesis tx from further parsing (would be treated as intraBlockInputTx)
-            txByTxIdMap.remove(genesisTxId);
         }
 
         // Worst case is that all txs in a block are depending on another, so only once get resolved at each iteration.
@@ -134,58 +134,50 @@ abstract public class BsqBlockchainService {
         // The set of txIds of txs which are used for inputs of another tx in same block
         Set<String> intraBlockSpendingTxIdSet = getIntraBlockSpendingTxIdSet(transactions);
 
-        Set<Tx> nonIntraBlockInputTxs = new HashSet<>();
-        Set<Tx> intraBlockInputTxs = new HashSet<>();
+        Set<Tx> txsWithoutInputsFromSameBlock = new HashSet<>();
+        Set<Tx> txsWithInputsFromSameBlock = new HashSet<>();
         // First we find the txs which have no intra-block inputs
         outerLoop:
         for (Tx tx : transactions) {
             for (TxInput input : tx.getInputs()) {
                 if (intraBlockSpendingTxIdSet.contains(input.getSpendingTxId())) {
                     // We have an input from one of the intra-block-transactions, so we cannot process that tx now.
-                    // We add the tx for later parsing to the intraBlockInputTxs and move to the next 
+                    // We add the tx for later parsing to the txsWithInputsFromSameBlock and move to the next 
                     // outerLoop iteration .
-                    intraBlockInputTxs.add(tx);
+                    txsWithInputsFromSameBlock.add(tx);
+
                     continue outerLoop;
                 }
             }
             // If we have not found any tx input pointing to anther tx in the same block we add it to our
-            // nonIntraBlockInputTxs for first pass of BSQ validation
-            nonIntraBlockInputTxs.add(tx);
+            // txsWithoutInputsFromSameBlock for first pass of BSQ validation
+            txsWithoutInputsFromSameBlock.add(tx);
         }
 
-        log.debug("intraBlockInputTxs " + intraBlockInputTxs.size());
-        log.debug("nonIntraBlockInputTxs " + nonIntraBlockInputTxs.size());
-
         // we check if we have any valid BSQ utxo from that tx set
-        boolean utxoChanged = false;
-        if (!nonIntraBlockInputTxs.isEmpty()) {
-            for (Tx tx : nonIntraBlockInputTxs) {
-                utxoChanged = utxoChanged || updateBsqUtxoMapFromTx(tx, blockHeight, bsqUTXOMap);
+        if (!txsWithoutInputsFromSameBlock.isEmpty()) {
+            for (Tx tx : txsWithoutInputsFromSameBlock) {
+                updateBsqUtxoMapFromTx(tx, blockHeight, bsqUTXOMap);
             }
         }
 
         // we check if we have any valid BSQ utxo from that tx set
-        if (!intraBlockInputTxs.isEmpty()) {
-            if (utxoChanged) {
-                if (recursionCounter < maxRecursions) {
-                    updateBsqUtxoMapFromBlock(intraBlockInputTxs, bsqUTXOMap, blockHeight, ++recursionCounter, maxRecursions);
-                } else {
-                    final String msg = "We exceeded our max. recursions for resolveConnectedTxs.\n" +
-                            "intraBlockInputTxs=" + intraBlockInputTxs.toString() + "\n" +
-                            "nonIntraBlockInputTxs=" + nonIntraBlockInputTxs;
-                    log.warn(msg);
-                    if (DevEnv.DEV_MODE)
-                        throw new RuntimeException(msg);
-                }
+        // We might have InputsFromSameBlock whcih are BTC only but not BSQ, so we cannot 
+        // optimize here and need to iterate further.
+        // TODO recursion risk?
+        if (!txsWithInputsFromSameBlock.isEmpty()) {
+            if (recursionCounter < maxRecursions) {
+                updateBsqUtxoMapFromBlock(txsWithInputsFromSameBlock, bsqUTXOMap, blockHeight, ++recursionCounter, maxRecursions);
             } else {
-                final String msg = "If we have intraBlockInputTxs we must have had got the utxoChanged, otherwise we cannot " +
-                        "satisfy the open intraBlockInputTxs.\n" +
-                        "intraBlockInputTxs=" + intraBlockInputTxs.toString() + "\n" +
-                        "nonIntraBlockInputTxs=" + nonIntraBlockInputTxs;
+                final String msg = "We exceeded our max. recursions for resolveConnectedTxs.\n" +
+                        "txsWithInputsFromSameBlock=" + txsWithInputsFromSameBlock.toString() + "\n" +
+                        "txsWithoutInputsFromSameBlock=" + txsWithoutInputsFromSameBlock;
                 log.warn(msg);
                 if (DevEnv.DEV_MODE)
                     throw new RuntimeException(msg);
             }
+        } else {
+            log.info("We have no more txsWithInputsFromSameBlock.");
         }
     }
 
@@ -205,14 +197,14 @@ abstract public class BsqBlockchainService {
         String txId = tx.getId();
         List<TxOutput> outputs = tx.getOutputs();
         boolean utxoChanged = false;
-        Coin availableValue = Coin.ZERO;
+        long availableValue = 0;
         for (TxInput input : tx.getInputs()) {
             String spendingTxId = input.getSpendingTxId();
             final int spendingTxOutputIndex = input.getSpendingTxOutputIndex();
             if (bsqUTXOMap.containsTuple(spendingTxId, spendingTxOutputIndex)) {
                 BsqUTXO bsqUTXO = bsqUTXOMap.getByTuple(spendingTxId, spendingTxOutputIndex);
                 log.debug("input value " + bsqUTXO.getValue());
-                availableValue = availableValue.add(bsqUTXO.getValue());
+                availableValue = availableValue + bsqUTXO.getValue();
 
                 bsqUTXOMap.removeByTuple(spendingTxId, spendingTxOutputIndex);
                 utxoChanged = true;
@@ -223,44 +215,38 @@ abstract public class BsqBlockchainService {
         }
 
         // If we have an input spending tokens we iterate the outputs
-        if (availableValue.isPositive()) {
+        if (availableValue > 0) {
 
             // We use order of output index. An output is a BSQ utxo as long there is enough input value
             for (int outputIndex = 0; outputIndex < outputs.size(); outputIndex++) {
                 TxOutput txOutput = outputs.get(outputIndex);
+                availableValue = availableValue - txOutput.getValue();
+                if (availableValue >= 0) {
+                    // We are spending available tokens
+                    BsqUTXO bsqUTXO = new BsqUTXO(txId,
+                            blockHeight,
+                            false,
+                            txOutput);
+                    bsqUTXOMap.putByTuple(txId, outputIndex, bsqUTXO);
 
-                if (availableValue.isZero()) {
-                    log.debug("We don't have anymore BSQ to spend");
-                    break;
-                } else {
-                    availableValue = availableValue.subtract(txOutput.getValue());
-                    if (!availableValue.isNegative()) {
-                        // We are spending available tokens
-                        BsqUTXO bsqUTXO = new BsqUTXO(txId,
-                                blockHeight,
-                                false,
-                                txOutput);
-                        bsqUTXOMap.putByTuple(txId, outputIndex, bsqUTXO);
-
-                        if (availableValue.isZero()) {
-                            log.debug("We don't have anymore BSQ to spend");
-                            break;
-                        }
-                    } else {
-                        log.warn("We tried to spend more BSQ as we have in our inputs");
-                        // TODO report burnt BSQ
-                        // TODO: check if we should be more tolerant and use 
-                        // availableValue = availableValue.subtract(txOutput.getValue());
-                        // only temp and allow follow up outputs to use the left input.
+                    if (availableValue == 0) {
+                        log.debug("We don't have anymore BSQ to spend");
                         break;
                     }
+                } else {
+                    log.warn("We tried to spend more BSQ as we have in our inputs");
+                    // TODO report burnt BSQ
+                    // TODO: check if we should be more tolerant and use 
+                    // availableValue = availableValue.subtract(txOutput.getValue());
+                    // only temp and allow follow up outputs to use the left input.
+                    break;
                 }
             }
 
             //TODO write that warning to a handler
-            if (availableValue.isPositive()) {
+            if (availableValue > 0) {
                 log.warn("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
-                        availableValue.value,
+                        availableValue,
                         tx.toString());
             }
         }
@@ -284,17 +270,5 @@ abstract public class BsqBlockchainService {
             bsqUTXOMap.putByTuple(txId, index, bsqUTXO);
         }
         checkArgument(!bsqUTXOMap.isEmpty(), "Genesis tx need to have BSQ utxo when parsing genesis block");
-    }
-
-    void printUtxoMap(BsqUTXOMap bsqUTXOMap) {
-        if (log.isInfoEnabled() || log.isDebugEnabled() || log.isTraceEnabled()) {
-            StringBuilder sb = new StringBuilder("bsqUTXOMap:\n");
-            bsqUTXOMap.entrySet().stream().forEach(e -> {
-                        sb.append("TxId:Index = ").append(e.getKey()).append("\n");
-                        sb.append("      UTXO = ").append(e.getValue().toString()).append("\n");
-                    }
-            );
-            log.error(sb.toString());
-        }
     }
 }

@@ -18,14 +18,12 @@
 package io.bisq.core.dao.blockchain;
 
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Value
-@Slf4j
 public class BsqBlock {
     private final int height;
     private final List<String> txIds;
@@ -42,5 +40,14 @@ public class BsqBlock {
 
     public Tx getTxByTxId(String txId) {
         return txByTxIdMap.get(txId);
+    }
+
+    @Override
+    public String toString() {
+        return "BsqBlock{" +
+                "\nheight=" + height +
+                ",\ntxIds=" + txIds +
+                ",\ntxByTxIdMap=" + txByTxIdMap +
+                "}\n";
     }
 }

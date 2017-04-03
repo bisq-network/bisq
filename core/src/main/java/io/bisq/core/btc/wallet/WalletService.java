@@ -27,6 +27,7 @@ import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.listeners.AddressConfidenceListener;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
+import io.bisq.core.dao.blockchain.TxOutput;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import org.bitcoinj.core.*;
@@ -319,6 +320,7 @@ public abstract class WalletService {
     @Nullable
     public TransactionConfidence getConfidenceForTxId(String txId) {
         if (wallet != null) {
+            // TODO includeDead txs?
             Set<Transaction> transactions = wallet.getTransactions(true);
             for (Transaction tx : transactions) {
                 if (tx.getHashAsString().equals(txId))
@@ -543,6 +545,26 @@ public abstract class WalletService {
         return transactionOutput.isMine(wallet);
     }
 
+    public boolean isTxOutputMine(TxOutput txOutput) {
+        try {
+            Script script = txOutput.getScript();
+            if (script.isSentToRawPubKey()) {
+                byte[] pubkey = script.getPubKey();
+                return wallet.isPubKeyMine(pubkey);
+            }
+            if (script.isPayToScriptHash()) {
+                return wallet.isPayToScriptHashMine(script.getPubKeyHash());
+            } else {
+                byte[] pubkeyHash = script.getPubKeyHash();
+                return wallet.isPubKeyHashMine(pubkeyHash);
+            }
+        } catch (ScriptException e) {
+            // Just means we didn't understand the output of this transaction: ignore it.
+            log.debug("Could not parse tx output script: {}", e.toString());
+            return false;
+        }
+    }
+
     public Coin getValueSentFromMeForTransaction(Transaction transaction) throws ScriptException {
         return transaction.getValueSentFromMe(wallet);
     }
@@ -589,7 +611,6 @@ public abstract class WalletService {
                 TransactionConfidence transactionConfidence = getMostRecentConfidence(transactionConfidenceList);
                 addressConfidenceListener.onTransactionConfidenceChanged(transactionConfidence);
             }
-
             txConfidenceListeners.stream()
                     .filter(txConfidenceListener -> tx != null &&
                             tx.getHashAsString() != null &&

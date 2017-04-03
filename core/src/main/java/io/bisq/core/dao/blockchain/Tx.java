@@ -26,4 +26,15 @@ public class Tx {
     private final String id;
     private final List<TxInput> inputs;
     private final List<TxOutput> outputs;
+    private final long time; // in ms from epoche
+
+    @Override
+    public String toString() {
+        return "Tx{" +
+                "\nid='" + id + '\'' +
+                ",\ninputs=" + inputs +
+                ",\noutputs=" + outputs +
+                ",\ntime=" + time +
+                "}\n";
+    }
 }

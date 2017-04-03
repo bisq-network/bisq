@@ -19,6 +19,7 @@ package io.bisq.gui.main.funds.transactions;
 
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.listeners.TxConfidenceListener;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOffer;
@@ -28,21 +29,22 @@ import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.GUIUtil;
 import javafx.scene.control.Tooltip;
-import org.bitcoinj.core.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
 
 import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.Optional;
 
+@Slf4j
 class TransactionsListItem {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
     private String dateString;
     private final Date date;
     private final String txId;
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
     private final TxConfidenceIndicator txConfidenceIndicator;
     private final Tooltip tooltip;
     @Nullable
@@ -53,65 +55,74 @@ class TransactionsListItem {
     private TxConfidenceListener txConfidenceListener;
     private boolean received;
     private boolean detailsAvailable;
+    private boolean txFeeForBsqPayment = false;
     private Coin amountAsCoin = Coin.ZERO;
     private BSFormatter formatter;
     private int confirmations = 0;
 
     public TransactionsListItem() {
         date = null;
-        walletService = null;
+        btcWalletService = null;
         txConfidenceIndicator = null;
         tooltip = null;
         txId = null;
     }
 
-    public TransactionsListItem(Transaction transaction, BtcWalletService walletService, Optional<Tradable> tradableOptional, BSFormatter formatter) {
+    public TransactionsListItem(Transaction transaction,
+                                BtcWalletService btcWalletService,
+                                BsqWalletService bsqWalletService,
+                                Optional<Tradable> tradableOptional,
+                                BSFormatter formatter) {
         this.formatter = formatter;
         txId = transaction.getHashAsString();
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
 
-        Coin valueSentToMe = walletService.getValueSentToMeForTransaction(transaction);
-        Coin valueSentFromMe = walletService.getValueSentFromMeForTransaction(transaction);
-        Address address;
+        Coin valueSentToMe = btcWalletService.getValueSentToMeForTransaction(transaction);
+        Coin valueSentFromMe = btcWalletService.getValueSentFromMeForTransaction(transaction);
+
+        // TODO check and refactor
         if (valueSentToMe.isZero()) {
             amountAsCoin = valueSentFromMe.multiply(-1);
-
-            for (TransactionOutput transactionOutput : transaction.getOutputs()) {
-                if (!walletService.isTransactionOutputMine(transactionOutput)) {
-                    direction = Res.get("funds.tx.direction.sentTo");
+            for (TransactionOutput output : transaction.getOutputs()) {
+                if (!btcWalletService.isTransactionOutputMine(output)) {
                     received = false;
-                    if (transactionOutput.getScriptPubKey().isSentToAddress()
-                            || transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getParams());
-                        addressString = address.toString();
+                    if (bsqWalletService.isTransactionOutputMine(output)) {
+                        txFeeForBsqPayment = true;
+                    } else {
+                        direction = Res.get("funds.tx.direction.sentTo");
+                        if (output.getScriptPubKey().isSentToAddress()
+                                || output.getScriptPubKey().isPayToScriptHash()) {
+                            addressString = output.getScriptPubKey().getToAddress(btcWalletService.getParams()).toString();
+                        }
                     }
                 }
             }
         } else if (valueSentFromMe.isZero()) {
             amountAsCoin = valueSentToMe;
-
             direction = Res.get("funds.tx.direction.receivedWith");
             received = true;
-
-            for (TransactionOutput transactionOutput : transaction.getOutputs()) {
-                if (!walletService.isTransactionOutputMine(transactionOutput)) {
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() ||
-                            transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getParams());
-                        addressString = address.toString();
+            for (TransactionOutput output : transaction.getOutputs()) {
+                if (!btcWalletService.isTransactionOutputMine(output)) {
+                    if (output.getScriptPubKey().isSentToAddress() ||
+                            output.getScriptPubKey().isPayToScriptHash()) {
+                        addressString = output.getScriptPubKey().getToAddress(btcWalletService.getParams()).toString();
                     }
                 }
             }
         } else {
             amountAsCoin = valueSentToMe.subtract(valueSentFromMe);
             boolean outgoing = false;
-            for (TransactionOutput transactionOutput : transaction.getOutputs()) {
-                if (!walletService.isTransactionOutputMine(transactionOutput)) {
-                    outgoing = true;
-                    if (transactionOutput.getScriptPubKey().isSentToAddress() ||
-                            transactionOutput.getScriptPubKey().isPayToScriptHash()) {
-                        address = transactionOutput.getScriptPubKey().getToAddress(walletService.getParams());
-                        addressString = address.toString();
+            for (TransactionOutput output : transaction.getOutputs()) {
+                if (!btcWalletService.isTransactionOutputMine(output)) {
+                    if (bsqWalletService.isTransactionOutputMine(output)) {
+                        outgoing = false;
+                        txFeeForBsqPayment = true;
+                    } else {
+                        outgoing = true;
+                        if (output.getScriptPubKey().isSentToAddress()
+                                || output.getScriptPubKey().isPayToScriptHash()) {
+                            addressString = output.getScriptPubKey().getToAddress(btcWalletService.getParams()).toString();
+                        }
                     }
                 }
             }
@@ -120,6 +131,10 @@ class TransactionsListItem {
                 direction = Res.get("funds.tx.direction.sentTo");
                 received = false;
             }
+        }
+        if (txFeeForBsqPayment) {
+            direction = Res.get("funds.tx.txFeePaymentForBsqTx");
+            addressString = "";
         }
 
         // confidence
@@ -138,7 +153,7 @@ class TransactionsListItem {
                 confirmations = confidence.getDepthInBlocks();
             }
         };
-        walletService.addTxConfidenceListener(txConfidenceListener);
+        btcWalletService.addTxConfidenceListener(txConfidenceListener);
         TransactionConfidence confidence = transaction.getConfidence();
         GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
         confirmations = confidence.getDepthInBlocks();
@@ -182,8 +197,10 @@ class TransactionsListItem {
         } else {
             if (amountAsCoin.isZero())
                 details = Res.get("funds.tx.noFundsFromDispute");
-            else
+            else if (!txFeeForBsqPayment)
                 details = received ? Res.get("funds.tx.receivedFunds") : Res.get("funds.tx.withdrawnFromWallet");
+            else
+                details = Res.get("funds.tx.txFeePaymentForBsqTx");
         }
 
         date = transaction.getUpdateTime();
@@ -192,7 +209,7 @@ class TransactionsListItem {
 
 
     public void cleanup() {
-        walletService.removeTxConfidenceListener(txConfidenceListener);
+        btcWalletService.removeTxConfidenceListener(txConfidenceListener);
     }
 
 

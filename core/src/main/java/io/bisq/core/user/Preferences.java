@@ -128,6 +128,8 @@ public final class Preferences implements Persistable {
     private final ArrayList<CryptoCurrency> cryptoCurrencies;
     private BlockChainExplorer blockChainExplorerMainNet;
     private BlockChainExplorer blockChainExplorerTestNet;
+    private BlockChainExplorer bsqBlockChainExplorer = new BlockChainExplorer("bisq", "https://explorer.bisq.io/tx.html?tx=",
+            "https://explorer.bisq.io/Address.html?addr=");
     private String backupDirectory;
     private boolean autoSelectArbitrators = true;
     private final Map<String, Boolean> dontShowAgainMap;
@@ -135,7 +137,6 @@ public final class Preferences implements Persistable {
     private boolean useTorForBitcoinJ = true;
 
     private boolean showOwnOffersInOfferBook = true;
-    private Locale preferredLocale;
     private TradeCurrency preferredTradeCurrency;
     private long withdrawalTxFeeInBytes = 100;
     private boolean useCustomWithdrawalTxFee = false;
@@ -231,15 +232,10 @@ public final class Preferences implements Persistable {
 
             setBlockChainExplorerTestNet(persisted.getBlockChainExplorerTestNet());
             setBlockChainExplorerMainNet(persisted.getBlockChainExplorerMainNet());
+            setBsqBlockChainExplorer(persisted.getBsqBlockChainExplorer());
 
             setUseCustomWithdrawalTxFee(persisted.useCustomWithdrawalTxFee);
             setWithdrawalTxFeeInBytes(persisted.withdrawalTxFeeInBytes);
-
-            // In case of an older version without that data we set it to defaults
-            if (blockChainExplorerTestNet == null)
-                setBlockChainExplorerTestNet(blockChainExplorersTestNet.get(0));
-            if (blockChainExplorerMainNet == null)
-                setBlockChainExplorerTestNet(blockChainExplorersMainNet.get(0));
 
             backupDirectory = persisted.getBackupDirectory();
             autoSelectArbitrators = persisted.getAutoSelectArbitrators();
@@ -297,7 +293,6 @@ public final class Preferences implements Persistable {
             setBlockChainExplorerMainNet(blockChainExplorersMainNet.get(0));
 
             dontShowAgainMap = new HashMap<>();
-            preferredLocale = getDefaultLocale();
             preferredTradeCurrency = getDefaultTradeCurrency();
             maxPriceDistanceInPercent = 0.1;
 
@@ -518,7 +513,12 @@ public final class Preferences implements Persistable {
         this.selectedPaymentAccountForCreateOffer = paymentAccount;
         storage.queueUpForSave();
     }
-    
+
+    public void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer) {
+        this.bsqBlockChainExplorer = bsqBlockChainExplorer;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -708,7 +708,11 @@ public final class Preferences implements Persistable {
     public PaymentAccount getSelectedPaymentAccountForCreateOffer() {
         return selectedPaymentAccountForCreateOffer;
     }
-    
+
+    public BlockChainExplorer getBsqBlockChainExplorer() {
+        return bsqBlockChainExplorer;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

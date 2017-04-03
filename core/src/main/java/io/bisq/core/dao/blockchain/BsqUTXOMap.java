@@ -38,6 +38,12 @@ public class BsqUTXOMap extends HashMap<BsqUTXOMap.TxIdIndexTuple, BsqUTXO> {
         return super.remove(new TxIdIndexTuple(txId, index));
     }
 
+    @Override
+    public String toString() {
+        return "BsqUTXOMap " + super.toString();
+    }
+
+    
     @Value
     static class TxIdIndexTuple {
         private final String txId;
@@ -45,7 +51,7 @@ public class BsqUTXOMap extends HashMap<BsqUTXOMap.TxIdIndexTuple, BsqUTXO> {
 
         @Override
         public String toString() {
-            return txId + ":" + index;
+            return "\nTxIdIndexTuple(" + txId + ":" + index + ")";
         }
     }
 }

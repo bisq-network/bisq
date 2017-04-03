@@ -24,4 +24,13 @@ public class TxInput {
     private final int spendingTxOutputIndex;
     private final String spendingTxId;
     private final String txId;
+
+    @Override
+    public String toString() {
+        return "TxInput{" +
+                "\nspendingTxOutputIndex=" + spendingTxOutputIndex +
+                ",\nspendingTxId='" + spendingTxId + '\'' +
+                ",\ntxId='" + txId + '\'' +
+                "}\n";
+    }
 }

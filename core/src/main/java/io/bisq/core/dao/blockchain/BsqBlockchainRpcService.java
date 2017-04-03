@@ -33,12 +33,12 @@ import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Tuple2;
+import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.RpcOptionKeys;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.script.Script;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -47,7 +47,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Named;
 import java.io.*;
 import java.net.URL;
+import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -137,13 +139,13 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     }
 
     @Override
-    protected ListenableFuture<Tuple2<BsqUTXOMap, Integer>> syncFromGenesis(int genesisBlockHeight, String genesisTxId) {
+    protected ListenableFuture<Tuple3<Set<BsqBlock>, BsqUTXOMap, Integer>> syncFromGenesis(int genesisBlockHeight, String genesisTxId) {
         return rpcRequestsExecutor.submit(() -> {
             long startTs = System.currentTimeMillis();
             int chainHeadHeight = requestChainHeadHeight();
-            BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis(chainHeadHeight, genesisBlockHeight, genesisTxId);
+            Tuple2<Set<BsqBlock>, BsqUTXOMap> tuple2 = parseAllBlocksFromGenesis(chainHeadHeight, genesisBlockHeight, genesisTxId);
             log.info("syncFromGenesis took {} ms", System.currentTimeMillis() - startTs);
-            return new Tuple2<>(bsqUTXOMap, chainHeadHeight);
+            return new Tuple3<>(tuple2.first, tuple2.second, chainHeadHeight);
         });
     }
 
@@ -186,20 +188,25 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     Tx requestTransaction(String txId) throws BsqBlockchainException {
         try {
             RawTransaction rawTransaction = getRawTransaction(txId);
+            final List<TxInput> txInputs = rawTransaction.getVIn()
+                    .stream()
+                    .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
+                    .map(rawInput -> new TxInput(rawInput.getVOut(), rawInput.getTxId(), rawTransaction.getHex()))
+                    .collect(Collectors.toList());
+            final List<TxOutput> txOutputs = rawTransaction.getVOut()
+                    .stream()
+                    .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
+                    .map(e -> new TxOutput(e.getN(),
+                            e.getValue().movePointRight(8).longValue(),
+                            e.getScriptPubKey().getAddresses(),
+                            e.getScriptPubKey().getHex() != null ? new Script(HEX.decode(e.getScriptPubKey().getHex())) : null))
+                    .collect(Collectors.toList());
+
+            // rawTransaction.getTime() is in seconds but we keep it in ms internally
             return new Tx(txId,
-                    rawTransaction.getVIn()
-                            .stream()
-                            .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
-                            .map(rawInput -> new TxInput(rawInput.getVOut(), rawInput.getTxId(), rawTransaction.getHex()))
-                            .collect(Collectors.toList()),
-                    rawTransaction.getVOut()
-                            .stream()
-                            .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
-                            .map(e -> new TxOutput(e.getN(),
-                                    Coin.valueOf(e.getValue().movePointRight(8).longValue()),
-                                    e.getScriptPubKey().getAddresses(),
-                                    e.getScriptPubKey().getHex() != null ? new Script(HEX.decode(e.getScriptPubKey().getHex())) : null))
-                            .collect(Collectors.toList()));
+                    txInputs,
+                    txOutputs,
+                    rawTransaction.getTime() * 1000);
         } catch (BitcoindException | CommunicationException e) {
             throw new BsqBlockchainException(e.getMessage(), e);
         }

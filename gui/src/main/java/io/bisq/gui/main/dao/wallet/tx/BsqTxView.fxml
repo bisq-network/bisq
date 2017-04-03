@@ -18,7 +18,7 @@
   -->
 
 <?import javafx.scene.layout.*?>
-<GridPane fx:id="root" fx:controller="io.bisq.gui.main.dao.wallet.tx.BsqTransactionsView"
+<GridPane fx:id="root" fx:controller="io.bisq.gui.main.dao.wallet.tx.BsqTxView"
           hgap="5.0" vgap="5.0"
           AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
           AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-10.0"

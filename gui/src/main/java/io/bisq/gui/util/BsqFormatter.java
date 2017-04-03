@@ -29,7 +29,7 @@ public class BsqFormatter extends BSFormatter {
     @Inject
     private BsqFormatter() {
         super();
-        coinFormat = new MonetaryFormat().shift(5).minDecimals(0).code(5, "BSQ").minDecimals(3);
+        coinFormat = new MonetaryFormat().shift(5).code(5, "BSQ").minDecimals(3);
     }
 
 }

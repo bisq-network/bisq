@@ -18,7 +18,6 @@
 package io.bisq.core.dao.blockchain;
 
 import lombok.Value;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.script.Script;
 
 import java.util.List;
@@ -26,7 +25,17 @@ import java.util.List;
 @Value
 public class TxOutput {
     private final int index;
-    private final Coin value;
+    private final long value;
     private final List<String> addresses;
     private final Script script;
+
+    @Override
+    public String toString() {
+        return "TxOutput{" +
+                "\nindex=" + index +
+                ",\nvalue=" + value +
+                ",\naddresses=" + addresses +
+                ",\nscript=" + script +
+                "}\n";
+    }
 }

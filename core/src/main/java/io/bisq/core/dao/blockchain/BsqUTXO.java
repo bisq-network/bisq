@@ -18,7 +18,6 @@
 package io.bisq.core.dao.blockchain;
 
 import lombok.Value;
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.script.Script;
 
 import java.util.List;
@@ -30,7 +29,7 @@ import java.util.List;
 public class BsqUTXO {
     private final String txId;
     private final long index;
-    private final Coin value;
+    private final long value;
     private final int height;
     private final boolean isBsqCoinBase;
     private final Script script;
@@ -40,7 +39,7 @@ public class BsqUTXO {
     // We do not support raw MS for BSQ but lets see if is needed anyway, might be removed 
     private final List<String> addresses;
 
-    private BsqUTXO(String txId, int index, Coin value, int height, boolean isBsqCoinBase, Script script, List<String> addresses) {
+    private BsqUTXO(String txId, int index, long value, int height, boolean isBsqCoinBase, Script script, List<String> addresses) {
         this.txId = txId;
         this.index = index;
         this.value = value;
@@ -60,5 +59,19 @@ public class BsqUTXO {
                 isBsqCoinBase,
                 output.getScript(),
                 output.getAddresses());
+    }
+
+    @Override
+    public String toString() {
+        return "BsqUTXO{" +
+                "\n     txId='" + txId + '\'' +
+                ",\n     index=" + index +
+                ",\n     value=" + value +
+                ",\n     height=" + height +
+                ",\n     isBsqCoinBase=" + isBsqCoinBase +
+                ",\n     script=" + script +
+                ",\n     utxoId='" + utxoId + '\'' +
+                ",\n     addresses=" + addresses +
+                "\n}";
     }
 }

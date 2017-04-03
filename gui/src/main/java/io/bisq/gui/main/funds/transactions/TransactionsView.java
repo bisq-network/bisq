@@ -24,6 +24,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple4;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.arbitration.DisputeManager;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
@@ -80,7 +81,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final ObservableList<TransactionsListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<TransactionsListItem> sortedList = new SortedList<>(observableList);
 
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
+    private BsqWalletService bsqWalletService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
@@ -100,12 +102,14 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private TransactionsView(BtcWalletService walletService, TradeManager tradeManager, OpenOfferManager openOfferManager,
+    private TransactionsView(BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
+                             TradeManager tradeManager, OpenOfferManager openOfferManager,
                              ClosedTradableManager closedTradableManager, FailedTradesManager failedTradesManager,
                              BSFormatter formatter, Preferences preferences, TradeDetailsWindow tradeDetailsWindow,
                              DisputeManager disputeManager, Stage stage,
                              OfferDetailsWindow offerDetailsWindow) {
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
+        this.bsqWalletService = bsqWalletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.closedTradableManager = closedTradableManager;
@@ -206,7 +210,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         tableView.setItems(sortedList);
         updateList();
 
-        walletService.addEventListener(walletEventListener);
+        btcWalletService.addEventListener(walletEventListener);
 
         scene = root.getScene();
         if (scene != null)
@@ -241,7 +245,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
         observableList.forEach(TransactionsListItem::cleanup);
-        walletService.removeEventListener(walletEventListener);
+        btcWalletService.removeEventListener(walletEventListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
@@ -260,7 +264,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         Stream<Tradable> concat3 = Stream.concat(concat2, failedTradesManager.getFailedTrades().stream());
         Set<Tradable> all = concat3.collect(Collectors.toSet());
 
-        Set<Transaction> transactions = walletService.getTransactions(true);
+        Set<Transaction> transactions = btcWalletService.getTransactions(true);
         List<TransactionsListItem> transactionsListItems = transactions.stream()
                 .map(transaction -> {
                     Optional<Tradable> tradableOptional = all.stream()
@@ -289,7 +293,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     return false;
                             })
                             .findAny();
-                    return new TransactionsListItem(transaction, walletService, tradableOptional, formatter);
+                    return new TransactionsListItem(transaction, btcWalletService, bsqWalletService, tradableOptional, formatter);
                 })
                 .collect(Collectors.toList());
 
@@ -524,7 +528,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                             public void updateItem(final TransactionsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    TransactionConfidence confidence = walletService.getConfidenceForTxId(item.getTxId());
+                                    TransactionConfidence confidence = btcWalletService.getConfidenceForTxId(item.getTxId());
                                     if (confidence != null) {
                                         if (confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING) {
                                             if (button == null) {
@@ -555,9 +559,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private void revertTransaction(String txId, @Nullable Tradable tradable) {
         try {
-            walletService.doubleSpendTransaction(txId, () -> {
+            btcWalletService.doubleSpendTransaction(txId, () -> {
                 if (tradable != null)
-                    walletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
+                    btcWalletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
 
                 new Popup().information(Res.get("funds.tx.txSent")).show();
             }, errorMessage -> new Popup().warning(errorMessage).show());

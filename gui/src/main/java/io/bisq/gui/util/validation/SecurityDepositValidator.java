@@ -29,7 +29,7 @@ public class SecurityDepositValidator extends BtcValidator {
     @Inject
     public SecurityDepositValidator(BSFormatter formatter) {
         super(formatter);
-        setMaxValueInBitcoin(Restrictions.MAX_BUYER_SECURITY_DEPOSIT);
+        setMaxValue(Restrictions.MAX_BUYER_SECURITY_DEPOSIT);
     }
 
 
