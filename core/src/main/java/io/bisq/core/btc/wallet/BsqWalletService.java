@@ -19,7 +19,6 @@ package io.bisq.core.btc.wallet;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
@@ -34,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.CoinSelection;
-import org.jetbrains.annotations.Nullable;
 
 import javax.inject.Inject;
 import java.util.HashSet;
@@ -113,7 +111,11 @@ public class BsqWalletService extends WalletService {
 
             });
         });
-        bsqBlockchainManager.getBsqUTXOMap().addListener(c -> updateWalletBsqTransactions());
+
+        bsqBlockchainManager.addUtxoListener(bsqUTXOMap -> {
+            updateCoinSelector(bsqUTXOMap);
+            updateWalletBsqTransactions();
+        });
     }
 
 
@@ -144,21 +146,7 @@ public class BsqWalletService extends WalletService {
     // UTXO
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestBsqUtxo(@Nullable ResultHandler resultHandler) {
-        if (bsqBlockchainManager.isUtxoAvailable()) {
-            applyUtxoSetToUTXOProvider(bsqBlockchainManager.getBsqUTXOMap());
-            if (resultHandler != null)
-                resultHandler.handleResult();
-        } else {
-            bsqBlockchainManager.addUtxoListener(bsqUTXOMap -> {
-                applyUtxoSetToUTXOProvider(bsqUTXOMap);
-                if (resultHandler != null)
-                    resultHandler.handleResult();
-            });
-        }
-    }
-
-    private void applyUtxoSetToUTXOProvider(BsqUTXOMap bsqUTXOMap) {
+    private void updateCoinSelector(BsqUTXOMap bsqUTXOMap) {
         bsqCoinSelector.setUtxoMap(bsqUTXOMap);
     }
 

@@ -96,7 +96,7 @@ public class BsqBlockchainServiceTest {
 
         service.buildBlocks(BLOCK_0, BLOCK_0);
 
-        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis();
+        parseAllBlocksFromGenesis();
 
         BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
         BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(GEN_TX_ID, 1);
@@ -135,7 +135,7 @@ public class BsqBlockchainServiceTest {
 
         service.buildBlocks(BLOCK_0, BLOCK_1);
 
-        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis();
+        parseAllBlocksFromGenesis();
 
         BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
         BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(TX1_ID, 0);
@@ -187,7 +187,7 @@ public class BsqBlockchainServiceTest {
 
         service.buildBlocks(BLOCK_0, BLOCK_1);
 
-        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis();
+        parseAllBlocksFromGenesis();
 
         BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
         BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(TX2_ID, 0);
@@ -239,7 +239,7 @@ public class BsqBlockchainServiceTest {
 
         service.buildBlocks(BLOCK_0, BLOCK_2);
 
-        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis();
+        parseAllBlocksFromGenesis();
 
         BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
         BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(TX2_ID, 0);
@@ -293,7 +293,7 @@ public class BsqBlockchainServiceTest {
 
         service.buildBlocks(BLOCK_0, BLOCK_1);
 
-        BsqUTXOMap bsqUTXOMap = parseAllBlocksFromGenesis();
+        parseAllBlocksFromGenesis();
 
         BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(TX2_ID, 0);
         assertEquals(bsqUTXO1.getUtxoId(), getUTXOId(TX2_ID, 0));
@@ -386,11 +386,12 @@ public class BsqBlockchainServiceTest {
     }
 
 
-    private BsqUTXOMap parseAllBlocksFromGenesis()
+    private void parseAllBlocksFromGenesis()
             throws BitcoindException, CommunicationException, BsqBlockchainException {
-        return service.parseAllBlocksFromGenesis(bsqUTXOMap,
+        service.parseBlockchain(bsqUTXOMap,
                 bsqTXOMap,
                 service.requestChainHeadHeight(),
+                BLOCK_0,
                 BLOCK_0,
                 GEN_TX_ID);
     }

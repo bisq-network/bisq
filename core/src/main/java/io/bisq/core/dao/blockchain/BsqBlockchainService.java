@@ -27,9 +27,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Profiler;
-import io.bisq.common.util.Tuple2;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -37,8 +35,9 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 abstract public class BsqBlockchainService {
-    private static final Logger log = LoggerFactory.getLogger(BsqBlockchainService.class);
+    private int snapshotHeight;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -56,9 +55,13 @@ abstract public class BsqBlockchainService {
 
     abstract void setup(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
 
-    abstract ListenableFuture<Tuple2<BsqUTXOMap, Integer>> syncFromGenesis(BsqUTXOMap bsqUTXOMap, BsqTXOMap bsqTXOMap, int genesisBlockHeight, String genesisTxId);
+    abstract ListenableFuture<Integer> executeParseBlockchain(BsqUTXOMap bsqUTXOMap,
+                                                              BsqTXOMap bsqTXOMap,
+                                                              int startBlockHeight,
+                                                              int genesisBlockHeight,
+                                                              String genesisTxId);
 
-    abstract void syncFromGenesisCompete(BsqUTXOMap bsqUTXOMap, BsqTXOMap bsqTXOMap, String genesisTxId, int genesisBlockHeight, Consumer<Block> onNewBlockHandler);
+    abstract void parseBlockchainCompete(Consumer<Block> onNewBlockHandler);
 
     abstract int requestChainHeadHeight() throws BitcoindException, CommunicationException;
 
@@ -67,15 +70,16 @@ abstract public class BsqBlockchainService {
     abstract Tx requestTransaction(String txId) throws BsqBlockchainException;
 
     @VisibleForTesting
-    BsqUTXOMap parseAllBlocksFromGenesis(BsqUTXOMap bsqUTXOMap,
-                                         BsqTXOMap bsqTXOMap,
-                                         int chainHeadHeight,
-                                         int genesisBlockHeight,
-                                         String genesisTxId) throws BsqBlockchainException {
+    void parseBlockchain(BsqUTXOMap bsqUTXOMap,
+                         BsqTXOMap bsqTXOMap,
+                         int chainHeadHeight,
+                         int startBlockHeight,
+                         int genesisBlockHeight,
+                         String genesisTxId) throws BsqBlockchainException {
         try {
             log.info("chainHeadHeight=" + chainHeadHeight);
             long startTotalTs = System.currentTimeMillis();
-            for (int height = genesisBlockHeight; height <= chainHeadHeight; height++) {
+            for (int height = startBlockHeight; height <= chainHeadHeight; height++) {
                 long startBlockTs = System.currentTimeMillis();
                 Block btcdBlock = requestBlock(height);
                 log.info("Current block height=" + height);
@@ -97,11 +101,10 @@ abstract public class BsqBlockchainService {
                         height,
                         (System.currentTimeMillis() - startBlockTs),
                         (System.currentTimeMillis() - startTotalTs),
-                        (height - genesisBlockHeight));
+                        (height - startBlockHeight + 1));
                 Profiler.printSystemLoad(log);
             }
             log.info("Parsing for all blocks since genesis took {} ms", System.currentTimeMillis() - startTotalTs);
-            return bsqUTXOMap;
         } catch (Throwable t) {
             log.error(t.toString());
             t.printStackTrace();
@@ -141,6 +144,17 @@ abstract public class BsqBlockchainService {
         // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
         // Realistically we don't expect more then a few recursive calls.
         updateBsqUtxoMapFromBlock(txByTxIdMap.values(), bsqUTXOMap, bsqTXOMap, blockHeight, 0, 5300);
+
+        int trigger = BsqBlockchainManager.getSnapshotTrigger();
+        if (blockHeight % trigger == 0 && blockHeight > snapshotHeight - trigger) {
+            snapshotHeight = blockHeight - trigger;
+            log.info("We reached a new snapshot trigger at height {}. New snapshotHeight is {}",
+                    blockHeight, snapshotHeight);
+            bsqUTXOMap.setSnapshotHeight(snapshotHeight);
+            bsqUTXOMap.persist();
+            bsqTXOMap.setSnapshotHeight(snapshotHeight);
+            bsqTXOMap.persist();
+        }
     }
 
     // Recursive method
@@ -238,7 +252,6 @@ abstract public class BsqBlockchainService {
                 availableValue = availableValue + bsqUTXO.getValue();
 
                 bsqUTXOMap.removeByTuple(spendingTxId, spendingTxOutputIndex);
-                bsqUTXOMap.setLastBlockHeight(blockHeight);
                 utxoChanged = true;
 
                 if (bsqUTXOMap.isEmpty())
@@ -263,10 +276,8 @@ abstract public class BsqBlockchainService {
                     }
                     // We are spending available tokens
                     bsqUTXOMap.add(new BsqUTXO(txOutput, blockHeight, false));
-                    bsqUTXOMap.setLastBlockHeight(blockHeight);
                     bsqTXOMap.add(txOutput);
-                    bsqTXOMap.setLastBlockHeight(blockHeight);
-                    
+
                     if (availableValue == 0) {
                         log.debug("We don't have anymore BSQ to spend");
                         break;
@@ -312,9 +323,7 @@ abstract public class BsqBlockchainService {
                     throw new RuntimeException(msg);
             }
             bsqUTXOMap.add(new BsqUTXO(txOutput, blockHeight, true));
-            bsqUTXOMap.setLastBlockHeight(blockHeight);
             bsqTXOMap.add(txOutput);
-            bsqTXOMap.setLastBlockHeight(blockHeight);
         }
         checkArgument(!bsqUTXOMap.isEmpty(), "Genesis tx need to have BSQ utxo when parsing genesis block");
     }

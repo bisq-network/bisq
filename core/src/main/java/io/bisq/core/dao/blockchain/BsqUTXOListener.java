@@ -2,5 +2,5 @@ package io.bisq.core.dao.blockchain;
 
 
 public interface BsqUTXOListener {
-    void onBsqUTXOChanged(BsqUTXOMap utxoByTxIdMap);
+    void onBsqUTXOChanged(BsqUTXOMap bsqUTXOMap);
 }

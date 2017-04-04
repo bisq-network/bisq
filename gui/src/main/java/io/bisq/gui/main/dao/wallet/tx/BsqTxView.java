@@ -133,7 +133,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         observableList.setAll(list);
 
         final Set<Transaction> invalidBsqTransactions = bsqWalletService.getInvalidBsqTransactions();
-        if (!invalidBsqTransactions.isEmpty() && bsqBlockchainManager.isUtxoAvailable()) {
+        if (!invalidBsqTransactions.isEmpty() && bsqBlockchainManager.isUtxoSyncWithChainHeadHeight()) {
             Set<String> txIds = invalidBsqTransactions.stream().map(t -> t.getHashAsString()).collect(Collectors.toSet());
             String key = "invalidBsqTransactionsWarning_" + txIds;
             if (preferences.showAgain(key))
@@ -151,8 +151,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(180);
         column.setMaxWidth(180);
-        column.setCellValueFactory((addressListItem) ->
-                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         column.setCellFactory(
                 new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
                         BsqTxListItem>>() {

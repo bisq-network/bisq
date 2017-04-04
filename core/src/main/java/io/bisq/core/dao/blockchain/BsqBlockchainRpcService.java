@@ -32,7 +32,6 @@ import com.neemre.btcdcli4j.daemon.event.BlockListener;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.RpcOptionKeys;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -142,24 +141,27 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     }
 
     @Override
-    protected ListenableFuture<Tuple2<BsqUTXOMap, Integer>> syncFromGenesis(BsqUTXOMap bsqUTXOMap,
-                                                                            BsqTXOMap bsqTXOMap,
-                                                                            int genesisBlockHeight,
-                                                                            String genesisTxId) {
+    protected ListenableFuture<Integer> executeParseBlockchain(BsqUTXOMap bsqUTXOMap,
+                                                               BsqTXOMap bsqTXOMap,
+                                                               int startBlockHeight,
+                                                               int genesisBlockHeight,
+                                                               String genesisTxId) {
         return rpcRequestsExecutor.submit(() -> {
             long startTs = System.currentTimeMillis();
             int chainHeadHeight = requestChainHeadHeight();
-            parseAllBlocksFromGenesis(bsqUTXOMap, bsqTXOMap, chainHeadHeight, genesisBlockHeight, genesisTxId);
+            parseBlockchain(bsqUTXOMap,
+                    bsqTXOMap,
+                    chainHeadHeight,
+                    startBlockHeight,
+                    genesisBlockHeight,
+                    genesisTxId);
             log.info("syncFromGenesis took {} ms", System.currentTimeMillis() - startTs);
-            return new Tuple2<>(bsqUTXOMap, chainHeadHeight);
+            return chainHeadHeight;
         });
     }
 
     @Override
-    protected void syncFromGenesisCompete(BsqUTXOMap bsqUTXOMap, BsqTXOMap bsqTXOMap,
-                                          String genesisTxId,
-                                          int genesisBlockHeight,
-                                          Consumer<Block> onNewBlockHandler) {
+    protected void parseBlockchainCompete(Consumer<Block> onNewBlockHandler) {
         daemon.addBlockListener(new BlockListener() {
             @Override
             public void blockDetected(Block block) {
@@ -173,8 +175,8 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
             public void walletChanged(Transaction transaction) {
                 log.info("walletChanged " + transaction.getTxId());
                *//* try {
-                   // parseTransaction(transaction.getTxId(), GENESIS_TX_ID, client.getBlockCount(), tempUtxoByTxIdMap, utxoByTxIdMap);
-                    printUtxoMap(utxoByTxIdMap);
+                   // parseTransaction(transaction.getTxId(), GENESIS_TX_ID, client.getBlockCount(), tempUtxoByTxIdMap, bsqUTXOMap);
+                    printUtxoMap(bsqUTXOMap);
                 } catch (BitcoindException | CommunicationException | BsqBlockchainException e) {
                     //TODO
                     e.printStackTrace();
@@ -209,7 +211,7 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
                         byte[] scriptProgramBytes = new byte[]{};
                         try {
                             scriptProgramBytes = e.getScriptPubKey().getHex() != null ?
-                                    new Script(HEX.decode(e.getScriptPubKey().getHex())).getProgram() : null;
+                                    new Script(HEX.decode(e.getScriptPubKey().getHex())).getProgram() : new byte[]{};
                         } catch (Throwable t) {
                             // expected for tx: 0f8e9655b29d76c5e01147704a64faf95a9c90433baacdd39d4c1d2667e570a2
                             log.error(e.getScriptPubKey().getAsm());

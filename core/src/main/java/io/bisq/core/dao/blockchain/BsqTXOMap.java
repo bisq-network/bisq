@@ -22,6 +22,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -39,7 +40,8 @@ public class BsqTXOMap implements Serializable {
     @Getter
     private HashSet<String> txIdSet = new HashSet<>();
     @Getter
-    private int lastBlockHeight;
+    @Setter
+    private int snapshotHeight;
 
     private transient ObservableMap<TxIdIndexTuple, TxOutput> observableMap;
     private transient final Storage<BsqTXOMap> storage;
@@ -49,7 +51,7 @@ public class BsqTXOMap implements Serializable {
         BsqTXOMap persisted = storage.initAndGetPersisted(this, "BsqTXOMap");
         if (persisted != null) {
             map.putAll(persisted.getMap());
-            lastBlockHeight = persisted.getLastBlockHeight();
+            snapshotHeight = persisted.getSnapshotHeight();
             txIdSet = persisted.getTxIdSet();
         }
 
@@ -71,12 +73,10 @@ public class BsqTXOMap implements Serializable {
         txIdSet.add(txOutput.getTxId());
         final TxOutput result = map.put(new TxIdIndexTuple(txOutput.getTxId(), txOutput.getIndex()), txOutput);
         observableMap.put(new TxIdIndexTuple(txOutput.getTxId(), txOutput.getIndex()), txOutput);
-        storage.queueUpForSave();
         return result;
     }
 
-    public void setLastBlockHeight(int lastBlockHeight) {
-        this.lastBlockHeight = lastBlockHeight;
+    public void persist() {
         storage.queueUpForSave();
     }
 

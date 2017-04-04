@@ -18,6 +18,8 @@
 package io.bisq.gui.main.dao.wallet;
 
 import io.bisq.core.btc.wallet.BsqWalletService;
+import io.bisq.core.dao.blockchain.BsqBlockchainManager;
+import io.bisq.core.dao.blockchain.BsqUTXOListener;
 import io.bisq.gui.util.BsqFormatter;
 import javafx.scene.control.TextField;
 import org.bitcoinj.core.*;
@@ -33,17 +35,21 @@ public class BalanceUtil {
 
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter formatter;
+    private BsqBlockchainManager bsqBlockchainManager;
     private TextField balanceTextField;
     private WalletEventListener walletEventListener;
+    private BsqUTXOListener bsqUTXOListener;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BalanceUtil(BsqWalletService bsqWalletService, BsqFormatter formatter) {
+    private BalanceUtil(BsqWalletService bsqWalletService, BsqFormatter formatter, BsqBlockchainManager bsqBlockchainManager) {
         this.bsqWalletService = bsqWalletService;
         this.formatter = formatter;
+        this.bsqBlockchainManager = bsqBlockchainManager;
     }
 
     public void setBalanceTextField(TextField balanceTextField) {
@@ -59,22 +65,22 @@ public class BalanceUtil {
 
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                requestUtxo();
+                updateBalance();
             }
 
             @Override
             public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                requestUtxo();
+                updateBalance();
             }
 
             @Override
             public void onReorganize(Wallet wallet) {
-                requestUtxo();
+                updateBalance();
             }
 
             @Override
             public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-                requestUtxo();
+                updateBalance();
             }
 
             @Override
@@ -83,24 +89,25 @@ public class BalanceUtil {
 
             @Override
             public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-
             }
         };
+
+        bsqUTXOListener = bsqUTXOMap -> updateBalance();
     }
 
-    private void requestUtxo() {
-        bsqWalletService.requestBsqUtxo(() -> {
-            balanceTextField.setText(formatter.formatCoinWithCode(bsqWalletService.getAvailableBalance()));
-        });
+    private void updateBalance() {
+        balanceTextField.setText(formatter.formatCoinWithCode(bsqWalletService.getAvailableBalance()));
     }
 
     public void activate() {
-        requestUtxo();
+        updateBalance();
         bsqWalletService.addEventListener(walletEventListener);
+        bsqBlockchainManager.addUtxoListener(bsqUTXOListener);
     }
 
     public void deactivate() {
         bsqWalletService.removeEventListener(walletEventListener);
+        bsqBlockchainManager.removeUtxoListener(bsqUTXOListener);
     }
 
 }

@@ -24,7 +24,6 @@ import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.storage.Storage;
-import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.wallet.WalletUtils;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +45,18 @@ public class BsqBlockchainManager {
     private static final String REG_TEST_GENESIS_TX_ID = "3bc7bc9484e112ec8ddd1a1c984379819245ac463b9ce40fa8b5bf771c0f9236";
     private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 102;
 
+    // Modulo of blocks for making snapshots of UTXO. 
+    // We stay also the value behind for safety against reorgs.
+    // E.g. for SNAPSHOT_TRIGGER = 30:
+    // If we are block 119 and last snapshot was 60 then we get a new trigger for a snapshot at block 120 and
+    // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after 
+    // a restart.
+    private static final int SNAPSHOT_TRIGGER = 30;
+
+    public static int getSnapshotTrigger() {
+        return SNAPSHOT_TRIGGER;
+    }
+
     @Getter
     private final BsqUTXOMap bsqUTXOMap;
     @Getter
@@ -53,7 +64,7 @@ public class BsqBlockchainManager {
     @Getter
     private int chainHeadHeight;
     @Getter
-    private boolean isUtxoAvailable;
+    private boolean isUtxoSyncWithChainHeadHeight;
 
     private final BsqBlockchainService blockchainService;
     private final List<BsqUTXOListener> bsqUTXOListeners = new ArrayList<>();
@@ -70,6 +81,8 @@ public class BsqBlockchainManager {
 
         bsqUTXOMap = new BsqUTXOMap(storageDir);
         bsqTXOMap = new BsqTXOMap(storageDir);
+
+        bsqUTXOMap.addListener(c -> bsqUTXOListeners.stream().forEach(e -> e.onBsqUTXOChanged(bsqUTXOMap)));
     }
 
 
@@ -78,7 +91,7 @@ public class BsqBlockchainManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
-        blockchainService.setup(this::setupComplete, errorMessageHandler);
+        blockchainService.setup(this::blockchainServiceSetupCompleted, errorMessageHandler);
     }
 
     public Set<String> getUtxoTxIdSet() {
@@ -102,35 +115,47 @@ public class BsqBlockchainManager {
     // private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void setupComplete() {
-        ListenableFuture<Tuple2<BsqUTXOMap, Integer>> future =
-                blockchainService.syncFromGenesis(bsqUTXOMap, bsqTXOMap, getGenesisBlockHeight(), getGenesisTxId());
-        Futures.addCallback(future, new FutureCallback<Tuple2<BsqUTXOMap, Integer>>() {
+    private void blockchainServiceSetupCompleted() {
+        final int genesisBlockHeight = getGenesisBlockHeight();
+        final String genesisTxId = getGenesisTxId();
+        int startBlockHeight = Math.max(genesisBlockHeight, bsqUTXOMap.getSnapshotHeight());
+        log.info("genesisBlockHeight=" + genesisBlockHeight);
+        log.info("startBlockHeight=" + startBlockHeight);
+        log.info("bsqUTXOMap.getSnapshotHeight()=" + bsqUTXOMap.getSnapshotHeight());
+
+        if (bsqUTXOMap.getSnapshotHeight() > 0) {
+            bsqUTXOListeners.stream().forEach(e -> e.onBsqUTXOChanged(bsqUTXOMap));
+        }
+        ListenableFuture<Integer> future =
+                blockchainService.executeParseBlockchain(bsqUTXOMap,
+                        bsqTXOMap,
+                        startBlockHeight,
+                        genesisBlockHeight,
+                        genesisTxId);
+
+        Futures.addCallback(future, new FutureCallback<Integer>() {
             @Override
-            public void onSuccess(Tuple2<BsqUTXOMap, Integer> tuple) {
+            public void onSuccess(Integer height) {
                 UserThread.execute(() -> {
-                    chainHeadHeight = tuple.second;
-                    isUtxoAvailable = true;
-                    bsqUTXOListeners.stream().forEach(e -> e.onBsqUTXOChanged(bsqUTXOMap));
-                    blockchainService.syncFromGenesisCompete(bsqUTXOMap, bsqTXOMap, getGenesisTxId(),
-                            getGenesisBlockHeight(),
-                            btcdBlock -> {
-                                if (btcdBlock != null) {
-                                    UserThread.execute(() -> {
-                                        try {
-                                            final BsqBlock bsqBlock = new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight());
-                                            blockchainService.parseBlock(bsqBlock,
-                                                    getGenesisBlockHeight(),
-                                                    getGenesisTxId(),
-                                                    bsqUTXOMap,
-                                                    bsqTXOMap);
-                                        } catch (BsqBlockchainException e) {
-                                            //TODO
-                                            e.printStackTrace();
-                                        }
-                                    });
+                    chainHeadHeight = height;
+                    isUtxoSyncWithChainHeadHeight = true;
+                    blockchainService.parseBlockchainCompete(btcdBlock -> {
+                        if (btcdBlock != null) {
+                            UserThread.execute(() -> {
+                                try {
+                                    final BsqBlock bsqBlock = new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight());
+                                    blockchainService.parseBlock(bsqBlock,
+                                            genesisBlockHeight,
+                                            genesisTxId,
+                                            bsqUTXOMap,
+                                            bsqTXOMap);
+                                } catch (BsqBlockchainException e) {
+                                    //TODO
+                                    e.printStackTrace();
                                 }
                             });
+                        }
+                    });
                 });
             }
 
