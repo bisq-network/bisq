@@ -127,43 +127,27 @@ abstract public class BsqBlockchainService {
         // TODO here we hve the performance bottleneck. takes about 4 sec.
         // check if there is more efficient rpc calls for tx ranges or all txs in a block with btcd 14
         List<String> txIds = block.getTxIds();
-        //long startTs = System.currentTimeMillis();
-
         Tx genesisTx = null;
-        for (int i = 0; i < txIds.size(); i++) {
-            String txId = txIds.get(i);
-            //log.error("# txId " + txId);
+        for (String txId : txIds) {
             final Tx tx = requestTransaction(txId);
             block.addTx(tx);
             if (txId.equals(genesisTxId))
                 genesisTx = tx;
         }
-        
-        for (String txId : txIds) {
-            //log.error("$ txId " + txId);
-            // block.addTx(requestTransaction(txId));
-        }
-        //log.info("requestTransaction took {} ms for {} txs", System.currentTimeMillis() - startTs, txIds.size());
 
         // First we check for the genesis tx
         // All outputs of genesis are valid BSQ UTXOs
-        /*Map<String, Tx> txByTxIdMap = block.getTxByTxIdMap();
-        if (blockHeight == genesisBlockHeight) {
-            txByTxIdMap.entrySet().stream()
-                    .filter(entry -> entry.getKey().equals(genesisTxId))
-                    .forEach(entry -> parseGenesisTx(entry.getValue(), blockHeight, bsqUTXOMap, bsqTXOMap));
-        }*/
-
         if (genesisTx != null) {
             checkArgument(blockHeight == genesisBlockHeight,
                     "If we have a matching genesis tx the block height must mathc as well");
             parseGenesisTx(genesisTx, blockHeight, bsqUTXOMap, bsqTXOMap);
         }
 
-        // Worst case is that all txs in a block are depending on another, so only once get resolved at each iteration.
+        // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
         // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
         // Realistically we don't expect more then a few recursive calls.
-
+        // There are some blocks with testing such dependency chains like block 130768 where at each iteration only 
+        // one get resolved.
         updateBsqUtxoMapFromBlock(block.getTxList(), bsqUTXOMap, bsqTXOMap, blockHeight, 0, 5300);
 
         int trigger = BsqBlockchainManager.getSnapshotTrigger();
@@ -215,7 +199,7 @@ abstract public class BsqBlockchainService {
         // those dont exceed 200 recursions and are mostly old blocks from 2012 when fees have been low ;-).
         // TODO check strategy btc core uses (sorting the dependency graph would be an optimisation)
         // Seems btc core delivers tx list sorted by dependency graph. -> TODO verify and test
-        if (recursionCounter > 100) {
+        if (recursionCounter > 10) {
             log.warn("Unusual high recursive calls at resolveConnectedTxs. recursionCounter=" + recursionCounter);
             log.warn("blockHeight=" + blockHeight);
             log.warn("txsWithoutInputsFromSameBlock " + txsWithoutInputsFromSameBlock.size());
@@ -262,7 +246,6 @@ abstract public class BsqBlockchainService {
                                            int blockHeight,
                                            BsqUTXOMap bsqUTXOMap,
                                            BsqTXOMap bsqTXOMap) {
-        String txId = tx.getId();
         List<TxOutput> outputs = tx.getOutputs();
         boolean utxoChanged = false;
         long availableValue = 0;
@@ -284,10 +267,8 @@ abstract public class BsqBlockchainService {
 
         // If we have an input spending tokens we iterate the outputs
         if (availableValue > 0) {
-
             // We use order of output index. An output is a BSQ utxo as long there is enough input value
-            for (int outputIndex = 0; outputIndex < outputs.size(); outputIndex++) {
-                TxOutput txOutput = outputs.get(outputIndex);
+            for (TxOutput txOutput : outputs) {
                 availableValue = availableValue - txOutput.getValue();
                 if (availableValue >= 0) {
                     if (txOutput.getAddresses().size() != 1) {
@@ -325,19 +306,16 @@ abstract public class BsqBlockchainService {
         return utxoChanged;
     }
 
-
     @VisibleForTesting
     void parseGenesisTx(Tx tx,
                         int blockHeight,
                         BsqUTXOMap bsqUTXOMap,
                         BsqTXOMap bsqTXOMap) {
-        String txId = tx.getId();
         List<TxOutput> outputs = tx.getOutputs();
 
         //TODO use BsqTXO not BsqUTXO as we dont know if they are unspent
         // Genesis tx uses all outputs as BSQ outputs
-        for (int index = 0; index < outputs.size(); index++) {
-            TxOutput txOutput = outputs.get(index);
+        for (TxOutput txOutput : outputs) {
             if (txOutput.getAddresses().size() != 1) {
                 final String msg = "We got a address list with more or less than 1 address. " +
                         "Seems to be a raw MS. Raw MS are not supported with BSQ.\n" + this.toString();
