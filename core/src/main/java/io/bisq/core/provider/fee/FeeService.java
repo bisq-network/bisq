@@ -66,8 +66,7 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FeeService(HttpClient httpClient,
-                      ProvidersRepository providersRepository) {
+    public FeeService(HttpClient httpClient, ProvidersRepository providersRepository) {
         this.feeProvider = new FeeProvider(httpClient, providersRepository.getBaseUrl());
     }
 

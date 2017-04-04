@@ -614,7 +614,7 @@ public final class Preferences implements Persistable {
         // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
         // Atm we don't support onion addresses there
         // This check includes localhost, so we also override useTorForBitcoinJ
-        if (bitcoinNodes != null && !bitcoinNodes.isEmpty())
+        if (bitcoinNodes != null && !bitcoinNodes.isEmpty() || bitcoinNetwork == BitcoinNetwork.REGTEST)
             return false;
         else
             return useTorForBitcoinJ;

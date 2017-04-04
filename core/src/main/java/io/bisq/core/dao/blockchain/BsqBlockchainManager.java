@@ -37,7 +37,6 @@ import java.util.Set;
 public class BsqBlockchainManager {
     private static final Logger log = LoggerFactory.getLogger(BsqBlockchainManager.class);
 
-
     //mainnet
     private static final String GENESIS_TX_ID = "cabbf6073aea8f22ec678e973ac30c6d8fc89321011da6a017f63e67b9f66667";
     private static final int GENESIS_BLOCK_HEIGHT = 105301;
@@ -66,6 +65,7 @@ public class BsqBlockchainManager {
         this.blockchainService = blockchainService;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +73,6 @@ public class BsqBlockchainManager {
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
         blockchainService.setup(this::setupComplete, errorMessageHandler);
     }
-
 
     public Set<String> getUtxoTxIdSet() {
         return bsqUTXOMap.getTxIdSet();
