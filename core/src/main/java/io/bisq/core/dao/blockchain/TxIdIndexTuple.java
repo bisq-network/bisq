@@ -19,8 +19,10 @@ package io.bisq.core.dao.blockchain;
 
 import lombok.Value;
 
+import java.io.Serializable;
+
 @Value
-public class TxIdIndexTuple {
+public class TxIdIndexTuple implements Serializable {
     private final String txId;
     private final int index;
 

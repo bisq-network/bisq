@@ -19,10 +19,11 @@ package io.bisq.core.dao.blockchain;
 
 import lombok.Value;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Value
-public class Tx {
+public class Tx implements Serializable {
     private final String id;
     private final List<TxInput> inputs;
     private final List<TxOutput> outputs;

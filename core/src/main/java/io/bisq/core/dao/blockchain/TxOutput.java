@@ -20,16 +20,17 @@ package io.bisq.core.dao.blockchain;
 import lombok.Value;
 import org.bouncycastle.util.encoders.Hex;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Value
-public class TxOutput {
+public class TxOutput implements Serializable {
     private final int index;
     private final long value;
     private final List<String> addresses;
     private final byte[] scriptProgramBytes;
     private final String txId;
-    
+
     @Override
     public String toString() {
         return "TxOutput{" +

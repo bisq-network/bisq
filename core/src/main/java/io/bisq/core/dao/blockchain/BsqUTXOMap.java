@@ -17,53 +17,90 @@
 
 package io.bisq.core.dao.blockchain;
 
+import io.bisq.common.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.util.*;
 
-public class BsqUTXOMap {
+@Slf4j
+public class BsqUTXOMap implements Serializable {
     // We don't use a Lombok delegate here as we want control the access to our map
-    private ObservableMap<TxIdIndexTuple, BsqUTXO> map = FXCollections.observableHashMap();
-    private Set<String> txIdSet = new HashSet<>();
+    @Getter
+    private HashMap<TxIdIndexTuple, BsqUTXO> map = new HashMap<>();
+    @Getter
+    private HashSet<String> txIdSet = new HashSet<>();
+    @Getter
+    private int lastBlockHeight;
+
+    private transient ObservableMap<TxIdIndexTuple, BsqUTXO> observableMap;
+    private transient final Storage<BsqUTXOMap> storage;
+
+    public BsqUTXOMap(File storageDir) {
+        storage = new Storage<>(storageDir);
+        BsqUTXOMap persisted = storage.initAndGetPersisted(this, "BsqUTXOMap");
+        if (persisted != null) {
+            map.putAll(persisted.getMap());
+            txIdSet = persisted.getTxIdSet();
+            lastBlockHeight = persisted.getLastBlockHeight();
+        }
+
+        observableMap = FXCollections.observableHashMap();
+        observableMap.putAll(map);
+    }
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            in.defaultReadObject();
+            observableMap = FXCollections.observableHashMap();
+            observableMap.putAll(map);
+        } catch (Throwable t) {
+            log.warn("Cannot be deserialized." + t.getMessage());
+        }
+    }
+
+    public Object add(BsqUTXO bsqUTXO) {
+        txIdSet.add(bsqUTXO.getTxId());
+        final BsqUTXO result = map.put(new TxIdIndexTuple(bsqUTXO.getTxId(), bsqUTXO.getIndex()), bsqUTXO);
+        observableMap.put(new TxIdIndexTuple(bsqUTXO.getTxId(), bsqUTXO.getIndex()), bsqUTXO);
+        storage.queueUpForSave();
+        return result;
+    }
+
+    public BsqUTXO removeByTuple(String txId, int index) {
+        txIdSet.remove(txId);
+        final BsqUTXO result = map.remove(new TxIdIndexTuple(txId, index));
+        observableMap.remove(new TxIdIndexTuple(txId, index));
+        storage.queueUpForSave();
+        return result;
+    }
+
+    public void setLastBlockHeight(int lastBlockHeight) {
+        this.lastBlockHeight = lastBlockHeight;
+        storage.queueUpForSave();
+    }
 
     public boolean containsTuple(String txId, int index) {
         return map.containsKey(new TxIdIndexTuple(txId, index));
     }
 
-    public Object add(BsqUTXO bsqUTXO) {
-        txIdSet.add(bsqUTXO.getTxId());
-        return map.put(new TxIdIndexTuple(bsqUTXO.getTxId(), bsqUTXO.getIndex()), bsqUTXO);
-    }
-
     public BsqUTXO getByTuple(String txId, int index) {
-        return map.get(new TxIdIndexTuple(txId, index));
-    }
-
-    public BsqUTXO removeByTuple(String txId, int index) {
-        txIdSet.remove(txId);
-        return map.remove(new TxIdIndexTuple(txId, index));
+        return observableMap.get(new TxIdIndexTuple(txId, index));
     }
 
     public void addListener(MapChangeListener<TxIdIndexTuple, BsqUTXO> listener) {
-        map.addListener(listener);
-    }
-
-    @Override
-    public String toString() {
-        return "BsqUTXOMap " + map.toString();
+        observableMap.addListener(listener);
     }
 
     public Collection<BsqUTXO> values() {
         return map.values();
-    }
-
-    public Set<String> getTxIdSet() {
-        return txIdSet;
     }
 
     public boolean isEmpty() {
@@ -76,6 +113,11 @@ public class BsqUTXOMap {
 
     public Set<Map.Entry<TxIdIndexTuple, BsqUTXO>> entrySet() {
         return map.entrySet();
+    }
+
+    @Override
+    public String toString() {
+        return "BsqUTXOMap " + map.toString();
     }
 }
 

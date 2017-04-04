@@ -26,7 +26,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
@@ -67,8 +69,11 @@ public class BsqBlockchainServiceTest {
 
     @Before
     public void setup() {
-        bsqUTXOMap = new BsqUTXOMap();
-        bsqTXOMap = new BsqTXOMap();
+        final URL resource = this.getClass().getClassLoader().getResource("");
+        final String path = resource != null ? resource.getFile() : "";
+        log.info("path for BsqUTXOMap=" + path);
+        bsqUTXOMap = new BsqUTXOMap(new File(path));
+        bsqTXOMap = new BsqTXOMap(new File(path));
         service = new MockBsqBlockchainService();
     }
 

@@ -20,6 +20,7 @@ package io.bisq.core.dao.blockchain;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.util.List;
 
 // Estimation for UTXO set: 1 UTXO object has 78 byte
@@ -27,7 +28,7 @@ import java.util.List;
 
 @Value
 @Slf4j
-public class BsqUTXO {
+public class BsqUTXO implements Serializable {
     private final int height;
     private final boolean isBsqCoinBase;
     private final TxOutput output;

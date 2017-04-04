@@ -23,6 +23,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.wallet.WalletUtils;
 import lombok.Getter;
@@ -30,6 +31,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Named;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -44,9 +47,9 @@ public class BsqBlockchainManager {
     private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 102;
 
     @Getter
-    private final BsqUTXOMap bsqUTXOMap = new BsqUTXOMap();
+    private final BsqUTXOMap bsqUTXOMap;
     @Getter
-    private final BsqTXOMap bsqTXOMap = new BsqTXOMap();
+    private final BsqTXOMap bsqTXOMap;
     @Getter
     private int chainHeadHeight;
     @Getter
@@ -61,8 +64,12 @@ public class BsqBlockchainManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BsqBlockchainManager(BsqBlockchainService blockchainService) {
+    public BsqBlockchainManager(BsqBlockchainService blockchainService,
+                                @Named(Storage.DIR_KEY) File storageDir) {
         this.blockchainService = blockchainService;
+
+        bsqUTXOMap = new BsqUTXOMap(storageDir);
+        bsqTXOMap = new BsqTXOMap(storageDir);
     }
 
 

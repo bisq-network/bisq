@@ -238,6 +238,7 @@ abstract public class BsqBlockchainService {
                 availableValue = availableValue + bsqUTXO.getValue();
 
                 bsqUTXOMap.removeByTuple(spendingTxId, spendingTxOutputIndex);
+                bsqUTXOMap.setLastBlockHeight(blockHeight);
                 utxoChanged = true;
 
                 if (bsqUTXOMap.isEmpty())
@@ -262,8 +263,10 @@ abstract public class BsqBlockchainService {
                     }
                     // We are spending available tokens
                     bsqUTXOMap.add(new BsqUTXO(txOutput, blockHeight, false));
+                    bsqUTXOMap.setLastBlockHeight(blockHeight);
                     bsqTXOMap.add(txOutput);
-
+                    bsqTXOMap.setLastBlockHeight(blockHeight);
+                    
                     if (availableValue == 0) {
                         log.debug("We don't have anymore BSQ to spend");
                         break;
@@ -309,7 +312,9 @@ abstract public class BsqBlockchainService {
                     throw new RuntimeException(msg);
             }
             bsqUTXOMap.add(new BsqUTXO(txOutput, blockHeight, true));
+            bsqUTXOMap.setLastBlockHeight(blockHeight);
             bsqTXOMap.add(txOutput);
+            bsqTXOMap.setLastBlockHeight(blockHeight);
         }
         checkArgument(!bsqUTXOMap.isEmpty(), "Genesis tx need to have BSQ utxo when parsing genesis block");
     }

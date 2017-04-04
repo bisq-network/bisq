@@ -48,6 +48,7 @@ public class WalletUtils {
     }
 
     public static boolean isRegTest() {
-        return Preferences.INSTANCE.getBitcoinNetwork().equals(BitcoinNetwork.REGTEST);
+        final Preferences preferences = Preferences.INSTANCE;
+        return preferences != null ? preferences.getBitcoinNetwork().equals(BitcoinNetwork.REGTEST) : true;
     }
 }

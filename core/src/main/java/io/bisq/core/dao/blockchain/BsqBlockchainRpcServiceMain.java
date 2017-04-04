@@ -19,14 +19,13 @@ package io.bisq.core.dao.blockchain;
 
 import ch.qos.logback.classic.Level;
 import io.bisq.common.app.Log;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.net.URL;
 
+@Slf4j
 public class BsqBlockchainRpcServiceMain {
-    private static final Logger log = LoggerFactory.getLogger(BsqBlockchainRpcServiceMain.class);
-
     public static void main(String[] args) throws BsqBlockchainException {
         Log.setup(System.getProperty("user.home") + File.separator + "BlockchainRpcServiceMain");
         Log.setLevel(Level.WARN);
@@ -39,7 +38,11 @@ public class BsqBlockchainRpcServiceMain {
         final String rpcWalletPort = args.length > 4 ? args[4] : "";
         BsqBlockchainRpcService blockchainRpcService = new BsqBlockchainRpcService(rpcUser, rpcPassword,
                 rpcPort, rpcBlockPort, rpcWalletPort);
-        BsqBlockchainManager bsqBlockchainManager = new BsqBlockchainManager(blockchainRpcService);
+        final URL resource = blockchainRpcService.getClass().getClassLoader().getResource("");
+        final String path = resource != null ? resource.getFile() : "";
+        log.info("path for BsqUTXOMap=" + path);
+        BsqBlockchainManager bsqBlockchainManager = new BsqBlockchainManager(blockchainRpcService,
+                new File(path));
         bsqBlockchainManager.onAllServicesInitialized(log::error);
 
         while (true) {
