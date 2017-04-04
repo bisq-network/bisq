@@ -190,10 +190,10 @@ abstract public class BsqBlockchainService {
         }
 
         // Usual values is up to 25
-        // There are soem blocks where it seems devs have tested many depending txs, but even 
-        // those dont exceed 200 recursions and are old blocks from 2012 or so...
-        // TOD) check strategy btc core uses (sorting the dependency graph would be an optimisation)
-        if (recursionCounter > 30) {
+        // There are some blocks where it seems devs have tested graphs of many depending txs, but even 
+        // those dont exceed 200 recursions and are mostly old blocks from 2012 when fees have been low ;-).
+        // TODO check strategy btc core uses (sorting the dependency graph would be an optimisation)
+        if (recursionCounter > 50) {
             log.warn("Unusual high recursive calls at resolveConnectedTxs. recursionCounter=" + recursionCounter);
             log.warn("txsWithoutInputsFromSameBlock " + txsWithoutInputsFromSameBlock.size());
             log.warn("txsWithInputsFromSameBlock " + txsWithInputsFromSameBlock.size());

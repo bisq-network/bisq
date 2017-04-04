@@ -64,10 +64,10 @@ public class BsqUTXO implements Serializable {
     @Override
     public String toString() {
         return "BsqUTXO{" +
-                "\n     output='" + output + '\'' +
-                ",\n     height=" + height +
+                "\n     height=" + height +
                 ",\n     isBsqCoinBase=" + isBsqCoinBase +
                 ",\n     utxoId='" + utxoId + '\'' +
+                ", \n     output=" + output +
                 "\n}";
     }
 

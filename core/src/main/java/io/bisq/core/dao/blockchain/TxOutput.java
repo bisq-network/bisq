@@ -34,10 +34,12 @@ public class TxOutput implements Serializable {
     @Override
     public String toString() {
         return "TxOutput{" +
-                "\nindex=" + index +
-                ",\nvalue=" + value +
-                ",\naddresses=" + addresses +
-                ",\nscriptProgramBytes=" + Hex.toHexString(scriptProgramBytes) +
-                "}\n";
+                "\n        txId=" + txId +
+                ",\n        index=" + index +
+                ",\n        value=" + value +
+                ",\n        addresses=" + addresses +
+                ",\n        scriptProgramBytes=" + Hex.toHexString(scriptProgramBytes) +
+                "\n" +
+                "     }";
     }
 }

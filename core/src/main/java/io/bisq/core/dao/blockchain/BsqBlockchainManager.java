@@ -41,8 +41,8 @@ public class BsqBlockchainManager {
 
     //mainnet
     private static final String GENESIS_TX_ID = "cabbf6073aea8f22ec678e973ac30c6d8fc89321011da6a017f63e67b9f66667";
-    private static final int GENESIS_BLOCK_HEIGHT = 105301;
-    private static final String REG_TEST_GENESIS_TX_ID = "3bc7bc9484e112ec8ddd1a1c984379819245ac463b9ce40fa8b5bf771c0f9236";
+    private static final int GENESIS_BLOCK_HEIGHT = 130766;
+    private static final String REG_TEST_GENESIS_TX_ID = "f56fffd2d25ba1be2649a7d88ee68248d5adcb2e42df03a592b1874e2a04aa62";
     private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 102;
 
     // Modulo of blocks for making snapshots of UTXO. 
