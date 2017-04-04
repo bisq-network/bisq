@@ -41,7 +41,7 @@ public class BsqBlockchainManager {
 
     //mainnet
     private static final String GENESIS_TX_ID = "cabbf6073aea8f22ec678e973ac30c6d8fc89321011da6a017f63e67b9f66667";
-    private static final int GENESIS_BLOCK_HEIGHT = 130766;
+    private static final int GENESIS_BLOCK_HEIGHT = 100000;
     private static final String REG_TEST_GENESIS_TX_ID = "f56fffd2d25ba1be2649a7d88ee68248d5adcb2e42df03a592b1874e2a04aa62";
     private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 102;
 
@@ -51,7 +51,7 @@ public class BsqBlockchainManager {
     // If we are block 119 and last snapshot was 60 then we get a new trigger for a snapshot at block 120 and
     // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after 
     // a restart.
-    private static final int SNAPSHOT_TRIGGER = 30;
+    private static final int SNAPSHOT_TRIGGER = 300000000;
 
     public static int getSnapshotTrigger() {
         return SNAPSHOT_TRIGGER;

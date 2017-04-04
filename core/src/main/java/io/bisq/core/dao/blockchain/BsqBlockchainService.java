@@ -26,10 +26,12 @@ import com.neemre.btcdcli4j.core.domain.Block;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.util.Profiler;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -97,12 +99,12 @@ abstract public class BsqBlockchainService {
                 if (!oldBsqUTXOMap.equals(newBsqUTXOMap))
                     log.info(bsqUTXOMap.toString());
 
-                log.info("Parsing for block {} took {} ms. Total: {} ms for {} blocks",
+                log.debug("Parsing for block {} took {} ms. Total: {} ms for {} blocks",
                         height,
                         (System.currentTimeMillis() - startBlockTs),
                         (System.currentTimeMillis() - startTotalTs),
                         (height - startBlockHeight + 1));
-                Profiler.printSystemLoad(log);
+                //Profiler.printSystemLoad(log);
             }
             log.info("Parsing for all blocks since genesis took {} ms", System.currentTimeMillis() - startTotalTs);
         } catch (Throwable t) {
@@ -126,24 +128,43 @@ abstract public class BsqBlockchainService {
         // check if there is more efficient rpc calls for tx ranges or all txs in a block with btcd 14
         List<String> txIds = block.getTxIds();
         //long startTs = System.currentTimeMillis();
+
+        Tx genesisTx = null;
+        for (int i = 0; i < txIds.size(); i++) {
+            String txId = txIds.get(i);
+            //log.error("# txId " + txId);
+            final Tx tx = requestTransaction(txId);
+            block.addTx(tx);
+            if (txId.equals(genesisTxId))
+                genesisTx = tx;
+        }
+        
         for (String txId : txIds) {
-            block.addTx(requestTransaction(txId));
+            //log.error("$ txId " + txId);
+            // block.addTx(requestTransaction(txId));
         }
         //log.info("requestTransaction took {} ms for {} txs", System.currentTimeMillis() - startTs, txIds.size());
 
         // First we check for the genesis tx
         // All outputs of genesis are valid BSQ UTXOs
-        Map<String, Tx> txByTxIdMap = block.getTxByTxIdMap();
+        /*Map<String, Tx> txByTxIdMap = block.getTxByTxIdMap();
         if (blockHeight == genesisBlockHeight) {
             txByTxIdMap.entrySet().stream()
                     .filter(entry -> entry.getKey().equals(genesisTxId))
                     .forEach(entry -> parseGenesisTx(entry.getValue(), blockHeight, bsqUTXOMap, bsqTXOMap));
+        }*/
+
+        if (genesisTx != null) {
+            checkArgument(blockHeight == genesisBlockHeight,
+                    "If we have a matching genesis tx the block height must mathc as well");
+            parseGenesisTx(genesisTx, blockHeight, bsqUTXOMap, bsqTXOMap);
         }
 
         // Worst case is that all txs in a block are depending on another, so only once get resolved at each iteration.
         // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
         // Realistically we don't expect more then a few recursive calls.
-        updateBsqUtxoMapFromBlock(txByTxIdMap.values(), bsqUTXOMap, bsqTXOMap, blockHeight, 0, 5300);
+
+        updateBsqUtxoMapFromBlock(block.getTxList(), bsqUTXOMap, bsqTXOMap, blockHeight, 0, 5300);
 
         int trigger = BsqBlockchainManager.getSnapshotTrigger();
         if (blockHeight % trigger == 0 && blockHeight > snapshotHeight - trigger) {
@@ -159,7 +180,7 @@ abstract public class BsqBlockchainService {
 
     // Recursive method
     // Performance-wise the recursion does not hurt (e.g. 5-20 ms).  
-    void updateBsqUtxoMapFromBlock(Collection<Tx> transactions,
+    void updateBsqUtxoMapFromBlock(List<Tx> transactions,
                                    BsqUTXOMap bsqUTXOMap,
                                    BsqTXOMap bsqTXOMap,
                                    int blockHeight,
@@ -168,8 +189,8 @@ abstract public class BsqBlockchainService {
         // The set of txIds of txs which are used for inputs of another tx in same block
         Set<String> intraBlockSpendingTxIdSet = getIntraBlockSpendingTxIdSet(transactions);
 
-        Set<Tx> txsWithoutInputsFromSameBlock = new HashSet<>();
-        Set<Tx> txsWithInputsFromSameBlock = new HashSet<>();
+        List<Tx> txsWithoutInputsFromSameBlock = new ArrayList<>();
+        List<Tx> txsWithInputsFromSameBlock = new ArrayList<>();
 
         // First we find the txs which have no intra-block inputs
         outerLoop:
@@ -193,8 +214,10 @@ abstract public class BsqBlockchainService {
         // There are some blocks where it seems devs have tested graphs of many depending txs, but even 
         // those dont exceed 200 recursions and are mostly old blocks from 2012 when fees have been low ;-).
         // TODO check strategy btc core uses (sorting the dependency graph would be an optimisation)
-        if (recursionCounter > 50) {
+        // Seems btc core delivers tx list sorted by dependency graph. -> TODO verify and test
+        if (recursionCounter > 100) {
             log.warn("Unusual high recursive calls at resolveConnectedTxs. recursionCounter=" + recursionCounter);
+            log.warn("blockHeight=" + blockHeight);
             log.warn("txsWithoutInputsFromSameBlock " + txsWithoutInputsFromSameBlock.size());
             log.warn("txsWithInputsFromSameBlock " + txsWithInputsFromSameBlock.size());
         }
@@ -225,7 +248,7 @@ abstract public class BsqBlockchainService {
         }
     }
 
-    private Set<String> getIntraBlockSpendingTxIdSet(Collection<Tx> transactions) {
+    private Set<String> getIntraBlockSpendingTxIdSet(List<Tx> transactions) {
         Set<String> txIdSet = transactions.stream().map(Tx::getId).collect(Collectors.toSet());
         Set<String> intraBlockSpendingTxIdSet = new HashSet<>();
         transactions.stream()
