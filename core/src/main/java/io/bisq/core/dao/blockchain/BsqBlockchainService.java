@@ -40,6 +40,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 abstract public class BsqBlockchainService {
     private int snapshotHeight;
+    // todo just temp
+    // Map<Integer, String> recursionMap = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -99,12 +101,21 @@ abstract public class BsqBlockchainService {
                 if (!oldBsqUTXOMap.equals(newBsqUTXOMap))
                     log.info(bsqUTXOMap.toString());
 
-                log.debug("Parsing for block {} took {} ms. Total: {} ms for {} blocks",
+              /*  StringBuilder sb = new StringBuilder("recursionMap:\n");
+                List<String> list = new ArrayList<>();
+                //recursionMap.entrySet().stream().forEach(e -> sb.append(e.getKey()).append(": ").append(e.getValue()).append("\n"));
+                recursionMap.entrySet().stream().forEach(e -> list.add("\nBlock height / Tx graph depth / Nr. of Txs: " + e.getKey()
+                        + " / " + e.getValue()));
+                Collections.sort(list);
+                list.stream().forEach(e -> sb.append(e).append("\n"));
+                log.warn(list.toString().replace(",", "").replace("[", "").replace("]", ""));*/
+
+               /* log.info("Parsing for block {} took {} ms. Total: {} ms for {} blocks",
                         height,
                         (System.currentTimeMillis() - startBlockTs),
                         (System.currentTimeMillis() - startTotalTs),
                         (height - startBlockHeight + 1));
-                //Profiler.printSystemLoad(log);
+                Profiler.printSystemLoad(log);*/
             }
             log.info("Parsing for all blocks since genesis took {} ms", System.currentTimeMillis() - startTotalTs);
         } catch (Throwable t) {
@@ -142,7 +153,9 @@ abstract public class BsqBlockchainService {
                     "If we have a matching genesis tx the block height must mathc as well");
             parseGenesisTx(genesisTx, blockHeight, bsqUTXOMap, bsqTXOMap);
         }
+        //txSize = block.getTxList().size();
 
+        // Worst case is that all txs in a block are depending on another, so only once get resolved at each iteration.
         // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
         // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
         // Realistically we don't expect more then a few recursive calls.
@@ -162,6 +175,8 @@ abstract public class BsqBlockchainService {
         }
     }
 
+    //private int txSize;
+
     // Recursive method
     // Performance-wise the recursion does not hurt (e.g. 5-20 ms).  
     void updateBsqUtxoMapFromBlock(List<Tx> transactions,
@@ -170,6 +185,8 @@ abstract public class BsqBlockchainService {
                                    int blockHeight,
                                    int recursionCounter,
                                    int maxRecursions) {
+        //recursionMap.put(blockHeight, recursionCounter + " / " + txSize);
+
         // The set of txIds of txs which are used for inputs of another tx in same block
         Set<String> intraBlockSpendingTxIdSet = getIntraBlockSpendingTxIdSet(transactions);
 
@@ -199,12 +216,15 @@ abstract public class BsqBlockchainService {
         // those dont exceed 200 recursions and are mostly old blocks from 2012 when fees have been low ;-).
         // TODO check strategy btc core uses (sorting the dependency graph would be an optimisation)
         // Seems btc core delivers tx list sorted by dependency graph. -> TODO verify and test
-        if (recursionCounter > 10) {
+        if (recursionCounter > 100) {
             log.warn("Unusual high recursive calls at resolveConnectedTxs. recursionCounter=" + recursionCounter);
             log.warn("blockHeight=" + blockHeight);
-            log.warn("txsWithoutInputsFromSameBlock " + txsWithoutInputsFromSameBlock.size());
-            log.warn("txsWithInputsFromSameBlock " + txsWithInputsFromSameBlock.size());
+            log.warn("txsWithoutInputsFromSameBlock.size " + txsWithoutInputsFromSameBlock.size());
+            log.warn("txsWithInputsFromSameBlock.size " + txsWithInputsFromSameBlock.size());
+            //  if (txsWithoutInputsFromSameBlock.size() == 1)
+            //  log.warn("txsWithInputsFromSameBlock " + txsWithInputsFromSameBlock.stream().map(e->e.getId()).collect(Collectors.toList()));
         }
+
         // we check if we have any valid BSQ utxo from that tx set
         if (!txsWithoutInputsFromSameBlock.isEmpty()) {
             for (Tx tx : txsWithoutInputsFromSameBlock) {
@@ -218,7 +238,8 @@ abstract public class BsqBlockchainService {
         // TODO recursion risk?
         if (!txsWithInputsFromSameBlock.isEmpty()) {
             if (recursionCounter < maxRecursions) {
-                updateBsqUtxoMapFromBlock(txsWithInputsFromSameBlock, bsqUTXOMap, bsqTXOMap, blockHeight, ++recursionCounter, maxRecursions);
+                updateBsqUtxoMapFromBlock(txsWithInputsFromSameBlock, bsqUTXOMap, bsqTXOMap, blockHeight,
+                        ++recursionCounter, maxRecursions);
             } else {
                 final String msg = "We exceeded our max. recursions for resolveConnectedTxs.\n" +
                         "txsWithInputsFromSameBlock=" + txsWithInputsFromSameBlock.toString() + "\n" +

@@ -17,7 +17,6 @@
 
 package io.bisq.core.btc.wallet;
 
-import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.user.Preferences;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
@@ -47,8 +46,8 @@ public class WalletUtils {
                 output.getScriptPubKey().getToAddress(getParams()).toString() : null;
     }
 
-    public static boolean isRegTest() {
+   /* public static boolean isRegTest() {
         final Preferences preferences = Preferences.INSTANCE;
-        return preferences != null ? preferences.getBitcoinNetwork().equals(BitcoinNetwork.REGTEST) : true;
-    }
+        return preferences != null ? preferences.getBitcoinNetwork().equals(BitcoinNetwork.REGTEST) : false;
+    }*/
 }

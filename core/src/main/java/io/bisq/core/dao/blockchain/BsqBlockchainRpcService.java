@@ -111,6 +111,8 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
                     log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
                     return client;
                 } catch (IOException | BitcoindException | CommunicationException e) {
+                    if (e instanceof CommunicationException)
+                        log.error("Maybe the rpc port is not set correctly? rpcPort=" + rpcPort);
                     log.error(e.toString());
                     e.printStackTrace();
                     log.error(e.getCause() != null ? e.getCause().toString() : "e.getCause()=null");

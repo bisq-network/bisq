@@ -17,7 +17,6 @@
 
 package io.bisq.core.btc.wallet;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -48,9 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.inject.internal.util.$Preconditions.checkArgument;
-import static com.google.inject.internal.util.$Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
 
 // TradeService handles all relevant transactions used in the trade process
 /*
@@ -336,7 +333,7 @@ public class TradeWalletService {
         TransactionOutput makerOutput = null;
 
         // We don't support more then 1 optional change output
-        Preconditions.checkArgument(dummyTx.getOutputs().size() < 3, "dummyTx.getOutputs().size() >= 3");
+        checkArgument(dummyTx.getOutputs().size() < 3, "dummyTx.getOutputs().size() >= 3");
 
         // Only save change outputs, the dummy output is ignored (that's why we start with index 1)
         if (dummyTx.getOutputs().size() > 1)

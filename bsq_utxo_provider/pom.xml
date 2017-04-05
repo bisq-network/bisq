@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>statistics</artifactId>
+    <artifactId>bsq_utxo_provider</artifactId>
 
     <build>
         <resources>
@@ -41,7 +41,7 @@
                     <transformers>
                         <transformer
                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>io.bisq.statistics.StatisticsMain</mainClass>
+                            <mainClass>io.bisq.bsq_utxo_provider.BsqUtxoProviderMain</mainClass>
                         </transformer>
                     </transformers>
                     <filters>
@@ -65,7 +65,7 @@
                         <configuration>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>bundled</shadedClassifierName>
-                            <finalName>Statistics</finalName>
+                            <finalName>BsqUtxoProvider</finalName>
                         </configuration>
                     </execution>
                 </executions>

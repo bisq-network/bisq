@@ -49,6 +49,7 @@
         <module>seednode</module>
         <module>statistics</module>
         <module>provider</module>
+        <module>bsq_utxo_provider</module>
     </modules>
 
     <build>
@@ -122,7 +123,7 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>3.0</version>
+            <version>4.1.0</version>
         </dependency>
 
         <!--crypto-->

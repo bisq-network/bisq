@@ -6,7 +6,7 @@
         </encoder>
     </appender>
 
-    <root level="TRACE">
+    <root level="INFO">
         <appender-ref ref="CONSOLE_APPENDER"/>
     </root>
 
@@ -25,6 +25,7 @@
     <logger name="org.bitcoinj.core.BitcoinSerializer" level="WARN"/>
     <logger name="org.bitcoinj.core.Peer" level="WARN"/>
 
+    <logger name="com.neemre.btcdcli4j" level="WARN"/>
 
     <!-- 
    <logger name="com.vinumeris.updatefx" level="OFF"/>

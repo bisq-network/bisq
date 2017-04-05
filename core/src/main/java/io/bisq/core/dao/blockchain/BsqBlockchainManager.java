@@ -24,7 +24,8 @@ import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.storage.Storage;
-import io.bisq.core.btc.wallet.WalletUtils;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.BitcoinNetwork;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -41,10 +42,11 @@ public class BsqBlockchainManager {
 
     //mainnet
     private static final String GENESIS_TX_ID = "cabbf6073aea8f22ec678e973ac30c6d8fc89321011da6a017f63e67b9f66667";
-
-    // 130768 has many inter-block dependencies.
-    // current height: 460397
-    private static final int GENESIS_BLOCK_HEIGHT = 400000; 
+    // block 300000 2014-05-10 
+    // block 350000 2015-03-30
+    // block 400000 2016-02-25
+    // block 450000 2017-01-25
+    private static final int GENESIS_BLOCK_HEIGHT = 400000;
     private static final String REG_TEST_GENESIS_TX_ID = "f56fffd2d25ba1be2649a7d88ee68248d5adcb2e42df03a592b1874e2a04aa62";
     private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 102;
 
@@ -70,6 +72,7 @@ public class BsqBlockchainManager {
     private boolean isUtxoSyncWithChainHeadHeight;
 
     private final BsqBlockchainService blockchainService;
+    private BitcoinNetwork bitcoinNetwork;
     private final List<BsqUTXOListener> bsqUTXOListeners = new ArrayList<>();
 
 
@@ -79,8 +82,10 @@ public class BsqBlockchainManager {
 
     @Inject
     public BsqBlockchainManager(BsqBlockchainService blockchainService,
+                                BisqEnvironment bisqEnvironment,
                                 @Named(Storage.DIR_KEY) File storageDir) {
         this.blockchainService = blockchainService;
+        this.bitcoinNetwork = bisqEnvironment.getBitcoinNetwork();
 
         bsqUTXOMap = new BsqUTXOMap(storageDir);
         bsqTXOMap = new BsqTXOMap(storageDir);
@@ -170,10 +175,10 @@ public class BsqBlockchainManager {
     }
 
     private String getGenesisTxId() {
-        return WalletUtils.isRegTest() ? REG_TEST_GENESIS_TX_ID : GENESIS_TX_ID;
+        return bitcoinNetwork == BitcoinNetwork.REGTEST ? REG_TEST_GENESIS_TX_ID : GENESIS_TX_ID;
     }
 
     private int getGenesisBlockHeight() {
-        return WalletUtils.isRegTest() ? REG_TEST_GENESIS_BLOCK_HEIGHT : GENESIS_BLOCK_HEIGHT;
+        return bitcoinNetwork == BitcoinNetwork.REGTEST ? REG_TEST_GENESIS_BLOCK_HEIGHT : GENESIS_BLOCK_HEIGHT;
     }
 }
