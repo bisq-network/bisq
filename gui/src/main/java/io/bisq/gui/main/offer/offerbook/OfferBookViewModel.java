@@ -151,7 +151,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         applyPriceSortTypeProperty(code);
 
         fillAllTradeCurrencies();
-        btcCode.bind(preferences.btcDenominationProperty());
+        btcCode.bind(preferences.getBtcDenominationProperty());
         preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
         offerBook.fillOfferBookListItems();
         applyFilterPredicate();
@@ -374,7 +374,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setMarketPriceFeedCurrency() {
-        if (!preferences.getUseStickyMarketPrice() && isTabSelected) {
+        if (!preferences.isUseStickyMarketPrice() && isTabSelected) {
             if (showAllTradeCurrenciesProperty.get())
                 priceFeedService.setCurrencyCode(Preferences.getDefaultTradeCurrency().getCode());
             else
@@ -429,7 +429,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
             boolean paymentMethodResult = showAllPaymentMethods ||
                     offer.getPaymentMethod().equals(selectedPaymentMethod);
-            boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.getShowOwnOffersInOfferBook();
+            boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
             return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
         });
     }

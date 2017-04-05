@@ -37,7 +37,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class FileManager<T> {
+public class FileManager<T extends Persistable> {
     private static final Logger log = LoggerFactory.getLogger(FileManager.class);
 
     private final File dir;
@@ -198,9 +198,9 @@ public class FileManager<T> {
 
         Message message = null;
         try {
-            message = ((Persistable) serializable).toProtobuf();
+            message = ((T) serializable).toProtobuf();
         } catch (Throwable e) {
-            log.info("Not protobufferable: {}, {}, {}", serializable.getClass().getSimpleName(), storageFile, e.getMessage());
+            log.info("Not protobufferable: {}, {}, {}", serializable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }
 
         try {

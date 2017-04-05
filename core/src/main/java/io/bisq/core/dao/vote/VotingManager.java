@@ -20,6 +20,7 @@ package io.bisq.core.dao.vote;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bisq.common.app.Version;
+import io.bisq.common.persistance.ListPersistable;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -52,18 +53,18 @@ public class VotingManager {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final FeeService feeService;
-    private final Storage<ArrayList<VoteItemsList>> voteItemCollectionsStorage;
+    private final Storage<ListPersistable<VoteItemsList>> voteItemCollectionsStorage;
     private final CompensationRequestManager compensationRequestManager;
     private final DaoPeriodService daoPeriodService;
     private final VotingDefaultValues votingDefaultValues;
-    private final ArrayList<VoteItemsList> voteItemsLists = new ArrayList<>();
+    private final List<VoteItemsList> voteItemsLists = new ArrayList<>();
     private VoteItemsList activeVoteItemsList;
 
     @Inject
     public VotingManager(BtcWalletService btcWalletService,
                          BsqWalletService bsqWalletService,
                          FeeService feeService,
-                         Storage<ArrayList<VoteItemsList>> voteItemCollectionsStorage,
+                         Storage<ListPersistable<VoteItemsList>> voteItemCollectionsStorage,
                          CompensationRequestManager compensationRequestManager,
                          DaoPeriodService daoPeriodService,
                          VotingDefaultValues votingDefaultValues) {
@@ -75,9 +76,9 @@ public class VotingManager {
         this.daoPeriodService = daoPeriodService;
         this.votingDefaultValues = votingDefaultValues;
 
-        ArrayList<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
+        ListPersistable<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
         if (persisted != null)
-            voteItemsLists.addAll(persisted);
+            voteItemsLists.addAll(persisted.getListPayload());
     }
 
     @VisibleForTesting
@@ -189,7 +190,7 @@ public class VotingManager {
             outputStream.write(Version.VOTING_VERSION);
 
             // Next we add the 20 bytes hash of the voter’s compensation requests collection.
-            // This is needed to mark our version of the "reality" as we have only eventually consistency in the 
+            // This is needed to mark our version of the "reality" as we have only eventually consistency in the
             // P2P network we cannot guarantee that all peers have the same data.
             // In the voting result we only consider those which match the majority view.
             outputStream.write(Utils.sha256hash160(getCompensationRequestsCollection()));
@@ -308,7 +309,7 @@ public class VotingManager {
         //TODO check equals code
         if (!voteItemsLists.contains(voteItemsList)) {
             voteItemsLists.add(voteItemsList);
-            voteItemCollectionsStorage.queueUpForSave(voteItemsLists, 500);
+            voteItemCollectionsStorage.queueUpForSave(new ListPersistable<>(voteItemsLists), 500);
         }
     }
 

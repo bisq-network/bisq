@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bisq.common.locale.CurrencyTuple;
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.persistance.HashSetPersistable;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 public class TradeStatisticsManager {
     private static final Logger log = LoggerFactory.getLogger(TradeStatisticsManager.class);
 
-    private final Storage<HashSet<TradeStatistics>> statisticsStorage;
+    private final Storage<HashSetPersistable<TradeStatistics>> statisticsStorage;
     private final Storage<PlainTextWrapper> fiatCurrencyListJsonStorage;
     private final Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage;
     private final Storage<PlainTextWrapper> statisticsJsonStorage;
@@ -35,7 +36,7 @@ public class TradeStatisticsManager {
     private final HashSet<TradeStatistics> tradeStatisticsSet = new HashSet<>();
 
     @Inject
-    public TradeStatisticsManager(Storage<HashSet<TradeStatistics>> statisticsStorage,
+    public TradeStatisticsManager(Storage<HashSetPersistable<TradeStatistics>> statisticsStorage,
                                   Storage<PlainTextWrapper> fiatCurrencyListJsonStorage,
                                   Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage,
                                   Storage<PlainTextWrapper> statisticsJsonStorage,
@@ -52,7 +53,7 @@ public class TradeStatisticsManager {
 
     private void init(P2PService p2PService) {
         statisticsStorage.setNumMaxBackupFiles(1);
-        
+
         if (dumpStatistics) {
             this.statisticsJsonStorage.initWithFileName("trade_statistics.json");
 
@@ -70,9 +71,10 @@ public class TradeStatisticsManager {
             cryptoCurrencyListJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(cryptoCurrencyList)), 2000);
         }
 
-        HashSet<TradeStatistics> persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
+        HashSetPersistable<TradeStatistics> persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
         if (persisted != null)
-            persisted.stream().forEach(e -> add(e, false));
+
+            persisted.getHashSet().stream().forEach(e -> add(e, false));
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
@@ -104,7 +106,7 @@ public class TradeStatisticsManager {
                 observableTradeStatisticsSet.add(tradeStatistics);
 
                 if (storeLocally)
-                    statisticsStorage.queueUpForSave(new HashSet<>(tradeStatisticsSet), 2000);
+                    statisticsStorage.queueUpForSave(new HashSetPersistable<>(tradeStatisticsSet), 2000);
 
                 dump();
             } else {
@@ -120,7 +122,7 @@ public class TradeStatisticsManager {
     private void dump() {
         if (dumpStatistics) {
             // We store the statistics as json so it is easy for further processing (e.g. for web based services)
-            // TODO This is just a quick solution for storing to one file. 
+            // TODO This is just a quick solution for storing to one file.
             // 1 statistic entry has 500 bytes as json.
             // Need a more scalable solution later when we get more volume.
             // The flag will only be activated by dedicated nodes, so it should not be too critical for the moment, but needs to

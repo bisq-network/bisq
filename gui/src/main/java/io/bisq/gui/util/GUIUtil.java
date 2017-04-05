@@ -26,6 +26,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.persistance.ListPersistable;
 import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -93,8 +94,8 @@ public class GUIUtil {
                                       Preferences preferences, Stage stage, ProtobufferResolver protobufferResolver) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
-            Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), protobufferResolver);
-            paymentAccountsStorage.initAndGetPersisted(accounts, fileName);
+            Storage<ListPersistable<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), protobufferResolver);
+            paymentAccountsStorage.initAndGetPersisted(new ListPersistable<>(accounts), fileName);
             paymentAccountsStorage.queueUpForSave();
             new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
         } else {
@@ -113,11 +114,11 @@ public class GUIUtil {
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
-                Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), protobufferResolver);
-                ArrayList<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
+                Storage<ListPersistable<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), protobufferResolver);
+                ListPersistable<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
-                    persisted.stream().forEach(paymentAccount -> {
+                    persisted.getListPayload().stream().forEach(paymentAccount -> {
                         final String id = paymentAccount.getId();
                         if (user.getPaymentAccount(id) == null) {
                             user.addPaymentAccount(paymentAccount);
@@ -191,7 +192,7 @@ public class GUIUtil {
                         return "▼ " + Res.get("list.currency.editList");
                     default:
                         String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
-                        if (preferences.getSortMarketCurrenciesNumerically())
+                        if (preferences.isSortMarketCurrenciesNumerically())
                             displayString += " - " + item.numTrades + " " + postFix;
                         return tradeCurrency.getDisplayPrefix() + displayString;
                 }
@@ -246,7 +247,7 @@ public class GUIUtil {
                 .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
                 .collect(Collectors.toList());
 
-        if (preferences.getSortMarketCurrenciesNumerically()) {
+        if (preferences.isSortMarketCurrenciesNumerically()) {
             list.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
             cryptoList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
         } else {

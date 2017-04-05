@@ -70,7 +70,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         HOUR,
         MINUTE_10,
         // TODO Can be removed after version 4.9.7
-        // Not used anymore but leave it as it might be used in preferences and could cause an exception if not there. 
+        // Not used anymore but leave it as it might be used in preferences and could cause an exception if not there.
         MINUTE
     }
 
@@ -181,7 +181,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
                 updateChartData();
 
-                if (!preferences.getUseStickyMarketPrice()) {
+                if (!preferences.isUseStickyMarketPrice()) {
                     if (showAllEntry)
                         priceFeedService.setCurrencyCode(Preferences.getDefaultTradeCurrency().getCode());
                     else
@@ -226,7 +226,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setMarketPriceFeedCurrency() {
-        if (!preferences.getUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX) {
+        if (!preferences.isUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX) {
             if (showAllTradeCurrenciesProperty.get())
                 priceFeedService.setCurrencyCode(Preferences.getDefaultTradeCurrency().getCode());
             else
@@ -235,7 +235,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     }
 
     private void syncPriceFeedCurrency() {
-        if (!preferences.getUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX)
+        if (!preferences.isUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX)
             priceFeedService.setCurrencyCode(selectedTradeCurrencyProperty.get().getCode());
     }
 

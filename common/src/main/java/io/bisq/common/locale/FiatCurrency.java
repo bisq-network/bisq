@@ -17,13 +17,17 @@
 
 package io.bisq.common.locale;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
+import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Currency;
 import java.util.Locale;
+import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -34,11 +38,8 @@ public final class FiatCurrency extends TradeCurrency {
 
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "★ ";
+    @Setter
     private static Locale defaultLocale;
-
-    public static void setDefaultLocale(Locale defaultLocale) {
-        FiatCurrency.defaultLocale = defaultLocale;
-    }
 
     private final Currency currency;
 
@@ -64,5 +65,16 @@ public final class FiatCurrency extends TradeCurrency {
     @Override
     public String getDisplayPrefix() {
         return PREFIX;
+    }
+
+    @Override
+    public Message toProtobuf() {
+        PB.TradeCurrency.Builder builder = PB.TradeCurrency.newBuilder().setCode(code).setName(name)
+                .setFiatCurrency(PB.FiatCurrency.newBuilder().setDefaultLocale(
+                        PB.Locale.newBuilder().setLanguage(defaultLocale.getLanguage())
+                                .setCountry(defaultLocale.getCountry())
+                                .setVariant(defaultLocale.getVariant())));
+        Optional.ofNullable(symbol).ifPresent(symbol -> builder.setSymbol(symbol));
+        return builder.build();
     }
 }

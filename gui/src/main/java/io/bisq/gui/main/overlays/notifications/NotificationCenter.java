@@ -70,7 +70,7 @@ public class NotificationCenter {
         this.preferences = preferences;
         this.navigation = navigation;
 
-        EasyBind.subscribe(preferences.useAnimationsProperty(), useAnimations -> NotificationCenter.useAnimations = useAnimations);
+        EasyBind.subscribe(preferences.getUseAnimationsProperty(), useAnimations -> NotificationCenter.useAnimations = useAnimations);
     }
 
     public void onAllServicesAndViewsInitialized() {

@@ -4,6 +4,7 @@ import io.bisq.common.Clock;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.common.persistance.HashSetPersistable;
 import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.network.p2p.NodeAddress;
@@ -73,7 +74,7 @@ public class PeerManager implements ConnectionListener {
     private final NetworkNode networkNode;
     private final Clock clock;
     private final Set<NodeAddress> seedNodeAddresses;
-    private final Storage<HashSet<Peer>> dbStorage;
+    private final Storage<HashSetPersistable<Peer>> dbStorage;
 
     private final HashSet<Peer> persistedPeers = new HashSet<>();
     private final Set<Peer> reportedPeers = new HashSet<>();
@@ -96,10 +97,10 @@ public class PeerManager implements ConnectionListener {
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
         dbStorage = new Storage<>(storageDir, protobufferResolver);
-        HashSet<Peer> persistedPeers = dbStorage.initAndGetPersistedWithFileName("PersistedPeers");
+        HashSetPersistable<Peer> persistedPeers = dbStorage.initAndGetPersistedWithFileName("PersistedPeers");
         if (persistedPeers != null) {
             log.debug("We have persisted reported peers. persistedPeers.size()=" + persistedPeers.size());
-            this.persistedPeers.addAll(persistedPeers);
+            this.persistedPeers.addAll(persistedPeers.getHashSet());
         }
 
         // we check if app was idle for more then 5 sec.
@@ -388,7 +389,7 @@ public class PeerManager implements ConnectionListener {
             persistedPeers.addAll(reportedPeersToAdd);
             purgePersistedPeersIfExceeds();
             if (dbStorage != null)
-                dbStorage.queueUpForSave(new HashSet<>(persistedPeers), 2000); // We clone it to avoid ConcurrentModificationExceptions at save
+                dbStorage.queueUpForSave(new HashSetPersistable<>(persistedPeers), 2000); // We clone it to avoid ConcurrentModificationExceptions at save
 
             printReportedPeers();
         } else {
@@ -451,8 +452,10 @@ public class PeerManager implements ConnectionListener {
         if (persistedPeers.contains(persistedPeer)) {
             persistedPeers.remove(persistedPeer);
 
-            if (dbStorage != null)
-                dbStorage.queueUpForSave(new HashSet<>(persistedPeers), 2000);
+            if (dbStorage != null) {
+                HashSetPersistable<Peer> serializable = new HashSetPersistable<>(persistedPeers);
+                dbStorage.queueUpForSave(serializable, 2000);
+            }
 
             return true;
         } else {

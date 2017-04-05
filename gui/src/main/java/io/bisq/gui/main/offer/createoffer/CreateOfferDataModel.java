@@ -140,7 +140,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         shortOfferId = Utilities.getShortId(offerId);
         addressEntry = walletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
 
-        useMarketBasedPrice.set(preferences.getUsePercentageBasedPrice());
+        useMarketBasedPrice.set(preferences.isUsePercentageBasedPrice());
         buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsCoin());
         sellerSecurityDeposit = Restrictions.SELLER_SECURITY_DEPOSIT;
 
@@ -181,7 +181,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         addBindings();
         addListeners();
 
-        if (!preferences.getUseStickyMarketPrice() && isTabSelected)
+        if (!preferences.isUseStickyMarketPrice() && isTabSelected)
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
         updateBalance();
@@ -194,7 +194,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void addBindings() {
-        btcCode.bind(preferences.btcDenominationProperty());
+        btcCode.bind(preferences.getBtcDenominationProperty());
     }
 
     private void removeBindings() {
@@ -247,19 +247,19 @@ class CreateOfferDataModel extends ActivatableDataModel {
         if (this.tradeCurrency != null)
             tradeCurrencyCode.set(this.tradeCurrency.getCode());
 
-        if (!preferences.getUseStickyMarketPrice())
+        if (!preferences.isUseStickyMarketPrice())
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
-        // The maker only pays the mining fee for the trade fee tx (not the mining fee for other trade txs). 
+        // The maker only pays the mining fee for the trade fee tx (not the mining fee for other trade txs).
         // A typical trade fee tx has about 226 bytes (if one input). We use 400 as a safe value.
         // We cannot use tx size calculation as we do not know initially how the input is funded. And we require the
         // fee for getting the funds needed.
-        // So we use an estimated average size and risk that in some cases we might get a bit of delay if the actual required 
-        // fee would be larger. 
+        // So we use an estimated average size and risk that in some cases we might get a bit of delay if the actual required
+        // fee would be larger.
         // As we use the best fee estimation (for 1 confirmation) that risk should not be too critical as long there are
         // not too many inputs.
 
-        // trade fee tx: 226 bytes (1 input) - 374 bytes (2 inputs)         
+        // trade fee tx: 226 bytes (1 input) - 374 bytes (2 inputs)
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But offer creation happens usually after that so we should have already the value from the estimation service.
@@ -275,7 +275,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
-        if (!preferences.getUseStickyMarketPrice() && isTabSelected)
+        if (!preferences.isUseStickyMarketPrice() && isTabSelected)
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
     }
 
@@ -412,7 +412,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
             if (paymentAccount != null)
                 paymentAccount.setSelectedTradeCurrency(tradeCurrency);
 
-            if (!preferences.getUseStickyMarketPrice())
+            if (!preferences.isUseStickyMarketPrice())
                 priceFeedService.setCurrencyCode(code);
 
             Optional<TradeCurrency> tradeCurrencyOptional = preferences.getTradeCurrenciesAsObservable().stream().filter(e -> e.getCode().equals(code)).findAny();
@@ -535,7 +535,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void calculateTotalToPay() {
-        // Maker does not pay the tx fee for the trade txs because the mining fee might be different when maker 
+        // Maker does not pay the tx fee for the trade txs because the mining fee might be different when maker
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (direction != null && amount.get() != null && createOfferFeeAsCoin != null) {

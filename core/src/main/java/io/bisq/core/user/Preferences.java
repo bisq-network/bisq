@@ -35,6 +35,8 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import lombok.Getter;
+import lombok.Setter;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.jetbrains.annotations.NotNull;
@@ -120,56 +122,94 @@ public final class Preferences implements Persistable {
     transient private final Storage<Preferences> storage;
     transient private final BisqEnvironment bisqEnvironment;
 
+    @Getter
     transient private BitcoinNetwork bitcoinNetwork;
 
     // Persisted fields
+    @Getter
     private String userLanguage = LanguageUtil.getDefaultLanguage(Preferences.getDefaultLocale());
+    @Getter
     private Country userCountry = CountryUtil.getDefaultCountry(Preferences.getDefaultLocale());
     private String btcDenomination = MonetaryFormat.CODE_BTC;
     private boolean useAnimations = DevEnv.STRESS_TEST_MODE ? false : true;
     private final ArrayList<FiatCurrency> fiatCurrencies;
     private final ArrayList<CryptoCurrency> cryptoCurrencies;
+    @Getter
     private BlockChainExplorer blockChainExplorerMainNet;
+    @Getter
     private BlockChainExplorer blockChainExplorerTestNet;
+    @Nullable
+    @Getter
     private String backupDirectory;
+    @Getter
     private boolean autoSelectArbitrators = true;
-    private final Map<String, Boolean> dontShowAgainMap;
+    @Getter
+    @Setter
+    private Map<String, Boolean> dontShowAgainMap;
+    @Getter
     private boolean tacAccepted;
     private boolean useTorForBitcoinJ = true;
 
+    @Getter
     private boolean showOwnOffersInOfferBook = true;
+    @Setter
     private Locale preferredLocale;
+    @Getter
     private TradeCurrency preferredTradeCurrency;
     private long withdrawalTxFeeInBytes = 100;
     private boolean useCustomWithdrawalTxFee = false;
 
+    @Getter
     private double maxPriceDistanceInPercent;
+    @Getter
     private String offerBookChartScreenCurrencyCode = Preferences.getDefaultTradeCurrency().getCode();
+    @Getter
     private String tradeChartsScreenCurrencyCode = Preferences.getDefaultTradeCurrency().getCode();
 
+    @Getter
     private String buyScreenCurrencyCode = Preferences.getDefaultTradeCurrency().getCode();
+    @Getter
     private String sellScreenCurrencyCode = Preferences.getDefaultTradeCurrency().getCode();
+    @Getter
     private int tradeStatisticsTickUnitIndex = 3;
 
+    @Getter
+    @Setter
     private boolean useStickyMarketPrice = false;
+    @Getter
     private boolean sortMarketCurrenciesNumerically = true;
+    @Getter
     private boolean usePercentageBasedPrice = true;
+    @Getter
+    @Setter
     private Map<String, String> peerTagMap = new HashMap<>();
+    @Getter
     private String bitcoinNodes = "";
 
+    @Getter
     private List<String> ignoreTradersList = new ArrayList<>();
+    @Getter
     private String directoryChooserPath;
+    @Getter
     private long buyerSecurityDepositAsLong = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT.value;
     @Nullable
+    @Getter
     private PaymentAccount selectedPaymentAccountForCreateOffer;
 
     // Observable wrappers
+    @Getter
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
+    @Getter
     transient private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(useAnimations);
+    @Getter
     transient private final BooleanProperty useCustomWithdrawalTxFeeProperty = new SimpleBooleanProperty(useCustomWithdrawalTxFee);
+    @Getter
     transient private final LongProperty withdrawalTxFeeInBytesProperty = new SimpleLongProperty(withdrawalTxFeeInBytes);
+    @Getter
     transient private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
+    @Getter
     transient private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
+    @Getter
     transient private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
 
 
@@ -245,9 +285,9 @@ public final class Preferences implements Persistable {
                 setBlockChainExplorerTestNet(blockChainExplorersMainNet.get(0));
 
             backupDirectory = persisted.getBackupDirectory();
-            autoSelectArbitrators = persisted.getAutoSelectArbitrators();
+            autoSelectArbitrators = persisted.isAutoSelectArbitrators();
             dontShowAgainMap = persisted.getDontShowAgainMap();
-            tacAccepted = persisted.getTacAccepted();
+            tacAccepted = persisted.isTacAccepted();
 
             userLanguage = persisted.getUserLanguage();
             if (userLanguage == null)
@@ -260,11 +300,11 @@ public final class Preferences implements Persistable {
             defaultTradeCurrency = preferredTradeCurrency;
             useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
 
-            useStickyMarketPrice = persisted.getUseStickyMarketPrice();
-            sortMarketCurrenciesNumerically = persisted.getSortMarketCurrenciesNumerically();
+            useStickyMarketPrice = persisted.isUseStickyMarketPrice();
+            sortMarketCurrenciesNumerically = persisted.isSortMarketCurrenciesNumerically();
 
-            usePercentageBasedPrice = persisted.getUsePercentageBasedPrice();
-            showOwnOffersInOfferBook = persisted.getShowOwnOffersInOfferBook();
+            usePercentageBasedPrice = persisted.isUsePercentageBasedPrice();
+            showOwnOffersInOfferBook = persisted.isShowOwnOffersInOfferBook();
             maxPriceDistanceInPercent = persisted.getMaxPriceDistanceInPercent();
 
             bitcoinNodes = persisted.getBitcoinNodes();
@@ -531,44 +571,12 @@ public final class Preferences implements Persistable {
         return btcDenominationProperty.get();
     }
 
-    public StringProperty btcDenominationProperty() {
-        return btcDenominationProperty;
-    }
-
     public boolean getUseAnimations() {
         return useAnimationsProperty.get();
     }
 
-    public BooleanProperty useAnimationsProperty() {
-        return useAnimationsProperty;
-    }
-
     public static boolean useAnimations() {
         return staticUseAnimations;
-    }
-
-    public BitcoinNetwork getBitcoinNetwork() {
-        return bitcoinNetwork;
-    }
-
-    public ObservableList<FiatCurrency> getFiatCurrenciesAsObservable() {
-        return fiatCurrenciesAsObservable;
-    }
-
-    public ObservableList<CryptoCurrency> getCryptoCurrenciesAsObservable() {
-        return cryptoCurrenciesAsObservable;
-    }
-
-    public ObservableList<TradeCurrency> getTradeCurrenciesAsObservable() {
-        return tradeCurrenciesAsObservable;
-    }
-
-    public BlockChainExplorer getBlockChainExplorerTestNet() {
-        return blockChainExplorerTestNet;
-    }
-
-    public BlockChainExplorer getBlockChainExplorerMainNet() {
-        return blockChainExplorerMainNet;
     }
 
     public BlockChainExplorer getBlockChainExplorer() {
@@ -585,32 +593,8 @@ public final class Preferences implements Persistable {
             return blockChainExplorersTestNet;
     }
 
-    public String getBackupDirectory() {
-        return backupDirectory;
-    }
-
-    public boolean getAutoSelectArbitrators() {
-        return autoSelectArbitrators;
-    }
-
-    public Map<String, Boolean> getDontShowAgainMap() {
-        return dontShowAgainMap;
-    }
-
     public boolean showAgain(String key) {
         return !dontShowAgainMap.containsKey(key) || !dontShowAgainMap.get(key);
-    }
-
-    public boolean getTacAccepted() {
-        return tacAccepted;
-    }
-
-    public String getUserLanguage() {
-        return userLanguage;
-    }
-
-    public TradeCurrency getPreferredTradeCurrency() {
-        return preferredTradeCurrency;
     }
 
     public boolean getUseTorForBitcoinJ() {
@@ -623,95 +607,17 @@ public final class Preferences implements Persistable {
             return useTorForBitcoinJ;
     }
 
-    public boolean getShowOwnOffersInOfferBook() {
-        return showOwnOffersInOfferBook;
-    }
-
-    public double getMaxPriceDistanceInPercent() {
-        return maxPriceDistanceInPercent;
-    }
-
-    public boolean getUseStickyMarketPrice() {
-        return useStickyMarketPrice;
-    }
-
-    public boolean getUsePercentageBasedPrice() {
-        return usePercentageBasedPrice;
-    }
-
-    public Map<String, String> getPeerTagMap() {
-        return peerTagMap;
-    }
-
-    public String getOfferBookChartScreenCurrencyCode() {
-        return offerBookChartScreenCurrencyCode;
-    }
-
-    public String getBuyScreenCurrencyCode() {
-        return buyScreenCurrencyCode;
-    }
-
-    public String getSellScreenCurrencyCode() {
-        return sellScreenCurrencyCode;
-    }
-
-    public List<String> getIgnoreTradersList() {
-        return ignoreTradersList;
-    }
-
-    public String getDirectoryChooserPath() {
-        return directoryChooserPath;
-    }
-
-    public String getTradeChartsScreenCurrencyCode() {
-        return tradeChartsScreenCurrencyCode;
-    }
-
-    public int getTradeStatisticsTickUnitIndex() {
-        return tradeStatisticsTickUnitIndex;
-    }
-
-    public boolean getSortMarketCurrenciesNumerically() {
-        return sortMarketCurrenciesNumerically;
-    }
-
-    public String getBitcoinNodes() {
-        return bitcoinNodes;
-    }
-
     public boolean getUseCustomWithdrawalTxFee() {
         return useCustomWithdrawalTxFeeProperty.get();
-    }
-
-    public BooleanProperty useCustomWithdrawalTxFeeProperty() {
-        return useCustomWithdrawalTxFeeProperty;
-    }
-
-    public LongProperty withdrawalTxFeeInBytesProperty() {
-        return withdrawalTxFeeInBytesProperty;
     }
 
     public long getWithdrawalTxFeeInBytes() {
         return withdrawalTxFeeInBytesProperty.get();
     }
 
-    public long getBuyerSecurityDepositAsLong() {
-        return buyerSecurityDepositAsLong;
-    }
-
     public Coin getBuyerSecurityDepositAsCoin() {
         return Coin.valueOf(buyerSecurityDepositAsLong);
     }
-
-    public Country getUserCountry() {
-        return userCountry;
-    }
-
-    @Nullable
-    public PaymentAccount getSelectedPaymentAccountForCreateOffer() {
-        return selectedPaymentAccountForCreateOffer;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -733,12 +639,12 @@ public final class Preferences implements Persistable {
         cryptoCurrenciesAsObservable.setAll(currencies);
     }
 
-    private void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
+    public void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
         this.blockChainExplorerTestNet = blockChainExplorerTestNet;
         storage.queueUpForSave();
     }
 
-    private void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
+    public void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
         this.blockChainExplorerMainNet = blockChainExplorerMainNet;
         storage.queueUpForSave();
     }
@@ -748,25 +654,22 @@ public final class Preferences implements Persistable {
         Res.applyLocaleToResourceBundle(defaultLocale);
     }
 
-
     @Override
     public Message toProtobuf() {
-        return PB.DiskEnvelope.newBuilder().setPreferences(PB.Preferences.newBuilder()
+        PB.Preferences.Builder builder = PB.Preferences.newBuilder()
                 .setUserLanguage(userLanguage)
                 .setUserCountry((PB.Country) userCountry.toProtobuf())
                 .setBtcDenomination(btcDenomination)
                 .setUseAnimations(useAnimations)
-                .addAllFiatCurrencies(fiatCurrencies.stream().map(fiatCurrency -> ((PB.FiatCurrency) fiatCurrency.toProtobuf())).collect(Collectors.toList()))
-                .addAllCryptoCurrencies(cryptoCurrencies.stream().map(cryptoCurrency -> ((PB.CryptoCurrency) cryptoCurrency.toProtobuf())).collect(Collectors.toList()))
+                .addAllFiatCurrencies(fiatCurrencies.stream().map(fiatCurrency -> ((PB.TradeCurrency) fiatCurrency.toProtobuf())).collect(Collectors.toList()))
+                .addAllCryptoCurrencies(cryptoCurrencies.stream().map(cryptoCurrency -> ((PB.TradeCurrency) cryptoCurrency.toProtobuf())).collect(Collectors.toList()))
                 .setBlockChainExplorerMainNet((PB.BlockChainExplorer) blockChainExplorerMainNet.toProtobuf())
                 .setBlockChainExplorerTestNet((PB.BlockChainExplorer) blockChainExplorerTestNet.toProtobuf())
-                .setBackupDirectory(backupDirectory)
                 .setAutoSelectArbitrators(autoSelectArbitrators)
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .setTacAccepted(tacAccepted)
                 .setUseTorForBitcoinJ(useTorForBitcoinJ)
                 .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
-                .setPreferredLocale(PB.Locale.newBuilder().setCountry(preferredLocale.getCountry()).setLanguage(preferredLocale.getLanguage()).setVariant(preferredLocale.getVariant()))
                 .setPreferredTradeCurrency((PB.TradeCurrency) preferredTradeCurrency.toProtobuf())
                 .setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes)
                 .setMaxPriceDistanceInPercent(maxPriceDistanceInPercent)
@@ -779,11 +682,10 @@ public final class Preferences implements Persistable {
                 .setBitcoinNodes(bitcoinNodes)
                 .addAllIgnoreTradersList(ignoreTradersList)
                 .setDirectoryChooserPath(directoryChooserPath)
-                .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong)).build();
-    }
+                .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong);
+        Optional.ofNullable(backupDirectory).ifPresent(backupDir -> builder.setBackupDirectory(backupDir));
+        Optional.ofNullable(preferredLocale).ifPresent(locale -> builder.setPreferredLocale(PB.Locale.newBuilder().setCountry(preferredLocale.getCountry()).setLanguage(preferredLocale.getLanguage()).setVariant(preferredLocale.getVariant())));
 
-    @Override
-    public Message fromProtobuf() {
-        return null;
+        return PB.DiskEnvelope.newBuilder().setPreferences(builder).build();
     }
 }

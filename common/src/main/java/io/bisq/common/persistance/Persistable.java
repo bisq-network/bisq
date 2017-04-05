@@ -15,10 +15,6 @@ public interface Persistable extends Serializable {
         throw new NotImplementedException("toProtobuf not yet implemented.");
     }
 
-    default Message fromProtobuf() {
-        throw new NotImplementedException("fromProtobuf not yet implemented.");
-    }
-
     default Parser getParser() {
         throw new NotImplementedException("Protobuf getParser not yet implemented.");
     }

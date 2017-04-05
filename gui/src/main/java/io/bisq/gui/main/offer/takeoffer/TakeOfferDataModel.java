@@ -131,7 +131,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // if (isWalletFunded.get())
         //     feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
 
-        if (!preferences.getUseStickyMarketPrice() && isTabSelected)
+        if (!preferences.isUseStickyMarketPrice() && isTabSelected)
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
 
         tradeManager.checkOfferAvailability(offer,
@@ -177,21 +177,21 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the takeOfferFee and not visible to the trader
 
-        // The taker pays the mining fee for the trade fee tx and the trade txs. 
-        // A typical trade fee tx has about 226 bytes (if one input). The trade txs has about 336-414 bytes. 
+        // The taker pays the mining fee for the trade fee tx and the trade txs.
+        // A typical trade fee tx has about 226 bytes (if one input). The trade txs has about 336-414 bytes.
         // We use 400 as a safe value.
         // We cannot use tx size calculation as we do not know initially how the input is funded. And we require the
         // fee for getting the funds needed.
-        // So we use an estimated average size and risk that in some cases we might get a bit of delay if the actual required 
-        // fee would be larger. 
+        // So we use an estimated average size and risk that in some cases we might get a bit of delay if the actual required
+        // fee would be larger.
         // As we use the best fee estimation (for 1 confirmation) that risk should not be too critical as long there are
-        // not too many inputs. The trade txs have no risks as there cannot be more than about 414 bytes. 
+        // not too many inputs. The trade txs have no risks as there cannot be more than about 414 bytes.
         // Only the trade fee tx carries a risk that it might be larger.
 
-        // trade fee tx: 226 bytes (1 input) - 374 bytes (2 inputs)   
-        // deposit tx: 336 bytes (1 MS output+ OP_RETURN) - 414 bytes (1 MS output + OP_RETURN + change in case of smaller trade amount)          
-        // payout tx: 371 bytes            
-        // disputed payout tx: 408 bytes 
+        // trade fee tx: 226 bytes (1 input) - 374 bytes (2 inputs)
+        // deposit tx: 336 bytes (1 MS output+ OP_RETURN) - 414 bytes (1 MS output + OP_RETURN + change in case of smaller trade amount)
+        // payout tx: 371 bytes
+        // disputed payout tx: 408 bytes
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But the "take offer" happens usually after that so we should have already the value from the estimation service.
@@ -238,7 +238,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         offer.resetState();
 
-        if (!preferences.getUseStickyMarketPrice())
+        if (!preferences.isUseStickyMarketPrice())
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
@@ -252,7 +252,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
-        if (!preferences.getUseStickyMarketPrice() && isTabSelected)
+        if (!preferences.isUseStickyMarketPrice() && isTabSelected)
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
@@ -261,7 +261,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // errorMessageHandler is used only in the check availability phase. As soon we have a trade we write the error msg in the trade object as we want to 
+    // errorMessageHandler is used only in the check availability phase. As soon we have a trade we write the error msg in the trade object as we want to
     // have it persisted as well.
     void onTakeOffer(TradeResultHandler tradeResultHandler) {
         checkNotNull(totalTxFeeAsCoin, "totalTxFeeAsCoin must not be null");
@@ -321,7 +321,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
-        btcCode.bind(preferences.btcDenominationProperty());
+        btcCode.bind(preferences.getBtcDenominationProperty());
     }
 
     private void removeBindings() {

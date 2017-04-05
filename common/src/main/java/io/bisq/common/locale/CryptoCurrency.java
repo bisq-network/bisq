@@ -17,7 +17,12 @@
 
 package io.bisq.common.locale;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
+import io.bisq.generated.protobuffer.PB;
+import lombok.Getter;
+
+import java.util.Optional;
 
 public final class CryptoCurrency extends TradeCurrency {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -26,7 +31,8 @@ public final class CryptoCurrency extends TradeCurrency {
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "✦ ";
 
-    private boolean isAsset;
+    @Getter
+    private boolean isAsset = false;
 
     public CryptoCurrency(String currencyCode, String name) {
         this(currencyCode, name, false);
@@ -37,16 +43,20 @@ public final class CryptoCurrency extends TradeCurrency {
         this.isAsset = isAsset;
     }
 
-    public CryptoCurrency(String currencyCode, String name, String symbol) {
+    public CryptoCurrency(String currencyCode, String name, String symbol, boolean isAsset) {
         super(currencyCode, name, symbol);
-    }
-
-    public boolean isAsset() {
-        return isAsset;
+        this.isAsset = isAsset;
     }
 
     @Override
     public String getDisplayPrefix() {
         return PREFIX;
+    }
+
+    @Override
+    public Message toProtobuf() {
+        PB.TradeCurrency.Builder builder = PB.TradeCurrency.newBuilder().setCode(code).setName(name).setCryptoCurrency(PB.CryptoCurrency.newBuilder().setIsAsset(isAsset));
+        Optional.ofNullable(symbol).ifPresent(symbol -> builder.setSymbol(symbol));
+        return builder.build();
     }
 }

@@ -250,7 +250,7 @@ public class MainViewModel implements ViewModel {
 
         p2pNetWorkReady = initP2PNetwork();
 
-        // We only init wallet service here if not using Tor for bitcoinj.        
+        // We only init wallet service here if not using Tor for bitcoinj.
         // When using Tor, wallet init must be deferred until Tor is ready.
         if (!preferences.getUseTorForBitcoinJ())
             initWalletService();
@@ -568,7 +568,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void checkCryptoSetup() {
-        // We want to test if the client is compiled with the correct crypto provider (BountyCastle) 
+        // We want to test if the client is compiled with the correct crypto provider (BountyCastle)
         // and if the unlimited Strength for cryptographic keys is set.
         // If users compile themselves they might miss that step and then would get an exception in the trade.
         // To avoid that we add here at startup a sample encryption and signing to see if it don't causes an exception.
@@ -639,7 +639,7 @@ public class MainViewModel implements ViewModel {
     void onSplashScreenRemoved() {
         isSplashScreenRemoved.set(true);
 
-        // Delay that as we want to know what is the current path of the navigation which is set 
+        // Delay that as we want to know what is the current path of the navigation which is set
         // in MainView showAppScreen handler
         notificationCenter.onAllServicesAndViewsInitialized();
     }
@@ -780,12 +780,12 @@ public class MainViewModel implements ViewModel {
             if (newValue != null && !newValue.equals(oldValue)) {
                 setMarketPriceInItems();
 
-                String code = preferences.getUseStickyMarketPrice() ?
+                String code = preferences.isUseStickyMarketPrice() ?
                         preferences.getPreferredTradeCurrency().getCode() :
                         priceFeedService.currencyCodeProperty().get();
                 Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(code);
                 if (itemOptional.isPresent()) {
-                    if (selectedPriceFeedComboBoxItemProperty.get() == null || !preferences.getUseStickyMarketPrice()) {
+                    if (selectedPriceFeedComboBoxItemProperty.get() == null || !preferences.isUseStickyMarketPrice()) {
                         itemOptional.get().setDisplayString(newValue);
                         selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
                     }
@@ -835,7 +835,7 @@ public class MainViewModel implements ViewModel {
     }
 
     public void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
-        if (!preferences.getUseStickyMarketPrice() && item != null) {
+        if (!preferences.isUseStickyMarketPrice() && item != null) {
             Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(priceFeedService.currencyCodeProperty().get());
             if (itemOptional.isPresent())
                 selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
@@ -852,7 +852,7 @@ public class MainViewModel implements ViewModel {
                     .ifPresent(selectedPriceFeedComboBoxItemProperty::set);
         }
 
-        // Need a delay a bit as we get item.isPriceAvailable() set after that call. 
+        // Need a delay a bit as we get item.isPriceAvailable() set after that call.
         // (In case we add a new currency in settings)
         UserThread.runAfter(() -> {
             if (item != null) {
@@ -902,7 +902,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateBalance() {
-        // Without delaying to the next cycle it does not update. 
+        // Without delaying to the next cycle it does not update.
         // Seems order of events we are listening on causes that...
         UserThread.execute(() -> {
             updateAvailableBalance();

@@ -23,7 +23,7 @@ public class TacWindow extends Overlay<TacWindow> {
     }
 
     public void showIfNeeded() {
-        if (!preferences.getTacAccepted() && !DevEnv.DEV_MODE) {
+        if (!preferences.isTacAccepted() && !DevEnv.DEV_MODE) {
             headLine(Res.get("tacWindow.headline"));
 
             // We do not translate the tacs because of the legal nature. We would need translations checked by lawyers

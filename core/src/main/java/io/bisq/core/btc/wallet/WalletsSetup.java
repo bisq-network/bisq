@@ -27,6 +27,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.persistance.LongPersistable;
 import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.Storage;
@@ -79,7 +80,7 @@ public class WalletsSetup {
     private final String walletFileName = "bisq_BTC";
     private final String bsqWalletFileName = "bisq_BSQ";
     private final Long bloomFilterTweak;
-    private final Storage<Long> storage;
+    private final Storage<LongPersistable> storage;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     private final DownloadListener downloadListener = new DownloadListener();
@@ -114,12 +115,12 @@ public class WalletsSetup {
         walletDir = new File(appDir, "bitcoin");
 
         storage = new Storage<>(walletDir, protobufferResolver);
-        Long nonce = storage.initAndGetPersistedWithFileName("BloomFilterNonce");
+        LongPersistable nonce = storage.initAndGetPersistedWithFileName("BloomFilterNonce");
         if (nonce != null) {
-            bloomFilterTweak = nonce;
+            bloomFilterTweak = nonce.getLongPayload();
         } else {
             bloomFilterTweak = new Random().nextLong();
-            storage.queueUpForSave(bloomFilterTweak, 10);
+            storage.queueUpForSave(new LongPersistable(bloomFilterTweak), 10);
         }
     }
 

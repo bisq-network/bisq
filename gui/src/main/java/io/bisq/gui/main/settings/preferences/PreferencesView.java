@@ -57,7 +57,7 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatable> {
 
     // not supported yet
-    //private ComboBox<String> btcDenominationComboBox; 
+    //private ComboBox<String> btcDenominationComboBox;
     private ComboBox<BlockChainExplorer> blockChainExplorerComboBox;
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
@@ -406,7 +406,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         transactionFeeInputTextField.setText(getNonTradeTxFeePerBytes());
         ignoreTradersListInputTextField.setText(preferences.getIgnoreTradersList().stream().collect(Collectors.joining(", ")));
-        
+
     /* btcDenominationComboBox.setDisable(true);
      btcDenominationComboBox.setItems(btcDenominations);
      btcDenominationComboBox.getSelectionModel().select(getBtcDenomination());
@@ -435,7 +435,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                         .show();
             }
             // Should we apply the changed currency immediately to the language list?
-            // If so and the user selects a unknown language he might get lost and it is hard to find 
+            // If so and the user selects a unknown language he might get lost and it is hard to find
             // again the language he understands
            /* if (selectedItem != null && !selectedItem.equals(preferences.getUserLanguage())) {
                 preferences.setUserLanguage(selectedItem);
@@ -534,21 +534,21 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void activateDisplayPreferences() {
-        showOwnOffersInOfferBook.setSelected(preferences.getShowOwnOffersInOfferBook());
+        showOwnOffersInOfferBook.setSelected(preferences.isShowOwnOffersInOfferBook());
         showOwnOffersInOfferBook.setOnAction(e -> preferences.setShowOwnOffersInOfferBook(showOwnOffersInOfferBook.isSelected()));
 
         useAnimationsCheckBox.setSelected(preferences.getUseAnimations());
         useAnimationsCheckBox.setOnAction(e -> preferences.setUseAnimations(useAnimationsCheckBox.isSelected()));
 
-        // useStickyMarketPriceCheckBox.setSelected(preferences.getUseStickyMarketPrice());
+        // useStickyMarketPriceCheckBox.setSelected(preferences.isUseStickyMarketPrice());
         // useStickyMarketPriceCheckBox.setOnAction(e -> preferences.setUseStickyMarketPrice(useStickyMarketPriceCheckBox.isSelected()));
 
-        sortMarketCurrenciesNumericallyCheckBox.setSelected(preferences.getSortMarketCurrenciesNumerically());
+        sortMarketCurrenciesNumericallyCheckBox.setSelected(preferences.isSortMarketCurrenciesNumerically());
         sortMarketCurrenciesNumericallyCheckBox.setOnAction(e -> preferences.setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumericallyCheckBox.isSelected()));
 
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgain());
 
-        autoSelectArbitratorsCheckBox.setSelected(preferences.getAutoSelectArbitrators());
+        autoSelectArbitratorsCheckBox.setSelected(preferences.isAutoSelectArbitrators());
         autoSelectArbitratorsCheckBox.setOnAction(e -> preferences.setAutoSelectArbitrators(autoSelectArbitratorsCheckBox.isSelected()));
     }
 
