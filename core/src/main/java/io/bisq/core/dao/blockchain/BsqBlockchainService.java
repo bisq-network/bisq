@@ -86,7 +86,7 @@ abstract public class BsqBlockchainService {
             for (int height = startBlockHeight; height <= chainHeadHeight; height++) {
                 long startBlockTs = System.currentTimeMillis();
                 Block btcdBlock = requestBlock(height);
-                log.info("Current block height=" + height);
+                log.debug("Current block height=" + height);
 
                 // 1 block has about 3 MB
                 final BsqBlock bsqBlock = new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight());

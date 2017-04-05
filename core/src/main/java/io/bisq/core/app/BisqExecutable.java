@@ -172,6 +172,11 @@ public abstract class BisqExecutable {
         parser.accepts(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT,
                 description("Bitcoind rpc port for wallet notifications", ""))
                 .withRequiredArg();
+        parser.accepts(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA,
+                description("If set to true the blockchain data from RPC requests to Bitcoin Core are stored " +
+                        "as json file in the data dir.", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
 
     }
 

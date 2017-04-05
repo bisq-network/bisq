@@ -23,9 +23,17 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.common.storage.FileManager;
+import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
+import io.bisq.common.util.MathUtils;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BitcoinNetwork;
+import io.bisq.core.dao.RpcOptionKeys;
+import io.bisq.core.dao.blockchain.json.ScriptPubKeyJson;
+import io.bisq.core.dao.blockchain.json.SpentInfoJson;
+import io.bisq.core.dao.blockchain.json.TxOutputForJson;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -33,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -47,7 +56,7 @@ public class BsqBlockchainManager {
     // block 400000 2016-02-25
     // block 450000 2017-01-25
     private static final int GENESIS_BLOCK_HEIGHT = 400000;
-    private static final String REG_TEST_GENESIS_TX_ID = "f56fffd2d25ba1be2649a7d88ee68248d5adcb2e42df03a592b1874e2a04aa62";
+    private static final String REG_TEST_GENESIS_TX_ID = "3bc7bc9484e112ec8ddd1a1c984379819245ac463b9ce40fa8b5bf771c0f9236";
     private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 102;
 
     // Modulo of blocks for making snapshots of UTXO. 
@@ -62,6 +71,13 @@ public class BsqBlockchainManager {
         return SNAPSHOT_TRIGGER;
     }
 
+
+    private final BsqBlockchainService blockchainService;
+    private File storageDir;
+    private final boolean dumpBlockchainData;
+    private final BitcoinNetwork bitcoinNetwork;
+    private final List<BsqUTXOListener> bsqUTXOListeners = new ArrayList<>();
+
     @Getter
     private final BsqUTXOMap bsqUTXOMap;
     @Getter
@@ -71,10 +87,6 @@ public class BsqBlockchainManager {
     @Getter
     private boolean isUtxoSyncWithChainHeadHeight;
 
-    private final BsqBlockchainService blockchainService;
-    private BitcoinNetwork bitcoinNetwork;
-    private final List<BsqUTXOListener> bsqUTXOListeners = new ArrayList<>();
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -83,14 +95,108 @@ public class BsqBlockchainManager {
     @Inject
     public BsqBlockchainManager(BsqBlockchainService blockchainService,
                                 BisqEnvironment bisqEnvironment,
-                                @Named(Storage.DIR_KEY) File storageDir) {
+                                @Named(Storage.DIR_KEY) File storageDir,
+                                @Named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.blockchainService = blockchainService;
+        this.storageDir = storageDir;
+        this.dumpBlockchainData = dumpBlockchainData;
         this.bitcoinNetwork = bisqEnvironment.getBitcoinNetwork();
 
         bsqUTXOMap = new BsqUTXOMap(storageDir);
         bsqTXOMap = new BsqTXOMap(storageDir);
 
-        bsqUTXOMap.addListener(c -> bsqUTXOListeners.stream().forEach(e -> e.onBsqUTXOChanged(bsqUTXOMap)));
+        bsqUTXOMap.addListener(c -> onBsqUTXOChanged());
+        bsqTXOMap.addListener(c -> onBsqTXOChanged());
+
+        if (dumpBlockchainData) {
+
+          /*  p2PService.addP2PServiceListener(new BootstrapListener() {
+                @Override
+                public void onBootstrapComplete() {
+                    addOfferBookChangedListener(new OfferBookChangedListener() {
+                        @Override
+                        public void onAdded(Offer offer) {
+                            doDumpBlockchainData();
+                        }
+
+                        @Override
+                        public void onRemoved(Offer offer) {
+                            doDumpBlockchainData();
+                        }
+                    });
+                    UserThread.runAfter(BsqBlockchainManager.this::doDumpBlockchainData, 1);
+                }
+            });*/
+        }
+    }
+
+    private void doDumpBlockchainData() {
+        bsqTXOMap.getMap().values().stream()
+                .forEach(txOutput -> {
+                    final boolean coinBase = false;
+                    final int height = -1;
+                    final int index = txOutput.getIndex();
+                    final boolean invalid = false;
+                    final int n = index;
+                    final int output_index = index;
+
+                    final ScriptPubKeyJson scriptPubKey = new ScriptPubKeyJson(txOutput.getAddresses(),
+                            "asm",
+                            "hex",
+                            -1,
+                            "type");
+                    final SpentInfoJson spent_info = new SpentInfoJson(-1, -1, "txId");
+
+                    final long squ_amount = txOutput.getValue();
+                    final String status = "?";
+                    final String transaction_version = "?";
+                    final long tx_time = -1;
+                    final String tx_type_str = "?";
+                    final String txid = txOutput.getTxId();
+                    final boolean validated = false;
+                    final double value = MathUtils.scaleDownByPowerOf10(squ_amount, 8);
+                    final long valueSat = squ_amount;
+
+                    // TODO WIP...
+                    TxOutputForJson txOutputForJson = new TxOutputForJson(coinBase,
+                            height,
+                            index,
+                            invalid,
+                            n,
+                            output_index,
+                            scriptPubKey,
+                            spent_info,
+                            squ_amount,
+                            status,
+                            transaction_version,
+                            tx_time,
+                            tx_type_str,
+                            txid,
+                            validated,
+                            value,
+                            valueSat
+                    );
+                    //   log.error("txOutputForJson " + txOutputForJson);
+                    File txoDir = new File(Paths.get(storageDir.getAbsolutePath(), "txo").toString());
+                    if (!txoDir.exists())
+                        if (!txoDir.mkdir())
+                            log.warn("make txoDir failed.\ntxoDir=" + txoDir.getAbsolutePath());
+                    File txoFile = new File(Paths.get(txoDir.getAbsolutePath(), txid + ":" + index + ".json").toString());
+
+                    // Nr of write requests might be a bit heavy, consider write whole list to one file
+                    FileManager<PlainTextWrapper> fileManager = new FileManager<>(storageDir, txoFile, 1);
+                    fileManager.saveLater(new PlainTextWrapper(Utilities.objectToJson(txOutputForJson)));
+                });
+
+    }
+
+    private void onBsqUTXOChanged() {
+        bsqUTXOListeners.stream().forEach(e -> e.onBsqUTXOChanged(bsqUTXOMap));
+    }
+
+    private void onBsqTXOChanged() {
+        if (dumpBlockchainData)
+            doDumpBlockchainData();
     }
 
 
@@ -127,13 +233,14 @@ public class BsqBlockchainManager {
         final int genesisBlockHeight = getGenesisBlockHeight();
         final String genesisTxId = getGenesisTxId();
         int startBlockHeight = Math.max(genesisBlockHeight, bsqUTXOMap.getSnapshotHeight());
+        log.info("genesisTxId=" + genesisTxId);
         log.info("genesisBlockHeight=" + genesisBlockHeight);
         log.info("startBlockHeight=" + startBlockHeight);
         log.info("bsqUTXOMap.getSnapshotHeight()=" + bsqUTXOMap.getSnapshotHeight());
 
-        if (bsqUTXOMap.getSnapshotHeight() > 0) {
-            bsqUTXOListeners.stream().forEach(e -> e.onBsqUTXOChanged(bsqUTXOMap));
-        }
+        if (bsqUTXOMap.getSnapshotHeight() > 0)
+            onBsqUTXOChanged();
+
         ListenableFuture<Integer> future =
                 blockchainService.executeParseBlockchain(bsqUTXOMap,
                         bsqTXOMap,
