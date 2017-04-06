@@ -40,10 +40,13 @@ public class BsqTXOMap implements Serializable {
     @Getter
     private HashSet<String> txIdSet = new HashSet<>();
     @Getter
+    private HashMap<String, Tx> burnedBSQTxMap = new HashMap<>();
+    @Getter
     @Setter
     private int snapshotHeight;
 
     private transient ObservableMap<TxIdIndexTuple, TxOutput> observableMap;
+    private transient ObservableMap<String, Tx> observableBurnedBSQTxMap;
     private transient final Storage<BsqTXOMap> storage;
 
     public BsqTXOMap(File storageDir) {
@@ -57,6 +60,8 @@ public class BsqTXOMap implements Serializable {
 
         observableMap = FXCollections.observableHashMap();
         observableMap.putAll(map);
+        observableBurnedBSQTxMap = FXCollections.observableHashMap();
+        observableBurnedBSQTxMap.putAll(burnedBSQTxMap);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -64,6 +69,8 @@ public class BsqTXOMap implements Serializable {
             in.defaultReadObject();
             observableMap = FXCollections.observableHashMap();
             observableMap.putAll(map);
+            observableBurnedBSQTxMap = FXCollections.observableHashMap();
+            observableBurnedBSQTxMap.putAll(burnedBSQTxMap);
         } catch (Throwable t) {
             log.warn("Cannot be deserialized." + t.getMessage());
         }
@@ -73,6 +80,12 @@ public class BsqTXOMap implements Serializable {
         txIdSet.add(txOutput.getTxId());
         final TxOutput result = map.put(new TxIdIndexTuple(txOutput.getTxId(), txOutput.getIndex()), txOutput);
         observableMap.put(new TxIdIndexTuple(txOutput.getTxId(), txOutput.getIndex()), txOutput);
+        return result;
+    }
+
+    public Object addBurnedBSQTx(Tx tx) {
+        Tx result = burnedBSQTxMap.put(tx.getId(), tx);
+        observableBurnedBSQTxMap.put(tx.getId(), tx);
         return result;
     }
 
@@ -90,6 +103,10 @@ public class BsqTXOMap implements Serializable {
 
     public void addListener(MapChangeListener<TxIdIndexTuple, TxOutput> listener) {
         observableMap.addListener(listener);
+    }
+
+    public void addBurnedBSQTxMapListener(MapChangeListener<String, Tx> listener) {
+        observableBurnedBSQTxMap.addListener(listener);
     }
 
     public Collection<TxOutput> values() {

@@ -225,8 +225,8 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
                         return new TxOutput(e.getN(),
                                 e.getValue().movePointRight(8).longValue(),
                                 e.getScriptPubKey().getAddresses(),
-                                scriptProgramBytes,
-                                rawTransaction.getTxId());
+                                rawTransaction.getTxId(),
+                                scriptProgramBytes);
                     })
                     .collect(Collectors.toList());
 

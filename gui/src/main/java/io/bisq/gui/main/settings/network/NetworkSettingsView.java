@@ -72,6 +72,10 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     TableColumn<P2pNetworkListItem, String> onionAddressColumn, connectionTypeColumn, creationDateColumn,
             roundTripTimeColumn, sentBytesColumn, receivedBytesColumn, peerTypeColumn;
+    @FXML
+    Label reSyncSPVChainLabel;
+    @FXML
+    Button reSyncSPVChainButton;
 
     private final Preferences preferences;
     private final Clock clock;
@@ -104,6 +108,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         btcNodesLabel.setText(Res.get("settings.net.btcNodesLabel"));
         bitcoinPeersLabel.setText(Res.get("settings.net.bitcoinPeersLabel"));
         useTorForBtcJLabel.setText(Res.get("settings.net.useTorForBtcJLabel"));
+        reSyncSPVChainLabel.setText(Res.getWithCol("settings.net.reSyncSPVChainLabel"));
+        reSyncSPVChainButton.setText(Res.get("settings.net.reSyncSPVChainButton"));
         p2PPeersLabel.setText(Res.get("settings.net.p2PPeersLabel"));
         onionAddressColumn.setText(Res.get("settings.net.onionAddressColumn"));
         creationDateColumn.setText(Res.get("settings.net.creationDateColumn"));
@@ -156,6 +162,17 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             }
         });
 
+        reSyncSPVChainButton.setOnAction(event -> {
+            if (walletsSetup.reSyncSPVChain()) {
+                new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
+                        .useShutDownButton()
+                        .show();
+                reSyncSPVChainButton.setDisable(true);
+            } else {
+                new Popup<>().error(Res.get("settings.net.reSyncSPVFailed")).show();
+            }
+        });
+        
         bitcoinPeersSubscription = EasyBind.subscribe(walletsSetup.connectedPeersProperty(),
                 connectedPeers -> updateBitcoinPeersTextArea());
 

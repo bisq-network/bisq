@@ -140,7 +140,7 @@ public class BtcWalletService extends WalletService {
         return completePreparedBsqTx(preparedBsqTx, isSendTx, null);
     }
 
-    public Transaction completePreparedBsqTx(Transaction preparedBsqTx, boolean isSendTx, @Nullable byte[] opReturnData) throws
+    public Transaction completePreparedBsqTx(Transaction preparedBsqTx, boolean useCustomTxFee, @Nullable byte[] opReturnData) throws
             TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
 
         // preparedBsqTx has following structure:
@@ -168,8 +168,8 @@ public class BtcWalletService extends WalletService {
         final int sigSizePerInput = 106;
         // typical size for a tx with 2 inputs
         int txSizeWithUnsignedInputs = 203;
-        // If isSendTx we allow overriding the estimated fee from preferences
-        final Coin txFeePerByte = isSendTx ? getTxFeeForWithdrawalPerByte() : feeService.getTxFeePerByte();
+        // If useCustomTxFee we allow overriding the estimated fee from preferences
+        final Coin txFeePerByte = useCustomTxFee ? getTxFeeForWithdrawalPerByte() : feeService.getTxFeePerByte();
         log.error("txFeePerByte " + txFeePerByte);
         // In case there are no change outputs we force a change by adding min dust to the BTC input
         Coin forcedChangeValue = Coin.ZERO;
@@ -238,11 +238,11 @@ public class BtcWalletService extends WalletService {
             TransactionInput txIn = resultTx.getInputs().get(i);
             checkArgument(txIn.getConnectedOutput() != null && txIn.getConnectedOutput().isMine(wallet),
                     "txIn.getConnectedOutput() is not in our wallet. That must not happen.");
-            signTransactionInput(resultTx, txIn, i);
+            signTransactionInput(wallet, aesKey, resultTx, txIn, i);
             checkScriptSig(resultTx, txIn, i);
         }
 
-        checkWalletConsistency();
+        checkWalletConsistency(wallet);
         verifyTransaction(resultTx);
 
         //printTx("BTC wallet: Signed tx", resultTx);
@@ -277,11 +277,10 @@ public class BtcWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Optional<AddressEntry> getAddressEntry(String offerId, AddressEntry.Context context) {
-        Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
+        return getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
                 .findAny();
-        return addressEntry;
     }
 
     public AddressEntry getOrCreateAddressEntry(String offerId, AddressEntry.Context context) {
@@ -318,7 +317,8 @@ public class BtcWalletService extends WalletService {
         if (addressEntry.isPresent()) {
             return addressEntry.get();
         } else {
-            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(),
+                    wallet.getParams(), context));
             saveAddressEntryList();
             return entry;
         }

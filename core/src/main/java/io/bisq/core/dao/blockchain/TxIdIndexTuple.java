@@ -28,6 +28,6 @@ public class TxIdIndexTuple implements Serializable {
 
     @Override
     public String toString() {
-        return "\nTxIdIndexTuple(" + txId + ":" + index + ")";
+        return "\n" + txId + ":" + index;
     }
 }

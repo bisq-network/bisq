@@ -116,6 +116,9 @@ public class BsqWalletService extends WalletService {
             updateCoinSelector(bsqUTXOMap);
             updateWalletBsqTransactions();
         });
+        bsqBlockchainManager.getBsqTXOMap().addBurnedBSQTxMapListener(change -> {
+            updateWalletBsqTransactions();
+        });
     }
 
 
@@ -138,9 +141,9 @@ public class BsqWalletService extends WalletService {
 
     @Override
     public Coin getAvailableBalance() {
-        return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
+        CoinSelection selection = bsqCoinSelector.select(NetworkParameters.MAX_MONEY, getMyBsqUtxosFromWallet());
+        return selection.valueGathered;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UTXO
@@ -151,20 +154,51 @@ public class BsqWalletService extends WalletService {
     }
 
     private void updateWalletBsqTransactions() {
-        walletBsqTransactions.setAll(getTxsWithOutputsFoundInBsqTxo());
+        walletBsqTransactions.setAll(getWalletTransactionsWithBsqTxo());
     }
 
-    private Set<Transaction> getTxsWithOutputsFoundInBsqTxo() {
+    private Set<TransactionOutput> getAllBsqUtxosFromWallet() {
         return getTransactions(true).stream()
                 .flatMap(tx -> tx.getOutputs().stream())
-                .filter(out -> out.getParentTransaction() != null && bsqBlockchainManager.getBsqTXOMap()
+                .filter(out -> out.getParentTransaction() != null && bsqBlockchainManager.getBsqUTXOMap()
                         .containsTuple(out.getParentTransaction().getHashAsString(), out.getIndex()))
+                .collect(Collectors.toSet());
+    }
+
+    private Set<TransactionOutput> getMyBsqUtxosFromWallet() {
+        return getAllBsqUtxosFromWallet().stream()
+                .filter(out -> out.isMine(wallet))
+                .collect(Collectors.toSet());
+    }
+
+    private Set<TransactionOutput> getWalletBsqTxos() {
+        return getTransactions(true).stream()
+                .flatMap(tx -> tx.getOutputs().stream())
+                .filter(out -> {
+                    final Transaction parentTransaction = out.getParentTransaction();
+                    if (parentTransaction == null)
+                        return false;
+                    final String id = parentTransaction.getHashAsString();
+                    return bsqBlockchainManager.getBsqTXOMap().containsTuple(id, out.getIndex()) ||
+                            bsqBlockchainManager.getBsqTXOMap().getBurnedBSQTxMap().containsKey(id);
+                })
+                .collect(Collectors.toSet());
+    }
+
+    private Set<Transaction> getWalletTransactionsWithBsqUtxo() {
+        return getAllBsqUtxosFromWallet().stream()
+                .map(TransactionOutput::getParentTransaction)
+                .collect(Collectors.toSet());
+    }
+
+    private Set<Transaction> getWalletTransactionsWithBsqTxo() {
+        return getWalletBsqTxos().stream()
                 .map(TransactionOutput::getParentTransaction)
                 .collect(Collectors.toSet());
     }
 
     public Set<Transaction> getInvalidBsqTransactions() {
-        Set<Transaction> txsWithOutputsFoundInBsqTxo = getTxsWithOutputsFoundInBsqTxo();
+        Set<Transaction> txsWithOutputsFoundInBsqTxo = getWalletTransactionsWithBsqTxo();
         Set<Transaction> walletTxs = getTransactions(true).stream().collect(Collectors.toSet());
         checkArgument(walletTxs.size() >= txsWithOutputsFoundInBsqTxo.size(),
                 "We cannot have more txsWithOutputsFoundInBsqTxo than walletTxs");
@@ -197,14 +231,14 @@ public class BsqWalletService extends WalletService {
             TransactionInput txIn = tx.getInputs().get(i);
             TransactionOutput connectedOutput = txIn.getConnectedOutput();
             if (connectedOutput != null && connectedOutput.isMine(wallet)) {
-                signTransactionInput(tx, txIn, i);
+                signTransactionInput(wallet, aesKey, tx, txIn, i);
                 checkScriptSig(tx, txIn, i);
             }
         }
 
-        checkWalletConsistency();
+        checkWalletConsistency(wallet);
         verifyTransaction(tx);
-        // printTx("BSQ wallet: Signed Tx", tx);
+        printTx("BSQ wallet: Signed Tx", tx);
         return tx;
     }
 
@@ -251,7 +285,7 @@ public class BsqWalletService extends WalletService {
         sendRequest.ensureMinRequiredFee = false;
         sendRequest.changeAddress = getUnusedAddress();
         wallet.completeTx(sendRequest);
-        checkWalletConsistency();
+        checkWalletConsistency(wallet);
         verifyTransaction(tx);
         //  printTx("prepareSendTx", tx);
         return tx;
@@ -265,19 +299,20 @@ public class BsqWalletService extends WalletService {
     public Transaction getPreparedBurnFeeTx(Coin fee) throws WalletException, TransactionVerificationException,
             InsufficientMoneyException, ChangeBelowDustException {
         Transaction tx = new Transaction(params);
-        CoinSelection coinSelection = bsqCoinSelector.select(fee, getTransactionOutputsFromUtxoProvider());
+
+        // We might have no output if inputs match fee.
+        // It will be checked in the final BTC tx that we have min. 1 output by increasing the BTC inputs to force a 
+        // non dust BTC output.
+
+        // TODO check dust output
+        CoinSelection coinSelection = bsqCoinSelector.select(fee, getMyBsqUtxosFromWallet());
         coinSelection.gathered.stream().forEach(tx::addInput);
         Coin change = bsqCoinSelector.getChange(fee, coinSelection);
         if (change.isPositive())
             tx.addOutput(change, getUnusedAddress());
 
-        // printTx("preparedCompensationRequestFeeTx", tx);
+        printTx("getPreparedBurnFeeTx", tx);
         return tx;
-    }
-
-    private List<TransactionOutput> getTransactionOutputsFromUtxoProvider() {
-        // As we have set the utxoProvider in the wallet it will be used for candidates selection internally
-        return wallet.calculateAllSpendCandidates(true, true);
     }
 
     protected Set<Address> getAllAddressesFromActiveKeys() throws UTXOProviderException {

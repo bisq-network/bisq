@@ -107,6 +107,7 @@ public class BsqBlockchainManager {
 
         bsqUTXOMap.addListener(c -> onBsqUTXOChanged());
         bsqTXOMap.addListener(c -> onBsqTXOChanged());
+        bsqTXOMap.addBurnedBSQTxMapListener(c -> onBsqTXOChanged());
 
         if (dumpBlockchainData) {
 

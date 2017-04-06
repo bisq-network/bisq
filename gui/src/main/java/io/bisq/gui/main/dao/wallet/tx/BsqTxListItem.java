@@ -60,16 +60,20 @@ class BsqTxListItem {
     @Getter
     private boolean received;
     @Getter
+    private boolean isBurnedBsqTx;
+    @Getter
     private TxConfidenceIndicator txConfidenceIndicator;
 
     private TxConfidenceListener txConfidenceListener;
 
     public BsqTxListItem(Transaction transaction,
                          BsqWalletService bsqWalletService,
-                         BtcWalletService btcWalletService) {
+                         BtcWalletService btcWalletService,
+                         boolean isBurnedBsqTx) {
         this.transaction = transaction;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
+        this.isBurnedBsqTx = isBurnedBsqTx;
 
         txId = transaction.getHashAsString();
         date = transaction.getUpdateTime();
@@ -118,8 +122,10 @@ class BsqTxListItem {
                 }
             }
         }
-
-        address = foreignReceiverAddress != null ? foreignReceiverAddress : ownReceiverAddress;
+        if (!isBurnedBsqTx)
+            address = foreignReceiverAddress != null ? foreignReceiverAddress : ownReceiverAddress;
+        else
+            address = Res.get("dao.wallet.burned");
     }
 
     private void setupConfidence(BsqWalletService bsqWalletService) {

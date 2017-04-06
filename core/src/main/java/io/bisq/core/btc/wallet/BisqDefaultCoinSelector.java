@@ -17,6 +17,7 @@
 
 package io.bisq.core.btc.wallet;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.wallet.CoinSelection;
@@ -26,6 +27,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Used from org.bitcoinj.wallet.DefaultCoinSelector but added selectOutput method and changed static methods to
@@ -36,7 +38,13 @@ import java.util.List;
  * possible. This means that the transaction is the most likely to get confirmed. Note that this means we may end up
  * "spending" more priority than would be required to get the transaction we are creating confirmed.
  */
+@Slf4j
 public abstract class BisqDefaultCoinSelector implements CoinSelector {
+
+    public CoinSelection select(Coin target, Set<TransactionOutput> candidates) {
+        return select(target, new ArrayList<>(candidates));
+    }
+
     @Override
     public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
         ArrayList<TransactionOutput> selected = new ArrayList<>();

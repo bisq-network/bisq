@@ -28,16 +28,16 @@ public class TxOutput implements Serializable {
     private final int index;
     private final long value;
     private final List<String> addresses;
-    private final byte[] scriptProgramBytes;
     private final String txId;
+    private final byte[] scriptProgramBytes;
 
     @Override
     public String toString() {
         return "TxOutput{" +
-                "\n        txId=" + txId +
-                ",\n        index=" + index +
+                "\n        index=" + index +
                 ",\n        value=" + value +
                 ",\n        addresses=" + addresses +
+                ",\n        txId=" + txId +
                 ",\n        scriptProgramBytes=" + Hex.toHexString(scriptProgramBytes) +
                 "\n" +
                 "     }";

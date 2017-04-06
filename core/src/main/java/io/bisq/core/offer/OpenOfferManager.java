@@ -27,6 +27,7 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.exceptions.TradePriceOutOfToleranceException;
@@ -72,6 +73,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final P2PService p2PService;
     private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
+    private final BsqWalletService bsqWalletService;
     private final OfferBookService offerBookService;
     private final ClosedTradableManager closedTradableManager;
     private final Preferences preferences;
@@ -92,6 +94,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             P2PService p2PService,
                             BtcWalletService walletService,
                             TradeWalletService tradeWalletService,
+                            BsqWalletService bsqWalletService,
                             OfferBookService offerBookService,
                             ClosedTradableManager closedTradableManager,
                             PriceFeedService priceFeedService,
@@ -102,6 +105,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.p2PService = p2PService;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
+        this.bsqWalletService = bsqWalletService;
         this.offerBookService = offerBookService;
         this.closedTradableManager = closedTradableManager;
         this.preferences = preferences;
@@ -253,8 +257,24 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void placeOffer(Offer offer, Coin reservedFundsForOffer, boolean useSavingsWallet, TransactionResultHandler resultHandler) {
-        PlaceOfferModel model = new PlaceOfferModel(offer, reservedFundsForOffer, useSavingsWallet, walletService, tradeWalletService, offerBookService, user);
+    public void placeOffer(Offer offer,
+                           Coin reservedFundsForOffer,
+                           Coin createOfferFeeAsBtc,
+                           Coin createOfferFeeAsBsq,
+                           boolean payFeeInBTC,
+                           boolean useSavingsWallet,
+                           TransactionResultHandler resultHandler) {
+        PlaceOfferModel model = new PlaceOfferModel(offer,
+                reservedFundsForOffer,
+                createOfferFeeAsBtc,
+                createOfferFeeAsBsq,
+                payFeeInBTC,
+                useSavingsWallet,
+                walletService,
+                tradeWalletService,
+                bsqWalletService,
+                offerBookService,
+                user);
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 transaction -> {

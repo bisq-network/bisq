@@ -91,15 +91,13 @@ abstract public class BsqBlockchainService {
                 // 1 block has about 3 MB
                 final BsqBlock bsqBlock = new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight());
 
-                String oldBsqUTXOMap = bsqUTXOMap.toString();
+                // String oldBsqUTXOMap = bsqUTXOMap.toString();
                 parseBlock(bsqBlock,
                         genesisBlockHeight,
                         genesisTxId,
                         bsqUTXOMap,
                         bsqTXOMap);
-                String newBsqUTXOMap = bsqUTXOMap.toString();
-                if (!oldBsqUTXOMap.equals(newBsqUTXOMap))
-                    log.info(bsqUTXOMap.toString());
+                // String newBsqUTXOMap = bsqUTXOMap.toString();
 
               /*  StringBuilder sb = new StringBuilder("recursionMap:\n");
                 List<String> list = new ArrayList<>();
@@ -270,6 +268,8 @@ abstract public class BsqBlockchainService {
         List<TxOutput> outputs = tx.getOutputs();
         boolean utxoChanged = false;
         long availableValue = 0;
+        long totalAvailableBSQInputs = 0;
+        long totalSpendBSQOutputs = 0;
         for (TxInput input : tx.getInputs()) {
             String spendingTxId = input.getSpendingTxId();
             final int spendingTxOutputIndex = input.getSpendingTxOutputIndex();
@@ -277,7 +277,7 @@ abstract public class BsqBlockchainService {
                 BsqUTXO bsqUTXO = bsqUTXOMap.getByTuple(spendingTxId, spendingTxOutputIndex);
                 log.debug("input value " + bsqUTXO.getValue());
                 availableValue = availableValue + bsqUTXO.getValue();
-
+                totalAvailableBSQInputs += bsqUTXO.getValue();
                 bsqUTXOMap.removeByTuple(spendingTxId, spendingTxOutputIndex);
                 utxoChanged = true;
 
@@ -300,30 +300,29 @@ abstract public class BsqBlockchainService {
                             throw new RuntimeException(msg);
                     }
                     // We are spending available tokens
-                    bsqUTXOMap.add(new BsqUTXO(txOutput, blockHeight, false));
+                    bsqUTXOMap.add(new BsqUTXO(blockHeight, txOutput, false));
                     bsqTXOMap.add(txOutput);
+                    totalSpendBSQOutputs += txOutput.getValue();
 
                     if (availableValue == 0) {
                         log.debug("We don't have anymore BSQ to spend");
                         break;
                     }
                 } else {
-                    log.warn("We tried to spend more BSQ as we have in our inputs");
-                    // TODO report burnt BSQ
-                    // TODO: check if we should be more tolerant and use 
-                    // availableValue = availableValue.subtract(txOutput.getValue());
-                    // only temp and allow follow up outputs to use the left input.
+                    log.debug("We tried to spend more BSQ as we have in our inputs");
                     break;
                 }
             }
-
-            //TODO write that warning to a handler
-            if (availableValue > 0) {
-                log.warn("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
-                        availableValue,
-                        tx.toString());
-            }
         }
+
+        if (totalAvailableBSQInputs - totalSpendBSQOutputs > 0) {
+            log.warn("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
+                    availableValue,
+                    tx.toString());
+
+            bsqTXOMap.addBurnedBSQTx(tx);
+        }
+
         return utxoChanged;
     }
 
@@ -344,7 +343,7 @@ abstract public class BsqBlockchainService {
                 if (DevEnv.DEV_MODE)
                     throw new RuntimeException(msg);
             }
-            bsqUTXOMap.add(new BsqUTXO(txOutput, blockHeight, true));
+            bsqUTXOMap.add(new BsqUTXO(blockHeight, txOutput, true));
             bsqTXOMap.add(txOutput);
         }
         checkArgument(!bsqUTXOMap.isEmpty(), "Genesis tx need to have BSQ utxo when parsing genesis block");

@@ -78,7 +78,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final BSFormatter formatter;
     private final String offerId;
     private final AddressEntry addressEntry;
-    private Coin createOfferFeeAsCoin;
+    private Coin createOfferFeeAsBtc;
+    private Coin createOfferFeeAsBsq;
     private Coin txFeeAsCoin;
     private final BalanceListener balanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
@@ -114,6 +115,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private boolean useSavingsWallet;
     Coin totalAvailableBalance;
     private double marketPriceMargin = 0;
+    private boolean payFeeInBtc;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -174,6 +176,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         };
 
         paymentAccountsChangeListener = change -> fillPaymentAccounts();
+        payFeeInBtc = preferences.getPayFeeInBTC();
     }
 
     @Override
@@ -319,7 +322,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
-        checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
+        checkNotNull(createOfferFeeAsBtc, "createOfferFeeAsBtc must not be null");
+        checkNotNull(createOfferFeeAsBsq, "createOfferFeeAsBsq must not be null");
 
         long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimit();
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
@@ -341,6 +345,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.MIN_BUYER_SECURITY_DEPOSIT) >= 0,
                 "securityDeposit must be not be less than " +
                         Restrictions.MIN_BUYER_SECURITY_DEPOSIT.toFriendlyString());
+        //TODO add createOfferFeeAsBsq
         OfferPayload offerPayload = new OfferPayload(offerId,
                 new Date().getTime(),
                 p2PService.getAddress(),
@@ -365,7 +370,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 Version.VERSION,
                 walletService.getLastBlockSeenHeight(),
                 txFeeAsCoin.value,
-                createOfferFeeAsCoin.value,
+                createOfferFeeAsBtc.value,
                 buyerSecurityDepositAsCoin.value,
                 sellerSecurityDeposit.value,
                 maxTradeLimit,
@@ -383,8 +388,17 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
-        checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
-        openOfferManager.placeOffer(offer, totalToPayAsCoin.get().subtract(txFeeAsCoin).subtract(createOfferFeeAsCoin), useSavingsWallet, resultHandler);
+        checkNotNull(createOfferFeeAsBtc, "createOfferFeeAsBtc must not be null");
+        checkNotNull(createOfferFeeAsBsq, "createOfferFeeAsBsq must not be null");
+
+        // trade fee handling happens in protocol tasks
+        openOfferManager.placeOffer(offer,
+                totalToPayAsCoin.get().subtract(txFeeAsCoin),
+                createOfferFeeAsBtc,
+                createOfferFeeAsBsq,
+                payFeeInBtc,
+                useSavingsWallet,
+                resultHandler);
     }
 
     public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
@@ -538,11 +552,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // Maker does not pay the tx fee for the trade txs because the mining fee might be different when maker 
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
-        if (direction != null && amount.get() != null && createOfferFeeAsCoin != null) {
-            Coin feeAndSecDeposit = createOfferFeeAsCoin.add(txFeeAsCoin).add(getSecurityDeposit());
-            Coin required = isBuyOffer() ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
-            totalToPayAsCoin.set(required);
-            log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
+        if (direction != null && amount.get() != null && createOfferFeeAsBtc != null) {
+            Coin createOfferFee = payFeeInBtc ? createOfferFeeAsBtc : Coin.ZERO;
+            Coin feeAndSecDeposit = createOfferFee.add(txFeeAsCoin).add(getSecurityDeposit());
+            Coin total = isBuyOffer() ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
+            totalToPayAsCoin.set(total);
             updateBalance();
         }
     }
@@ -594,9 +608,14 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0;
     }
 
-    public Coin getCreateOfferFeeAsCoin() {
-        checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
-        return createOfferFeeAsCoin;
+    public Coin getCreateOfferFeeAsBtc() {
+        checkNotNull(createOfferFeeAsBtc, "createOfferFeeAsBtc must not be null");
+        return createOfferFeeAsBtc;
+    }
+
+    public Coin getCreateOfferFeeAsBsq() {
+        checkNotNull(createOfferFeeAsBsq, "createOfferFeeAsBsq must not be null");
+        return createOfferFeeAsBsq;
     }
 
     public Coin getTxFeeAsCoin() {
@@ -647,13 +666,23 @@ class CreateOfferDataModel extends ActivatableDataModel {
     void updateTradeFee() {
         Coin amount = this.amount.get();
         if (amount != null) {
-            createOfferFeeAsCoin = CoinUtil.getFeePerBtc(feeService.getCreateOfferFeeInBtcPerBtc(), amount);
+            createOfferFeeAsBtc = CoinUtil.getFeePerBtc(feeService.getCreateOfferFeeInBtcPerBtc(), amount);
             // We don't want too fractional btc values so we use only a divide by 10 instead of 100
-            createOfferFeeAsCoin = createOfferFeeAsCoin.divide(10).multiply(Math.round(marketPriceMargin * 1_000));
-            createOfferFeeAsCoin = CoinUtil.maxCoin(createOfferFeeAsCoin, feeService.getMinCreateOfferFeeInBtc());
+            createOfferFeeAsBtc = createOfferFeeAsBtc.divide(10).multiply(Math.round(marketPriceMargin * 1_000));
+            createOfferFeeAsBtc = CoinUtil.maxCoin(createOfferFeeAsBtc, feeService.getMinCreateOfferFeeInBtc());
+
+            createOfferFeeAsBsq = CoinUtil.getFeePerBtc(feeService.getCreateOfferFeeInBtcPerBsq(), amount);
+            // We don't want too fractional btc values so we use only a divide by 10 instead of 100
+            createOfferFeeAsBsq = createOfferFeeAsBsq.divide(10).multiply(Math.round(marketPriceMargin * 1_000));
+            createOfferFeeAsBsq = CoinUtil.maxCoin(createOfferFeeAsBsq, feeService.getMinCreateOfferFeeInBsq());
         }
     }
 
+    public void setPayFeeInBtc(boolean payFeeInBtc) {
+        preferences.setPayFeeInBTC(payFeeInBtc);
+        this.payFeeInBtc = payFeeInBtc;
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -711,7 +740,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return sellerSecurityDeposit;
     }
 
-    ReadOnlyObjectProperty<Coin> getTotalToPayAsCoin() {
+    ReadOnlyObjectProperty<Coin> totalToPayAsCoinProperty() {
         return totalToPayAsCoin;
     }
 
@@ -721,5 +750,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     ReadOnlyObjectProperty<Coin> getBalance() {
         return balance;
+    }
+
+    public boolean getPayFeeInBtc() {
+        return payFeeInBtc;
     }
 }

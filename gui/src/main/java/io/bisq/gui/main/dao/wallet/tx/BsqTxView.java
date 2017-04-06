@@ -22,6 +22,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
+import io.bisq.core.dao.blockchain.Tx;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -44,6 +45,7 @@ import javafx.util.Callback;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -110,10 +112,11 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     protected void activate() {
         balanceUtil.activate();
         bsqWalletService.getWalletBsqTransactions().addListener(walletBsqTransactionsListener);
-        updateList();
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+
+        updateList();
     }
 
     @Override
@@ -127,8 +130,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private void updateList() {
         observableList.forEach(BsqTxListItem::cleanup);
 
+        Map<String, Tx> burnedBSQTxIdMap = bsqBlockchainManager.getBsqTXOMap().getBurnedBSQTxMap();
         Set<BsqTxListItem> list = bsqWalletService.getWalletBsqTransactions().stream()
-                .map(t -> new BsqTxListItem(t, bsqWalletService, btcWalletService))
+                .map(transaction -> new BsqTxListItem(transaction,
+                        bsqWalletService,
+                        btcWalletService,
+                        burnedBSQTxIdMap.containsKey(transaction.getHashAsString())))
                 .collect(Collectors.toSet());
         observableList.setAll(list);
 
@@ -229,6 +236,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                         return new TableCell<BsqTxListItem, BsqTxListItem>() {
 
                             private AddressWithIconAndDirection field;
+                            private Label label;
 
                             @Override
                             public void updateItem(final BsqTxListItem item, boolean empty) {
@@ -236,11 +244,19 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
                                 if (item != null && !empty) {
                                     String addressString = item.getAddress();
-                                    field = new AddressWithIconAndDirection(item.getDirection(), addressString,
-                                            AwesomeIcon.EXTERNAL_LINK, item.isReceived());
-                                    field.setOnAction(event -> openAddressInBlockExplorer(item));
-                                    field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
-                                    setGraphic(field);
+                                    if (item.isBurnedBsqTx()) {
+                                        if (field != null)
+                                            field.setOnAction(null);
+
+                                        label = new Label(addressString);
+                                        setGraphic(label);
+                                    } else {
+                                        field = new AddressWithIconAndDirection(item.getDirection(), addressString,
+                                                AwesomeIcon.EXTERNAL_LINK, item.isReceived());
+                                        field.setOnAction(event -> openAddressInBlockExplorer(item));
+                                        field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
+                                        setGraphic(field);
+                                    }
                                 } else {
                                     setGraphic(null);
                                     if (field != null)

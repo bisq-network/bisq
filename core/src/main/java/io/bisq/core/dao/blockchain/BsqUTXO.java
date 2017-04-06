@@ -30,44 +30,44 @@ import java.util.List;
 @Slf4j
 public class BsqUTXO implements Serializable {
     private final int height;
+    private final TxOutput txOutput;
     private final boolean isBsqCoinBase;
-    private final TxOutput output;
     private final String utxoId;
 
-    public BsqUTXO(TxOutput output, int height, boolean isBsqCoinBase) {
+    public BsqUTXO(int height, TxOutput txOutput, boolean isBsqCoinBase) {
         this.height = height;
+        this.txOutput = txOutput;
         this.isBsqCoinBase = isBsqCoinBase;
-        this.output = output;
 
-        utxoId = output.getTxId() + ":" + output.getIndex();
+        utxoId = txOutput.getTxId() + ":" + txOutput.getIndex();
     }
 
     public String getAddress() {
         // Only at raw MS outputs addresses have more then 1 entry 
         // We do not support raw MS for BSQ but lets see if is needed anyway, might be removed 
-        final List<String> addresses = output.getAddresses();
+        final List<String> addresses = txOutput.getAddresses();
         return addresses.size() == 1 ? addresses.get(0) : addresses.toString();
     }
 
     public long getValue() {
-        return output.getValue();
+        return txOutput.getValue();
     }
 
     public String getTxId() {
-        return output.getTxId();
+        return txOutput.getTxId();
     }
 
     public int getIndex() {
-        return output.getIndex();
+        return txOutput.getIndex();
     }
 
     @Override
     public String toString() {
         return "BsqUTXO{" +
                 "\n     height=" + height +
-                ",\n     isBsqCoinBase=" + isBsqCoinBase +
-                ",\n     utxoId='" + utxoId + '\'' +
-                ", \n     output=" + output +
+                ", \n     output=" + txOutput +
+                ", \n     isBsqCoinBase=" + isBsqCoinBase +
+                ", \n     utxoId='" + utxoId + '\'' +
                 "\n}";
     }
 

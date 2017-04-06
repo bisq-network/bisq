@@ -47,6 +47,9 @@ public class FeeService {
     public static final long MIN_CREATE_OFFER_FEE_IN_BTC = 10_000;
     public static final long DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BTC = 30_000; // excluded mining fee
 
+    public static final long MIN_CREATE_OFFER_FEE_IN_BSQ = 1;
+    public static final long DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BSQ = 100; 
+
     public static final long MIN_TAKE_OFFER_FEE_IN_BTC = 10_000;
     public static final long DEFAULT_TAKE_OFFER_FEE_IN_BTC_PER_BTC = 40_000; // excluded mining fee
 
@@ -126,8 +129,16 @@ public class FeeService {
         return Coin.valueOf(DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BTC);
     }
 
+    public Coin getCreateOfferFeeInBtcPerBsq() {
+        return Coin.valueOf(DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BSQ);
+    }
+
     public Coin getMinCreateOfferFeeInBtc() {
         return Coin.valueOf(MIN_CREATE_OFFER_FEE_IN_BTC);
+    }
+
+    public Coin getMinCreateOfferFeeInBsq() {
+        return Coin.valueOf(MIN_CREATE_OFFER_FEE_IN_BSQ);
     }
 
     public Coin getMinTakeOfferFeeInBtc() {

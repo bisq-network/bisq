@@ -106,7 +106,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private PopOver totalToPayInfoPopover;
-    private ToggleButton fixedPriceButton, useMarketBasedPriceButton;
+    private ToggleButton fixedPriceButton, useMarketBasedPriceButton, payFeeInBsqButton, payFeeInBtcButton;
 
     private OfferView.CloseHandler closeHandler;
 
@@ -171,7 +171,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         createListeners();
 
-        balanceTextField.setFormatter(model.getFormatter());
+        balanceTextField.setFormatter(model.getBtcFormatter());
 
         paymentAccountsComboBox.setConverter(new StringConverter<PaymentAccount>() {
             @Override
@@ -220,12 +220,13 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
             onPaymentAccountsComboBoxSelected();
 
-            balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());
+            balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoinProperty().get());
 
             // if (DevFlags.STRESS_TEST_MODE)
             //     UserThread.runAfter(this::onShowPayFundsScreen, 200, TimeUnit.MILLISECONDS);
 
             updateMarketPriceAvailable();
+            updateFeeToggleButtons(model.dataModel.getPayFeeInBtc());
         }
     }
 
@@ -342,7 +343,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             node.setFocusTraversable(false);
         });
 
-        balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());
+        balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoinProperty().get());
 
         //noinspection PointlessBooleanExpression
         if (!DevEnv.DEV_MODE) {
@@ -355,7 +356,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     .show();
 
             key = "createOfferFundWalletInfo";
-            String tradeAmountText = model.isSellOffer() ? Res.get("createOffer.createOfferFundWalletInfo.tradeAmount", model.getTradeAmount()) : "";
+            String tradeAmountText = model.isSellOffer() ?
+                    Res.get("createOffer.createOfferFundWalletInfo.tradeAmount", model.getTradeAmount()) : "";
             String message = Res.get("createOffer.createOfferFundWalletInfo.msg",
                     model.totalToPay.get(),
                     tradeAmountText,
@@ -694,7 +696,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             toggleButtonsHBox.setVisible(isMarketPriceAvailable);
             toggleButtonsHBox.setManaged(isMarketPriceAvailable);
             boolean fixedPriceSelected = !model.dataModel.getUseMarketBasedPrice().get() || !isMarketPriceAvailable;
-            updateToggleButtons(fixedPriceSelected);
+            updatePriceToggleButtons(fixedPriceSelected);
         }
     }
 
@@ -1016,7 +1018,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fixedPriceButton.setId("toggle-price-left");
         fixedPriceButton.setToggleGroup(toggleGroup);
         fixedPriceButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
-            updateToggleButtons(newValue);
+            updatePriceToggleButtons(newValue);
         });
 
         useMarketBasedPriceButton = new ToggleButton(Res.get("createOffer.percentage"));
@@ -1024,11 +1026,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         useMarketBasedPriceButton.setId("toggle-price-right");
         useMarketBasedPriceButton.setToggleGroup(toggleGroup);
         useMarketBasedPriceButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
-            updateToggleButtons(!newValue);
+            updatePriceToggleButtons(!newValue);
         });
 
         toggleButtonsHBox = new HBox();
-        toggleButtonsHBox.setPadding(new Insets(18, 0, 0, 0));
+        toggleButtonsHBox.setPadding(new Insets(16, 0, 0, 0));
         toggleButtonsHBox.getChildren().addAll(fixedPriceButton, useMarketBasedPriceButton);
 
         // =
@@ -1059,7 +1061,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         gridPane.getChildren().add(firstRowHBox);
     }
 
-    private void updateToggleButtons(boolean fixedPriceSelected) {
+    private void updatePriceToggleButtons(boolean fixedPriceSelected) {
         int marketPriceAvailable = model.marketPriceAvailableProperty.get();
         fixedPriceSelected = fixedPriceSelected || (marketPriceAvailable == 0);
 
@@ -1075,9 +1077,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         fixedPriceButton.setMouseTransparent(fixedPriceSelected);
         useMarketBasedPriceButton.setMouseTransparent(!fixedPriceSelected);
 
-        final boolean finalFixedPriceSelected = fixedPriceSelected;
-        fixedPriceButton.setStyle(finalFixedPriceSelected ? "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
-        useMarketBasedPriceButton.setStyle(!finalFixedPriceSelected ? "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+        fixedPriceButton.setStyle(fixedPriceSelected ?
+                "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+        useMarketBasedPriceButton.setStyle(!fixedPriceSelected ?
+                "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
 
         if (fixedPriceSelected) {
             if (firstRowHBox.getChildren().contains(percentagePriceBox))
@@ -1098,6 +1101,23 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             if (!secondRowHBox.getChildren().contains(fixedPriceBox))
                 secondRowHBox.getChildren().add(2, fixedPriceBox);
         }
+    }
+
+    private void updateFeeToggleButtons(boolean payFeeInBtcSelected) {
+        model.dataModel.setPayFeeInBtc(payFeeInBtcSelected);
+
+        if (!payFeeInBtcButton.isSelected() && payFeeInBtcSelected)
+            payFeeInBtcButton.setSelected(true);
+        if (payFeeInBsqButton.isSelected() && !payFeeInBtcSelected)
+            payFeeInBsqButton.setSelected(false);
+
+        payFeeInBtcButton.setMouseTransparent(payFeeInBtcSelected);
+        payFeeInBsqButton.setMouseTransparent(!payFeeInBtcSelected);
+
+        payFeeInBtcButton.setStyle(payFeeInBtcSelected ?
+                "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+        payFeeInBsqButton.setStyle(!payFeeInBtcSelected ?
+                "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
     }
 
     private void addSecondRow() {
@@ -1174,10 +1194,42 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         xLabel.setPadding(new Insets(14, 3, 0, 3));
         xLabel.setVisible(false); // we just use it to get the same layout as the upper row
 
+
+        // BSQ/BTC fee toggle
+        ToggleGroup feeToggleGroup = new ToggleGroup();
+        payFeeInBsqButton = new ToggleButton("BSQ");
+        payFeeInBsqButton.setPrefWidth(70);
+        editOfferElements.add(payFeeInBsqButton);
+        payFeeInBsqButton.setId("toggle-price-left");
+        payFeeInBsqButton.setToggleGroup(feeToggleGroup);
+        payFeeInBsqButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
+            updateFeeToggleButtons(!newValue);
+        });
+
+        payFeeInBtcButton = new ToggleButton("BTC");
+        payFeeInBtcButton.setPrefWidth(payFeeInBsqButton.getPrefWidth());
+        editOfferElements.add(payFeeInBtcButton);
+        payFeeInBtcButton.setId("toggle-price-right");
+        payFeeInBtcButton.setToggleGroup(feeToggleGroup);
+        payFeeInBtcButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
+            updateFeeToggleButtons(newValue);
+        });
+
+        HBox toggleButtonsHBox = new HBox();
+        toggleButtonsHBox.getChildren().addAll(payFeeInBsqButton, payFeeInBtcButton);
+
+        Label descriptionLabel = new Label(Res.get("createOffer.currencyForFee"));
+        descriptionLabel.setId("input-description-label");
+        descriptionLabel.setPrefWidth(payFeeInBsqButton.getPrefWidth() * 2);
+
+        VBox box = new VBox();
+        box.setSpacing(2);
+        box.getChildren().addAll(descriptionLabel, toggleButtonsHBox);
+
         HBox thirdRowHBox = new HBox();
         thirdRowHBox.setSpacing(5);
         thirdRowHBox.setAlignment(Pos.CENTER_LEFT);
-        thirdRowHBox.getChildren().addAll(buyerSecurityDepositBox, xLabel, sellerSecurityDepositBox);
+        thirdRowHBox.getChildren().addAll(buyerSecurityDepositBox, xLabel, sellerSecurityDepositBox, box);
         GridPane.setRowIndex(thirdRowHBox, ++gridRow);
         GridPane.setColumnIndex(thirdRowHBox, 1);
         GridPane.setMargin(thirdRowHBox, new Insets(0, 10, 5, 0));

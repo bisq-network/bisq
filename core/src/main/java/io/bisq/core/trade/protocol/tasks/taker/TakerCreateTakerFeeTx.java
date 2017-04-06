@@ -58,7 +58,7 @@ public class TakerCreateTakerFeeTx extends TradeTask {
             Address fundingAddress = addressEntry.getAddress();
             Address reservedForTradeAddress = reservedForTradeAddressEntry.getAddress();
             Address changeAddress = changeAddressEntry.getAddress();
-            Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createTradingFeeTx(
+            Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createBtcTradingFeeTx(
                     fundingAddress,
                     reservedForTradeAddress,
                     changeAddress,

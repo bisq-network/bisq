@@ -328,6 +328,13 @@ public class GUIUtil {
                 " " + Res.get("guiUtil.ofTradeAmount") + ")";
     }
 
+    public static String getPercentageOfTradeAmountForBsq(Coin fee, Coin tradeAmount, BSFormatter formatter) {
+        // TODo convert to BTC with market price
+        return "";
+       /* return " (" + formatter.formatToPercentWithSymbol((double) fee.value / (double) tradeAmount.value) +
+                " " + Res.get("guiUtil.ofTradeAmount") + ")";*/
+    }
+
     public static <T> T getParentOfType(Node node, Class<T> t) {
         Node parent = node.getParent();
 

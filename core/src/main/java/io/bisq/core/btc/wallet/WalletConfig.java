@@ -79,8 +79,9 @@ public class WalletConfig extends AbstractIdleService {
     private final Context context;
     private final NetworkParameters params;
     private final File directory;
-    private final String btcWalletFilePrefix;
-    private final String bsqWalletFilePrefix;
+    private final String btcWalletFileName;
+    private final String bsqWalletFileName;
+    private final String spvChainFileName;
     private final Socks5Proxy socks5Proxy;
     private final BisqWalletFactory walletFactory;
 
@@ -115,14 +116,18 @@ public class WalletConfig extends AbstractIdleService {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public WalletConfig(NetworkParameters params, Socks5Proxy socks5Proxy,
-                        File directory, String btcWalletFilePrefix,
-                        String bsqWalletFilePrefix) {
+    public WalletConfig(NetworkParameters params,
+                        Socks5Proxy socks5Proxy,
+                        File directory,
+                        String btcWalletFileName,
+                        String bsqWalletFileName,
+                        String spvChainFileName) {
         this.context = new Context(params);
         this.params = checkNotNull(context.getParams());
         this.directory = checkNotNull(directory);
-        this.btcWalletFilePrefix = checkNotNull(btcWalletFilePrefix);
-        this.bsqWalletFilePrefix = bsqWalletFilePrefix;
+        this.btcWalletFileName = checkNotNull(btcWalletFileName);
+        this.bsqWalletFileName = bsqWalletFileName;
+        this.spvChainFileName = spvChainFileName;
         this.socks5Proxy = socks5Proxy;
 
         walletFactory = new BisqWalletFactory() {
@@ -352,7 +357,7 @@ public class WalletConfig extends AbstractIdleService {
     public boolean isChainFileLocked() throws IOException {
         RandomAccessFile file2 = null;
         try {
-            File file = new File(directory, btcWalletFilePrefix + ".spvchain");
+            File file = new File(directory, spvChainFileName);
             if (!file.exists())
                 return false;
             if (file.isDirectory())
@@ -380,11 +385,11 @@ public class WalletConfig extends AbstractIdleService {
         }
         log.info("Starting up with directory = {}", directory);
         try {
-            File chainFile = new File(directory, btcWalletFilePrefix + ".spvchain");
+            File chainFile = new File(directory, spvChainFileName);
             boolean chainFileExists = chainFile.exists();
 
             // BTC wallet
-            vBtcWalletFile = new File(directory, btcWalletFilePrefix + ".wallet");
+            vBtcWalletFile = new File(directory, btcWalletFileName);
             boolean shouldReplayWallet = (vBtcWalletFile.exists() && !chainFileExists) || seed != null;
             BisqKeyChainGroup keyChainGroup;
             if (seed != null)
@@ -394,7 +399,7 @@ public class WalletConfig extends AbstractIdleService {
             vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayWallet, keyChainGroup, false);
 
             // BSQ walelt
-            vBsqWalletFile = new File(directory, bsqWalletFilePrefix + ".wallet");
+            vBsqWalletFile = new File(directory, bsqWalletFileName);
             if (seed != null)
                 keyChainGroup = new BisqKeyChainGroup(params, new BsqDeterministicKeyChain(seed), false, bsqWalletLookaheadSize);
             else

@@ -160,6 +160,7 @@ public final class Preferences implements Persistable {
     private long buyerSecurityDepositAsLong = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT.value;
     @Nullable
     private PaymentAccount selectedPaymentAccountForCreateOffer;
+    private boolean payFeeInBTC = true;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
@@ -285,6 +286,7 @@ public final class Preferences implements Persistable {
             );
 
             selectedPaymentAccountForCreateOffer = persisted.getSelectedPaymentAccountForCreateOffer();
+            payFeeInBTC = persisted.getPayFeeInBTC();
         } else {
             setFiatCurrencies(CurrencyUtil.getAllMainFiatCurrencies(Preferences.getDefaultLocale(), Preferences.getDefaultTradeCurrency()));
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
@@ -519,6 +521,11 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setPayFeeInBTC(boolean payFeeInBTC) {
+        this.payFeeInBTC = payFeeInBTC;
+        storage.queueUpForSave();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -711,6 +718,10 @@ public final class Preferences implements Persistable {
 
     public BlockChainExplorer getBsqBlockChainExplorer() {
         return bsqBlockChainExplorer;
+    }
+
+    public boolean getPayFeeInBTC() {
+        return payFeeInBTC;
     }
 
 

@@ -66,6 +66,9 @@ public class WalletsSetup {
     private static final Logger log = LoggerFactory.getLogger(WalletsSetup.class);
 
     private static final long STARTUP_TIMEOUT_SEC = 60;
+    private static final String BTC_WALLET_FILE_NAME = "bisq_BTC.wallet";
+    private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
+    private static final String SPV_CHAIN_FILE_NAME = "bisq.spvchain";
 
     private final RegTestHost regTestHost;
     private final AddressEntryList addressEntryList;
@@ -75,10 +78,7 @@ public class WalletsSetup {
     private final NetworkParameters params;
     private final File walletDir;
     private final int socks5DiscoverMode;
-    private final String walletFileName = "bisq_BTC";
-    private final String bsqWalletFileName = "bisq_BSQ";
     private final Long bloomFilterTweak;
-    private final Storage<Long> storage;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     private final DownloadListener downloadListener = new DownloadListener();
@@ -111,7 +111,7 @@ public class WalletsSetup {
         params = preferences.getBitcoinNetwork().getParameters();
         walletDir = new File(appDir, "bitcoin");
 
-        storage = new Storage<>(walletDir);
+        Storage<Long> storage = new Storage<>(walletDir);
         Long nonce = storage.initAndGetPersistedWithFileName("BloomFilterNonce");
         if (nonce != null) {
             bloomFilterTweak = nonce;
@@ -145,7 +145,7 @@ public class WalletsSetup {
         final Socks5Proxy socks5Proxy = preferences.getUseTorForBitcoinJ() ? socks5ProxyProvider.getSocks5Proxy() : null;
         log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
 
-        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, walletFileName, bsqWalletFileName) {
+        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, BTC_WALLET_FILE_NAME, BSQ_WALLET_FILE_NAME, SPV_CHAIN_FILE_NAME) {
             @Override
             protected void onSetupCompleted() {
                 //We are here in the btcj thread Thread[ STARTING,5,main] 
@@ -244,6 +244,16 @@ public class WalletsSetup {
                 // ignore
             }
             shutDownComplete.set(true);
+        }
+    }
+
+    public boolean reSyncSPVChain() {
+        try {
+            return new File(walletDir, SPV_CHAIN_FILE_NAME).delete();
+        } catch (Throwable t) {
+            log.error(t.toString());
+            t.printStackTrace();
+            return false;
         }
     }
 
@@ -400,8 +410,8 @@ public class WalletsSetup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void backupWallets() {
-        FileUtil.rollingBackup(walletDir, walletFileName + ".wallet", 20);
-        FileUtil.rollingBackup(walletDir, bsqWalletFileName + ".wallet", 20);
+        FileUtil.rollingBackup(walletDir, BTC_WALLET_FILE_NAME, 20);
+        FileUtil.rollingBackup(walletDir, BSQ_WALLET_FILE_NAME, 20);
     }
 
     void clearBackups() {

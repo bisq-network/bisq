@@ -160,7 +160,7 @@ public abstract class WalletService {
     // Checks
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void checkWalletConsistency() throws WalletException {
+    public static void checkWalletConsistency(Wallet wallet) throws WalletException {
         try {
             log.trace("Check if wallet is consistent before commit.");
             checkNotNull(wallet);
@@ -172,7 +172,7 @@ public abstract class WalletService {
         }
     }
 
-    void verifyTransaction(Transaction transaction) throws TransactionVerificationException {
+    public static void verifyTransaction(Transaction transaction) throws TransactionVerificationException {
         try {
             log.trace("Verify transaction " + transaction);
             transaction.verify();
@@ -183,13 +183,13 @@ public abstract class WalletService {
         }
     }
 
-    void checkScriptSigs(Transaction transaction) throws TransactionVerificationException {
+    public static void checkAllScriptSignaturesForTx(Transaction transaction) throws TransactionVerificationException {
         for (int i = 0; i < transaction.getInputs().size(); i++) {
-            checkScriptSig(transaction, transaction.getInputs().get(i), i);
+            WalletService.checkScriptSig(transaction, transaction.getInputs().get(i), i);
         }
     }
 
-    void checkScriptSig(Transaction transaction, TransactionInput input, int inputIndex) throws TransactionVerificationException {
+    public static void checkScriptSig(Transaction transaction, TransactionInput input, int inputIndex) throws TransactionVerificationException {
         try {
             log.trace("Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey. Check input at index: " + inputIndex);
             checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
@@ -201,11 +201,18 @@ public abstract class WalletService {
         }
     }
 
+    public static void removeSignatures(Transaction transaction) {
+        for (TransactionInput input : transaction.getInputs()) {
+            input.setScriptSig(new Script(new byte[]{}));
+        }
+    }
+    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Sign tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void signTransactionInput(Transaction tx, TransactionInput txIn, int index) {
+    public static void signTransactionInput(Wallet wallet, KeyParameter aesKey, Transaction tx, TransactionInput txIn, int index) {
         KeyBag maybeDecryptingKeyBag = new DecryptingKeyBag(wallet, aesKey);
         if (txIn.getConnectedOutput() != null) {
             try {

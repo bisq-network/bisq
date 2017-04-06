@@ -18,6 +18,7 @@
 package io.bisq.core.offer.placeoffer;
 
 import io.bisq.common.taskrunner.Model;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.offer.Offer;
@@ -33,9 +34,13 @@ public class PlaceOfferModel implements Model {
 
     public final Offer offer;
     public final Coin reservedFundsForOffer;
+    public final Coin createOfferFeeAsBtc;
+    public final Coin createOfferFeeAsBsq;
+    public final boolean payFeeInBtc;
     public final boolean useSavingsWallet;
     public final BtcWalletService walletService;
     public final TradeWalletService tradeWalletService;
+    public final BsqWalletService bsqWalletService;
     public final OfferBookService offerBookService;
     public final User user;
     public boolean offerAddedToOfferBook;
@@ -43,16 +48,24 @@ public class PlaceOfferModel implements Model {
 
     public PlaceOfferModel(Offer offer,
                            Coin reservedFundsForOffer,
+                           Coin createOfferFeeAsBtc,
+                           Coin createOfferFeeAsBsq,
+                           boolean payFeeInBtc,
                            boolean useSavingsWallet,
                            BtcWalletService walletService,
                            TradeWalletService tradeWalletService,
+                           BsqWalletService bsqWalletService,
                            OfferBookService offerBookService,
                            User user) {
         this.offer = offer;
         this.reservedFundsForOffer = reservedFundsForOffer;
+        this.createOfferFeeAsBtc = createOfferFeeAsBtc;
+        this.createOfferFeeAsBsq = createOfferFeeAsBsq;
+        this.payFeeInBtc = payFeeInBtc;
         this.useSavingsWallet = useSavingsWallet;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
+        this.bsqWalletService = bsqWalletService;
         this.offerBookService = offerBookService;
         this.user = user;
     }
