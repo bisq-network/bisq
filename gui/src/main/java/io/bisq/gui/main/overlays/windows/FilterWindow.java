@@ -32,6 +32,7 @@ import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,15 +147,13 @@ public class FilterWindow extends Overlay<FilterWindow> {
             ArrayList<String> nodes = new ArrayList<>();
             ArrayList<PaymentAccountFilter> paymentAccountFilters = new ArrayList<>();
 
-            if (!offerIdsInputTextField.getText().isEmpty())
-                offerIds = new ArrayList<>(Arrays.asList(offerIdsInputTextField.getText().replace(" ", "")
-                        .replace(", ", ",")
+            if (!offerIdsInputTextField.getText().isEmpty()) {
+                offerIds = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(offerIdsInputTextField.getText())
                         .split(",")));
+            }
             if (!nodesInputTextField.getText().isEmpty())
-                nodes = new ArrayList<>(Arrays.asList(nodesInputTextField.getText().replace(":9999", "")
+                nodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(nodesInputTextField.getText()).replace(":9999", "")
                         .replace(".onion", "")
-                        .replace(" ", "")
-                        .replace(", ", ",")
                         .split(",")));
             if (!paymentAccountFilterInputTextField.getText().isEmpty())
                 paymentAccountFilters = new ArrayList<>(Arrays.asList(paymentAccountFilterInputTextField.getText()

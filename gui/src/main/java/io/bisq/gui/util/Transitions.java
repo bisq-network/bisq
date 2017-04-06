@@ -74,7 +74,7 @@ public class Transitions {
         fadeOutAndRemove(node, DEFAULT_DURATION);
     }
 
-    private void fadeOutAndRemove(Node node, int duration) {
+    public void fadeOutAndRemove(Node node, int duration) {
         fadeOutAndRemove(node, duration, null);
     }
 

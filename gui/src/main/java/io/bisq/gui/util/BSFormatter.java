@@ -149,7 +149,7 @@ public class BSFormatter {
     public Coin parseToCoin(String input) {
         if (input != null && input.length() > 0) {
             try {
-                return coinFormat.parse(cleanInput(input));
+                return coinFormat.parse(cleanDoubleInput(input));
             } catch (Throwable t) {
                 log.warn("Exception at parseToBtc: " + t.toString());
                 return Coin.ZERO;
@@ -169,7 +169,7 @@ public class BSFormatter {
      */
     public Coin parseToCoinWith4Decimals(String input) {
         try {
-            return Coin.valueOf(new BigDecimal(parseToCoin(cleanInput(input)).value).setScale(-scale - 1,
+            return Coin.valueOf(new BigDecimal(parseToCoin(cleanDoubleInput(input)).value).setScale(-scale - 1,
                     BigDecimal.ROUND_HALF_UP).setScale(scale + 1).toBigInteger().longValue());
         } catch (Throwable t) {
             if (input != null && input.length() > 0)
@@ -225,7 +225,7 @@ public class BSFormatter {
     protected Fiat parseToFiat(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
-                return Fiat.parseFiat(currencyCode, cleanInput(input));
+                return Fiat.parseFiat(currencyCode, cleanDoubleInput(input));
             } catch (Exception e) {
                 log.warn("Exception at parseToFiat: " + e.toString());
                 return Fiat.valueOf(currencyCode, 0);
@@ -248,7 +248,7 @@ public class BSFormatter {
     public Fiat parseToFiatWithPrecision(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
-                return parseToFiat(new BigDecimal(cleanInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString(),
+                return parseToFiat(new BigDecimal(cleanDoubleInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString(),
                         currencyCode);
             } catch (Throwable t) {
                 log.warn("Exception at parseToFiatWithPrecision: " + t.toString());
@@ -489,24 +489,27 @@ public class BSFormatter {
     }
 
     public double parseNumberStringToDouble(String percentString) throws NumberFormatException {
-        String input = percentString.replace(",", ".");
-        input = input.replace(" ", "");
-        return Double.parseDouble(input);
+        return Double.parseDouble(cleanDoubleInput(percentString));
     }
 
     public double parsePercentStringToDouble(String percentString) throws NumberFormatException {
         String input = percentString.replace("%", "");
-        input = input.replace(",", ".");
-        input = input.replace(" ", "");
+        input = cleanDoubleInput(input);
         double value = Double.parseDouble(input);
         return value / 100d;
     }
 
-    protected String cleanInput(String input) {
+    protected String cleanDoubleInput(String input) {
         input = input.replace(",", ".");
+        input = StringUtils.deleteWhitespace(input);
+        if (input.equals("."))
+            input = input.replace(".", "0.");
+        if (input.equals("-."))
+            input = input.replace("-.", "-0.");
         // don't use String.valueOf(Double.parseDouble(input)) as return value as it gives scientific
         // notation (1.0E-6) which screw up coinFormat.parse
         //noinspection ResultOfMethodCallIgnored
+        // Just called to check if we have a valid double, throws exception otherwise
         Double.parseDouble(input);
         return input;
     }

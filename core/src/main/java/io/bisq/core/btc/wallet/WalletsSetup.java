@@ -244,6 +244,8 @@ public class WalletsSetup {
                 // ignore
             }
             shutDownComplete.set(true);
+        } else {
+            shutDownComplete.set(true);
         }
     }
 

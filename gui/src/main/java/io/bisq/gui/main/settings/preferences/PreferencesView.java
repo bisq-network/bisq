@@ -44,6 +44,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
@@ -213,9 +214,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                         preferences.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes);
                     }
                 } catch (NumberFormatException t) {
+                    log.error(t.toString());
+                    t.printStackTrace();
                     new Popup().warning(Res.get("validation.integerOnly")).show();
                     transactionFeeInputTextField.setText(estimatedFee);
                 } catch (Throwable t) {
+                    log.error(t.toString());
+                    t.printStackTrace();
                     new Popup().warning(Res.get("validation.inputError", t.getMessage())).show();
                     transactionFeeInputTextField.setText(estimatedFee);
                 }
@@ -225,7 +230,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         ignoreTradersListInputTextField = addLabelInputTextField(root, ++gridRow,
                 Res.get("setting.preferences.ignorePeers")).second;
         ignoreTradersListListener = (observable, oldValue, newValue) ->
-                preferences.setIgnoreTradersList(Arrays.asList(newValue.replace(" ", "")
+                preferences.setIgnoreTradersList(Arrays.asList(StringUtils.deleteWhitespace(newValue)
                         .replace(":9999", "").replace(".onion", "")
                         .split(",")));
     }

@@ -23,8 +23,8 @@ import io.bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
 import io.bisq.core.offer.placeoffer.PlaceOfferProtocol;
 import io.bisq.core.offer.placeoffer.tasks.AddOfferToRemoteOfferBook;
-import io.bisq.core.offer.placeoffer.tasks.BroadcastCreateOfferFeeTx;
-import io.bisq.core.offer.placeoffer.tasks.CreateOfferFeeTx;
+import io.bisq.core.offer.placeoffer.tasks.BroadcastMakerFeeTx;
+import io.bisq.core.offer.placeoffer.tasks.MakerFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.ValidateOffer;
 import io.bisq.core.trade.protocol.BuyerAsMakerProtocol;
 import io.bisq.core.trade.protocol.BuyerAsTakerProtocol;
@@ -81,9 +81,9 @@ public class DebugView extends InitializableView {
                         /*---- Protocol ----*/
                         PlaceOfferProtocol.class,
                         ValidateOffer.class,
-                        CreateOfferFeeTx.class,
+                        MakerFeeTx.class,
                         AddOfferToRemoteOfferBook.class,
-                        BroadcastCreateOfferFeeTx.class,
+                        BroadcastMakerFeeTx.class,
                         Boolean.class, /* used as separator*/
 
                         

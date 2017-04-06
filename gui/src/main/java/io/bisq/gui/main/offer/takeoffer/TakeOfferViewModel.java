@@ -559,8 +559,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     public String getTakerFee() {
-        return formatter.formatCoinWithCode(dataModel.getTakerFeeAsCoin()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getTakerFeeAsCoin(), dataModel.amountAsCoin.get(), formatter);
+        return formatter.formatCoinWithCode(dataModel.getTakerFee()) +
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getTakerFee(), dataModel.amountAsCoin.get(), formatter);
     }
 
     public String getTxFee() {

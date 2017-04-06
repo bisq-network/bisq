@@ -115,7 +115,7 @@ public class VoteManagerTest {
         opReturnData = new byte[23];
         opReturnData[0] = Version.VOTING_VERSION;
         opReturnData[21] = (byte) 0;
-        opReturnData[22] = VotingType.CREATE_OFFER_FEE_IN_BTC.code;
+        opReturnData[22] = VotingType.MAKER_FEE_IN_BTC.code;
         try {
             votingManager.getVoteItemListFromOpReturnData(opReturnData);
             fail("Expected an IllegalArgumentException to be thrown");
@@ -129,7 +129,7 @@ public class VoteManagerTest {
         opReturnData[21] = (byte) 2;
         opReturnData[22] = (byte) 255;
         opReturnData[23] = (byte) 255;
-        opReturnData[24] = VotingType.CREATE_OFFER_FEE_IN_BTC.code;
+        opReturnData[24] = VotingType.MAKER_FEE_IN_BTC.code;
         try {
             votingManager.getVoteItemListFromOpReturnData(opReturnData);
             fail("Expected an IllegalArgumentException to be thrown");
@@ -141,7 +141,7 @@ public class VoteManagerTest {
         opReturnData = new byte[24];
         opReturnData[0] = Version.VOTING_VERSION;
         opReturnData[21] = (byte) 0;
-        opReturnData[22] = VotingType.CREATE_OFFER_FEE_IN_BTC.code;
+        opReturnData[22] = VotingType.MAKER_FEE_IN_BTC.code;
         opReturnData[23] = (byte) 255;
         try {
             votingManager.getVoteItemListFromOpReturnData(opReturnData);
@@ -154,24 +154,24 @@ public class VoteManagerTest {
         opReturnData = new byte[24];
         opReturnData[0] = Version.VOTING_VERSION;
         opReturnData[21] = (byte) 0;
-        opReturnData[22] = VotingType.CREATE_OFFER_FEE_IN_BTC.code;
+        opReturnData[22] = VotingType.MAKER_FEE_IN_BTC.code;
         opReturnData[23] = (byte) 254;
         voteItemsList = votingManager.getVoteItemListFromOpReturnData(opReturnData);
         assertTrue(voteItemsList.hasVotedOnAnyItem());
-        assertEquals(opReturnData[23], voteItemsList.getVoteItemByVotingType(VotingType.CREATE_OFFER_FEE_IN_BTC).get().getValue());
+        assertEquals(opReturnData[23], voteItemsList.getVoteItemByVotingType(VotingType.MAKER_FEE_IN_BTC).get().getValue());
 
         // Valid param votes
         opReturnData = new byte[26];
         opReturnData[0] = Version.VOTING_VERSION;
         opReturnData[21] = (byte) 0;
-        opReturnData[22] = VotingType.CREATE_OFFER_FEE_IN_BTC.code;
+        opReturnData[22] = VotingType.MAKER_FEE_IN_BTC.code;
         opReturnData[23] = (byte) 130;
-        opReturnData[24] = VotingType.TAKE_OFFER_FEE_IN_BTC.code;
+        opReturnData[24] = VotingType.TAKER_FEE_IN_BTC.code;
         opReturnData[25] = (byte) 120;
         voteItemsList = votingManager.getVoteItemListFromOpReturnData(opReturnData);
         assertTrue(voteItemsList.hasVotedOnAnyItem());
-        assertEquals(opReturnData[23], voteItemsList.getVoteItemByVotingType(VotingType.CREATE_OFFER_FEE_IN_BTC).get().getValue());
-        assertEquals(opReturnData[25], voteItemsList.getVoteItemByVotingType(VotingType.TAKE_OFFER_FEE_IN_BTC).get().getValue());
+        assertEquals(opReturnData[23], voteItemsList.getVoteItemByVotingType(VotingType.MAKER_FEE_IN_BTC).get().getValue());
+        assertEquals(opReturnData[25], voteItemsList.getVoteItemByVotingType(VotingType.TAKER_FEE_IN_BTC).get().getValue());
     }
 
 

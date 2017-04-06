@@ -445,7 +445,7 @@ public class MainViewModel implements ViewModel {
                         } else if (exception.getCause() instanceof BlockStoreException) {
                             log.error(exception.getMessage());
                             // Ugly, but no other way to cover that specific case
-                            if (exception.getMessage().equals("Store file is already locked by another process")) {
+                            if (exception.getMessage().equals("org.bitcoinj.store.BlockStoreException: org.bitcoinj.store.BlockStoreException: Store file is already locked by another process")) {
                                 new Popup().warning(Res.get("popup.warning.startupFailed.twoInstances"))
                                         .useShutDownButton()
                                         .show();

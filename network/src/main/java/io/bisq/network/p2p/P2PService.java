@@ -38,6 +38,7 @@ import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
 import javafx.beans.property.*;
+import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
@@ -182,7 +183,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             FileUtil.rollingBackup(new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString()), "private_key", 20);
 
         if (banList != null && !banList.isEmpty())
-            BanList.setList(Arrays.asList(banList.replace(" ", "").split(",")).stream().map(NodeAddress::new).collect(Collectors.toList()));
+            BanList.setList(Arrays.asList(StringUtils.deleteWhitespace(banList).split(",")).stream().map(NodeAddress::new).collect(Collectors.toList()));
         if (myAddress != null && !myAddress.isEmpty())
             seedNodesRepository.setNodeAddressToExclude(new NodeAddress(myAddress));
 
@@ -194,7 +195,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         Set<NodeAddress> seedNodeAddresses;
         if (seedNodes != null && !seedNodes.isEmpty())
-            seedNodeAddresses = Arrays.asList(seedNodes.replace(" ", "").split(",")).stream().map(NodeAddress::new).collect(Collectors.toSet());
+            seedNodeAddresses = Arrays.asList(StringUtils.deleteWhitespace(seedNodes).split(",")).stream().map(NodeAddress::new).collect(Collectors.toSet());
         else
             seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhostForP2P, networkId);
 
@@ -279,14 +280,18 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             if (keepAliveManager != null)
                 keepAliveManager.shutDown();
 
-            if (networkNode != null)
+            if (networkReadySubscription != null)
+                networkReadySubscription.unsubscribe();
+
+            if (networkNode != null) {
                 networkNode.shutDown(() -> {
                     shutDownResultHandlers.stream().forEach(Runnable::run);
                     shutDownComplete = true;
                 });
-
-            if (networkReadySubscription != null)
-                networkReadySubscription.unsubscribe();
+            } else {
+                shutDownResultHandlers.stream().forEach(Runnable::run);
+                shutDownComplete = true;
+            }
         } else {
             log.debug("shutDown already in progress");
             if (shutDownComplete) {

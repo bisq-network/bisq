@@ -30,6 +30,7 @@ package io.bisq.gui.util.validation;
  */
 
 import io.bisq.common.locale.Res;
+import org.apache.commons.lang3.StringUtils;
 
 public final class InteracETransferValidator extends InputValidator {
 
@@ -68,7 +69,7 @@ public final class InteracETransferValidator extends InputValidator {
         // check for correct format and strip +, space and -
         if (input.matches("\\+?1[ -]?\\d{3}[ -]?\\d{3}[ -]?\\d{4}")) {
             input = input.replace("+", "");
-            input = input.replace(" ", "");
+            input = StringUtils.deleteWhitespace(input);
             input = input.replace("-", "");
 
             String inputAreaCode = input.substring(1, 4);

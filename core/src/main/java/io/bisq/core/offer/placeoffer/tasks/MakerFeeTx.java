@@ -40,11 +40,11 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
-    private static final Logger log = LoggerFactory.getLogger(CreateOfferFeeTx.class);
+public class MakerFeeTx extends Task<PlaceOfferModel> {
+    private static final Logger log = LoggerFactory.getLogger(MakerFeeTx.class);
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public CreateOfferFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
+    public MakerFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
 
@@ -65,14 +65,14 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
             Address reservedForTradeAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address changeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
 
-            if (model.payFeeInBtc) {
+            if (model.isCurrencyForMakerFeeBtc) {
                 Transaction btcTransaction = model.tradeWalletService.createBtcTradingFeeTx(
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
-                        model.reservedFundsForOffer.subtract(model.createOfferFeeAsBtc),
+                        model.reservedFundsForOffer.subtract(model.makerFee),
                         model.useSavingsWallet,
-                        offer.getCreateOfferFee(),
+                        offer.getMakerFee(),
                         offer.getTxFee(),
                         selectedArbitrator.getBtcAddress());
 
@@ -86,7 +86,7 @@ public class CreateOfferFeeTx extends Task<PlaceOfferModel> {
             } else {
                 final BsqWalletService bsqWalletService = model.bsqWalletService;
                 final TradeWalletService tradeWalletService = model.tradeWalletService;
-                Transaction preparedBurnFeeTx = model.bsqWalletService.getPreparedBurnFeeTx(model.createOfferFeeAsBsq);
+                Transaction preparedBurnFeeTx = model.bsqWalletService.getPreparedBurnFeeTx(model.makerFee);
                 Transaction txWithBsqFee = tradeWalletService.completeBsqTradingFeeTx(preparedBurnFeeTx,
                         fundingAddress,
                         reservedForTradeAddress,

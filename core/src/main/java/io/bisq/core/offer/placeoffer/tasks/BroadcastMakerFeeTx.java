@@ -27,14 +27,14 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
-    private static final Logger log = LoggerFactory.getLogger(BroadcastCreateOfferFeeTx.class);
+public class BroadcastMakerFeeTx extends Task<PlaceOfferModel> {
+    private static final Logger log = LoggerFactory.getLogger(BroadcastMakerFeeTx.class);
 
     private boolean removeOfferFailed;
     private boolean addOfferFailed;
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public BroadcastCreateOfferFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
+    public BroadcastMakerFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
 
@@ -63,7 +63,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                                     model.offer.setOfferFeePaymentTxId(transaction.getHashAsString());
                                     model.setTransaction(transaction);
                                     model.offerBookService.addOffer(model.offer,
-                                            BroadcastCreateOfferFeeTx.this::complete,
+                                            BroadcastMakerFeeTx.this::complete,
                                             errorMessage -> {
                                                 log.error("addOffer failed");
                                                 addOfferFailed = true;

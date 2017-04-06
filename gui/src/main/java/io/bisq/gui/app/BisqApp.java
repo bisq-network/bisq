@@ -391,7 +391,6 @@ public class BisqApp extends Application {
     }
 
     private void gracefulShutDown(ResultHandler resultHandler) {
-        log.debug("gracefulShutDown");
         try {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
@@ -410,12 +409,16 @@ public class BisqApp extends Application {
                     });
                 });
                 // we wait max 20 sec.
-                UserThread.runAfter(resultHandler::handleResult, 20);
+                UserThread.runAfter(() -> {
+                    log.warn("Timeout triggered resultHandler");
+                    resultHandler.handleResult();
+                }, 20);
             } else {
+                log.warn("injector == null triggered resultHandler");
                 UserThread.runAfter(resultHandler::handleResult, 1);
             }
         } catch (Throwable t) {
-            log.debug("App shutdown failed with exception");
+            log.error("App shutdown failed with exception");
             t.printStackTrace();
             System.exit(1);
         }

@@ -51,11 +51,11 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             // Coins
             checkCoinNotNullOrZero(offer.getAmount(), "Amount");
             checkCoinNotNullOrZero(offer.getMinAmount(), "MinAmount");
-            checkCoinNotNullOrZero(offer.getCreateOfferFee(), "CreateOfferFee");
+            checkCoinNotNullOrZero(offer.getMakerFee(), "MakerFee");
 
-            checkArgument(offer.getCreateOfferFee().value >= FeeService.MIN_CREATE_OFFER_FEE_IN_BTC,
+            checkArgument(offer.getMakerFee().value >= FeeService.getMinMakerFee(offer.isCurrencyForMakerFeeBtc()),
                     "createOfferFee must not be less than FeeService.MIN_CREATE_OFFER_FEE_IN_BTC. " +
-                            "createOfferFee=" + offer.getCreateOfferFee().toFriendlyString());
+                            "MakerFee=" + offer.getMakerFee().toFriendlyString());
 
             checkCoinNotNullOrZero(offer.getBuyerSecurityDeposit(), "buyerSecurityDeposit");
             checkCoinNotNullOrZero(offer.getSellerSecurityDeposit(), "sellerSecurityDeposit");
@@ -96,7 +96,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkNotNull(offer.getMinAmount(), "MinAmount is null");
             checkNotNull(offer.getPrice(), "Price is null");
             checkNotNull(offer.getTxFee(), "txFee is null");
-            checkNotNull(offer.getCreateOfferFee(), "CreateOfferFee is null");
+            checkNotNull(offer.getMakerFee(), "MakerFee is null");
             checkNotNull(offer.getVersionNr(), "VersionNr is null");
             checkArgument(offer.getMaxTradePeriod() > 0,
                     "maxTradePeriod must be positive. maxTradePeriod=" + offer.getMaxTradePeriod());

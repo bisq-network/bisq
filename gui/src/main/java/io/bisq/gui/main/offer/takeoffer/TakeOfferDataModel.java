@@ -66,7 +66,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final PriceFeedService priceFeedService;
     private final BSFormatter formatter;
 
-    private Coin takerFeeAsCoin;
+    private Coin takerFee;
+    private boolean isCurrencyForMakerFeeBtc;
     private Coin txFeeAsCoin;
     private Coin totalTxFeeAsCoin;
     private Coin securityDeposit;
@@ -265,10 +266,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // have it persisted as well.
     void onTakeOffer(TradeResultHandler tradeResultHandler) {
         checkNotNull(totalTxFeeAsCoin, "totalTxFeeAsCoin must not be null");
-        Coin fundsNeededForTrade = totalToPayAsCoin.get().subtract(takerFeeAsCoin).subtract(txFeeAsCoin);
+        Coin fundsNeededForTrade = totalToPayAsCoin.get().subtract(takerFee).subtract(txFeeAsCoin);
         tradeManager.onTakeOffer(amountAsCoin.get(),
                 txFeeAsCoin,
-                takerFeeAsCoin,
+                takerFee,
                 tradePrice.getValue(),
                 fundsNeededForTrade,
                 offer,
@@ -355,8 +356,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void applyAmount(Coin amount) {
         amountAsCoin.set(amount);
 
-        takerFeeAsCoin = CoinUtil.getFeePerBtc(feeService.getTakeOfferFeeInBtcPerBtc(), amount);
-        takerFeeAsCoin = CoinUtil.maxCoin(takerFeeAsCoin, feeService.getMinTakeOfferFeeInBtc());
+        takerFee = CoinUtil.getFeePerBtc(Coin.valueOf(FeeService.getTakerFeeInBtcPerBtc(isCurrencyForMakerFeeBtc)), amount);
+        takerFee = Coin.valueOf(Math.max(takerFee.value, FeeService.getMinTakerFee(isCurrencyForMakerFeeBtc)));
 
         calculateTotalToPay();
     }
@@ -365,8 +366,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // Taker pays 2 times the tx fee because the mining fee might be different when maker created the offer
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
-        if (offer != null && amountAsCoin.get() != null && takerFeeAsCoin != null) {
-            Coin value = takerFeeAsCoin.add(totalTxFeeAsCoin).add(securityDeposit);
+        if (offer != null && amountAsCoin.get() != null && takerFee != null) {
+            Coin value = takerFee.add(totalTxFeeAsCoin).add(securityDeposit);
             if (getDirection() == Offer.Direction.SELL)
                 totalToPayAsCoin.set(value);
             else
@@ -461,9 +462,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return CurrencyUtil.getNameByCode(offer.getCurrencyCode());
     }
 
-    public Coin getTakerFeeAsCoin() {
+    public Coin getTakerFee() {
         checkNotNull(totalTxFeeAsCoin, "totalTxFeeAsCoin must not be null");
-        return takerFeeAsCoin;
+        return takerFee;
     }
 
     public Coin getTotalTxFeeAsCoin() {

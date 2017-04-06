@@ -176,7 +176,7 @@ public class Offer implements Serializable {
             throw new MarketPriceNotAvailableException("Market price required for calculating trade price is not available.");
 
         checkArgument(takersTradePrice > 0, "takersTradePrice must be positive");
-        
+
         double factor = (double) takersTradePrice / (double) offerPrice.getValue();
         // We allow max. 1 % difference between own offerPayload price calculation and takers calculation.
         // Market price might be different at maker's and takers side so we need a bit of tolerance.
@@ -242,8 +242,12 @@ public class Offer implements Serializable {
         return Coin.valueOf(offerPayload.getTxFee());
     }
 
-    public Coin getCreateOfferFee() {
-        return Coin.valueOf(offerPayload.getCreateOfferFee());
+    public Coin getMakerFee() {
+        return Coin.valueOf(offerPayload.getMakerFee());
+    }
+
+    public boolean isCurrencyForMakerFeeBtc() {
+        return offerPayload.isCurrencyForMakerFeeBtc();
     }
 
     public Coin getBuyerSecurityDeposit() {

@@ -40,18 +40,20 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FeeService {
     private static final Logger log = LoggerFactory.getLogger(FeeService.class);
 
-    public static final long MIN_TX_FEE = 60; // satoshi/byte
-    public static final long MAX_TX_FEE = 300;
+    public static final long MIN_TX_FEE = 40; // satoshi/byte
+    public static final long MAX_TX_FEE = 500;
     public static final long DEFAULT_TX_FEE = 150;
 
-    public static final long MIN_CREATE_OFFER_FEE_IN_BTC = 10_000;
-    public static final long DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BTC = 30_000; // excluded mining fee
+    private static final long MIN_MAKER_FEE_IN_BTC = 10_000;
+    private static final long MIN_MAKER_FEE_IN_BSQ = 10;
+    private static final long DEFAULT_MAKER_FEE_IN_BTC_PER_BTC = 30_000;
+    private static final long DEFAULT_MAKER_FEE_IN_BSQ_PER_BTC = 30;
 
-    public static final long MIN_CREATE_OFFER_FEE_IN_BSQ = 1;
-    public static final long DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BSQ = 100; 
+    private static final long MIN_TAKER_FEE_IN_BTC = 10_000;
+    private static final long MIN_TAKER_FEE_IN_BSQ = 10;
+    private static final long DEFAULT_TAKER_FEE_IN_BTC_PER_BTC = 40_000;
+    private static final long DEFAULT_TAKER_FEE_IN_BSQ_PER_BTC = 40;
 
-    public static final long MIN_TAKE_OFFER_FEE_IN_BTC = 10_000;
-    public static final long DEFAULT_TAKE_OFFER_FEE_IN_BTC_PER_BTC = 40_000; // excluded mining fee
 
     // 0.00216 btc is for 3 x tx fee for taker -> about 2 EUR!
 
@@ -124,31 +126,23 @@ public class FeeService {
             return Coin.valueOf(DEFAULT_TX_FEE);
     }
 
-    // TODO we will get that from the DAO voting
-    public Coin getCreateOfferFeeInBtcPerBtc() {
-        return Coin.valueOf(DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BTC);
+    public static long getMakerFeePerBtc(boolean currencyForMakerFeeBtc) {
+        return currencyForMakerFeeBtc ? DEFAULT_MAKER_FEE_IN_BTC_PER_BTC : DEFAULT_MAKER_FEE_IN_BSQ_PER_BTC;
     }
 
-    public Coin getCreateOfferFeeInBtcPerBsq() {
-        return Coin.valueOf(DEFAULT_CREATE_OFFER_FEE_IN_BTC_PER_BSQ);
+    public static long getMinMakerFee(boolean currencyForMakerFeeBtc) {
+        return currencyForMakerFeeBtc ? MIN_MAKER_FEE_IN_BTC : MIN_MAKER_FEE_IN_BSQ;
     }
 
-    public Coin getMinCreateOfferFeeInBtc() {
-        return Coin.valueOf(MIN_CREATE_OFFER_FEE_IN_BTC);
+
+    public static long getTakerFeeInBtcPerBtc(boolean currencyForTakerFeeBtc) {
+        return currencyForTakerFeeBtc ? DEFAULT_TAKER_FEE_IN_BTC_PER_BTC : DEFAULT_TAKER_FEE_IN_BSQ_PER_BTC;
     }
 
-    public Coin getMinCreateOfferFeeInBsq() {
-        return Coin.valueOf(MIN_CREATE_OFFER_FEE_IN_BSQ);
+    public static long getMinTakerFee(boolean currencyForTakerFeeBtc) {
+        return currencyForTakerFeeBtc ? MIN_TAKER_FEE_IN_BTC : MIN_TAKER_FEE_IN_BSQ;
     }
 
-    public Coin getMinTakeOfferFeeInBtc() {
-        return Coin.valueOf(MIN_TAKE_OFFER_FEE_IN_BTC);
-    }
-
-    // TODO we will get that from the DAO voting
-    public Coin getTakeOfferFeeInBtcPerBtc() {
-        return Coin.valueOf(DEFAULT_TAKE_OFFER_FEE_IN_BTC_PER_BTC);
-    }
 
     public Coin getCreateCompensationRequestFee() {
         //TODO
@@ -159,5 +153,4 @@ public class FeeService {
         //TODO
         return Coin.valueOf(999);
     }
-
 }

@@ -85,6 +85,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     // The domain (dataModel) uses always the same price model (otherCurrencyBTC)
     // If we would change the price representation in the domain we would not be backward compatible
     final StringProperty price = new SimpleStringProperty();
+    final StringProperty makerFee = new SimpleStringProperty();
+    final StringProperty makerFeeCurrencyCode = new SimpleStringProperty();
 
     // Positive % value means always a better price form the maker's perspective: 
     // Buyer (with fiat): lower price as market
@@ -186,6 +188,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 UserThread.runAfter(() -> {
                     price.set("1000");
                     onFocusOutPriceAsPercentageTextField(true, false);
+                    applyMakerFee();
                 }, 200, TimeUnit.MILLISECONDS);
 
                 setAmountToModel();
@@ -203,16 +206,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         addListeners();
 
         updateButtonDisableState();
-
-        if (dataModel.getDirection() == Offer.Direction.BUY) {
-            directionLabel = Res.get("shared.buyBitcoin");
-            amountDescription = Res.get("createOffer.amountPriceBox.amountDescription", Res.get("shared.buy"));
-        } else {
-            directionLabel = Res.get("shared.sellBitcoin");
-            amountDescription = Res.get("createOffer.amountPriceBox.amountDescription", Res.get("shared.sell"));
-        }
-
-        buyerSecurityDeposit.set(btcFormatter.formatCoin(dataModel.getBuyerSecurityDeposit().get()));
 
         updateMarketPriceAvailable();
     }
@@ -352,6 +345,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                         }
                     }
                 } catch (Throwable t) {
+                    log.error(t.toString());
+                    t.printStackTrace();
                     new Popup().warning(Res.get("validation.inputError", t.toString())).show();
                 }
             }
@@ -388,6 +383,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 amount.set(btcFormatter.formatCoin(newValue));
             else
                 amount.set("");
+
+            applyMakerFee();
         };
         minAmountAsCoinListener = (ov, oldValue, newValue) -> {
             if (newValue != null)
@@ -403,6 +400,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 price.set("");
 
             ignorePriceStringListener = false;
+            applyMakerFee();
         };
         volumeListener = (ov, oldValue, newValue) -> {
             ignoreVolumeStringListener = true;
@@ -412,6 +410,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 volume.set("");
 
             ignoreVolumeStringListener = false;
+            applyMakerFee();
         };
 
         securityDepositAsCoinListener = (ov, oldValue, newValue) -> {
@@ -419,6 +418,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 buyerSecurityDeposit.set(btcFormatter.formatCoin(newValue));
             else
                 buyerSecurityDeposit.set("");
+
+            applyMakerFee();
         };
 
 
@@ -431,6 +432,12 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             updateMarketPriceAvailable();
             updateButtonDisableState();
         };
+    }
+
+    private void applyMakerFee() {
+        makerFee.set(getFormatter().formatCoin(dataModel.getMakerFee()));
+        log.error("applyMakerFee " + dataModel.getMakerFee());
+        makerFeeCurrencyCode.set(dataModel.getCurrencyForMakerFeeBtc() ? "BTC" : "BSQ");
     }
 
     private void updateMarketPriceAvailable() {
@@ -496,6 +503,13 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         boolean result = dataModel.initWithData(direction, tradeCurrency);
         if (dataModel.paymentAccount != null)
             btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin());
+
+        final boolean isBuy = dataModel.getDirection() == Offer.Direction.BUY;
+        directionLabel = isBuy ? Res.get("shared.buyBitcoin") : Res.get("shared.sellBitcoin");
+        amountDescription = Res.get("createOffer.amountPriceBox.amountDescription",
+                isBuy ? Res.get("shared.buy") : Res.get("shared.sell"));
+
+        buyerSecurityDeposit.set(btcFormatter.formatCoin(dataModel.getBuyerSecurityDeposit().get()));
 
         return result;
     }
@@ -586,6 +600,15 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             return false;
         }
 
+    }
+
+    public void setCurrencyForMakerFeeBtc(boolean currencyForMakerFeeBtc) {
+        dataModel.setCurrencyForMakerFeeBtc(currencyForMakerFeeBtc);
+        applyMakerFee();
+    }
+
+    private BSFormatter getFormatter() {
+        return dataModel.getCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
 
 
@@ -775,13 +798,11 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     public String getCreateOfferFee() {
-        if (dataModel.getPayFeeInBtc()) {
-            return btcFormatter.formatCoinWithCode(dataModel.getCreateOfferFeeAsBtc()) +
-                    GUIUtil.getPercentageOfTradeAmount(dataModel.getCreateOfferFeeAsBtc(), dataModel.getAmount().get(), btcFormatter);
-        } else {
-            return bsqFormatter.formatCoinWithCode(dataModel.getCreateOfferFeeAsBsq()) +
-                    GUIUtil.getPercentageOfTradeAmountForBsq(dataModel.getCreateOfferFeeAsBsq(), dataModel.getAmount().get(), bsqFormatter);
-        }
+        //TODO use last bisq market price to estimate BSQ val
+        final String perc = dataModel.getCurrencyForMakerFeeBtc() ?
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getMakerFee(), dataModel.getAmount().get(), btcFormatter) :
+                "";
+        return getFormatter().formatCoinWithCode(dataModel.getMakerFee()) + perc;
     }
 
     public String getTxFee() {
@@ -861,6 +882,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         } else {
             dataModel.setPrice(null);
         }
+        dataModel.updateTradeFee();
     }
 
     private void setVolumeToModel() {
@@ -873,6 +895,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         } else {
             dataModel.setVolume(null);
         }
+        dataModel.updateTradeFee();
     }
 
     private void setBuyerSecurityDepositToModel() {
