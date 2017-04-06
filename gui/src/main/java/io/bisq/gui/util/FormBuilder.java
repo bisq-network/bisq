@@ -21,6 +21,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Tuple4;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.*;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -167,13 +168,13 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public static HyperlinkWithIcon addHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String url) {
-        return addHyperlinkWithIcon(gridPane, rowIndex, title, url, 0);
+    public static HyperlinkWithIcon addHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String url, Preferences preferences) {
+        return addHyperlinkWithIcon(gridPane, rowIndex, title, url, 0, preferences);
     }
 
-    public static HyperlinkWithIcon addHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String url, double top) {
+    public static HyperlinkWithIcon addHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String url, double top, Preferences preferences) {
         HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, AwesomeIcon.EXTERNAL_LINK);
-        hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
+        hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url, preferences));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
@@ -186,15 +187,17 @@ public class FormBuilder {
     // Label  + HyperlinkWithIcon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String labelTitle, String title, String url) {
-        return addLabelHyperlinkWithIcon(gridPane, rowIndex, labelTitle, title, url, 0);
+    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex,
+                                                                             String labelTitle, String title,
+                                                                             String url, Preferences preferences) {
+        return addLabelHyperlinkWithIcon(gridPane, rowIndex, labelTitle, title, url, 0, preferences);
     }
 
-    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String labelTitle, String title, String url, double top) {
+    public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String labelTitle, String title, String url, double top, Preferences preferences) {
         Label label = addLabel(gridPane, rowIndex, labelTitle, top);
 
         HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, AwesomeIcon.EXTERNAL_LINK);
-        hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
+        hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url, preferences));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 1);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
@@ -722,10 +725,10 @@ public class FormBuilder {
     // Label  + AddressTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Tuple2<Label, AddressTextField> addLabelAddressTextField(GridPane gridPane, int rowIndex, String title) {
+    public static Tuple2<Label, AddressTextField> addLabelAddressTextField(GridPane gridPane, int rowIndex, String title, Preferences preferences) {
         Label label = addLabel(gridPane, rowIndex, title, 0);
 
-        AddressTextField addressTextField = new AddressTextField();
+        AddressTextField addressTextField = new AddressTextField(preferences);
         GridPane.setRowIndex(addressTextField, rowIndex);
         GridPane.setColumnIndex(addressTextField, 1);
         gridPane.getChildren().add(addressTextField);
@@ -941,7 +944,7 @@ public class FormBuilder {
         box.getChildren().addAll(textField, currency);
         return new Tuple3<>(box, textField, currency);
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Trade: Label, VBox

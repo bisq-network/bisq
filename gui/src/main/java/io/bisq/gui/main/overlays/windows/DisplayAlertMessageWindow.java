@@ -19,6 +19,7 @@ package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.common.locale.Res;
 import io.bisq.core.alert.Alert;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.HyperlinkWithIcon;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.FormBuilder;
@@ -39,7 +40,8 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisplayAlertMessageWindow() {
+    public DisplayAlertMessageWindow(Preferences preferences) {
+        super(preferences);
         type = Type.Attention;
     }
 
@@ -72,7 +74,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
             headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
             String url = "https://bisq.io/downloads";
             HyperlinkWithIcon hyperlinkWithIcon = FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex,
-                    Res.get("displayAlertMessageWindow.update.download"), url, url).second;
+                    Res.get("displayAlertMessageWindow.update.download"), url, url, preferences).second;
             hyperlinkWithIcon.setMaxWidth(550);
         } else {
             headLine = Res.get("displayAlertMessageWindow.headline");

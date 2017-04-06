@@ -24,6 +24,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.WalletService;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -67,7 +68,8 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
 
     @Inject
     public EmptyWalletWindow(WalletPasswordWindow walletPasswordWindow,
-                             OpenOfferManager openOfferManager, BSFormatter formatter) {
+                             OpenOfferManager openOfferManager, BSFormatter formatter, Preferences preferences) {
+        super(preferences);
         this.walletPasswordWindow = walletPasswordWindow;
         this.openOfferManager = openOfferManager;
         this.formatter = formatter;
@@ -151,7 +153,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     private void doEmptyWallet(KeyParameter aesKey) {
         if (!openOfferManager.getOpenOffers().isEmpty()) {
             UserThread.runAfter(() ->
-                    new Popup().warning(Res.get("emptyWalletWindow.openOffers.warn"))
+                    new Popup(preferences).warning(Res.get("emptyWalletWindow.openOffers.warn"))
                             .actionButtonText(Res.get("emptyWalletWindow.openOffers.yes"))
                             .onAction(() -> doEmptyWallet2(aesKey))
                             .show(), 300, TimeUnit.MILLISECONDS);
@@ -171,7 +173,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                             balanceTextField.setText(formatter.formatCoinWithCode(walletService.getAvailableBalance()));
                             emptyWalletButton.setDisable(true);
                             log.debug("wallet empty successful");
-                            onClose(() -> UserThread.runAfter(() -> new Popup()
+                            onClose(() -> UserThread.runAfter(() -> new Popup(preferences)
                                     .feedback(Res.get("emptyWalletWindow.sent.success"))
                                     .show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS));
                             doClose();

@@ -18,6 +18,7 @@
 package io.bisq.gui.util;
 
 import com.google.common.base.Charsets;
+import com.google.inject.Inject;
 import com.googlecode.jcsv.CSVStrategy;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 import com.googlecode.jcsv.writer.CSVWriter;
@@ -32,6 +33,7 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -44,6 +46,8 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
 import org.slf4j.Logger;
@@ -61,9 +65,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class GUIUtil {
-    private static final Logger log = LoggerFactory.getLogger(GUIUtil.class);
-
     public final static String SHOW_ALL_FLAG = "SHOW_ALL_FLAG";
     public final static String EDIT_FLAG = "EDIT_FLAG";
 
@@ -77,11 +80,11 @@ public class GUIUtil {
         return 0;
     }
 
-    public static void showFeeInfoBeforeExecute(Runnable runnable) {
+    public static void showFeeInfoBeforeExecute(Runnable runnable, Preferences preferences) {
         String key = "miningFeeInfo";
-        if (!DevEnv.DEV_MODE && Preferences.INSTANCE.showAgain(key)) {
-            new Popup<>().information(Res.get("guiUtil.miningFeeInfo"))
-                    .dontShowAgainId(key, Preferences.INSTANCE)
+        if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
+            new Popup<>(preferences).information(Res.get("guiUtil.miningFeeInfo"))
+                    .dontShowAgainId(key, preferences)
                     .onClose(runnable::run)
                     .useIUnderstandButton()
                     .show();
@@ -97,9 +100,9 @@ public class GUIUtil {
             Storage<ListPersistable<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), protobufferResolver);
             paymentAccountsStorage.initAndGetPersisted(new ListPersistable<>(accounts), fileName);
             paymentAccountsStorage.queueUpForSave();
-            new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
+            new Popup<>(preferences).feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
         } else {
-            new Popup<>().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
+            new Popup<>(preferences).warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
         }
     }
 
@@ -127,10 +130,10 @@ public class GUIUtil {
                             msg.append(Res.get("guiUtil.accountImport.noImport", id));
                         }
                     });
-                    new Popup<>().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
+                    new Popup<>(preferences).feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
 
                 } else {
-                    new Popup<>().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
+                    new Popup<>(preferences).warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
                 }
             } else {
                 log.error("The selected file is not the expected file for import. The expected file name is: " + fileName + ".");
@@ -141,7 +144,7 @@ public class GUIUtil {
 
     public static <T> void exportCSV(String fileName, CSVEntryConverter<T> headerConverter,
                                      CSVEntryConverter<T> contentConverter, T emptyItem,
-                                     List<T> list, Stage stage) {
+                                     List<T> list, Stage stage, Preferences preferences) {
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialFileName(fileName);
@@ -161,7 +164,7 @@ public class GUIUtil {
         } catch (RuntimeException | IOException e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+            new Popup(preferences).error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
         }
     }
 
@@ -289,11 +292,10 @@ public class GUIUtil {
     }
 
 
-    public static void openWebPage(String target) {
+    public static void openWebPage(String target, Preferences preferences) {
         String key = "warnOpenURLWhenTorEnabled";
-        final Preferences preferences = Preferences.INSTANCE;
         if (preferences.showAgain(key)) {
-            new Popup<>().information(Res.get("guiUtil.openWebBrowser.warning", target))
+            new Popup<>(preferences).information(Res.get("guiUtil.openWebBrowser.warning", target))
                     .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
                     .onAction(() -> {
                         preferences.dontShowAgain(key, true);
@@ -348,7 +350,7 @@ public class GUIUtil {
 
     public static void showClearXchangeWarning(Preferences preferences) {
         String key = "confirmClearXchangeRequirements";
-        new Popup().information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
+        new Popup(preferences).information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
                 .dontShowAgainId(key, preferences)

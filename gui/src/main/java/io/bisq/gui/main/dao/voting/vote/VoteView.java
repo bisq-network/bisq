@@ -30,6 +30,7 @@ import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.*;
 import io.bisq.core.provider.fee.FeeService;
+import io.bisq.core.user.Preferences;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -67,6 +68,7 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 @FxmlView
 public class VoteView extends ActivatableView<GridPane, Void> {
 
+    private final Preferences preferences;
     private ComboBox<VoteItem> parametersComboBox;
     private ComboBox<CompensationRequestVoteItem> compensationRequestsComboBox;
 
@@ -95,7 +97,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     @Inject
     private VoteView(CompensationRequestManager compensationRequestManager, BsqWalletService bsqWalletService,
                      BtcWalletService btcWalletService, FeeService feeService, BsqFormatter bsqFormatter,
-                     BSFormatter btcFormatter, VotingManager voteManager) {
+                     BSFormatter btcFormatter, VotingManager voteManager, Preferences preferences) {
         this.compensationRequestManager = compensationRequestManager;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
@@ -103,6 +105,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
         this.voteManager = voteManager;
+        this.preferences = preferences;
     }
 
     @Override
@@ -131,7 +134,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                             () -> compensationRequestsTitledGroupBg.setManaged(!CompensationViewItem.isEmpty()));
                     UserThread.execute(selectionModel::clearSelection);
                 } else {
-                    new Popup<>().warning(Res.get("dao.voting.requestAlreadyAdded")).show();
+                    new Popup<>(preferences).warning(Res.get("dao.voting.requestAlreadyAdded")).show();
                 }
             }
 
@@ -160,7 +163,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                             () -> parametersTitledGroupBg.setManaged(!ParameterViewItem.isEmpty()));
                     UserThread.execute(selectionModel::clearSelection);
                 } else {
-                    new Popup<>().warning(Res.get("dao.voting.parameterAlreadyAdded")).show();
+                    new Popup<>(preferences).warning(Res.get("dao.voting.parameterAlreadyAdded")).show();
                 }
             }
             parametersTitledGroupBg.setManaged(!ParameterViewItem.isEmpty());
@@ -203,11 +206,11 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             log.error(voteItemsList.toString());
             //TODO
             if (voteItemsList.isMyVote()) {
-                new Popup<>().warning(Res.get("dao.voting.votedAlready")).show();
+                new Popup<>(preferences).warning(Res.get("dao.voting.votedAlready")).show();
             } else if (!voteItemsList.getAllVoteItemList().stream().filter(VoteItem::hasVoted).findAny().isPresent() &&
                     !voteItemsList.getAllVoteItemList().stream().filter(e -> e instanceof CompensationRequestVoteItemCollection)
                             .filter(e -> ((CompensationRequestVoteItemCollection) e).hasVotedOnAnyItem()).findAny().isPresent()) {
-                new Popup<>().warning(Res.get("dao.voting.notVotedOnAnyEntry")).show();
+                new Popup<>(preferences).warning(Res.get("dao.voting.notVotedOnAnyEntry")).show();
             } else {
                 try {
                     byte[] opReturnData = voteManager.calculateOpReturnData(voteItemsList);
@@ -218,7 +221,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                         Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                         Coin miningFee = signedTx.getFee();
                         int txSize = signedTx.bitcoinSerialize().length;
-                        new Popup().headLine(Res.get("dao.voting.confirmTx"))
+                        new Popup(preferences).headLine(Res.get("dao.voting.confirmTx"))
                                 .confirmation(Res.get("dao.tx.summary",
                                         btcFormatter.formatCoinWithCode(votingTxFee),
                                         btcFormatter.formatCoinWithCode(miningFee),
@@ -228,15 +231,15 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                 .onAction(() -> {
                                     try {
                                         bsqWalletService.commitTx(txWithBtcFee);
-                                        // We need to create another instance, otherwise the tx would trigger an invalid state exception 
-                                        // if it gets committed 2 times 
+                                        // We need to create another instance, otherwise the tx would trigger an invalid state exception
+                                        // if it gets committed 2 times
                                         btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
                                         bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                                             @Override
                                             public void onSuccess(@Nullable Transaction transaction) {
                                                 checkNotNull(transaction, "Transaction must not be null at doSend callback.");
                                                 log.error("tx successful published" + transaction.getHashAsString());
-                                                new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                                                new Popup<>(preferences).confirmation(Res.get("dao.tx.published.success")).show();
                                                 voteItemsList.setIsMyVote(true);
 
                                                 //TODO send to P2P network
@@ -244,13 +247,13 @@ public class VoteView extends ActivatableView<GridPane, Void> {
 
                                             @Override
                                             public void onFailure(@NotNull Throwable t) {
-                                                new Popup<>().warning(t.toString()).show();
+                                                new Popup<>(preferences).warning(t.toString()).show();
                                             }
                                         });
                                     } catch (WalletException | TransactionVerificationException e) {
                                         log.error(e.toString());
                                         e.printStackTrace();
-                                        new Popup<>().warning(e.toString());
+                                        new Popup<>(preferences).warning(e.toString());
                                     }
                                 })
                                 .closeButtonText(Res.get("shared.cancel"))
@@ -259,11 +262,11 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                             ChangeBelowDustException | InsufficientFundsException e) {
                         log.error(e.toString());
                         e.printStackTrace();
-                        new Popup<>().warning(e.toString()).show();
+                        new Popup<>(preferences).warning(e.toString()).show();
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    new Popup<>().error(e.toString()).show();
+                    new Popup<>(preferences).error(e.toString()).show();
                 }
             }
         });

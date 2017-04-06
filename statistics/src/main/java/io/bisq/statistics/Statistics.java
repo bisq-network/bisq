@@ -20,7 +20,7 @@ import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
-import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.P2PService;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -59,7 +59,7 @@ public class Statistics {
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
-            // Might come from another thread 
+            // Might come from another thread
             if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
                     throwable.getCause().getCause() instanceof BlockStoreException) {
                 log.error(throwable.getMessage());
@@ -99,7 +99,7 @@ public class Statistics {
         priceFeedService = injector.getInstance(PriceFeedService.class);
 
         // We need the price feed for market based offers
-        priceFeedService.setCurrencyCode(Preferences.getDefaultTradeCurrency().getCode());
+        priceFeedService.setCurrencyCode(PreferencesImpl.getDefaultTradeCurrency().getCode());
         priceFeedService.init(price -> log.debug("price " + price),
                 (errorMessage, throwable) -> log.warn(throwable.getMessage()));
     }

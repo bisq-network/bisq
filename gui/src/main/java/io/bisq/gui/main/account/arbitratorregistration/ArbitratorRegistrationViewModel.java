@@ -26,7 +26,7 @@ import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.network.p2p.NodeAddress;
@@ -52,7 +52,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     final BooleanProperty revokeButtonDisabled = new SimpleBooleanProperty(true);
     final ObjectProperty<Arbitrator> myArbitratorProperty = new SimpleObjectProperty<>();
 
-    final ObservableList<String> languageCodes = FXCollections.observableArrayList(LanguageUtil.getDefaultLanguageLocaleAsCode(Preferences.getDefaultLocale()));
+    final ObservableList<String> languageCodes = FXCollections.observableArrayList(LanguageUtil.getDefaultLanguageLocaleAsCode(PreferencesImpl.getDefaultLocale()));
     final ObservableList<String> allLanguageCodes = FXCollections.observableArrayList(LanguageUtil.getAllLanguageCodes());
     private boolean allDataValid;
     private final MapChangeListener<NodeAddress, Arbitrator> arbitratorMapChangeListener;
@@ -82,7 +82,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                 Arbitrator myRegisteredArbitrator = user.getRegisteredArbitrator();
                 myArbitratorProperty.set(myRegisteredArbitrator);
 
-                // We don't reset the languages in case of revocation, as its likely that the arbitrator will use the same again when he re-activate 
+                // We don't reset the languages in case of revocation, as its likely that the arbitrator will use the same again when he re-activate
                 // registration later
                 if (myRegisteredArbitrator != null)
                     languageCodes.setAll(myRegisteredArbitrator.getLanguageCodes());
@@ -146,7 +146,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
         if (allDataValid) {
             AddressEntry arbitratorDepositAddressEntry = walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR);
             String registrationSignature = arbitratorManager.signStorageSignaturePubKey(registrationKey);
-            // TODO not impl in UI    
+            // TODO not impl in UI
             String emailAddress = null;
             Arbitrator arbitrator = new Arbitrator(
                     p2PService.getAddress(),

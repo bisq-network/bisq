@@ -127,7 +127,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         String key = "supportInfo";
         if (!DevEnv.DEV_MODE)
-            new Popup().backgroundInfo(Res.get("support.backgroundInfo"))
+            new Popup(preferences).backgroundInfo(Res.get("support.backgroundInfo"))
                     .width(900)
                     .actionButtonTextWithGoTo("navigation.portfolio.pending")
                     .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class))

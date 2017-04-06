@@ -22,6 +22,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.main.MainView;
@@ -130,7 +131,7 @@ public abstract class Overlay<T extends Overlay> {
     protected Label headLineLabel;
     protected String dontShowAgainId;
     protected String dontShowAgainText;
-    private Preferences preferences;
+    protected Preferences preferences;
     protected ChangeListener<Number> positionListener;
     protected Timer centerTime;
     protected double buttonDistance = 20;
@@ -144,7 +145,8 @@ public abstract class Overlay<T extends Overlay> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Overlay() {
+    public Overlay(Preferences preferences) {
+        this.preferences = preferences;
     }
 
     public void show() {
@@ -320,7 +322,7 @@ public abstract class Overlay<T extends Overlay> {
 
     public T useReportBugButton() {
         this.closeButtonText = Res.get("shared.reportBug");
-        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bisq/bisq/issues"));
+        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bisq/bisq/issues", preferences));
         return (T) this;
     }
 
@@ -706,7 +708,7 @@ public abstract class Overlay<T extends Overlay> {
 
         gitHubButton.setOnAction(event -> {
             Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("https://github.com/bisq/bisq/issues");
+            GUIUtil.openWebPage("https://github.com/bisq/bisq/issues", preferences);
         });
 
         Button forumButton = new Button(Res.get("popup.reportError.forum"));
@@ -717,7 +719,7 @@ public abstract class Overlay<T extends Overlay> {
 
         forumButton.setOnAction(event -> {
             Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("http://forum.bisq.io");
+            GUIUtil.openWebPage("http://forum.bisq.io", preferences);
         });
     }
 
@@ -791,7 +793,7 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected double getDuration(double duration) {
-        return useAnimation && Preferences.useAnimations() ? duration : 1;
+        return useAnimation && PreferencesImpl.useAnimations() ? duration : 1;
     }
 
     @Override

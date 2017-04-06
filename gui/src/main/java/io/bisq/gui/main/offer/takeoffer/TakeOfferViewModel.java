@@ -24,6 +24,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.Trade;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
@@ -56,6 +57,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private final P2PService p2PService;
     private final Navigation navigation;
     private final BSFormatter formatter;
+    private final Preferences preferences;
 
     private String amountRange;
     private String paymentLabel;
@@ -105,7 +107,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     @Inject
     public TakeOfferViewModel(TakeOfferDataModel dataModel, BtcValidator btcValidator, P2PService p2PService,
-                              Navigation navigation, BSFormatter formatter) {
+                              Navigation navigation, BSFormatter formatter, Preferences preferences) {
         super(dataModel);
         this.dataModel = dataModel;
 
@@ -113,6 +115,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         this.p2PService = p2PService;
         this.navigation = navigation;
         this.formatter = formatter;
+        this.preferences = preferences;
 
         createListeners();
     }
@@ -218,7 +221,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             updateButtonDisableState();
             return true;
         } else {
-            new Popup().warning(Res.get("shared.notEnoughFunds",
+            new Popup(preferences).warning(Res.get("shared.notEnoughFunds",
                     formatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
                     formatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
@@ -272,7 +275,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         log.debug("applyOfferState state = " + state);
         offerWarning.set(null);
 
-        // We have 2 situations handled here: 
+        // We have 2 situations handled here:
         // 1. when clicking take offer in the offerbook screen, we do the availability check
         // 2. Before actually taking the offer in the take offer screen, we check again the availability as some time might have passed in the meantime
         // So we use the takeOfferRequested flag to display different network_messages depending on the context.

@@ -17,6 +17,7 @@ public class TacWindow extends Overlay<TacWindow> {
 
     @Inject
     public TacWindow(Preferences preferences) {
+        super(preferences);
         this.preferences = preferences;
         type = Type.Attention;
         width = 900;
@@ -59,7 +60,7 @@ public class TacWindow extends Overlay<TacWindow> {
     protected void addMessage() {
         super.addMessage();
         addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("tacWindow.arbitrationSystem"),
-                "https://bisq.io/arbitration_system.pdf", -6);
+                "https://bisq.io/arbitration_system.pdf", -6, preferences);
     }
 
     @Override

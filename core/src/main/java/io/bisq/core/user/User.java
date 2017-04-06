@@ -117,7 +117,7 @@ public final class User implements Persistable {
         } else {
             accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
 
-            acceptedLanguageLocaleCodes.add(LanguageUtil.getDefaultLanguageLocaleAsCode(Preferences.getDefaultLocale()));
+            acceptedLanguageLocaleCodes.add(LanguageUtil.getDefaultLanguageLocaleAsCode(PreferencesImpl.getDefaultLocale()));
             String english = LanguageUtil.getEnglishLanguageLocaleCode();
             if (!acceptedLanguageLocaleCodes.contains(english))
                 acceptedLanguageLocaleCodes.add(english);

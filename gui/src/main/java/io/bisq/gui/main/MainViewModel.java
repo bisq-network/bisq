@@ -56,6 +56,7 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.components.BalanceWithConfirmationTextField;
@@ -279,7 +280,7 @@ public class MainViewModel implements ViewModel {
             log.error("Startup timeout with unknown problem.");
             details = Res.get("popup.warning.unknownProblemAtStartup");
         }
-        startupTimeoutPopup = new Popup();
+        startupTimeoutPopup = new Popup(preferences);
         startupTimeoutPopup.warning(Res.get("popup.warning.startupFailed.timeout", details))
                 .useShutDownButton()
                 .show();
@@ -447,11 +448,11 @@ public class MainViewModel implements ViewModel {
                             log.error(exception.getMessage());
                             // Ugly, but no other way to cover that specific case
                             if (exception.getMessage().equals("Store file is already locked by another process")) {
-                                new Popup().warning(Res.get("popup.warning.startupFailed.twoInstances"))
+                                new Popup(preferences).warning(Res.get("popup.warning.startupFailed.twoInstances"))
                                         .useShutDownButton()
                                         .show();
                             } else {
-                                new Popup().error(Res.get("popup.error.walletException",
+                                new Popup(preferences).error(Res.get("popup.error.walletException",
                                         exception.getMessage()))
                                         .show();
                             }
@@ -537,7 +538,7 @@ public class MainViewModel implements ViewModel {
         try {
             daoManager.onAllServicesInitialized();
         } catch (BsqBlockchainException e) {
-            new Popup<>().error(e.toString()).show();
+            new Popup<>(preferences).error(e.toString()).show();
         }
 
         setupBtcNumPeersWatcher();
@@ -557,7 +558,7 @@ public class MainViewModel implements ViewModel {
         String remindPasswordAndBackupKey = "remindPasswordAndBackup";
         user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
             if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(remindPasswordAndBackupKey) && change.wasAdded()) {
-                new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
+                new Popup<>(preferences).headLine(Res.get("popup.securityRecommendation.headline"))
                         .information(Res.get("popup.securityRecommendation.msg"))
                         .dontShowAgainId(remindPasswordAndBackupKey, preferences)
                         .show();
@@ -601,7 +602,7 @@ public class MainViewModel implements ViewModel {
                     e.printStackTrace();
                     String msg = Res.get("popup.warning.cryptoTestFailed", e.getMessage());
                     log.error(msg);
-                    UserThread.execute(() -> new Popup<>().warning(msg)
+                    UserThread.execute(() -> new Popup<>(preferences).warning(msg)
                             .useShutDownButton()
                             .useReportBugButton()
                             .show());
@@ -621,7 +622,7 @@ public class MainViewModel implements ViewModel {
                     .map(e -> e.getId() + "\n")
                     .collect(Collectors.toList()).toString()
                     .replace("[", "").replace("]", "");
-            new Popup<>()
+            new Popup<>(preferences)
                     .warning(Res.get("popup.warning.oldOffers.msg", offers))
                     .actionButtonText(Res.get("popup.warning.oldOffers.buttonText"))
                     .onAction(() -> openOfferManager.removeOpenOffers(outDatedOffers, null))
@@ -687,7 +688,7 @@ public class MainViewModel implements ViewModel {
                             key = "displayHalfTradePeriodOver" + trade.getId();
                             if (preferences.showAgain(key)) {
                                 preferences.dontShowAgain(key, true);
-                                new Popup().warning(Res.get("popup.warning.tradePeriod.halfReached",
+                                new Popup(preferences).warning(Res.get("popup.warning.tradePeriod.halfReached",
                                         trade.getShortId(),
                                         formatter.formatDateTime(maxTradePeriodDate)))
                                         .show();
@@ -697,7 +698,7 @@ public class MainViewModel implements ViewModel {
                             key = "displayTradePeriodOver" + trade.getId();
                             if (preferences.showAgain(key)) {
                                 preferences.dontShowAgain(key, true);
-                                new Popup().warning(Res.get("popup.warning.tradePeriod.ended",
+                                new Popup(preferences).warning(Res.get("popup.warning.tradePeriod.ended",
                                         trade.getShortId(),
                                         formatter.formatDateTime(maxTradePeriodDate)))
                                         .show();
@@ -883,11 +884,11 @@ public class MainViewModel implements ViewModel {
         if (alert != null &&
                 !alreadyDisplayed &&
                 (!alert.isUpdateInfo() || alert.isNewVersion()))
-            new DisplayAlertMessageWindow().alertMessage(alert).show();
+            new DisplayAlertMessageWindow(preferences).alertMessage(alert).show();
     }
 
     private void displayPrivateNotification(PrivateNotificationPayload privateNotification) {
-        new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
+        new Popup<>(preferences).headLine(Res.get("popup.privateNotification.headline"))
                 .attention(privateNotification.message)
                 .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
                 .onClose(privateNotificationManager::removePrivateNotification)
@@ -989,7 +990,7 @@ public class MainViewModel implements ViewModel {
         OKPayAccount okPayAccount = new OKPayAccount();
         okPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
         okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
-        okPayAccount.setSelectedTradeCurrency(Preferences.getDefaultTradeCurrency());
+        okPayAccount.setSelectedTradeCurrency(PreferencesImpl.getDefaultTradeCurrency());
         user.addPaymentAccount(okPayAccount);
 
         CryptoCurrencyAccount cryptoCurrencyAccount = new CryptoCurrencyAccount();

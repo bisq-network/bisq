@@ -27,6 +27,7 @@ import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.Contract;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.BSFormatter;
@@ -61,7 +62,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ContractWindow(DisputeManager disputeManager, BSFormatter formatter) {
+    public ContractWindow(DisputeManager disputeManager, BSFormatter formatter, Preferences preferences) {
+        super(preferences);
         this.disputeManager = disputeManager;
         this.formatter = formatter;
         type = Type.Confirmation;
@@ -153,11 +155,11 @@ public class ContractWindow extends Overlay<ContractWindow> {
         if (showAcceptedCountryCodes) {
             String countries;
             Tooltip tooltip = null;
-            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes, Preferences.getDefaultLocale())) {
+            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes, PreferencesImpl.getDefaultLocale())) {
                 countries = Res.getWithCol("shared.allEuroCountries");
             } else {
                 countries = CountryUtil.getCodesString(acceptedCountryCodes);
-                tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes, Preferences.getDefaultLocale()));
+                tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes, PreferencesImpl.getDefaultLocale()));
             }
             TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.acceptedTakerCountries"), countries).second;
             if (tooltip != null) acceptedCountries.setTooltip(new Tooltip());

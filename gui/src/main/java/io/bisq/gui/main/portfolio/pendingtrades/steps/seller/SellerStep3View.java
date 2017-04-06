@@ -24,6 +24,7 @@ import io.bisq.common.util.Tuple3;
 import io.bisq.core.payment.payload.*;
 import io.bisq.core.trade.Contract;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
 import io.bisq.gui.components.TitledGroupBg;
@@ -119,7 +120,7 @@ public class SellerStep3View extends TradeStepView {
         String myTitle = "";
         String peersTitle = "";
         boolean isBlockChain = false;
-        String nameByCode = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale());
+        String nameByCode = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), PreferencesImpl.getDefaultLocale());
         Contract contract = trade.getContract();
         if (contract != null) {
             PaymentAccountPayload myPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
@@ -217,7 +218,7 @@ public class SellerStep3View extends TradeStepView {
             String key = "confirmPaymentReceived";
             if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
-                String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode(), Preferences.getDefaultLocale()));
+                String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode(), PreferencesImpl.getDefaultLocale()));
                 if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload)) {
                     message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getShortId());
 
@@ -227,7 +228,7 @@ public class SellerStep3View extends TradeStepView {
                     }
                 }
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
-                new Popup()
+                new Popup(preferences)
                         .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
                         .confirmation(message)
                         .width(700)
@@ -239,7 +240,7 @@ public class SellerStep3View extends TradeStepView {
                 confirmPaymentReceived();
             }
         } else {
-            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -249,7 +250,7 @@ public class SellerStep3View extends TradeStepView {
         String key = "confirmPayment" + trade.getId();
         String message;
         String tradeVolumeWithCode = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
-        String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale());
+        String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), PreferencesImpl.getDefaultLocale());
         String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
         String id = trade.getShortId();
         if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
@@ -272,25 +273,25 @@ public class SellerStep3View extends TradeStepView {
         }
         if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
             preferences.dontShowAgain(key, true);
-            new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
+            new Popup(preferences).headLine(Res.get("popup.attention.forTradeWithId", id))
                     .attention(message)
                     .show();
         }
     }
-    
+
     private void confirmPaymentReceived() {
         confirmButton.setDisable(true);
 
         model.dataModel.onFiatPaymentReceived(() -> {
-            // In case the first send failed we got the support button displayed. 
+            // In case the first send failed we got the support button displayed.
             // If it succeeds at a second try we remove the support button again.
             //TODO check for support. in case of a dispute we dont want to hide the button
-            //if (notificationGroup != null) 
+            //if (notificationGroup != null)
             //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
             confirmButton.setDisable(false);
             busyAnimation.stop();
-            new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
+            new Popup(preferences).warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 

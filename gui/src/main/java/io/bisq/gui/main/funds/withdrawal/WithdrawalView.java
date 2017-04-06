@@ -233,9 +233,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
                             withdrawToTextField.getText(), amountOfSelectedItems);
                 } catch (InsufficientFundsException e) {
-                    new Popup<>().warning(e.getMessage()).show();
+                    new Popup<>(preferences).warning(e.getMessage()).show();
                 } catch (Throwable t) {
-                    new Popup<>().error(Res.get("popup.error.createTx", t.toString())).show();
+                    new Popup<>(preferences).error(Res.get("popup.error.createTx", t.toString())).show();
                 }
                 if (feeEstimationTransaction != null) {
                     Coin fee = feeEstimationTransaction.getFee();
@@ -250,7 +250,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         } else {
                             double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
                             double kb = txSize / 1000d;
-                            new Popup().headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
+                            new Popup(preferences).headLine(Res.get("funds.withdrawal.confirmWithdrawalRequest"))
                                     .confirmation(Res.get("shared.sendFundsDetailsWithFee",
                                             formatter.formatCoinWithCode(senderAmountAsCoinProperty.get()),
                                             withdrawFromTextField.getText(),
@@ -265,13 +265,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                     .show();
                         }
                     } else {
-                        new Popup().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
+                        new Popup(preferences).warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
                     }
                 }
             } catch (Throwable e) {
                 e.printStackTrace();
                 log.error(e.toString());
-                new Popup().warning(e.getMessage()).show();
+                new Popup(preferences).warning(e.getMessage()).show();
             }
         }
     }
@@ -322,7 +322,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void openBlockExplorer(WithdrawalListItem item) {
         if (item.getAddressString() != null)
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), preferences);
     }
 
 
@@ -353,17 +353,17 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             reset();
             updateList();
         } catch (AddressFormatException e) {
-            new Popup().warning(Res.get("validation.btc.invalidAddress")).show();
+            new Popup(preferences).warning(Res.get("validation.btc.invalidAddress")).show();
         } catch (Wallet.DustySendRequested e) {
-            new Popup().warning(Res.get("validation.btc.amountBelowDust")).show();
+            new Popup(preferences).warning(Res.get("validation.btc.amountBelowDust")).show();
         } catch (AddressEntryException e) {
-            new Popup().error(e.getMessage()).show();
+            new Popup(preferences).error(e.getMessage()).show();
         } catch (InsufficientMoneyException e) {
             log.warn(e.getMessage());
-            new Popup().warning(Res.get("funds.withdrawal.notEnoughFunds")).show();
+            new Popup(preferences).warning(Res.get("funds.withdrawal.notEnoughFunds")).show();
         } catch (Throwable e) {
             log.warn(e.getMessage());
-            new Popup().warning(e.getMessage()).show();
+            new Popup(preferences).warning(e.getMessage()).show();
         }
     }
 
@@ -402,21 +402,21 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private boolean areInputsValid() {
         if (!senderAmountAsCoinProperty.get().isPositive()) {
-            new Popup().warning(Res.get("validation.negative")).show();
+            new Popup(preferences).warning(Res.get("validation.negative")).show();
             return false;
         }
 
         if (!btcAddressValidator.validate(withdrawToTextField.getText()).isValid) {
-            new Popup().warning(Res.get("validation.btc.invalidAddress")).show();
+            new Popup(preferences).warning(Res.get("validation.btc.invalidAddress")).show();
             return false;
         }
         if (!amountOfSelectedItems.isPositive()) {
-            new Popup().warning(Res.get("funds.withdrawal.warn.noSourceAddressSelected")).show();
+            new Popup(preferences).warning(Res.get("funds.withdrawal.warn.noSourceAddressSelected")).show();
             return false;
         }
 
         if (senderAmountAsCoinProperty.get().compareTo(amountOfSelectedItems) > 0) {
-            new Popup().warning(Res.get("funds.withdrawal.warn.amountExceeds")).show();
+            new Popup(preferences).warning(Res.get("funds.withdrawal.warn.amountExceeds")).show();
             return false;
         }
 

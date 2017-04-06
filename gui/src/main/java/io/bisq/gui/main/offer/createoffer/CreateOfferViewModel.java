@@ -84,7 +84,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     // If we would change the price representation in the domain we would not be backward compatible
     final StringProperty price = new SimpleStringProperty();
 
-    // Positive % value means always a better price form the maker's perspective: 
+    // Positive % value means always a better price form the maker's perspective:
     // Buyer (with fiat): lower price as market
     // Buyer (with altcoin): higher (display) price as market (display price is inverted)
     final StringProperty marketPriceMargin = new SimpleStringProperty();
@@ -296,7 +296,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 marketPriceMargin.set(formatter.formatToPercent(percentage));
                             } catch (NumberFormatException t) {
                                 marketPriceMargin.set("");
-                                new Popup().warning(Res.get("validation.NaN")).show();
+                                new Popup(preferences).warning(Res.get("validation.NaN")).show();
                             }
                         } else {
                             log.debug("We don't have a market price. We use the static price instead.");
@@ -312,7 +312,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     if (!newValue.isEmpty() && !newValue.equals("-")) {
                         double percentage = formatter.parsePercentStringToDouble(newValue);
                         if (percentage >= 1 || percentage <= -1) {
-                            new Popup().warning(Res.get("popup.warning.tooLargePercentageValue") + "\n" +
+                            new Popup(preferences).warning(Res.get("popup.warning.tooLargePercentageValue") + "\n" +
                                     Res.get("popup.warning.examplePercentageValue"))
                                     .show();
                         } else {
@@ -342,13 +342,13 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 dataModel.calculateTotalToPay();
                                 updateButtonDisableState();
                             } else {
-                                new Popup().warning(Res.get("popup.warning.noPriceFeedAvailable")).show();
+                                new Popup(preferences).warning(Res.get("popup.warning.noPriceFeedAvailable")).show();
                                 marketPriceMargin.set("");
                             }
                         }
                     }
                 } catch (Throwable t) {
-                    new Popup().warning(Res.get("validation.inputError", t.toString())).show();
+                    new Popup(preferences).warning(Res.get("validation.inputError", t.toString())).show();
                 }
             }
         };
@@ -573,7 +573,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             updateButtonDisableState();
             return true;
         } else {
-            new Popup().warning(Res.get("shared.notEnoughFunds",
+            new Popup(preferences).warning(Res.get("shared.notEnoughFunds",
                     formatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()),
                     formatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
@@ -673,7 +673,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     if (amount.get() != null)
                         amountValidationResult.set(isBtcInputValid(amount.get()));
 
-                    // We only check minAmountValidationResult if amountValidationResult is valid, otherwise we would get 
+                    // We only check minAmountValidationResult if amountValidationResult is valid, otherwise we would get
                     // triggered a close of the popup when the minAmountValidationResult is applied
                     if (amountValidationResult.getValue() != null && amountValidationResult.getValue().isValid && minAmount.get() != null)
                         minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
@@ -691,7 +691,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 String buyerSecurityDepositLowerAsDefault = "buyerSecurityDepositLowerAsDefault";
                 if (preferences.showAgain(buyerSecurityDepositLowerAsDefault) &&
                         formatter.parseToCoin(buyerSecurityDeposit.get()).compareTo(defaultSecurityDeposit) < 0) {
-                    new Popup<>()
+                    new Popup<>(preferences)
                             .warning(Res.get("createOffer.tooLowSecDeposit.warning",
                                     formatter.formatCoinWithCode(defaultSecurityDeposit)))
                             .width(800)
@@ -739,7 +739,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private void displayPriceOutOfRangePopup() {
-        Popup popup = new Popup();
+        Popup popup = new Popup(preferences);
         popup.warning(Res.get("createOffer.priceOutSideOfDeviation",
                 formatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())))
                 .actionButtonText(Res.get("createOffer.changePrice"))

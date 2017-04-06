@@ -25,6 +25,7 @@ import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.Trade;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.HyperlinkWithIcon;
@@ -50,6 +51,8 @@ import javax.inject.Inject;
 @FxmlView
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
 
+    private final Preferences preferences;
+
     @FXML
     TableView<ClosedTradableListItem> tableView;
     @FXML
@@ -65,12 +68,14 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     @Inject
     public ClosedTradesView(ClosedTradesViewModel model, OfferDetailsWindow offerDetailsWindow,
-                            TradeDetailsWindow tradeDetailsWindow, PrivateNotificationManager privateNotificationManager, Stage stage) {
+                            TradeDetailsWindow tradeDetailsWindow, PrivateNotificationManager privateNotificationManager,
+                            Stage stage, Preferences preferences) {
         super(model);
         this.offerDetailsWindow = offerDetailsWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
         this.stage = stage;
+        this.preferences = preferences;
     }
 
     @Override
@@ -176,7 +181,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             };
 
             GUIUtil.exportCSV("tradeHistory.csv", headerConverter, contentConverter,
-                    new ClosedTradableListItem(null), sortedList, stage);
+                    new ClosedTradableListItem(null), sortedList, stage, preferences);
         });
     }
 
@@ -309,7 +314,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             Res.get("portfolio.closed.peerInfoIcon", hostName),
                                             numPastTrades,
                                             privateNotificationManager,
-                                            newItem.getTradable().getOffer());
+                                            newItem.getTradable().getOffer(), preferences);
                                     setPadding(new Insets(-2, 0, -2, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {

@@ -170,7 +170,7 @@ public class NotificationCenter {
         if (message != null) {
             String key = "NotificationCenter_" + phase.name() + trade.getId();
             if (preferences.showAgain(key)) {
-                Notification notification = new Notification().tradeHeadLine(trade.getShortId()).message(message);
+                Notification notification = new Notification(preferences).tradeHeadLine(trade.getShortId()).message(message);
                 if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(PendingTradesView.class)) {
                     notification.actionButtonTextWithGoTo("navigation.portfolio.pending")
                             .onAction(() -> {
@@ -215,7 +215,7 @@ public class NotificationCenter {
                     break;
             }
             if (message != null) {
-                Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
+                Notification notification = new Notification(preferences).disputeHeadLine(trade.getShortId()).message(message);
                 if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TraderDisputeView.class)) {
                     notification.actionButtonTextWithGoTo("navigation.support")
                             .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class))

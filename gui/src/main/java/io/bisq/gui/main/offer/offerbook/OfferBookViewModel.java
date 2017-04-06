@@ -34,6 +34,7 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.ActivatableViewModel;
@@ -144,7 +145,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
         } else {
             showAllTradeCurrenciesProperty.set(true);
-            selectedTradeCurrency = Preferences.getDefaultTradeCurrency();
+            selectedTradeCurrency = PreferencesImpl.getDefaultTradeCurrency();
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
 
@@ -327,7 +328,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         if (item != null) {
             Offer offer = item.getOffer();
             result = Res.getWithCol("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
-            result += "\n" + Res.getWithCol("shared.currency") + " " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode(), Preferences.getDefaultLocale());
+            result += "\n" + Res.getWithCol("shared.currency") + " " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode(), PreferencesImpl.getDefaultLocale());
 
             String methodCountryCode = offer.getCountryCode();
             if (methodCountryCode != null) {
@@ -341,15 +342,15 @@ class OfferBookViewModel extends ActivatableViewModel {
             }
 
             if (methodCountryCode != null)
-                result += "\n" + Res.get("offerbook.offerersBankSeat", CountryUtil.getNameByCode(methodCountryCode, Preferences.getDefaultLocale()));
+                result += "\n" + Res.get("offerbook.offerersBankSeat", CountryUtil.getNameByCode(methodCountryCode, PreferencesImpl.getDefaultLocale()));
 
             List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
             List<String> acceptedBanks = offer.getAcceptedBankIds();
             if (acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty()) {
-                if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes, Preferences.getDefaultLocale()))
+                if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes, PreferencesImpl.getDefaultLocale()))
                     result += Res.get("offerbook.offerersAcceptedBankSeatsEuro");
                 else
-                    result += Res.get("offerbook.offerersAcceptedBankSeats", CountryUtil.getNamesByCodesString(acceptedCountryCodes, Preferences.getDefaultLocale()));
+                    result += Res.get("offerbook.offerersAcceptedBankSeats", CountryUtil.getNamesByCodesString(acceptedCountryCodes, PreferencesImpl.getDefaultLocale()));
             } else if (acceptedBanks != null && !acceptedBanks.isEmpty()) {
                 if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK))
                     result += "\n" + Res.getWithCol("shared.bankName") + " " + acceptedBanks.get(0);
@@ -376,7 +377,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private void setMarketPriceFeedCurrency() {
         if (!preferences.isUseStickyMarketPrice() && isTabSelected) {
             if (showAllTradeCurrenciesProperty.get())
-                priceFeedService.setCurrencyCode(Preferences.getDefaultTradeCurrency().getCode());
+                priceFeedService.setCurrencyCode(PreferencesImpl.getDefaultTradeCurrency().getCode());
             else
                 priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
         }

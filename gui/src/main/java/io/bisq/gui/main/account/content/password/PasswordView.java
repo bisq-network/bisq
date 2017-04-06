@@ -22,6 +22,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.crypto.ScryptUtil;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.BusyAnimation;
@@ -48,6 +49,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     private final WalletsManager walletsManager;
     private final PasswordValidator passwordValidator;
+    private final Preferences preferences;
 
     private PasswordTextField passwordField;
     private PasswordTextField repeatedPasswordField;
@@ -64,9 +66,10 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private PasswordView(WalletsManager walletsManager, PasswordValidator passwordValidator) {
+    private PasswordView(WalletsManager walletsManager, PasswordValidator passwordValidator, Preferences preferences) {
         this.walletsManager = walletsManager;
         this.passwordValidator = passwordValidator;
+        this.preferences = preferences;
     }
 
     @Override
@@ -106,7 +109,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                 if (walletsManager.areWalletsEncrypted()) {
                     if (walletsManager.checkAESKey(aesKey)) {
                         walletsManager.decryptWallets(aesKey);
-                        new Popup()
+                        new Popup(preferences)
                                 .feedback(Res.get("password.walletDecrypted"))
                                 .show();
                         passwordField.setText("");
@@ -114,13 +117,13 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                         walletsManager.backupWallets();
                     } else {
                         pwButton.setDisable(false);
-                        new Popup()
+                        new Popup(preferences)
                                 .warning(Res.get("password.wrongPw"))
                                 .show();
                     }
                 } else {
                     walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
-                    new Popup()
+                    new Popup(preferences)
                             .feedback(Res.get("password.walletEncrypted"))
                             .show();
                     passwordField.setText("");

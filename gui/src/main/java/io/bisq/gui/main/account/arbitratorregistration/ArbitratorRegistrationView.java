@@ -24,6 +24,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -60,6 +61,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     private ChangeListener<Arbitrator> arbitratorChangeListener;
     private UnlockArbitrationRegistrationWindow unlockArbitrationRegistrationWindow;
     private ListChangeListener<String> listChangeListener;
+    private Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,8 +69,9 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ArbitratorRegistrationView(ArbitratorRegistrationViewModel model) {
+    private ArbitratorRegistrationView(ArbitratorRegistrationViewModel model, Preferences preferences) {
         super(model);
+        this.preferences = preferences;
     }
 
     @Override
@@ -96,7 +99,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             updateLanguageList();
 
             if (model.registrationPubKeyAsHex.get() == null && unlockArbitrationRegistrationWindow == null) {
-                unlockArbitrationRegistrationWindow = new UnlockArbitrationRegistrationWindow();
+                unlockArbitrationRegistrationWindow = new UnlockArbitrationRegistrationWindow(preferences);
                 unlockArbitrationRegistrationWindow.onClose(() -> unlockArbitrationRegistrationWindow = null)
                         .onKey(privKey -> model.setPrivKeyAndCheckPubKey(privKey))
                         .width(700)
@@ -214,30 +217,30 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         model.onRemoveLanguage(locale);
 
         if (languagesListView.getItems().size() == 0) {
-            new Popup().warning(Res.get("account.arbitratorRegistration.warn.min1Language")).show();
-            model.onAddLanguage(LanguageUtil.getDefaultLanguageLocaleAsCode(Preferences.getDefaultLocale()));
+            new Popup(preferences).warning(Res.get("account.arbitratorRegistration.warn.min1Language")).show();
+            model.onAddLanguage(LanguageUtil.getDefaultLanguageLocaleAsCode(PreferencesImpl.getDefaultLocale()));
         }
     }
 
     private void onRevoke() {
         if (model.isBootstrapped()) {
             model.onRevoke(
-                    () -> new Popup().feedback(Res.get("account.arbitratorRegistration.removedSuccess")).show(),
-                    (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.removedFailed",
+                    () -> new Popup(preferences).feedback(Res.get("account.arbitratorRegistration.removedSuccess")).show(),
+                    (errorMessage) -> new Popup(preferences).error(Res.get("account.arbitratorRegistration.removedFailed",
                             Res.get("shared.errorMessageInline", errorMessage))).show());
         } else {
-            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
     private void onRegister() {
         if (model.isBootstrapped()) {
             model.onRegister(
-                    () -> new Popup().feedback(Res.get("account.arbitratorRegistration.registerSuccess")).show(),
-                    (errorMessage) -> new Popup().error(Res.get("account.arbitratorRegistration.registerFailed",
+                    () -> new Popup(preferences).feedback(Res.get("account.arbitratorRegistration.registerSuccess")).show(),
+                    (errorMessage) -> new Popup(preferences).error(Res.get("account.arbitratorRegistration.registerFailed",
                             Res.get("shared.errorMessageInline", errorMessage))).show());
         } else {
-            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 }

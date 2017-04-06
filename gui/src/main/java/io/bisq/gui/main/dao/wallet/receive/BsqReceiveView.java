@@ -21,6 +21,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressTextField;
@@ -56,14 +57,15 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     private AddressTextField addressTextField;
     private InputTextField amountTextField;
     private TextField balanceTextField;
-
     private final BsqWalletService bsqWalletService;
+
     private final BsqFormatter formatter;
     private final BalanceUtil balanceUtil;
-
     private int gridRow = 0;
+
     private final String paymentLabelString;
     private Subscription amountTextFieldSubscription;
+    private final Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -71,11 +73,13 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter formatter, BalanceUtil balanceUtil) {
+    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter formatter, BalanceUtil balanceUtil,
+                           Preferences preferences) {
         this.bsqWalletService = bsqWalletService;
         this.formatter = formatter;
         this.balanceUtil = balanceUtil;
         paymentLabelString = Res.get("dao.wallet.receive.fundBSQWallet");
+        this.preferences = preferences;
     }
 
     @Override
@@ -95,7 +99,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         root.getChildren().add(qrCodeImageView);
 
-        addressTextField = addLabelAddressTextField(root, ++gridRow, Res.getWithCol("shared.address")).second;
+        addressTextField = addLabelAddressTextField(root, ++gridRow, Res.getWithCol("shared.address"), preferences).second;
         addressTextField.setPaymentLabel(paymentLabelString);
 
         amountTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.wallet.receive.amountOptional")).second;
@@ -113,9 +117,9 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
         });
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
-                        () -> new QRCodeWindow(getBitcoinURI()).show(),
+                        () -> new QRCodeWindow(getBitcoinURI(), preferences).show(),
                         200, TimeUnit.MILLISECONDS)
-        ));
+        , preferences));
         addressTextField.setAddress(bsqWalletService.freshReceiveAddress().toString());
         updateQRCode();
     }

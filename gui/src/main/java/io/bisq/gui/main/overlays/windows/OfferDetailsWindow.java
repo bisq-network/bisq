@@ -28,6 +28,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.components.BusyAnimation;
@@ -76,7 +77,9 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferDetailsWindow(BSFormatter formatter, Preferences preferences, User user, KeyRing keyRing, Navigation navigation) {
+    public OfferDetailsWindow(BSFormatter formatter, Preferences preferences, User user, KeyRing keyRing,
+                              Navigation navigation) {
+        super(preferences);
         this.formatter = formatter;
         this.preferences = preferences;
         this.user = user;
@@ -255,15 +258,15 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (showAcceptedCountryCodes) {
             String countries;
             Tooltip tooltip = null;
-            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes, Preferences.getDefaultLocale())) {
+            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes, PreferencesImpl.getDefaultLocale())) {
                 countries = Res.getWithCol("shared.allEuroCountries");
             } else {
                 if (acceptedCountryCodes.size() == 1) {
-                    countries = CountryUtil.getNameAndCode(acceptedCountryCodes.get(0), Preferences.getDefaultLocale());
+                    countries = CountryUtil.getNameAndCode(acceptedCountryCodes.get(0), PreferencesImpl.getDefaultLocale());
                     tooltip = new Tooltip(countries);
                 } else {
                     countries = CountryUtil.getCodesString(acceptedCountryCodes);
-                    tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes, Preferences.getDefaultLocale()));
+                    tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes, PreferencesImpl.getDefaultLocale()));
                 }
             }
             TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex,
@@ -299,7 +302,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         if (paymentMethodCountryCode != null)
             addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),
-                    CountryUtil.getNameAndCode(paymentMethodCountryCode, Preferences.getDefaultLocale()));
+                    CountryUtil.getNameAndCode(paymentMethodCountryCode, PreferencesImpl.getDefaultLocale()));
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.acceptedArbitrators"),
                 formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
@@ -376,7 +379,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                     takeOfferHandlerOptional.get().run();
                 }
             } else {
-                new Popup().warning(Res.get("offerDetailsWindow.warn.noArbitrator")).show();
+                new Popup(preferences).warning(Res.get("offerDetailsWindow.warn.noArbitrator")).show();
 
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class,
                         ArbitratorSelectionView.class);

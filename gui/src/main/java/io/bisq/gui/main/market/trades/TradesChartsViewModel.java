@@ -28,6 +28,7 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.gui.main.MainView;
@@ -116,7 +117,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         if (tradeCurrencyOptional.isPresent())
             selectedTradeCurrencyProperty.set(tradeCurrencyOptional.get());
         else
-            selectedTradeCurrencyProperty.set(Preferences.getDefaultTradeCurrency());
+            selectedTradeCurrencyProperty.set(PreferencesImpl.getDefaultTradeCurrency());
 
         tickUnit = TickUnit.values()[preferences.getTradeStatisticsTickUnitIndex()];
     }
@@ -183,7 +184,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
                 if (!preferences.isUseStickyMarketPrice()) {
                     if (showAllEntry)
-                        priceFeedService.setCurrencyCode(Preferences.getDefaultTradeCurrency().getCode());
+                        priceFeedService.setCurrencyCode(PreferencesImpl.getDefaultTradeCurrency().getCode());
                     else
                         priceFeedService.setCurrencyCode(code);
                 }
@@ -228,7 +229,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private void setMarketPriceFeedCurrency() {
         if (!preferences.isUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX) {
             if (showAllTradeCurrenciesProperty.get())
-                priceFeedService.setCurrencyCode(Preferences.getDefaultTradeCurrency().getCode());
+                priceFeedService.setCurrencyCode(PreferencesImpl.getDefaultTradeCurrency().getCode());
             else
                 priceFeedService.setCurrencyCode(getCurrencyCode());
         }

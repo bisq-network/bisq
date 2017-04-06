@@ -22,7 +22,7 @@ import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.payment.payload.SwishAccountPayload;
-import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 
 public final class SwishAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -30,7 +30,7 @@ public final class SwishAccount extends PaymentAccount {
 
     public SwishAccount() {
         super(PaymentMethod.SWISH);
-        setSingleTradeCurrency(new FiatCurrency("SEK", Preferences.getDefaultLocale()));
+        setSingleTradeCurrency(new FiatCurrency("SEK", PreferencesImpl.getDefaultLocale()));
     }
 
     @Override

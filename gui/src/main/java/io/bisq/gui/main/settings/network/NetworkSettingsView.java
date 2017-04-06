@@ -144,7 +144,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         useTorForBtcJCheckBox.setOnAction(event -> {
             boolean selected = useTorForBtcJCheckBox.isSelected();
             if (selected != preferences.getUseTorForBitcoinJ()) {
-                new Popup().information(Res.get("settings.net.needRestart"))
+                new Popup(preferences).information(Res.get("settings.net.needRestart"))
                         .actionButtonText(Res.get("shared.applyAndShutDown"))
                         .onAction(() -> {
                             preferences.setUseTorForBitcoinJ(selected);
@@ -180,7 +180,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 btcNodesPreFocusText = btcNodes.getText();
             }
             if (oldValue && !newValue && !btcNodesPreFocusText.equals(btcNodes.getText())) {
-                new Popup().information(Res.get("settings.net.needRestart"))
+                new Popup(preferences).information(Res.get("settings.net.needRestart"))
                         .actionButtonText(Res.get("shared.applyAndShutDown"))
                         .onAction(() -> {
                             if (btcNodes.getText().isEmpty()) {

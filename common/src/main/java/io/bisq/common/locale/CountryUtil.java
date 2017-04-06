@@ -161,7 +161,7 @@ public class CountryUtil {
     private static List<Locale> getAllCountryLocales() {
         List<Locale> allLocales = LocaleUtil.getAllLocales();
 
-        // Filter duplicate locale entries 
+        // Filter duplicate locale entries
         Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !locale.getCountry().isEmpty())
                 .collect(Collectors.toSet());
 
@@ -217,7 +217,7 @@ public class CountryUtil {
     }
 
     public static String getDefaultCountryCode(Locale locale) {
-        // might be set later in pref or config, so not use Preferences.getDefaultLocale() anywhere in the code
+        // might be set later in pref or config, so not use PreferencesImpl.getDefaultLocale() anywhere in the code
         return locale.getCountry();
     }
 

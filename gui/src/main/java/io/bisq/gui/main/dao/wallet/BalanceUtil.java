@@ -18,6 +18,7 @@
 package io.bisq.gui.main.dao.wallet;
 
 import io.bisq.core.btc.wallet.BsqWalletService;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BsqFormatter;
 import javafx.scene.control.TextField;
@@ -34,6 +35,7 @@ public class BalanceUtil {
 
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter formatter;
+    private final Preferences preferences;
     private TextField balanceTextField;
     private WalletEventListener walletEventListener;
 
@@ -42,9 +44,10 @@ public class BalanceUtil {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BalanceUtil(BsqWalletService bsqWalletService, BsqFormatter formatter) {
+    private BalanceUtil(BsqWalletService bsqWalletService, BsqFormatter formatter, Preferences preferences) {
         this.bsqWalletService = bsqWalletService;
         this.formatter = formatter;
+        this.preferences = preferences;
     }
 
     public void setBalanceTextField(TextField balanceTextField) {
@@ -92,7 +95,7 @@ public class BalanceUtil {
         bsqWalletService.requestBsqUtxo(() -> {
             balanceTextField.setText(formatter.formatCoinWithCode(bsqWalletService.getAvailableBalance()));
         }, errorMessage -> {
-            new Popup<>().warning(errorMessage);
+            new Popup<>(preferences).warning(errorMessage);
         });
     }
 

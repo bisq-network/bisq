@@ -25,7 +25,7 @@ import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
 import io.bisq.core.offer.Offer;
-import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.network.p2p.NodeAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 public class BSFormatter {
     protected static final Logger log = LoggerFactory.getLogger(BSFormatter.class);
 
-    protected Locale locale = Preferences.getDefaultLocale();
+    protected Locale locale = PreferencesImpl.getDefaultLocale();
     protected boolean useMilliBit;
     protected int scale = 3;
 
@@ -70,7 +70,7 @@ public class BSFormatter {
     @Inject
     public BSFormatter() {
         coinFormat = MonetaryFormat.BTC;
-        
+
       /*  if (user.tradeCurrencyProperty().get() == null)
             setFiatCurrencyCode(CurrencyUtil.getDefaultFiatCurrencyAsCode());
         else if (user.tradeCurrencyProperty().get() != null)
@@ -329,7 +329,7 @@ public class BSFormatter {
 
     public String formatVolumeLabel(String currencyCode, String postFix) {
         return Res.get("formatter.formatVolumeLabel",
-                CurrencyUtil.getNameByCode(currencyCode, Preferences.getDefaultLocale()),
+                CurrencyUtil.getNameByCode(currencyCode, PreferencesImpl.getDefaultLocale()),
                 postFix);
     }
 
@@ -715,7 +715,7 @@ public class BSFormatter {
     }
 
     public String getCurrencyNameAndCurrencyPair(String currencyCode) {
-        return CurrencyUtil.getNameByCode(currencyCode, Preferences.getDefaultLocale()) + " (" + getCurrencyPair(currencyCode) + ")";
+        return CurrencyUtil.getNameByCode(currencyCode, PreferencesImpl.getDefaultLocale()) + " (" + getCurrencyPair(currencyCode) + ")";
     }
 
     public String getPriceWithCurrencyCode(String currencyCode) {

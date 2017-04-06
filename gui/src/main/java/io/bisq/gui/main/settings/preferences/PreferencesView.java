@@ -24,6 +24,7 @@ import io.bisq.common.util.Tuple3;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -77,7 +78,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ComboBox<CryptoCurrency> cryptoCurrenciesComboBox;
     private Button resetDontShowAgainButton;
     // private ListChangeListener<TradeCurrency> displayCurrenciesListChangeListener;
-    final ObservableList<String> btcDenominations = FXCollections.observableArrayList(Preferences.getBtcDenominations());
+    final ObservableList<String> btcDenominations = FXCollections.observableArrayList(PreferencesImpl.getBtcDenominations());
     final ObservableList<BlockChainExplorer> blockExplorers;
     final ObservableList<String> languageCodes;
     final ObservableList<Country> countries;
@@ -165,7 +166,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 if (value <= 0.3) {
                     preferences.setMaxPriceDistanceInPercent(value);
                 } else {
-                    new Popup().warning(Res.get("setting.preferences.deviationToLarge")).show();
+                    new Popup(preferences).warning(Res.get("setting.preferences.deviationToLarge")).show();
                     UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
                 }
             } catch (NumberFormatException t) {
@@ -204,19 +205,19 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 try {
                     int withdrawalTxFeeInBytes = Integer.parseInt(transactionFeeInputTextField.getText());
                     if (withdrawalTxFeeInBytes * 1000 < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value) {
-                        new Popup().warning(Res.get("setting.preferences.txFeeMin")).show();
+                        new Popup(preferences).warning(Res.get("setting.preferences.txFeeMin")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else if (withdrawalTxFeeInBytes > 5000) {
-                        new Popup().warning(Res.get("setting.preferences.txFeeTooLarge")).show();
+                        new Popup(preferences).warning(Res.get("setting.preferences.txFeeTooLarge")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else {
                         preferences.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes);
                     }
                 } catch (NumberFormatException t) {
-                    new Popup().warning(Res.get("validation.integerOnly")).show();
+                    new Popup(preferences).warning(Res.get("validation.integerOnly")).show();
                     transactionFeeInputTextField.setText(estimatedFee);
                 } catch (Throwable t) {
-                    new Popup().warning(Res.get("validation.inputError", t.getMessage())).show();
+                    new Popup(preferences).warning(Res.get("validation.inputError", t.getMessage())).show();
                     transactionFeeInputTextField.setText(estimatedFee);
                 }
             }
@@ -280,7 +281,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                             label.setText(item.getNameAndCode());
                             removeButton.setOnAction(e -> {
                                 if (item.equals(preferences.getPreferredTradeCurrency())) {
-                                    new Popup().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
+                                    new Popup(preferences).warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
                                 } else {
                                     preferences.removeFiatCurrency(item);
                                     if (!allFiatCurrencies.contains(item))
@@ -330,7 +331,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                             label.setText(item.getNameAndCode());
                             removeButton.setOnAction(e -> {
                                 if (item.equals(preferences.getPreferredTradeCurrency())) {
-                                    new Popup().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
+                                    new Popup(preferences).warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
                                 } else {
                                     preferences.removeCryptoCurrency(item);
                                     if (!allCryptoCurrencies.contains(item))
@@ -430,7 +431,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             String selectedItem = userLanguageComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 preferences.setUserLanguage(selectedItem);
-                new Popup<>().information(Res.get("settings.preferences.languageChange"))
+                new Popup<>(preferences).information(Res.get("settings.preferences.languageChange"))
                         .closeButtonText(Res.get("shared.ok"))
                         .show();
             }

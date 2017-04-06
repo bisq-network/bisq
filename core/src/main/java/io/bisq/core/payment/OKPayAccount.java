@@ -22,7 +22,7 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.core.payment.payload.OKPayAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
-import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ public final class OKPayAccount extends PaymentAccount {
 
     public OKPayAccount() {
         super(PaymentMethod.OK_PAY);
-        tradeCurrencies.addAll(CurrencyUtil.getAllOKPayCurrencies(Preferences.getDefaultLocale()));
+        tradeCurrencies.addAll(CurrencyUtil.getAllOKPayCurrencies(PreferencesImpl.getDefaultLocale()));
     }
 
     @Override

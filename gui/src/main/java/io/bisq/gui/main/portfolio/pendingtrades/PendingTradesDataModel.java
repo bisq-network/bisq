@@ -345,7 +345,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 if (candidates.size() == 1)
                     doOpenDispute(isSupportTicket, candidates.get(0));
                 else if (candidates.size() > 1)
-                    new SelectDepositTxWindow().transactions(candidates)
+                    new SelectDepositTxWindow(preferences).transactions(candidates)
                             .onSelect(transaction -> doOpenDispute(isSupportTicket, transaction))
                             .closeButtonText(Res.get("shared.cancel"))
                             .show();
@@ -405,7 +405,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             if (p2PService.isBootstrapped()) {
                 sendOpenNewDisputeMessage(dispute, false);
             } else {
-                new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
+                new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
             }
         } else {
             log.warn("trade is null at doOpenDispute");
@@ -419,13 +419,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 (errorMessage, throwable) -> {
                     if ((throwable instanceof DisputeAlreadyOpenException)) {
                         errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");
-                        new Popup().warning(errorMessage)
+                        new Popup(preferences).warning(errorMessage)
                                 .actionButtonText(Res.get("portfolio.pending.openAgainDispute.button"))
                                 .onAction(() -> sendOpenNewDisputeMessage(dispute, true))
                                 .closeButtonText(Res.get("shared.cancel"))
                                 .show();
                     } else {
-                        new Popup().warning(errorMessage).show();
+                        new Popup(preferences).warning(errorMessage).show();
                     }
                 });
     }
