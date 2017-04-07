@@ -149,11 +149,15 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public CreateOfferViewModel(CreateOfferDataModel dataModel, FiatValidator fiatValidator,
-                                AltcoinValidator altcoinValidator, BtcValidator btcValidator,
+    public CreateOfferViewModel(CreateOfferDataModel dataModel,
+                                FiatValidator fiatValidator,
+                                AltcoinValidator altcoinValidator,
+                                BtcValidator btcValidator,
                                 SecurityDepositValidator securityDepositValidator,
-                                P2PService p2PService, PriceFeedService priceFeedService,
-                                Preferences preferences, Navigation navigation,
+                                P2PService p2PService,
+                                PriceFeedService priceFeedService,
+                                Preferences preferences,
+                                Navigation navigation,
                                 BSFormatter btcFormatter,
                                 BsqFormatter bsqFormatter) {
         super(dataModel);
@@ -418,8 +422,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 buyerSecurityDeposit.set(btcFormatter.formatCoin(newValue));
             else
                 buyerSecurityDeposit.set("");
-
-            applyMakerFee();
         };
 
 
@@ -436,7 +438,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private void applyMakerFee() {
         makerFee.set(getFormatter().formatCoin(dataModel.getMakerFee()));
-        log.error("applyMakerFee " + dataModel.getMakerFee());
         makerFeeCurrencyCode.set(dataModel.getCurrencyForMakerFeeBtc() ? "BTC" : "BSQ");
     }
 
@@ -511,6 +512,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
         buyerSecurityDeposit.set(btcFormatter.formatCoin(dataModel.getBuyerSecurityDeposit().get()));
 
+        applyMakerFee();
         return result;
     }
 
@@ -602,15 +604,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     }
 
-    public void setCurrencyForMakerFeeBtc(boolean currencyForMakerFeeBtc) {
+    void setCurrencyForMakerFeeBtc(boolean currencyForMakerFeeBtc) {
         dataModel.setCurrencyForMakerFeeBtc(currencyForMakerFeeBtc);
         applyMakerFee();
     }
-
-    private BSFormatter getFormatter() {
-        return dataModel.getCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Handle focus
@@ -797,7 +794,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get(), btcFormatter);
     }
 
-    public String getCreateOfferFee() {
+    public String getMakerFee() {
         //TODO use last bisq market price to estimate BSQ val
         final String perc = dataModel.getCurrencyForMakerFeeBtc() ?
                 GUIUtil.getPercentageOfTradeAmount(dataModel.getMakerFee(), dataModel.getAmount().get(), btcFormatter) :
@@ -965,4 +962,9 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             timeoutTimer = null;
         }
     }
+
+    private BSFormatter getFormatter() {
+        return dataModel.getCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
+    }
+
 }

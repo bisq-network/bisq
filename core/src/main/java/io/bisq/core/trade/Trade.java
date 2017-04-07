@@ -188,6 +188,7 @@ public abstract class Trade implements Tradable, Model {
     transient private ObjectProperty<Phase> statePhaseProperty;
     transient private ObjectProperty<DisputeState> disputeStateProperty;
     transient private ObjectProperty<TradePeriodState> tradePeriodStateProperty;
+
     // Trades are saved in the TradeList
     @Nullable
     transient private Storage<? extends TradableList> storage;
@@ -203,11 +204,12 @@ public abstract class Trade implements Tradable, Model {
     private Date takeOfferDate;
     private Coin tradeAmount;
     private final Coin txFee;
-    private final Coin takeOfferFee;
+    private final Coin takerFee;
+    private boolean isCurrencyForTakerFeeBtc;
     private long tradePrice;
     private NodeAddress tradingPeerNodeAddress;
     @Nullable
-    private String takeOfferFeeTxId;
+    private String takerFeeTxId;
     protected State state;
     private DisputeState disputeState = DisputeState.NONE;
     private TradePeriodState tradePeriodState = TradePeriodState.NORMAL;
@@ -234,10 +236,15 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // maker
-    protected Trade(Offer offer, Coin txFee, Coin takeOfferFee, Storage<? extends TradableList> storage) {
+    protected Trade(Offer offer,
+                    Coin txFee,
+                    Coin takerFee,
+                    boolean isCurrencyForTakerFeeBtc,
+                    Storage<? extends TradableList> storage) {
         this.offer = offer;
         this.txFee = txFee;
-        this.takeOfferFee = takeOfferFee;
+        this.takerFee = takerFee;
+        this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.storage = storage;
         this.takeOfferDate = new Date();
 
@@ -251,10 +258,15 @@ public abstract class Trade implements Tradable, Model {
     }
 
     // taker
-    protected Trade(Offer offer, Coin tradeAmount, Coin txFee, Coin takeOfferFee, long tradePrice, NodeAddress tradingPeerNodeAddress,
+    protected Trade(Offer offer, Coin tradeAmount,
+                    Coin txFee,
+                    Coin takerFee,
+                    boolean isCurrencyForTakerFeeBtc,
+                    long tradePrice,
+                    NodeAddress tradingPeerNodeAddress,
                     Storage<? extends TradableList> storage) {
 
-        this(offer, txFee, takeOfferFee, storage);
+        this(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, storage);
         this.tradeAmount = tradeAmount;
         this.tradePrice = tradePrice;
         this.tradingPeerNodeAddress = tradingPeerNodeAddress;
@@ -592,8 +604,8 @@ public abstract class Trade implements Tradable, Model {
         return txFee;
     }
 
-    public Coin getTakeOfferFee() {
-        return takeOfferFee;
+    public Coin getTakerFee() {
+        return takerFee;
     }
 
     public void setTakerContractSignature(String takerSignature) {
@@ -703,14 +715,20 @@ public abstract class Trade implements Tradable, Model {
         return contractHash;
     }
 
-    public void setTakeOfferFeeTxId(String takeOfferFeeTxId) {
-        this.takeOfferFeeTxId = takeOfferFeeTxId;
+    public void setTakerFeeTxId(String takerFeeTxId) {
+        this.takerFeeTxId = takerFeeTxId;
     }
 
     @org.jetbrains.annotations.Nullable
-    public String getTakeOfferFeeTxId() {
-        return takeOfferFeeTxId;
+    public String getTakerFeeTxId() {
+        return takerFeeTxId;
     }
+
+
+    public boolean isCurrencyForTakerFeeBtc() {
+        return isCurrencyForTakerFeeBtc;
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -770,7 +788,7 @@ public abstract class Trade implements Tradable, Model {
                 "\n\tdisputeState=" + disputeState +
                 "\n\ttradePeriodState=" + tradePeriodState +
                 "\n\tdepositTx=" + depositTx +
-                "\n\ttakeOfferFeeTxId=" + takeOfferFeeTxId +
+                "\n\ttakeOfferFeeTxId=" + takerFeeTxId +
                 "\n\tcontract=" + contract +
                 "\n\ttakerContractSignature.hashCode()='" + (takerContractSignature != null ?
                 takerContractSignature.hashCode() : "") + '\'' +
@@ -781,7 +799,7 @@ public abstract class Trade implements Tradable, Model {
                 "\n\tmediatorNodeAddress=" + mediatorNodeAddress +
                 "\n\ttakerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 "\n\ttxFee='" + txFee.toFriendlyString() + '\'' +
-                "\n\ttakeOfferFee='" + takeOfferFee.toFriendlyString() + '\'' +
+                "\n\ttakeOfferFee='" + takerFee.toFriendlyString() + '\'' +
                 "\n\terrorMessage='" + errorMessage + '\'' +
                 '}';
     }

@@ -43,7 +43,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
         try {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "TradeAmount must not be null");
-            checkNotNull(trade.getTakeOfferFeeTxId(), "TakeOfferFeeTxId must not be null");
+            checkNotNull(trade.getTakerFeeTxId(), "TakeOfferFeeTxId must not be null");
 
             BtcWalletService walletService = processModel.getWalletService();
             String id = processModel.getOffer().getId();
@@ -59,7 +59,8 @@ public class TakerSendPayDepositRequest extends TradeTask {
                     trade.getTradeAmount().value,
                     trade.getTradePrice().getValue(),
                     trade.getTxFee().getValue(),
-                    trade.getTakeOfferFee().getValue(),
+                    trade.getTakerFee().getValue(),
+                    trade.isCurrencyForTakerFeeBtc(),
                     processModel.getRawTransactionInputs(),
                     processModel.getChangeOutputValue(),
                     processModel.getChangeOutputAddress(),
@@ -68,7 +69,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
                     processModel.getPubKeyRing(),
                     processModel.getPaymentAccountPayload(trade),
                     processModel.getAccountId(),
-                    trade.getTakeOfferFeeTxId(),
+                    trade.getTakerFeeTxId(),
                     new ArrayList<>(processModel.getUser().getAcceptedArbitratorAddresses()),
                     new ArrayList<>(processModel.getUser().getAcceptedMediatorAddresses()),
                     trade.getArbitratorNodeAddress(),

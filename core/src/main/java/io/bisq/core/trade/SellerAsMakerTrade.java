@@ -24,26 +24,28 @@ import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.trade.protocol.MakerProtocol;
 import io.bisq.core.trade.protocol.SellerAsMakerProtocol;
 import io.bisq.network.p2p.NodeAddress;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 
+@Slf4j
 public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
-    private static final Logger log = LoggerFactory.getLogger(SellerAsMakerTrade.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SellerAsMakerTrade(Offer offer, Coin txFee, Coin takeOfferFee, Storage<? extends TradableList> storage) {
-        super(offer, txFee, takeOfferFee, storage);
+    public SellerAsMakerTrade(Offer offer,
+                              Coin txFee,
+                              Coin takeOfferFee,
+                              boolean isCurrencyForTakerFeeBtc,
+                              Storage<? extends TradableList> storage) {
+        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, storage);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {

@@ -49,7 +49,7 @@ public final class Contract implements Payload {
     public final OfferPayload offerPayload;
     private final long tradeAmount;
     private final long tradePrice;
-    public final String takeOfferFeeTxID;
+    public final String takerFeeTxID;
     public final NodeAddress arbitratorNodeAddress;
     public final NodeAddress mediatorNodeAddress;
     private final boolean isBuyerMakerAndSellerTaker;
@@ -75,7 +75,7 @@ public final class Contract implements Payload {
     public Contract(OfferPayload offerPayload,
                     Coin tradeAmount,
                     Price tradePrice,
-                    String takeOfferFeeTxID,
+                    String takerFeeTxID,
                     NodeAddress buyerNodeAddress,
                     NodeAddress sellerNodeAddress,
                     NodeAddress arbitratorNodeAddress,
@@ -96,7 +96,7 @@ public final class Contract implements Payload {
         this.buyerNodeAddress = buyerNodeAddress;
         this.sellerNodeAddress = sellerNodeAddress;
         this.tradeAmount = tradeAmount.value;
-        this.takeOfferFeeTxID = takeOfferFeeTxID;
+        this.takerFeeTxID = takerFeeTxID;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
         this.isBuyerMakerAndSellerTaker = isBuyerMakerAndSellerTaker;
@@ -182,7 +182,7 @@ public final class Contract implements Payload {
                 .setOfferPayload(offerPayload.toProto().getOfferPayload())
                 .setTradeAmount(tradeAmount)
                 .setTradePrice(tradePrice)
-                .setTakeOfferFeeTxId(takeOfferFeeTxID)
+                .setTakerFeeTxId(takerFeeTxID)
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProto())
                 .setMediatorNodeAddress(mediatorNodeAddress.toProto())
                 .setIsBuyerMakerAndSellerTaker(isBuyerMakerAndSellerTaker)
@@ -206,7 +206,7 @@ public final class Contract implements Payload {
                 "\n\toffer=" + offerPayload +
                 "\n\ttradeAmount=" + tradeAmount +
                 "\n\ttradePrice=" + tradePrice +
-                "\n\ttakeOfferFeeTxID='" + takeOfferFeeTxID + '\'' +
+                "\n\ttakerFeeTxID='" + takerFeeTxID + '\'' +
                 "\n\tarbitratorAddress=" + arbitratorNodeAddress +
                 "\n\tmediatorNodeAddress=" + mediatorNodeAddress +
                 "\n\tisBuyerMakerAndSellerTaker=" + isBuyerMakerAndSellerTaker +

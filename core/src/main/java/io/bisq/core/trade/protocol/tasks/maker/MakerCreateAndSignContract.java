@@ -46,7 +46,7 @@ public class MakerCreateAndSignContract extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            Preconditions.checkNotNull(trade.getTakeOfferFeeTxId(), "trade.getTakeOfferFeeTxId() must not be null");
+            Preconditions.checkNotNull(trade.getTakerFeeTxId(), "trade.getTakeOfferFeeTxId() must not be null");
 
             TradingPeer taker = processModel.tradingPeer;
             PaymentAccountPayload makerPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
@@ -69,7 +69,7 @@ public class MakerCreateAndSignContract extends TradeTask {
                     processModel.getOffer().getOfferPayload(),
                     trade.getTradeAmount(),
                     trade.getTradePrice(),
-                    trade.getTakeOfferFeeTxId(),
+                    trade.getTakerFeeTxId(),
                     buyerNodeAddress,
                     sellerNodeAddress,
                     trade.getArbitratorNodeAddress(),

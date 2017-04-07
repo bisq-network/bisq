@@ -69,7 +69,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             processModel.tradingPeer.setPubKeyRing(checkNotNull(payDepositRequest.takerPubKeyRing));
 
             processModel.tradingPeer.setAccountId(nonEmptyStringOf(payDepositRequest.takerAccountId));
-            trade.setTakeOfferFeeTxId(nonEmptyStringOf(payDepositRequest.takeOfferFeeTxId));
+            trade.setTakerFeeTxId(nonEmptyStringOf(payDepositRequest.takeOfferFeeTxId));
             processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(payDepositRequest.acceptedArbitratorNodeAddresses));
             processModel.setTakerAcceptedMediatorNodeAddresses(checkNotNull(payDepositRequest.acceptedMediatorNodeAddresses));
             if (payDepositRequest.acceptedArbitratorNodeAddresses.isEmpty())

@@ -167,7 +167,7 @@ class TransactionsListItem {
                 details = Res.get("funds.tx.createOfferFee", id);
             } else if (tradable instanceof Trade) {
                 Trade trade = (Trade) tradable;
-                if (trade.getTakeOfferFeeTxId() != null && trade.getTakeOfferFeeTxId().equals(txId)) {
+                if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().equals(txId)) {
                     details = Res.get("funds.tx.takeOfferFee", id);
                 } else {
                     Offer offer = trade.getOffer();

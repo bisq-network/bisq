@@ -266,11 +266,17 @@ public class TradeManager {
             PayDepositRequest payDepositRequest = (PayDepositRequest) message;
             Trade trade;
             if (offer.isBuyOffer())
-                trade = new BuyerAsMakerTrade(offer, Coin.valueOf(payDepositRequest.txFee),
-                        Coin.valueOf(payDepositRequest.takeOfferFee), tradableListStorage);
+                trade = new BuyerAsMakerTrade(offer,
+                        Coin.valueOf(payDepositRequest.txFee),
+                        Coin.valueOf(payDepositRequest.takerFee),
+                        payDepositRequest.isCurrencyForTakerFeeBtc,
+                        tradableListStorage);
             else
-                trade = new SellerAsMakerTrade(offer, Coin.valueOf(payDepositRequest.txFee),
-                        Coin.valueOf(payDepositRequest.takeOfferFee), tradableListStorage);
+                trade = new SellerAsMakerTrade(offer,
+                        Coin.valueOf(payDepositRequest.txFee),
+                        Coin.valueOf(payDepositRequest.takerFee),
+                        payDepositRequest.isCurrencyForTakerFeeBtc,
+                        tradableListStorage);
 
             trade.setStorage(tradableListStorage);
             initTrade(trade, trade.getProcessModel().getUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
@@ -325,7 +331,8 @@ public class TradeManager {
     // First we check if offer is still available then we create the trade with the protocol
     public void onTakeOffer(Coin amount,
                             Coin txFee,
-                            Coin takeOfferFee,
+                            Coin takerFee,
+                            boolean isCurrencyForTakerFeeBtc,
                             long tradePrice,
                             Coin fundsNeededForTrade,
                             Offer offer,
@@ -337,14 +344,17 @@ public class TradeManager {
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE)
-                        createTrade(amount, txFee, takeOfferFee, tradePrice, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
+                        createTrade(amount, txFee, takerFee, isCurrencyForTakerFeeBtc,
+                                tradePrice, fundsNeededForTrade, offer, paymentAccountId,
+                                useSavingsWallet, model, tradeResultHandler);
                 },
                 errorMessageHandler::handleErrorMessage);
     }
 
     private void createTrade(Coin amount,
                              Coin txFee,
-                             Coin takeOfferFee,
+                             Coin takerFee,
+                             boolean isCurrencyForTakerFeeBtc,
                              long tradePrice,
                              Coin fundsNeededForTrade,
                              Offer offer,
@@ -354,9 +364,11 @@ public class TradeManager {
                              TradeResultHandler tradeResultHandler) {
         Trade trade;
         if (offer.isBuyOffer())
-            trade = new SellerAsTakerTrade(offer, amount, txFee, takeOfferFee, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
+            trade = new SellerAsTakerTrade(offer, amount, txFee, takerFee, isCurrencyForTakerFeeBtc,
+                    tradePrice, model.getPeerNodeAddress(), tradableListStorage);
         else
-            trade = new BuyerAsTakerTrade(offer, amount, txFee, takeOfferFee, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
+            trade = new BuyerAsTakerTrade(offer, amount, txFee, takerFee, isCurrencyForTakerFeeBtc,
+                    tradePrice, model.getPeerNodeAddress(), tradableListStorage);
 
         trade.setTakerPaymentAccountId(paymentAccountId);
 

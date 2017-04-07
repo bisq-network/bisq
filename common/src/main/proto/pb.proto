@@ -468,7 +468,7 @@ message Contract {
     OfferPayload offer_payload = 1;
     int64 trade_amount = 2;
     int64 trade_price = 3;
-    string take_offer_fee_tx_id = 4;
+    string taker_fee_tx_id = 4;
     NodeAddress arbitrator_node_address = 5;
     bool is_buyer_maker_and_seller_taker = 6;
     string maker_account_id = 7;
@@ -484,7 +484,7 @@ message Contract {
     bytes maker_btc_pub_key = 17;
     bytes taker_btc_pub_key = 18;
     NodeAddress mediator_node_address = 19;
-    }
+}
 
 message PeerOpenedDisputeMessage {
     Dispute dispute = 1;
@@ -504,7 +504,7 @@ message PayDepositRequest {
     int64 trade_price = 3;
     bytes taker_multi_sig_pub_key = 4;
     int64 tx_fee = 5;
-    int64 take_offer_fee = 6;
+    int64 taker_fee = 6;
     repeated RawTransactionInput raw_transaction_inputs = 7;
     int64 change_output_value = 8;
     string change_output_address = 9;
@@ -512,12 +512,13 @@ message PayDepositRequest {
     PubKeyRing taker_pub_key_ring = 11;
     PaymentAccountPayload taker_payment_account_payload = 12;
     string taker_account_id = 13;
-    string take_offer_fee_tx_id = 14;
+    string taker_fee_tx_id = 14;
     repeated NodeAddress accepted_arbitrator_node_addresses = 15;
     repeated NodeAddress accepted_mediator_node_addresses = 16;
     NodeAddress arbitrator_node_address = 17;
     NodeAddress mediator_node_address = 18;
     NodeAddress sender_node_address = 19;
+    bool is_currency_for_taker_fee_btc = 20;
 }
 
 message RawTransactionInput {

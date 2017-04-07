@@ -399,7 +399,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 resultHandler);
     }
 
-    public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
+    void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         if (paymentAccount != null && !this.paymentAccount.equals(paymentAccount)) {
             volume.set(null);
             price.set(null);
@@ -409,7 +409,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         }
     }
 
-    public void onCurrencySelected(TradeCurrency tradeCurrency) {
+    void onCurrencySelected(TradeCurrency tradeCurrency) {
         if (tradeCurrency != null) {
             if (!this.tradeCurrency.equals(tradeCurrency)) {
                 volume.set(null);
@@ -457,6 +457,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
             calculateTotalToPay();
         }, null);
     }
+
+    void setCurrencyForMakerFeeBtc(boolean currencyForMakerFeeBtc) {
+        preferences.setPayFeeInBTC(currencyForMakerFeeBtc);
+        this.isCurrencyForMakerFeeBtc = currencyForMakerFeeBtc;
+        updateTradeFee();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -551,8 +558,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (direction != null && amount.get() != null && makerFee != null) {
-            Coin createOfferFee = isCurrencyForMakerFeeBtc ? makerFee : Coin.ZERO;
-            Coin feeAndSecDeposit = createOfferFee.add(txFeeAsCoin).add(getSecurityDeposit());
+            Coin optionalMakerFee = isCurrencyForMakerFeeBtc ? this.makerFee : Coin.ZERO;
+            Coin feeAndSecDeposit = optionalMakerFee.add(txFeeAsCoin).add(getSecurityDeposit());
             Coin total = isBuyOffer() ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
             totalToPayAsCoin.set(total);
             updateBalance();
@@ -669,12 +676,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
             long makerFeeAsLong = MathUtils.doubleToLong(makerFeeAsDouble);
             makerFee = Coin.valueOf(Math.max(makerFeeAsLong, FeeService.getMinMakerFee(isCurrencyForMakerFeeBtc)));
         }
-    }
-
-    public void setCurrencyForMakerFeeBtc(boolean currencyForMakerFeeBtc) {
-        preferences.setPayFeeInBTC(currencyForMakerFeeBtc);
-        this.isCurrencyForMakerFeeBtc = currencyForMakerFeeBtc;
-        updateTradeFee();
     }
 
 

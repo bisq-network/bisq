@@ -58,20 +58,24 @@ public class TakerCreateTakerFeeTx extends TradeTask {
             Address fundingAddress = addressEntry.getAddress();
             Address reservedForTradeAddress = reservedForTradeAddressEntry.getAddress();
             Address changeAddress = changeAddressEntry.getAddress();
-            Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createBtcTradingFeeTx(
-                    fundingAddress,
-                    reservedForTradeAddress,
-                    changeAddress,
-                    processModel.getFundsNeededForTrade(),
-                    processModel.getUseSavingsWallet(),
-                    trade.getTakeOfferFee(),
-                    trade.getTxFee(),
-                    selectedArbitrator.getBtcAddress());
+            if (trade.isCurrencyForTakerFeeBtc()) {
+                Transaction createTakeOfferFeeTx = processModel.getTradeWalletService().createBtcTradingFeeTx(
+                        fundingAddress,
+                        reservedForTradeAddress,
+                        changeAddress,
+                        processModel.getFundsNeededForTrade(),
+                        processModel.getUseSavingsWallet(),
+                        trade.getTakerFee(),
+                        trade.getTxFee(),
+                        selectedArbitrator.getBtcAddress());
 
-            processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
-            trade.setTakeOfferFeeTxId(createTakeOfferFeeTx.getHashAsString());
+                processModel.setTakeOfferFeeTx(createTakeOfferFeeTx);
+                trade.setTakerFeeTxId(createTakeOfferFeeTx.getHashAsString());
 
-            complete();
+                complete();
+            } else {
+                // TODO
+            }
         } catch (Throwable t) {
             failed(t);
         }

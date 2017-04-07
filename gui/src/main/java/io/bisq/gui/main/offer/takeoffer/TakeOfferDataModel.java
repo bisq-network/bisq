@@ -67,7 +67,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final BSFormatter formatter;
 
     private Coin takerFee;
-    private boolean isCurrencyForMakerFeeBtc;
+    private boolean isCurrencyForTakerFeeBtc;
     private Coin txFeeAsCoin;
     private Coin totalTxFeeAsCoin;
     private Coin securityDeposit;
@@ -80,7 +80,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
     // final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
     // final BooleanProperty isMainNet = new SimpleBooleanProperty();
-    final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>();
+    private final ObjectProperty<Coin> amount = new SimpleObjectProperty<>();
     final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> totalToPayAsCoin = new SimpleObjectProperty<>();
     final ObjectProperty<Coin> balance = new SimpleObjectProperty<>();
@@ -114,6 +114,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.formatter = formatter;
 
         // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
+        isCurrencyForTakerFeeBtc = preferences.getPayFeeInBTC();
     }
 
     @Override
@@ -165,10 +166,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
         checkArgument(!possiblePaymentAccounts.isEmpty(), "possiblePaymentAccounts.isEmpty()");
         paymentAccount = possiblePaymentAccounts.get(0);
 
-        amountAsCoin.set(offer.getAmount());
+        amount.set(offer.getAmount());
 
         if (DevEnv.DEV_MODE)
-            amountAsCoin.set(offer.getAmount());
+            amount.set(offer.getAmount());
 
         securityDeposit = offer.getDirection() == Offer.Direction.SELL ?
                 getBuyerSecurityDeposit() :
@@ -266,10 +267,13 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // have it persisted as well.
     void onTakeOffer(TradeResultHandler tradeResultHandler) {
         checkNotNull(totalTxFeeAsCoin, "totalTxFeeAsCoin must not be null");
+        checkNotNull(takerFee, "takerFee must not be null");
+
         Coin fundsNeededForTrade = totalToPayAsCoin.get().subtract(takerFee).subtract(txFeeAsCoin);
-        tradeManager.onTakeOffer(amountAsCoin.get(),
+        tradeManager.onTakeOffer(amount.get(),
                 txFeeAsCoin,
                 takerFee,
+                isCurrencyForTakerFeeBtc,
                 tradePrice.getValue(),
                 fundsNeededForTrade,
                 offer,
@@ -293,6 +297,12 @@ class TakeOfferDataModel extends ActivatableDataModel {
         updateBalance();
         if (!isWalletFunded.get())
             this.useSavingsWallet = false;
+    }
+
+    void setCurrencyForTakerFeeBtc(boolean currencyForTakerFeeBtc) {
+        preferences.setPayFeeInBTC(currencyForTakerFeeBtc);
+        this.isCurrencyForTakerFeeBtc = currencyForTakerFeeBtc;
+        updateTradeFee();
     }
 
 
@@ -337,6 +347,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
         walletService.removeBalanceListener(balanceListener);
     }
 
+    public boolean getCurrencyForTakerFeeBtc() {
+        return isCurrencyForTakerFeeBtc;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
@@ -344,9 +357,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     void calculateVolume() {
         if (tradePrice != null && offer != null &&
-                amountAsCoin.get() != null &&
-                !amountAsCoin.get().isZero()) {
-            volume.set(tradePrice.getVolumeByAmount(amountAsCoin.get()));
+                amount.get() != null &&
+                !amount.get().isZero()) {
+            volume.set(tradePrice.getVolumeByAmount(amount.get()));
             //volume.set(new ExchangeRate(tradePrice).coinToFiat(amountAsCoin.get()));
 
             updateBalance();
@@ -354,11 +367,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     void applyAmount(Coin amount) {
-        amountAsCoin.set(amount);
+        this.amount.set(amount);
 
-        takerFee = CoinUtil.getFeePerBtc(Coin.valueOf(FeeService.getTakerFeeInBtcPerBtc(isCurrencyForMakerFeeBtc)), amount);
-        takerFee = Coin.valueOf(Math.max(takerFee.value, FeeService.getMinTakerFee(isCurrencyForMakerFeeBtc)));
-
+        updateTradeFee();
         calculateTotalToPay();
     }
 
@@ -366,15 +377,25 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // Taker pays 2 times the tx fee because the mining fee might be different when maker created the offer
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
-        if (offer != null && amountAsCoin.get() != null && takerFee != null) {
-            Coin value = takerFee.add(totalTxFeeAsCoin).add(securityDeposit);
+        if (offer != null && amount.get() != null && takerFee != null) {
+            Coin optionalTakerFee = isCurrencyForTakerFeeBtc ? this.takerFee : Coin.ZERO;
+            Coin value = optionalTakerFee.add(totalTxFeeAsCoin).add(securityDeposit);
             if (getDirection() == Offer.Direction.SELL)
                 totalToPayAsCoin.set(value);
             else
-                totalToPayAsCoin.set(value.add(amountAsCoin.get()));
+                totalToPayAsCoin.set(value.add(amount.get()));
 
             updateBalance();
             log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
+        }
+    }
+
+    void updateTradeFee() {
+        Coin amount = this.amount.get();
+        if (amount != null) {
+            // TODO write unit test for that
+            takerFee = CoinUtil.getFeePerBtc(Coin.valueOf(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc)), amount);
+            takerFee = Coin.valueOf(Math.max(takerFee.value, FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc)));
         }
     }
 
@@ -427,27 +448,31 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement
-        if (offer != null && amountAsCoin.get() != null)
-            return !offer.getMinAmount().isGreaterThan(amountAsCoin.get());
+        if (offer != null && amount.get() != null)
+            return !offer.getMinAmount().isGreaterThan(amount.get());
         return true;
     }
 
     boolean isAmountLargerThanOfferAmount() {
         //noinspection SimplifiableIfStatement
-        if (amountAsCoin.get() != null && offer != null)
-            return amountAsCoin.get().isGreaterThan(offer.getAmount());
+        if (amount.get() != null && offer != null)
+            return amount.get().isGreaterThan(offer.getAmount());
         return true;
     }
 
     boolean wouldCreateDustForMaker() {
         //noinspection SimplifiableIfStatement
-        if (amountAsCoin.get() != null && offer != null) {
-            Coin customAmount = offer.getAmount().subtract(amountAsCoin.get());
+        if (amount.get() != null && offer != null) {
+            Coin customAmount = offer.getAmount().subtract(amount.get());
             Coin dustAndFee = totalTxFeeAsCoin.add(Transaction.MIN_NONDUST_OUTPUT);
             return customAmount.isPositive() && customAmount.isLessThan(dustAndFee);
         } else {
             return true;
         }
+    }
+
+    ReadOnlyObjectProperty<Coin> getAmount() {
+        return amount;
     }
 
     public PaymentMethod getPaymentMethod() {
@@ -463,7 +488,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     public Coin getTakerFee() {
-        checkNotNull(totalTxFeeAsCoin, "totalTxFeeAsCoin must not be null");
         return takerFee;
     }
 

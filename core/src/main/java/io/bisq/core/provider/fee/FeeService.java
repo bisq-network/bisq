@@ -135,7 +135,7 @@ public class FeeService {
     }
 
 
-    public static long getTakerFeeInBtcPerBtc(boolean currencyForTakerFeeBtc) {
+    public static long getTakerFeePerBtc(boolean currencyForTakerFeeBtc) {
         return currencyForTakerFeeBtc ? DEFAULT_TAKER_FEE_IN_BTC_PER_BTC : DEFAULT_TAKER_FEE_IN_BSQ_PER_BTC;
     }
 

@@ -233,7 +233,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 Offer offer = trade.getOffer();
                 return offer.getMakerFee().add(offer.getTxFee());
             } else {
-                return trade.getTakeOfferFee().add(trade.getTxFee().multiply(3));
+                return trade.getTakerFee().add(trade.getTxFee().multiply(3));
             }
         } else {
             log.error("Trade is null at getTotalFees");
