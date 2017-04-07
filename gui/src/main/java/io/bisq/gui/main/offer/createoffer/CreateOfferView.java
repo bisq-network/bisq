@@ -88,75 +88,47 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private final Navigation navigation;
     private final Transitions transitions;
     private final OfferDetailsWindow offerDetailsWindow;
+    private final Preferences preferences;
+    private final BSFormatter btcFormatter;
 
     private ScrollPane scrollPane;
     private GridPane gridPane;
-    private ImageView imageView;
-    private AddressTextField addressTextField;
-    private BalanceTextField balanceTextField;
     private TitledGroupBg payFundsTitledGroupBg;
     private BusyAnimation waitingForFundsBusyAnimation;
-    private Button nextButton;
-    private Button cancelButton1;
-    private Button cancelButton2;
-    private Button placeOfferButton;
-    private InputTextField amountTextField, minAmountTextField, fixedPriceTextField, marketBasedPriceTextField, volumeTextField;
-    private TextField currencyTextField;
+    private Button nextButton, cancelButton1, cancelButton2, placeOfferButton;
+    private ToggleButton fixedPriceButton, useMarketBasedPriceButton, payFeeInBsqButton, payFeeInBtcButton;
+    private InputTextField buyerSecurityDepositInputTextField, amountTextField, minAmountTextField,
+            fixedPriceTextField, marketBasedPriceTextField, volumeTextField;
+    private TextField currencyTextField, makerFeeTextField, sellerSecurityDepositTextField;
+    private AddressTextField addressTextField;
+    private BalanceTextField balanceTextField;
+    private TextFieldWithCopyIcon totalToPayTextField;
     private Label directionLabel, amountDescriptionLabel, addressLabel, balanceLabel,
             totalToPayLabel, totalToPayInfoIconLabel, amountBtcLabel, priceCurrencyLabel,
             volumeCurrencyLabel, minAmountBtcLabel, priceDescriptionLabel,
-            volumeDescriptionLabel, currencyTextFieldLabel,
-            currencyComboBoxLabel, waitingForFundsLabel, marketBasedPriceLabel;
-    private TextFieldWithCopyIcon totalToPayTextField;
+            volumeDescriptionLabel, currencyTextFieldLabel, makerFeeTextLabel, buyerSecurityDepositLabel,
+            currencyComboBoxLabel, waitingForFundsLabel, marketBasedPriceLabel, xLabel,
+            sellerSecurityDepositBtcLabel, sellerSecurityDepositLabel, buyerSecurityDepositBtcLabel, makerFeeCurrencyLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
     private PopOver totalToPayInfoPopover;
-    private ToggleButton fixedPriceButton, useMarketBasedPriceButton, payFeeInBsqButton, payFeeInBtcButton;
+    private ImageView imageView, qrCodeImageView;
+    private VBox fixedPriceBox, percentagePriceBox;
+    private HBox fundingHBox, firstRowHBox, secondRowHBox, toggleButtonsHBox, makerFeeRowHBox,
+            buyerSecurityDepositValueCurrencyBox, sellerSecurityDepositValueCurrencyBox;
 
+    private Subscription isWaitingForFundsSubscription, balanceSubscription, cancelButton2StyleSubscription;
+    private ChangeListener<Boolean> amountFocusedListener, minAmountFocusedListener, volumeFocusedListener,
+            buyerSecurityDepositFocusedListener, priceFocusedListener, placeOfferCompletedListener,
+            priceAsPercentageFocusedListener;
+    private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener;
+    private ChangeListener<Number> marketPriceAvailableListener;
+    private EventHandler<ActionEvent> currencyComboBoxSelectionHandler, paymentAccountsComboBoxSelectionHandler;
     private OfferView.CloseHandler closeHandler;
 
-    private ChangeListener<Boolean> amountFocusedListener;
-    private ChangeListener<Boolean> minAmountFocusedListener;
-    private ChangeListener<Boolean> priceFocusedListener, priceAsPercentageFocusedListener;
-    private ChangeListener<Boolean> volumeFocusedListener;
-    private ChangeListener<Boolean> buyerSecurityDepositFocusedListener;
-
-    private ChangeListener<String> errorMessageListener;
-    private ChangeListener<Boolean> placeOfferCompletedListener;
-    // private ChangeListener<Coin> feeFromFundingTxListener;
-    private EventHandler<ActionEvent> paymentAccountsComboBoxSelectionHandler;
-
-    private EventHandler<ActionEvent> currencyComboBoxSelectionHandler;
     private int gridRow = 0;
-    private final Preferences preferences;
-    private final BSFormatter btcFormatter;
-    private ChangeListener<String> tradeCurrencyCodeListener;
-    private ImageView qrCodeImageView;
-    private HBox fundingHBox;
-    private Subscription isWaitingForFundsSubscription;
-    private Subscription cancelButton2StyleSubscription;
-    private Subscription balanceSubscription;
     private final List<Node> editOfferElements = new ArrayList<>();
-    private boolean isActivated;
-    private Label xLabel;
-    private VBox fixedPriceBox;
-    private VBox percentagePriceBox;
-    private HBox secondRowHBox;
-    private HBox firstRowHBox;
-    private HBox toggleButtonsHBox;
-    private ChangeListener<Number> marketPriceAvailableListener;
-    private InputTextField buyerSecurityDepositInputTextField;
-    private TextField sellerSecurityDepositTextField;
-    private Label buyerSecurityDepositBtcLabel, sellerSecurityDepositBtcLabel;
-    private boolean clearXchangeWarningDisplayed;
-    private TextField makerFeeTextField;
-    private Label makerFeeCurrencyLabel;
-    private HBox makerFeeRowHBox;
-    private Label makerFeeTextLabel;
-    private Label buyerSecurityDepositLabel;
-    private Label sellerSecurityDepositLabel;
-    private HBox buyerSecurityDepositValueCurrencyBox;
-    private HBox sellerSecurityDepositValueCurrencyBox;
+    private boolean clearXchangeWarningDisplayed, isActivated;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -845,7 +817,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addOptionsGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, Res.get("createOffer.options"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, Res.get("createOffer.feeCurrencyAndDeposit"), Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 3);
 
         addMakerFeeRow();
