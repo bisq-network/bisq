@@ -21,6 +21,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.grapher.graphviz.GraphvizGrapher;
+import com.google.inject.grapher.graphviz.GraphvizModule;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
@@ -41,6 +43,7 @@ import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.SystemTray;
 import io.bisq.gui.common.UITimer;
 import io.bisq.gui.common.view.CachingViewLoader;
@@ -76,7 +79,9 @@ import org.reactfx.EventStreams;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
@@ -159,7 +164,15 @@ public class BisqApp extends Application {
             bisqAppModule = new BisqAppModule(env, primaryStage);
             injector = Guice.createInjector(bisqAppModule);
             injector.getInstance(InjectorViewFactory.class).setInjector(injector);
-            this.preferences = injector.getInstance(Preferences.class);
+/*
+            PrintWriter out = new PrintWriter(new File("grapher.dot"), "UTF-8");
+            Injector injector = Guice.createInjector(new GraphvizModule());
+            GraphvizGrapher grapher = injector.getInstance(GraphvizGrapher.class);
+            grapher.setOut(out);
+            grapher.setRankdir("TB");
+            grapher.graph(injector);
+*/
+            this.preferences = injector.getInstance(PreferencesImpl.class);
 
             Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
 

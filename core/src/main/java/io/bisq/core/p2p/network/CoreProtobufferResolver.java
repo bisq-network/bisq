@@ -77,10 +77,10 @@ import static io.bisq.generated.protobuffer.PB.Envelope.MessageCase.*;
 @Slf4j
 public class CoreProtobufferResolver implements ProtobufferResolver {
 
-    @Inject
+    //@Inject
     private Provider<AddressEntryList> addressEntryList;
 
-    @Inject
+    //@Inject
     private Provider<Preferences> preferencesProvider;
 
     @Override

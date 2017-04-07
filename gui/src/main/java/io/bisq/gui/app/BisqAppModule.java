@@ -62,20 +62,22 @@ class BisqAppModule extends AppModule {
 
     @Override
     protected void configure() {
+
         bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
+
         bind(CachingViewLoader.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
         bind(NotificationCenter.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
-        bind(ProtobufferResolver.class).to(CoreProtobufferResolver.class).in(Singleton.class);
 
         File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
         bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);
 
         File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.DIR_KEY));
         bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
+        bind(ProtobufferResolver.class).to(CoreProtobufferResolver.class).in(Singleton.class);
         bind(Preferences.class).to(PreferencesImpl.class).in(Singleton.class);
 
 

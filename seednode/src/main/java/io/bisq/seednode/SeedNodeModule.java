@@ -56,7 +56,6 @@ class SeedNodeModule extends AppModule {
     @Override
     protected void configure() {
         bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
-
         bind(Preferences.class).to(PreferencesImpl.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
@@ -70,7 +69,6 @@ class SeedNodeModule extends AppModule {
 
         File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.DIR_KEY));
         bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
-
 
         // ordering is used for shut down sequence
         install(tradeModule());
