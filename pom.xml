@@ -130,7 +130,7 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.53</version>
+            <version>1.56</version>
         </dependency>
 
         <!-- We need both bcpg-jdk15on and bcpg-jdk16 -->
@@ -143,13 +143,6 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpg-jdk16</artifactId>
             <version>1.46</version>
-        </dependency>
-
-        <!--http-->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>4.4.1</version>
         </dependency>
 
         <!--utils-->
@@ -166,7 +159,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>18.0</version>
+            <version>19.0</version>
         </dependency>
         <dependency>
             <groupId>org.fxmisc.easybind</groupId>
@@ -240,6 +233,12 @@
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java-util</artifactId>
             <version>3.2.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
             <scope>test</scope>
         </dependency>
         <dependency>
