@@ -19,12 +19,13 @@ package io.bisq.core.offer;
 
 import com.google.inject.Singleton;
 import io.bisq.common.app.AppModule;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
+@Slf4j
 public class OfferModule extends AppModule {
-    private static final Logger log = LoggerFactory.getLogger(OfferModule.class);
 
     public OfferModule(Environment env) {
         super(env);

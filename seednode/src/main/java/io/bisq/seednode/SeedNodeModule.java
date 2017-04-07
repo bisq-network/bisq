@@ -32,6 +32,7 @@ import io.bisq.core.filter.FilterModule;
 import io.bisq.core.offer.OfferModule;
 import io.bisq.core.p2p.network.CoreProtobufferResolver;
 import io.bisq.core.trade.TradeModule;
+import io.bisq.core.user.Preferences;
 import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
 import io.bisq.network.crypto.EncryptionServiceModule;
@@ -54,6 +55,9 @@ class SeedNodeModule extends AppModule {
 
     @Override
     protected void configure() {
+        bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
+
+        bind(Preferences.class).to(PreferencesImpl.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
@@ -67,7 +71,6 @@ class SeedNodeModule extends AppModule {
         File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.DIR_KEY));
         bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
 
-        bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
 
         // ordering is used for shut down sequence
         install(tradeModule());
