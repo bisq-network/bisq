@@ -742,9 +742,10 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected void addCloseButton() {
-        closeButton = new Button(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
-        closeButton.setOnAction(event -> doClose());
-
+        if (!hideCloseButton) {
+            closeButton = new Button(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
+            closeButton.setOnAction(event -> doClose());
+        }
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new Button(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
             actionButton.setDefaultButton(true);
@@ -758,7 +759,10 @@ public abstract class Overlay<T extends Overlay> {
             Pane spacer = new Pane();
             HBox hBox = new HBox();
             hBox.setSpacing(10);
-            hBox.getChildren().addAll(spacer, closeButton, actionButton);
+            if (!hideCloseButton)
+                hBox.getChildren().addAll(spacer, closeButton, actionButton);
+            else
+                hBox.getChildren().addAll(spacer, actionButton);
             HBox.setHgrow(spacer, Priority.ALWAYS);
 
             GridPane.setHalignment(hBox, HPos.RIGHT);
