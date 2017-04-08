@@ -40,11 +40,11 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class MakerFeeTx extends Task<PlaceOfferModel> {
-    private static final Logger log = LoggerFactory.getLogger(MakerFeeTx.class);
+public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
+    private static final Logger log = LoggerFactory.getLogger(CreateMakerFeeTx.class);
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public MakerFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
+    public CreateMakerFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
 
