@@ -22,7 +22,6 @@ import io.bisq.common.locale.CountryUtil;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.payment.payload.SepaAccountPayload;
-import io.bisq.core.user.Preferences;
 
 import java.util.List;
 
@@ -37,7 +36,7 @@ public final class SepaAccount extends CountryBasedPaymentAccount implements Ban
     @Override
     protected PaymentAccountPayload getPayload() {
         return new SepaAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod(),
-                CountryUtil.getAllSepaCountries(Preferences.getDefaultLocale()));
+                CountryUtil.getAllSepaCountries());
     }
 
     @Override

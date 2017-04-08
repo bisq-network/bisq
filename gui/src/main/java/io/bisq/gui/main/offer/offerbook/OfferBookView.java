@@ -26,6 +26,7 @@ import io.bisq.common.monetary.Volume;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -385,12 +386,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void onRemoveOpenOffer(Offer offer) {
         if (model.isBootstrapped()) {
             String key = "RemoveOfferWarning";
-            if (model.preferences.showAgain(key))
+            if (DontShowAgainLookup.showAgain(key))
                 new Popup().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(offer.getMakerFee())))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOffer(offer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
-                        .dontShowAgainId(key, model.preferences)
+                        .dontShowAgainId(key)
                         .show();
             else
                 doRemoveOffer(offer);
@@ -404,11 +405,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         model.onRemoveOpenOffer(offer,
                 () -> {
                     log.debug(Res.get("offerbook.removeOffer.success"));
-                    if (model.preferences.showAgain(key))
+                    if (DontShowAgainLookup.showAgain(key))
                         new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
                                 .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
-                                .dontShowAgainId(key, model.preferences)
+                                .dontShowAgainId(key)
                                 .show();
                 },
                 (message) -> {
@@ -759,7 +760,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     String tooltipText = hasTraded ?
                                             Res.get("peerInfoIcon.tooltip.offer.traded", hostName, numPastTrades) :
                                             Res.get("peerInfoIcon.tooltip.offer.notTraded", hostName);
-                                    Node peerInfoIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades, privateNotificationManager, newItem.getOffer());
+                                    Node peerInfoIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades,
+                                            privateNotificationManager, newItem.getOffer(), model.preferences);
                                     setPadding(new Insets(-2, 0, -2, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {

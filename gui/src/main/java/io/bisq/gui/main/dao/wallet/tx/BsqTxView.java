@@ -23,6 +23,7 @@ import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.blockchain.Tx;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -143,12 +144,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         if (!invalidBsqTransactions.isEmpty() && bsqBlockchainManager.isUtxoSyncWithChainHeadHeight()) {
             Set<String> txIds = invalidBsqTransactions.stream().map(t -> t.getHashAsString()).collect(Collectors.toSet());
             String key = "invalidBsqTransactionsWarning_" + txIds;
-            if (preferences.showAgain(key))
+            if (DontShowAgainLookup.showAgain(key))
                 new Popup().warning("We detected invalid Bsq transactions.\n" +
                         "This must not happen if you used the bisq application only to send or receive BSQ.\n\n" +
                         "invalidBsqTransactionIds=" + txIds.toString())
                         .width(800)
-                        .dontShowAgainId(key, preferences)
+                        .dontShowAgainId(key)
                         .show();
         }
     }

@@ -29,6 +29,7 @@ import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
@@ -77,9 +78,9 @@ public class GUIUtil {
 
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
         String key = "miningFeeInfo";
-        if (!DevEnv.DEV_MODE && Preferences.INSTANCE.showAgain(key)) {
+        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
             new Popup<>().information(Res.get("guiUtil.miningFeeInfo"))
-                    .dontShowAgainId(key, Preferences.INSTANCE)
+                    .dontShowAgainId(key)
                     .onClose(runnable::run)
                     .useIUnderstandButton()
                     .show();
@@ -287,12 +288,11 @@ public class GUIUtil {
 
     public static void openWebPage(String target) {
         String key = "warnOpenURLWhenTorEnabled";
-        final Preferences preferences = Preferences.INSTANCE;
-        if (preferences.showAgain(key)) {
+        if (DontShowAgainLookup.showAgain(key)) {
             new Popup<>().information(Res.get("guiUtil.openWebBrowser.warning", target))
                     .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
                     .onAction(() -> {
-                        preferences.dontShowAgain(key, true);
+                        DontShowAgainLookup.dontShowAgain(key, true);
                         doOpenWebPage(target);
                     })
                     .closeButtonText(Res.get("guiUtil.openWebBrowser.copyUrl"))
@@ -354,7 +354,7 @@ public class GUIUtil {
         new Popup().information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
-                .dontShowAgainId(key, preferences)
+                .dontShowAgainId(key)
                 .show();
     }
 }

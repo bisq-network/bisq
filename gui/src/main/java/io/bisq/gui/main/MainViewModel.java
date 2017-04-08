@@ -19,6 +19,7 @@ package io.bisq.gui.main;
 
 import com.google.inject.Inject;
 import io.bisq.common.Clock;
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
@@ -54,6 +55,7 @@ import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ViewModel;
@@ -557,12 +559,12 @@ public class MainViewModel implements ViewModel {
 
         showAppScreen.set(true);
 
-        String remindPasswordAndBackupKey = "remindPasswordAndBackup";
+        String key = "remindPasswordAndBackup";
         user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
-            if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(remindPasswordAndBackupKey) && change.wasAdded()) {
+            if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(key) && change.wasAdded()) {
                 new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
                         .information(Res.get("popup.securityRecommendation.msg"))
-                        .dontShowAgainId(remindPasswordAndBackupKey, preferences)
+                        .dontShowAgainId(key)
                         .show();
             }
         });
@@ -688,8 +690,8 @@ public class MainViewModel implements ViewModel {
                             break;
                         case HALF_REACHED:
                             key = "displayHalfTradePeriodOver" + trade.getId();
-                            if (preferences.showAgain(key)) {
-                                preferences.dontShowAgain(key, true);
+                            if (DontShowAgainLookup.showAgain(key)) {
+                                DontShowAgainLookup.dontShowAgain(key, true);
                                 new Popup().warning(Res.get("popup.warning.tradePeriod.halfReached",
                                         trade.getShortId(),
                                         formatter.formatDateTime(maxTradePeriodDate)))
@@ -698,8 +700,8 @@ public class MainViewModel implements ViewModel {
                             break;
                         case TRADE_PERIOD_OVER:
                             key = "displayTradePeriodOver" + trade.getId();
-                            if (preferences.showAgain(key)) {
-                                preferences.dontShowAgain(key, true);
+                            if (DontShowAgainLookup.showAgain(key)) {
+                                DontShowAgainLookup.dontShowAgain(key, true);
                                 new Popup().warning(Res.get("popup.warning.tradePeriod.ended",
                                         trade.getShortId(),
                                         formatter.formatDateTime(maxTradePeriodDate)))
@@ -992,7 +994,7 @@ public class MainViewModel implements ViewModel {
         OKPayAccount okPayAccount = new OKPayAccount();
         okPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
         okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
-        okPayAccount.setSelectedTradeCurrency(Preferences.getDefaultTradeCurrency());
+        okPayAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
         user.addPaymentAccount(okPayAccount);
 
         CryptoCurrencyAccount cryptoCurrencyAccount = new CryptoCurrencyAccount();

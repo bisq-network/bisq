@@ -23,6 +23,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple3;
 import io.bisq.core.payment.payload.*;
 import io.bisq.core.trade.Contract;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
@@ -119,7 +120,7 @@ public class SellerStep3View extends TradeStepView {
         String myTitle = "";
         String peersTitle = "";
         boolean isBlockChain = false;
-        String nameByCode = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale());
+        String nameByCode = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
         Contract contract = trade.getContract();
         if (contract != null) {
             PaymentAccountPayload myPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
@@ -215,9 +216,9 @@ public class SellerStep3View extends TradeStepView {
         if (model.p2PService.isBootstrapped()) {
             Preferences preferences = model.dataModel.preferences;
             String key = "confirmPaymentReceived";
-            if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
+            if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
-                String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode(), Preferences.getDefaultLocale()));
+                String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
                 if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload)) {
                     message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.fiat", trade.getShortId());
 
@@ -249,7 +250,7 @@ public class SellerStep3View extends TradeStepView {
         String key = "confirmPayment" + trade.getId();
         String message;
         String tradeVolumeWithCode = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
-        String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), Preferences.getDefaultLocale());
+        String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
         String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
         String id = trade.getShortId();
         if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
@@ -270,8 +271,8 @@ public class SellerStep3View extends TradeStepView {
                 message = message + Res.get("portfolio.pending.step3_seller.bankCheck" + optionalHolderName.get(), part);
             }
         }
-        if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
-            preferences.dontShowAgain(key, true);
+        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+            DontShowAgainLookup.dontShowAgain(key, true);
             new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
                     .attention(message)
                     .show();

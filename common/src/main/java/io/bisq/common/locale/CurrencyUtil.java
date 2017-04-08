@@ -17,34 +17,19 @@
 
 package io.bisq.common.locale;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.bisq.common.GlobalSettings;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class CurrencyUtil {
-    private static final Logger log = LoggerFactory.getLogger(CurrencyUtil.class);
-
     private static List<FiatCurrency> allSortedFiatCurrencies;
-    private static Locale defaultLocale;
-    private static FiatCurrency defaultTradeCurrency;
-
-    public static void setDefaultLocale(Locale defaultLocale) {
-        CurrencyUtil.defaultLocale = defaultLocale;
-    }
-
-    public static void setDefaultTradeCurrency(FiatCurrency defaultTradeCurrency) {
-        CurrencyUtil.defaultTradeCurrency = defaultTradeCurrency;
-    }
 
     private static List<FiatCurrency> createAllSortedFiatCurrenciesList() {
-        return createAllSortedFiatCurrenciesList(defaultLocale);
-    }
-
-    private static List<FiatCurrency> createAllSortedFiatCurrenciesList(Locale locale) {
         Set<FiatCurrency> set = CountryUtil.getAllCountries().stream()
-                .map(country -> getCurrencyByCountryCode(country.code, locale))
+                .map(country -> getCurrencyByCountryCode(country.code))
                 .collect(Collectors.toSet());
         List<FiatCurrency> list = new ArrayList<>(set);
         list.sort(TradeCurrency::compareTo);
@@ -52,21 +37,16 @@ public class CurrencyUtil {
     }
 
     public static List<FiatCurrency> getAllSortedFiatCurrencies() {
-        return getAllSortedFiatCurrencies(defaultLocale);
-    }
-
-    public static List<FiatCurrency> getAllSortedFiatCurrencies(Locale locale) {
         if (Objects.isNull(allSortedFiatCurrencies)) {
-            allSortedFiatCurrencies = createAllSortedFiatCurrenciesList(locale);
+            allSortedFiatCurrencies = createAllSortedFiatCurrenciesList();
         }
         return allSortedFiatCurrencies;
     }
 
-    public static List<FiatCurrency> getAllMainFiatCurrencies() {
-        return getAllMainFiatCurrencies(defaultLocale, defaultTradeCurrency);
-    }
 
-    public static List<FiatCurrency> getAllMainFiatCurrencies(Locale locale, TradeCurrency defaultTradeCurrency) {
+    public static List<FiatCurrency> getMainFiatCurrencies() {
+        Locale locale = getLocale();
+        TradeCurrency defaultTradeCurrency = getDefaultTradeCurrency();
         List<FiatCurrency> list = new ArrayList<>();
         // Top traded currencies
         list.add(new FiatCurrency("USD", locale));
@@ -266,14 +246,15 @@ public class CurrencyUtil {
     /**
      * @return Sorted list of SEPA currencies with EUR as first item
      */
-    private static Set<TradeCurrency> getSortedSEPACurrencyCodes(Locale locale) {
-        return CountryUtil.getAllSepaCountries(locale).stream()
-                .map(country -> getCurrencyByCountryCode(country.code, locale))
+    private static Set<TradeCurrency> getSortedSEPACurrencyCodes() {
+        return CountryUtil.getAllSepaCountries().stream()
+                .map(country -> getCurrencyByCountryCode(country.code))
                 .collect(Collectors.toSet());
     }
 
     // At OKPay you can exchange internally those currencies
-    public static List<TradeCurrency> getAllOKPayCurrencies(Locale locale) {
+    public static List<TradeCurrency> getAllOKPayCurrencies() {
+        Locale locale = getLocale();
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
                 new FiatCurrency("EUR", locale),
                 new FiatCurrency("USD", locale),
@@ -336,36 +317,34 @@ public class CurrencyUtil {
         }
     }
 
-    public static FiatCurrency getCurrencyByCountryCode(String countryCode) {
-        return getCurrencyByCountryCode(countryCode, defaultLocale);
-    }
 
-    public static FiatCurrency getCurrencyByCountryCode(String countryCode, Locale locale) {
-        return new FiatCurrency(Currency.getInstance(new Locale(LanguageUtil.getDefaultLanguage(locale), countryCode)).getCurrencyCode(), locale);
+    public static FiatCurrency getCurrencyByCountryCode(String countryCode) {
+        return new FiatCurrency(Currency.getInstance(new Locale(LanguageUtil.getDefaultLanguage(), countryCode)).getCurrencyCode());
     }
 
 
     public static String getNameByCode(String currencyCode) {
-        return getNameAndCode(currencyCode, defaultLocale);
-    }
-
-    public static String getNameByCode(String currencyCode, Locale locale) {
         if (isCryptoCurrency(currencyCode))
             return getCryptoCurrency(currencyCode).get().getName();
         else
             try {
-                return Currency.getInstance(currencyCode).getDisplayName(locale);
+                return Currency.getInstance(currencyCode).getDisplayName();
             } catch (Throwable t) {
                 log.debug("No currency name available " + t.getMessage());
                 return currencyCode;
             }
     }
 
+
     public static String getNameAndCode(String currencyCode) {
-        return getNameAndCode(currencyCode, defaultLocale);
+        return getNameByCode(currencyCode) + " (" + currencyCode + ")";
     }
 
-    public static String getNameAndCode(String currencyCode, Locale locale) {
-        return getNameByCode(currencyCode, locale) + " (" + currencyCode + ")";
+    private static Locale getLocale() {
+        return GlobalSettings.getLocale();
+    }
+
+    public static TradeCurrency getDefaultTradeCurrency() {
+        return GlobalSettings.getDefaultTradeCurrency();
     }
 }

@@ -394,7 +394,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
                         break;
                     case SEPA_ACCOUNT_PAYLOAD:
                         SepaAccountPayload sepaAccountPayload = new SepaAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                                protoEntry.getMaxTradePeriod(), CountryUtil.getAllSepaCountries(CountryUtil.getDefaultLocale()));
+                                protoEntry.getMaxTradePeriod(), CountryUtil.getAllSepaCountries());
                         fillInCountryBasedPaymentAccountPayload(protoEntry, sepaAccountPayload);
                         result = sepaAccountPayload;
                         break;

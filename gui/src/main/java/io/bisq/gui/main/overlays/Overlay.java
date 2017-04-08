@@ -17,11 +17,12 @@
 
 package io.bisq.gui.main.overlays;
 
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.user.Preferences;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.main.MainView;
@@ -130,7 +131,6 @@ public abstract class Overlay<T extends Overlay> {
     protected Label headLineLabel;
     protected String dontShowAgainId;
     protected String dontShowAgainText;
-    private Preferences preferences;
     protected ChangeListener<Number> positionListener;
     protected Timer centerTime;
     protected double buttonDistance = 20;
@@ -148,7 +148,7 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     public void show() {
-        if (dontShowAgainId == null || preferences == null || preferences.showAgain(dontShowAgainId)) {
+        if (dontShowAgainId == null || DontShowAgainLookup.showAgain(dontShowAgainId)) {
             createGridPane();
             addHeadLine();
             addSeparator();
@@ -360,9 +360,8 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
-    public T dontShowAgainId(String key, Preferences preferences) {
+    public T dontShowAgainId(String key) {
         this.dontShowAgainId = key;
-        this.preferences = preferences;
         return (T) this;
     }
 
@@ -730,7 +729,7 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected void addDontShowAgainCheckBox() {
-        if (dontShowAgainId != null && preferences != null) {
+        if (dontShowAgainId != null) {
             // We might have set it and overridden the default, so we check if it is not set
             if (dontShowAgainText == null)
                 dontShowAgainText = Res.get("popup.doNotShowAgain");
@@ -738,7 +737,7 @@ public abstract class Overlay<T extends Overlay> {
             CheckBox dontShowAgainCheckBox = addCheckBox(gridPane, rowIndex, dontShowAgainText, buttonDistance - 1);
             GridPane.setColumnIndex(dontShowAgainCheckBox, 0);
             GridPane.setHalignment(dontShowAgainCheckBox, HPos.LEFT);
-            dontShowAgainCheckBox.setOnAction(e -> preferences.dontShowAgain(dontShowAgainId, dontShowAgainCheckBox.isSelected()));
+            dontShowAgainCheckBox.setOnAction(e -> DontShowAgainLookup.dontShowAgain(dontShowAgainId, dontShowAgainCheckBox.isSelected()));
         }
     }
 
@@ -791,7 +790,7 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected double getDuration(double duration) {
-        return useAnimation && Preferences.useAnimations() ? duration : 1;
+        return useAnimation && GlobalSettings.getUseAnimations() ? duration : 1;
     }
 
     @Override

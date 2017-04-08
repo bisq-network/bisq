@@ -21,6 +21,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.offer.OpenOffer;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
@@ -120,12 +121,12 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void onRemoveOpenOffer(OpenOffer openOffer) {
         if (model.isBootstrapped()) {
             String key = "RemoveOfferWarning";
-            if (preferences.showAgain(key))
+            if (DontShowAgainLookup.showAgain(key))
                 new Popup().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(openOffer.getOffer().getMakerFee())))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOpenOffer(openOffer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
-                        .dontShowAgainId(key, preferences)
+                        .dontShowAgainId(key)
                         .show();
             else
                 doRemoveOpenOffer(openOffer);
@@ -139,11 +140,11 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 () -> {
                     log.debug("Remove offer was successful");
                     String key = "WithdrawFundsAfterRemoveOfferInfo";
-                    if (preferences.showAgain(key))
+                    if (DontShowAgainLookup.showAgain(key))
                         new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
                                 .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
-                                .dontShowAgainId(key, preferences)
+                                .dontShowAgainId(key)
                                 .show();
                 },
                 (message) -> {

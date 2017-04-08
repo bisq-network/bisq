@@ -25,7 +25,6 @@ import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.CashDepositAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
@@ -83,9 +82,9 @@ public class CashDepositForm extends PaymentMethodForm {
 
         if (!showRequirements)
             FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.bank.country"),
-                    CountryUtil.getNameAndCode(countryCode, Preferences.getDefaultLocale()));
+                    CountryUtil.getNameAndCode(countryCode));
         else
-            requirements += "\n" + Res.get("payment.bank.country") + " " + CountryUtil.getNameAndCode(countryCode, Preferences.getDefaultLocale());
+            requirements += "\n" + Res.get("payment.bank.country") + " " + CountryUtil.getNameAndCode(countryCode);
 
         // We don't want to display more than 6 rows to avoid scrolling, so if we get too many fields we combine them horizontally
         int nrRows = 0;
@@ -313,7 +312,7 @@ public class CashDepositForm extends PaymentMethodForm {
             if (selectedItem != null) {
                 getCountryBasedPaymentAccount().setCountry(selectedItem);
                 String countryCode = selectedItem.code;
-                TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode, Preferences.getDefaultLocale());
+                TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode);
                 paymentAccount.setSingleTradeCurrency(currency);
                 currencyComboBox.setDisable(false);
                 currencyComboBox.getSelectionModel().select(currency);
@@ -421,10 +420,10 @@ public class CashDepositForm extends PaymentMethodForm {
 
         currencyComboBox = FormBuilder.addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency")).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
-        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies(Preferences.getDefaultLocale())));
+        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
         currencyComboBox.setOnAction(e -> {
             TradeCurrency selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
-            FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(countryComboBox.getSelectionModel().getSelectedItem().code, Preferences.getDefaultLocale());
+            FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(countryComboBox.getSelectionModel().getSelectedItem().code);
             if (!defaultCurrency.equals(selectedItem)) {
                 new Popup<>().warning(Res.get("payment.foreign.currency"))
                         .actionButtonText(Res.get("shared.yes"))

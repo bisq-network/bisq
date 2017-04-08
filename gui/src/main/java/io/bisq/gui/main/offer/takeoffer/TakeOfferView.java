@@ -29,6 +29,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
@@ -360,7 +361,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     .actionButtonText(Res.get("shared.faq"))
                     .onAction(() -> GUIUtil.openWebPage("https://bisq.io/faq#6"))
                     .useIUnderstandButton()
-                    .dontShowAgainId(key, preferences)
+                    .dontShowAgainId(key)
                     .show();
 
 
@@ -377,7 +378,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             key = "takeOfferFundWalletInfo";
             new Popup().headLine(Res.get("takeOffer.takeOfferFundWalletInfo.headline"))
                     .instruction(message)
-                    .dontShowAgainId(key, preferences)
+                    .dontShowAgainId(key)
                     .show();
         }
 
@@ -548,11 +549,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             } else //noinspection ConstantConditions,ConstantConditions
                 if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
                     String key = "takeOfferSuccessInfo";
-                    if (preferences.showAgain(key)) {
+                    if (DontShowAgainLookup.showAgain(key)) {
                         UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
                                 .feedback(Res.get("takeOffer.success.info"))
                                 .actionButtonTextWithGoTo("navigation.portfolio.pending")
-                                .dontShowAgainId(key, preferences)
+                                .dontShowAgainId(key)
                                 .onAction(() -> {
                                     UserThread.runAfter(
                                             () -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class)

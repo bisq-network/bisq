@@ -19,6 +19,7 @@ package io.bisq.common.locale;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
+import io.bisq.common.GlobalSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,25 +28,20 @@ import java.util.stream.Collectors;
 
 public class CountryUtil {
     private static final Logger log = LoggerFactory.getLogger(CountryUtil.class);
-    private static Locale defaultLocale;
 
-    public static List<Country> getAllSepaEuroCountries(Locale locale) {
+    public static List<Country> getAllSepaEuroCountries() {
         List<Country> list = new ArrayList<>();
         String[] codes = {"AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",
                 "IT", "LV", "LT", "LU", "MC", "MT", "NL", "PT", "SK", "SI", "ES"};
-        populateCountryListByCodes(list, codes, locale);
+        populateCountryListByCodes(list, codes);
         list.sort((a, b) -> a.name.compareTo(b.name));
 
         return list;
     }
 
     private static void populateCountryListByCodes(List<Country> list, String[] codes) {
-
-    }
-
-    private static void populateCountryListByCodes(List<Country> list, String[] codes, Locale defaultLocale) {
         for (String code : codes) {
-            Locale locale = new Locale(LanguageUtil.getDefaultLanguage(defaultLocale), code, "");
+            Locale locale = new Locale(LanguageUtil.getDefaultLanguage(), code, "");
             String regionCode = getRegionCode(locale.getCountry());
             final Region region = new Region(regionCode, getRegionName(regionCode));
             final Country country = new Country(locale.getCountry(), locale.getDisplayCountry(), region);
@@ -53,56 +49,49 @@ public class CountryUtil {
         }
     }
 
-    public static boolean containsAllSepaEuroCountries(List<String> countryCodesToCompare, Locale locale) {
+    public static boolean containsAllSepaEuroCountries(List<String> countryCodesToCompare) {
         countryCodesToCompare.sort(String::compareTo);
-        List<String> countryCodesBase = getAllSepaEuroCountries(locale).stream().map(c -> c.code).collect(Collectors.toList());
+        List<String> countryCodesBase = getAllSepaEuroCountries().stream().map(c -> c.code).collect(Collectors.toList());
         return countryCodesToCompare.toString().equals(countryCodesBase.toString());
     }
 
-    public static List<Country> getAllSepaNonEuroCountries(Locale locale) {
+    public static List<Country> getAllSepaNonEuroCountries() {
         List<Country> list = new ArrayList<>();
         String[] codes = {"BG", "HR", "CZ", "DK", "GB", "HU", "PL", "RO",
                 "SE", "IS", "NO", "LI", "CH"};
-        populateCountryListByCodes(list, codes, locale);
+        populateCountryListByCodes(list, codes);
         list.sort((a, b) -> a.name.compareTo(b.name));
         return list;
     }
 
-    public static List<Country> getAllSepaCountries(Locale locale) {
+    public static List<Country> getAllSepaCountries() {
+        Locale locale = getLocale();
         List<Country> list = new ArrayList<>();
-        list.addAll(getAllSepaEuroCountries(locale));
-        list.addAll(getAllSepaNonEuroCountries(locale));
+        list.addAll(getAllSepaEuroCountries());
+        list.addAll(getAllSepaNonEuroCountries());
         return list;
     }
 
-    public static Country getDefaultCountry(final Locale locale) {
-        String regionCode = getRegionCode(locale.getCountry());
+    public static Country getDefaultCountry() {
+        String regionCode = getRegionCode(getLocale().getCountry());
         final Region region = new Region(regionCode, getRegionName(regionCode));
-        return new Country(locale.getCountry(), locale.getDisplayCountry(), region);
+        return new Country(getLocale().getCountry(), getLocale().getDisplayCountry(), region);
     }
 
     public static String getNameByCode(String countryCode) {
-        return new Locale(LanguageUtil.getDefaultLanguage(defaultLocale), countryCode).getDisplayCountry();
-    }
-
-    public static String getNameByCode(String countryCode, Locale locale) {
-        return new Locale(LanguageUtil.getDefaultLanguage(locale), countryCode).getDisplayCountry();
+        return new Locale(LanguageUtil.getDefaultLanguage(), countryCode).getDisplayCountry();
     }
 
     public static String getNameAndCode(String countryCode) {
-        return getNameByCode(countryCode, defaultLocale);
-    }
-
-    public static String getNameAndCode(String countryCode, Locale locale) {
-        return getNameByCode(countryCode, locale) + " (" + countryCode + ")";
+        return getNameByCode(countryCode) + " (" + countryCode + ")";
     }
 
     public static String getCodesString(List<String> countryCodes) {
         return countryCodes.stream().collect(Collectors.joining(", "));
     }
 
-    public static String getNamesByCodesString(List<String> countryCodes, Locale locale) {
-        return getNamesByCodes(countryCodes, locale).stream().collect(Collectors.joining(",\n"));
+    public static String getNamesByCodesString(List<String> countryCodes) {
+        return getNamesByCodes(countryCodes).stream().collect(Collectors.joining(",\n"));
     }
 
     public static List<Region> getAllRegions() {
@@ -171,8 +160,8 @@ public class CountryUtil {
         return allCountryLocales;
     }
 
-    private static List<String> getNamesByCodes(List<String> countryCodes, Locale locale) {
-        return countryCodes.stream().map(s -> CountryUtil.getNameByCode(s, locale)).collect(Collectors.toList());
+    private static List<String> getNamesByCodes(List<String> countryCodes) {
+        return countryCodes.stream().map(s -> CountryUtil.getNameByCode(s)).collect(Collectors.toList());
     }
 
     // other source of countries: https://developers.braintreepayments.com/reference/general/countries/java
@@ -216,16 +205,12 @@ public class CountryUtil {
         }
     }
 
-    public static String getDefaultCountryCode(Locale locale) {
+    public static String getDefaultCountryCode() {
         // might be set later in pref or config, so not use Preferences.getDefaultLocale() anywhere in the code
-        return locale.getCountry();
+        return getLocale().getCountry();
     }
 
-    public static void setDefaultLocale(Locale defaultLocale) {
-        CountryUtil.defaultLocale = defaultLocale;
-    }
-
-    public static Locale getDefaultLocale() {
-        return defaultLocale;
+    private static Locale getLocale() {
+        return GlobalSettings.getLocale();
     }
 }

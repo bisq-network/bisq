@@ -28,6 +28,7 @@ import io.bisq.core.btc.AddressEntryException;
 import io.bisq.core.btc.InsufficientFundsException;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.MainView;
@@ -148,8 +149,8 @@ public class BuyerStep4View extends TradeStepView {
             withdrawAddressTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
         } else {
             String key = "tradeCompleted" + trade.getId();
-            if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
-                preferences.dontShowAgain(key, true);
+            if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+                DontShowAgainLookup.dontShowAgain(key, true);
                 new Notification().headLine(Res.get("notification.tradeCompleted.headline"))
                         .notification(Res.get("notification.tradeCompleted.msg"))
                         .autoClose()
@@ -185,7 +186,7 @@ public class BuyerStep4View extends TradeStepView {
                     } else {
                         BSFormatter formatter = model.formatter;
                         String key = "reviewWithdrawalAtTradeComplete";
-                        if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
+                        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                             int txSize = feeEstimationTransaction.bitcoinSerialize().length;
                             double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
                             double kb = txSize / 1000d;
@@ -206,7 +207,7 @@ public class BuyerStep4View extends TradeStepView {
                                         useSavingsWalletButton.setDisable(false);
                                         withdrawToExternalWalletButton.setDisable(false);
                                     })
-                                    .dontShowAgainId(key, preferences)
+                                    .dontShowAgainId(key)
                                     .show();
                         } else {
                             doWithdrawal(amount, fee);
@@ -265,7 +266,7 @@ public class BuyerStep4View extends TradeStepView {
                     .feedback(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.msg"))
                     .actionButtonTextWithGoTo("navigation.funds.transactions")
                     .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))
-                    .dontShowAgainId(key, preferences)
+                    .dontShowAgainId(key)
                     .show();
         }
         useSavingsWalletButton.setDisable(true);

@@ -19,6 +19,7 @@ package io.bisq.gui.main.market.trades;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
@@ -116,7 +117,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         if (tradeCurrencyOptional.isPresent())
             selectedTradeCurrencyProperty.set(tradeCurrencyOptional.get());
         else
-            selectedTradeCurrencyProperty.set(Preferences.getDefaultTradeCurrency());
+            selectedTradeCurrencyProperty.set(GlobalSettings.getDefaultTradeCurrency());
 
         tickUnit = TickUnit.values()[preferences.getTradeStatisticsTickUnitIndex()];
     }
@@ -183,7 +184,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
                 if (!preferences.getUseStickyMarketPrice()) {
                     if (showAllEntry)
-                        priceFeedService.setCurrencyCode(Preferences.getDefaultTradeCurrency().getCode());
+                        priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());
                     else
                         priceFeedService.setCurrencyCode(code);
                 }
@@ -228,7 +229,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private void setMarketPriceFeedCurrency() {
         if (!preferences.getUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX) {
             if (showAllTradeCurrenciesProperty.get())
-                priceFeedService.setCurrencyCode(Preferences.getDefaultTradeCurrency().getCode());
+                priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());
             else
                 priceFeedService.setCurrencyCode(getCurrencyCode());
         }

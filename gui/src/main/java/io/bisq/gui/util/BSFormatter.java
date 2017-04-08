@@ -17,6 +17,7 @@
 
 package io.bisq.gui.util;
 
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.Res;
@@ -25,7 +26,6 @@ import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
 import io.bisq.core.offer.Offer;
-import io.bisq.core.user.Preferences;
 import io.bisq.network.p2p.NodeAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -48,7 +48,6 @@ import java.util.stream.Collectors;
 public class BSFormatter {
     protected static final Logger log = LoggerFactory.getLogger(BSFormatter.class);
 
-    protected Locale locale = Preferences.getDefaultLocale();
     protected boolean useMilliBit;
     protected int scale = 3;
 
@@ -94,12 +93,6 @@ public class BSFormatter {
         scale = useMilliBit ? 0 : 3;
     }
 
-    /**
-     * Note that setting the locale does not set the currency as it might be independent.
-     */
-    public void setLocale(Locale locale) {
-        this.locale = locale;
-    }
 
     protected MonetaryFormat getMonetaryFormat() {
         if (useMilliBit)
@@ -329,7 +322,7 @@ public class BSFormatter {
 
     public String formatVolumeLabel(String currencyCode, String postFix) {
         return Res.get("formatter.formatVolumeLabel",
-                CurrencyUtil.getNameByCode(currencyCode, Preferences.getDefaultLocale()),
+                CurrencyUtil.getNameByCode(currencyCode),
                 postFix);
     }
 
@@ -437,8 +430,8 @@ public class BSFormatter {
 
     public String formatDateTime(Date date) {
         if (date != null) {
-            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
-            DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
+            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, getLocale());
+            DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, getLocale());
             return dateFormatter.format(date) + " " + timeFormatter.format(date);
         } else {
             return "";
@@ -447,8 +440,8 @@ public class BSFormatter {
 
     public String formatDateTimeSpan(Date dateFrom, Date dateTo) {
         if (dateFrom != null && dateTo != null) {
-            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
-            DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
+            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, getLocale());
+            DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, getLocale());
             return dateFormatter.format(dateFrom) + " " + timeFormatter.format(dateFrom) + " - " + timeFormatter.format(dateTo);
         } else {
             return "";
@@ -457,7 +450,7 @@ public class BSFormatter {
 
     public String formatTime(Date date) {
         if (date != null) {
-            DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
+            DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, getLocale());
             return timeFormatter.format(date);
         } else {
             return "";
@@ -466,7 +459,7 @@ public class BSFormatter {
 
     public String formatDate(Date date) {
         if (date != null) {
-            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
+            DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, getLocale());
             return dateFormatter.format(date);
         } else {
             return "";
@@ -718,7 +711,7 @@ public class BSFormatter {
     }
 
     public String getCurrencyNameAndCurrencyPair(String currencyCode) {
-        return CurrencyUtil.getNameByCode(currencyCode, Preferences.getDefaultLocale()) + " (" + getCurrencyPair(currencyCode) + ")";
+        return CurrencyUtil.getNameByCode(currencyCode) + " (" + getCurrencyPair(currencyCode) + ")";
     }
 
     public String getPriceWithCurrencyCode(String currencyCode) {
@@ -726,5 +719,9 @@ public class BSFormatter {
             return Res.get("shared.priceInCurForCur", "BTC", currencyCode);
         else
             return Res.get("shared.priceInCurForCur", currencyCode, "BTC");
+    }
+
+    public Locale getLocale() {
+        return GlobalSettings.getLocale();
     }
 }

@@ -131,7 +131,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
                     .width(900)
                     .actionButtonTextWithGoTo("navigation.portfolio.pending")
                     .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class))
-                    .dontShowAgainId(key, preferences)
+                    .dontShowAgainId(key)
                     .show();
     }
 

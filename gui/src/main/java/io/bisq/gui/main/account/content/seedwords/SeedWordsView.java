@@ -23,6 +23,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsManager;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -158,11 +159,11 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
             askForPassword();
         } else {
             String key = "showSeedWordsWarning";
-            if (preferences.showAgain(key)) {
+            if (DontShowAgainLookup.showAgain(key)) {
                 new Popup().warning(Res.get("account.seed.warn.noPw.msg"))
                         .actionButtonText(Res.get("account.seed.warn.noPw.yes"))
                         .onAction(() -> {
-                            preferences.dontShowAgain(key, true);
+                            DontShowAgainLookup.dontShowAgain(key, true);
                             initSeedWords(keyChainSeed);
                             showSeedScreen();
                         })

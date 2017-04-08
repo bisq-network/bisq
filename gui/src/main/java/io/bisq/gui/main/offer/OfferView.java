@@ -17,6 +17,7 @@
 
 package io.bisq.gui.main.offer;
 
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
@@ -116,7 +117,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         if (tradeCurrencyOptional.isPresent())
             tradeCurrency = tradeCurrencyOptional.get();
         else {
-            tradeCurrency = Preferences.getDefaultTradeCurrency();
+            tradeCurrency = GlobalSettings.getDefaultTradeCurrency();
         }
 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);

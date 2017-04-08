@@ -19,6 +19,7 @@ package io.bisq.gui.main.market.offerbook;
 
 import com.google.common.math.LongMath;
 import com.google.inject.Inject;
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.monetary.Price;
@@ -88,7 +89,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         if (tradeCurrencyOptional.isPresent())
             selectedTradeCurrencyProperty.set(tradeCurrencyOptional.get());
         else {
-            selectedTradeCurrencyProperty.set(Preferences.getDefaultTradeCurrency());
+            selectedTradeCurrencyProperty.set(GlobalSettings.getDefaultTradeCurrency());
         }
 
         offerBookListItems = offerBook.getOfferBookListItems();

@@ -29,6 +29,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
@@ -339,7 +340,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     .actionButtonText(Res.get("shared.faq"))
                     .onAction(() -> GUIUtil.openWebPage("https://bisq.io/faq#6"))
                     .useIUnderstandButton()
-                    .dontShowAgainId(key, preferences)
+                    .dontShowAgainId(key)
                     .show();
 
             key = "createOfferFundWalletInfo";
@@ -356,7 +357,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             log.error(message);
             new Popup().headLine(Res.get("createOffer.createOfferFundWalletInfo.headline"))
                     .instruction(message)
-                    .dontShowAgainId(key, preferences)
+                    .dontShowAgainId(key)
                     .show();
         }
 
@@ -638,10 +639,10 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             } else if (newValue) {
                 // We need a bit of delay to avoid issues with fade out/fade in of 2 popups
                 String key = "createOfferSuccessInfo";
-                if (preferences.showAgain(key)) {
+                if (DontShowAgainLookup.showAgain(key)) {
                     UserThread.runAfter(() -> new Popup().headLine(Res.get("createOffer.success.headline"))
                                     .feedback(Res.get("createOffer.success.info"))
-                                    .dontShowAgainId(key, preferences)
+                                    .dontShowAgainId(key)
                                     .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
                                     .onAction(() -> {
                                         UserThread.runAfter(() ->

@@ -6,6 +6,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.trade.*;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.main.MainView;
@@ -169,26 +170,26 @@ public class NotificationCenter {
 
         if (message != null) {
             String key = "NotificationCenter_" + phase.name() + trade.getId();
-            if (preferences.showAgain(key)) {
+            if (DontShowAgainLookup.showAgain(key)) {
                 Notification notification = new Notification().tradeHeadLine(trade.getShortId()).message(message);
                 if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(PendingTradesView.class)) {
                     notification.actionButtonTextWithGoTo("navigation.portfolio.pending")
                             .onAction(() -> {
-                                preferences.dontShowAgain(key, true);
+                                DontShowAgainLookup.dontShowAgain(key, true);
                                 navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
                                 if (selectItemByTradeIdConsumer != null)
                                     UserThread.runAfter(() -> selectItemByTradeIdConsumer.accept(trade.getId()), 1);
                             })
-                            .onClose(() -> preferences.dontShowAgain(key, true))
+                            .onClose(() -> DontShowAgainLookup.dontShowAgain(key, true))
                             .show();
                 } else if (selectedTradeId != null && !trade.getId().equals(selectedTradeId)) {
                     notification.actionButtonText(Res.get("notification.trade.selectTrade"))
                             .onAction(() -> {
-                                preferences.dontShowAgain(key, true);
+                                DontShowAgainLookup.dontShowAgain(key, true);
                                 if (selectItemByTradeIdConsumer != null)
                                     selectItemByTradeIdConsumer.accept(trade.getId());
                             })
-                            .onClose(() -> preferences.dontShowAgain(key, true))
+                            .onClose(() -> DontShowAgainLookup.dontShowAgain(key, true))
                             .show();
                 }
             }

@@ -112,7 +112,7 @@ public class TradeWalletService {
     @Inject
     public TradeWalletService(WalletsSetup walletsSetup, Preferences preferences) {
         this.walletsSetup = walletsSetup;
-        this.params = preferences.getBitcoinNetwork().getParameters();
+        this.params = WalletUtils.getParameters();
         walletsSetup.addSetupCompletedHandler(() -> {
             walletConfig = walletsSetup.getWalletConfig();
             wallet = walletsSetup.getBtcWallet();

@@ -17,15 +17,14 @@
 
 package io.bisq.common.locale;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.bisq.common.GlobalSettings;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class LanguageUtil {
-    private static final Logger log = LoggerFactory.getLogger(LanguageUtil.class);
-
     private static final List<String> userLanguageCodes = Arrays.asList(
             "en", // English
             "de", // German
@@ -79,7 +78,6 @@ public class LanguageUtil {
             "mt"  // Maltese
             */
     );
-    private static Locale defaultLocale;
 
     public static List<String> getAllLanguageCodes() {
         List<Locale> allLocales = LocaleUtil.getAllLocales();
@@ -96,17 +94,13 @@ public class LanguageUtil {
         return allLanguageCodes;
     }
 
-    public static String getDefaultLanguage(Locale locale) {
+    public static String getDefaultLanguage() {
         // might be set later in pref or config, so not use defaultLocale anywhere in the code
-        return locale.getLanguage();
+        return getLocale().getLanguage();
     }
 
     public static String getDefaultLanguageLocaleAsCode() {
-        return getDefaultLanguageLocaleAsCode(defaultLocale);
-    }
-
-    public static String getDefaultLanguageLocaleAsCode(Locale locale) {
-        return new Locale(LanguageUtil.getDefaultLanguage(locale), "").getLanguage();
+        return new Locale(LanguageUtil.getDefaultLanguage(), "").getLanguage();
     }
 
     public static String getEnglishLanguageLocaleCode() {
@@ -122,7 +116,7 @@ public class LanguageUtil {
         return userLanguageCodes;
     }
 
-    public static void setDefaultLocale(Locale defaultLocale) {
-        LanguageUtil.defaultLocale = defaultLocale;
+    private static Locale getLocale() {
+        return GlobalSettings.getLocale();
     }
 }

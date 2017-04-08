@@ -17,7 +17,7 @@
 
 package io.bisq.core.btc.wallet;
 
-import io.bisq.core.user.Preferences;
+import io.bisq.core.btc.BitcoinNetwork;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.TransactionOutput;
@@ -25,8 +25,10 @@ import org.bitcoinj.core.TransactionOutput;
 import javax.annotation.Nullable;
 
 public class WalletUtils {
-    public static NetworkParameters getParams() {
-        return Preferences.INSTANCE.getBitcoinNetwork().getParameters();
+    private static BitcoinNetwork bitcoinNetwork;
+
+    public static NetworkParameters getParameters() {
+        return getBitcoinNetwork().getParameters();
     }
 
     public static boolean isOutputScriptConvertableToAddress(TransactionOutput output) {
@@ -37,13 +39,21 @@ public class WalletUtils {
     @Nullable
     public static Address getAddressFromOutput(TransactionOutput output) {
         return isOutputScriptConvertableToAddress(output) ?
-                output.getScriptPubKey().getToAddress(getParams()) : null;
+                output.getScriptPubKey().getToAddress(getParameters()) : null;
     }
 
     @Nullable
     public static String getAddressStringFromOutput(TransactionOutput output) {
         return isOutputScriptConvertableToAddress(output) ?
-                output.getScriptPubKey().getToAddress(getParams()).toString() : null;
+                output.getScriptPubKey().getToAddress(getParameters()).toString() : null;
+    }
+
+    public static void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
+        WalletUtils.bitcoinNetwork = bitcoinNetwork;
+    }
+
+    public static BitcoinNetwork getBitcoinNetwork() {
+        return bitcoinNetwork;
     }
 
    /* public static boolean isRegTest() {

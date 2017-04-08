@@ -29,6 +29,7 @@ import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.user.Preferences;
 import io.bisq.network.DnsLookupTor;
@@ -96,6 +97,7 @@ public class WalletsSetup {
                         AddressEntryList addressEntryList,
                         UserAgent userAgent,
                         Preferences preferences,
+                        BisqEnvironment bisqEnvironment,
                         Socks5ProxyProvider socks5ProxyProvider,
                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
                         @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
@@ -108,7 +110,8 @@ public class WalletsSetup {
 
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);
 
-        params = preferences.getBitcoinNetwork().getParameters();
+        WalletUtils.setBitcoinNetwork(bisqEnvironment.getBitcoinNetwork());
+        params = WalletUtils.getParameters();
         walletDir = new File(appDir, "bitcoin");
 
         Storage<Long> storage = new Storage<>(walletDir);

@@ -712,8 +712,8 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             buyerSecurityDepositValidationResult.set(result);
             if (result.isValid) {
                 Coin defaultSecurityDeposit = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT;
-                String buyerSecurityDepositLowerAsDefault = "buyerSecurityDepositLowerAsDefault";
-                if (preferences.showAgain(buyerSecurityDepositLowerAsDefault) &&
+                String key = "buyerSecurityDepositLowerAsDefault";
+                if (preferences.showAgain(key) &&
                         btcFormatter.parseToCoin(buyerSecurityDeposit.get()).compareTo(defaultSecurityDeposit) < 0) {
                     new Popup<>()
                             .warning(Res.get("createOffer.tooLowSecDeposit.warning",
@@ -728,7 +728,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                             })
                             .closeButtonText(Res.get("createOffer.useLowerValue"))
                             .onClose(this::applyBuyerSecurityDepositOnFocusOut)
-                            .dontShowAgainId(buyerSecurityDepositLowerAsDefault, preferences)
+                            .dontShowAgainId(key)
                             .show();
                 } else {
                     applyBuyerSecurityDepositOnFocusOut();

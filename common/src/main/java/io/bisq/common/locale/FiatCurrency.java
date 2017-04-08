@@ -17,6 +17,7 @@
 
 package io.bisq.common.locale;
 
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,16 +35,11 @@ public final class FiatCurrency extends TradeCurrency {
 
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "★ ";
-    private static Locale defaultLocale;
-
-    public static void setDefaultLocale(Locale defaultLocale) {
-        FiatCurrency.defaultLocale = defaultLocale;
-    }
 
     private final Currency currency;
 
     public FiatCurrency(String currencyCode) {
-        this(currencyCode, defaultLocale);
+        this(currencyCode, getLocale());
     }
 
     public FiatCurrency(String currencyCode, Locale locale) {
@@ -52,13 +48,17 @@ public final class FiatCurrency extends TradeCurrency {
 
     @SuppressWarnings("WeakerAccess")
     public FiatCurrency(Currency currency) {
-        this(currency, defaultLocale);
+        this(currency, getLocale());
     }
 
     @SuppressWarnings("WeakerAccess")
     public FiatCurrency(Currency currency, Locale locale) {
         super(currency.getCurrencyCode(), currency.getDisplayName(locale), currency.getSymbol());
         this.currency = currency;
+    }
+
+    private static Locale getLocale() {
+        return GlobalSettings.getLocale();
     }
 
     @Override

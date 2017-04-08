@@ -29,6 +29,7 @@ public class PeerInfoIcon extends Group {
     private final int numTrades;
     private final PrivateNotificationManager privateNotificationManager;
     private final Offer offer;
+    private Preferences preferences;
     private final Map<String, String> peerTagMap;
     private final Label numTradesLabel;
     private final double SIZE = 26;
@@ -38,14 +39,15 @@ public class PeerInfoIcon extends Group {
     private final Pane tagPane;
     private final Pane numTradesPane;
 
-    public PeerInfoIcon(String hostName, String tooltipText, int numTrades, PrivateNotificationManager privateNotificationManager, Offer offer) {
+    public PeerInfoIcon(String hostName, String tooltipText, int numTrades, PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences) {
         this.hostName = hostName;
         this.tooltipText = tooltipText;
         this.numTrades = numTrades;
         this.privateNotificationManager = privateNotificationManager;
         this.offer = offer;
+        this.preferences = preferences;
 
-        peerTagMap = Preferences.INSTANCE.getPeerTagMap();
+        peerTagMap = preferences.getPeerTagMap();
 
         int maxIndices = 15;
         int intValue = 0;
@@ -104,12 +106,12 @@ public class PeerInfoIcon extends Group {
 
         getChildren().addAll(background, avatarImageView, tagPane, numTradesPane);
 
-        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer)
+        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences)
                 .hostName(hostName)
                 .numTrades(numTrades)
                 .position(localToScene(new Point2D(0, 0)))
                 .onSave(newTag -> {
-                    Preferences.INSTANCE.setTagForPeer(hostName, newTag);
+                    preferences.setTagForPeer(hostName, newTag);
                     updatePeerInfoIcon();
                 })
                 .show());

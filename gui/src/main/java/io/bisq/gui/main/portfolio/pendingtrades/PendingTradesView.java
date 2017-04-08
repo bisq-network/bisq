@@ -20,6 +20,7 @@ package io.bisq.gui.main.portfolio.pendingtrades;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.core.alert.PrivateNotificationManager;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.HyperlinkWithIcon;
@@ -53,6 +54,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final TradeDetailsWindow tradeDetailsWindow;
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
+    private Preferences preferences;
     @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
@@ -73,11 +75,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesView(PendingTradesViewModel model, TradeDetailsWindow tradeDetailsWindow, BSFormatter formatter, PrivateNotificationManager privateNotificationManager) {
+    public PendingTradesView(PendingTradesViewModel model, TradeDetailsWindow tradeDetailsWindow, BSFormatter formatter, PrivateNotificationManager privateNotificationManager, Preferences preferences) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
+        this.preferences = preferences;
     }
 
     @Override
@@ -469,7 +472,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                             Res.get("peerInfoIcon.tooltip.trade.traded", hostName, numPastTrades) :
                                             Res.get("peerInfoIcon.tooltip.trade.notTraded", hostName);
                                     Node peerInfoIcon = new PeerInfoIcon(hostName, tooltipText, numPastTrades,
-                                            privateNotificationManager, newItem.getTrade().getOffer());
+                                            privateNotificationManager, newItem.getTrade().getOffer(), preferences);
                                     setPadding(new Insets(-2, 0, -2, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {

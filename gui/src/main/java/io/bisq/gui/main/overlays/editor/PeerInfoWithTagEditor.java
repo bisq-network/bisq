@@ -1,5 +1,6 @@
 package io.bisq.gui.main.overlays.editor;
 
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.locale.Res;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
@@ -48,12 +49,14 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private ChangeListener<Boolean> focusListener;
     private final PrivateNotificationManager privateNotificationManager;
     private final Offer offer;
+    private Preferences preferences;
     private EventHandler<KeyEvent> keyEventEventHandler;
 
 
-    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer) {
+    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences) {
         this.privateNotificationManager = privateNotificationManager;
         this.offer = offer;
+        this.preferences = preferences;
         width = 400;
         type = Type.Undefined;
         if (INSTANCE != null)
@@ -143,7 +146,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.getWithCol("shared.onionAddress"), hostName).second.setMouseTransparent(false);
         FormBuilder.addLabelTextField(gridPane, ++rowIndex, Res.get("peerInfo.nrOfTrades"), String.valueOf(numTrades));
         inputTextField = FormBuilder.addLabelInputTextField(gridPane, ++rowIndex, Res.get("peerInfo.setTag")).second;
-        Map<String, String> peerTagMap = Preferences.INSTANCE.getPeerTagMap();
+        Map<String, String> peerTagMap = preferences.getPeerTagMap();
         String tag = peerTagMap.containsKey(hostName) ? peerTagMap.get(hostName) : "";
         inputTextField.setText(tag);
 
@@ -177,7 +180,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     @Override
     protected void animateHide(Runnable onFinishedHandler) {
-        if (Preferences.INSTANCE.getUseAnimations()) {
+        if (GlobalSettings.getUseAnimations()) {
             double duration = getDuration(300);
             Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
 
@@ -209,7 +212,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     @Override
     protected void animateDisplay() {
-        if (Preferences.INSTANCE.getUseAnimations()) {
+        if (GlobalSettings.getUseAnimations()) {
             double startY = -160;
             double duration = getDuration(400);
             Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);

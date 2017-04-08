@@ -17,12 +17,12 @@
 
 package io.bisq.core.payment;
 
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.ClearXchangeAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
-import io.bisq.core.user.Preferences;
 
 public final class ClearXchangeAccount extends PaymentAccount {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -30,7 +30,7 @@ public final class ClearXchangeAccount extends PaymentAccount {
 
     public ClearXchangeAccount() {
         super(PaymentMethod.CLEAR_X_CHANGE);
-        setSingleTradeCurrency(new FiatCurrency("USD", Preferences.getDefaultLocale()));
+        setSingleTradeCurrency(new FiatCurrency("USD", GlobalSettings.getLocale()));
     }
 
     @Override

@@ -18,6 +18,7 @@
 package io.bisq.gui.util.validation;
 
 import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.user.Preferences;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -45,7 +46,7 @@ public final class BtcAddressValidator extends InputValidator {
 
     private ValidationResult validateBtcAddress(String input) {
         try {
-            new Address(preferences.getBitcoinNetwork().getParameters(), input);
+            new Address(WalletUtils.getParameters(), input);
             return new ValidationResult(true);
         } catch (AddressFormatException e) {
             return new ValidationResult(false, Res.get("validation.btc.invalidFormat"));
