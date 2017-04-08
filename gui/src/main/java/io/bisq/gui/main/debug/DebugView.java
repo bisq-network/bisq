@@ -108,7 +108,7 @@ public class DebugView extends InitializableView {
                         /*---- Protocol ----*/
                         SellerAsTakerProtocol.class,
                         TakerSelectArbitrator.class,
-                        TakerCreateTakerFeeTx.class,
+                        CreateTakerFeeTx.class,
                         TakerPublishTakerFeeTx.class,
                         SellerAsTakerCreatesDepositTxInputs.class,
                         TakerSendPayDepositRequest.class,
@@ -130,7 +130,7 @@ public class DebugView extends InitializableView {
                         /*---- Protocol ----*/
                         BuyerAsTakerProtocol.class,
                         TakerSelectArbitrator.class,
-                        TakerCreateTakerFeeTx.class,
+                        CreateTakerFeeTx.class,
                         TakerPublishTakerFeeTx.class,
                         SellerAsTakerCreatesDepositTxInputs.class,
                         TakerSendPayDepositRequest.class,

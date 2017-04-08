@@ -33,9 +33,9 @@ import org.bitcoinj.core.Transaction;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class TakerCreateTakerFeeTx extends TradeTask {
+public class CreateTakerFeeTx extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public TakerCreateTakerFeeTx(TaskRunner taskHandler, Trade trade) {
+    public CreateTakerFeeTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
