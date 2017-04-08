@@ -34,8 +34,6 @@ public class PlaceOfferModel implements Model {
 
     public final Offer offer;
     public final Coin reservedFundsForOffer;
-    public final Coin makerFee;
-    public final boolean isCurrencyForMakerFeeBtc;
     public final boolean useSavingsWallet;
     public final BtcWalletService walletService;
     public final TradeWalletService tradeWalletService;
@@ -47,8 +45,6 @@ public class PlaceOfferModel implements Model {
 
     public PlaceOfferModel(Offer offer,
                            Coin reservedFundsForOffer,
-                           Coin makerFee,
-                           boolean isCurrencyForMakerFeeBtc,
                            boolean useSavingsWallet,
                            BtcWalletService walletService,
                            TradeWalletService tradeWalletService,
@@ -57,8 +53,6 @@ public class PlaceOfferModel implements Model {
                            User user) {
         this.offer = offer;
         this.reservedFundsForOffer = reservedFundsForOffer;
-        this.makerFee = makerFee;
-        this.isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc;
         this.useSavingsWallet = useSavingsWallet;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;

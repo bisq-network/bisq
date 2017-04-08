@@ -393,8 +393,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // trade fee handling happens in protocol tasks
         openOfferManager.placeOffer(offer,
                 totalToPayAsCoin.get().subtract(txFeeAsCoin),
-                makerFee,
-                isCurrencyForMakerFeeBtc,
                 useSavingsWallet,
                 resultHandler);
     }

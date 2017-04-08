@@ -62,15 +62,16 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
             BtcWalletService walletService = model.walletService;
             String id = offer.getId();
             Address fundingAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING).getAddress();
-            Address reservedForTradeAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+            Address reservedForTradeAddress = walletService.getOrCreateAddressEntry(id,
+                    AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address changeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
 
-            if (model.isCurrencyForMakerFeeBtc) {
+            if (offer.isCurrencyForMakerFeeBtc()) {
                 Transaction btcTransaction = model.tradeWalletService.createBtcTradingFeeTx(
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
-                        model.reservedFundsForOffer.subtract(model.makerFee),
+                        model.reservedFundsForOffer.subtract(offer.getMakerFee()),
                         model.useSavingsWallet,
                         offer.getMakerFee(),
                         offer.getTxFee(),
@@ -86,7 +87,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
             } else {
                 final BsqWalletService bsqWalletService = model.bsqWalletService;
                 final TradeWalletService tradeWalletService = model.tradeWalletService;
-                Transaction preparedBurnFeeTx = model.bsqWalletService.getPreparedBurnFeeTx(model.makerFee);
+                Transaction preparedBurnFeeTx = model.bsqWalletService.getPreparedBurnFeeTx(offer.getMakerFee());
                 Transaction txWithBsqFee = tradeWalletService.completeBsqTradingFeeTx(preparedBurnFeeTx,
                         fundingAddress,
                         reservedForTradeAddress,

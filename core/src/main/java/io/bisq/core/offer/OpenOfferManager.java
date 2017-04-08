@@ -259,14 +259,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     public void placeOffer(Offer offer,
                            Coin reservedFundsForOffer,
-                           Coin makerFee,
-                           boolean isCurrencyForMakerFeeBtc,
                            boolean useSavingsWallet,
                            TransactionResultHandler resultHandler) {
         PlaceOfferModel model = new PlaceOfferModel(offer,
                 reservedFundsForOffer,
-                makerFee,
-                isCurrencyForMakerFeeBtc,
                 useSavingsWallet,
                 walletService,
                 tradeWalletService,
