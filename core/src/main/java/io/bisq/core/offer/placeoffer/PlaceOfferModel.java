@@ -24,23 +24,27 @@ import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.user.User;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
+@Getter
 public class PlaceOfferModel implements Model {
-    private static final Logger log = LoggerFactory.getLogger(PlaceOfferModel.class);
+    private final Offer offer;
+    private final Coin reservedFundsForOffer;
+    private final boolean useSavingsWallet;
+    private final BtcWalletService walletService;
+    private final TradeWalletService tradeWalletService;
+    private final BsqWalletService bsqWalletService;
+    private final OfferBookService offerBookService;
+    private final User user;
 
-    public final Offer offer;
-    public final Coin reservedFundsForOffer;
-    public final boolean useSavingsWallet;
-    public final BtcWalletService walletService;
-    public final TradeWalletService tradeWalletService;
-    public final BsqWalletService bsqWalletService;
-    public final OfferBookService offerBookService;
-    public final User user;
-    public boolean offerAddedToOfferBook;
+    @Setter
+    private boolean offerAddedToOfferBook;
+    @Setter
     private Transaction transaction;
 
     public PlaceOfferModel(Offer offer,
@@ -61,21 +65,11 @@ public class PlaceOfferModel implements Model {
         this.user = user;
     }
 
-    public void setTransaction(Transaction transaction) {
-        this.transaction = transaction;
-    }
-
-    public Transaction getTransaction() {
-        return transaction;
-    }
-
     @Override
     public void persist() {
-
     }
 
     @Override
     public void onComplete() {
-
     }
 }

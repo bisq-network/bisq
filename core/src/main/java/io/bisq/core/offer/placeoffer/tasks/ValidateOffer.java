@@ -44,7 +44,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
 
     @Override
     protected void run() {
-        Offer offer = model.offer;
+        Offer offer = model.getOffer();
         try {
             runInterceptHook();
 

@@ -50,29 +50,30 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
 
     @Override
     protected void run() {
-        Offer offer = model.offer;
+        Offer offer = model.getOffer();
         try {
             runInterceptHook();
 
-            NodeAddress selectedArbitratorNodeAddress = ArbitratorSelectionRule.select(model.user.getAcceptedArbitratorAddresses(),
-                    model.offer);
+            NodeAddress selectedArbitratorNodeAddress = ArbitratorSelectionRule.select(model.getUser().getAcceptedArbitratorAddresses(),
+                    model.getOffer());
             log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
-            Arbitrator selectedArbitrator = model.user.getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
+            Arbitrator selectedArbitrator = model.getUser().getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
             checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateOfferFeeTx");
-            BtcWalletService walletService = model.walletService;
+            BtcWalletService walletService = model.getWalletService();
             String id = offer.getId();
             Address fundingAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING).getAddress();
             Address reservedForTradeAddress = walletService.getOrCreateAddressEntry(id,
                     AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address changeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
 
+            final TradeWalletService tradeWalletService1 = model.getTradeWalletService();
             if (offer.isCurrencyForMakerFeeBtc()) {
-                Transaction btcTransaction = model.tradeWalletService.createBtcTradingFeeTx(
+                Transaction btcTransaction = tradeWalletService1.createBtcTradingFeeTx(
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
-                        model.reservedFundsForOffer.subtract(offer.getMakerFee()),
-                        model.useSavingsWallet,
+                        model.getReservedFundsForOffer().subtract(offer.getMakerFee()),
+                        model.isUseSavingsWallet(),
                         offer.getMakerFee(),
                         offer.getTxFee(),
                         selectedArbitrator.getBtcAddress());
@@ -85,18 +86,18 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
 
                 complete();
             } else {
-                final BsqWalletService bsqWalletService = model.bsqWalletService;
-                final TradeWalletService tradeWalletService = model.tradeWalletService;
-                Transaction preparedBurnFeeTx = model.bsqWalletService.getPreparedBurnFeeTx(offer.getMakerFee());
+                final BsqWalletService bsqWalletService = model.getBsqWalletService();
+                final TradeWalletService tradeWalletService = tradeWalletService1;
+                Transaction preparedBurnFeeTx = model.getBsqWalletService().getPreparedBurnFeeTx(offer.getMakerFee());
                 Transaction txWithBsqFee = tradeWalletService.completeBsqTradingFeeTx(preparedBurnFeeTx,
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
-                        model.reservedFundsForOffer,
-                        model.useSavingsWallet,
+                        model.getReservedFundsForOffer(),
+                        model.isUseSavingsWallet(),
                         offer.getTxFee());
 
-                Transaction signedTx = model.bsqWalletService.signTx(txWithBsqFee);
+                Transaction signedTx = model.getBsqWalletService().signTx(txWithBsqFee);
                 WalletService.checkAllScriptSignaturesForTx(signedTx);
                 bsqWalletService.commitTx(txWithBsqFee);
                 // We need to create another instance, otherwise the tx would trigger an invalid state exception 
