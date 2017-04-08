@@ -487,12 +487,20 @@ public class MainViewModel implements ViewModel {
                         walletPasswordWindow
                                 .onAesKey(aesKey -> {
                                     walletsManager.setAesKey(aesKey);
-                                    walletInitialized.set(true);
+                                    if (preferences.isResyncSPVRequested()) {
+                                        showFirstPopupIfResyncSPVRequested();
+                                    } else {
+                                        walletInitialized.set(true);
+                                    }
                                 })
                                 .hideCloseButton()
                                 .show();
                     } else {
-                        walletInitialized.set(true);
+                        if (preferences.isResyncSPVRequested()) {
+                            showFirstPopupIfResyncSPVRequested();
+                        } else {
+                            walletInitialized.set(true);
+                        }
                     }
                 },
                 walletServiceException::set);
@@ -570,6 +578,28 @@ public class MainViewModel implements ViewModel {
         });
 
         checkIfOpenOffersMatchTradeProtocolVersion();
+    }
+
+    private void showFirstPopupIfResyncSPVRequested() {
+        Popup firstPopup = new Popup<>();
+        firstPopup.information(Res.get("settings.net.reSyncSPVAfterRestart")).show();
+        if (btcSyncProgress.get() == 1) {
+            showSecondPopupIfResyncSPVRequested(firstPopup);
+        } else {
+            btcSyncProgress.addListener((observable, oldValue, newValue) -> {
+                if ((double) newValue == 1)
+                    showSecondPopupIfResyncSPVRequested(firstPopup);
+            });
+        }
+    }
+
+    private void showSecondPopupIfResyncSPVRequested(Popup firstPopup) {
+        firstPopup.hide();
+        preferences.setResyncSPVRequested(false);
+        new Popup<>().information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
+                .hideCloseButton()
+                .useShutDownButton()
+                .show();
     }
 
     private void checkCryptoSetup() {

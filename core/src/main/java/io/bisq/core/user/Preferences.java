@@ -122,6 +122,7 @@ public final class Preferences implements Persistable {
     @Nullable
     private PaymentAccount selectedPaymentAccountForCreateOffer;
     private boolean payFeeInBTC = true;
+    private boolean resyncSPVRequested;
 
     // Observable wrappers
     transient private final StringProperty btcDenominationProperty = new SimpleStringProperty();
@@ -230,6 +231,7 @@ public final class Preferences implements Persistable {
             selectedPaymentAccountForCreateOffer = persisted.getSelectedPaymentAccountForCreateOffer();
             payFeeInBTC = persisted.getPayFeeInBTC();
             setBuyerSecurityDepositAsLong(persisted.getBuyerSecurityDepositAsLong());
+            resyncSPVRequested = persisted.isResyncSPVRequested();
         } else {
             userLanguage = GlobalSettings.getLocale().getLanguage();
             userCountry = CountryUtil.getDefaultCountry();
@@ -490,6 +492,12 @@ public final class Preferences implements Persistable {
         storage.queueUpForSave();
     }
 
+    public void setResyncSPVRequested(boolean resyncSPVRequested) {
+        this.resyncSPVRequested = resyncSPVRequested;
+        // We call that before shutdown so we dont want a delay here
+        storage.queueUpForSave(1);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -688,6 +696,9 @@ public final class Preferences implements Persistable {
         return BTC_DENOMINATIONS;
     }
 
+    public boolean isResyncSPVRequested() {
+        return resyncSPVRequested;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

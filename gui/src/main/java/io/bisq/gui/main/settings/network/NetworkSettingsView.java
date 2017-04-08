@@ -166,13 +166,18 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
             if (walletsSetup.reSyncSPVChain()) {
                 new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
                         .useShutDownButton()
+                        .actionButtonText(Res.get("shared.shutDown"))
+                        .onAction(() -> {
+                            preferences.setResyncSPVRequested(true);
+                            UserThread.runAfter(BisqApp.shutDownHandler::run, 100, TimeUnit.MILLISECONDS);
+                        })
+                        .hideCloseButton()
                         .show();
-                reSyncSPVChainButton.setDisable(true);
             } else {
                 new Popup<>().error(Res.get("settings.net.reSyncSPVFailed")).show();
             }
         });
-        
+
         bitcoinPeersSubscription = EasyBind.subscribe(walletsSetup.connectedPeersProperty(),
                 connectedPeers -> updateBitcoinPeersTextArea());
 
