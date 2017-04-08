@@ -40,8 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -53,6 +51,23 @@ import java.util.stream.Collectors;
 public final class PreferencesImpl implements Preferences {
 
     ///////////////// START of STATIC ////////////////////////////////////////////////////////////////////////
+
+
+    static {
+        Locale locale = Locale.getDefault();
+        PreferencesImpl.defaultLocale = locale;
+        Res.applyLocaleToResourceBundle(getDefaultLocale());
+
+        CountryUtil.setDefaultLocale(locale);
+        CurrencyUtil.setDefaultLocale(locale);
+        LanguageUtil.setDefaultLocale(locale);
+        FiatCurrency.setDefaultLocale(locale);
+
+        FiatCurrency currencyByCountryCode = CurrencyUtil.getCurrencyByCountryCode(CountryUtil.getDefaultCountryCode(locale), locale);
+        PreferencesImpl.defaultTradeCurrency = currencyByCountryCode;
+        CurrencyUtil.setDefaultTradeCurrency(currencyByCountryCode);
+    }
+
 
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -86,7 +101,7 @@ public final class PreferencesImpl implements Preferences {
     ));
 
     @Getter
-    private static Locale defaultLocale = Locale.getDefault();
+    private static Locale defaultLocale/* = Locale.getDefault()*/;
 
     @Getter
     private static TradeCurrency defaultTradeCurrency;
@@ -98,6 +113,7 @@ public final class PreferencesImpl implements Preferences {
     public static List<String> getBtcDenominations() {
         return BTC_DENOMINATIONS;
     }
+
     public static boolean useAnimations() {
         return staticUseAnimations;
     }
@@ -214,7 +230,8 @@ public final class PreferencesImpl implements Preferences {
         this.bisqEnvironment = bisqEnvironment;
 
         // setup
-        Res.applyLocaleToResourceBundle(defaultLocale);
+      /*  
+       Res.applyLocaleToResourceBundle(defaultLocale);
         CountryUtil.setDefaultLocale(defaultLocale);
         CurrencyUtil.setDefaultLocale(defaultLocale);
         LanguageUtil.setDefaultLocale(defaultLocale);
@@ -223,6 +240,7 @@ public final class PreferencesImpl implements Preferences {
         FiatCurrency currencyByCountryCode = CurrencyUtil.getCurrencyByCountryCode(CountryUtil.getDefaultCountryCode(defaultLocale), defaultLocale);
         defaultTradeCurrency = currencyByCountryCode;
         CurrencyUtil.setDefaultTradeCurrency(currencyByCountryCode);
+        */
         // end setup
 
         directoryChooserPath = Utilities.getSystemHomeDirectory();
