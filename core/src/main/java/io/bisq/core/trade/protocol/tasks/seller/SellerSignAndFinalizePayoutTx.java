@@ -50,8 +50,8 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
 
             Offer offer = trade.getOffer();
-            TradingPeer tradingPeer = processModel.tradingPeer;
-            BtcWalletService walletService = processModel.getWalletService();
+            TradingPeer tradingPeer = processModel.getTradingPeer();
+            BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
             final byte[] buyerSignature = tradingPeer.getSignature();

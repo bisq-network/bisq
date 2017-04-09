@@ -155,9 +155,19 @@ public class TradeWalletService {
                                              Address changeAddress,
                                              Coin reservedFundsForOffer,
                                              boolean useSavingsWallet,
-                                             Coin tradingFee, Coin txFee,
+                                             Coin tradingFee,
+                                             Coin txFee,
                                              String feeReceiverAddresses)
             throws InsufficientMoneyException, AddressFormatException {
+        log.debug("fundingAddress " + fundingAddress.toString());
+        log.debug("reservedForTradeAddress " + reservedForTradeAddress.toString());
+        log.debug("changeAddress " + changeAddress.toString());
+        log.debug("reservedFundsForOffer " + reservedFundsForOffer.toPlainString());
+        log.debug("useSavingsWallet " + useSavingsWallet);
+        log.debug("tradingFee " + tradingFee.toPlainString());
+        log.debug("txFee " + txFee.toPlainString());
+        log.debug("feeReceiverAddresses " + feeReceiverAddresses);
+
         Transaction tradingFeeTx = new Transaction(params);
         tradingFeeTx.addOutput(tradingFee, new Address(params, feeReceiverAddresses));
         // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
@@ -198,6 +208,13 @@ public class TradeWalletService {
             TransactionVerificationException, WalletException, InsufficientFundsException,
             InsufficientMoneyException, AddressFormatException {
 
+        log.debug("preparedBsqTx " + preparedBsqTx.toString());
+        log.debug("fundingAddress " + fundingAddress.toString());
+        log.debug("changeAddress " + changeAddress.toString());
+        log.debug("reservedFundsForOffer " + reservedFundsForOffer.toPlainString());
+        log.debug("useSavingsWallet " + useSavingsWallet);
+        log.debug("txFee " + txFee.toPlainString());
+
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
         // outputs [0-1] BSQ change output
@@ -224,6 +241,8 @@ public class TradeWalletService {
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
         // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
+
+        // WalletService.printTx("preparedBsqTx", preparedBsqTx);
         Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(preparedBsqTx);
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
@@ -283,10 +302,10 @@ public class TradeWalletService {
      */
     public InputsAndChangeOutput takerCreatesDepositsTxInputs(Coin inputAmount, Coin txFee, Address takersAddress, Address takersChangeAddress) throws
             TransactionVerificationException, WalletException {
-        log.trace("takerCreatesDepositsTxInputs called");
-        log.trace("inputAmount " + inputAmount.toFriendlyString());
-        log.trace("txFee " + txFee.toFriendlyString());
-        log.trace("takersAddress " + takersAddress.toString());
+        log.debug("takerCreatesDepositsTxInputs called");
+        log.debug("inputAmount " + inputAmount.toFriendlyString());
+        log.debug("txFee " + txFee.toFriendlyString());
+        log.debug("takersAddress " + takersAddress.toString());
 
         // We add the mining fee 2 times to the deposit tx:
         // 1. Will be spent when publishing the deposit tx (paid by buyer)
@@ -384,18 +403,18 @@ public class TradeWalletService {
                                                                          byte[] sellerPubKey,
                                                                          byte[] arbitratorPubKey)
             throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
-        log.trace("makerCreatesAndSignsDepositTx called");
-        log.trace("makerIsBuyer " + makerIsBuyer);
-        log.trace("makerInputAmount " + makerInputAmount.toFriendlyString());
-        log.trace("msOutputAmount " + msOutputAmount.toFriendlyString());
-        log.trace("takerRawInputs " + takerRawTransactionInputs.toString());
-        log.trace("takerChangeOutputValue " + takerChangeOutputValue);
-        log.trace("takerChangeAddressString " + takerChangeAddressString);
-        log.trace("makerAddress " + makerAddress);
-        log.trace("makerChangeAddress " + makerChangeAddress);
-        log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.debug("makerCreatesAndSignsDepositTx called");
+        log.debug("makerIsBuyer " + makerIsBuyer);
+        log.debug("makerInputAmount " + makerInputAmount.toFriendlyString());
+        log.debug("msOutputAmount " + msOutputAmount.toFriendlyString());
+        log.debug("takerRawInputs " + takerRawTransactionInputs.toString());
+        log.debug("takerChangeOutputValue " + takerChangeOutputValue);
+        log.debug("takerChangeAddressString " + takerChangeAddressString);
+        log.debug("makerAddress " + makerAddress);
+        log.debug("makerChangeAddress " + makerChangeAddress);
+        log.debug("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.debug("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.debug("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
 
         checkArgument(!takerRawTransactionInputs.isEmpty());
 
@@ -528,14 +547,14 @@ public class TradeWalletService {
             WalletException {
         Transaction makersDepositTx = new Transaction(params, makersDepositTxSerialized);
 
-        log.trace("signAndPublishDepositTx called");
-        log.trace("takerIsSeller " + takerIsSeller);
-        log.trace("makersDepositTx " + makersDepositTx.toString());
-        log.trace("buyerConnectedOutputsForAllInputs " + buyerInputs.toString());
-        log.trace("sellerConnectedOutputsForAllInputs " + sellerInputs.toString());
-        log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.debug("signAndPublishDepositTx called");
+        log.debug("takerIsSeller " + takerIsSeller);
+        log.debug("makersDepositTx " + makersDepositTx.toString());
+        log.debug("buyerConnectedOutputsForAllInputs " + buyerInputs.toString());
+        log.debug("sellerConnectedOutputsForAllInputs " + sellerInputs.toString());
+        log.debug("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.debug("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.debug("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
 
         checkArgument(!buyerInputs.isEmpty());
         checkArgument(!sellerInputs.isEmpty());

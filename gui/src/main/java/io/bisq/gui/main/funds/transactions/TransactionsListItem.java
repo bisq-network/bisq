@@ -132,6 +132,7 @@ class TransactionsListItem {
                 received = false;
             }
         }
+
         if (txFeeForBsqPayment) {
             direction = Res.get("funds.tx.txFeePaymentForBsqTx");
             addressString = "";

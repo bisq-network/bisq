@@ -39,8 +39,8 @@ public class BuyerSendFiatTransferStartedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            BtcWalletService walletService = processModel.getWalletService();
-            final String id = processModel.getId();
+            BtcWalletService walletService = processModel.getBtcWalletService();
+            final String id = processModel.getOfferId();
             AddressEntry payoutAddressEntry = walletService.getOrCreateAddressEntry(id,
                     AddressEntry.Context.TRADE_PAYOUT);
             final FiatTransferStartedMsg message = new FiatTransferStartedMsg(
@@ -54,19 +54,19 @@ public class BuyerSendFiatTransferStartedMessage extends TradeTask {
             trade.setState(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
             processModel.getP2PService().sendEncryptedMailboxMessage(
                     trade.getTradingPeerNodeAddress(),
-                    processModel.tradingPeer.getPubKeyRing(),
+                    processModel.getTradingPeer().getPubKeyRing(),
                     message,
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
-                            log.info("Message arrived at peer. tradeId={}, message{}", id, message);
+                            log.debug("Message arrived at peer. tradeId={}, message{}", id, message);
                             trade.setState(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
                             complete();
                         }
 
                         @Override
                         public void onStoredInMailbox() {
-                            log.info("Message stored in mailbox. tradeId={}, message{}", id, message);
+                            log.debug("Message stored in mailbox. tradeId={}, message{}", id, message);
                             trade.setState(Trade.State.BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG);
                             complete();
                         }

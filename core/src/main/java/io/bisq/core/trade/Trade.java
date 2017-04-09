@@ -30,8 +30,8 @@ import io.bisq.common.monetary.Volume;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.taskrunner.Model;
 import io.bisq.core.arbitration.Arbitrator;
-import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.Mediator;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
@@ -288,9 +288,9 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void init(P2PService p2PService,
-                     BtcWalletService walletService,
+                     BtcWalletService btcWalletService,
+                     BsqWalletService bsqWalletService,
                      TradeWalletService tradeWalletService,
-                     ArbitratorManager arbitratorManager,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
                      User user,
@@ -303,9 +303,9 @@ public abstract class Trade implements Tradable, Model {
                 tradeManager,
                 openOfferManager,
                 p2PService,
-                walletService,
+                btcWalletService,
+                bsqWalletService,
                 tradeWalletService,
-                arbitratorManager,
                 user,
                 filterManager,
                 keyRing,

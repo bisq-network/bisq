@@ -93,7 +93,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
     @Override
     public void handleTakeOfferRequest(TradeMsg message, NodeAddress sender) {
-        Validator.checkTradeId(processModel.getId(), message);
+        Validator.checkTradeId(processModel.getOfferId(), message);
         checkArgument(message instanceof PayDepositRequest);
         processModel.setTradeMessage(message);
         processModel.setTempTradingPeerNodeAddress(sender);

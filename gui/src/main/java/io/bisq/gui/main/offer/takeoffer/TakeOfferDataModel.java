@@ -23,7 +23,6 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
-import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -47,8 +46,6 @@ import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
-import java.util.List;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -68,8 +65,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     private Coin takerFee;
     private boolean isCurrencyForTakerFeeBtc;
-    private Coin txFeeAsCoin;
-    private Coin totalTxFeeAsCoin;
+    private Coin txFeeFromFeeService;
     private Coin securityDeposit;
     // Coin feeFromFundingTx = Coin.NEGATIVE_SATOSHI;
 
@@ -175,6 +171,10 @@ class TakeOfferDataModel extends ActivatableDataModel {
                 getBuyerSecurityDeposit() :
                 getSellerSecurityDeposit();
 
+        // We request to get the actual estimated fee
+        requestTxFee();
+
+
         // Taker pays 2 times the tx fee because the mining fee might be different when maker created the offer
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the takeOfferFee and not visible to the trader
@@ -197,11 +197,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But the "take offer" happens usually after that so we should have already the value from the estimation service.
-        txFeeAsCoin = feeService.getTxFee(400);
-        totalTxFeeAsCoin = txFeeAsCoin.multiply(3);
-
-        // We request to get the actual estimated fee
-        requestTxFee();
+        txFeeFromFeeService = feeService.getTxFee(400);
 
         calculateVolume();
         calculateTotalToPay();
@@ -246,8 +242,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     void requestTxFee() {
         feeService.requestFees(() -> {
-            txFeeAsCoin = feeService.getTxFee(400);
-            totalTxFeeAsCoin = txFeeAsCoin.multiply(3);
+            txFeeFromFeeService = feeService.getTxFee(400);
             calculateTotalToPay();
         }, null);
     }
@@ -266,12 +261,15 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // errorMessageHandler is used only in the check availability phase. As soon we have a trade we write the error msg in the trade object as we want to 
     // have it persisted as well.
     void onTakeOffer(TradeResultHandler tradeResultHandler) {
-        checkNotNull(totalTxFeeAsCoin, "totalTxFeeAsCoin must not be null");
+        checkNotNull(txFeeFromFeeService, "txFeeFromFeeService must not be null");
         checkNotNull(takerFee, "takerFee must not be null");
 
-        Coin fundsNeededForTrade = totalToPayAsCoin.get().subtract(takerFee).subtract(txFeeAsCoin);
+        Coin fundsNeededForTrade = getSecurityDeposit().add(txFeeFromFeeService).add(txFeeFromFeeService);
+        if (isBuyOffer())
+            fundsNeededForTrade = fundsNeededForTrade.add(amount.get());
+
         tradeManager.onTakeOffer(amount.get(),
-                txFeeAsCoin,
+                txFeeFromFeeService,
                 takerFee,
                 isCurrencyForTakerFeeBtc,
                 tradePrice.getValue(),
@@ -378,16 +376,21 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (offer != null && amount.get() != null && takerFee != null) {
-            Coin optionalTakerFee = isCurrencyForTakerFeeBtc ? this.takerFee : Coin.ZERO;
-            Coin value = optionalTakerFee.add(totalTxFeeAsCoin).add(securityDeposit);
-            if (getDirection() == Offer.Direction.SELL)
-                totalToPayAsCoin.set(value);
+            Coin feeAndSecDeposit = getTotalTxFee().add(securityDeposit);
+            if (isCurrencyForTakerFeeBtc)
+                feeAndSecDeposit = feeAndSecDeposit.add(takerFee);
+            if (isBuyOffer())
+                totalToPayAsCoin.set(feeAndSecDeposit.add(amount.get()));
             else
-                totalToPayAsCoin.set(value.add(amount.get()));
-
+                totalToPayAsCoin.set(feeAndSecDeposit);
+            
             updateBalance();
             log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
         }
+    }
+
+    private boolean isBuyOffer() {
+        return getDirection() == Offer.Direction.BUY;
     }
 
     void updateTradeFee() {
@@ -464,7 +467,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         //noinspection SimplifiableIfStatement
         if (amount.get() != null && offer != null) {
             Coin customAmount = offer.getAmount().subtract(amount.get());
-            Coin dustAndFee = totalTxFeeAsCoin.add(Transaction.MIN_NONDUST_OUTPUT);
+            Coin dustAndFee = getTotalTxFee().add(Transaction.MIN_NONDUST_OUTPUT);
             return customAmount.isPositive() && customAmount.isLessThan(dustAndFee);
         } else {
             return true;
@@ -491,20 +494,15 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return takerFee;
     }
 
-    public Coin getTotalTxFeeAsCoin() {
-        return totalTxFeeAsCoin;
-    }
-
-    public Coin getTxFeeAsCoin() {
-        return txFeeAsCoin;
+    public Coin getTotalTxFee() {
+        if (isCurrencyForTakerFeeBtc)
+            return txFeeFromFeeService.multiply(3);
+        else
+            return txFeeFromFeeService.multiply(3).subtract(takerFee);
     }
 
     public AddressEntry getAddressEntry() {
         return addressEntry;
-    }
-
-    public List<Arbitrator> getArbitrators() {
-        return user.getAcceptedArbitrators();
     }
 
     public Preferences getPreferences() {

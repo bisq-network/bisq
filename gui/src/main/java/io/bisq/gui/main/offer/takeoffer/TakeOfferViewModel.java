@@ -19,7 +19,6 @@ package io.bisq.gui.main.offer.takeoffer;
 
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
-import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -46,7 +45,6 @@ import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
-import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static javafx.beans.binding.Bindings.createStringBinding;
@@ -582,17 +580,28 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public String getTakerFee() {
         //TODO use last bisq market price to estimate BSQ val
-        final String perc = dataModel.getCurrencyForTakerFeeBtc() ?
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getTakerFee(), dataModel.getAmount().get(), btcFormatter) :
-                "";
-        return btcFormatter.formatCoinWithCode(dataModel.getTakerFee()) + perc;
+        final Coin takerFeeAsCoin = dataModel.getTakerFee();
+        final String takerFee = getFormatter().formatCoinWithCode(takerFeeAsCoin);
+        if (dataModel.getCurrencyForTakerFeeBtc())
+            return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+        else
+            return takerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(takerFeeAsCoin)) + ")";
+    }
+
+    public String getTotalToPayInfo() {
+        final String totalToPay = this.totalToPay.get();
+        if (dataModel.getCurrencyForTakerFeeBtc())
+            return totalToPay;
+        else
+            return totalToPay + " + " + bsqFormatter.formatCoinWithCode(dataModel.getTakerFee());
     }
 
     public String getTxFee() {
-        return btcFormatter.formatCoinWithCode(dataModel.getTotalTxFeeAsCoin()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getTotalTxFeeAsCoin(), dataModel.getAmount().get(), btcFormatter);
-    }
+        Coin txFeeAsCoin = dataModel.getTotalTxFee();
+        return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
+                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
 
+    }
 
     public PaymentMethod getPaymentMethod() {
         return dataModel.getPaymentMethod();
@@ -600,10 +609,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     ObservableList<PaymentAccount> getPossiblePaymentAccounts() {
         return dataModel.getPossiblePaymentAccounts();
-    }
-
-    public List<Arbitrator> getArbitrators() {
-        return dataModel.getArbitrators();
     }
 
     boolean hasAcceptedArbitrators() {

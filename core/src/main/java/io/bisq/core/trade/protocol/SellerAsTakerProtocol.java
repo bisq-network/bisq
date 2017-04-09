@@ -51,7 +51,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         this.sellerAsTakerTrade = trade;
 
-        processModel.tradingPeer.setPubKeyRing(trade.getOffer().getPubKeyRing());
+        processModel.getTradingPeer().setPubKeyRing(trade.getOffer().getPubKeyRing());
     }
 
 

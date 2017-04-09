@@ -34,6 +34,7 @@ import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;
+import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.validation.BtcAddressValidator;
 import io.bisq.network.p2p.P2PService;
@@ -77,7 +78,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         STEP4
     }
 
-    public final BSFormatter formatter;
+    public final BSFormatter btcFormatter;
+    private final BsqFormatter bsqFormatter;
     public final BtcAddressValidator btcAddressValidator;
 
     public final P2PService p2PService;
@@ -97,7 +99,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     @Inject
     public PendingTradesViewModel(PendingTradesDataModel dataModel,
-                                  BSFormatter formatter,
+                                  BSFormatter btcFormatter,
+                                  BsqFormatter bsqFormatter,
                                   BtcAddressValidator btcAddressValidator,
                                   P2PService p2PService,
                                   User user,
@@ -105,7 +108,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   Clock clock) {
         super(dataModel);
 
-        this.formatter = formatter;
+        this.btcFormatter = btcFormatter;
+        this.bsqFormatter = bsqFormatter;
         this.btcAddressValidator = btcAddressValidator;
         this.p2PService = p2PService;
         this.user = user;
@@ -160,14 +164,14 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getPayoutAmount() {
-        return dataModel.getTrade() != null ? formatter.formatCoinWithCode(dataModel.getTrade().getPayoutAmount()) : "";
+        return dataModel.getTrade() != null ? btcFormatter.formatCoinWithCode(dataModel.getTrade().getPayoutAmount()) : "";
     }
 
     String getMarketLabel(PendingTradesListItem item) {
         if ((item == null))
             return "";
 
-        return formatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
+        return btcFormatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
     }
     // trade period
 
@@ -196,7 +200,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getRemainingTradeDurationAsWords() {
-        return formatter.formatDurationAsWords(Math.max(0, getRemainingTradeDuration()));
+        return btcFormatter.formatDurationAsWords(Math.max(0, getRemainingTradeDuration()));
     }
 
     public double getRemainingTradeDurationAsPercentage() {
@@ -210,7 +214,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getDateForOpenDispute() {
-        return formatter.formatDateTime(new Date(new Date().getTime() + getRemainingTradeDuration()));
+        return btcFormatter.formatDateTime(new Date(new Date().getTime() + getRemainingTradeDuration()));
     }
 
     public boolean showWarning() {
@@ -228,7 +232,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         Contract contract = trade.getContract();
         if (contract != null) {
             Offer offer = trade.getOffer();
-            return formatter.getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
+            return btcFormatter.getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
         } else {
             return "";
         }
@@ -258,20 +262,23 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     // summary
     public String getTradeVolume() {
-        return dataModel.getTrade() != null ? formatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount()) : "";
+        return dataModel.getTrade() != null ? btcFormatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount()) : "";
     }
 
     public String getFiatVolume() {
-        return dataModel.getTrade() != null ? formatter.formatVolumeWithCode(dataModel.getTrade().getTradeVolume()) : "";
+        return dataModel.getTrade() != null ? btcFormatter.formatVolumeWithCode(dataModel.getTrade().getTradeVolume()) : "";
     }
 
     public String getTotalFees() {
-        Offer offer = dataModel.getOffer();
-        Trade trade = dataModel.getTrade();
         Coin totalFees = dataModel.getTotalFees();
-        if (offer != null && trade != null) {
-            String percentage = GUIUtil.getPercentageOfTradeAmount(totalFees, trade.getTradeAmount(), formatter);
-            return formatter.formatCoinWithCode(totalFees) + percentage;
+        if (trade != null && totalFees.isPositive()) {
+            Coin tradeFeeAsBsq = dataModel.getTradeFeeAsBsq();
+            String percentage = GUIUtil.getPercentageOfTradeAmount(totalFees, trade.getTradeAmount(), btcFormatter);
+            if (tradeFeeAsBsq.isPositive()) {
+                return btcFormatter.formatCoinWithCode(totalFees) + percentage + " + " + bsqFormatter.formatCoinWithCode(tradeFeeAsBsq);
+            } else {
+                return btcFormatter.formatCoinWithCode(totalFees) + percentage;
+            }
         } else {
             return "";
         }
@@ -284,8 +291,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
             Coin securityDeposit = dataModel.isBuyer() ?
                     offer.getBuyerSecurityDeposit()
                     : offer.getSellerSecurityDeposit();
-            String percentage = GUIUtil.getPercentageOfTradeAmount(securityDeposit, trade.getTradeAmount(), formatter);
-            return formatter.formatCoinWithCode(securityDeposit) + percentage;
+            String percentage = GUIUtil.getPercentageOfTradeAmount(securityDeposit, trade.getTradeAmount(), btcFormatter);
+            return btcFormatter.formatCoinWithCode(securityDeposit) + percentage;
         } else {
             return "";
         }

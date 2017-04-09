@@ -287,7 +287,7 @@ public class BuyerStep2View extends TradeStepView {
             String assign = Res.get("portfolio.pending.step2_buyer.assign");
             String fees = Res.get("portfolio.pending.step2_buyer.fees");
             String id = trade.getShortId();
-            String amount = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
+            String amount = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload)
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
                         CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),

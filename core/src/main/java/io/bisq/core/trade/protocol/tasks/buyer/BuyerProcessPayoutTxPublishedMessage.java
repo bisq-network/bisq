@@ -42,7 +42,7 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
             runInterceptHook();
             log.debug("current trade state " + trade.getState());
             PayoutTxPublishedMsg message = (PayoutTxPublishedMsg) processModel.getTradeMessage();
-            Validator.checkTradeId(processModel.getId(), message);
+            Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
             checkArgument(message.payoutTx != null);
             Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(message.payoutTx);

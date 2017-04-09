@@ -311,7 +311,7 @@ public class BsqWalletService extends WalletService {
         if (change.isPositive())
             tx.addOutput(change, getUnusedAddress());
 
-        printTx("getPreparedBurnFeeTx", tx);
+        //printTx("getPreparedBurnFeeTx", tx);
         return tx;
     }
 

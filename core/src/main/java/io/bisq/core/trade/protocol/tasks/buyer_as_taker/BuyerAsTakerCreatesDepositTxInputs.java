@@ -39,15 +39,19 @@ public class BuyerAsTakerCreatesDepositTxInputs extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+
+            // In case we pay the taker fee in bsq we reduce tx fee by that as the burned bsq satoshis goes to miners.
+            Coin bsqTakerFee = trade.isCurrencyForTakerFeeBtc() ? Coin.ZERO : trade.getTakerFee();
+            
             Coin txFee = trade.getTxFee();
-            Coin doubleTxFee = txFee.add(txFee);
-            Coin takerInputAmount = trade.getOffer().getBuyerSecurityDeposit().add(doubleTxFee);
-            BtcWalletService walletService = processModel.getWalletService();
-            Address takersAddress = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+            Coin takerInputAmount = trade.getOffer().getBuyerSecurityDeposit().add(txFee).add(txFee).subtract(bsqTakerFee);
+            BtcWalletService walletService = processModel.getBtcWalletService();
+            Address takersAddress = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(),
+                    AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address takersChangeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
             InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositsTxInputs(
                     takerInputAmount,
-                    txFee,
+                    txFee.subtract(bsqTakerFee),
                     takersAddress,
                     takersChangeAddress);
             processModel.setRawTransactionInputs(result.rawTransactionInputs);

@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
@@ -66,13 +67,13 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                     AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address changeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
 
-            final TradeWalletService tradeWalletService1 = model.getTradeWalletService();
+            final TradeWalletService tradeWalletService = model.getTradeWalletService();
             if (offer.isCurrencyForMakerFeeBtc()) {
-                Transaction btcTransaction = tradeWalletService1.createBtcTradingFeeTx(
+                Transaction btcTransaction = tradeWalletService.createBtcTradingFeeTx(
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
-                        model.getReservedFundsForOffer().subtract(offer.getMakerFee()),
+                        model.getReservedFundsForOffer(),
                         model.isUseSavingsWallet(),
                         offer.getMakerFee(),
                         offer.getTxFee(),
@@ -87,7 +88,6 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                 complete();
             } else {
                 final BsqWalletService bsqWalletService = model.getBsqWalletService();
-                final TradeWalletService tradeWalletService = tradeWalletService1;
                 Transaction preparedBurnFeeTx = model.getBsqWalletService().getPreparedBurnFeeTx(offer.getMakerFee());
                 Transaction txWithBsqFee = tradeWalletService.completeBsqTradingFeeTx(preparedBurnFeeTx,
                         fundingAddress,
@@ -99,14 +99,15 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
 
                 Transaction signedTx = model.getBsqWalletService().signTx(txWithBsqFee);
                 WalletService.checkAllScriptSignaturesForTx(signedTx);
-                bsqWalletService.commitTx(txWithBsqFee);
+                bsqWalletService.commitTx(signedTx);
                 // We need to create another instance, otherwise the tx would trigger an invalid state exception 
                 // if it gets committed 2 times 
-                tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(txWithBsqFee));
+                tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));
                 bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                     @Override
                     public void onSuccess(@Nullable Transaction transaction) {
                         if (transaction != null) {
+                            checkArgument(transaction.equals(signedTx));
                             offer.setOfferFeePaymentTxId(transaction.getHashAsString());
                             model.setTransaction(transaction);
 
@@ -118,6 +119,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                     @Override
                     public void onFailure(@NotNull Throwable t) {
                         log.error(t.toString());
+                        t.printStackTrace();
                         offer.setErrorMessage("An error occurred.\n" +
                                 "Error message:\n"
                                 + t.getMessage());

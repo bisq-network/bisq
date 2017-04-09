@@ -43,8 +43,9 @@ public class SellerAsTakerCreatesDepositTxInputs extends TradeTask {
                 Coin takerInputAmount = trade.getOffer().getSellerSecurityDeposit()
                         .add(txFee).add(txFee).add(trade.getTradeAmount());
 
-                BtcWalletService walletService = processModel.getWalletService();
-                Address takersAddress = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+                BtcWalletService walletService = processModel.getBtcWalletService();
+                Address takersAddress = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(),
+                        AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
                 Address takersChangeAddress = walletService.getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
                 InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositsTxInputs(
                         takerInputAmount,

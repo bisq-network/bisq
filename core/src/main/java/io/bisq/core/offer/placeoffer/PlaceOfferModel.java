@@ -33,6 +33,7 @@ import org.bitcoinj.core.Transaction;
 @Slf4j
 @Getter
 public class PlaceOfferModel implements Model {
+    // Immutable
     private final Offer offer;
     private final Coin reservedFundsForOffer;
     private final boolean useSavingsWallet;
@@ -42,6 +43,7 @@ public class PlaceOfferModel implements Model {
     private final OfferBookService offerBookService;
     private final User user;
 
+    // Mutable
     @Setter
     private boolean offerAddedToOfferBook;
     @Setter

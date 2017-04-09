@@ -43,7 +43,7 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            BtcWalletService walletService = processModel.getWalletService();
+            BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
             Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
@@ -55,7 +55,7 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                     "makerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
             PublishDepositTxRequest message = new PublishDepositTxRequest(
-                    processModel.getId(),
+                    processModel.getOfferId(),
                     processModel.getPaymentAccountPayload(trade),
                     processModel.getAccountId(),
                     makerMultiSigPubKey,
@@ -71,19 +71,19 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
 
             processModel.getP2PService().sendEncryptedMailboxMessage(
                     trade.getTradingPeerNodeAddress(),
-                    processModel.tradingPeer.getPubKeyRing(),
+                    processModel.getTradingPeer().getPubKeyRing(),
                     message,
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
-                            log.info("Message arrived at peer. tradeId={}, message{}", id, message);
+                            log.debug("Message arrived at peer. tradeId={}, message{}", id, message);
                             trade.setState(Trade.State.MAKER_SAW_ARRIVED_PUBLISH_DEPOSIT_TX_REQUEST);
                             complete();
                         }
 
                         @Override
                         public void onStoredInMailbox() {
-                            log.info("Message stored in mailbox. tradeId={}, message{}", id, message);
+                            log.debug("Message stored in mailbox. tradeId={}, message{}", id, message);
                             trade.setState(Trade.State.MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST);
                             complete();
                         }

@@ -184,7 +184,7 @@ public class BuyerStep4View extends TradeStepView {
                     if (DevEnv.DEV_MODE) {
                         doWithdrawal(amount, fee);
                     } else {
-                        BSFormatter formatter = model.formatter;
+                        BSFormatter formatter = model.btcFormatter;
                         String key = "reviewWithdrawalAtTradeComplete";
                         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                             int txSize = feeEstimationTransaction.bitcoinSerialize().length;

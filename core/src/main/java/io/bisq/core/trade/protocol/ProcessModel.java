@@ -21,8 +21,8 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.taskrunner.Model;
-import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.data.RawTransactionInput;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
@@ -38,19 +38,20 @@ import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.user.User;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
+@Getter
 public class ProcessModel implements Model, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -58,46 +59,54 @@ public class ProcessModel implements Model, Serializable {
     // Transient/Immutable
     transient private TradeManager tradeManager;
     transient private OpenOfferManager openOfferManager;
-    transient private BtcWalletService walletService;
+    transient private BtcWalletService btcWalletService;
+    transient private BsqWalletService bsqWalletService;
     transient private TradeWalletService tradeWalletService;
-    transient private ArbitratorManager arbitratorManager;
     transient private Offer offer;
     transient private User user;
     transient private FilterManager filterManager;
     transient private KeyRing keyRing;
     transient private P2PService p2PService;
 
+    // Immutable
+    private final TradingPeer tradingPeer = new TradingPeer();
+    private String offerId;
+    private String accountId;
+    private PubKeyRing pubKeyRing;
+
     // Mutable
-    public final TradingPeer tradingPeer;
+    @Setter
     transient private TradeMsg tradeMessage;
+    @Setter
     private byte[] payoutTxSignature;
-
+    @Setter
     private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
+    @Setter
     private List<NodeAddress> takerAcceptedMediatorNodeAddresses;
-
-    // that is used to store temp. the peers address when we get an incoming message before the message is verified.
-    // After successful verified we copy that over to the trade.tradingPeerAddress
-    private NodeAddress tempTradingPeerNodeAddress;
+    @Setter
     private byte[] preparedDepositTx;
+    @Setter
     private ArrayList<RawTransactionInput> rawTransactionInputs;
+    @Setter
     private long changeOutputValue;
     @Nullable
+    @Setter
     private String changeOutputAddress;
+    @Setter
     private Transaction takeOfferFeeTx;
+    @Setter
     private boolean useSavingsWallet;
+    @Setter
     private Coin fundsNeededForTrade;
+    @Setter
     private byte[] myMultiSigPubKey;
+    // that is used to store temp. the peers address when we get an incoming message before the message is verified.
+    // After successful verified we copy that over to the trade.tradingPeerAddress
+    @Setter
+    private NodeAddress tempTradingPeerNodeAddress;
+
 
     public ProcessModel() {
-        tradingPeer = new TradingPeer();
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
     }
 
     public void onAllServicesInitialized(Offer offer,
@@ -105,8 +114,8 @@ public class ProcessModel implements Model, Serializable {
                                          OpenOfferManager openOfferManager,
                                          P2PService p2PService,
                                          BtcWalletService walletService,
+                                         BsqWalletService bsqWalletService,
                                          TradeWalletService tradeWalletService,
-                                         ArbitratorManager arbitratorManager,
                                          User user,
                                          FilterManager filterManager,
                                          KeyRing keyRing,
@@ -115,70 +124,34 @@ public class ProcessModel implements Model, Serializable {
         this.offer = offer;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
-        this.walletService = walletService;
+        this.btcWalletService = walletService;
+        this.bsqWalletService = bsqWalletService;
         this.tradeWalletService = tradeWalletService;
-        this.arbitratorManager = arbitratorManager;
         this.user = user;
         this.filterManager = filterManager;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;
         this.fundsNeededForTrade = fundsNeededForTrade;
-    }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getter only
-    ///////////////////////////////////////////////////////////////////////////////////////////
+        offerId = offer.getId();
+        accountId = user.getAccountId();
+        pubKeyRing = keyRing.getPubKeyRing();
 
-
-    public TradeManager getTradeManager() {
-        return tradeManager;
-    }
-
-    public OpenOfferManager getOpenOfferManager() {
-        return openOfferManager;
-    }
-
-    public BtcWalletService getWalletService() {
-        return walletService;
-    }
-
-    public TradeWalletService getTradeWalletService() {
-        return tradeWalletService;
-    }
-
-    public Offer getOffer() {
-        return offer;
-    }
-
-    public String getId() {
-        return offer.getId();
-    }
-
-    public User getUser() {
-        return user;
-    }
+        log.error("onAllServicesInitialized myNodeAddress=" + p2PService.getAddress());
+    }  // TODO need lazy access?
 
     public NodeAddress getMyNodeAddress() {
+        log.error("getMyNodeAddress myNodeAddress=" + p2PService.getAddress());
         return p2PService.getAddress();
     }
 
-    public Coin getFundsNeededForTrade() {
-        return fundsNeededForTrade;
+    @Override
+    public void persist() {
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getter/Setter for Mutable objects
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void setTradeMessage(TradeMsg tradeMessage) {
-        this.tradeMessage = tradeMessage;
-    }
-
-    @Nullable
-    public TradeMsg getTradeMessage() {
-        return tradeMessage;
+    @Override
+    public void onComplete() {
     }
 
     @Nullable
@@ -191,125 +164,13 @@ public class ProcessModel implements Model, Serializable {
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
     }
 
-    public String getAccountId() {
-        return user.getAccountId();
-    }
-
-    @Nullable
-    public byte[] getPayoutTxSignature() {
-        return payoutTxSignature;
-    }
-
-    public void setPayoutTxSignature(byte[] payoutTxSignature) {
-        this.payoutTxSignature = payoutTxSignature;
-    }
-
-    @Override
-    public void persist() {
-    }
-
-    @Override
-    public void onComplete() {
-    }
-
-    public P2PService getP2PService() {
-        return p2PService;
-    }
-
-    public PubKeyRing getPubKeyRing() {
-        return keyRing.getPubKeyRing();
-    }
-
-    public KeyRing getKeyRing() {
-        return keyRing;
-    }
-
-    public void setTakerAcceptedArbitratorNodeAddresses(List<NodeAddress> takerAcceptedArbitratorNodeAddresses) {
-        this.takerAcceptedArbitratorNodeAddresses = takerAcceptedArbitratorNodeAddresses;
-    }
-
-    public List<NodeAddress> getTakerAcceptedArbitratorNodeAddresses() {
-        return takerAcceptedArbitratorNodeAddresses;
-    }
-
-    public void setTakerAcceptedMediatorNodeAddresses(List<NodeAddress> takerAcceptedMediatorNodeAddresses) {
-        this.takerAcceptedMediatorNodeAddresses = takerAcceptedMediatorNodeAddresses;
-    }
-
-    public List<NodeAddress> getTakerAcceptedMediatorNodeAddresses() {
-        return takerAcceptedMediatorNodeAddresses;
-    }
-
-    public void setTempTradingPeerNodeAddress(NodeAddress tempTradingPeerNodeAddress) {
-        this.tempTradingPeerNodeAddress = tempTradingPeerNodeAddress;
-    }
-
-    public NodeAddress getTempTradingPeerNodeAddress() {
-        return tempTradingPeerNodeAddress;
-    }
-
-    public ArbitratorManager getArbitratorManager() {
-        return arbitratorManager;
-    }
-
-    public void setPreparedDepositTx(byte[] preparedDepositTx) {
-        this.preparedDepositTx = preparedDepositTx;
-    }
-
-    public byte[] getPreparedDepositTx() {
-        return preparedDepositTx;
-    }
-
-    public void setRawTransactionInputs(ArrayList<RawTransactionInput> rawTransactionInputs) {
-        this.rawTransactionInputs = rawTransactionInputs;
-    }
-
-    public ArrayList<RawTransactionInput> getRawTransactionInputs() {
-        return rawTransactionInputs;
-    }
-
-    public void setChangeOutputValue(long changeOutputValue) {
-        this.changeOutputValue = changeOutputValue;
-    }
-
-    public long getChangeOutputValue() {
-        return changeOutputValue;
-    }
-
-    public void setChangeOutputAddress(String changeOutputAddress) {
-        this.changeOutputAddress = changeOutputAddress;
-    }
-
-    @Nullable
-    public String getChangeOutputAddress() {
-        return changeOutputAddress;
-    }
-
-    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
-        this.takeOfferFeeTx = takeOfferFeeTx;
-    }
-
-    public Transaction getTakeOfferFeeTx() {
-        return takeOfferFeeTx;
-    }
-
-    public void setMyMultiSigPubKey(byte[] myMultiSigPubKey) {
-        this.myMultiSigPubKey = myMultiSigPubKey;
-    }
-
-    public byte[] getMyMultiSigPubKey() {
-        return myMultiSigPubKey;
-    }
-
-    public boolean getUseSavingsWallet() {
-        return useSavingsWallet;
-    }
-
-    public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload, PaymentAccountFilter[] appliedPaymentAccountFilter) {
+    public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,
+                                                      PaymentAccountFilter[] appliedPaymentAccountFilter) {
         return filterManager.getFilter() != null &&
                 filterManager.getFilter().bannedPaymentAccounts.stream()
                         .filter(paymentAccountFilter -> {
-                            final boolean samePaymentMethodId = paymentAccountFilter.paymentMethodId.equals(paymentAccountPayload.getPaymentMethodId());
+                            final boolean samePaymentMethodId = paymentAccountFilter.paymentMethodId.equals(
+                                    paymentAccountPayload.getPaymentMethodId());
                             if (samePaymentMethodId) {
                                 try {
                                     Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getMethodName);

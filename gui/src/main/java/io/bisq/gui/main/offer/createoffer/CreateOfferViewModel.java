@@ -190,7 +190,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 amount.set("0.01");
                 minAmount.set(amount.get());
                 UserThread.runAfter(() -> {
-                    price.set("1000");
+                    price.set("1200");
                     onFocusOutPriceAsPercentageTextField(true, false);
                     applyMakerFee();
                 }, 200, TimeUnit.MILLISECONDS);
@@ -796,15 +796,27 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     public String getMakerFee() {
         //TODO use last bisq market price to estimate BSQ val
-        final String perc = dataModel.getCurrencyForMakerFeeBtc() ?
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getMakerFee(), dataModel.getAmount().get(), btcFormatter) :
-                "";
-        return getFormatter().formatCoinWithCode(dataModel.getMakerFee()) + perc;
+        final Coin makerFeeAsCoin = dataModel.getMakerFee();
+        final String makerFee = getFormatter().formatCoinWithCode(makerFeeAsCoin);
+        if (dataModel.getCurrencyForMakerFeeBtc())
+            return makerFee + GUIUtil.getPercentageOfTradeAmount(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+        else
+            return makerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(makerFeeAsCoin)) + ")";
+    }
+
+    public String getTotalToPayInfo() {
+        final String totalToPay = this.totalToPay.get();
+        if (dataModel.getCurrencyForMakerFeeBtc())
+            return totalToPay;
+        else
+            return totalToPay + " + " + bsqFormatter.formatCoinWithCode(dataModel.getMakerFee());
     }
 
     public String getTxFee() {
-        return btcFormatter.formatCoinWithCode(dataModel.getTxFeeAsCoin()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getTxFeeAsCoin(), dataModel.getAmount().get(), btcFormatter);
+        Coin txFeeAsCoin = dataModel.getTxFee();
+        return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
+                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+
     }
 
     public PaymentAccount getPaymentAccount() {

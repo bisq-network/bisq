@@ -185,7 +185,7 @@ public class Connection implements MessageListener {
                         Thread.sleep(50);
                     }
 
-                    PB.Envelope envelope = null;
+                    PB.Envelope envelope;
 
                     lastSendTimeStamp = now;
                     String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
@@ -751,22 +751,29 @@ public class Connection implements MessageListener {
                         // Reading the protobuffer message from the inputstream
                         PB.Envelope envelope;
                         try {
-//                            if (protoInputStream.available() > 0) {
+                            //TODO check
+                            // if (protoInputStream.available() > 0) {
                             envelope = PB.Envelope.parseDelimitedFrom(protoInputStream);
-//                            } else {
-//                                return;
-//                            }
-
-                            if (!sharedModel.stopped && envelope == null) {
-                                log.error("Envelope is null, available={}", protoInputStream.available());
-                                reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                           /* } else {
+                                // we probably got a network issue so return here
+                               // stop();
+                                log.error("protoInputStream.available()=0. we probably got a network issue so return here");
                                 return;
-                            }
+                            }*/
                         } catch (Throwable t) {
                             if (!sharedModel.stopped) {
-                                log.error("Invalid data arrived at inputHandler of connection " + connection, t);
-                                reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                                if (t instanceof SocketTimeoutException) {
+                                    stop();
+                                } else {
+                                    log.warn("sharedModel.stopped " + t.toString());
+                                    //reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                                }
                             }
+                            return;
+                        }
+                        if (envelope == null) {
+                            log.warn("envelope = null");
+                            //reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                             return;
                         }
 
@@ -785,7 +792,7 @@ public class Connection implements MessageListener {
 
                         // TODO we get nullpointers here, should be covered by the check above...
                         if (envelope == null) {
-                            log.debug("Envelope is null, available={}", protoInputStream.available());
+                            log.error("Envelope is null, available={}", protoInputStream.available());
                             reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                             return;
                         }

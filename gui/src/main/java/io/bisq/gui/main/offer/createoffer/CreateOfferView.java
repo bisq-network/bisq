@@ -1295,7 +1295,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         separator.setStyle("-fx-background: #666;");
         GridPane.setConstraints(separator, 1, i++);
         infoGridPane.getChildren().add(separator);
-        addPayInfoEntry(infoGridPane, i, Res.getWithCol("shared.total"), model.totalToPay.get());
+        addPayInfoEntry(infoGridPane, i, Res.getWithCol("shared.total"), model.getTotalToPayInfo());
         totalToPayInfoPopover = new PopOver(infoGridPane);
         if (totalToPayInfoIconLabel.getScene() != null) {
             totalToPayInfoPopover.setDetachable(false);
@@ -1309,7 +1309,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {
         Label label = new Label(labelText);
         TextField textField = new TextField(value);
-        textField.setMinWidth(300);
+        textField.setMinWidth(500);
         textField.setEditable(false);
         textField.setFocusTraversable(false);
         textField.setId("payment-info");

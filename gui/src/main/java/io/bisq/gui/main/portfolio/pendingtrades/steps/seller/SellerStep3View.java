@@ -249,7 +249,7 @@ public class SellerStep3View extends TradeStepView {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         String key = "confirmPayment" + trade.getId();
         String message;
-        String tradeVolumeWithCode = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
+        String tradeVolumeWithCode = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
         String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
         String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
         String id = trade.getShortId();

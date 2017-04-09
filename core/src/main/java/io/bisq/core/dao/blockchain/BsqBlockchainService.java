@@ -316,7 +316,7 @@ abstract public class BsqBlockchainService {
         }
 
         if (totalAvailableBSQInputs - totalSpendBSQOutputs > 0) {
-            log.warn("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
+            log.debug("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
                     availableValue,
                     tx.toString());
 

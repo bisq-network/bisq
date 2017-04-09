@@ -46,7 +46,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             log.debug("current trade state " + trade.getState());
             PayDepositRequest payDepositRequest = (PayDepositRequest) processModel.getTradeMessage();
             checkNotNull(payDepositRequest);
-            checkTradeId(processModel.getId(), payDepositRequest);
+            checkTradeId(processModel.getOfferId(), payDepositRequest);
 
             PaymentAccountPayload paymentAccountPayload = checkNotNull(payDepositRequest.takerPaymentAccountPayload);
             final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
@@ -56,19 +56,19 @@ public class MakerProcessPayDepositRequest extends TradeTask {
                         "banFilter=" + appliedPaymentAccountFilter[0].toString());
                 return;
             }
-            processModel.tradingPeer.setPaymentAccountPayload(paymentAccountPayload);
+            processModel.getTradingPeer().setPaymentAccountPayload(paymentAccountPayload);
 
-            processModel.tradingPeer.setRawTransactionInputs(checkNotNull(payDepositRequest.rawTransactionInputs));
+            processModel.getTradingPeer().setRawTransactionInputs(checkNotNull(payDepositRequest.rawTransactionInputs));
             checkArgument(payDepositRequest.rawTransactionInputs.size() > 0);
 
-            processModel.tradingPeer.setChangeOutputValue(payDepositRequest.changeOutputValue);
-            processModel.tradingPeer.setChangeOutputAddress(payDepositRequest.changeOutputAddress);
+            processModel.getTradingPeer().setChangeOutputValue(payDepositRequest.changeOutputValue);
+            processModel.getTradingPeer().setChangeOutputAddress(payDepositRequest.changeOutputAddress);
 
-            processModel.tradingPeer.setMultiSigPubKey(checkNotNull(payDepositRequest.takerMultiSigPubKey));
-            processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(payDepositRequest.takerPayoutAddressString));
-            processModel.tradingPeer.setPubKeyRing(checkNotNull(payDepositRequest.takerPubKeyRing));
+            processModel.getTradingPeer().setMultiSigPubKey(checkNotNull(payDepositRequest.takerMultiSigPubKey));
+            processModel.getTradingPeer().setPayoutAddressString(nonEmptyStringOf(payDepositRequest.takerPayoutAddressString));
+            processModel.getTradingPeer().setPubKeyRing(checkNotNull(payDepositRequest.takerPubKeyRing));
 
-            processModel.tradingPeer.setAccountId(nonEmptyStringOf(payDepositRequest.takerAccountId));
+            processModel.getTradingPeer().setAccountId(nonEmptyStringOf(payDepositRequest.takerAccountId));
             trade.setTakerFeeTxId(nonEmptyStringOf(payDepositRequest.takeOfferFeeTxId));
             processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(payDepositRequest.acceptedArbitratorNodeAddresses));
             processModel.setTakerAcceptedMediatorNodeAddresses(checkNotNull(payDepositRequest.acceptedMediatorNodeAddresses));

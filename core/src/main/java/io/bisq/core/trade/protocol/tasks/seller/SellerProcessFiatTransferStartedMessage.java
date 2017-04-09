@@ -39,11 +39,11 @@ public class SellerProcessFiatTransferStartedMessage extends TradeTask {
             runInterceptHook();
             log.debug("current trade state " + trade.getState());
             FiatTransferStartedMsg message = (FiatTransferStartedMsg) processModel.getTradeMessage();
-            Validator.checkTradeId(processModel.getId(), message);
+            Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
 
-            processModel.tradingPeer.setPayoutAddressString(Validator.nonEmptyStringOf(message.buyerPayoutAddress));
-            processModel.tradingPeer.setSignature(checkNotNull(message.buyerSignature));
+            processModel.getTradingPeer().setPayoutAddressString(Validator.nonEmptyStringOf(message.buyerPayoutAddress));
+            processModel.getTradingPeer().setSignature(checkNotNull(message.buyerSignature));
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

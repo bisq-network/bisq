@@ -81,7 +81,6 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final AddressEntry addressEntry;
     private Coin makerFee;
     private boolean isCurrencyForMakerFeeBtc;
-    private Coin txFeeAsCoin;
     private final BalanceListener balanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
@@ -116,6 +115,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private boolean useSavingsWallet;
     Coin totalAvailableBalance;
     private double marketPriceMargin = 0;
+    private Coin txFeeFromFeeService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -253,6 +253,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
         if (!preferences.getUseStickyMarketPrice())
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
+        // We request to get the actual estimated fee
+        requestTxFee();
+
         // The maker only pays the mining fee for the trade fee tx (not the mining fee for other trade txs). 
         // A typical trade fee tx has about 226 bytes (if one input). We use 400 as a safe value.
         // We cannot use tx size calculation as we do not know initially how the input is funded. And we require the
@@ -266,13 +269,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But offer creation happens usually after that so we should have already the value from the estimation service.
-        txFeeAsCoin = feeService.getTxFee(400);
-
-        // We request to get the actual estimated fee
-        requestTxFee();
+        txFeeFromFeeService = feeService.getTxFee(400);
 
         calculateVolume();
         calculateTotalToPay();
+
         return true;
     }
 
@@ -368,7 +369,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 acceptedBanks,
                 Version.VERSION,
                 walletService.getLastBlockSeenHeight(),
-                txFeeAsCoin.value,
+                txFeeFromFeeService.value,
                 makerFee.value,
                 isCurrencyForMakerFeeBtc,
                 buyerSecurityDepositAsCoin.value,
@@ -390,9 +391,12 @@ class CreateOfferDataModel extends ActivatableDataModel {
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
         checkNotNull(makerFee, "makerFee must not be null");
 
-        // trade fee handling happens in protocol tasks
+        Coin reservedFundsForOffer = getSecurityDeposit();
+        if (!isBuyOffer())
+            reservedFundsForOffer = reservedFundsForOffer.add(amount.get());
+
         openOfferManager.placeOffer(offer,
-                totalToPayAsCoin.get().subtract(txFeeAsCoin),
+                reservedFundsForOffer,
                 useSavingsWallet,
                 resultHandler);
     }
@@ -451,7 +455,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void requestTxFee() {
         feeService.requestFees(() -> {
-            txFeeAsCoin = feeService.getTxFee(400);
+            txFeeFromFeeService = feeService.getTxFee(400);
             calculateTotalToPay();
         }, null);
     }
@@ -556,8 +560,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
         if (direction != null && amount.get() != null && makerFee != null) {
-            Coin optionalMakerFee = isCurrencyForMakerFeeBtc ? this.makerFee : Coin.ZERO;
-            Coin feeAndSecDeposit = optionalMakerFee.add(txFeeAsCoin).add(getSecurityDeposit());
+            Coin feeAndSecDeposit = getTxFee().add(getSecurityDeposit());
+            if (isCurrencyForMakerFeeBtc)
+                feeAndSecDeposit = feeAndSecDeposit.add(makerFee);
             Coin total = isBuyOffer() ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
             totalToPayAsCoin.set(total);
             updateBalance();
@@ -615,8 +620,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return makerFee;
     }
 
-    public Coin getTxFeeAsCoin() {
-        return txFeeAsCoin;
+    public Coin getTxFee() {
+        if (getCurrencyForMakerFeeBtc())
+            return txFeeFromFeeService;
+        else
+            return txFeeFromFeeService.subtract(makerFee);
     }
 
     public Preferences getPreferences() {

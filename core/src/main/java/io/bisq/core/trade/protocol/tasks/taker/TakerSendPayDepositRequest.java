@@ -45,7 +45,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
             checkNotNull(trade.getTradeAmount(), "TradeAmount must not be null");
             checkNotNull(trade.getTakerFeeTxId(), "TakeOfferFeeTxId must not be null");
 
-            BtcWalletService walletService = processModel.getWalletService();
+            BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             checkArgument(!walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(),
@@ -55,7 +55,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
             PayDepositRequest message = new PayDepositRequest(
                     processModel.getMyNodeAddress(),
-                    processModel.getId(),
+                    processModel.getOfferId(),
                     trade.getTradeAmount().value,
                     trade.getTradePrice().getValue(),
                     trade.getTxFee().getValue(),
@@ -79,12 +79,12 @@ public class TakerSendPayDepositRequest extends TradeTask {
 
             processModel.getP2PService().sendEncryptedDirectMessage(
                     trade.getTradingPeerNodeAddress(),
-                    processModel.tradingPeer.getPubKeyRing(),
+                    processModel.getTradingPeer().getPubKeyRing(),
                     message,
                     new SendDirectMessageListener() {
                         @Override
                         public void onArrived() {
-                            log.info("Message arrived at peer. tradeId={}, message{}", id, message);
+                            log.debug("Message arrived at peer. tradeId={}, message{}", id, message);
                             complete();
                         }
 

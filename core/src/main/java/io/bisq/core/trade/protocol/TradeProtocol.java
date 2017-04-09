@@ -51,7 +51,7 @@ public abstract class TradeProtocol {
 
         decryptedDirectMessageListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
             // We check the sig only as soon we have stored the peers pubKeyRing.
-            PubKeyRing tradingPeerPubKeyRing = processModel.tradingPeer.getPubKeyRing();
+            PubKeyRing tradingPeerPubKeyRing = processModel.getTradingPeer().getPubKeyRing();
             PublicKey signaturePubKey = decryptedMessageWithPubKey.signaturePubKey;
             if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
                 Msg msg = decryptedMessageWithPubKey.msg;
@@ -60,21 +60,10 @@ public abstract class TradeProtocol {
                     TradeMsg tradeMessage = (TradeMsg) msg;
                     nonEmptyStringOf(tradeMessage.tradeId);
 
-                    if (tradeMessage.tradeId.equals(processModel.getId()))
+                    if (tradeMessage.tradeId.equals(processModel.getOfferId()))
                         doHandleDecryptedMessage(tradeMessage, peersNodeAddress);
                 }
-            } //else {
-            //TODO not clear anymore what case is handled here
-            // it might be that we received a msg from the arbitrator, we don't handle that here but we don't want to log an error
-                /*Optional<Arbitrator> arbitratorOptional = processModel.getArbitratorManager().getArbitratorsObservableMap().values().stream()
-                        .filter(e -> e.getArbitratorAddress().equals(trade.getArbitratorAddress())).findFirst();
-                PubKeyRing arbitratorPubKeyRing = null;
-                if (arbitratorOptional.isPresent())
-                    arbitratorPubKeyRing = arbitratorOptional.get().getPubKeyRing();
-
-                if ((arbitratorPubKeyRing != null && !signaturePubKey.equals(arbitratorPubKeyRing.getSignaturePubKey())))
-                    log.error("Signature used in seal message does not match the one stored with that trade for the trading peer or arbitrator.");*/
-            //}
+            } 
         };
         processModel.getP2PService().addDecryptedDirectMessageListener(decryptedDirectMessageListener);
 
@@ -104,7 +93,7 @@ public abstract class TradeProtocol {
 
     public void applyMailboxMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, Trade trade) {
         log.debug("applyMailboxMessage " + decryptedMsgWithPubKey.msg);
-        if (decryptedMsgWithPubKey.signaturePubKey.equals(processModel.tradingPeer.getPubKeyRing().getSignaturePubKey()))
+        if (decryptedMsgWithPubKey.signaturePubKey.equals(processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey()))
             doApplyMailboxMessage(decryptedMsgWithPubKey.msg, trade);
         else
             log.error("SignaturePubKey in message does not match the SignaturePubKey we have stored to that trading peer.");
@@ -159,7 +148,7 @@ public abstract class TradeProtocol {
 
             // if we have not the deposit already published we swap reserved funds to available funds
             if (!trade.isDepositPublished())
-                processModel.getWalletService().swapAnyTradeEntryContextToAvailableEntry(trade.getId());
+                processModel.getBtcWalletService().swapAnyTradeEntryContextToAvailableEntry(trade.getId());
         }
     }
 }
