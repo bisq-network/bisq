@@ -142,7 +142,9 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
         final Set<Transaction> invalidBsqTransactions = bsqWalletService.getInvalidBsqTransactions();
         if (!invalidBsqTransactions.isEmpty() && bsqBlockchainManager.isUtxoSyncWithChainHeadHeight()) {
-            Set<String> txIds = invalidBsqTransactions.stream().map(t -> t.getHashAsString()).collect(Collectors.toSet());
+            Set<String> txIds = invalidBsqTransactions.stream()
+                    .filter(t -> t != null)
+                    .map(t -> t.getHashAsString()).collect(Collectors.toSet());
             String key = "invalidBsqTransactionsWarning_" + txIds;
             if (DontShowAgainLookup.showAgain(key))
                 new Popup().warning("We detected invalid Bsq transactions.\n" +
@@ -272,9 +274,30 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void addAmountColumn() {
-        TableColumn<BsqTxListItem, String> column = new TableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
-        column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(bsqFormatter.formatCoin(item.getValue().getAmount())));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new TableColumn<>(Res.get("shared.amountWithCur", "BSQ"));
         column.setMinWidth(130);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<TableColumn<BsqTxListItem, BsqTxListItem>,
+                TableCell<BsqTxListItem, BsqTxListItem>>() {
+
+            @Override
+            public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
+                    BsqTxListItem> column) {
+                return new TableCell<BsqTxListItem, BsqTxListItem>() {
+
+                    @Override
+                    public void updateItem(final BsqTxListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+
+                        if (item != null && !empty) {
+                            setText(bsqFormatter.formatCoin(item.getAmount()));
+                        } else {
+                            setText("");
+                        }
+                    }
+                };
+            }
+        });
         tableView.getColumns().add(column);
     }
 

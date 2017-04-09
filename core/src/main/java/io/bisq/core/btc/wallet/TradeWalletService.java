@@ -180,9 +180,9 @@ public class TradeWalletService {
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
         if (useSavingsWallet)
-            sendRequest.coinSelector = new BtcCoinSelector(params, walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+            sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
         else
-            sendRequest.coinSelector = new BtcCoinSelector(params, fundingAddress);
+            sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
         // We use a fixed fee
         sendRequest.feePerKb = Coin.ZERO;
         sendRequest.fee = txFee;
@@ -247,9 +247,9 @@ public class TradeWalletService {
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
         if (useSavingsWallet)
-            sendRequest.coinSelector = new BtcCoinSelector(params, walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+            sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
         else
-            sendRequest.coinSelector = new BtcCoinSelector(params, fundingAddress);
+            sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
         // We use a fixed fee
         sendRequest.feePerKb = Coin.ZERO;
         sendRequest.fee = txFee;
@@ -1173,7 +1173,7 @@ public class TradeWalletService {
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.fee = txFee;
             // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
-            sendRequest.coinSelector = new BtcCoinSelector(params, address);
+            sendRequest.coinSelector = new BtcCoinSelector(address);
             // We use always the same address in a trade for all transactions
             sendRequest.changeAddress = changeAddress;
             // With the usage of completeTx() we get all the work done with fee calculation, validation and coin selection.

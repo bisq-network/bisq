@@ -176,7 +176,7 @@ public class BtcWalletService extends WalletService {
         Address changeAddress = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
         checkNotNull(changeAddress, "changeAddress must not be null");
 
-        final BtcCoinSelector coinSelector = new BtcCoinSelector(params, walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+        final BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
         final List<TransactionInput> preparedBsqTxInputs = preparedBsqTx.getInputs();
         final List<TransactionOutput> preparedBsqTxOutputs = preparedBsqTx.getOutputs();
         int numInputs = preparedBsqTxInputs.size() + 1; // We add 1 for the BTC fee input
@@ -477,7 +477,7 @@ public class BtcWalletService extends WalletService {
                             sendRequest.fee = fee;
                             sendRequest.feePerKb = Coin.ZERO;
                             sendRequest.aesKey = aesKey;
-                            sendRequest.coinSelector = new BtcCoinSelector(params, toAddress);
+                            sendRequest.coinSelector = new BtcCoinSelector(toAddress);
                             sendRequest.changeAddress = toAddress;
                             wallet.completeTx(sendRequest);
                             tx = sendRequest.tx;
@@ -496,7 +496,7 @@ public class BtcWalletService extends WalletService {
                             sendRequest.fee = fee;
                             sendRequest.feePerKb = Coin.ZERO;
                             sendRequest.aesKey = aesKey;
-                            sendRequest.coinSelector = new BtcCoinSelector(params, toAddress);
+                            sendRequest.coinSelector = new BtcCoinSelector(toAddress);
                             sendRequest.changeAddress = toAddress;
                             sendResult = wallet.sendCoins(sendRequest);
                         } catch (InsufficientMoneyException e) {
@@ -511,7 +511,7 @@ public class BtcWalletService extends WalletService {
                             sendRequest.fee = fee;
                             sendRequest.feePerKb = Coin.ZERO;
                             sendRequest.aesKey = aesKey;
-                            sendRequest.coinSelector = new BtcCoinSelector(params, toAddress, false);
+                            sendRequest.coinSelector = new BtcCoinSelector(toAddress, false);
                             sendRequest.changeAddress = toAddress;
 
                             try {
@@ -713,7 +713,7 @@ public class BtcWalletService extends WalletService {
 
         checkNotNull(addressEntry.get(), "addressEntry.get() must not be null");
         checkNotNull(addressEntry.get().getAddress(), "addressEntry.get().getAddress() must not be null");
-        sendRequest.coinSelector = new BtcCoinSelector(params, addressEntry.get().getAddress());
+        sendRequest.coinSelector = new BtcCoinSelector(addressEntry.get().getAddress());
         sendRequest.changeAddress = addressEntry.get().getAddress();
         return sendRequest;
     }
@@ -752,7 +752,7 @@ public class BtcWalletService extends WalletService {
         if (addressEntries.isEmpty())
             throw new AddressEntryException("No Addresses for withdraw found in our wallet");
 
-        sendRequest.coinSelector = new BtcCoinSelector(params, walletsSetup.getAddressesFromAddressEntries(addressEntries));
+        sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries));
         Optional<AddressEntry> addressEntryOptional = Optional.empty();
         AddressEntry changeAddressAddressEntry = null;
         if (changeAddress != null)

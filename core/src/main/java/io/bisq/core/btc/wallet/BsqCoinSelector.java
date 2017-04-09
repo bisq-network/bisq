@@ -19,10 +19,7 @@ package io.bisq.core.btc.wallet;
 
 import io.bisq.core.dao.blockchain.BsqUTXO;
 import io.bisq.core.dao.blockchain.BsqUTXOMap;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
-import org.bitcoinj.params.RegTestParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +35,6 @@ import java.util.Set;
 class BsqCoinSelector extends BisqDefaultCoinSelector {
     private static final Logger log = LoggerFactory.getLogger(BsqCoinSelector.class);
 
-    private final boolean permitForeignPendingTx;
-
     private final Map<String, Set<BsqUTXO>> utxoSetByAddressMap = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +42,7 @@ class BsqCoinSelector extends BisqDefaultCoinSelector {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public BsqCoinSelector(boolean permitForeignPendingTx) {
-        this.permitForeignPendingTx = permitForeignPendingTx;
+        super(permitForeignPendingTx);
     }
 
     public void setUtxoMap(BsqUTXOMap bsqUTXOMap) {
@@ -61,22 +56,7 @@ class BsqCoinSelector extends BisqDefaultCoinSelector {
     }
 
     @Override
-    protected boolean isSelectable(Transaction tx) {
-        TransactionConfidence confidence = tx.getConfidence();
-        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-        boolean isConfirmed = type.equals(TransactionConfidence.ConfidenceType.BUILDING);
-        boolean isPending = type.equals(TransactionConfidence.ConfidenceType.PENDING);
-        boolean isOwnTxAndPending = isPending &&
-                confidence.getSource().equals(TransactionConfidence.Source.SELF) &&
-                // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
-                // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
-                // TODO check with local BTC mainnet core node (1 connection)
-                (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
-        return isConfirmed || (permitForeignPendingTx && isPending) || isOwnTxAndPending;
-    }
-
-    @Override
-    protected boolean selectOutput(TransactionOutput output) {
+    protected boolean isTxOutputSpendable(TransactionOutput output) {
         if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
             return utxoSetByAddressMap.containsKey(WalletUtils.getAddressStringFromOutput(output));
         } else {

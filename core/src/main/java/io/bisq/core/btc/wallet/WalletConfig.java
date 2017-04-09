@@ -340,11 +340,6 @@ public class WalletConfig extends AbstractIdleService {
      * or block chain download is started. You can tweak the objects configuration here.
      */
     void onSetupCompleted() {
-        vBtcWallet.allowSpendingUnconfirmedTransactions();
-
-        // TODO do we want that here?
-        vBsqWallet.allowSpendingUnconfirmedTransactions();
-
         if (!params.equals(RegTestParams.get()))
             peerGroup().setMaxConnections(11);
     }
