@@ -28,7 +28,8 @@ public class LanguageUtil {
     private static final List<String> userLanguageCodes = Arrays.asList(
             "en", // English
             "de", // German
-            "es"  // Spanish
+            "es", // Spanish
+            "sr"  // Serbian
             
             /*
             // not translated yet
@@ -37,7 +38,6 @@ public class LanguageUtil {
             "it", // Italian
             "el", // Greek
             "fr", // French
-            "sr", // Serbian
             "ja", // Japanese
             "iw", // Hebrew
             "hi", // Hindi
@@ -109,7 +109,11 @@ public class LanguageUtil {
 
     public static String getDisplayName(String code) {
         Locale locale = new Locale(code.toUpperCase());
-        return locale.getDisplayName(locale);
+        if (locale.getLanguage().equals("sr")) {
+            return locale.getDisplayName();
+        } else {
+            return locale.getDisplayName(locale);
+        }
     }
 
     public static List<String> getUserLanguageCodes() {
