@@ -119,7 +119,7 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
             } catch (Throwable e) {
                 log.error(e.toString());
                 e.printStackTrace();
-                throw new BsqBlockchainException(e.getMessage(), e);
+                throw new BsqBlockchainException(e.toString(), e);
             }
         });
 
@@ -134,7 +134,7 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> {
                     log.error(throwable.toString());
-                    errorMessageHandler.handleErrorMessage(throwable.getMessage());
+                    errorMessageHandler.handleErrorMessage(throwable.toString());
                 });
             }
         });
