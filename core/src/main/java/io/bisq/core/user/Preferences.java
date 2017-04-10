@@ -128,8 +128,6 @@ public interface Preferences extends Persistable {
 
     void setDontShowAgainMap(java.util.Map<String, Boolean> dontShowAgainMap);
 
-    void setPreferredLocale(java.util.Locale preferredLocale);
-
     void setUseStickyMarketPrice(boolean useStickyMarketPrice);
 
     void setPeerTagMap(java.util.Map<String, String> peerTagMap);
@@ -190,10 +188,6 @@ public interface Preferences extends Persistable {
 
     javafx.beans.property.BooleanProperty getUseAnimationsProperty();
 
-    javafx.beans.property.BooleanProperty getUseCustomWithdrawalTxFeeProperty();
-
-    javafx.beans.property.LongProperty getWithdrawalTxFeeInBytesProperty();
-
     javafx.collections.ObservableList<FiatCurrency> getFiatCurrenciesAsObservable();
 
     javafx.collections.ObservableList<CryptoCurrency> getCryptoCurrenciesAsObservable();
@@ -202,7 +196,15 @@ public interface Preferences extends Persistable {
 
     boolean isResyncSPVRequested();
 
+    void setResyncSPVRequested(boolean resyncSPVRequested);
+
     boolean getPayFeeInBTC();
 
     BlockChainExplorer getBsqBlockChainExplorer();
+
+    List<String> getBtcDenominations();
+
+    void setUseAnimations(boolean useAnimations);
+
+    void setPayFeeInBTC(boolean payFeeInBTC);
 }

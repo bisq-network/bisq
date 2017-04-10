@@ -911,8 +911,6 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         preferences.setUserLanguage(envelope.getPreferences().getUserLanguage());
         PB.Country userCountry = envelope.getPreferences().getUserCountry();
         preferences.setUserCountry(new Country(userCountry.getCode(), userCountry.getName(), new Region(userCountry.getRegion().getCode(), userCountry.getRegion().getName())));
-        preferences.setBtcDenomination(envelope.getPreferences().getBtcDenomination());
-        preferences.setUseAnimations(envelope.getPreferences().getUseAnimations());
         envelope.getPreferences().getFiatCurrenciesList().stream()
                 .forEach(tradeCurrency -> preferences.addFiatCurrency((FiatCurrency) getTradeCurrency(tradeCurrency)));
         envelope.getPreferences().getCryptoCurrenciesList().stream()
@@ -928,7 +926,6 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         preferences.setUseTorForBitcoinJ(envelope.getPreferences().getUseTorForBitcoinJ());
         preferences.setShowOwnOffersInOfferBook(envelope.getPreferences().getShowOwnOffersInOfferBook());
         PB.Locale preferredLocale = envelope.getPreferences().getPreferredLocale();
-        preferences.setPreferredLocale(new Locale(preferredLocale.getLanguage(), preferredLocale.getCountry(), preferredLocale.getVariant()));
         PB.TradeCurrency preferredTradeCurrency = envelope.getPreferences().getPreferredTradeCurrency();
         preferences.setPreferredTradeCurrency(getTradeCurrency(preferredTradeCurrency));
         preferences.setWithdrawalTxFeeInBytes(envelope.getPreferences().getWithdrawalTxFeeInBytes());

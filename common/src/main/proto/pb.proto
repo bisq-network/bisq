@@ -863,8 +863,6 @@ message Preferences {
     // Persisted fields
     string user_language = 1;
     Country user_country = 2;
-    string btc_denomination = 3;
-    bool use_animations = 4;
     repeated TradeCurrency fiat_currencies = 5;
     repeated TradeCurrency crypto_currencies = 6;
     BlockChainExplorer block_chain_explorer_main_net = 7;

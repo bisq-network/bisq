@@ -37,7 +37,7 @@ public class TakerPublishTakerFeeTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            processModel.getTradeWalletService().broadcastTx(processModel.getTradeWalletService().getWalletTx(Sha256Hash.of(processModel.getTakeOfferFeeTxId())),
+            processModel.getTradeWalletService().broadcastTx(processModel.getTradeWalletService().getWalletTx(processModel.getTakeOfferFeeTx().getHash()),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {

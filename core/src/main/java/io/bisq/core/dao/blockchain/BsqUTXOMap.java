@@ -17,6 +17,8 @@
 
 package io.bisq.core.dao.blockchain;
 
+import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
@@ -32,7 +34,7 @@ import java.io.Serializable;
 import java.util.*;
 
 @Slf4j
-public class BsqUTXOMap implements Serializable {
+public class BsqUTXOMap implements Persistable {
     // We don't use a Lombok delegate here as we want control the access to our map
     @Getter
     private HashMap<TxIdIndexTuple, BsqUTXO> map = new HashMap<>();
@@ -45,8 +47,8 @@ public class BsqUTXOMap implements Serializable {
     private transient ObservableMap<TxIdIndexTuple, BsqUTXO> observableMap;
     private transient final Storage<BsqUTXOMap> storage;
 
-    public BsqUTXOMap(File storageDir) {
-        storage = new Storage<>(storageDir);
+    public BsqUTXOMap(File storageDir, ProtobufferResolver protobufferResolver) {
+        storage = new Storage<>(storageDir, protobufferResolver);
         BsqUTXOMap persisted = storage.initAndGetPersisted(this, "BsqUTXOMap");
         if (persisted != null) {
             map.putAll(persisted.getMap());

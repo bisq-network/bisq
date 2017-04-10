@@ -79,7 +79,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private ComboBox<CryptoCurrency> cryptoCurrenciesComboBox;
     private Button resetDontShowAgainButton;
     // private ListChangeListener<TradeCurrency> displayCurrenciesListChangeListener;
-    final ObservableList<String> btcDenominations = FXCollections.observableArrayList(PreferencesImpl.getBtcDenominations());
+    final ObservableList<String> btcDenominations = FXCollections.observableArrayList();
     final ObservableList<BlockChainExplorer> blockExplorers;
     final ObservableList<String> languageCodes;
     final ObservableList<Country> countries;

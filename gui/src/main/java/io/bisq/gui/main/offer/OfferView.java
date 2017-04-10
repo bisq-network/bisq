@@ -118,7 +118,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         if (tradeCurrencyOptional.isPresent())
             tradeCurrency = tradeCurrencyOptional.get();
         else {
-            tradeCurrency = PreferencesImpl.getDefaultTradeCurrency();
+            tradeCurrency = GlobalSettings.getDefaultTradeCurrency();
         }
 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);

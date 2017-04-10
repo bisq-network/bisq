@@ -17,6 +17,8 @@
 
 package io.bisq.core.dao.blockchain;
 
+import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
@@ -33,7 +35,7 @@ import java.util.*;
 
 // Map of any ever existing TxOutput which was a valid BSQ
 @Slf4j
-public class BsqTXOMap implements Serializable {
+public class BsqTXOMap implements Persistable {
     // We don't use a Lombok delegate here as we want control the access to our map
     @Getter
     private HashMap<TxIdIndexTuple, TxOutput> map = new HashMap<>();
@@ -49,8 +51,8 @@ public class BsqTXOMap implements Serializable {
     private transient ObservableMap<String, Tx> observableBurnedBSQTxMap;
     private transient final Storage<BsqTXOMap> storage;
 
-    public BsqTXOMap(File storageDir) {
-        storage = new Storage<>(storageDir);
+    public BsqTXOMap(File storageDir, ProtobufferResolver protobufferResolver) {
+        storage = new Storage<>(storageDir, protobufferResolver);
         BsqTXOMap persisted = storage.initAndGetPersisted(this, "BsqTXOMap");
         if (persisted != null) {
             map.putAll(persisted.getMap());

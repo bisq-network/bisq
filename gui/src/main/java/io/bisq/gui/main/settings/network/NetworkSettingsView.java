@@ -164,7 +164,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         reSyncSPVChainButton.setOnAction(event -> {
             if (walletsSetup.reSyncSPVChain()) {
-                new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
+                new Popup<>(preferences).feedback(Res.get("settings.net.reSyncSPVSuccess"))
                         .useShutDownButton()
                         .actionButtonText(Res.get("shared.shutDown"))
                         .onAction(() -> {
@@ -174,7 +174,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                         .hideCloseButton()
                         .show();
             } else {
-                new Popup<>().error(Res.get("settings.net.reSyncSPVFailed")).show();
+                new Popup<>(preferences).error(Res.get("settings.net.reSyncSPVFailed")).show();
             }
         });
 

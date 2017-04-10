@@ -21,8 +21,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.grapher.graphviz.GraphvizGrapher;
-import com.google.inject.grapher.graphviz.GraphvizModule;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;

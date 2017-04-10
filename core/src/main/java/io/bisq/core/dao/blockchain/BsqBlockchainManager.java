@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.neemre.btcdcli4j.core.domain.PubKeyScript;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -50,7 +51,7 @@ public class BsqBlockchainManager {
 
     //mainnet
     private static final String GENESIS_TX_ID = "cabbf6073aea8f22ec678e973ac30c6d8fc89321011da6a017f63e67b9f66667";
-    // block 300000 2014-05-10 
+    // block 300000 2014-05-10
     // block 350000 2015-03-30
     // block 400000 2016-02-25
     // block 450000 2017-01-25
@@ -58,11 +59,11 @@ public class BsqBlockchainManager {
     private static final String REG_TEST_GENESIS_TX_ID = "3bc7bc9484e112ec8ddd1a1c984379819245ac463b9ce40fa8b5bf771c0f9236";
     private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 102;
 
-    // Modulo of blocks for making snapshots of UTXO. 
+    // Modulo of blocks for making snapshots of UTXO.
     // We stay also the value behind for safety against reorgs.
     // E.g. for SNAPSHOT_TRIGGER = 30:
     // If we are block 119 and last snapshot was 60 then we get a new trigger for a snapshot at block 120 and
-    // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after 
+    // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after
     // a restart.
     private static final int SNAPSHOT_TRIGGER = 300000;
 
@@ -97,15 +98,16 @@ public class BsqBlockchainManager {
                                 BisqEnvironment bisqEnvironment,
                                 @Named(Storage.DIR_KEY) File storageDir,
                                 Storage<PlainTextWrapper> jsonStorage,
-                                @Named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
+                                @Named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData,
+                                ProtobufferResolver protobufferResolver) {
         this.blockchainService = blockchainService;
         this.storageDir = storageDir;
         this.jsonStorage = jsonStorage;
         this.dumpBlockchainData = dumpBlockchainData;
         this.bitcoinNetwork = bisqEnvironment.getBitcoinNetwork();
 
-        bsqUTXOMap = new BsqUTXOMap(storageDir);
-        bsqTXOMap = new BsqTXOMap(storageDir);
+        bsqUTXOMap = new BsqUTXOMap(storageDir, protobufferResolver);
+        bsqTXOMap = new BsqTXOMap(storageDir, protobufferResolver);
 
         bsqUTXOMap.addListener(c -> onBsqUTXOChanged());
         bsqTXOMap.addListener(c -> onBsqTXOChanged());

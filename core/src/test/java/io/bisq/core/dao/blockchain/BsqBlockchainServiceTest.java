@@ -72,8 +72,8 @@ public class BsqBlockchainServiceTest {
         final URL resource = this.getClass().getClassLoader().getResource("");
         final String path = resource != null ? resource.getFile() : "";
         log.info("path for BsqUTXOMap=" + path);
-        bsqUTXOMap = new BsqUTXOMap(new File(path));
-        bsqTXOMap = new BsqTXOMap(new File(path));
+        bsqUTXOMap = new BsqUTXOMap(new File(path), null);
+        bsqTXOMap = new BsqTXOMap(new File(path), null);
         service = new MockBsqBlockchainService();
     }
 
@@ -88,7 +88,7 @@ public class BsqBlockchainServiceTest {
         // Output 0: ADDRESS_GEN_1 ADDRESS_GEN_1_VALUE
         // Output 1: ADDRESS_GEN_2 ADDRESS_GEN_2_VALUE
 
-        // UTXO: 
+        // UTXO:
         // GENESIS_TX_ID:0
         // GENESIS_TX_ID:1
 
@@ -119,7 +119,7 @@ public class BsqBlockchainServiceTest {
         // Input 0: Output 1 from GENESIS_TX
         // Output 0: ADDRESS_TX_1 ADDRESS_TX_1_VALUE (=ADDRESS_GEN_2_VALUE)
 
-        // UTXO: 
+        // UTXO:
         // GENESIS_TX_ID:0
         // TX1_ID:0
 
@@ -161,7 +161,7 @@ public class BsqBlockchainServiceTest {
         // Input 0: Output 0 from TX1
         // Output 0: ADDRESS_TX_2 ADDRESS_TX_2_VALUE (=ADDRESS_TX_1_VALUE)
 
-        // UTXO: 
+        // UTXO:
         // GENESIS_TX_ID:0
         // TX2_ID:0
 
@@ -213,7 +213,7 @@ public class BsqBlockchainServiceTest {
         // Input 0: Output 0 from TX1
         // Output 0: ADDRESS_TX_2 ADDRESS_TX_2_VALUE (=ADDRESS_TX_1_VALUE)
 
-        // UTXO: 
+        // UTXO:
         // GENESIS_TX_ID:0
         // TX2_ID:0
 
@@ -264,9 +264,9 @@ public class BsqBlockchainServiceTest {
         // TX2 (block 1):
         // Input 0: Output 0 from TX1
         // Input 1: Output 0 from GENESIS_TX
-        // Output 0: ADDRESS_TX_2 ADDRESS_TX_1_VALUE + ADDRESS_GEN_1_VALUE 
+        // Output 0: ADDRESS_TX_2 ADDRESS_TX_1_VALUE + ADDRESS_GEN_1_VALUE
 
-        // UTXO: 
+        // UTXO:
         // TX2_ID:0
 
         buildGenesisBlock();
