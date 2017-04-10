@@ -20,8 +20,8 @@ package io.bisq.core.dao.blockchain.json;
 import lombok.Value;
 
 @Value
-public class SpentInfoJson {
+public class SpentInfoForJson {
     private final long height;
-    private final int index;
-    private final String txid;
+    private final int inputIndex;
+    private final String txId;
 }

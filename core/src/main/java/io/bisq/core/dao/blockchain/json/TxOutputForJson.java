@@ -21,23 +21,21 @@ import lombok.Value;
 
 @Value
 public class TxOutputForJson {
-    private final boolean coinBase;
+    private final String txId;
+    private final int outputIndex;
+    private final long bsqAmount;
     private final int height;
-    private final int index;
-    private final boolean invalid;
-    private final int n;
-    private final int output_index;
+    private final boolean isBsqCoinBase;
+    private final boolean isVerified;
+    private final long burnedFee;
+    private final long btcTxFee;
+    private final ScriptPubKeyForJson scriptPubKey;
+    private final SpentInfoForJson spentInfo;
+    private final long time;
+    private final String txVersion;
 
-    private final ScriptPubKeyJson scriptPubKey;
-    private final SpentInfoJson spent_info;
+    public String getSortData() {
+        return height + txId + outputIndex;
+    }
 
-    private final long squ_amount;
-    private final String status;
-    private final String transaction_version;
-    private final long tx_time;
-    private final String tx_type_str;
-    private final String txid;
-    private final boolean validated;
-    private final double value;
-    private final long valueSat;
 }

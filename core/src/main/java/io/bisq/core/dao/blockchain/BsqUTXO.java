@@ -21,7 +21,6 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
-import java.util.List;
 
 // Estimation for UTXO set: 1 UTXO object has 78 byte
 // 1000 UTXOs - 10 000 UTXOs: 78kb -780kb
@@ -43,10 +42,7 @@ public class BsqUTXO implements Serializable {
     }
 
     public String getAddress() {
-        // Only at raw MS outputs addresses have more then 1 entry 
-        // We do not support raw MS for BSQ but lets see if is needed anyway, might be removed 
-        final List<String> addresses = txOutput.getAddresses();
-        return addresses.size() == 1 ? addresses.get(0) : addresses.toString();
+        return txOutput.getAddress();
     }
 
     public long getValue() {

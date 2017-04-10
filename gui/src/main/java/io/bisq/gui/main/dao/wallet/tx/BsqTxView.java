@@ -134,9 +134,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         Map<String, Tx> burnedBSQTxIdMap = bsqBlockchainManager.getBsqTXOMap().getBurnedBSQTxMap();
         Set<BsqTxListItem> list = bsqWalletService.getWalletBsqTransactions().stream()
                 .map(transaction -> new BsqTxListItem(transaction,
-                        bsqWalletService,
-                        btcWalletService,
-                        burnedBSQTxIdMap.containsKey(transaction.getHashAsString())))
+                                bsqWalletService,
+                                btcWalletService,
+                                burnedBSQTxIdMap.containsKey(transaction.getHashAsString()), bsqFormatter)
+                )
                 .collect(Collectors.toSet());
         observableList.setAll(list);
 

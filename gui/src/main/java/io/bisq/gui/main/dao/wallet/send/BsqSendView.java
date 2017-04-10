@@ -53,7 +53,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
 
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
-    private final BSFormatter bsqFormatter;
+    private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
     private final BalanceUtil balanceUtil;
     private BsqValidator bsqValidator;
@@ -113,7 +113,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         }
 
         sendButton.setOnAction((event) -> {
-            String receiversAddressString = receiversAddressInputTextField.getText();
+            String receiversAddressString = bsqFormatter.getAddressFromBsqAddress(receiversAddressInputTextField.getText()).toString();
             Coin receiverAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
             try {
                 Transaction preparedSendTx = bsqWalletService.getPreparedSendTx(receiversAddressString, receiverAmount);
@@ -124,7 +124,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                 new Popup().headLine(Res.get("dao.wallet.send.sendFunds.headline"))
                         .confirmation(Res.get("dao.wallet.send.sendFunds.details",
                                 bsqFormatter.formatCoinWithCode(receiverAmount),
-                                receiversAddressString,
+                                receiversAddressInputTextField.getText(),
                                 btcFormatter.formatCoinWithCode(miningFee),
                                 CoinUtil.getFeePerByte(miningFee, txSize),
                                 txSize / 1000d,

@@ -22,7 +22,7 @@ import lombok.Value;
 import java.util.List;
 
 @Value
-public class ScriptPubKeyJson {
+public class ScriptPubKeyForJson {
     private final List<String> addresses;
     private final String asm;
     private final String hex;

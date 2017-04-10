@@ -21,18 +21,17 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
+import com.neemre.btcdcli4j.core.domain.PubKeyScript;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.storage.FileManager;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
-import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.dao.RpcOptionKeys;
-import io.bisq.core.dao.blockchain.json.ScriptPubKeyJson;
-import io.bisq.core.dao.blockchain.json.SpentInfoJson;
+import io.bisq.core.dao.blockchain.json.ScriptPubKeyForJson;
+import io.bisq.core.dao.blockchain.json.SpentInfoForJson;
 import io.bisq.core.dao.blockchain.json.TxOutputForJson;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
@@ -41,10 +40,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class BsqBlockchainManager {
     private static final Logger log = LoggerFactory.getLogger(BsqBlockchainManager.class);
@@ -86,6 +85,7 @@ public class BsqBlockchainManager {
     private int chainHeadHeight;
     @Getter
     private boolean isUtxoSyncWithChainHeadHeight;
+    private final Storage<PlainTextWrapper> jsonStorage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -96,9 +96,11 @@ public class BsqBlockchainManager {
     public BsqBlockchainManager(BsqBlockchainService blockchainService,
                                 BisqEnvironment bisqEnvironment,
                                 @Named(Storage.DIR_KEY) File storageDir,
+                                Storage<PlainTextWrapper> jsonStorage,
                                 @Named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.blockchainService = blockchainService;
         this.storageDir = storageDir;
+        this.jsonStorage = jsonStorage;
         this.dumpBlockchainData = dumpBlockchainData;
         this.bitcoinNetwork = bisqEnvironment.getBitcoinNetwork();
 
@@ -110,7 +112,7 @@ public class BsqBlockchainManager {
         bsqTXOMap.addBurnedBSQTxMapListener(c -> onBsqTXOChanged());
 
         if (dumpBlockchainData) {
-
+            this.jsonStorage.initWithFileName("txo.json");
           /*  p2PService.addP2PServiceListener(new BootstrapListener() {
                 @Override
                 public void onBootstrapComplete() {
@@ -132,63 +134,67 @@ public class BsqBlockchainManager {
     }
 
     private void doDumpBlockchainData() {
-        bsqTXOMap.getMap().values().stream()
-                .forEach(txOutput -> {
-                    final boolean coinBase = false;
-                    final int height = -1;
-                    final int index = txOutput.getIndex();
-                    final boolean invalid = false;
-                    final int n = index;
-                    final int output_index = index;
+        List<TxOutputForJson> list = bsqTXOMap.getMap().values().stream()
+                .map(this::getTxOutputForJson)
+                .collect(Collectors.toList());
 
-                    final ScriptPubKeyJson scriptPubKey = new ScriptPubKeyJson(txOutput.getAddresses(),
-                            "asm",
-                            "hex",
-                            -1,
-                            "type");
-                    final SpentInfoJson spent_info = new SpentInfoJson(-1, -1, "txId");
+        list.sort((o1, o2) -> (o1.getSortData().compareTo(o2.getSortData())));
+        TxOutputForJson[] array = new TxOutputForJson[list.size()];
+        list.toArray(array);
+        jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(array)), 5000);
 
-                    final long squ_amount = txOutput.getValue();
-                    final String status = "?";
-                    final String transaction_version = "?";
-                    final long tx_time = -1;
-                    final String tx_type_str = "?";
-                    final String txid = txOutput.getTxId();
-                    final boolean validated = false;
-                    final double value = MathUtils.scaleDownByPowerOf10(squ_amount, 8);
-                    final long valueSat = squ_amount;
+        // keep the individual file storage option as code as we dont know yet what we will use.
+      /*  log.error("txOutputForJson " + txOutputForJson);
+        File txoDir = new File(Paths.get(storageDir.getAbsolutePath(), "txo").toString());
+        if (!txoDir.exists())
+            if (!txoDir.mkdir())
+                log.warn("make txoDir failed.\ntxoDir=" + txoDir.getAbsolutePath());
+        File txoFile = new File(Paths.get(txoDir.getAbsolutePath(),
+                txOutput.getTxId() + ":" + outputIndex + ".json").toString());
 
-                    // TODO WIP...
-                    TxOutputForJson txOutputForJson = new TxOutputForJson(coinBase,
-                            height,
-                            index,
-                            invalid,
-                            n,
-                            output_index,
-                            scriptPubKey,
-                            spent_info,
-                            squ_amount,
-                            status,
-                            transaction_version,
-                            tx_time,
-                            tx_type_str,
-                            txid,
-                            validated,
-                            value,
-                            valueSat
-                    );
-                    //   log.error("txOutputForJson " + txOutputForJson);
-                    File txoDir = new File(Paths.get(storageDir.getAbsolutePath(), "txo").toString());
-                    if (!txoDir.exists())
-                        if (!txoDir.mkdir())
-                            log.warn("make txoDir failed.\ntxoDir=" + txoDir.getAbsolutePath());
-                    File txoFile = new File(Paths.get(txoDir.getAbsolutePath(), txid + ":" + index + ".json").toString());
+        // Nr of write requests might be a bit heavy, consider write whole list to one file
+        FileManager<PlainTextWrapper> fileManager = new FileManager<>(storageDir, txoFile, 1);
+        fileManager.saveLater(new PlainTextWrapper(Utilities.objectToJson(txOutputForJson)));*/
+    }
 
-                    // Nr of write requests might be a bit heavy, consider write whole list to one file
-                    FileManager<PlainTextWrapper> fileManager = new FileManager<>(storageDir, txoFile, 1);
-                    fileManager.saveLater(new PlainTextWrapper(Utilities.objectToJson(txOutputForJson)));
-                });
+    private TxOutputForJson getTxOutputForJson(TxOutput txOutput) {
+        String txId = txOutput.getTxId();
+        int outputIndex = txOutput.getIndex();
+        final long bsqAmount = txOutput.getValue();
+        final int height = txOutput.getBlockHeight();
+        final boolean isBsqCoinBase = txOutput.isBsqCoinBase();
+        final boolean verified = txOutput.isVerified();
+        final long burnedFee = txOutput.getBurnedFee();
+        final long btcTxFee = txOutput.getBtcTxFee();
 
+        PubKeyScript pubKeyScript = txOutput.getPubKeyScript();
+        final ScriptPubKeyForJson scriptPubKey = new ScriptPubKeyForJson(pubKeyScript.getAddresses(),
+                pubKeyScript.getAsm(),
+                pubKeyScript.getHex(),
+                pubKeyScript.getReqSigs(),
+                pubKeyScript.getType().toString());
+        SpentInfoForJson spentInfoJson = null;
+        SpendInfo spendInfo = txOutput.getSpendInfo();
+        if (spendInfo != null)
+            spentInfoJson = new SpentInfoForJson(spendInfo.getBlockHeight(),
+                    spendInfo.getInputIndex(),
+                    spendInfo.getTxId());
+
+        final long time = txOutput.getTime();
+        final String txVersion = txOutput.getTxVersion();
+        return new TxOutputForJson(txId,
+                outputIndex,
+                bsqAmount,
+                height,
+                isBsqCoinBase,
+                verified,
+                burnedFee,
+                btcTxFee,
+                scriptPubKey,
+                spentInfoJson,
+                time,
+                txVersion
+        );
     }
 
     private void onBsqUTXOChanged() {

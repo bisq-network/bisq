@@ -18,20 +18,20 @@
 package io.bisq.gui.util.validation;
 
 import io.bisq.common.locale.Res;
-import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.user.Preferences;
-import org.bitcoinj.core.Address;
-import org.bitcoinj.core.AddressFormatException;
+import io.bisq.gui.util.BsqFormatter;
 
 import javax.inject.Inject;
 
 public final class BsqAddressValidator extends InputValidator {
 
     private final Preferences preferences;
+    private BsqFormatter bsqFormatter;
 
     @Inject
-    public BsqAddressValidator(Preferences preferences) {
+    public BsqAddressValidator(Preferences preferences, BsqFormatter bsqFormatter) {
         this.preferences = preferences;
+        this.bsqFormatter = bsqFormatter;
     }
 
     @Override
@@ -46,9 +46,9 @@ public final class BsqAddressValidator extends InputValidator {
 
     private ValidationResult validateBsqAddress(String input) {
         try {
-            new Address(WalletUtils.getParameters(), input);
+            bsqFormatter.getAddressFromBsqAddress(input);
             return new ValidationResult(true);
-        } catch (AddressFormatException e) {
+        } catch (Throwable e) {
             return new ValidationResult(false, Res.get("validation.bsq.invalidFormat"));
         }
     }

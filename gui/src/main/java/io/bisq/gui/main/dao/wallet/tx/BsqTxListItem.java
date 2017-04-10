@@ -23,6 +23,7 @@ import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
+import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
 import javafx.scene.control.Tooltip;
 import lombok.Getter;
@@ -61,6 +62,7 @@ class BsqTxListItem {
     private boolean received;
     @Getter
     private boolean isBurnedBsqTx;
+    private BsqFormatter bsqFormatter;
     @Getter
     private TxConfidenceIndicator txConfidenceIndicator;
 
@@ -69,11 +71,13 @@ class BsqTxListItem {
     public BsqTxListItem(Transaction transaction,
                          BsqWalletService bsqWalletService,
                          BtcWalletService btcWalletService,
-                         boolean isBurnedBsqTx) {
+                         boolean isBurnedBsqTx,
+                         BsqFormatter bsqFormatter) {
         this.transaction = transaction;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.isBurnedBsqTx = isBurnedBsqTx;
+        this.bsqFormatter = bsqFormatter;
 
         txId = transaction.getHashAsString();
         date = transaction.getUpdateTime();
@@ -106,7 +110,7 @@ class BsqTxListItem {
                     WalletUtils.isOutputScriptConvertableToAddress(output)) {
                 // We don't support send txs with multiple outputs to multiple receivers, so we can 
                 // assume that only one output is not from our own wallets.
-                foreignReceiverAddress = WalletUtils.getAddressStringFromOutput(output);
+                foreignReceiverAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletUtils.getAddressFromOutput(output));
                 break;
             }
         }
@@ -117,7 +121,7 @@ class BsqTxListItem {
         if (foreignReceiverAddress != null) {
             for (TransactionOutput output : transaction.getOutputs()) {
                 if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
-                    ownReceiverAddress = WalletUtils.getAddressStringFromOutput(output);
+                    ownReceiverAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletUtils.getAddressFromOutput(output));
                     break;
                 }
             }

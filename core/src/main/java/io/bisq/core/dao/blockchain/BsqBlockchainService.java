@@ -71,7 +71,7 @@ abstract public class BsqBlockchainService {
 
     abstract Block requestBlock(int i) throws BitcoindException, CommunicationException;
 
-    abstract Tx requestTransaction(String txId) throws BsqBlockchainException;
+    abstract Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException;
 
     @VisibleForTesting
     void parseBlockchain(BsqUTXOMap bsqUTXOMap,
@@ -138,7 +138,7 @@ abstract public class BsqBlockchainService {
         List<String> txIds = block.getTxIds();
         Tx genesisTx = null;
         for (String txId : txIds) {
-            final Tx tx = requestTransaction(txId);
+            final Tx tx = requestTransaction(txId, blockHeight);
             block.addTx(tx);
             if (txId.equals(genesisTxId))
                 genesisTx = tx;
@@ -270,12 +270,19 @@ abstract public class BsqBlockchainService {
         long availableValue = 0;
         long totalAvailableBSQInputs = 0;
         long totalSpendBSQOutputs = 0;
-        for (TxInput input : tx.getInputs()) {
+        final String txId = tx.getId();
+        for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
+            TxInput input = tx.getInputs().get(inputIndex);
             String spendingTxId = input.getSpendingTxId();
             final int spendingTxOutputIndex = input.getSpendingTxOutputIndex();
+
+            if (bsqTXOMap.containsTuple(spendingTxId, spendingTxOutputIndex)) {
+                TxOutput txOutputFromSpendingTx = bsqTXOMap.getByTuple(spendingTxId, spendingTxOutputIndex);
+                txOutputFromSpendingTx.setSpendInfo(new SpendInfo(blockHeight, txId, inputIndex));
+            }
+
             if (bsqUTXOMap.containsTuple(spendingTxId, spendingTxOutputIndex)) {
                 BsqUTXO bsqUTXO = bsqUTXOMap.getByTuple(spendingTxId, spendingTxOutputIndex);
-                log.debug("input value " + bsqUTXO.getValue());
                 availableValue = availableValue + bsqUTXO.getValue();
                 totalAvailableBSQInputs += bsqUTXO.getValue();
                 bsqUTXOMap.removeByTuple(spendingTxId, spendingTxOutputIndex);
@@ -292,14 +299,8 @@ abstract public class BsqBlockchainService {
             for (TxOutput txOutput : outputs) {
                 availableValue = availableValue - txOutput.getValue();
                 if (availableValue >= 0) {
-                    if (txOutput.getAddresses().size() != 1) {
-                        final String msg = "We got a address list with more or less than 1 address for a BsqUTXO. " +
-                                "Seems to be a raw MS. Raw MS are not supported with BSQ.\n" + this.toString();
-                        log.warn(msg);
-                        if (DevEnv.DEV_MODE)
-                            throw new RuntimeException(msg);
-                    }
                     // We are spending available tokens
+                    txOutput.setVerified(true);
                     bsqUTXOMap.add(new BsqUTXO(blockHeight, txOutput, false));
                     bsqTXOMap.add(txOutput);
                     totalSpendBSQOutputs += txOutput.getValue();
@@ -315,11 +316,12 @@ abstract public class BsqBlockchainService {
             }
         }
 
-        if (totalAvailableBSQInputs - totalSpendBSQOutputs > 0) {
+        final long burnedAmount = totalAvailableBSQInputs - totalSpendBSQOutputs;
+        if (burnedAmount > 0) {
             log.debug("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
                     availableValue,
                     tx.toString());
-
+            tx.getOutputs().stream().forEach(e -> e.setBurnedFee(burnedAmount));
             bsqTXOMap.addBurnedBSQTx(tx);
         }
 
@@ -336,13 +338,8 @@ abstract public class BsqBlockchainService {
         //TODO use BsqTXO not BsqUTXO as we dont know if they are unspent
         // Genesis tx uses all outputs as BSQ outputs
         for (TxOutput txOutput : outputs) {
-            if (txOutput.getAddresses().size() != 1) {
-                final String msg = "We got a address list with more or less than 1 address. " +
-                        "Seems to be a raw MS. Raw MS are not supported with BSQ.\n" + this.toString();
-                log.warn(msg);
-                if (DevEnv.DEV_MODE)
-                    throw new RuntimeException(msg);
-            }
+            txOutput.setVerified(true);
+            txOutput.setBsqCoinBase(true);
             bsqUTXOMap.add(new BsqUTXO(blockHeight, txOutput, true));
             bsqTXOMap.add(txOutput);
         }

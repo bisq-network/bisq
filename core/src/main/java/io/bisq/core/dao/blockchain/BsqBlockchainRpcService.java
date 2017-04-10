@@ -37,7 +37,6 @@ import io.bisq.core.dao.RpcOptionKeys;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.bitcoinj.script.Script;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +50,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.bitcoinj.core.Utils.HEX;
 
 public class BsqBlockchainRpcService extends BsqBlockchainService {
     private static final Logger log = LoggerFactory.getLogger(BsqBlockchainRpcService.class);
@@ -198,35 +196,27 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     }
 
     @Override
-    Tx requestTransaction(String txId) throws BsqBlockchainException {
+    Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException {
         try {
             RawTransaction rawTransaction = getRawTransaction(txId);
+            final long time = rawTransaction.getTime() * 1000;
             final List<TxInput> txInputs = rawTransaction.getVIn()
                     .stream()
                     .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
                     .map(rawInput -> new TxInput(rawInput.getVOut(), rawInput.getTxId(), rawTransaction.getHex()))
                     .collect(Collectors.toList());
+
             final List<TxOutput> txOutputs = rawTransaction.getVOut()
                     .stream()
                     .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
-                    .map(e -> {
-                        byte[] scriptProgramBytes = new byte[]{};
-                        try {
-                            scriptProgramBytes = e.getScriptPubKey().getHex() != null ?
-                                    new Script(HEX.decode(e.getScriptPubKey().getHex())).getProgram() : new byte[]{};
-                        } catch (Throwable t) {
-                            // expected for tx: 0f8e9655b29d76c5e01147704a64faf95a9c90433baacdd39d4c1d2667e570a2
-                            log.error(e.getScriptPubKey().getAsm());
-                            log.error(e.getScriptPubKey().getHex());
-                            log.error(e.getScriptPubKey().toString());
-                            log.error(t.toString());
-                            t.printStackTrace();
-                        }
-                        return new TxOutput(e.getN(),
-                                e.getValue().movePointRight(8).longValue(),
-                                e.getScriptPubKey().getAddresses(),
+                    .map(rawOutput -> {
+
+                        return new TxOutput(rawOutput.getN(),
+                                rawOutput.getValue().movePointRight(8).longValue(),
                                 rawTransaction.getTxId(),
-                                scriptProgramBytes);
+                                rawOutput.getScriptPubKey(),
+                                blockHeight,
+                                time);
                     })
                     .collect(Collectors.toList());
 
@@ -234,7 +224,7 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
             return new Tx(txId,
                     txInputs,
                     txOutputs,
-                    rawTransaction.getTime() * 1000);
+                    time);
         } catch (BitcoindException | CommunicationException e) {
             throw new BsqBlockchainException(e.getMessage(), e);
         }
