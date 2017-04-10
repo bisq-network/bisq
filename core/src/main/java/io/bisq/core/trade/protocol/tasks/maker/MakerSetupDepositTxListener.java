@@ -47,7 +47,7 @@ public class MakerSetupDepositTxListener extends TradeTask {
         try {
             runInterceptHook();
             if (trade.getState().getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED) {
-                BtcWalletService walletService = processModel.getWalletService();
+                BtcWalletService walletService = processModel.getBtcWalletService();
                 Address address = walletService.getOrCreateAddressEntry(trade.getId(),
                         AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
 

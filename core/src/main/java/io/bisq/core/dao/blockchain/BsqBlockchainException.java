@@ -25,4 +25,8 @@ public class BsqBlockchainException extends Exception {
     public BsqBlockchainException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    public BsqBlockchainException(Throwable cause) {
+        super(cause);
+    }
 }

@@ -51,9 +51,9 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
 
-            BtcWalletService walletService = processModel.getWalletService();
+            BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
-            TradingPeer tradingPeer = processModel.tradingPeer;
+            TradingPeer tradingPeer = processModel.getTradingPeer();
             final Offer offer = trade.getOffer();
 
             // params

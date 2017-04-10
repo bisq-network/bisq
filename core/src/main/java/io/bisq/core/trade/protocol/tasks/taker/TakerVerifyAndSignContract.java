@@ -49,9 +49,9 @@ public class TakerVerifyAndSignContract extends TradeTask {
         try {
             runInterceptHook();
 
-            checkNotNull(trade.getTakeOfferFeeTxId(), "TakeOfferFeeTxId must not be null");
+            checkNotNull(trade.getTakerFeeTxId(), "TakeOfferFeeTxId must not be null");
 
-            TradingPeer maker = processModel.tradingPeer;
+            TradingPeer maker = processModel.getTradingPeer();
             PaymentAccountPayload makerPaymentAccountPayload = maker.getPaymentAccountPayload();
             PaymentAccountPayload takerPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
 
@@ -62,7 +62,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
             log.debug("buyerAddress " + buyerNodeAddress);
             log.debug("sellerAddress " + sellerNodeAddress);
 
-            BtcWalletService walletService = processModel.getWalletService();
+            BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
@@ -78,7 +78,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     processModel.getOffer().getOfferPayload(),
                     trade.getTradeAmount(),
                     trade.getTradePrice(),
-                    trade.getTakeOfferFeeTxId(),
+                    trade.getTakerFeeTxId(),
                     buyerNodeAddress,
                     sellerNodeAddress,
                     trade.getArbitratorNodeAddress(),

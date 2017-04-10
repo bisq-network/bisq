@@ -49,6 +49,7 @@
         <module>seednode</module>
         <module>statistics</module>
         <module>provider</module>
+        <module>bsq_utxo_provider</module>
     </modules>
 
     <build>
@@ -124,11 +125,6 @@
             <artifactId>guice</artifactId>
             <version>4.1.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.google.inject.extensions</groupId>
-            <artifactId>guice-grapher</artifactId>
-            <version>4.1.0</version>
-        </dependency>
 
         <!--crypto-->
         <dependency>
@@ -147,13 +143,6 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpg-jdk16</artifactId>
             <version>1.46</version>
-        </dependency>
-
-        <!--http-->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>4.4.1</version>
         </dependency>
 
         <!--utils-->
@@ -195,7 +184,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.16.12</version>
+            <version>1.16.16</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

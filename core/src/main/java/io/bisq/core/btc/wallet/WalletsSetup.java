@@ -31,6 +31,7 @@ import io.bisq.common.persistance.LongPersistable;
 import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.user.Preferences;
 import io.bisq.network.DnsLookupTor;
@@ -68,6 +69,9 @@ public class WalletsSetup {
     private static final Logger log = LoggerFactory.getLogger(WalletsSetup.class);
 
     private static final long STARTUP_TIMEOUT_SEC = 60;
+    private static final String BTC_WALLET_FILE_NAME = "bisq_BTC.wallet";
+    private static final String BSQ_WALLET_FILE_NAME = "bisq_BSQ.wallet";
+    private static final String SPV_CHAIN_FILE_NAME = "bisq.spvchain";
 
     private final RegTestHost regTestHost;
     private final AddressEntryList addressEntryList;
@@ -77,8 +81,6 @@ public class WalletsSetup {
     private final NetworkParameters params;
     private final File walletDir;
     private final int socks5DiscoverMode;
-    private final String walletFileName = "bisq_BTC";
-    private final String bsqWalletFileName = "bisq_BSQ";
     private final Long bloomFilterTweak;
     private final Storage<LongPersistable> storage;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
@@ -98,6 +100,7 @@ public class WalletsSetup {
                         AddressEntryList addressEntryList,
                         UserAgent userAgent,
                         Preferences preferences,
+                        BisqEnvironment bisqEnvironment,
                         Socks5ProxyProvider socks5ProxyProvider,
                         ProtobufferResolver protobufferResolver,
                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
@@ -111,7 +114,8 @@ public class WalletsSetup {
 
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);
 
-        params = preferences.getBitcoinNetwork().getParameters();
+        WalletUtils.setBitcoinNetwork(bisqEnvironment.getBitcoinNetwork());
+        params = WalletUtils.getParameters();
         walletDir = new File(appDir, "bitcoin");
 
         storage = new Storage<>(walletDir, protobufferResolver);
@@ -148,7 +152,7 @@ public class WalletsSetup {
         final Socks5Proxy socks5Proxy = preferences.getUseTorForBitcoinJ() ? socks5ProxyProvider.getSocks5Proxy() : null;
         log.debug("Use socks5Proxy for bitcoinj: " + socks5Proxy);
 
-        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, walletFileName, bsqWalletFileName) {
+        walletConfig = new WalletConfig(params, socks5Proxy, walletDir, BTC_WALLET_FILE_NAME, BSQ_WALLET_FILE_NAME, SPV_CHAIN_FILE_NAME) {
             @Override
             protected void onSetupCompleted() {
                 //We are here in the btcj thread Thread[ STARTING,5,main]
@@ -247,6 +251,18 @@ public class WalletsSetup {
                 // ignore
             }
             shutDownComplete.set(true);
+        } else {
+            shutDownComplete.set(true);
+        }
+    }
+
+    public boolean reSyncSPVChain() {
+        try {
+            return new File(walletDir, SPV_CHAIN_FILE_NAME).delete();
+        } catch (Throwable t) {
+            log.error(t.toString());
+            t.printStackTrace();
+            return false;
         }
     }
 
@@ -391,7 +407,7 @@ public class WalletsSetup {
         // be private by default when using proxy/tor.  However, the seedpeers
         // could become outdated, so it is important that the user be able to
         // disable it, but should be made aware of the reduced privacy.
-        if (socks5Proxy != null && !usePeerNodes) {
+        if (socks5Proxy != null && !usePeerNodes && regTestHost != RegTestHost.LOCALHOST) {
             // SeedPeers uses hard coded stable addresses (from MainNetParams). It should be updated from time to time.
             walletConfig.setDiscovery(new Socks5MultiDiscovery(socks5Proxy, params, socks5DiscoverMode));
         }
@@ -403,8 +419,8 @@ public class WalletsSetup {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void backupWallets() {
-        FileUtil.rollingBackup(walletDir, walletFileName + ".wallet", 20);
-        FileUtil.rollingBackup(walletDir, bsqWalletFileName + ".wallet", 20);
+        FileUtil.rollingBackup(walletDir, BTC_WALLET_FILE_NAME, 20);
+        FileUtil.rollingBackup(walletDir, BSQ_WALLET_FILE_NAME, 20);
     }
 
     void clearBackups() {

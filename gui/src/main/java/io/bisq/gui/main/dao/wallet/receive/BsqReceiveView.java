@@ -39,6 +39,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.uri.BitcoinURI;
 import org.fxmisc.easybind.EasyBind;
@@ -58,8 +59,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     private InputTextField amountTextField;
     private TextField balanceTextField;
     private final BsqWalletService bsqWalletService;
-
-    private final BsqFormatter formatter;
+    private final BsqFormatter bsqFormatter;
     private final BalanceUtil balanceUtil;
     private int gridRow = 0;
 
@@ -73,10 +73,9 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter formatter, BalanceUtil balanceUtil,
-                           Preferences preferences) {
+    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter bsqFormatter, BalanceUtil balanceUtil, Preferences preferences) {
         this.bsqWalletService = bsqWalletService;
-        this.formatter = formatter;
+        this.bsqFormatter = bsqFormatter;
         this.balanceUtil = balanceUtil;
         paymentLabelString = Res.get("dao.wallet.receive.fundBSQWallet");
         this.preferences = preferences;
@@ -112,15 +111,15 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
         balanceUtil.activate();
 
         amountTextFieldSubscription = EasyBind.subscribe(amountTextField.textProperty(), t -> {
-            addressTextField.setAmountAsCoin(formatter.parseToCoin(t));
+            addressTextField.setAmountAsCoin(bsqFormatter.parseToCoin(t));
             updateQRCode();
         });
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
                         () -> new QRCodeWindow(getBitcoinURI(), preferences).show(),
-                        200, TimeUnit.MILLISECONDS)
-        , preferences));
-        addressTextField.setAddress(bsqWalletService.freshReceiveAddress().toString());
+                        200, TimeUnit.MILLISECONDS), preferences
+        ));
+        addressTextField.setAddress(bsqFormatter.getBsqAddressStringFromAddress(bsqWalletService.freshReceiveAddress()));
         updateQRCode();
     }
 
@@ -146,11 +145,12 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     }
 
     private Coin getAmountAsCoin() {
-        return formatter.parseToCoin(amountTextField.getText());
+        return bsqFormatter.parseToCoin(amountTextField.getText());
     }
 
     private String getBitcoinURI() {
-        return BitcoinURI.convertToBitcoinURI(addressTextField.getAddress(),
+        Address addressFromBsqAddress = bsqFormatter.getAddressFromBsqAddress(addressTextField.getAddress());
+        return BitcoinURI.convertToBitcoinURI(addressFromBsqAddress,
                 getAmountAsCoin(),
                 paymentLabelString,
                 null);

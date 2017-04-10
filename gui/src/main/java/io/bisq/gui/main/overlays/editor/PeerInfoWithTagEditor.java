@@ -1,6 +1,6 @@
 package io.bisq.gui.main.overlays.editor;
 
-import com.google.inject.Inject;
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.locale.Res;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
@@ -42,10 +42,8 @@ import java.util.function.Consumer;
 
 @Slf4j
 public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
-    private final Preferences preferences;
     private InputTextField inputTextField;
     private Point2D position;
-
     private static PeerInfoWithTagEditor INSTANCE;
     private Consumer<String> saveHandler;
     private String hostName;
@@ -53,6 +51,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private ChangeListener<Boolean> focusListener;
     private final PrivateNotificationManager privateNotificationManager;
     private final Offer offer;
+    private Preferences preferences;
     private EventHandler<KeyEvent> keyEventEventHandler;
 
 
@@ -184,7 +183,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     @Override
     protected void animateHide(Runnable onFinishedHandler) {
-        if (preferences.getUseAnimations()) {
+        if (GlobalSettings.getUseAnimations()) {
             double duration = getDuration(300);
             Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
 
@@ -216,7 +215,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     @Override
     protected void animateDisplay() {
-        if (preferences.getUseAnimations()) {
+        if (GlobalSettings.getUseAnimations()) {
             double startY = -160;
             double duration = getDuration(400);
             Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);

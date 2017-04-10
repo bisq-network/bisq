@@ -12,7 +12,6 @@
     <artifactId>statistics</artifactId>
 
     <build>
-
         <resources>
             <resource>
                 <filtering>false</filtering>

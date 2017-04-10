@@ -17,6 +17,7 @@
 
 package io.bisq.common.locale;
 
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.DevEnv;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -37,14 +38,12 @@ import java.util.ResourceBundle;
 public class Res {
     private static final Logger log = LoggerFactory.getLogger(Res.class);
 
-    private static ResourceBundle resourceBundle;
+    private static ResourceBundle resourceBundle = ResourceBundle.getBundle("i18n.displayStrings", GlobalSettings.getLocale(), new UTF8Control());
 
     static {
-        applyLocaleToResourceBundle(Locale.US);
-    }
-
-    public static void applyLocaleToResourceBundle(Locale locale) {
-        resourceBundle = ResourceBundle.getBundle("i18n.displayStrings", locale, new UTF8Control());
+        GlobalSettings.localePropertyProperty().addListener((observable, oldValue, newValue) -> {
+            resourceBundle = ResourceBundle.getBundle("i18n.displayStrings", newValue, new UTF8Control());
+        });
     }
 
     public static String getWithCol(String key) {

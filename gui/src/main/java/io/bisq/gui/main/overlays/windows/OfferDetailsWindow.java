@@ -258,15 +258,15 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (showAcceptedCountryCodes) {
             String countries;
             Tooltip tooltip = null;
-            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes, PreferencesImpl.getDefaultLocale())) {
+            if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes)) {
                 countries = Res.getWithCol("shared.allEuroCountries");
             } else {
                 if (acceptedCountryCodes.size() == 1) {
-                    countries = CountryUtil.getNameAndCode(acceptedCountryCodes.get(0), PreferencesImpl.getDefaultLocale());
+                    countries = CountryUtil.getNameAndCode(acceptedCountryCodes.get(0));
                     tooltip = new Tooltip(countries);
                 } else {
                     countries = CountryUtil.getCodesString(acceptedCountryCodes);
-                    tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes, PreferencesImpl.getDefaultLocale()));
+                    tooltip = new Tooltip(CountryUtil.getNamesByCodesString(acceptedCountryCodes));
                 }
             }
             TextField acceptedCountries = addLabelTextField(gridPane, ++rowIndex,
@@ -302,7 +302,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         if (paymentMethodCountryCode != null)
             addLabelTextField(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),
-                    CountryUtil.getNameAndCode(paymentMethodCountryCode, PreferencesImpl.getDefaultLocale()));
+                    CountryUtil.getNameAndCode(paymentMethodCountryCode));
 
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.acceptedArbitrators"),
                 formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));

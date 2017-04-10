@@ -22,6 +22,7 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple3;
 import io.bisq.core.payment.payload.*;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
@@ -162,8 +163,7 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
                 String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",
-                        CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(),
-                                PreferencesImpl.getDefaultLocale()));
+                        CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));
                 gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);
                 break;
             default:
@@ -221,14 +221,14 @@ public class BuyerStep2View extends TradeStepView {
         if (model.p2PService.isBootstrapped()) {
             if (model.dataModel.getSellersPaymentAccountPayload() instanceof CashDepositAccountPayload) {
                 String key = "confirmPaperReceiptSent";
-                if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
+                if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                     Popup popup = new Popup(preferences);
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.paperReceipt.headline"))
                             .feedback(Res.get("portfolio.pending.step2_buyer.paperReceipt.msg"))
                             .onAction(this::showConfirmPaymentStartedPopup)
                             .closeButtonText(Res.get("shared.no"))
                             .onClose(popup::hide)
-                            .dontShowAgainId(key, preferences)
+                            .dontShowAgainId(key)
                             .show();
                 } else {
                     showConfirmPaymentStartedPopup();
@@ -243,18 +243,17 @@ public class BuyerStep2View extends TradeStepView {
 
     private void showConfirmPaymentStartedPopup() {
         String key = "confirmPaymentStarted";
-        if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
+        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
             Popup popup = new Popup(preferences);
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
                     .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg",
-                            CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(),
-                                    PreferencesImpl.getDefaultLocale())))
+                            CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode())))
                     .width(700)
                     .actionButtonText(Res.get("portfolio.pending.step2_buyer.confirmStart.yes"))
                     .onAction(this::confirmPaymentStarted)
                     .closeButtonText(Res.get("shared.no"))
                     .onClose(popup::hide)
-                    .dontShowAgainId(key, preferences)
+                    .dontShowAgainId(key)
                     .show();
         } else {
             confirmPaymentStarted();
@@ -289,10 +288,10 @@ public class BuyerStep2View extends TradeStepView {
             String assign = Res.get("portfolio.pending.step2_buyer.assign");
             String fees = Res.get("portfolio.pending.step2_buyer.fees");
             String id = trade.getShortId();
-            String amount = model.formatter.formatVolumeWithCode(trade.getTradeVolume());
+            String amount = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload)
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
-                        CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode(), PreferencesImpl.getDefaultLocale()),
+                        CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),
                         amount) +
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n\n" +
@@ -326,8 +325,8 @@ public class BuyerStep2View extends TradeStepView {
                         refTextWarn + "\n\n" +
                         fees;
 
-            if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
-                preferences.dontShowAgain(key, true);
+            if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
+                DontShowAgainLookup.dontShowAgain(key, true);
                 new Popup(preferences).headLine(Res.get("popup.attention.forTradeWithId", id))
                         .attention(message)
                         .show();

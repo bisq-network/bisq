@@ -264,7 +264,7 @@ public class OfferBookViewModelTest {
 
 
     private Offer getOffer(String tradeCurrencyCode, String paymentMethodId, String countryCode, ArrayList<String> acceptedCountryCodes, String bankId, ArrayList<String> acceptedBanks) {
-        return new Offer( new OfferPayload(null,
+        return new Offer(new OfferPayload(null,
                 0,
                 null,
                 null,
@@ -289,6 +289,7 @@ public class OfferBookViewModelTest {
                 0,
                 0,
                 0,
+                false,
                 0,
                 0,
                 0,

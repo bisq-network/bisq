@@ -32,6 +32,7 @@ import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
@@ -82,9 +83,9 @@ public class GUIUtil {
 
     public static void showFeeInfoBeforeExecute(Runnable runnable, Preferences preferences) {
         String key = "miningFeeInfo";
-        if (!DevEnv.DEV_MODE && preferences.showAgain(key)) {
+        if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
             new Popup<>(preferences).information(Res.get("guiUtil.miningFeeInfo"))
-                    .dontShowAgainId(key, preferences)
+                    .dontShowAgainId(key)
                     .onClose(runnable::run)
                     .useIUnderstandButton()
                     .show();
@@ -294,11 +295,11 @@ public class GUIUtil {
 
     public static void openWebPage(String target, Preferences preferences) {
         String key = "warnOpenURLWhenTorEnabled";
-        if (preferences.showAgain(key)) {
+        if (DontShowAgainLookup.showAgain(key)) {
             new Popup<>(preferences).information(Res.get("guiUtil.openWebBrowser.warning", target))
                     .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
                     .onAction(() -> {
-                        preferences.dontShowAgain(key, true);
+                        DontShowAgainLookup.dontShowAgain(key, true);
                         doOpenWebPage(target);
                     })
                     .closeButtonText(Res.get("guiUtil.openWebBrowser.copyUrl"))
@@ -334,6 +335,13 @@ public class GUIUtil {
                 " " + Res.get("guiUtil.ofTradeAmount") + ")";
     }
 
+    public static String getPercentageOfTradeAmountForBsq(Coin fee, Coin tradeAmount, BSFormatter formatter) {
+        // TODo convert to BTC with market price
+        return "";
+       /* return " (" + formatter.formatToPercentWithSymbol((double) fee.value / (double) tradeAmount.value) +
+                " " + Res.get("guiUtil.ofTradeAmount") + ")";*/
+    }
+
     public static <T> T getParentOfType(Node node, Class<T> t) {
         Node parent = node.getParent();
 
@@ -353,7 +361,7 @@ public class GUIUtil {
         new Popup(preferences).information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
-                .dontShowAgainId(key, preferences)
+                .dontShowAgainId(key)
                 .show();
     }
 }

@@ -19,6 +19,7 @@ package io.bisq.gui.main.offer.offerbook;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.Version;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
@@ -145,7 +146,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
         } else {
             showAllTradeCurrenciesProperty.set(true);
-            selectedTradeCurrency = PreferencesImpl.getDefaultTradeCurrency();
+            selectedTradeCurrency = GlobalSettings.getDefaultTradeCurrency();
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
 
@@ -328,7 +329,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         if (item != null) {
             Offer offer = item.getOffer();
             result = Res.getWithCol("shared.paymentMethod") + " " + Res.get(offer.getPaymentMethod().getId());
-            result += "\n" + Res.getWithCol("shared.currency") + " " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode(), PreferencesImpl.getDefaultLocale());
+            result += "\n" + Res.getWithCol("shared.currency") + " " + CurrencyUtil.getNameAndCode(offer.getCurrencyCode());
 
             String methodCountryCode = offer.getCountryCode();
             if (methodCountryCode != null) {
@@ -342,15 +343,15 @@ class OfferBookViewModel extends ActivatableViewModel {
             }
 
             if (methodCountryCode != null)
-                result += "\n" + Res.get("offerbook.offerersBankSeat", CountryUtil.getNameByCode(methodCountryCode, PreferencesImpl.getDefaultLocale()));
+                result += "\n" + Res.get("offerbook.offerersBankSeat", CountryUtil.getNameByCode(methodCountryCode));
 
             List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
             List<String> acceptedBanks = offer.getAcceptedBankIds();
             if (acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty()) {
-                if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes, PreferencesImpl.getDefaultLocale()))
+                if (CountryUtil.containsAllSepaEuroCountries(acceptedCountryCodes))
                     result += Res.get("offerbook.offerersAcceptedBankSeatsEuro");
                 else
-                    result += Res.get("offerbook.offerersAcceptedBankSeats", CountryUtil.getNamesByCodesString(acceptedCountryCodes, PreferencesImpl.getDefaultLocale()));
+                    result += Res.get("offerbook.offerersAcceptedBankSeats", CountryUtil.getNamesByCodesString(acceptedCountryCodes));
             } else if (acceptedBanks != null && !acceptedBanks.isEmpty()) {
                 if (offer.getPaymentMethod().equals(PaymentMethod.SAME_BANK))
                     result += "\n" + Res.getWithCol("shared.bankName") + " " + acceptedBanks.get(0);
@@ -377,7 +378,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private void setMarketPriceFeedCurrency() {
         if (!preferences.isUseStickyMarketPrice() && isTabSelected) {
             if (showAllTradeCurrenciesProperty.get())
-                priceFeedService.setCurrencyCode(PreferencesImpl.getDefaultTradeCurrency().getCode());
+                priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());
             else
                 priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
         }

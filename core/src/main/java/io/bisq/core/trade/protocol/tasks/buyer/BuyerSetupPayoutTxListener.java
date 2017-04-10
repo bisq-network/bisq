@@ -46,7 +46,7 @@ public class BuyerSetupPayoutTxListener extends TradeTask {
         try {
             runInterceptHook();
             if (!trade.isPayoutPublished()) {
-                BtcWalletService walletService = processModel.getWalletService();
+                BtcWalletService walletService = processModel.getBtcWalletService();
                 Address address = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(),
                         AddressEntry.Context.TRADE_PAYOUT).getAddress();
 

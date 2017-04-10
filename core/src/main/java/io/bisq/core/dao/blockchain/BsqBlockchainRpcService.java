@@ -29,32 +29,27 @@ import com.neemre.btcdcli4j.core.domain.Block;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
 import com.neemre.btcdcli4j.daemon.BtcdDaemonImpl;
 import com.neemre.btcdcli4j.daemon.event.BlockListener;
+import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.RpcOptionKeys;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.script.Script;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.io.*;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.bitcoinj.core.Utils.HEX;
 
 public class BsqBlockchainRpcService extends BsqBlockchainService {
     private static final Logger log = LoggerFactory.getLogger(BsqBlockchainRpcService.class);
@@ -78,8 +73,8 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     public BsqBlockchainRpcService(@Named(RpcOptionKeys.RPC_USER) String rpcUser,
                                    @Named(RpcOptionKeys.RPC_PASSWORD) String rpcPassword,
                                    @Named(RpcOptionKeys.RPC_PORT) String rpcPort,
-                                   @Named(RpcOptionKeys.RPC_BLOCK_PORT) String rpcBlockPort,
-                                   @Named(RpcOptionKeys.RPC_WALLET_PORT) String rpcWalletPort) {
+                                   @Named(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort,
+                                   @Named(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT) String rpcWalletPort) {
         this.rpcUser = rpcUser;
         this.rpcPassword = rpcPassword;
         this.rpcPort = rpcPort;
@@ -114,39 +109,59 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
                     log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
                     return client;
                 } catch (IOException | BitcoindException | CommunicationException e) {
+                    if (e instanceof CommunicationException)
+                        log.error("Maybe the rpc port is not set correctly? rpcPort=" + rpcPort);
+                    log.error(e.toString());
+                    e.printStackTrace();
+                    log.error(e.getCause() != null ? e.getCause().toString() : "e.getCause()=null");
                     throw new BsqBlockchainException(e.getMessage(), e);
                 }
-            } catch (URISyntaxException | IOException e) {
+            } catch (Throwable e) {
+                log.error(e.toString());
+                e.printStackTrace();
                 throw new BsqBlockchainException(e.getMessage(), e);
             }
         });
 
         Futures.addCallback(future, new FutureCallback<BtcdClientImpl>() {
             public void onSuccess(BtcdClientImpl client) {
-                BsqBlockchainRpcService.this.client = client;
-                resultHandler.handleResult();
+                UserThread.execute(() -> {
+                    BsqBlockchainRpcService.this.client = client;
+                    resultHandler.handleResult();
+                });
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                errorMessageHandler.handleErrorMessage(throwable.getMessage());
+                UserThread.execute(() -> {
+                    log.error(throwable.toString());
+                    errorMessageHandler.handleErrorMessage(throwable.getMessage());
+                });
             }
         });
     }
 
     @Override
-    protected ListenableFuture<Tuple2<Map<String, Map<Integer, BsqUTXO>>, Integer>> syncFromGenesis(int genesisBlockHeight, String genesisTxId) {
+    protected ListenableFuture<Integer> executeParseBlockchain(BsqUTXOMap bsqUTXOMap,
+                                                               BsqTXOMap bsqTXOMap,
+                                                               int startBlockHeight,
+                                                               int genesisBlockHeight,
+                                                               String genesisTxId) {
         return rpcRequestsExecutor.submit(() -> {
             long startTs = System.currentTimeMillis();
-            Map<String, Map<Integer, BsqUTXO>> utxoByTxIdMap = new HashMap<>();
             int chainHeadHeight = requestChainHeadHeight();
-            parseBlockchain(utxoByTxIdMap, chainHeadHeight, genesisBlockHeight, genesisTxId);
+            parseBlockchain(bsqUTXOMap,
+                    bsqTXOMap,
+                    chainHeadHeight,
+                    startBlockHeight,
+                    genesisBlockHeight,
+                    genesisTxId);
             log.info("syncFromGenesis took {} ms", System.currentTimeMillis() - startTs);
-            return new Tuple2<>(utxoByTxIdMap, chainHeadHeight);
+            return chainHeadHeight;
         });
     }
 
     @Override
-    protected void syncFromGenesisCompete(String genesisTxId, int genesisBlockHeight, Consumer<Block> onNewBlockHandler) {
+    protected void parseBlockchainCompete(Consumer<Block> onNewBlockHandler) {
         daemon.addBlockListener(new BlockListener() {
             @Override
             public void blockDetected(Block block) {
@@ -160,8 +175,8 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
             public void walletChanged(Transaction transaction) {
                 log.info("walletChanged " + transaction.getTxId());
                *//* try {
-                   // parseTransaction(transaction.getTxId(), GENESIS_TX_ID, client.getBlockCount(), tempUtxoByTxIdMap, utxoByTxIdMap);
-                    printUtxoMap(utxoByTxIdMap);
+                   // parseTransaction(transaction.getTxId(), GENESIS_TX_ID, client.getBlockCount(), tempUtxoByTxIdMap, bsqUTXOMap);
+                    printUtxoMap(bsqUTXOMap);
                 } catch (BitcoindException | CommunicationException | BsqBlockchainException e) {
                     //TODO
                     e.printStackTrace();
@@ -181,23 +196,35 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     }
 
     @Override
-    BsqTransaction requestTransaction(String txId) throws BsqBlockchainException {
+    Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException {
         try {
             RawTransaction rawTransaction = getRawTransaction(txId);
-            return new BsqTransaction(txId,
-                    rawTransaction.getVIn()
-                            .stream()
-                            .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
-                            .map(rawInput -> new BsqTxInput(rawInput.getVOut(), rawInput.getTxId(), rawTransaction.getHex()))
-                            .collect(Collectors.toList()),
-                    rawTransaction.getVOut()
-                            .stream()
-                            .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
-                            .map(e -> new BsqTxOutput(e.getN(),
-                                    Coin.valueOf(e.getValue().movePointRight(8).longValue()),
-                                    e.getScriptPubKey().getAddresses(),
-                                    e.getScriptPubKey().getHex() != null ? new Script(HEX.decode(e.getScriptPubKey().getHex())) : null))
-                            .collect(Collectors.toList()));
+            final long time = rawTransaction.getTime() * 1000;
+            final List<TxInput> txInputs = rawTransaction.getVIn()
+                    .stream()
+                    .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
+                    .map(rawInput -> new TxInput(rawInput.getVOut(), rawInput.getTxId(), rawTransaction.getHex()))
+                    .collect(Collectors.toList());
+
+            final List<TxOutput> txOutputs = rawTransaction.getVOut()
+                    .stream()
+                    .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
+                    .map(rawOutput -> {
+
+                        return new TxOutput(rawOutput.getN(),
+                                rawOutput.getValue().movePointRight(8).longValue(),
+                                rawTransaction.getTxId(),
+                                rawOutput.getScriptPubKey(),
+                                blockHeight,
+                                time);
+                    })
+                    .collect(Collectors.toList());
+
+            // rawTransaction.getTime() is in seconds but we keep it in ms internally
+            return new Tx(txId,
+                    txInputs,
+                    txOutputs,
+                    time);
         } catch (BitcoindException | CommunicationException e) {
             throw new BsqBlockchainException(e.getMessage(), e);
         }

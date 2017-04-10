@@ -114,7 +114,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final String versionNr;
     private final long blockHeightAtOfferCreation;
     private final long txFee;
-    private final long createOfferFee;
+    private final long makerFee;
+    private final boolean isCurrencyForMakerFeeBtc;
     private final long buyerSecurityDeposit;
     private final long sellerSecurityDeposit;
     private final long maxTradeLimit;
@@ -146,48 +147,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * no nulls are allowed because protobuffer replaces them with "" on the other side,
-     * meaning it's null here and "" there => not good
-     *
-     * @param id
-     * @param date                       date of OfferPayload creation, can be null in which case the current date/time will be used.
-     * @param makerNodeAddress
-     * @param pubKeyRing
-     * @param direction
-     * @param price
-     * @param marketPriceMargin
-     * @param useMarketBasedPrice
-     * @param amount
-     * @param minAmount
-     * @param baseCurrencyCode
-     * @param counterCurrencyCode
-     * @param arbitratorNodeAddresses
-     * @param mediatorNodeAddresses
-     * @param paymentMethodId
-     * @param makerPaymentAccountId
-     * @param offerFeePaymentTxId
-     * @param countryCode
-     * @param acceptedCountryCodes
-     * @param bankId
-     * @param acceptedBankIds
-     * @param versionNr
-     * @param blockHeightAtOfferCreation
-     * @param txFee
-     * @param createOfferFee
-     * @param buyerSecurityDeposit
-     * @param sellerSecurityDeposit
-     * @param maxTradeLimit
-     * @param maxTradePeriod
-     * @param useAutoClose
-     * @param useReOpenAfterAutoClose
-     * @param lowerClosePrice
-     * @param upperClosePrice
-     * @param isPrivateOffer
-     * @param hashOfChallenge
-     * @param extraDataMap
-     */
-    @SuppressWarnings("JavaDoc")
     public OfferPayload(String id,
                         long date,
                         NodeAddress makerNodeAddress,
@@ -212,7 +171,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                         String versionNr,
                         long blockHeightAtOfferCreation,
                         long txFee,
-                        long createOfferFee,
+                        long makerFee,
+                        boolean isCurrencyForMakerFeeBtc,
                         long buyerSecurityDeposit,
                         long sellerSecurityDeposit,
                         long maxTradeLimit,
@@ -249,7 +209,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.versionNr = versionNr;
         this.blockHeightAtOfferCreation = blockHeightAtOfferCreation;
         this.txFee = txFee;
-        this.createOfferFee = createOfferFee;
+        this.makerFee = makerFee;
+        this.isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc;
         this.buyerSecurityDeposit = buyerSecurityDeposit;
         this.sellerSecurityDeposit = sellerSecurityDeposit;
         this.maxTradeLimit = maxTradeLimit;
@@ -314,7 +275,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setVersionNr(versionNr)
                 .setBlockHeightAtOfferCreation(blockHeightAtOfferCreation)
                 .setTxFee(txFee)
-                .setCreateOfferFee(createOfferFee)
+                .setMakerFee(makerFee)
+                .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc)
                 .setBuyerSecurityDeposit(buyerSecurityDeposit)
                 .setSellerSecurityDeposit(sellerSecurityDeposit)
                 .setMaxTradeLimit(maxTradeLimit)

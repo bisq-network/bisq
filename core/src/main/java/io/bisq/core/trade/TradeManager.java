@@ -27,9 +27,9 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.persistance.Msg;
 import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
-import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryException;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
@@ -79,12 +79,12 @@ public class TradeManager {
 
     private final User user;
     private final KeyRing keyRing;
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
+    private final BsqWalletService bsqWalletService;
     private final TradeWalletService tradeWalletService;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
-    private final ArbitratorManager arbitratorManager;
     private final P2PService p2PService;
     private final FilterManager filterManager;
     private final TradeStatisticsManager tradeStatisticsManager;
@@ -103,12 +103,12 @@ public class TradeManager {
     @Inject
     public TradeManager(User user,
                         KeyRing keyRing,
-                        BtcWalletService walletService,
+                        BtcWalletService btcWalletService,
+                        BsqWalletService bsqWalletService,
                         TradeWalletService tradeWalletService,
                         OpenOfferManager openOfferManager,
                         ClosedTradableManager closedTradableManager,
                         FailedTradesManager failedTradesManager,
-                        ArbitratorManager arbitratorManager,
                         P2PService p2PService,
                         PriceFeedService priceFeedService,
                         FilterManager filterManager,
@@ -117,12 +117,12 @@ public class TradeManager {
                         @Named(Storage.DIR_KEY) File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
+        this.bsqWalletService = bsqWalletService;
         this.tradeWalletService = tradeWalletService;
         this.openOfferManager = openOfferManager;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
-        this.arbitratorManager = arbitratorManager;
         this.p2PService = p2PService;
         this.filterManager = filterManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
@@ -269,11 +269,17 @@ public class TradeManager {
             PayDepositRequest payDepositRequest = (PayDepositRequest) message;
             Trade trade;
             if (offer.isBuyOffer())
-                trade = new BuyerAsMakerTrade(offer, Coin.valueOf(payDepositRequest.txFee),
-                        Coin.valueOf(payDepositRequest.takeOfferFee), tradableListStorage);
+                trade = new BuyerAsMakerTrade(offer,
+                        Coin.valueOf(payDepositRequest.txFee),
+                        Coin.valueOf(payDepositRequest.takerFee),
+                        payDepositRequest.isCurrencyForTakerFeeBtc,
+                        tradableListStorage);
             else
-                trade = new SellerAsMakerTrade(offer, Coin.valueOf(payDepositRequest.txFee),
-                        Coin.valueOf(payDepositRequest.takeOfferFee), tradableListStorage);
+                trade = new SellerAsMakerTrade(offer,
+                        Coin.valueOf(payDepositRequest.txFee),
+                        Coin.valueOf(payDepositRequest.takerFee),
+                        payDepositRequest.isCurrencyForTakerFeeBtc,
+                        tradableListStorage);
 
             trade.setStorage(tradableListStorage);
             initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
@@ -289,9 +295,9 @@ public class TradeManager {
 
     private void initTrade(Trade trade, boolean useSavingsWallet, Coin fundsNeededForTrade) {
         trade.init(p2PService,
-                walletService,
+                btcWalletService,
+                bsqWalletService,
                 tradeWalletService,
-                arbitratorManager,
                 this,
                 openOfferManager,
                 user,
@@ -328,7 +334,8 @@ public class TradeManager {
     // First we check if offer is still available then we create the trade with the protocol
     public void onTakeOffer(Coin amount,
                             Coin txFee,
-                            Coin takeOfferFee,
+                            Coin takerFee,
+                            boolean isCurrencyForTakerFeeBtc,
                             long tradePrice,
                             Coin fundsNeededForTrade,
                             Offer offer,
@@ -340,14 +347,25 @@ public class TradeManager {
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE)
-                        createTrade(amount, txFee, takeOfferFee, tradePrice, fundsNeededForTrade, offer, paymentAccountId, useSavingsWallet, model, tradeResultHandler);
+                        createTrade(amount,
+                                txFee,
+                                takerFee,
+                                isCurrencyForTakerFeeBtc,
+                                tradePrice,
+                                fundsNeededForTrade,
+                                offer,
+                                paymentAccountId,
+                                useSavingsWallet,
+                                model,
+                                tradeResultHandler);
                 },
                 errorMessageHandler::handleErrorMessage);
     }
 
     private void createTrade(Coin amount,
                              Coin txFee,
-                             Coin takeOfferFee,
+                             Coin takerFee,
+                             boolean isCurrencyForTakerFeeBtc,
                              long tradePrice,
                              Coin fundsNeededForTrade,
                              Offer offer,
@@ -357,9 +375,11 @@ public class TradeManager {
                              TradeResultHandler tradeResultHandler) {
         Trade trade;
         if (offer.isBuyOffer())
-            trade = new SellerAsTakerTrade(offer, amount, txFee, takeOfferFee, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
+            trade = new SellerAsTakerTrade(offer, amount, txFee, takerFee, isCurrencyForTakerFeeBtc,
+                    tradePrice, model.getPeerNodeAddress(), tradableListStorage);
         else
-            trade = new BuyerAsTakerTrade(offer, amount, txFee, takeOfferFee, tradePrice, model.getPeerNodeAddress(), tradableListStorage);
+            trade = new BuyerAsTakerTrade(offer, amount, txFee, takerFee, isCurrencyForTakerFeeBtc,
+                    tradePrice, model.getPeerNodeAddress(), tradableListStorage);
 
         trade.setTakerPaymentAccountId(paymentAccountId);
 
@@ -384,7 +404,7 @@ public class TradeManager {
 
     public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey,
                                   Trade trade, ResultHandler resultHandler, FaultHandler faultHandler) {
-        String fromAddress = walletService.getOrCreateAddressEntry(trade.getId(),
+        String fromAddress = btcWalletService.getOrCreateAddressEntry(trade.getId(),
                 AddressEntry.Context.TRADE_PAYOUT).getAddressString();
         FutureCallback<Transaction> callback = new FutureCallback<Transaction>() {
             @Override
@@ -405,7 +425,7 @@ public class TradeManager {
             }
         };
         try {
-            walletService.sendFunds(fromAddress, toAddress, amount, fee, aesKey, AddressEntry.Context.TRADE_PAYOUT, callback);
+            btcWalletService.sendFunds(fromAddress, toAddress, amount, fee, aesKey, AddressEntry.Context.TRADE_PAYOUT, callback);
         } catch (AddressFormatException | InsufficientMoneyException | AddressEntryException e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -437,7 +457,7 @@ public class TradeManager {
 
         // we only swap if we have not an open offer (in case the removeTrade happened at the trade preparation phase)
         if (!openOfferManager.findOpenOffer(trade.getId()).isPresent())
-            walletService.swapAnyTradeEntryContextToAvailableEntry(trade.getId());
+            btcWalletService.swapAnyTradeEntryContextToAvailableEntry(trade.getId());
     }
 
 
@@ -483,13 +503,13 @@ public class TradeManager {
     }
 
     public Stream<AddressEntry> getAddressEntriesForAvailableBalanceStream() {
-        Stream<AddressEntry> availableOrPayout = Stream.concat(walletService.getAddressEntries(AddressEntry.Context.TRADE_PAYOUT)
-                .stream(), walletService.getFundedAvailableAddressEntries().stream());
+        Stream<AddressEntry> availableOrPayout = Stream.concat(btcWalletService.getAddressEntries(AddressEntry.Context.TRADE_PAYOUT)
+                .stream(), btcWalletService.getFundedAvailableAddressEntries().stream());
         Stream<AddressEntry> available = Stream.concat(availableOrPayout,
-                walletService.getAddressEntries(AddressEntry.Context.ARBITRATOR).stream());
-        available = Stream.concat(available, walletService.getAddressEntries(AddressEntry.Context.OFFER_FUNDING).stream());
+                btcWalletService.getAddressEntries(AddressEntry.Context.ARBITRATOR).stream());
+        available = Stream.concat(available, btcWalletService.getAddressEntries(AddressEntry.Context.OFFER_FUNDING).stream());
         return available
-                .filter(addressEntry -> walletService.getBalanceForAddress(addressEntry.getAddress()).isPositive());
+                .filter(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isPositive());
     }
 
     public Stream<Trade> getLockedTradeStream() {

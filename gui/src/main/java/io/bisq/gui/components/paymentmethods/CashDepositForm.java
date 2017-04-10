@@ -26,7 +26,6 @@ import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.CashDepositAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
@@ -85,9 +84,9 @@ public class CashDepositForm extends PaymentMethodForm {
 
         if (!showRequirements)
             FormBuilder.addLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.getWithCol("payment.bank.country"),
-                    CountryUtil.getNameAndCode(countryCode, PreferencesImpl.getDefaultLocale()));
+                    CountryUtil.getNameAndCode(countryCode));
         else
-            requirements += "\n" + Res.get("payment.bank.country") + " " + CountryUtil.getNameAndCode(countryCode, PreferencesImpl.getDefaultLocale());
+            requirements += "\n" + Res.get("payment.bank.country") + " " + CountryUtil.getNameAndCode(countryCode);
 
         // We don't want to display more than 6 rows to avoid scrolling, so if we get too many fields we combine them horizontally
         int nrRows = 0;
@@ -316,7 +315,7 @@ public class CashDepositForm extends PaymentMethodForm {
             if (selectedItem != null) {
                 getCountryBasedPaymentAccount().setCountry(selectedItem);
                 String countryCode = selectedItem.code;
-                TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode, PreferencesImpl.getDefaultLocale());
+                TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode);
                 paymentAccount.setSingleTradeCurrency(currency);
                 currencyComboBox.setDisable(false);
                 currencyComboBox.getSelectionModel().select(currency);
@@ -424,10 +423,10 @@ public class CashDepositForm extends PaymentMethodForm {
 
         currencyComboBox = FormBuilder.addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency")).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
-        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies(PreferencesImpl.getDefaultLocale())));
+        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
         currencyComboBox.setOnAction(e -> {
             TradeCurrency selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
-            FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(countryComboBox.getSelectionModel().getSelectedItem().code, PreferencesImpl.getDefaultLocale());
+            FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(countryComboBox.getSelectionModel().getSelectedItem().code);
             if (!defaultCurrency.equals(selectedItem)) {
                 new Popup<>(preferences).warning(Res.get("payment.foreign.currency"))
                         .actionButtonText(Res.get("shared.yes"))
@@ -606,22 +605,22 @@ public class CashDepositForm extends PaymentMethodForm {
         String countryCode = cashDepositAccountPayload.getCountryCode();
         if (validatorsApplied && BankUtil.useValidation(countryCode)) {
             if (BankUtil.isBankNameRequired(countryCode))
-                result &= bankNameInputTextField.getValidator().validate(cashDepositAccountPayload.getBankName()).isValid;
+                result = result && bankNameInputTextField.getValidator().validate(cashDepositAccountPayload.getBankName()).isValid;
 
             if (BankUtil.isBankIdRequired(countryCode))
-                result &= bankIdInputTextField.getValidator().validate(cashDepositAccountPayload.getBankId()).isValid;
+                result = result && bankIdInputTextField.getValidator().validate(cashDepositAccountPayload.getBankId()).isValid;
 
             if (BankUtil.isBranchIdRequired(countryCode))
-                result &= branchIdInputTextField.getValidator().validate(cashDepositAccountPayload.getBranchId()).isValid;
+                result = result && branchIdInputTextField.getValidator().validate(cashDepositAccountPayload.getBranchId()).isValid;
 
             if (BankUtil.isAccountNrRequired(countryCode))
-                result &= accountNrInputTextField.getValidator().validate(cashDepositAccountPayload.getAccountNr()).isValid;
+                result = result && accountNrInputTextField.getValidator().validate(cashDepositAccountPayload.getAccountNr()).isValid;
 
             if (BankUtil.isAccountTypeRequired(countryCode))
-                result &= cashDepositAccountPayload.getAccountType() != null;
+                result = result && cashDepositAccountPayload.getAccountType() != null;
 
             if (useHolderID && BankUtil.isHolderIdRequired(countryCode))
-                result &= holderIdInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderTaxId()).isValid;
+                result = result && holderIdInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderTaxId()).isValid;
         }
         allInputsValid.set(result);
     }

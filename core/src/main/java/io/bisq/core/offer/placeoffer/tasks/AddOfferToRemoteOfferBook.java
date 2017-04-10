@@ -36,19 +36,19 @@ public class AddOfferToRemoteOfferBook extends Task<PlaceOfferModel> {
     protected void run() {
         try {
             runInterceptHook();
-            model.offerBookService.addOffer(model.offer,
+            model.getOfferBookService().addOffer(model.getOffer(),
                     () -> {
-                        model.offerAddedToOfferBook = true;
+                        model.setOfferAddedToOfferBook(true);
                         complete();
                     },
                     errorMessage -> {
-                        model.offer.setErrorMessage("Could not add offer to offerbook.\n" +
+                        model.getOffer().setErrorMessage("Could not add offer to offerbook.\n" +
                                 "Please check your network connection and try again.");
 
                         failed(errorMessage);
                     });
         } catch (Throwable t) {
-            model.offer.setErrorMessage("An error occurred.\n" +
+            model.getOffer().setErrorMessage("An error occurred.\n" +
                     "Error message:\n"
                     + t.getMessage());
 

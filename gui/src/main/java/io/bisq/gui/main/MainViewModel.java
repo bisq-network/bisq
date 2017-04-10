@@ -19,6 +19,7 @@ package io.bisq.gui.main;
 
 import com.google.inject.Inject;
 import io.bisq.common.Clock;
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
@@ -43,7 +44,6 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.dao.DaoManager;
-import io.bisq.core.dao.blockchain.BsqBlockchainException;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
@@ -55,6 +55,7 @@ import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
@@ -447,13 +448,21 @@ public class MainViewModel implements ViewModel {
                         } else if (exception.getCause() instanceof BlockStoreException) {
                             log.error(exception.getMessage());
                             // Ugly, but no other way to cover that specific case
-                            if (exception.getMessage().equals("Store file is already locked by another process")) {
+                            if (exception.getMessage().equals("org.bitcoinj.store.BlockStoreException: org.bitcoinj.store.BlockStoreException: Store file is already locked by another process")) {
                                 new Popup(preferences).warning(Res.get("popup.warning.startupFailed.twoInstances"))
                                         .useShutDownButton()
                                         .show();
                             } else {
-                                new Popup(preferences).error(Res.get("popup.error.walletException",
+                                new Popup(preferences).warning(Res.get("error.spvFileCorrupted",
                                         exception.getMessage()))
+                                        .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
+                                        .onAction(() -> {
+                                            if (walletsSetup.reSyncSPVChain())
+                                                new Popup<>(preferences).feedback(Res.get("settings.net.reSyncSPVSuccess"))
+                                                        .useShutDownButton().show();
+                                            else
+                                                new Popup<>(preferences).error(Res.get("settings.net.reSyncSPVFailed")).show();
+                                        })
                                         .show();
                             }
                         } else {
@@ -479,12 +488,20 @@ public class MainViewModel implements ViewModel {
                         walletPasswordWindow
                                 .onAesKey(aesKey -> {
                                     walletsManager.setAesKey(aesKey);
-                                    walletInitialized.set(true);
+                                    if (preferences.isResyncSPVRequested()) {
+                                        showFirstPopupIfResyncSPVRequested();
+                                    } else {
+                                        walletInitialized.set(true);
+                                    }
                                 })
                                 .hideCloseButton()
                                 .show();
                     } else {
-                        walletInitialized.set(true);
+                        if (preferences.isResyncSPVRequested()) {
+                            showFirstPopupIfResyncSPVRequested();
+                        } else {
+                            walletInitialized.set(true);
+                        }
                     }
                 },
                 walletServiceException::set);
@@ -535,11 +552,7 @@ public class MainViewModel implements ViewModel {
 
         feeService.onAllServicesInitialized();
 
-        try {
-            daoManager.onAllServicesInitialized();
-        } catch (BsqBlockchainException e) {
-            new Popup<>(preferences).error(e.toString()).show();
-        }
+        daoManager.onAllServicesInitialized(errorMessage -> new Popup<>(preferences).error(errorMessage).show());
 
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
@@ -555,17 +568,39 @@ public class MainViewModel implements ViewModel {
 
         showAppScreen.set(true);
 
-        String remindPasswordAndBackupKey = "remindPasswordAndBackup";
+        String key = "remindPasswordAndBackup";
         user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
-            if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(remindPasswordAndBackupKey) && change.wasAdded()) {
+            if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(key) && change.wasAdded()) {
                 new Popup<>(preferences).headLine(Res.get("popup.securityRecommendation.headline"))
                         .information(Res.get("popup.securityRecommendation.msg"))
-                        .dontShowAgainId(remindPasswordAndBackupKey, preferences)
+                        .dontShowAgainId(key)
                         .show();
             }
         });
 
         checkIfOpenOffersMatchTradeProtocolVersion();
+    }
+
+    private void showFirstPopupIfResyncSPVRequested() {
+        Popup firstPopup = new Popup<>(preferences);
+        firstPopup.information(Res.get("settings.net.reSyncSPVAfterRestart")).show();
+        if (btcSyncProgress.get() == 1) {
+            showSecondPopupIfResyncSPVRequested(firstPopup);
+        } else {
+            btcSyncProgress.addListener((observable, oldValue, newValue) -> {
+                if ((double) newValue == 1)
+                    showSecondPopupIfResyncSPVRequested(firstPopup);
+            });
+        }
+    }
+
+    private void showSecondPopupIfResyncSPVRequested(Popup firstPopup) {
+        firstPopup.hide();
+        preferences.setResyncSPVRequested(false);
+        new Popup<>(preferences).information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
+                .hideCloseButton()
+                .useShutDownButton()
+                .show();
     }
 
     private void checkCryptoSetup() {
@@ -686,8 +721,8 @@ public class MainViewModel implements ViewModel {
                             break;
                         case HALF_REACHED:
                             key = "displayHalfTradePeriodOver" + trade.getId();
-                            if (preferences.showAgain(key)) {
-                                preferences.dontShowAgain(key, true);
+                            if (DontShowAgainLookup.showAgain(key)) {
+                                DontShowAgainLookup.dontShowAgain(key, true);
                                 new Popup(preferences).warning(Res.get("popup.warning.tradePeriod.halfReached",
                                         trade.getShortId(),
                                         formatter.formatDateTime(maxTradePeriodDate)))
@@ -696,8 +731,8 @@ public class MainViewModel implements ViewModel {
                             break;
                         case TRADE_PERIOD_OVER:
                             key = "displayTradePeriodOver" + trade.getId();
-                            if (preferences.showAgain(key)) {
-                                preferences.dontShowAgain(key, true);
+                            if (DontShowAgainLookup.showAgain(key)) {
+                                DontShowAgainLookup.dontShowAgain(key, true);
                                 new Popup(preferences).warning(Res.get("popup.warning.tradePeriod.ended",
                                         trade.getShortId(),
                                         formatter.formatDateTime(maxTradePeriodDate)))
@@ -990,7 +1025,7 @@ public class MainViewModel implements ViewModel {
         OKPayAccount okPayAccount = new OKPayAccount();
         okPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
         okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
-        okPayAccount.setSelectedTradeCurrency(PreferencesImpl.getDefaultTradeCurrency());
+        okPayAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
         user.addPaymentAccount(okPayAccount);
 
         CryptoCurrencyAccount cryptoCurrencyAccount = new CryptoCurrencyAccount();

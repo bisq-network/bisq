@@ -45,7 +45,8 @@ public final class PayDepositRequest extends TradeMsg {
     public final long tradePrice;
     public final byte[] takerMultiSigPubKey;
     public final long txFee;
-    public final long takeOfferFee;
+    public final long takerFee;
+    public final boolean isCurrencyForTakerFeeBtc;
     public final List<RawTransactionInput> rawTransactionInputs;
     public final long changeOutputValue;
     @Nullable
@@ -66,7 +67,8 @@ public final class PayDepositRequest extends TradeMsg {
                              long tradeAmount,
                              long tradePrice,
                              long txFee,
-                             long takeOfferFee,
+                             long takerFee,
+                             boolean isCurrencyForTakerFeeBtc,
                              List<RawTransactionInput> rawTransactionInputs,
                              long changeOutputValue,
                              String changeOutputAddress,
@@ -85,7 +87,8 @@ public final class PayDepositRequest extends TradeMsg {
         this.tradeAmount = tradeAmount;
         this.tradePrice = tradePrice;
         this.txFee = txFee;
-        this.takeOfferFee = takeOfferFee;
+        this.takerFee = takerFee;
+        this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.rawTransactionInputs = rawTransactionInputs;
         this.changeOutputValue = changeOutputValue;
         this.changeOutputAddress = changeOutputAddress;
@@ -110,7 +113,8 @@ public final class PayDepositRequest extends TradeMsg {
                 .setTradePrice(tradePrice)
                 .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
                 .setTxFee(txFee)
-                .setTakeOfferFee(takeOfferFee)
+                .setTakerFee(takerFee)
+                .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .addAllRawTransactionInputs(rawTransactionInputs.stream()
                         .map(rawTransactionInput -> rawTransactionInput.toProto()).collect(Collectors.toList()))
                 .setChangeOutputValue(changeOutputValue)
@@ -118,7 +122,7 @@ public final class PayDepositRequest extends TradeMsg {
                 .setTakerPubKeyRing(takerPubKeyRing.toProto())
                 .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProto())
                 .setTakerAccountId(takerAccountId)
-                .setTakeOfferFeeTxId(takeOfferFeeTxId)
+                .setTakerFeeTxId(takeOfferFeeTxId)
                 .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream()
                         .map(nodeAddress -> nodeAddress.toProto()).collect(Collectors.toList()))
                 .addAllAcceptedMediatorNodeAddresses(acceptedMediatorNodeAddresses.stream()
@@ -138,7 +142,8 @@ public final class PayDepositRequest extends TradeMsg {
                 ", tradePrice=" + tradePrice +
                 ", takerMultiSigPubKey=" + Hex.toHexString(takerMultiSigPubKey) +
                 ", txFee=" + txFee +
-                ", takeOfferFee=" + takeOfferFee +
+                ", takerFee=" + takerFee +
+                ", isCurrencyForTakerFeeBtc=" + isCurrencyForTakerFeeBtc +
                 ", rawTransactionInputs=" + rawTransactionInputs +
                 ", changeOutputValue=" + changeOutputValue +
                 ", changeOutputAddress='" + changeOutputAddress + '\'' +

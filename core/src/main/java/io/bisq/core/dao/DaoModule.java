@@ -55,8 +55,12 @@ public class DaoModule extends AppModule {
         bindConstant().annotatedWith(named(RpcOptionKeys.RPC_USER)).to(env.getRequiredProperty(RpcOptionKeys.RPC_USER));
         bindConstant().annotatedWith(named(RpcOptionKeys.RPC_PASSWORD)).to(env.getRequiredProperty(RpcOptionKeys.RPC_PASSWORD));
         bindConstant().annotatedWith(named(RpcOptionKeys.RPC_PORT)).to(env.getRequiredProperty(RpcOptionKeys.RPC_PORT));
-        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_BLOCK_PORT)).to(env.getRequiredProperty(RpcOptionKeys.RPC_BLOCK_PORT));
-        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_WALLET_PORT)).to(env.getRequiredProperty(RpcOptionKeys.RPC_WALLET_PORT));
+        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT))
+                .to(env.getRequiredProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT));
+        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT))
+                .to(env.getRequiredProperty(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT));
+        bindConstant().annotatedWith(named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA))
+                .to(env.getRequiredProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA));
     }
 }
 

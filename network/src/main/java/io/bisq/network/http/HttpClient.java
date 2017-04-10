@@ -71,12 +71,9 @@ public class HttpClient {
             if (socks5Proxy == null)
                 socks5Proxy = socks5ProxyProvider.getSocks5Proxy();
         }
-
-        if (ignoreSocks5Proxy) {
-            log.debug("Use clear net for HttpClient because ignoreSocks5Proxy is set to true");
-            return requestWithGETNoProxy(param, headerKey, headerValue);
-        } else if (socks5Proxy == null) {
-            log.debug("Use clear net for HttpClient because socks5Proxy is null");
+        if (ignoreSocks5Proxy || socks5Proxy == null || baseUrl.contains("localhost")) {
+            log.debug("Use clear net for HttpClient. socks5Proxy={}, ignoreSocks5Proxy={}, baseUrl={}",
+                    socks5Proxy, ignoreSocks5Proxy, baseUrl);
             return requestWithGETNoProxy(param, headerKey, headerValue);
         } else {
             log.debug("Use socks5Proxy for HttpClient: " + socks5Proxy);

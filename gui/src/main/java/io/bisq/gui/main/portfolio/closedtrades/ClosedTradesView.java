@@ -50,9 +50,6 @@ import javax.inject.Inject;
 
 @FxmlView
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
-
-    private final Preferences preferences;
-
     @FXML
     TableView<ClosedTradableListItem> tableView;
     @FXML
@@ -61,17 +58,19 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     @FXML
     Button exportButton;
     private final OfferDetailsWindow offerDetailsWindow;
+    private Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private final Stage stage;
     private SortedList<ClosedTradableListItem> sortedList;
 
     @Inject
-    public ClosedTradesView(ClosedTradesViewModel model, OfferDetailsWindow offerDetailsWindow,
-                            TradeDetailsWindow tradeDetailsWindow, PrivateNotificationManager privateNotificationManager,
-                            Stage stage, Preferences preferences) {
+    public ClosedTradesView(ClosedTradesViewModel model, OfferDetailsWindow offerDetailsWindow, Preferences preferences,
+                            TradeDetailsWindow tradeDetailsWindow,
+                            PrivateNotificationManager privateNotificationManager, Stage stage) {
         super(model);
         this.offerDetailsWindow = offerDetailsWindow;
+        this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
         this.stage = stage;

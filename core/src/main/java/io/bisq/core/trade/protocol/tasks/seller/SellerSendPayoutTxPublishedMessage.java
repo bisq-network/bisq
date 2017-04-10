@@ -39,7 +39,7 @@ public class SellerSendPayoutTxPublishedMessage extends TradeTask {
         try {
             runInterceptHook();
             if (trade.getPayoutTx() != null) {
-                final String id = processModel.getId();
+                final String id = processModel.getOfferId();
                 final PayoutTxPublishedMsg message = new PayoutTxPublishedMsg(
                         id,
                         trade.getPayoutTx().bitcoinSerialize(),
@@ -50,19 +50,19 @@ public class SellerSendPayoutTxPublishedMessage extends TradeTask {
                 trade.setState(Trade.State.SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG);
                 processModel.getP2PService().sendEncryptedMailboxMessage(
                         trade.getTradingPeerNodeAddress(),
-                        processModel.tradingPeer.getPubKeyRing(),
+                        processModel.getTradingPeer().getPubKeyRing(),
                         message,
                         new SendMailboxMessageListener() {
                             @Override
                             public void onArrived() {
-                                log.info("Message arrived at peer. tradeId={}, message{}", id, message);
+                                log.debug("Message arrived at peer. tradeId={}, message{}", id, message);
                                 trade.setState(Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
-                                log.info("Message stored in mailbox. tradeId={}, message{}", id, message);
+                                log.debug("Message stored in mailbox. tradeId={}, message{}", id, message);
                                 trade.setState(Trade.State.SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG);
                                 complete();
                             }

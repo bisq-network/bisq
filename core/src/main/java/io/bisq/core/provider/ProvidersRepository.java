@@ -3,6 +3,7 @@ package io.bisq.core.provider;
 import com.google.inject.Inject;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.network.NetworkOptionKeys;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,9 @@ public class ProvidersRepository {
                 //providers = "http://t4wlzy7l6k4hnolg.onion/, http://g27szt7aw2vrtowe.onion/";
             }
         }
-        providerArray = providers.replace(" ", "").split(",");
+
+        providerArray = StringUtils.deleteWhitespace(providers).split(",");
+        
         int index = new Random().nextInt(providerArray.length);
         baseUrl = providerArray[index];
         log.info("baseUrl for PriceFeedService: " + baseUrl);

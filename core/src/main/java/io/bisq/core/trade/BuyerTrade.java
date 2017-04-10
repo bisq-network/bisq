@@ -24,25 +24,34 @@ import io.bisq.common.storage.Storage;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.protocol.BuyerProtocol;
 import io.bisq.network.p2p.NodeAddress;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public abstract class BuyerTrade extends Trade {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(BuyerAsMakerTrade.class);
-
-    BuyerTrade(Offer offer, Coin tradeAmount, Coin txFee, Coin takeOfferFee, long tradePrice, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, txFee, takeOfferFee, tradePrice, tradingPeerNodeAddress, storage);
+    BuyerTrade(Offer offer,
+               Coin tradeAmount,
+               Coin txFee,
+               Coin takeOfferFee,
+               boolean isCurrencyForTakerFeeBtc,
+               long tradePrice,
+               NodeAddress tradingPeerNodeAddress,
+               Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, tradePrice, tradingPeerNodeAddress, storage);
     }
 
-    BuyerTrade(Offer offer, Coin txFee, Coin takeOfferFee, Storage<? extends TradableList> storage) {
-        super(offer, txFee, takeOfferFee, storage);
+    BuyerTrade(Offer offer,
+               Coin txFee,
+               Coin takeOfferFee,
+               boolean isCurrencyForTakerFeeBtc,
+               Storage<? extends TradableList> storage) {
+        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, storage);
     }
 
     @Override

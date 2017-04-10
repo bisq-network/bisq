@@ -156,7 +156,7 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
         return completePreparedBsqTx(preparedBsqTx, isSendTx, null);
     }
 
-    public Transaction completePreparedBsqTx(Transaction preparedBsqTx, boolean isSendTx, @Nullable byte[] opReturnData) throws
+    public Transaction completePreparedBsqTx(Transaction preparedBsqTx, boolean useCustomTxFee, @Nullable byte[] opReturnData) throws
             TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
 
         // preparedBsqTx has following structure:
@@ -184,16 +184,15 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
         final int sigSizePerInput = 106;
         // typical size for a tx with 2 inputs
         int txSizeWithUnsignedInputs = 203;
-        // If isSendTx we allow overriding the estimated fee from preferences
-        final Coin txFeePerByte = isSendTx ? getTxFeeForWithdrawalPerByte() : feeService.getTxFeePerByte();
-        log.error("txFeePerByte " + txFeePerByte);
+        // If useCustomTxFee we allow overriding the estimated fee from preferences
+        final Coin txFeePerByte = useCustomTxFee ? getTxFeeForWithdrawalPerByte() : feeService.getTxFeePerByte();
         // In case there are no change outputs we force a change by adding min dust to the BTC input
         Coin forcedChangeValue = Coin.ZERO;
 
         Address changeAddress = getOrCreateAddressEntry(AddressEntry.Context.AVAILABLE).getAddress();
         checkNotNull(changeAddress, "changeAddress must not be null");
 
-        final BtcCoinSelector coinSelector = new BtcCoinSelector(params, walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+        final BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
         final List<TransactionInput> preparedBsqTxInputs = preparedBsqTx.getInputs();
         final List<TransactionOutput> preparedBsqTxOutputs = preparedBsqTx.getOutputs();
         int numInputs = preparedBsqTxInputs.size() + 1; // We add 1 for the BTC fee input
@@ -254,11 +253,11 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
             TransactionInput txIn = resultTx.getInputs().get(i);
             checkArgument(txIn.getConnectedOutput() != null && txIn.getConnectedOutput().isMine(wallet),
                     "txIn.getConnectedOutput() is not in our wallet. That must not happen.");
-            signTransactionInput(resultTx, txIn, i);
+            signTransactionInput(wallet, aesKey, resultTx, txIn, i);
             checkScriptSig(resultTx, txIn, i);
         }
 
-        checkWalletConsistency();
+        checkWalletConsistency(wallet);
         verifyTransaction(resultTx);
 
         //printTx("BTC wallet: Signed tx", resultTx);
@@ -293,11 +292,10 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Optional<AddressEntry> getAddressEntry(String offerId, AddressEntry.Context context) {
-        Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
+        return getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
                 .findAny();
-        return addressEntry;
     }
 
     public AddressEntry getOrCreateAddressEntry(String offerId, AddressEntry.Context context) {
@@ -334,7 +332,8 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
         if (addressEntry.isPresent()) {
             return addressEntry.get();
         } else {
-            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), context));
+            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(),
+                    wallet.getParams(), context));
             saveAddressEntryList();
             return entry;
         }
@@ -494,7 +493,7 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
                             sendRequest.fee = fee;
                             sendRequest.feePerKb = Coin.ZERO;
                             sendRequest.aesKey = aesKey;
-                            sendRequest.coinSelector = new BtcCoinSelector(params, toAddress);
+                            sendRequest.coinSelector = new BtcCoinSelector(toAddress);
                             sendRequest.changeAddress = toAddress;
                             wallet.completeTx(sendRequest);
                             tx = sendRequest.tx;
@@ -513,7 +512,7 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
                             sendRequest.fee = fee;
                             sendRequest.feePerKb = Coin.ZERO;
                             sendRequest.aesKey = aesKey;
-                            sendRequest.coinSelector = new BtcCoinSelector(params, toAddress);
+                            sendRequest.coinSelector = new BtcCoinSelector(toAddress);
                             sendRequest.changeAddress = toAddress;
                             sendResult = wallet.sendCoins(sendRequest);
                         } catch (InsufficientMoneyException e) {
@@ -528,7 +527,7 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
                             sendRequest.fee = fee;
                             sendRequest.feePerKb = Coin.ZERO;
                             sendRequest.aesKey = aesKey;
-                            sendRequest.coinSelector = new BtcCoinSelector(params, toAddress, false);
+                            sendRequest.coinSelector = new BtcCoinSelector(toAddress, false);
                             sendRequest.changeAddress = toAddress;
 
                             try {
@@ -730,7 +729,7 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
 
         checkNotNull(addressEntry.get(), "addressEntry.get() must not be null");
         checkNotNull(addressEntry.get().getAddress(), "addressEntry.get().getAddress() must not be null");
-        sendRequest.coinSelector = new BtcCoinSelector(params, addressEntry.get().getAddress());
+        sendRequest.coinSelector = new BtcCoinSelector(addressEntry.get().getAddress());
         sendRequest.changeAddress = addressEntry.get().getAddress();
         return sendRequest;
     }
@@ -769,7 +768,7 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
         if (addressEntries.isEmpty())
             throw new AddressEntryException("No Addresses for withdraw found in our wallet");
 
-        sendRequest.coinSelector = new BtcCoinSelector(params, walletsSetup.getAddressesFromAddressEntries(addressEntries));
+        sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries));
         Optional<AddressEntry> addressEntryOptional = Optional.empty();
         AddressEntry changeAddressAddressEntry = null;
         if (changeAddress != null)

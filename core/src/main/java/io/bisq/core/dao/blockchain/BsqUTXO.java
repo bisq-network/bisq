@@ -17,26 +17,54 @@
 
 package io.bisq.core.dao.blockchain;
 
-import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.UTXO;
-import org.bitcoinj.core.Utils;
-import org.bitcoinj.script.Script;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.Serializable;
 
 // Estimation for UTXO set: 1 UTXO object has 78 byte
 // 1000 UTXOs - 10 000 UTXOs: 78kb -780kb
 
-public class BsqUTXO extends UTXO {
-    private static final Logger log = LoggerFactory.getLogger(BsqUTXO.class);
+@Value
+@Slf4j
+public class BsqUTXO implements Serializable {
+    private final int height;
+    private final TxOutput txOutput;
+    private final boolean isBsqCoinBase;
+    private final String utxoId;
 
-    public BsqUTXO(String txId, long index, Coin value, int height, boolean coinBase, Script script, String address) {
-        super(Sha256Hash.wrap(Utils.HEX.decode(txId)), index, value, height, coinBase, script, address);
+    public BsqUTXO(int height, TxOutput txOutput, boolean isBsqCoinBase) {
+        this.height = height;
+        this.txOutput = txOutput;
+        this.isBsqCoinBase = isBsqCoinBase;
+
+        utxoId = txOutput.getTxId() + ":" + txOutput.getIndex();
+    }
+
+    public String getAddress() {
+        return txOutput.getAddress();
+    }
+
+    public long getValue() {
+        return txOutput.getValue();
+    }
+
+    public String getTxId() {
+        return txOutput.getTxId();
+    }
+
+    public int getIndex() {
+        return txOutput.getIndex();
     }
 
     @Override
     public String toString() {
-        return String.format("value:%d, spending tx:%s at index:%d)", getValue().value, getHash(), getIndex());
+        return "BsqUTXO{" +
+                "\n     height=" + height +
+                ", \n     output=" + txOutput +
+                ", \n     isBsqCoinBase=" + isBsqCoinBase +
+                ", \n     utxoId='" + utxoId + '\'' +
+                "\n}";
     }
+
 }

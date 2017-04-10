@@ -38,27 +38,27 @@ public class TakerSendDepositTxPublishedMessage extends TradeTask {
         try {
             runInterceptHook();
             if (trade.getDepositTx() != null) {
-                final String id = processModel.getId();
-                DepositTxPublishedMsg message = new DepositTxPublishedMsg(processModel.getId(),
+                final String id = processModel.getOfferId();
+                DepositTxPublishedMsg message = new DepositTxPublishedMsg(processModel.getOfferId(),
                         trade.getDepositTx().bitcoinSerialize(),
                         processModel.getMyNodeAddress(),
                         UUID.randomUUID().toString());
                 trade.setState(Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
                 processModel.getP2PService().sendEncryptedMailboxMessage(
                         trade.getTradingPeerNodeAddress(),
-                        processModel.tradingPeer.getPubKeyRing(),
+                        processModel.getTradingPeer().getPubKeyRing(),
                         message,
                         new SendMailboxMessageListener() {
                             @Override
                             public void onArrived() {
-                                log.info("Message arrived at peer. tradeId={}, message{}", id, message);
+                                log.debug("Message arrived at peer. tradeId={}, message{}", id, message);
                                 trade.setState(Trade.State.TAKER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
                                 complete();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
-                                log.info("Message stored in mailbox. tradeId={}, message{}", id, message);
+                                log.debug("Message stored in mailbox. tradeId={}, message{}", id, message);
                                 trade.setState(Trade.State.TAKER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG);
                                 complete();
                             }

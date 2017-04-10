@@ -48,11 +48,12 @@ public final class VoteItemsList implements Persistable {
         return allVoteItemList.remove(voteItem);
     }
 
+    // TODO no translations yet
     public VoteItemsList(VotingDefaultValues votingDefaultValues) {
-        add(new VoteItem(VotingType.CREATE_OFFER_FEE_IN_BTC, "Create offer fee (in BTC Satoshi)", votingDefaultValues));
-        add(new VoteItem(VotingType.TAKE_OFFER_FEE_IN_BTC, "Take offer fee (in BTC Satoshi)", votingDefaultValues));
-        add(new VoteItem(VotingType.CREATE_OFFER_FEE_IN_BSQ, "Create offer fee (in BSQ)", votingDefaultValues));
-        add(new VoteItem(VotingType.TAKE_OFFER_FEE_IN_BSQ, "Take offer fee (in BSQ)", votingDefaultValues));
+        add(new VoteItem(VotingType.MAKER_FEE_IN_BTC, "Maker fee (in BTC Satoshi)", votingDefaultValues));
+        add(new VoteItem(VotingType.TAKER_FEE_IN_BTC, "Taker fee (in BTC Satoshi)", votingDefaultValues));
+        add(new VoteItem(VotingType.MAKER_FEE_IN_BSQ, "Maker fee (in BSQ)", votingDefaultValues));
+        add(new VoteItem(VotingType.TAKER_FEE_IN_BSQ, "Taker fee (in BSQ)", votingDefaultValues));
         add(new VoteItem(VotingType.CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ, "Compensation request fee (in BSQ)", votingDefaultValues));
         add(new VoteItem(VotingType.VOTING_FEE_IN_BSQ, "Voting fee (in BSQ)", votingDefaultValues));
 

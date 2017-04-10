@@ -41,10 +41,6 @@ public interface Preferences extends Persistable {
 
     void resetDontShowAgain();
 
-    void setBtcDenomination(String btcDenomination);
-
-    void setUseAnimations(boolean useAnimations);
-
     void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork);
 
     void addFiatCurrency(FiatCurrency tradeCurrency);
@@ -203,4 +199,10 @@ public interface Preferences extends Persistable {
     javafx.collections.ObservableList<CryptoCurrency> getCryptoCurrenciesAsObservable();
 
     javafx.collections.ObservableList<TradeCurrency> getTradeCurrenciesAsObservable();
+
+    boolean isResyncSPVRequested();
+
+    boolean getPayFeeInBTC();
+
+    BlockChainExplorer getBsqBlockChainExplorer();
 }

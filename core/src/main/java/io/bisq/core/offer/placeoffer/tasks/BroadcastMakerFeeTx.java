@@ -27,14 +27,14 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
-    private static final Logger log = LoggerFactory.getLogger(BroadcastCreateOfferFeeTx.class);
+public class BroadcastMakerFeeTx extends Task<PlaceOfferModel> {
+    private static final Logger log = LoggerFactory.getLogger(BroadcastMakerFeeTx.class);
 
     private boolean removeOfferFailed;
     private boolean addOfferFailed;
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public BroadcastCreateOfferFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
+    public BroadcastMakerFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
 
@@ -42,13 +42,13 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
     protected void run() {
         try {
             runInterceptHook();
-            model.tradeWalletService.broadcastTx(model.getTransaction(), new FutureCallback<Transaction>() {
+            model.getTradeWalletService().broadcastTx(model.getTransaction(), new FutureCallback<Transaction>() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.debug("Broadcast of offer fee payment succeeded: transaction = " + transaction.toString());
 
                     if (model.getTransaction().getHashAsString().equals(transaction.getHashAsString())) {
-                        model.offer.setState(Offer.State.OFFER_FEE_PAID);
+                        model.getOffer().setState(Offer.State.OFFER_FEE_PAID);
                         // No tx malleability happened after broadcast (still not in blockchain)
                         complete();
                     } else {
@@ -56,19 +56,19 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                         // Tx malleability happened after broadcast. We first remove the malleable offer.
                         // Then we publish the changed offer to the P2P network again after setting the new TxId.
                         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
-                        model.offerBookService.removeOffer(model.offer.getOfferPayload(),
+                        model.getOfferBookService().removeOffer(model.getOffer().getOfferPayload(),
                                 () -> {
                                     log.debug("We store now the changed txID to the offer and add that again.");
                                     // We store now the changed txID to the offer and add that again.
-                                    model.offer.setOfferFeePaymentTxId(transaction.getHashAsString());
+                                    model.getOffer().setOfferFeePaymentTxId(transaction.getHashAsString());
                                     model.setTransaction(transaction);
-                                    model.offerBookService.addOffer(model.offer,
-                                            BroadcastCreateOfferFeeTx.this::complete,
+                                    model.getOfferBookService().addOffer(model.getOffer(),
+                                            BroadcastMakerFeeTx.this::complete,
                                             errorMessage -> {
                                                 log.error("addOffer failed");
                                                 addOfferFailed = true;
                                                 updateStateOnFault();
-                                                model.offer.setErrorMessage("An error occurred when adding the offer to the P2P network.\n" +
+                                                model.getOffer().setErrorMessage("An error occurred when adding the offer to the P2P network.\n" +
                                                         "Error message:\n"
                                                         + errorMessage);
                                                 failed(errorMessage);
@@ -78,7 +78,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                                     log.error("removeOffer failed");
                                     removeOfferFailed = true;
                                     updateStateOnFault();
-                                    model.offer.setErrorMessage("An error occurred when removing the offer from the P2P network.\n" +
+                                    model.getOffer().setErrorMessage("An error occurred when removing the offer from the P2P network.\n" +
                                             "Error message:\n"
                                             + errorMessage);
                                     failed(errorMessage);
@@ -89,14 +89,14 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
                 @Override
                 public void onFailure(@NotNull Throwable t) {
                     updateStateOnFault();
-                    model.offer.setErrorMessage("An error occurred.\n" +
+                    model.getOffer().setErrorMessage("An error occurred.\n" +
                             "Error message:\n"
                             + t.getMessage());
                     failed(t);
                 }
             });
         } catch (Throwable t) {
-            model.offer.setErrorMessage("An error occurred.\n" +
+            model.getOffer().setErrorMessage("An error occurred.\n" +
                     "Error message:\n"
                     + t.getMessage());
             failed(t);
@@ -106,7 +106,7 @@ public class BroadcastCreateOfferFeeTx extends Task<PlaceOfferModel> {
     private void updateStateOnFault() {
         if (!removeOfferFailed && !addOfferFailed) {
             // If broadcast fails we need to remove offer from offerbook
-            model.offerBookService.removeOffer(model.offer.getOfferPayload(),
+            model.getOfferBookService().removeOffer(model.getOffer().getOfferPayload(),
                     () -> log.debug("OfferPayload removed from offerbook because broadcast failed."),
                     errorMessage -> log.error("removeOffer failed. " + errorMessage));
         }

@@ -20,15 +20,12 @@ package io.bisq.core.user;
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
-import io.bisq.generated.protobuffer.PB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class BlockChainExplorer implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
-    private static final Logger log = LoggerFactory.getLogger(BlockChainExplorer.class);
 
     public final String name;
     public final String txUrl;

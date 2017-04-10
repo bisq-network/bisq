@@ -17,65 +17,41 @@
 
 package io.bisq.core.dao.blockchain;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.Value;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+@Value
 public class BsqBlock {
-    private static final Logger log = LoggerFactory.getLogger(BsqBlock.class);
-
-    public final int blockHeight;
-    public final List<String> txIds;
-
-    private final Map<String, BsqTransaction> bsqTransactions = new HashMap<>();
-
-    public BsqBlock(List<String> txIds, int blockHeight) {
+    @Getter
+    private final int height;
+    @Getter
+    private final List<String> txIds;
+    // private final Map<String, Tx> txByTxIdMap = new HashMap<>();
+    private final List<Tx> txList = new ArrayList<>();
+    
+    public BsqBlock(List<String> txIds, int height) {
         this.txIds = txIds;
-        this.blockHeight = blockHeight;
+        this.height = height;
     }
 
-    public void addBsqTransaction(BsqTransaction bsqTransaction) {
-        bsqTransactions.put(bsqTransaction.txId, bsqTransaction);
+    public void addTx(Tx tx) {
+        //txByTxIdMap.put(tx.getId(), tx);
+        txList.add(tx);
     }
 
-    public BsqTransaction getBsqTransaction(String txId) {
-        return bsqTransactions.get(txId);
-    }
-
-    public Map<String, BsqTransaction> getTransactions() {
-        return bsqTransactions;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        BsqBlock bsqBlock = (BsqBlock) o;
-
-        if (blockHeight != bsqBlock.blockHeight) return false;
-        if (txIds != null ? !txIds.equals(bsqBlock.txIds) : bsqBlock.txIds != null) return false;
-        return !(bsqTransactions != null ? !bsqTransactions.equals(bsqBlock.bsqTransactions) : bsqBlock.bsqTransactions != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = blockHeight;
-        result = 31 * result + (txIds != null ? txIds.hashCode() : 0);
-        result = 31 * result + (bsqTransactions != null ? bsqTransactions.hashCode() : 0);
-        return result;
-    }
+  /*  public Tx getTxByTxId(String txId) {
+        return txByTxIdMap.get(txId);
+    }*/
 
     @Override
     public String toString() {
         return "BsqBlock{" +
-                "blockHeight=" + blockHeight +
-                ", txIds=" + txIds +
-                ", bsqTransactions=" + bsqTransactions +
-                '}';
+                "\nheight=" + height +
+                ",\ntxIds=" + txIds +
+                ",\ntxList=" + txList +
+                "}\n";
     }
 }

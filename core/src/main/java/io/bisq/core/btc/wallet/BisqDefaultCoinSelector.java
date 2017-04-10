@@ -17,8 +17,8 @@
 
 package io.bisq.core.btc.wallet;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
-import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.wallet.CoinSelection;
 import org.bitcoinj.wallet.CoinSelector;
 
@@ -26,6 +26,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Used from org.bitcoinj.wallet.DefaultCoinSelector but added selectOutput method and changed static methods to
@@ -36,19 +37,32 @@ import java.util.List;
  * possible. This means that the transaction is the most likely to get confirmed. Note that this means we may end up
  * "spending" more priority than would be required to get the transaction we are creating confirmed.
  */
+@Slf4j
 public abstract class BisqDefaultCoinSelector implements CoinSelector {
+
+    protected final boolean permitForeignPendingTx;
+
+    public CoinSelection select(Coin target, Set<TransactionOutput> candidates) {
+        return select(target, new ArrayList<>(candidates));
+    }
+
+    public BisqDefaultCoinSelector(boolean permitForeignPendingTx) {
+        this.permitForeignPendingTx = permitForeignPendingTx;
+    }
+
+    public BisqDefaultCoinSelector() {
+        permitForeignPendingTx = false;
+    }
+
     @Override
     public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
         ArrayList<TransactionOutput> selected = new ArrayList<>();
-        // Sort the inputs by age*value so we get the highest "coindays" spent.
-        // TODO: Consider changing the wallets internal format to track just outputs and keep them ordered.
+        // Sort the inputs by age*value so we get the highest "coin days" spent.
         ArrayList<TransactionOutput> sortedOutputs = new ArrayList<>(candidates);
-        // When calculating the wallet balance, we may be asked to select all possible coins, if so, avoid sorting
-        // them in order to improve performance.
-        // TODO: Take in network parameters when instantiated, and then test against the current network. Or just have a boolean parameter for "give me everything"
-        if (!target.equals(NetworkParameters.MAX_MONEY)) {
+        // If we spend all we don't need to sort
+        if (!target.equals(NetworkParameters.MAX_MONEY))
             sortOutputs(sortedOutputs);
-        }
+
         // Now iterate over the sorted outputs until we have got as close to the target as possible or a little
         // bit over (excessive value will be change).
         long total = 0;
@@ -60,12 +74,10 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
                     break;
             }
 
-            // Only pick chain-included transactions, or transactions that are ours and pending.
-            if (!shouldSelect(output.getParentTransaction()) || !selectOutput(output))
-                continue;
-
-            selected.add(output);
-            total += output.getValue().value;
+            if (isTxSpendable(output.getParentTransaction()) && isTxOutputSpendable(output)) {
+                selected.add(output);
+                total += output.getValue().value;
+            }
         }
         // Total may be lower than target here, if the given candidates were insufficient to create to requested
         // transaction.
@@ -86,7 +98,21 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
         return Coin.valueOf(change);
     }
 
-    abstract boolean selectOutput(TransactionOutput output);
+    // We allow spending own unconfirmed txs and if permitForeignPendingTx is set as well foreign unconfirmed txs.
+    protected boolean isTxSpendable(Transaction tx) {
+        if (tx != null) {
+            TransactionConfidence confidence = tx.getConfidence();
+            TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
+            boolean isConfirmed = type.equals(TransactionConfidence.ConfidenceType.BUILDING);
+            boolean isPending = type.equals(TransactionConfidence.ConfidenceType.PENDING);
+            boolean isOwnTx = confidence.getSource().equals(TransactionConfidence.Source.SELF);
+            return isConfirmed || (isPending && (permitForeignPendingTx || isOwnTx));
+        } else {
+            return false;
+        }
+    }
+
+    abstract boolean isTxOutputSpendable(TransactionOutput output);
 
     protected void sortOutputs(ArrayList<TransactionOutput> outputs) {
         Collections.sort(outputs, (a, b) -> {
@@ -102,31 +128,12 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
             int c2 = bValue.compareTo(aValue);
             if (c2 != 0) return c2;
             // They are entirely equivalent (possibly pending) so sort by hash to ensure a total ordering.
-            BigInteger aHash = a.getParentTransactionHash().toBigInteger();
-            BigInteger bHash = b.getParentTransactionHash().toBigInteger();
+            BigInteger aHash = a.getParentTransactionHash() != null ?
+                    a.getParentTransactionHash().toBigInteger() : BigInteger.ZERO;
+            BigInteger bHash = b.getParentTransactionHash() != null ?
+                    b.getParentTransactionHash().toBigInteger() : BigInteger.ZERO;
             return aHash.compareTo(bHash);
         });
     }
 
-    /**
-     * Sub-classes can override this to just customize whether transactions are usable, but keep age sorting.
-     */
-    protected boolean shouldSelect(Transaction tx) {
-        if (tx != null) {
-            return isSelectable(tx);
-        }
-        return true;
-    }
-
-    protected boolean isSelectable(Transaction tx) {
-        // Only pick chain-included transactions, or transactions that are ours and pending.
-        TransactionConfidence confidence = tx.getConfidence();
-        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-        return type.equals(TransactionConfidence.ConfidenceType.BUILDING) ||
-                type.equals(TransactionConfidence.ConfidenceType.PENDING) &&
-                        confidence.getSource().equals(TransactionConfidence.Source.SELF) &&
-                        // In regtest mode we expect to have only one peer, so we won't see transactions propagate.
-                        // TODO: The value 1 below dates from a time when transactions we broadcast *to* were counted, set to 0
-                        (confidence.numBroadcastPeers() > 1 || tx.getParams() == RegTestParams.get());
-    }
 }

@@ -928,7 +928,7 @@ public class FormBuilder {
         return new Tuple3<>(box, input, currency);
     }
 
-    public static Tuple3<HBox, TextField, Label> getNotEditableValueCurrencyBox() {
+    public static Tuple3<HBox, TextField, Label> getNonEditableValueCurrencyBox() {
         TextField textField = new InputTextField();
         textField.setPrefWidth(190);
         textField.setAlignment(Pos.CENTER_RIGHT);

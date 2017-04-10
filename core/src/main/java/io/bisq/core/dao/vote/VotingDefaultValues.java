@@ -33,10 +33,10 @@ public class VotingDefaultValues {
     // Default values at genesis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static final long CREATE_OFFER_FEE_IN_BTC_AT_GENESIS = 30_000;
-    public static final long TAKE_OFFER_FEE_IN_BTC_AT_GENESIS = 80_000;
-    public static final long CREATE_OFFER_FEE_IN_BSQ_AT_GENESIS = 333;
-    public static final long TAKE_OFFER_FEE_IN_BSQ_AT_GENESIS = 444;
+    public static final long MAKER_FEE_IN_BTC_AT_GENESIS = 30_000;
+    public static final long TAKER_FEE_IN_BTC_AT_GENESIS = 80_000;
+    public static final long MAKER_FEE_IN_BSQ_AT_GENESIS = 333;
+    public static final long TAKER_FEE_IN_BSQ_AT_GENESIS = 444;
     public static final long CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ_AT_GENESIS = 7777;
     public static final long VOTING_FEE_IN_BSQ_AT_GENESIS = 8888;
 
@@ -60,10 +60,10 @@ public class VotingDefaultValues {
     // Fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private long createOfferFeeInBtc = CREATE_OFFER_FEE_IN_BTC_AT_GENESIS;
-    private long takeOfferFeeInBtc = TAKE_OFFER_FEE_IN_BTC_AT_GENESIS;
-    private long createOfferFeeInBsq = CREATE_OFFER_FEE_IN_BSQ_AT_GENESIS;
-    private long takeOfferFeeInBsq = TAKE_OFFER_FEE_IN_BSQ_AT_GENESIS;
+    private long makerFeeInBtc = MAKER_FEE_IN_BTC_AT_GENESIS;
+    private long takerFeeInBtc = TAKER_FEE_IN_BTC_AT_GENESIS;
+    private long makerFeeInBsq = MAKER_FEE_IN_BSQ_AT_GENESIS;
+    private long takerFeeInBsq = TAKER_FEE_IN_BSQ_AT_GENESIS;
     private long createCompensationRequestFeeInBsq = CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ_AT_GENESIS;
     private long votingFeeInBsq = VOTING_FEE_IN_BSQ_AT_GENESIS;
 
@@ -108,14 +108,14 @@ public class VotingDefaultValues {
 
     public long getValueByVotingType(VotingType votingType) {
         switch (votingType) {
-            case CREATE_OFFER_FEE_IN_BTC:
-                return createOfferFeeInBtc;
-            case TAKE_OFFER_FEE_IN_BTC:
-                return takeOfferFeeInBtc;
-            case CREATE_OFFER_FEE_IN_BSQ:
-                return createOfferFeeInBsq;
-            case TAKE_OFFER_FEE_IN_BSQ:
-                return takeOfferFeeInBsq;
+            case MAKER_FEE_IN_BTC:
+                return makerFeeInBtc;
+            case TAKER_FEE_IN_BTC:
+                return takerFeeInBtc;
+            case MAKER_FEE_IN_BSQ:
+                return makerFeeInBsq;
+            case TAKER_FEE_IN_BSQ:
+                return takerFeeInBsq;
             case CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ:
                 return createCompensationRequestFeeInBsq;
             case VOTING_FEE_IN_BSQ:
@@ -155,17 +155,17 @@ public class VotingDefaultValues {
 
     public void setValueByVotingType(VotingType votingType, long value) {
         switch (votingType) {
-            case CREATE_OFFER_FEE_IN_BTC:
-                createOfferFeeInBtc = value;
+            case MAKER_FEE_IN_BTC:
+                makerFeeInBtc = value;
                 break;
-            case TAKE_OFFER_FEE_IN_BTC:
-                takeOfferFeeInBtc = value;
+            case TAKER_FEE_IN_BTC:
+                takerFeeInBtc = value;
                 break;
-            case CREATE_OFFER_FEE_IN_BSQ:
-                createOfferFeeInBsq = value;
+            case MAKER_FEE_IN_BSQ:
+                makerFeeInBsq = value;
                 break;
-            case TAKE_OFFER_FEE_IN_BSQ:
-                takeOfferFeeInBsq = value;
+            case TAKER_FEE_IN_BSQ:
+                takerFeeInBsq = value;
                 break;
             case CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ:
                 createCompensationRequestFeeInBsq = value;
@@ -256,20 +256,20 @@ public class VotingDefaultValues {
         this.maxBtcAmountCompensationRequest = maxBtcAmountCompensationRequest;
     }
 
-    public long getCreateOfferFeeInBtc() {
-        return createOfferFeeInBtc;
+    public long getMakerFeeInBtc() {
+        return makerFeeInBtc;
     }
 
-    public void setCreateOfferFeeInBtc(long createOfferFeeInBtc) {
-        this.createOfferFeeInBtc = createOfferFeeInBtc;
+    public void setMakerFeeInBtc(long makerFeeInBtc) {
+        this.makerFeeInBtc = makerFeeInBtc;
     }
 
-    public long getTakeOfferFeeInBtc() {
-        return takeOfferFeeInBtc;
+    public long getTakerFeeInBtc() {
+        return takerFeeInBtc;
     }
 
-    public void setTakeOfferFeeInBtc(long takeOfferFeeInBtc) {
-        this.takeOfferFeeInBtc = takeOfferFeeInBtc;
+    public void setTakerFeeInBtc(long takerFeeInBtc) {
+        this.takerFeeInBtc = takerFeeInBtc;
     }
 
     public long getCreateCompensationRequestFeeInBsq() {

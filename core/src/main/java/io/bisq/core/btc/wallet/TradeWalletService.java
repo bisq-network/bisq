@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import io.bisq.common.app.Log;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.InsufficientFundsException;
 import io.bisq.core.btc.data.InputsAndChangeOutput;
 import io.bisq.core.btc.data.PreparedDepositTxAndMakerInputs;
 import io.bisq.core.btc.data.RawTransactionInput;
@@ -47,7 +48,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 // TradeService handles all relevant transactions used in the trade process
 /*
@@ -110,7 +112,7 @@ public class TradeWalletService {
     @Inject
     public TradeWalletService(WalletsSetup walletsSetup, Preferences preferences) {
         this.walletsSetup = walletsSetup;
-        this.params = preferences.getBitcoinNetwork().getParameters();
+        this.params = WalletUtils.getParameters();
         walletsSetup.addSetupCompletedHandler(() -> {
             walletConfig = walletsSetup.getWalletConfig();
             wallet = walletsSetup.getBtcWallet();
@@ -148,11 +150,24 @@ public class TradeWalletService {
      * @throws InsufficientMoneyException
      * @throws AddressFormatException
      */
-    public Transaction createTradingFeeTx(Address fundingAddress, Address reservedForTradeAddress,
-                                          Address changeAddress, Coin reservedFundsForOffer,
-                                          boolean useSavingsWallet, Coin tradingFee, Coin txFee,
-                                          String feeReceiverAddresses)
+    public Transaction createBtcTradingFeeTx(Address fundingAddress,
+                                             Address reservedForTradeAddress,
+                                             Address changeAddress,
+                                             Coin reservedFundsForOffer,
+                                             boolean useSavingsWallet,
+                                             Coin tradingFee,
+                                             Coin txFee,
+                                             String feeReceiverAddresses)
             throws InsufficientMoneyException, AddressFormatException {
+        log.debug("fundingAddress " + fundingAddress.toString());
+        log.debug("reservedForTradeAddress " + reservedForTradeAddress.toString());
+        log.debug("changeAddress " + changeAddress.toString());
+        log.debug("reservedFundsForOffer " + reservedFundsForOffer.toPlainString());
+        log.debug("useSavingsWallet " + useSavingsWallet);
+        log.debug("tradingFee " + tradingFee.toPlainString());
+        log.debug("txFee " + txFee.toPlainString());
+        log.debug("feeReceiverAddresses " + feeReceiverAddresses);
+
         Transaction tradingFeeTx = new Transaction(params);
         tradingFeeTx.addOutput(tradingFee, new Address(params, feeReceiverAddresses));
         // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
@@ -165,9 +180,9 @@ public class TradeWalletService {
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
         if (useSavingsWallet)
-            sendRequest.coinSelector = new BtcCoinSelector(params, walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+            sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
         else
-            sendRequest.coinSelector = new BtcCoinSelector(params, fundingAddress);
+            sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
         // We use a fixed fee
         sendRequest.feePerKb = Coin.ZERO;
         sendRequest.fee = txFee;
@@ -177,9 +192,90 @@ public class TradeWalletService {
 
         checkNotNull(wallet, "Wallet must not be null");
         wallet.completeTx(sendRequest);
-        BtcWalletService.printTx("tradingFeeTx", tradingFeeTx);
+        WalletService.printTx("tradingFeeTx", tradingFeeTx);
 
         return tradingFeeTx;
+    }
+
+
+    public Transaction completeBsqTradingFeeTx(Transaction preparedBsqTx,
+                                               Address fundingAddress,
+                                               Address reservedForTradeAddress,
+                                               Address changeAddress,
+                                               Coin reservedFundsForOffer,
+                                               boolean useSavingsWallet,
+                                               Coin txFee) throws
+            TransactionVerificationException, WalletException, InsufficientFundsException,
+            InsufficientMoneyException, AddressFormatException {
+
+        log.debug("preparedBsqTx " + preparedBsqTx.toString());
+        log.debug("fundingAddress " + fundingAddress.toString());
+        log.debug("changeAddress " + changeAddress.toString());
+        log.debug("reservedFundsForOffer " + reservedFundsForOffer.toPlainString());
+        log.debug("useSavingsWallet " + useSavingsWallet);
+        log.debug("txFee " + txFee.toPlainString());
+
+        // preparedBsqTx has following structure:
+        // inputs [1-n] BSQ inputs
+        // outputs [0-1] BSQ change output
+        // mining fee: burned BSQ fee
+
+        // We add BTC mining fee. Result tx looks like:
+        // inputs [1-n] BSQ inputs
+        // inputs [1-n] BTC inputs
+        // outputs [0-1] BSQ change output
+        // outputs [1] BTC reservedForTrade output
+        // outputs [0-1] BTC change output
+        // mining fee: BTC mining fee + burned BSQ fee
+
+        // In case of txs for burned BSQ fees we have no receiver output and it might be that there is no change outputs
+        // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input
+        // for BTC to force an additional change output.
+
+        final int preparedBsqTxInputsSize = preparedBsqTx.getInputs().size();
+
+
+        // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
+        preparedBsqTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
+
+        // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
+        // wait for 1 confirmation)
+        // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
+
+        // WalletService.printTx("preparedBsqTx", preparedBsqTx);
+        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(preparedBsqTx);
+        sendRequest.shuffleOutputs = false;
+        sendRequest.aesKey = aesKey;
+        if (useSavingsWallet)
+            sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+        else
+            sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
+        // We use a fixed fee
+        sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.fee = txFee;
+        sendRequest.signInputs = false;
+
+        // Change is optional in case of overpay or use of funds from savings wallet
+        sendRequest.changeAddress = changeAddress;
+
+        checkNotNull(wallet, "Wallet must not be null");
+        wallet.completeTx(sendRequest);
+        Transaction resultTx = sendRequest.tx;
+
+        // Sign all BTC inputs
+        for (int i = preparedBsqTxInputsSize; i < resultTx.getInputs().size(); i++) {
+            TransactionInput txIn = resultTx.getInputs().get(i);
+            checkArgument(txIn.getConnectedOutput() != null && txIn.getConnectedOutput().isMine(wallet),
+                    "txIn.getConnectedOutput() is not in our wallet. That must not happen.");
+            WalletService.signTransactionInput(wallet, aesKey, resultTx, txIn, i);
+            WalletService.checkScriptSig(resultTx, txIn, i);
+        }
+
+        WalletService.checkWalletConsistency(wallet);
+        WalletService.verifyTransaction(resultTx);
+
+        WalletService.printTx("BTC wallet: Signed tx", resultTx);
+        return resultTx;
     }
 
 
@@ -206,10 +302,10 @@ public class TradeWalletService {
      */
     public InputsAndChangeOutput takerCreatesDepositsTxInputs(Coin inputAmount, Coin txFee, Address takersAddress, Address takersChangeAddress) throws
             TransactionVerificationException, WalletException {
-        log.trace("takerCreatesDepositsTxInputs called");
-        log.trace("inputAmount " + inputAmount.toFriendlyString());
-        log.trace("txFee " + txFee.toFriendlyString());
-        log.trace("takersAddress " + takersAddress.toString());
+        log.debug("takerCreatesDepositsTxInputs called");
+        log.debug("inputAmount " + inputAmount.toFriendlyString());
+        log.debug("txFee " + txFee.toFriendlyString());
+        log.debug("takersAddress " + takersAddress.toString());
 
         // We add the mining fee 2 times to the deposit tx:
         // 1. Will be spent when publishing the deposit tx (paid by buyer)
@@ -243,11 +339,11 @@ public class TradeWalletService {
         addAvailableInputsAndChangeOutputs(dummyTX, takersAddress, takersChangeAddress, txFee);
 
         // The completeTx() call signs the input, but we don't want to pass over signed tx inputs so we remove the signature
-        removeSignatures(dummyTX);
+        WalletService.removeSignatures(dummyTX);
 
-        verifyTransaction(dummyTX);
+        WalletService.verifyTransaction(dummyTX);
 
-        //BtcWalletService.printTx("dummyTX", dummyTX);
+        //WalletService.printTx("dummyTX", dummyTX);
 
         List<RawTransactionInput> rawTransactionInputList = dummyTX.getInputs().stream()
                 .map(e -> {
@@ -277,15 +373,15 @@ public class TradeWalletService {
     /**
      * The maker creates the deposit transaction using the takers input(s) and optional output and signs his input(s).
      *
-     * @param makerIsBuyer            The flag indicating if we are in the maker as buyer role or the opposite.
+     * @param makerIsBuyer              The flag indicating if we are in the maker as buyer role or the opposite.
      * @param contractHash              The hash of the contract to be added to the OP_RETURN output.
-     * @param makerInputAmount        The input amount of the maker.
+     * @param makerInputAmount          The input amount of the maker.
      * @param msOutputAmount            The output amount to our MS output.
      * @param takerRawTransactionInputs Raw data for the connected outputs for all inputs of the taker (normally 1 input)
      * @param takerChangeOutputValue    Optional taker change output value
      * @param takerChangeAddressString  Optional taker change address
-     * @param makerAddress            The maker's address.
-     * @param makerChangeAddress      The maker's change address.
+     * @param makerAddress              The maker's address.
+     * @param makerChangeAddress        The maker's change address.
      * @param buyerPubKey               The public key of the buyer.
      * @param sellerPubKey              The public key of the seller.
      * @param arbitratorPubKey          The public key of the arbitrator.
@@ -307,18 +403,18 @@ public class TradeWalletService {
                                                                          byte[] sellerPubKey,
                                                                          byte[] arbitratorPubKey)
             throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
-        log.trace("makerCreatesAndSignsDepositTx called");
-        log.trace("makerIsBuyer " + makerIsBuyer);
-        log.trace("makerInputAmount " + makerInputAmount.toFriendlyString());
-        log.trace("msOutputAmount " + msOutputAmount.toFriendlyString());
-        log.trace("takerRawInputs " + takerRawTransactionInputs.toString());
-        log.trace("takerChangeOutputValue " + takerChangeOutputValue);
-        log.trace("takerChangeAddressString " + takerChangeAddressString);
-        log.trace("makerAddress " + makerAddress);
-        log.trace("makerChangeAddress " + makerChangeAddress);
-        log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.debug("makerCreatesAndSignsDepositTx called");
+        log.debug("makerIsBuyer " + makerIsBuyer);
+        log.debug("makerInputAmount " + makerInputAmount.toFriendlyString());
+        log.debug("msOutputAmount " + msOutputAmount.toFriendlyString());
+        log.debug("takerRawInputs " + takerRawTransactionInputs.toString());
+        log.debug("takerChangeOutputValue " + takerChangeOutputValue);
+        log.debug("takerChangeAddressString " + takerChangeAddressString);
+        log.debug("makerAddress " + makerAddress);
+        log.debug("makerChangeAddress " + makerChangeAddress);
+        log.debug("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.debug("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.debug("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
 
         checkArgument(!takerRawTransactionInputs.isEmpty());
 
@@ -413,12 +509,12 @@ public class TradeWalletService {
         for (int i = start; i < end; i++) {
             TransactionInput input = preparedDepositTx.getInput(i);
             signInput(preparedDepositTx, input, i);
-            checkScriptSig(preparedDepositTx, input, i);
+            WalletService.checkScriptSig(preparedDepositTx, input, i);
         }
 
-        BtcWalletService.printTx("prepared depositTx", preparedDepositTx);
+        WalletService.printTx("prepared depositTx", preparedDepositTx);
 
-        verifyTransaction(preparedDepositTx);
+        WalletService.verifyTransaction(preparedDepositTx);
 
         return new PreparedDepositTxAndMakerInputs(makerRawTransactionInputs, preparedDepositTx.bitcoinSerialize());
     }
@@ -426,15 +522,15 @@ public class TradeWalletService {
     /**
      * The taker signs the deposit transaction he received from the maker and publishes it.
      *
-     * @param takerIsSeller               The flag indicating if we are in the taker as seller role or the opposite.
-     * @param contractHash                The hash of the contract to be added to the OP_RETURN output.
+     * @param takerIsSeller             The flag indicating if we are in the taker as seller role or the opposite.
+     * @param contractHash              The hash of the contract to be added to the OP_RETURN output.
      * @param makersDepositTxSerialized The prepared deposit transaction signed by the maker.
-     * @param buyerInputs                 The connected outputs for all inputs of the buyer.
-     * @param sellerInputs                The connected outputs for all inputs of the seller.
-     * @param buyerPubKey                 The public key of the buyer.
-     * @param sellerPubKey                The public key of the seller.
-     * @param arbitratorPubKey            The public key of the arbitrator.
-     * @param callback                    Callback when transaction is broadcasted.
+     * @param buyerInputs               The connected outputs for all inputs of the buyer.
+     * @param sellerInputs              The connected outputs for all inputs of the seller.
+     * @param buyerPubKey               The public key of the buyer.
+     * @param sellerPubKey              The public key of the seller.
+     * @param arbitratorPubKey          The public key of the arbitrator.
+     * @param callback                  Callback when transaction is broadcasted.
      * @throws SigningException
      * @throws TransactionVerificationException
      * @throws WalletException
@@ -451,14 +547,14 @@ public class TradeWalletService {
             WalletException {
         Transaction makersDepositTx = new Transaction(params, makersDepositTxSerialized);
 
-        log.trace("signAndPublishDepositTx called");
-        log.trace("takerIsSeller " + takerIsSeller);
-        log.trace("makersDepositTx " + makersDepositTx.toString());
-        log.trace("buyerConnectedOutputsForAllInputs " + buyerInputs.toString());
-        log.trace("sellerConnectedOutputsForAllInputs " + sellerInputs.toString());
-        log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.debug("signAndPublishDepositTx called");
+        log.debug("takerIsSeller " + takerIsSeller);
+        log.debug("makersDepositTx " + makersDepositTx.toString());
+        log.debug("buyerConnectedOutputsForAllInputs " + buyerInputs.toString());
+        log.debug("sellerConnectedOutputsForAllInputs " + sellerInputs.toString());
+        log.debug("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.debug("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.debug("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
 
         checkArgument(!buyerInputs.isEmpty());
         checkArgument(!sellerInputs.isEmpty());
@@ -504,7 +600,7 @@ public class TradeWalletService {
 
         // Add all outputs from makersDepositTx to depositTx
         makersDepositTx.getOutputs().forEach(depositTx::addOutput);
-        //BtcWalletService.printTx("makersDepositTx", makersDepositTx);
+        //WalletService.printTx("makersDepositTx", makersDepositTx);
 
         // Sign inputs
         int start = takerIsSeller ? buyerInputs.size() : 0;
@@ -512,13 +608,13 @@ public class TradeWalletService {
         for (int i = start; i < end; i++) {
             TransactionInput input = depositTx.getInput(i);
             signInput(depositTx, input, i);
-            checkScriptSig(depositTx, input, i);
+            WalletService.checkScriptSig(depositTx, input, i);
         }
 
-        BtcWalletService.printTx("depositTx", depositTx);
+        WalletService.printTx("depositTx", depositTx);
 
-        verifyTransaction(depositTx);
-        checkWalletConsistency();
+        WalletService.verifyTransaction(depositTx);
+        WalletService.checkWalletConsistency(wallet);
 
         // Broadcast depositTx
         checkNotNull(walletConfig);
@@ -580,9 +676,9 @@ public class TradeWalletService {
 
         ECKey.ECDSASignature buyerSignature = multiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
 
-        BtcWalletService.printTx("prepared payoutTx", preparedPayoutTx);
+        WalletService.printTx("prepared payoutTx", preparedPayoutTx);
 
-        verifyTransaction(preparedPayoutTx);
+        WalletService.verifyTransaction(preparedPayoutTx);
 
         return buyerSignature.encodeToDER();
     }
@@ -655,11 +751,11 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
-        BtcWalletService.printTx("payoutTx", payoutTx);
+        WalletService.printTx("payoutTx", payoutTx);
 
-        verifyTransaction(payoutTx);
-        checkWalletConsistency();
-        checkScriptSig(payoutTx, input, 0);
+        WalletService.verifyTransaction(payoutTx);
+        WalletService.checkWalletConsistency(wallet);
+        WalletService.checkScriptSig(payoutTx, input, 0);
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         input.verify(input.getConnectedOutput());
         return payoutTx;
@@ -726,9 +822,9 @@ public class TradeWalletService {
 
         ECKey.ECDSASignature arbitratorSignature = arbitratorKeyPair.sign(sigHash, aesKey).toCanonicalised();
 
-        verifyTransaction(preparedPayoutTx);
+        WalletService.verifyTransaction(preparedPayoutTx);
 
-        //BtcWalletService.printTx("preparedPayoutTx", preparedPayoutTx);
+        //WalletService.printTx("preparedPayoutTx", preparedPayoutTx);
 
         return arbitratorSignature.encodeToDER();
     }
@@ -802,11 +898,11 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
-        BtcWalletService.printTx("disputed payoutTx", payoutTx);
+        WalletService.printTx("disputed payoutTx", payoutTx);
 
-        verifyTransaction(payoutTx);
-        checkWalletConsistency();
-        checkScriptSig(payoutTx, input, 0);
+        WalletService.verifyTransaction(payoutTx);
+        WalletService.checkWalletConsistency(wallet);
+        WalletService.checkScriptSig(payoutTx, input, 0);
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         input.verify(input.getConnectedOutput());
         return payoutTx;
@@ -899,10 +995,10 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
-        BtcWalletService.printTx("payoutTx", payoutTx);
+        WalletService.printTx("payoutTx", payoutTx);
 
-        verifyTransaction(payoutTx);
-        checkWalletConsistency();
+        WalletService.verifyTransaction(payoutTx);
+        WalletService.checkWalletConsistency(wallet);
 
         if (walletConfig != null) {
             ListenableFuture<Transaction> future = walletConfig.peerGroup().broadcastTransaction(payoutTx).future();
@@ -970,6 +1066,14 @@ public class TradeWalletService {
     public Transaction getWalletTx(Sha256Hash txId) throws VerificationException {
         checkNotNull(wallet);
         return wallet.getTransaction(txId);
+    }
+
+    public void commitTx(Transaction tx) {
+        wallet.commitTx(tx);
+    }
+
+    public Transaction getClonedTransaction(Transaction tx) {
+        return new Transaction(params, tx.bitcoinSerialize());
     }
 
 
@@ -1059,47 +1163,6 @@ public class TradeWalletService {
         }
     }
 
-    private void checkWalletConsistency() throws WalletException {
-        try {
-            log.trace("Check if wallet is consistent before commit.");
-            checkNotNull(wallet);
-            checkState(wallet.isConsistent());
-        } catch (Throwable t) {
-            t.printStackTrace();
-            log.error(t.getMessage());
-            throw new WalletException(t);
-        }
-    }
-
-    private void verifyTransaction(Transaction transaction) throws TransactionVerificationException {
-        try {
-            log.trace("Verify transaction " + transaction);
-            transaction.verify();
-        } catch (Throwable t) {
-            t.printStackTrace();
-            log.error(t.getMessage());
-            throw new TransactionVerificationException(t);
-        }
-    }
-
-    private void checkScriptSig(Transaction transaction, TransactionInput input, int inputIndex) throws TransactionVerificationException {
-        try {
-            log.trace("Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey. Check input at index: " + inputIndex);
-            checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
-            input.getScriptSig().correctlySpends(transaction, inputIndex, input.getConnectedOutput().getScriptPubKey());
-        } catch (Throwable t) {
-            t.printStackTrace();
-            log.error(t.getMessage());
-            throw new TransactionVerificationException(t);
-        }
-    }
-
-    private void removeSignatures(Transaction transaction) {
-        for (TransactionInput input : transaction.getInputs()) {
-            input.setScriptSig(new Script(new byte[]{}));
-        }
-    }
-
     private void addAvailableInputsAndChangeOutputs(Transaction transaction, Address address, Address changeAddress, Coin txFee) throws WalletException {
         try {
             // Lets let the framework do the work to find the right inputs
@@ -1110,7 +1173,7 @@ public class TradeWalletService {
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.fee = txFee;
             // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
-            sendRequest.coinSelector = new BtcCoinSelector(params, address);
+            sendRequest.coinSelector = new BtcCoinSelector(address);
             // We use always the same address in a trade for all transactions
             sendRequest.changeAddress = changeAddress;
             // With the usage of completeTx() we get all the work done with fee calculation, validation and coin selection.

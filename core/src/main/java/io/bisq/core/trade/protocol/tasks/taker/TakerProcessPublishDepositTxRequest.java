@@ -43,7 +43,7 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
             runInterceptHook();
             log.debug("current trade state " + trade.getState());
             PublishDepositTxRequest publishDepositTxRequest = (PublishDepositTxRequest) processModel.getTradeMessage();
-            checkTradeId(processModel.getId(), publishDepositTxRequest);
+            checkTradeId(processModel.getOfferId(), publishDepositTxRequest);
             checkNotNull(publishDepositTxRequest);
 
             PaymentAccountPayload paymentAccountPayload = checkNotNull(publishDepositTxRequest.makerPaymentAccountPayload);
@@ -55,13 +55,13 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
                 return;
             }
 
-            processModel.tradingPeer.setPaymentAccountPayload(paymentAccountPayload);
-            processModel.tradingPeer.setAccountId(nonEmptyStringOf(publishDepositTxRequest.makerAccountId));
-            processModel.tradingPeer.setMultiSigPubKey(checkNotNull(publishDepositTxRequest.makerMultiSigPubKey));
-            processModel.tradingPeer.setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.makerContractAsJson));
-            processModel.tradingPeer.setContractSignature(nonEmptyStringOf(publishDepositTxRequest.makerContractSignature));
-            processModel.tradingPeer.setPayoutAddressString(nonEmptyStringOf(publishDepositTxRequest.makerPayoutAddressString));
-            processModel.tradingPeer.setRawTransactionInputs(checkNotNull(publishDepositTxRequest.makerInputs));
+            processModel.getTradingPeer().setPaymentAccountPayload(paymentAccountPayload);
+            processModel.getTradingPeer().setAccountId(nonEmptyStringOf(publishDepositTxRequest.makerAccountId));
+            processModel.getTradingPeer().setMultiSigPubKey(checkNotNull(publishDepositTxRequest.makerMultiSigPubKey));
+            processModel.getTradingPeer().setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.makerContractAsJson));
+            processModel.getTradingPeer().setContractSignature(nonEmptyStringOf(publishDepositTxRequest.makerContractSignature));
+            processModel.getTradingPeer().setPayoutAddressString(nonEmptyStringOf(publishDepositTxRequest.makerPayoutAddressString));
+            processModel.getTradingPeer().setRawTransactionInputs(checkNotNull(publishDepositTxRequest.makerInputs));
             processModel.setPreparedDepositTx(checkNotNull(publishDepositTxRequest.preparedDepositTx));
             checkArgument(publishDepositTxRequest.makerInputs.size() > 0);
 

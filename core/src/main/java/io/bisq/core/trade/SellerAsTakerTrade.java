@@ -23,27 +23,32 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
 import io.bisq.core.trade.protocol.TakerProtocol;
 import io.bisq.network.p2p.NodeAddress;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
-    private static final Logger log = LoggerFactory.getLogger(SellerAsTakerTrade.class);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SellerAsTakerTrade(Offer offer, Coin tradeAmount, Coin txFee, Coin takeOfferFee, long tradePrice, NodeAddress tradingPeerNodeAddress, Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, txFee, takeOfferFee, tradePrice, tradingPeerNodeAddress, storage);
+    public SellerAsTakerTrade(Offer offer,
+                              Coin tradeAmount,
+                              Coin txFee,
+                              Coin takerFee,
+                              boolean isCurrencyForTakerFeeBtc,
+                              long tradePrice,
+                              NodeAddress tradingPeerNodeAddress,
+                              Storage<? extends TradableList> storage) {
+        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice, tradingPeerNodeAddress, storage);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {

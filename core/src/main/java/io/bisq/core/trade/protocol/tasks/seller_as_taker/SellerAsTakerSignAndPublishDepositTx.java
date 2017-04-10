@@ -57,7 +57,7 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
             trade.setContractHash(contractHash);
 
             ArrayList<RawTransactionInput> sellerInputs = processModel.getRawTransactionInputs();
-            BtcWalletService walletService = processModel.getWalletService();
+            BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
             Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
@@ -72,8 +72,8 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
 
             sellerMultiSigAddressEntry.setCoinLockedInMultiSig(sellerInput.subtract(trade.getTxFee().multiply(2)));
             walletService.saveAddressEntryList();
-            
-            TradingPeer tradingPeer = processModel.tradingPeer;
+
+            TradingPeer tradingPeer = processModel.getTradingPeer();
             Transaction depositTx = processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
                     true,
                     contractHash,

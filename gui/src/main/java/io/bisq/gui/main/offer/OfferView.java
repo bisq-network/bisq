@@ -17,6 +17,7 @@
 
 package io.bisq.gui.main.offer;
 
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;

@@ -17,6 +17,7 @@
 
 package io.bisq.gui.util;
 
+import io.bisq.common.GlobalSettings;
 import org.bitcoinj.core.Coin;
 import org.junit.Test;
 
@@ -142,9 +143,9 @@ public class BSFormatterTest {
 
     @Test
     public void testHasBtcValidDecimals() {
+        GlobalSettings.setLocale(Locale.GERMAN);
         BSFormatter formatter = new BSFormatter();
         formatter.useMilliBitFormat(false);
-        formatter.setLocale(Locale.GERMAN);
         assertTrue(formatter.hasBtcValidDecimals(null));
         assertTrue(formatter.hasBtcValidDecimals("0"));
         assertTrue(formatter.hasBtcValidDecimals("0,0001"));
@@ -158,9 +159,9 @@ public class BSFormatterTest {
 
     @Test
     public void testParseToFiatWith2Decimals() {
+        GlobalSettings.setLocale(Locale.GERMAN);
         BSFormatter formatter = new BSFormatter();
         formatter.useMilliBitFormat(false);
-        formatter.setLocale(Locale.GERMAN);
         assertEquals("0", formatter.parseToFiatWithPrecision("0", "EUR").toPlainString());
         assertEquals("0", formatter.parseToFiatWithPrecision(null, "EUR").toPlainString());
         assertEquals("0", formatter.parseToFiatWithPrecision("s", "EUR").toPlainString());
@@ -171,9 +172,9 @@ public class BSFormatterTest {
 
     @Test
     public void testHasFiatValidDecimals() {
+        GlobalSettings.setLocale(Locale.GERMAN);
         BSFormatter formatter = new BSFormatter();
         formatter.useMilliBitFormat(false);
-        formatter.setLocale(Locale.GERMAN);
         assertTrue(formatter.isFiatAlteredWhenPrecisionApplied(null, "EUR"));
         assertTrue(formatter.isFiatAlteredWhenPrecisionApplied("0", "EUR"));
         assertTrue(formatter.isFiatAlteredWhenPrecisionApplied("0,01", "EUR"));

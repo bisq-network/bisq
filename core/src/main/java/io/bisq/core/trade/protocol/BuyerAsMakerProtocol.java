@@ -105,7 +105,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
     @Override
     public void handleTakeOfferRequest(TradeMsg message, NodeAddress peerNodeAddress) {
-        Validator.checkTradeId(processModel.getId(), message);
+        Validator.checkTradeId(processModel.getOfferId(), message);
         checkArgument(message instanceof PayDepositRequest);
         processModel.setTradeMessage(message);
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);

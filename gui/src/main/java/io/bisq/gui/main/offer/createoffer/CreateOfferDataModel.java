@@ -27,6 +27,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
+import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.Restrictions;
@@ -78,8 +79,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final BSFormatter formatter;
     private final String offerId;
     private final AddressEntry addressEntry;
-    private Coin createOfferFeeAsCoin;
-    private Coin txFeeAsCoin;
+    private Coin makerFee;
+    private boolean isCurrencyForMakerFeeBtc;
     private final BalanceListener balanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
@@ -114,6 +115,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private boolean useSavingsWallet;
     Coin totalAvailableBalance;
     private double marketPriceMargin = 0;
+    private Coin txFeeFromFeeService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -174,6 +176,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         };
 
         paymentAccountsChangeListener = change -> fillPaymentAccounts();
+        isCurrencyForMakerFeeBtc = preferences.getPayFeeInBTC();
     }
 
     @Override
@@ -250,6 +253,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
         if (!preferences.isUseStickyMarketPrice())
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
+        // We request to get the actual estimated fee
+        requestTxFee();
+
         // The maker only pays the mining fee for the trade fee tx (not the mining fee for other trade txs).
         // A typical trade fee tx has about 226 bytes (if one input). We use 400 as a safe value.
         // We cannot use tx size calculation as we do not know initially how the input is funded. And we require the
@@ -263,13 +269,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         // Set the default values (in rare cases if the fee request was not done yet we get the hard coded default values)
         // But offer creation happens usually after that so we should have already the value from the estimation service.
-        txFeeAsCoin = feeService.getTxFee(400);
-
-        // We request to get the actual estimated fee
-        requestTxFee();
+        txFeeFromFeeService = feeService.getTxFee(400);
 
         calculateVolume();
         calculateTotalToPay();
+
         return true;
     }
 
@@ -319,7 +323,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String countryCode = paymentAccount instanceof CountryBasedPaymentAccount ? ((CountryBasedPaymentAccount) paymentAccount).getCountry().code : null;
 
         checkNotNull(p2PService.getAddress(), "Address must not be null");
-        checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
+        checkNotNull(makerFee, "makerFee must not be null");
 
         long maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimit();
         long maxTradePeriod = paymentAccount.getPaymentMethod().getMaxTradePeriod();
@@ -341,6 +345,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         checkArgument(buyerSecurityDepositAsCoin.compareTo(Restrictions.MIN_BUYER_SECURITY_DEPOSIT) >= 0,
                 "securityDeposit must be not be less than " +
                         Restrictions.MIN_BUYER_SECURITY_DEPOSIT.toFriendlyString());
+        //TODO add createOfferFeeAsBsq
         OfferPayload offerPayload = new OfferPayload(offerId,
                 new Date().getTime(),
                 p2PService.getAddress(),
@@ -364,8 +369,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 acceptedBanks,
                 Version.VERSION,
                 walletService.getLastBlockSeenHeight(),
-                txFeeAsCoin.value,
-                createOfferFeeAsCoin.value,
+                txFeeFromFeeService.value,
+                makerFee.value,
+                isCurrencyForMakerFeeBtc,
                 buyerSecurityDepositAsCoin.value,
                 sellerSecurityDeposit.value,
                 maxTradeLimit,
@@ -383,11 +389,19 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
-        checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
-        openOfferManager.placeOffer(offer, totalToPayAsCoin.get().subtract(txFeeAsCoin).subtract(createOfferFeeAsCoin), useSavingsWallet, resultHandler);
+        checkNotNull(makerFee, "makerFee must not be null");
+
+        Coin reservedFundsForOffer = getSecurityDeposit();
+        if (!isBuyOffer())
+            reservedFundsForOffer = reservedFundsForOffer.add(amount.get());
+
+        openOfferManager.placeOffer(offer,
+                reservedFundsForOffer,
+                useSavingsWallet,
+                resultHandler);
     }
 
-    public void onPaymentAccountSelected(PaymentAccount paymentAccount) {
+    void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         if (paymentAccount != null && !this.paymentAccount.equals(paymentAccount)) {
             volume.set(null);
             price.set(null);
@@ -397,7 +411,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         }
     }
 
-    public void onCurrencySelected(TradeCurrency tradeCurrency) {
+    void onCurrencySelected(TradeCurrency tradeCurrency) {
         if (tradeCurrency != null) {
             if (!this.tradeCurrency.equals(tradeCurrency)) {
                 volume.set(null);
@@ -441,10 +455,17 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void requestTxFee() {
         feeService.requestFees(() -> {
-            txFeeAsCoin = feeService.getTxFee(400);
+            txFeeFromFeeService = feeService.getTxFee(400);
             calculateTotalToPay();
         }, null);
     }
+
+    void setCurrencyForMakerFeeBtc(boolean currencyForMakerFeeBtc) {
+        preferences.setPayFeeInBTC(currencyForMakerFeeBtc);
+        this.isCurrencyForMakerFeeBtc = currencyForMakerFeeBtc;
+        updateTradeFee();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -538,11 +559,12 @@ class CreateOfferDataModel extends ActivatableDataModel {
         // Maker does not pay the tx fee for the trade txs because the mining fee might be different when maker
         // created the offer and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the createOfferFee tx is deducted from the createOfferFee and not visible to the trader
-        if (direction != null && amount.get() != null && createOfferFeeAsCoin != null) {
-            Coin feeAndSecDeposit = createOfferFeeAsCoin.add(txFeeAsCoin).add(getSecurityDeposit());
-            Coin required = isBuyOffer() ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
-            totalToPayAsCoin.set(required);
-            log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
+        if (direction != null && amount.get() != null && makerFee != null) {
+            Coin feeAndSecDeposit = getTxFee().add(getSecurityDeposit());
+            if (isCurrencyForMakerFeeBtc)
+                feeAndSecDeposit = feeAndSecDeposit.add(makerFee);
+            Coin total = isBuyOffer() ? feeAndSecDeposit : feeAndSecDeposit.add(amount.get());
+            totalToPayAsCoin.set(total);
             updateBalance();
         }
     }
@@ -594,13 +616,15 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return totalToPayAsCoin.get() != null && balance.compareTo(totalToPayAsCoin.get()) >= 0;
     }
 
-    public Coin getCreateOfferFeeAsCoin() {
-        checkNotNull(createOfferFeeAsCoin, "createOfferFeeAsCoin must not be null");
-        return createOfferFeeAsCoin;
+    public Coin getMakerFee() {
+        return makerFee;
     }
 
-    public Coin getTxFeeAsCoin() {
-        return txFeeAsCoin;
+    public Coin getTxFee() {
+        if (getCurrencyForMakerFeeBtc())
+            return txFeeFromFeeService;
+        else
+            return txFeeFromFeeService.subtract(makerFee);
     }
 
     public Preferences getPreferences() {
@@ -647,10 +671,16 @@ class CreateOfferDataModel extends ActivatableDataModel {
     void updateTradeFee() {
         Coin amount = this.amount.get();
         if (amount != null) {
-            createOfferFeeAsCoin = CoinUtil.getFeePerBtc(feeService.getCreateOfferFeeInBtcPerBtc(), amount);
-            // We don't want too fractional btc values so we use only a divide by 10 instead of 100
-            createOfferFeeAsCoin = createOfferFeeAsCoin.divide(10).multiply(Math.round(marketPriceMargin * 1_000));
-            createOfferFeeAsCoin = CoinUtil.maxCoin(createOfferFeeAsCoin, feeService.getMinCreateOfferFeeInBtc());
+            // TODO write unit test for that
+            makerFee = CoinUtil.getFeePerBtc(Coin.valueOf(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc)), amount);
+            double makerFeeAsDouble = (double) makerFee.value;
+            makerFeeAsDouble = makerFeeAsDouble * marketPriceMargin * 100;
+            // For BTC we round so min value change is 100 satoshi
+            if (isCurrencyForMakerFeeBtc)
+                makerFeeAsDouble = MathUtils.roundDouble(makerFeeAsDouble / 100, 0) * 100;
+
+            long makerFeeAsLong = MathUtils.doubleToLong(makerFeeAsDouble);
+            makerFee = Coin.valueOf(Math.max(makerFeeAsLong, FeeService.getMinMakerFee(isCurrencyForMakerFeeBtc)));
         }
     }
 
@@ -711,7 +741,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return sellerSecurityDeposit;
     }
 
-    ReadOnlyObjectProperty<Coin> getTotalToPayAsCoin() {
+    ReadOnlyObjectProperty<Coin> totalToPayAsCoinProperty() {
         return totalToPayAsCoin;
     }
 
@@ -721,5 +751,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     ReadOnlyObjectProperty<Coin> getBalance() {
         return balance;
+    }
+
+    public boolean getCurrencyForMakerFeeBtc() {
+        return isCurrencyForMakerFeeBtc;
     }
 }

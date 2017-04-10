@@ -18,8 +18,10 @@
 package io.bisq.gui.util.validation;
 
 import io.bisq.common.locale.Res;
+import io.bisq.core.btc.Restrictions;
 import io.bisq.gui.util.BSFormatter;
 import org.bitcoinj.core.Coin;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -31,15 +33,15 @@ public class BtcValidator extends NumberValidator {
 
 
     @Nullable
-    protected Coin maxValueInBitcoin;
+    protected Coin maxValue;
 
     @Inject
     public BtcValidator(BSFormatter formatter) {
         this.formatter = formatter;
     }
 
-    public void setMaxValueInBitcoin(Coin maxValueInBitcoin) {
-        this.maxValueInBitcoin = maxValueInBitcoin;
+    public void setMaxValue(@NotNull Coin maxValue) {
+        this.maxValue = maxValue;
     }
 
     @Override
@@ -54,10 +56,19 @@ public class BtcValidator extends NumberValidator {
             result = validateIfNotZero(input)
                     .and(validateIfNotNegative(input))
                     .and(validateIfNotFractionalBtcValue(input))
-                    .and(validateIfNotExceedsMaxBtcValue(input));
+                    .and(validateIfNotExceedsMaxBtcValue(input))
+                    .and(validateIfAboveDust(input));
         }
 
         return result;
+    }
+
+    protected ValidationResult validateIfAboveDust(String input) {
+        final Coin coin = Coin.parseCoin(input);
+        if (Restrictions.isAboveDust(coin))
+            return new ValidationResult(true);
+        else
+            return new ValidationResult(false, Res.get("validation.btc.amountBelowDust"));
     }
 
     protected ValidationResult validateIfNotFractionalBtcValue(String input) {
@@ -72,8 +83,8 @@ public class BtcValidator extends NumberValidator {
     protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
         try {
             final Coin coin = Coin.parseCoin(input);
-            if (maxValueInBitcoin != null && coin.compareTo(maxValueInBitcoin) > 0)
-                return new ValidationResult(false, Res.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxValueInBitcoin)));
+            if (maxValue != null && coin.compareTo(maxValue) > 0)
+                return new ValidationResult(false, Res.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxValue)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {

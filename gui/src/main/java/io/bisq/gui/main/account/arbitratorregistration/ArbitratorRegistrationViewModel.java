@@ -26,7 +26,6 @@ import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.network.p2p.NodeAddress;
@@ -52,7 +51,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     final BooleanProperty revokeButtonDisabled = new SimpleBooleanProperty(true);
     final ObjectProperty<Arbitrator> myArbitratorProperty = new SimpleObjectProperty<>();
 
-    final ObservableList<String> languageCodes = FXCollections.observableArrayList(LanguageUtil.getDefaultLanguageLocaleAsCode(PreferencesImpl.getDefaultLocale()));
+    final ObservableList<String> languageCodes = FXCollections.observableArrayList(LanguageUtil.getDefaultLanguageLocaleAsCode());
     final ObservableList<String> allLanguageCodes = FXCollections.observableArrayList(LanguageUtil.getAllLanguageCodes());
     private boolean allDataValid;
     private final MapChangeListener<NodeAddress, Arbitrator> arbitratorMapChangeListener;

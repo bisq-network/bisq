@@ -167,7 +167,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 rows++;
         }
 
-        if (trade.getTakeOfferFeeTxId() != null)
+        if (trade.getTakerFeeTxId() != null)
             rows++;
         if (trade.getDepositTx() != null)
             rows++;
@@ -227,8 +227,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         }
 
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
-        if (trade.getTakeOfferFeeTxId() != null)
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), trade.getTakeOfferFeeTxId());
+        if (trade.getTakerFeeTxId() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), trade.getTakerFeeTxId());
 
         if (trade.getDepositTx() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.getWithCol("shared.depositTransactionId"),

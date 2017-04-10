@@ -250,7 +250,8 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
                 payDepositRequest.getTradeAmount(),
                 payDepositRequest.getTradePrice(),
                 payDepositRequest.getTxFee(),
-                payDepositRequest.getTakeOfferFee(),
+                payDepositRequest.getTakerFee(),
+                payDepositRequest.getIsCurrencyForTakerFeeBtc(),
                 rawTransactionInputs, payDepositRequest.getChangeOutputValue(),
                 payDepositRequest.getChangeOutputAddress(),
                 payDepositRequest.getTakerMultiSigPubKey().toByteArray(),
@@ -258,7 +259,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
                 getPubKeyRing(payDepositRequest.getTakerPubKeyRing()),
                 getPaymentAccountPayload(payDepositRequest.getTakerPaymentAccountPayload()),
                 payDepositRequest.getTakerAccountId(),
-                payDepositRequest.getTakeOfferFeeTxId(),
+                payDepositRequest.getTakerFeeTxId(),
                 arbitratorNodeAddresses,
                 mediatorNodeAddresses,
                 getNodeAddress(payDepositRequest.getArbitratorNodeAddress()),
@@ -314,7 +315,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         return new Contract(getOfferPayload(contract.getOfferPayload()),
                 Coin.valueOf(contract.getTradeAmount()),
                 Price.valueOf(getCurrencyCode(contract.getOfferPayload()), contract.getTradePrice()),
-                contract.getTakeOfferFeeTxId(),
+                contract.getTakerFeeTxId(),
                 getNodeAddress(contract.getBuyerNodeAddress()),
                 getNodeAddress(contract.getSellerNodeAddress()),
                 getNodeAddress(contract.getArbitratorNodeAddress()),
@@ -393,7 +394,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
                         break;
                     case SEPA_ACCOUNT_PAYLOAD:
                         SepaAccountPayload sepaAccountPayload = new SepaAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                                protoEntry.getMaxTradePeriod(), CountryUtil.getAllSepaCountries(CountryUtil.getDefaultLocale()));
+                                protoEntry.getMaxTradePeriod(), CountryUtil.getAllSepaCountries());
                         fillInCountryBasedPaymentAccountPayload(protoEntry, sepaAccountPayload);
                         result = sepaAccountPayload;
                         break;
@@ -507,7 +508,8 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
                 pbOffer.getVersionNr(),
                 pbOffer.getBlockHeightAtOfferCreation(),
                 pbOffer.getTxFee(),
-                pbOffer.getCreateOfferFee(),
+                pbOffer.getMakerFee(),
+                pbOffer.getIsCurrencyForMakerFeeBtc(),
                 pbOffer.getBuyerSecurityDeposit(),
                 pbOffer.getSellerSecurityDeposit(),
                 pbOffer.getMaxTradeLimit(),

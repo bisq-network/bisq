@@ -15,38 +15,24 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.gui.main.dao.wallet.tx;
+package io.bisq.core.dao.blockchain;
 
-import io.bisq.gui.common.view.ActivatableView;
-import io.bisq.gui.common.view.FxmlView;
-import javafx.scene.layout.GridPane;
+import lombok.Value;
 
-import javax.inject.Inject;
+import java.io.Serializable;
 
-@FxmlView
-public class BsqTransactionsView extends ActivatableView<GridPane, Void> {
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor, lifecycle
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Inject
-    private BsqTransactionsView() {
-    }
+@Value
+public class TxInput implements Serializable {
+    private final int spendingTxOutputIndex;
+    private final String spendingTxId;
+    private final String txId;
 
     @Override
-    public void initialize() {
-    }
-
-    @Override
-    protected void activate() {
-
-    }
-
-    @Override
-    protected void deactivate() {
-
+    public String toString() {
+        return "TxInput{" +
+                "\nspendingTxOutputIndex=" + spendingTxOutputIndex +
+                ",\nspendingTxId='" + spendingTxId + '\'' +
+                ",\ntxId='" + txId + '\'' +
+                "}\n";
     }
 }
-

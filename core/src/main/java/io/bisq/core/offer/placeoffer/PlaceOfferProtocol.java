@@ -19,8 +19,8 @@ package io.bisq.core.offer.placeoffer;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.offer.placeoffer.tasks.AddOfferToRemoteOfferBook;
-import io.bisq.core.offer.placeoffer.tasks.BroadcastCreateOfferFeeTx;
-import io.bisq.core.offer.placeoffer.tasks.CreateOfferFeeTx;
+import io.bisq.core.offer.placeoffer.tasks.BroadcastMakerFeeTx;
+import io.bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
 import io.bisq.core.offer.placeoffer.tasks.ValidateOffer;
 import io.bisq.core.trade.handlers.TransactionResultHandler;
 import org.slf4j.Logger;
@@ -49,7 +49,7 @@ public class PlaceOfferProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void placeOffer() {
-        log.debug("model.offer.id" + model.offer.getId());
+        log.debug("model.offer.id" + model.getOffer().getId());
         TaskRunner<PlaceOfferModel> taskRunner = new TaskRunner<>(model,
                 () -> {
                     log.debug("sequence at handleRequestTakeOfferMessage completed");
@@ -58,10 +58,10 @@ public class PlaceOfferProtocol {
                 (errorMessage) -> {
                     log.error(errorMessage);
 
-                    if (model.offerAddedToOfferBook) {
-                        model.offerBookService.removeOffer(model.offer.getOfferPayload(),
+                    if (model.isOfferAddedToOfferBook()) {
+                        model.getOfferBookService().removeOffer(model.getOffer().getOfferPayload(),
                                 () -> {
-                                    model.offerAddedToOfferBook = false;
+                                    model.setOfferAddedToOfferBook(false);
                                     log.debug("OfferPayload removed from offer book.");
                                 },
                                 log::error);
@@ -71,9 +71,9 @@ public class PlaceOfferProtocol {
         );
         taskRunner.addTasks(
                 ValidateOffer.class,
-                CreateOfferFeeTx.class,
+                CreateMakerFeeTx.class,
                 AddOfferToRemoteOfferBook.class,
-                BroadcastCreateOfferFeeTx.class
+                BroadcastMakerFeeTx.class
         );
 
         taskRunner.run();

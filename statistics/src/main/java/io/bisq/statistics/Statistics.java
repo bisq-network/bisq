@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.bisq.common.CommonOptionKeys;
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
@@ -20,7 +21,6 @@ import io.bisq.core.offer.OfferBookService;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.P2PService;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -99,7 +99,7 @@ public class Statistics {
         priceFeedService = injector.getInstance(PriceFeedService.class);
 
         // We need the price feed for market based offers
-        priceFeedService.setCurrencyCode(PreferencesImpl.getDefaultTradeCurrency().getCode());
+        priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());
         priceFeedService.init(price -> log.debug("price " + price),
                 (errorMessage, throwable) -> log.warn(throwable.getMessage()));
     }

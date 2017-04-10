@@ -231,9 +231,36 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         if (trade != null) {
             if (isMaker()) {
                 Offer offer = trade.getOffer();
-                return offer.getCreateOfferFee().add(offer.getTxFee());
+                if (offer.isCurrencyForMakerFeeBtc())
+                    return offer.getMakerFee().add(offer.getTxFee());
+                else
+                    return offer.getTxFee().subtract(offer.getMakerFee());
             } else {
-                return trade.getTakeOfferFee().add(trade.getTxFee().multiply(3));
+                if (trade.isCurrencyForTakerFeeBtc())
+                    return trade.getTakerFee().add(trade.getTxFee().multiply(3));
+                else
+                    return trade.getTxFee().multiply(3).subtract(trade.getTakerFee());
+            }
+        } else {
+            log.error("Trade is null at getTotalFees");
+            return Coin.ZERO;
+        }
+    }
+
+    Coin getTradeFeeAsBsq() {
+        Trade trade = getTrade();
+        if (trade != null) {
+            if (isMaker()) {
+                Offer offer = trade.getOffer();
+                if (offer.isCurrencyForMakerFeeBtc())
+                    return Coin.ZERO;
+                else
+                    return offer.getMakerFee();
+            } else {
+                if (trade.isCurrencyForTakerFeeBtc())
+                    return Coin.ZERO;
+                else
+                    return trade.getTakerFee();
             }
         } else {
             log.error("Trade is null at getTotalFees");
@@ -335,8 +362,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         // spending tx
                         // MS tx
                         candidates.addAll(transaction.getOutputs().stream()
-                                .filter(transactionOutput -> !btcWalletService.isTransactionOutputMine(transactionOutput))
-                                .filter(transactionOutput -> transactionOutput.getScriptPubKey().isPayToScriptHash())
+                                .filter(output -> !btcWalletService.isTransactionOutputMine(output))
+                                .filter(output -> output.getScriptPubKey().isPayToScriptHash())
                                 .map(transactionOutput -> transaction)
                                 .collect(Collectors.toList()));
                     }

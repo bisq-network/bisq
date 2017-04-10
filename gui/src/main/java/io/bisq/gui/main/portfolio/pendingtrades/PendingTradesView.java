@@ -75,8 +75,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesView(PendingTradesViewModel model, TradeDetailsWindow tradeDetailsWindow, BSFormatter formatter,
-                             PrivateNotificationManager privateNotificationManager, Preferences preferences) {
+    public PendingTradesView(PendingTradesViewModel model, TradeDetailsWindow tradeDetailsWindow, BSFormatter formatter, PrivateNotificationManager privateNotificationManager, Preferences preferences) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.formatter = formatter;

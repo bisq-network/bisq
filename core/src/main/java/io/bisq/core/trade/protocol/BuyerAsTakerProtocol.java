@@ -51,7 +51,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
         this.buyerAsTakerTrade = trade;
 
-        processModel.tradingPeer.setPubKeyRing(trade.getOffer().getPubKeyRing());
+        processModel.getTradingPeer().setPubKeyRing(trade.getOffer().getPubKeyRing());
 
         Trade.Phase phase = trade.getState().getPhase();
         if (trade.isFiatSent() && !trade.isPayoutPublished()) {
@@ -100,7 +100,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 TakerSelectMediator.class,
                 TakerVerifyMakerAccount.class,
                 TakerVerifyMakerFeePayment.class,
-                TakerCreateTakerFeeTx.class,
+                CreateTakerFeeTx.class,
                 TakerPublishTakerFeeTx.class,
                 BuyerAsTakerCreatesDepositTxInputs.class,
                 TakerSendPayDepositRequest.class

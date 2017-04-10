@@ -36,6 +36,7 @@ public class AddressWithIconAndDirection extends AnchorPane {
         HBox.setHgrow(label, Priority.ALWAYS);
 
         hyperlink = new Hyperlink(address);
+        HBox.setMargin(hyperlink, new Insets(1, 0, 0, 0));
         HBox.setHgrow(hyperlink, Priority.SOMETIMES);
         // You need to set max width to Double.MAX_VALUE to make HBox.setHgrow working like expected!
         // also pref width needs to be not default (-1)

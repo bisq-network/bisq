@@ -76,8 +76,10 @@ public class BisqEnvironment extends StandardEnvironment {
     private final String btcNetworkDir;
     private final String logLevel, providers;
     private BitcoinNetwork bitcoinNetwork;
-    private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword, rpcPort, rpcBlockPort, rpcWalletPort,
-            myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress, socks5ProxyHttpAddress;
+    private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
+            rpcPort, rpcBlockNotificationPort, rpcWalletNotificationPort, dumpBlockchainData,
+            myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
+            socks5ProxyHttpAddress;
 
     public BitcoinNetwork getBitcoinNetwork() {
         return bitcoinNetwork;
@@ -176,14 +178,15 @@ public class BisqEnvironment extends StandardEnvironment {
         rpcPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_PORT) ?
                 (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_PORT) :
                 "";
-        rpcBlockPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_BLOCK_PORT) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_BLOCK_PORT) :
+        rpcBlockNotificationPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) :
                 "";
-        rpcWalletPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_WALLET_PORT) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_WALLET_PORT) :
+        rpcWalletNotificationPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT) :
                 "";
-
-        //BtcOptionKeys
+        dumpBlockchainData = commandLineProperties.containsProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) :
+                "";
         btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_NODES) :
                 "";
@@ -257,9 +260,10 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(RpcOptionKeys.RPC_USER, rpcUser);
                 setProperty(RpcOptionKeys.RPC_PASSWORD, rpcPassword);
                 setProperty(RpcOptionKeys.RPC_PORT, rpcPort);
-                setProperty(RpcOptionKeys.RPC_BLOCK_PORT, rpcBlockPort);
-                setProperty(RpcOptionKeys.RPC_WALLET_PORT, rpcWalletPort);
-
+                setProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
+                setProperty(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT, rpcWalletNotificationPort);
+                setProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);
+                
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
                 setProperty(BtcOptionKeys.WALLET_DIR, btcNetworkDir);

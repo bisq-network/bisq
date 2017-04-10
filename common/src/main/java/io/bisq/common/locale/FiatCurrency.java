@@ -18,6 +18,7 @@
 package io.bisq.common.locale;
 
 import com.google.protobuf.Message;
+import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
@@ -38,13 +39,11 @@ public final class FiatCurrency extends TradeCurrency {
 
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "★ ";
-    @Setter
-    private static Locale defaultLocale;
 
     private final Currency currency;
 
     public FiatCurrency(String currencyCode) {
-        this(currencyCode, defaultLocale);
+        this(currencyCode, getLocale());
     }
 
     public FiatCurrency(String currencyCode, Locale locale) {
@@ -53,13 +52,17 @@ public final class FiatCurrency extends TradeCurrency {
 
     @SuppressWarnings("WeakerAccess")
     public FiatCurrency(Currency currency) {
-        this(currency, defaultLocale);
+        this(currency, getLocale());
     }
 
     @SuppressWarnings("WeakerAccess")
     public FiatCurrency(Currency currency, Locale locale) {
         super(currency.getCurrencyCode(), currency.getDisplayName(locale), currency.getSymbol());
         this.currency = currency;
+    }
+
+    private static Locale getLocale() {
+        return GlobalSettings.getLocale();
     }
 
     @Override
@@ -71,9 +74,9 @@ public final class FiatCurrency extends TradeCurrency {
     public Message toProtobuf() {
         PB.TradeCurrency.Builder builder = PB.TradeCurrency.newBuilder().setCode(code).setName(name)
                 .setFiatCurrency(PB.FiatCurrency.newBuilder().setDefaultLocale(
-                        PB.Locale.newBuilder().setLanguage(defaultLocale.getLanguage())
-                                .setCountry(defaultLocale.getCountry())
-                                .setVariant(defaultLocale.getVariant())));
+                        PB.Locale.newBuilder().setLanguage(GlobalSettings.getLocale().getLanguage())
+                                .setCountry(GlobalSettings.getLocale().getCountry())
+                                .setVariant(GlobalSettings.getLocale().getVariant())));
         Optional.ofNullable(symbol).ifPresent(symbol -> builder.setSymbol(symbol));
         return builder.build();
     }

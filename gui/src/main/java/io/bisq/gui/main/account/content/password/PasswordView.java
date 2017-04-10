@@ -43,7 +43,6 @@ import javax.inject.Inject;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-
 @FxmlView
 public class PasswordView extends ActivatableView<GridPane, Void> {
 

@@ -20,14 +20,15 @@ package io.bisq.core.dao.blockchain;
 import com.neemre.btcdcli4j.core.BitcoindException;
 import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.domain.*;
-import org.bitcoinj.core.Utils;
+import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Coin;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
@@ -37,14 +38,43 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
  */
-
+@Slf4j
 public class BsqBlockchainServiceTest {
-    private static final Logger log = LoggerFactory.getLogger(BsqBlockchainServiceTest.class);
-    private MockBsqBlockchainService squBlockchainService;
+
+
+    public static final int BLOCK_0 = 0;
+    public static final int BLOCK_1 = 1;
+    public static final int BLOCK_2 = 2;
+
+    public static final String FUND_GEN_FUND_TX_ID = "FUND_GEN_FUND_TX_ID";
+    public static final String FUND_GEN_TX_ID = "FUND_GEN_TX_ID";
+    public static final String GEN_TX_ID = "GEN_TX_ID";
+    public static final String TX1_ID = "TX1_ID";
+    public static final String TX2_ID = "TX2_ID";
+
+    public static final String ADDRESS_GEN_FUND_TX = "ADDRESS_GEN_FUND_TX";
+    public static final String ADDRESS_GEN_1 = "ADDRESS_GEN_1";
+    public static final String ADDRESS_GEN_2 = "ADDRESS_GEN_2";
+    public static final String ADDRESS_TX_1 = "ADDRESS_TX_1";
+    public static final String ADDRESS_TX_2 = "ADDRESS_TX_2";
+
+    public static final long ADDRESS_GEN_1_VALUE = Coin.parseCoin("0.00005000").value;
+    public static final long ADDRESS_GEN_2_VALUE = Coin.parseCoin("0.00001000").value;
+    public static final long ADDRESS_TX_1_VALUE = Coin.parseCoin("0.00001000").value;
+    public static final long ADDRESS_TX_2_VALUE = Coin.parseCoin("0.00001000").value;
+
+    private MockBsqBlockchainService service;
+    private BsqUTXOMap bsqUTXOMap;
+    private BsqTXOMap bsqTXOMap;
 
     @Before
     public void setup() {
-        squBlockchainService = new MockBsqBlockchainService();
+        final URL resource = this.getClass().getClassLoader().getResource("");
+        final String path = resource != null ? resource.getFile() : "";
+        log.info("path for BsqUTXOMap=" + path);
+        bsqUTXOMap = new BsqUTXOMap(new File(path));
+        bsqTXOMap = new BsqTXOMap(new File(path));
+        service = new MockBsqBlockchainService();
     }
 
     @After
@@ -52,186 +82,242 @@ public class BsqBlockchainServiceTest {
     }
 
     @Test
-    public void testGenesisBlock() throws BsqBlockchainException, BitcoindException, CommunicationException {
-        int genesisBlockHeight = 0;
-        String genesisTxId = "000000a4d94cb612b5d722d531083f59f317d5dea1db4a191f61b2ab34af2627";
-        buildGenesisBlock(genesisBlockHeight, genesisTxId);
-        Map<String, Map<Integer, BsqUTXO>> utxoByTxIdMap = squBlockchainService.parseBlockchain(new HashMap<>(),
-                squBlockchainService.requestChainHeadHeight(),
-                genesisBlockHeight,
-                genesisTxId);
-        BsqUTXO bsqUTXO1 = utxoByTxIdMap.get(genesisTxId).get(0);
-        BsqUTXO bsqUTXO2 = utxoByTxIdMap.get(genesisTxId).get(1);
-        assertEquals(1, utxoByTxIdMap.size());
-        assertEquals("addressGen1", bsqUTXO1.getAddress());
-        assertEquals("addressGen2", bsqUTXO2.getAddress());
+    public void testGenTx() throws BsqBlockchainException, BitcoindException, CommunicationException {
+        // GENESIS_TX (block 0):
+        // Input 0: output from GEN_FUNDING_TX_ID
+        // Output 0: ADDRESS_GEN_1 ADDRESS_GEN_1_VALUE
+        // Output 1: ADDRESS_GEN_2 ADDRESS_GEN_2_VALUE
+
+        // UTXO: 
+        // GENESIS_TX_ID:0
+        // GENESIS_TX_ID:1
+
+        buildGenesisBlock();
+
+        service.buildBlocks(BLOCK_0, BLOCK_0);
+
+        parseAllBlocksFromGenesis();
+
+        BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
+        BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(GEN_TX_ID, 1);
+        assertEquals(bsqUTXO1.getUtxoId(), getUTXOId(GEN_TX_ID, 0));
+        assertEquals(bsqUTXO2.getUtxoId(), getUTXOId(GEN_TX_ID, 1));
+        assertEquals(ADDRESS_GEN_1_VALUE, bsqUTXO1.getValue());
+        assertEquals(ADDRESS_GEN_2_VALUE, bsqUTXO2.getValue());
+        assertEquals(2, bsqUTXOMap.size());
+    }
+
+
+    @Test
+    public void testGenToTx1() throws BsqBlockchainException, BitcoindException, CommunicationException {
+        // GENESIS_TX (block 0):
+        // Input 0: Output 0 from GEN_FUNDING_TX_ID
+        // Output 0: ADDRESS_GEN_1 ADDRESS_GEN_1_VALUE
+        // Output 1: ADDRESS_GEN_2 ADDRESS_GEN_2_VALUE
+
+        // TX1 (block 1):
+        // Input 0: Output 1 from GENESIS_TX
+        // Output 0: ADDRESS_TX_1 ADDRESS_TX_1_VALUE (=ADDRESS_GEN_2_VALUE)
+
+        // UTXO: 
+        // GENESIS_TX_ID:0
+        // TX1_ID:0
+
+        buildGenesisBlock();
+
+        buildTx(GEN_TX_ID,
+                1,
+                TX1_ID,
+                BLOCK_1,
+                0,
+                ADDRESS_TX_1_VALUE,
+                ADDRESS_TX_1);
+
+        service.buildBlocks(BLOCK_0, BLOCK_1);
+
+        parseAllBlocksFromGenesis();
+
+        BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
+        BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(TX1_ID, 0);
+        assertEquals(bsqUTXO1.getUtxoId(), getUTXOId(GEN_TX_ID, 0));
+        assertEquals(bsqUTXO2.getUtxoId(), getUTXOId(TX1_ID, 0));
+        assertEquals(ADDRESS_GEN_1_VALUE, bsqUTXO1.getValue());
+        assertEquals(ADDRESS_TX_1_VALUE, bsqUTXO2.getValue());
+        assertEquals(2, bsqUTXOMap.size());
     }
 
     @Test
-    public void testGenToTx1Block1() throws BsqBlockchainException, BitcoindException, CommunicationException {
-        int genesisBlockHeight = 0;
-        String genesisTxId = "000000a4d94cb612b5d722d531083f59f317d5dea1db4a191f61b2ab34af2627";
-        buildGenesisBlock(genesisBlockHeight, genesisTxId);
+    public void testGenToTx1ToTx2InBlock1() throws BsqBlockchainException, BitcoindException, CommunicationException {
+        // GENESIS_TX (block 0):
+        // Input 0: Output 0 from GEN_FUNDING_TX_ID
+        // Output 0: ADDRESS_GEN_1 ADDRESS_GEN_1_VALUE
+        // Output 1: ADDRESS_GEN_2 ADDRESS_GEN_2_VALUE
 
-        // We spend from output 1 of gen tx
-        String txId = "100000a4d94cb612b5d722d531083f59f317d5dea1db4a191f61b2ab34af2627";
-        buildSpendingTx(genesisBlockHeight,
-                genesisTxId,
-                txId,
+        // TX1 (block 1):
+        // Input 0: Output 1 from GENESIS_TX
+        // Output 0: ADDRESS_TX_1 ADDRESS_TX_1_VALUE (=ADDRESS_GEN_2_VALUE)
+
+        // TX2 (block 1):
+        // Input 0: Output 0 from TX1
+        // Output 0: ADDRESS_TX_2 ADDRESS_TX_2_VALUE (=ADDRESS_TX_1_VALUE)
+
+        // UTXO: 
+        // GENESIS_TX_ID:0
+        // TX2_ID:0
+
+        buildGenesisBlock();
+
+        // Tx1 uses as input the output 1 of genTx
+        buildTx(GEN_TX_ID,
                 1,
+                TX1_ID,
+                BLOCK_1,
                 0,
-                0.00001000,
-                "addressTx1");
+                ADDRESS_TX_1_VALUE,
+                ADDRESS_TX_1);
 
-        Map<String, Map<Integer, BsqUTXO>> utxoByTxIdMap = squBlockchainService.parseBlockchain(new HashMap<>(),
-                squBlockchainService.requestChainHeadHeight(),
-                genesisBlockHeight,
-                genesisTxId);
+        // Tx2 uses as input the output 0 of Tx1
+        buildTx(TX1_ID,
+                0,
+                TX2_ID,
+                BLOCK_1,
+                0,
+                ADDRESS_TX_2_VALUE,
+                ADDRESS_TX_2);
 
-        BsqUTXO bsqUTXO1 = utxoByTxIdMap.get(genesisTxId).get(0);
-        BsqUTXO bsqUTXO2 = utxoByTxIdMap.get(txId).get(0);
-        assertEquals(2, utxoByTxIdMap.size());
-        assertEquals("addressGen1", bsqUTXO1.getAddress());
-        assertEquals("addressTx1", bsqUTXO2.getAddress());
+        service.buildBlocks(BLOCK_0, BLOCK_1);
+
+        parseAllBlocksFromGenesis();
+
+        BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
+        BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(TX2_ID, 0);
+        assertEquals(bsqUTXO1.getUtxoId(), getUTXOId(GEN_TX_ID, 0));
+        assertEquals(bsqUTXO2.getUtxoId(), getUTXOId(TX2_ID, 0));
+        assertEquals(ADDRESS_GEN_1_VALUE, bsqUTXO1.getValue());
+        assertEquals(ADDRESS_TX_2_VALUE, bsqUTXO2.getValue());
+        assertEquals(2, bsqUTXOMap.size());
     }
 
     @Test
-    public void testGenToTx1toTx2Block1() throws BsqBlockchainException, BitcoindException, CommunicationException {
-        int genesisBlockHeight = 0;
-        String genesisTxId = "000000a4d94cb612b5d722d531083f59f317d5dea1db4a191f61b2ab34af2627";
-        buildGenesisBlock(genesisBlockHeight, genesisTxId);
+    public void testGenToTx1ToTx2InBlock2() throws BsqBlockchainException, BitcoindException, CommunicationException {
+        // GENESIS_TX (block 0):
+        // Input 0: Output 0 from GEN_FUNDING_TX_ID
+        // Output 0: ADDRESS_GEN_1 ADDRESS_GEN_1_VALUE
+        // Output 1: ADDRESS_GEN_2 ADDRESS_GEN_2_VALUE
 
-        // We spend from output 1 of gen tx
-        String tx1Id = "100000a4d94cb612b5d722d531083f59f317d5dea1db4a191f61b2ab34af2627";
-        buildSpendingTx(genesisBlockHeight,
-                genesisTxId,
-                tx1Id,
+        // TX1 (block 1):
+        // Input 0: Output 1 from GENESIS_TX
+        // Output 0: ADDRESS_TX_1 ADDRESS_TX_1_VALUE (=ADDRESS_GEN_2_VALUE)
+
+        // TX2 (block 2):
+        // Input 0: Output 0 from TX1
+        // Output 0: ADDRESS_TX_2 ADDRESS_TX_2_VALUE (=ADDRESS_TX_1_VALUE)
+
+        // UTXO: 
+        // GENESIS_TX_ID:0
+        // TX2_ID:0
+
+        buildGenesisBlock();
+
+        // Tx1 uses as input the output 1 of genTx
+        buildTx(GEN_TX_ID,
                 1,
+                TX1_ID,
+                BLOCK_1,
                 0,
-                0.00001000,
-                "addressTx1");
+                ADDRESS_TX_1_VALUE,
+                ADDRESS_TX_1);
 
-        // We spend from output 0 of tx1 (same block)
-        String tx2Id = "200000a4d94cb612b5d722d531083f59f317d5dea1db4a191f61b2ab34af2627";
-        buildSpendingTx(1,
-                tx1Id,
-                tx2Id,
+        // Tx2 uses as input the output 0 of Tx1
+        buildTx(TX1_ID,
                 0,
+                TX2_ID,
+                BLOCK_2,
                 0,
-                0.00001000,
-                "addressTx2");
+                ADDRESS_TX_2_VALUE,
+                ADDRESS_TX_2);
 
-        Map<String, Map<Integer, BsqUTXO>> utxoByTxIdMap = squBlockchainService.parseBlockchain(new HashMap<>(),
-                squBlockchainService.requestChainHeadHeight(),
-                genesisBlockHeight,
-                genesisTxId);
+        service.buildBlocks(BLOCK_0, BLOCK_2);
 
-        BsqUTXO bsqUTXO1 = utxoByTxIdMap.get(genesisTxId).get(0);
-        BsqUTXO bsqUTXO2 = utxoByTxIdMap.get(tx2Id).get(0);
-        assertEquals(2, utxoByTxIdMap.size());
-        assertEquals("addressGen1", bsqUTXO1.getAddress());
-        assertEquals("addressTx2", bsqUTXO2.getAddress());
+        parseAllBlocksFromGenesis();
+
+        BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
+        BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(TX2_ID, 0);
+        assertEquals(bsqUTXO1.getUtxoId(), getUTXOId(GEN_TX_ID, 0));
+        assertEquals(bsqUTXO2.getUtxoId(), getUTXOId(TX2_ID, 0));
+        assertEquals(ADDRESS_GEN_1_VALUE, bsqUTXO1.getValue());
+        assertEquals(ADDRESS_TX_2_VALUE, bsqUTXO2.getValue());
+        assertEquals(2, bsqUTXOMap.size());
     }
 
     @Test
-    public void testGenToTx1toTx2AndGenToTx2Block1() throws BsqBlockchainException, BitcoindException, CommunicationException {
-        int genesisBlockHeight = 0;
-        String genesisTxId = "000000a4d94cb612b5d722d531083f59f317d5dea1db4a191f61b2ab34af2627";
-        buildGenesisBlock(genesisBlockHeight, genesisTxId);
+    public void testGenToTx1ToTx2AndGenToTx2InBlock1() throws BsqBlockchainException, BitcoindException, CommunicationException {
+        // GENESIS_TX (block 0):
+        // Input 0: Output 0 from GEN_FUNDING_TX_ID
+        // Output 0: ADDRESS_GEN_1 ADDRESS_GEN_1_VALUE
+        // Output 1: ADDRESS_GEN_2 ADDRESS_GEN_2_VALUE
 
-        // We spend from output 1 of gen tx
-        String tx1Id = "100000a4d94cb612b5d722d531083f59f317d5dea1db4a191f61b2ab34af2627";
-        buildSpendingTx(genesisBlockHeight,
-                genesisTxId,
-                tx1Id,
+        // TX1 (block 1):
+        // Input 0: Output 1 from GENESIS_TX
+        // Output 0: ADDRESS_TX_1 ADDRESS_TX_1_VALUE (=ADDRESS_GEN_2_VALUE)
+
+        // TX2 (block 1):
+        // Input 0: Output 0 from TX1
+        // Input 1: Output 0 from GENESIS_TX
+        // Output 0: ADDRESS_TX_2 ADDRESS_TX_1_VALUE + ADDRESS_GEN_1_VALUE 
+
+        // UTXO: 
+        // TX2_ID:0
+
+        buildGenesisBlock();
+
+        // Tx1 uses as input the output 1 of genTx
+        buildTx(GEN_TX_ID,
                 1,
+                TX1_ID,
+                BLOCK_1,
                 0,
-                0.00001000,
-                "addressTx1");
+                ADDRESS_TX_1_VALUE,
+                ADDRESS_TX_1);
 
-        // We spend from output 0 of tx1 (same block)
-        String tx2Id = "200000a4d94cb612b5d722d531083f59f317d5dea1db4a191f61b2ab34af2627";
-        RawTransaction tx2 = buildSpendingTx(1,
-                tx1Id,
-                tx2Id,
-                0,
-                0,
-                0.00001000,
-                "addressTx3a");
-
-        // We spend from output 0 of gen tx to tx2
-        List<RawInput> rawInputs = tx2.getVIn();
-        rawInputs.add(getRawInput(0, genesisTxId));
-        tx2.setVIn(rawInputs);
-
-        List<RawOutput> rawOutputs = tx2.getVOut();
-        rawOutputs.add(getRawOutput(0, 0.00005000, "addressTx3b"));
-        tx2.setVOut(rawOutputs);
-
-
-        Map<String, Map<Integer, BsqUTXO>> utxoByTxIdMap = squBlockchainService.parseBlockchain(new HashMap<>(),
-                squBlockchainService.requestChainHeadHeight(),
-                genesisBlockHeight,
-                genesisTxId);
-
-        BsqUTXO bsqUTXO1 = utxoByTxIdMap.get(tx2Id).get(0);
-        BsqUTXO bsqUTXO2 = utxoByTxIdMap.get(tx2Id).get(1);
-        assertEquals(1, utxoByTxIdMap.size());
-        assertEquals("addressTx3a", bsqUTXO1.getAddress());
-        assertEquals("addressTx3b", bsqUTXO2.getAddress());
-    }
-
-
-    private RawTransaction buildSpendingTx(int inputTxBlockHeight,
-                                           String inputTxId,
-                                           String txId,
-                                           int inputIndex,
-                                           int outputIndex,
-                                           double outputValue,
-                                           String outputAddress) {
-        RawTransaction rawTransaction = getRawTransaction(inputTxBlockHeight + 1, txId);
-
+        // Tx2 uses as input the output 0 of Tx1 and output 0 of genTx
         List<RawInput> rawInputs = new ArrayList<>();
-        rawInputs.add(getRawInput(inputIndex, inputTxId));
+        rawInputs.add(getRawInput(0, TX1_ID));
+        rawInputs.add(getRawInput(0, GEN_TX_ID));
+        RawTransaction rawTransaction = getRawTransaction(BLOCK_1, TX2_ID);
         rawTransaction.setVIn(rawInputs);
-
         List<RawOutput> rawOutputs = new ArrayList<>();
-        rawOutputs.add(getRawOutput(outputIndex, outputValue, outputAddress));
+        rawOutputs.add(getRawOutput(0, ADDRESS_TX_1_VALUE + ADDRESS_GEN_1_VALUE, ADDRESS_TX_2));
         rawTransaction.setVOut(rawOutputs);
+        service.addTxToBlock(BLOCK_1, rawTransaction);
 
-        squBlockchainService.addTxToBlock(1, rawTransaction);
-        squBlockchainService.buildBlocks(0, 1);
-        return rawTransaction;
+        service.buildBlocks(BLOCK_0, BLOCK_1);
+
+        parseAllBlocksFromGenesis();
+
+        BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(TX2_ID, 0);
+        assertEquals(bsqUTXO1.getUtxoId(), getUTXOId(TX2_ID, 0));
+        assertEquals(ADDRESS_GEN_1_VALUE + ADDRESS_GEN_2_VALUE, bsqUTXO1.getValue());
+        assertEquals(1, bsqUTXOMap.size());
     }
 
-    private void buildGenesisBlock(int genesisBlockHeight, String genesisTxId) throws BsqBlockchainException, BitcoindException, CommunicationException {
-        RawTransaction genesisRawTransaction = getRawTransaction(genesisBlockHeight, genesisTxId);
 
-        List<RawInput> rawInputs = new ArrayList<>();
-        rawInputs.add(getRawInput(0, "000001a4d94cb612b5d722d531083f59f317d5dea1db4a191f61b2ab34af2627"));
-        genesisRawTransaction.setVIn(rawInputs);
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Get btcd objects
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-        List<RawOutput> rawOutputs = new ArrayList<>();
-        rawOutputs.add(getRawOutput(0, 0.00005000, "addressGen1"));
-        rawOutputs.add(getRawOutput(1, 0.00001000, "addressGen2"));
-        genesisRawTransaction.setVOut(rawOutputs);
-
-        squBlockchainService.setGenesisTx(genesisTxId, genesisBlockHeight);
-        squBlockchainService.addTxToBlock(0, genesisRawTransaction);
-        squBlockchainService.buildBlocks(0, 0);
-    }
-
-    private RawTransaction getRawTransaction(int genesisBlockHeight, String txId) {
+    private RawTransaction getRawTransaction(int height, String txId) {
         RawTransaction genesisRawTransaction = new RawTransaction();
-        genesisRawTransaction.setBlockHash("BlockHash" + genesisBlockHeight);
+        genesisRawTransaction.setBlockHash("BlockHash" + height);
         genesisRawTransaction.setTxId(txId);
+        genesisRawTransaction.setTime(new Date().getTime() / 1000);
         return genesisRawTransaction;
     }
 
-    private RawOutput getRawOutput(int index, double value, String address) {
+    private RawOutput getRawOutput(int index, long value, String address) {
         RawOutput rawOutput = new RawOutput();
         rawOutput.setN(index);
-        rawOutput.setValue(BigDecimal.valueOf((long) (value * 100000000), 8));
+        rawOutput.setValue(BigDecimal.valueOf(value).divide(BigDecimal.valueOf(100000000)));
         PubKeyScript scriptPubKey = new PubKeyScript();
         scriptPubKey.setAddresses(Collections.singletonList(address));
         rawOutput.setScriptPubKey(scriptPubKey);
@@ -245,26 +331,87 @@ public class BsqBlockchainServiceTest {
         return rawInput;
     }
 
-    private String getHex(String txId) {
-        byte[] bytes = new byte[32];
-        byte[] inputBytes = txId.getBytes();
-        for (int i = 0; i < 32; i++) {
-            if (inputBytes.length > i)
-                bytes[i] = inputBytes[i];
-            else
-                bytes[i] = 0x00;
-        }
-        return Utils.HEX.encode(bytes);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void buildGenesisBlock()
+            throws BsqBlockchainException, BitcoindException, CommunicationException {
+        // tx funding the funding tx for genesis tx
+        List<RawInput> inputForFundGenTx = new ArrayList<>();
+        inputForFundGenTx.add(getRawInput(0, FUND_GEN_FUND_TX_ID));
+        final RawTransaction fundGenTx = getRawTransaction(BLOCK_0, FUND_GEN_TX_ID);
+        fundGenTx.setVIn(inputForFundGenTx);
+
+        List<RawOutput> outputForFundGenTx = new ArrayList<>();
+        outputForFundGenTx.add(getRawOutput(0, ADDRESS_GEN_1_VALUE + ADDRESS_GEN_2_VALUE, ADDRESS_GEN_FUND_TX));
+        fundGenTx.setVOut(outputForFundGenTx);
+
+        service.addTxToBlock(BLOCK_0, fundGenTx);
+
+        List<RawInput> inputsForGenTx = new ArrayList<>();
+        inputsForGenTx.add(getRawInput(0, FUND_GEN_TX_ID));
+        RawTransaction genesisTx = getRawTransaction(BLOCK_0, GEN_TX_ID);
+        genesisTx.setVIn(inputsForGenTx);
+
+        List<RawOutput> outputs = new ArrayList<>();
+        outputs.add(getRawOutput(0, ADDRESS_GEN_1_VALUE, ADDRESS_GEN_1));
+        outputs.add(getRawOutput(1, ADDRESS_GEN_2_VALUE, ADDRESS_GEN_2));
+        genesisTx.setVOut(outputs);
+
+        service.setGenesisTx(GEN_TX_ID, BLOCK_0);
+        service.addTxToBlock(BLOCK_0, genesisTx);
+        service.buildBlocks(BLOCK_0, BLOCK_0);
+    }
+
+    private void buildTx(String spendingTxId,
+                         int spendingTxOutputIndex,
+                         String txId,
+                         int txBlockHeight,
+                         int outputIndex,
+                         long outputValue,
+                         String outputAddress) {
+        List<RawInput> rawInputs = new ArrayList<>();
+        rawInputs.add(getRawInput(spendingTxOutputIndex, spendingTxId));
+
+        RawTransaction rawTransaction = getRawTransaction(txBlockHeight, txId);
+        rawTransaction.setVIn(rawInputs);
+
+        List<RawOutput> rawOutputs = new ArrayList<>();
+        rawOutputs.add(getRawOutput(outputIndex, outputValue, outputAddress));
+        rawTransaction.setVOut(rawOutputs);
+
+        service.addTxToBlock(txBlockHeight, rawTransaction);
+    }
+
+
+    private void parseAllBlocksFromGenesis()
+            throws BitcoindException, CommunicationException, BsqBlockchainException {
+        service.parseBlockchain(bsqUTXOMap,
+                bsqTXOMap,
+                service.requestChainHeadHeight(),
+                BLOCK_0,
+                BLOCK_0,
+                GEN_TX_ID);
+    }
+
+    private String getUTXOId(String TxId, int index) {
+        return TxId + ":" + index;
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+// Mock
+///////////////////////////////////////////////////////////////////////////////////////////
+
+@Slf4j
 class MockBsqBlockchainService extends BsqBlockchainRpcService {
-    private static final Logger log = LoggerFactory.getLogger(MockBsqBlockchainService.class);
     private List<Block> blocks;
     private int chainHeadHeight;
-    private String genesisTxId;
-    private int genesisBlockHeight;
-    private final Map<String, RawTransaction> txsByIsMap = new HashMap<>();
+    private String GENESIS_TX_ID;
+    private int GENESIS_HEIGHT;
+    private final Map<String, RawTransaction> txByIdMap = new HashMap<>();
     private final Map<Integer, List<RawTransaction>> txsInBlockMap = new HashMap<>();
     private final Map<Integer, List<String>> txIdsInBlockMap = new HashMap<>();
 
@@ -300,7 +447,7 @@ class MockBsqBlockchainService extends BsqBlockchainRpcService {
         String txId = transaction.getTxId();
         ids.add(txId);
 
-        txsByIsMap.put(txId, transaction);
+        txByIdMap.put(txId, transaction);
     }
 
     public void buildTxList(int from, int to) {
@@ -320,8 +467,8 @@ class MockBsqBlockchainService extends BsqBlockchainRpcService {
 
     private List<String> getTxList(int blockIndex) {
         List<String> txList = new ArrayList<>();
-        if (blockIndex == genesisBlockHeight) {
-            txList.add(genesisTxId);
+        if (blockIndex == GENESIS_HEIGHT) {
+            txList.add(GENESIS_TX_ID);
         }
         return txList;
     }
@@ -336,14 +483,13 @@ class MockBsqBlockchainService extends BsqBlockchainRpcService {
         return blocks.get(index);
     }
 
-    public void setGenesisTx(String genesisTxId, int genesisBlockHeight) {
-        this.genesisTxId = genesisTxId;
-        this.genesisBlockHeight = genesisBlockHeight;
+    public void setGenesisTx(String GENESIS_TX_ID, int GENESIS_HEIGHT) {
+        this.GENESIS_TX_ID = GENESIS_TX_ID;
+        this.GENESIS_HEIGHT = GENESIS_HEIGHT;
     }
 
     @Override
     protected RawTransaction getRawTransaction(String txId) throws BitcoindException, CommunicationException {
-        return txsByIsMap.get(txId);
+        return txByIdMap.get(txId);
     }
-
 }

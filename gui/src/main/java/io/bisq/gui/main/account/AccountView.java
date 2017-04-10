@@ -124,7 +124,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
             new Popup(preferences)
                     .headLine(Res.get("account.info.headline"))
                     .backgroundInfo(Res.get("account.info.msg"))
-                    .dontShowAgainId(key, preferences)
+                    .dontShowAgainId(key)
                     .show();
     }
 

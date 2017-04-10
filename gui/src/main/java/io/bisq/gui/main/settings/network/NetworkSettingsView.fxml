@@ -20,8 +20,8 @@
 <?import io.bisq.gui.components.InputTextField?>
 <?import io.bisq.gui.components.TitledGroupBg?>
 <?import javafx.geometry.*?>
-<?import javafx.scene.control.cell.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.*?>
 <?import javafx.scene.layout.*?>
 <GridPane fx:id="root" fx:controller="io.bisq.gui.main.settings.network.NetworkSettingsView"
           hgap="5.0" vgap="5.0"
@@ -33,7 +33,7 @@
         <Insets bottom="10.0" left="25.0" top="30.0" right="25"/>
     </padding>
 
-    <TitledGroupBg fx:id="btcHeader" GridPane.rowSpan="3"/>
+    <TitledGroupBg fx:id="btcHeader" GridPane.rowSpan="4"/>
 
     <Label fx:id="bitcoinPeersLabel" GridPane.rowIndex="0"/>
     <TextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
@@ -45,7 +45,10 @@
     <Label fx:id="btcNodesLabel" GridPane.rowIndex="2"/>
     <InputTextField fx:id="btcNodes" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
 
-    <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="3" GridPane.rowSpan="3">
+    <Label fx:id="reSyncSPVChainLabel" GridPane.rowIndex="3"/>
+    <Button fx:id="reSyncSPVChainButton" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+    <TitledGroupBg fx:id="p2pHeader" GridPane.rowIndex="4" GridPane.rowSpan="3">
         <padding>
             <Insets top="50.0"/>
         </padding>
@@ -54,20 +57,20 @@
         </GridPane.margin>
     </TitledGroupBg>
 
-    <Label fx:id="onionAddressLabel" GridPane.rowIndex="3">
+    <Label fx:id="onionAddressLabel" GridPane.rowIndex="4">
         <GridPane.margin>
             <Insets top="50.0"/>
         </GridPane.margin>
     </Label>
-    <TextField fx:id="onionAddress" GridPane.rowIndex="3" GridPane.columnIndex="1"
+    <TextField fx:id="onionAddress" GridPane.rowIndex="4" GridPane.columnIndex="1"
                editable="false" focusTraversable="false">
         <GridPane.margin>
             <Insets top="50.0"/>
         </GridPane.margin>
     </TextField>
 
-    <Label fx:id="p2PPeersLabel" GridPane.rowIndex="4"/>
-    <TableView fx:id="tableView" GridPane.rowIndex="4" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
+    <Label fx:id="p2PPeersLabel" GridPane.rowIndex="5"/>
+    <TableView fx:id="tableView" GridPane.rowIndex="5" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
                GridPane.vgrow="SOMETIMES">
         <columns>
             <TableColumn fx:id="onionAddressColumn" minWidth="220">
@@ -108,8 +111,8 @@
         </columns>
     </TableView>
 
-    <Label fx:id="totalTrafficLabel" GridPane.rowIndex="5"/>
-    <TextField fx:id="totalTrafficTextField" GridPane.rowIndex="5" GridPane.columnIndex="1" editable="false"
+    <Label fx:id="totalTrafficLabel" GridPane.rowIndex="6"/>
+    <TextField fx:id="totalTrafficTextField" GridPane.rowIndex="6" GridPane.columnIndex="1" editable="false"
                focusTraversable="false"/>
 
     <columnConstraints>

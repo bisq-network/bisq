@@ -58,7 +58,7 @@ public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
             byte[] contractHash = Hash.getHash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
             ArrayList<RawTransactionInput> buyerInputs = processModel.getRawTransactionInputs();
-            BtcWalletService walletService = processModel.getWalletService();
+            BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
             Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
@@ -68,8 +68,8 @@ public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
 
             buyerMultiSigAddressEntry.setCoinLockedInMultiSig(buyerInput.subtract(trade.getTxFee().multiply(2)));
             walletService.saveAddressEntryList();
-            
-            TradingPeer tradingPeer = processModel.tradingPeer;
+
+            TradingPeer tradingPeer = processModel.getTradingPeer();
             byte[] buyerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(buyerMultiSigPubKey, buyerMultiSigAddressEntry.getPubKey()),
                     "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);

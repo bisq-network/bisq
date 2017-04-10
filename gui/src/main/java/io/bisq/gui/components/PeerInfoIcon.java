@@ -32,6 +32,7 @@ public class PeerInfoIcon extends Group {
     private final int numTrades;
     private final PrivateNotificationManager privateNotificationManager;
     private final Offer offer;
+    private Preferences preferences;
     private final Map<String, String> peerTagMap;
     private final Label numTradesLabel;
     private final double SIZE = 26;
@@ -41,13 +42,13 @@ public class PeerInfoIcon extends Group {
     private final Pane tagPane;
     private final Pane numTradesPane;
 
-    public PeerInfoIcon(String hostName, String tooltipText, int numTrades, PrivateNotificationManager privateNotificationManager, Offer offer,
-                        Preferences preferences) {
+    public PeerInfoIcon(String hostName, String tooltipText, int numTrades, PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences) {
         this.hostName = hostName;
         this.tooltipText = tooltipText;
         this.numTrades = numTrades;
         this.privateNotificationManager = privateNotificationManager;
         this.offer = offer;
+        this.preferences = preferences;
 
         peerTagMap = preferences.getPeerTagMap();
 

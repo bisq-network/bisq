@@ -68,16 +68,16 @@ public class SameBankForm extends BankForm {
                 && ((CountryBasedPaymentAccount) paymentAccount).getCountry() != null;
 
         if (BankUtil.isBankNameRequired(bankAccountPayload.getCountryCode()))
-            result &= inputValidator.validate(bankAccountPayload.getBankName()).isValid;
+            result = result && inputValidator.validate(bankAccountPayload.getBankName()).isValid;
 
         if (BankUtil.isBankIdRequired(bankAccountPayload.getCountryCode()))
-            result &= inputValidator.validate(bankAccountPayload.getBankId()).isValid;
+            result = result && inputValidator.validate(bankAccountPayload.getBankId()).isValid;
 
         if (BankUtil.isBranchIdRequired(bankAccountPayload.getCountryCode()))
-            result &= inputValidator.validate(bankAccountPayload.getBranchId()).isValid;
+            result = result && inputValidator.validate(bankAccountPayload.getBranchId()).isValid;
 
         if (BankUtil.isAccountNrRequired(bankAccountPayload.getCountryCode()))
-            result &= inputValidator.validate(bankAccountPayload.getAccountNr()).isValid;
+            result = result && inputValidator.validate(bankAccountPayload.getAccountNr()).isValid;
 
         allInputsValid.set(result);
     }

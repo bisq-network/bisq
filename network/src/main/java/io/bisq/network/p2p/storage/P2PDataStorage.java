@@ -262,7 +262,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
         boolean containsKey = map.containsKey(hashOfPayload);
         if (containsKey)
-            result &= checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.ownerPubKey, hashOfPayload);
+            result = result && checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.ownerPubKey, hashOfPayload);
 
         // printData("before add");
         if (result) {
