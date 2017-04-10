@@ -65,6 +65,7 @@ public class BsqBlockchainManager {
     // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after 
     // a restart.
     private static final int SNAPSHOT_TRIGGER = 300000;
+    private final boolean connectToBtcCore;
 
     public static int getSnapshotTrigger() {
         return SNAPSHOT_TRIGGER;
@@ -98,6 +99,7 @@ public class BsqBlockchainManager {
                                 BisqEnvironment bisqEnvironment,
                                 @Named(Storage.DIR_KEY) File storageDir,
                                 Storage<PlainTextWrapper> jsonStorage,
+                                @Named(RpcOptionKeys.RPC_USER) String rpcUser,
                                 @Named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.blockchainService = blockchainService;
         this.storageDir = storageDir;
@@ -105,6 +107,7 @@ public class BsqBlockchainManager {
         this.dumpBlockchainData = dumpBlockchainData;
         this.bitcoinNetwork = bisqEnvironment.getBitcoinNetwork();
 
+        connectToBtcCore = rpcUser != null && !rpcUser.isEmpty();
         bsqUTXOMap = new BsqUTXOMap(storageDir);
         bsqTXOMap = new BsqTXOMap(storageDir);
 
@@ -214,7 +217,8 @@ public class BsqBlockchainManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
-        blockchainService.setup(this::blockchainServiceSetupCompleted, errorMessageHandler);
+        if (connectToBtcCore)
+            blockchainService.setup(this::blockchainServiceSetupCompleted, errorMessageHandler);
     }
 
     public Set<String> getUtxoTxIdSet() {
