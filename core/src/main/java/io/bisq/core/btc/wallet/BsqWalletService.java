@@ -39,6 +39,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -51,6 +52,8 @@ public class BsqWalletService extends WalletService {
     private final BsqCoinSelector bsqCoinSelector;
     @Getter
     private final ObservableList<Transaction> walletBsqTransactions = FXCollections.observableArrayList();
+    private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
+    private Coin availableBsqBalance;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -115,9 +118,11 @@ public class BsqWalletService extends WalletService {
         bsqBlockchainManager.addUtxoListener(bsqUTXOMap -> {
             updateCoinSelector(bsqUTXOMap);
             updateWalletBsqTransactions();
+            updateBsqBalance();
         });
         bsqBlockchainManager.getBsqTXOMap().addBurnedBSQTxMapListener(change -> {
             updateWalletBsqTransactions();
+            updateBsqBalance();
         });
     }
 
@@ -141,9 +146,22 @@ public class BsqWalletService extends WalletService {
 
     @Override
     public Coin getAvailableBalance() {
-        CoinSelection selection = bsqCoinSelector.select(NetworkParameters.MAX_MONEY, getMyBsqUtxosFromWallet());
-        return selection.valueGathered;
+        return availableBsqBalance;
     }
+
+    public void addBsqBalanceListener(BsqBalanceListener listener) {
+        bsqBalanceListeners.add(listener);
+    }
+
+    public void removeBsqBalanceListener(BsqBalanceListener listener) {
+        bsqBalanceListeners.remove(listener);
+    }
+
+    private void updateBsqBalance() {
+        availableBsqBalance = bsqCoinSelector.select(NetworkParameters.MAX_MONEY, getMyBsqUtxosFromWallet()).valueGathered;
+        bsqBalanceListeners.stream().forEach(e -> e.updateAvailableBalance(availableBsqBalance));
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UTXO
@@ -287,7 +305,7 @@ public class BsqWalletService extends WalletService {
         wallet.completeTx(sendRequest);
         checkWalletConsistency(wallet);
         verifyTransaction(tx);
-        //  printTx("prepareSendTx", tx);
+        // printTx("prepareSendTx", tx);
         return tx;
     }
 

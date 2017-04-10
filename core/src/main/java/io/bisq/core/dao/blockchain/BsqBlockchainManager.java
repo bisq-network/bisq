@@ -76,6 +76,7 @@ public class BsqBlockchainManager {
     private final boolean dumpBlockchainData;
     private final BitcoinNetwork bitcoinNetwork;
     private final List<BsqUTXOListener> bsqUTXOListeners = new ArrayList<>();
+    private final List<BsqTxoListener> bsqTxoListeners = new ArrayList<>();
 
     @Getter
     private final BsqUTXOMap bsqUTXOMap;
@@ -202,6 +203,7 @@ public class BsqBlockchainManager {
     }
 
     private void onBsqTXOChanged() {
+        bsqTxoListeners.stream().forEach(e -> e.onBsqTxoChanged(bsqTXOMap));
         if (dumpBlockchainData)
             doDumpBlockchainData();
     }
@@ -229,6 +231,14 @@ public class BsqBlockchainManager {
 
     public void removeUtxoListener(BsqUTXOListener bsqUTXOListener) {
         bsqUTXOListeners.remove(bsqUTXOListener);
+    }
+
+    public void addTxoListener(BsqTxoListener bsqTxoListener) {
+        bsqTxoListeners.add(bsqTxoListener);
+    }
+
+    public void removeTxoListener(BsqTxoListener bsqTxoListener) {
+        bsqTxoListeners.remove(bsqTxoListener);
     }
 
 

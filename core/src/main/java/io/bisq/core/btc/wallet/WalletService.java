@@ -206,7 +206,7 @@ public abstract class WalletService {
             input.setScriptSig(new Script(new byte[]{}));
         }
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Sign tx
