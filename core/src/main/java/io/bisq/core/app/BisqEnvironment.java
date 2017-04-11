@@ -77,7 +77,7 @@ public class BisqEnvironment extends StandardEnvironment {
     private final String logLevel, providers;
     private BitcoinNetwork bitcoinNetwork;
     private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
-            rpcPort, rpcBlockNotificationPort, rpcWalletNotificationPort, dumpBlockchainData,
+            rpcPort, rpcBlockNotificationPort, dumpBlockchainData,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             socks5ProxyHttpAddress;
 
@@ -181,9 +181,6 @@ public class BisqEnvironment extends StandardEnvironment {
         rpcBlockNotificationPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) ?
                 (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) :
                 "";
-        rpcWalletNotificationPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT) :
-                "";
         dumpBlockchainData = commandLineProperties.containsProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) ?
                 (String) commandLineProperties.getProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) :
                 "";
@@ -261,7 +258,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(RpcOptionKeys.RPC_PASSWORD, rpcPassword);
                 setProperty(RpcOptionKeys.RPC_PORT, rpcPort);
                 setProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
-                setProperty(RpcOptionKeys.RPC_WALLET_NOTIFICATION_PORT, rpcWalletNotificationPort);
                 setProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);
                 
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);

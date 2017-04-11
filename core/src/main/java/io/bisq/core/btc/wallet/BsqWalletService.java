@@ -23,7 +23,7 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
-import io.bisq.core.dao.blockchain.BsqUTXOMap;
+import io.bisq.core.dao.blockchain.TxOutput;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import javafx.collections.FXCollections;
@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -51,7 +52,7 @@ public class BsqWalletService extends WalletService {
     private final BsqBlockchainManager bsqBlockchainManager;
     private final BsqCoinSelector bsqCoinSelector;
     @Getter
-    private final ObservableList<Transaction> walletBsqTransactions = FXCollections.observableArrayList();
+    private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
     private Coin availableBsqBalance;
 
@@ -77,6 +78,7 @@ public class BsqWalletService extends WalletService {
             wallet.setCoinSelector(bsqCoinSelector);
 
             wallet.addEventListener(walletEventListener);
+
             wallet.addEventListener(new AbstractWalletEventListener() {
                 @Override
                 public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
@@ -90,7 +92,7 @@ public class BsqWalletService extends WalletService {
 
                 @Override
                 public void onReorganize(Wallet wallet) {
-                    updateWalletBsqTransactions();
+                    updateBsqWalletTransactions();
                 }
 
                 @Override
@@ -99,29 +101,25 @@ public class BsqWalletService extends WalletService {
 
                 @Override
                 public void onKeysAdded(List<ECKey> keys) {
-                    updateWalletBsqTransactions();
+                    updateBsqWalletTransactions();
                 }
 
                 @Override
                 public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                    updateWalletBsqTransactions();
+                    updateBsqWalletTransactions();
                 }
 
                 @Override
                 public void onWalletChanged(Wallet wallet) {
-                    updateWalletBsqTransactions();
+                    updateBsqWalletTransactions();
                 }
 
             });
         });
 
-        bsqBlockchainManager.addUtxoListener(bsqUTXOMap -> {
-            updateCoinSelector(bsqUTXOMap);
-            updateWalletBsqTransactions();
-            updateBsqBalance();
-        });
-        bsqBlockchainManager.getBsqTXOMap().addBurnedBSQTxMapListener(change -> {
-            updateWalletBsqTransactions();
+        bsqBlockchainManager.addTxOutputMapListener(bsqTxoMap -> {
+            bsqCoinSelector.setTxoMap(bsqTxoMap);
+            updateBsqWalletTransactions();
             updateBsqBalance();
         });
     }
@@ -144,6 +142,11 @@ public class BsqWalletService extends WalletService {
     // Balance
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void updateBsqBalance() {
+        availableBsqBalance = bsqCoinSelector.select(NetworkParameters.MAX_MONEY, getMyUnspentBsqTxOutputsFromWallet()).valueGathered;
+        bsqBalanceListeners.stream().forEach(e -> e.updateAvailableBalance(availableBsqBalance));
+    }
+
     @Override
     public Coin getAvailableBalance() {
         return availableBsqBalance;
@@ -157,66 +160,56 @@ public class BsqWalletService extends WalletService {
         bsqBalanceListeners.remove(listener);
     }
 
-    private void updateBsqBalance() {
-        availableBsqBalance = bsqCoinSelector.select(NetworkParameters.MAX_MONEY, getMyBsqUtxosFromWallet()).valueGathered;
-        bsqBalanceListeners.stream().forEach(e -> e.updateAvailableBalance(availableBsqBalance));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // UTXO
+    // BSQ TransactionOutputs and Transactions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void updateCoinSelector(BsqUTXOMap bsqUTXOMap) {
-        bsqCoinSelector.setUtxoMap(bsqUTXOMap);
+    private void updateBsqWalletTransactions() {
+        walletTransactions.setAll(getAllBsqTransactionsFromWallet());
     }
 
-    private void updateWalletBsqTransactions() {
-        walletBsqTransactions.setAll(getWalletTransactionsWithBsqTxo());
-    }
-
-    private Set<TransactionOutput> getAllBsqUtxosFromWallet() {
-        return getTransactions(true).stream()
-                .flatMap(tx -> tx.getOutputs().stream())
-                .filter(out -> out.getParentTransaction() != null && bsqBlockchainManager.getBsqUTXOMap()
-                        .containsTuple(out.getParentTransaction().getHashAsString(), out.getIndex()))
+    private Set<TransactionOutput> getAllBsqTxOutputsFromWallet() {
+        return getWalletTransactionOutputStream()
+                .filter(out -> out.getParentTransaction() != null && bsqBlockchainManager.getTxOutputMap()
+                        .contains(out.getParentTransaction().getHashAsString(), out.getIndex()))
                 .collect(Collectors.toSet());
     }
 
-    private Set<TransactionOutput> getMyBsqUtxosFromWallet() {
-        return getAllBsqUtxosFromWallet().stream()
-                .filter(out -> out.isMine(wallet))
-                .collect(Collectors.toSet());
-    }
-
-    private Set<TransactionOutput> getWalletBsqTxos() {
-        return getTransactions(true).stream()
-                .flatMap(tx -> tx.getOutputs().stream())
+    private Set<TransactionOutput> getAllUnspentBsqTxOutputsFromWallet() {
+        return getAllBsqTxOutputsFromWallet().stream()
                 .filter(out -> {
-                    final Transaction parentTransaction = out.getParentTransaction();
-                    if (parentTransaction == null)
+                    final Transaction tx = out.getParentTransaction();
+                    if (tx == null) {
                         return false;
-                    final String id = parentTransaction.getHashAsString();
-                    return bsqBlockchainManager.getBsqTXOMap().containsTuple(id, out.getIndex()) ||
-                            bsqBlockchainManager.getBsqTXOMap().getBurnedBSQTxMap().containsKey(id);
+                    } else {
+                        final TxOutput txOutput = bsqBlockchainManager.getTxOutputMap()
+                                .get(tx.getHashAsString(), out.getIndex());
+                        return txOutput != null && txOutput.isUnSpend();
+                    }
                 })
                 .collect(Collectors.toSet());
     }
 
-    private Set<Transaction> getWalletTransactionsWithBsqUtxo() {
-        return getAllBsqUtxosFromWallet().stream()
-                .map(TransactionOutput::getParentTransaction)
+    private Set<TransactionOutput> getMyUnspentBsqTxOutputsFromWallet() {
+        return getAllUnspentBsqTxOutputsFromWallet().stream()
+                .filter(out -> out.isMine(wallet))
                 .collect(Collectors.toSet());
     }
 
-    private Set<Transaction> getWalletTransactionsWithBsqTxo() {
-        return getWalletBsqTxos().stream()
+    private Stream<TransactionOutput> getWalletTransactionOutputStream() {
+        return getTransactions(true).stream()
+                .flatMap(tx -> tx.getOutputs().stream());
+    }
+
+    private Set<Transaction> getAllBsqTransactionsFromWallet() {
+        return getAllBsqTxOutputsFromWallet().stream()
                 .map(TransactionOutput::getParentTransaction)
                 .collect(Collectors.toSet());
     }
 
     public Set<Transaction> getInvalidBsqTransactions() {
-        Set<Transaction> txsWithOutputsFoundInBsqTxo = getWalletTransactionsWithBsqTxo();
+        Set<Transaction> txsWithOutputsFoundInBsqTxo = getAllBsqTransactionsFromWallet();
         Set<Transaction> walletTxs = getTransactions(true).stream().collect(Collectors.toSet());
         checkArgument(walletTxs.size() >= txsWithOutputsFoundInBsqTxo.size(),
                 "We cannot have more txsWithOutputsFoundInBsqTxo than walletTxs");
@@ -323,7 +316,7 @@ public class BsqWalletService extends WalletService {
         // non dust BTC output.
 
         // TODO check dust output
-        CoinSelection coinSelection = bsqCoinSelector.select(fee, getMyBsqUtxosFromWallet());
+        CoinSelection coinSelection = bsqCoinSelector.select(fee, getMyUnspentBsqTxOutputsFromWallet());
         coinSelection.gathered.stream().forEach(tx::addInput);
         Coin change = bsqCoinSelector.getChange(fee, coinSelection);
         if (change.isPositive())

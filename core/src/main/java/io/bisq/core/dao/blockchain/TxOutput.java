@@ -62,7 +62,6 @@ public class TxOutput implements Serializable {
     @Nullable
     private String address;
 
-
     public TxOutput(int index,
                     long value,
                     String txId,
@@ -105,16 +104,35 @@ public class TxOutput implements Serializable {
         return address;
     }
 
+    public boolean isUnSpend() {
+        return spendInfo == null;
+    }
+
+    public boolean hasBurnedFee() {
+        return burnedFee > 0;
+    }
+
+    public String getTxoId() {
+        return txId + ":" + index;
+    }
+
+
     @Override
     public String toString() {
         return "TxOutput{" +
-                "\n        index=" + index +
-                ",\n        value=" + value +
-                ",\n        address=" + getAddress() +
-                ",\n        txId=" + txId +
-                ",\n        pubKeyScript=" + pubKeyScript +
-                ",\n        spendInfo=" + spendInfo +
-                "\n" +
-                "     }";
+                "\n     index=" + index +
+                ",\n     value=" + value +
+                ",\n     txId='" + txId + '\'' +
+                ",\n     pubKeyScript=" + pubKeyScript +
+                ",\n     blockHeight=" + blockHeight +
+                ",\n     time=" + time +
+                ",\n     txVersion='" + txVersion + '\'' +
+                ",\n     isBsqCoinBase=" + isBsqCoinBase +
+                ",\n     isVerified=" + isVerified +
+                ",\n     burnedFee=" + burnedFee +
+                ",\n     btcTxFee=" + btcTxFee +
+                ",\n     spendInfo=" + spendInfo +
+                ",\n     address='" + getAddress() + '\'' +
+                "\n}";
     }
 }

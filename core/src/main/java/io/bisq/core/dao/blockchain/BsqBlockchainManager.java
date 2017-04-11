@@ -17,36 +17,27 @@
 
 package io.bisq.core.dao.blockchain;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
-import com.neemre.btcdcli4j.core.domain.PubKeyScript;
-import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
-import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.dao.RpcOptionKeys;
-import io.bisq.core.dao.blockchain.json.ScriptPubKeyForJson;
-import io.bisq.core.dao.blockchain.json.SpentInfoForJson;
-import io.bisq.core.dao.blockchain.json.TxOutputForJson;
+import io.bisq.core.dao.blockchain.json.JsonExporter;
 import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Named;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
+@Slf4j
 public class BsqBlockchainManager {
-    private static final Logger log = LoggerFactory.getLogger(BsqBlockchainManager.class);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     //mainnet
     private static final String GENESIS_TX_ID = "cabbf6073aea8f22ec678e973ac30c6d8fc89321011da6a017f63e67b9f66667";
@@ -65,29 +56,28 @@ public class BsqBlockchainManager {
     // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after 
     // a restart.
     private static final int SNAPSHOT_TRIGGER = 300000;
-    private final boolean connectToBtcCore;
 
     public static int getSnapshotTrigger() {
         return SNAPSHOT_TRIGGER;
     }
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Class fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private final BsqBlockchainService blockchainService;
-    private File storageDir;
-    private final boolean dumpBlockchainData;
+    private final JsonExporter jsonExporter;
     private final BitcoinNetwork bitcoinNetwork;
-    private final List<BsqUTXOListener> bsqUTXOListeners = new ArrayList<>();
-    private final List<BsqTxoListener> bsqTxoListeners = new ArrayList<>();
+    private final List<TxOutputMap.Listener> txOutputMapListeners = new ArrayList<>();
 
     @Getter
-    private final BsqUTXOMap bsqUTXOMap;
-    @Getter
-    private final BsqTXOMap bsqTXOMap;
+    private final TxOutputMap txOutputMap;
     @Getter
     private int chainHeadHeight;
     @Getter
-    private boolean isUtxoSyncWithChainHeadHeight;
-    private final Storage<PlainTextWrapper> jsonStorage;
+    private boolean parseBlockchainComplete;
+    private final boolean connectToBtcCore;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -97,120 +87,18 @@ public class BsqBlockchainManager {
     @Inject
     public BsqBlockchainManager(BsqBlockchainService blockchainService,
                                 BisqEnvironment bisqEnvironment,
+                                JsonExporter jsonExporter,
                                 @Named(Storage.DIR_KEY) File storageDir,
-                                Storage<PlainTextWrapper> jsonStorage,
-                                @Named(RpcOptionKeys.RPC_USER) String rpcUser,
-                                @Named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
+                                @Named(RpcOptionKeys.RPC_USER) String rpcUser) {
         this.blockchainService = blockchainService;
-        this.storageDir = storageDir;
-        this.jsonStorage = jsonStorage;
-        this.dumpBlockchainData = dumpBlockchainData;
+        this.jsonExporter = jsonExporter;
         this.bitcoinNetwork = bisqEnvironment.getBitcoinNetwork();
 
         connectToBtcCore = rpcUser != null && !rpcUser.isEmpty();
-        bsqUTXOMap = new BsqUTXOMap(storageDir);
-        bsqTXOMap = new BsqTXOMap(storageDir);
+        txOutputMap = new TxOutputMap(storageDir);
 
-        bsqUTXOMap.addListener(c -> onBsqUTXOChanged());
-        bsqTXOMap.addListener(c -> onBsqTXOChanged());
-        bsqTXOMap.addBurnedBSQTxMapListener(c -> onBsqTXOChanged());
-
-        if (dumpBlockchainData) {
-            this.jsonStorage.initWithFileName("txo.json");
-          /*  p2PService.addP2PServiceListener(new BootstrapListener() {
-                @Override
-                public void onBootstrapComplete() {
-                    addOfferBookChangedListener(new OfferBookChangedListener() {
-                        @Override
-                        public void onAdded(Offer offer) {
-                            doDumpBlockchainData();
-                        }
-
-                        @Override
-                        public void onRemoved(Offer offer) {
-                            doDumpBlockchainData();
-                        }
-                    });
-                    UserThread.runAfter(BsqBlockchainManager.this::doDumpBlockchainData, 1);
-                }
-            });*/
-        }
+        txOutputMap.addListener(bsqTxOutputMap -> onBsqTxoChanged());
     }
-
-    private void doDumpBlockchainData() {
-        List<TxOutputForJson> list = bsqTXOMap.getMap().values().stream()
-                .map(this::getTxOutputForJson)
-                .collect(Collectors.toList());
-
-        list.sort((o1, o2) -> (o1.getSortData().compareTo(o2.getSortData())));
-        TxOutputForJson[] array = new TxOutputForJson[list.size()];
-        list.toArray(array);
-        jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(array)), 5000);
-
-        // keep the individual file storage option as code as we dont know yet what we will use.
-      /*  log.error("txOutputForJson " + txOutputForJson);
-        File txoDir = new File(Paths.get(storageDir.getAbsolutePath(), "txo").toString());
-        if (!txoDir.exists())
-            if (!txoDir.mkdir())
-                log.warn("make txoDir failed.\ntxoDir=" + txoDir.getAbsolutePath());
-        File txoFile = new File(Paths.get(txoDir.getAbsolutePath(),
-                txOutput.getTxId() + ":" + outputIndex + ".json").toString());
-
-        // Nr of write requests might be a bit heavy, consider write whole list to one file
-        FileManager<PlainTextWrapper> fileManager = new FileManager<>(storageDir, txoFile, 1);
-        fileManager.saveLater(new PlainTextWrapper(Utilities.objectToJson(txOutputForJson)));*/
-    }
-
-    private TxOutputForJson getTxOutputForJson(TxOutput txOutput) {
-        String txId = txOutput.getTxId();
-        int outputIndex = txOutput.getIndex();
-        final long bsqAmount = txOutput.getValue();
-        final int height = txOutput.getBlockHeight();
-        final boolean isBsqCoinBase = txOutput.isBsqCoinBase();
-        final boolean verified = txOutput.isVerified();
-        final long burnedFee = txOutput.getBurnedFee();
-        final long btcTxFee = txOutput.getBtcTxFee();
-
-        PubKeyScript pubKeyScript = txOutput.getPubKeyScript();
-        final ScriptPubKeyForJson scriptPubKey = new ScriptPubKeyForJson(pubKeyScript.getAddresses(),
-                pubKeyScript.getAsm(),
-                pubKeyScript.getHex(),
-                pubKeyScript.getReqSigs(),
-                pubKeyScript.getType().toString());
-        SpentInfoForJson spentInfoJson = null;
-        SpendInfo spendInfo = txOutput.getSpendInfo();
-        if (spendInfo != null)
-            spentInfoJson = new SpentInfoForJson(spendInfo.getBlockHeight(),
-                    spendInfo.getInputIndex(),
-                    spendInfo.getTxId());
-
-        final long time = txOutput.getTime();
-        final String txVersion = txOutput.getTxVersion();
-        return new TxOutputForJson(txId,
-                outputIndex,
-                bsqAmount,
-                height,
-                isBsqCoinBase,
-                verified,
-                burnedFee,
-                btcTxFee,
-                scriptPubKey,
-                spentInfoJson,
-                time,
-                txVersion
-        );
-    }
-
-    private void onBsqUTXOChanged() {
-        bsqUTXOListeners.stream().forEach(e -> e.onBsqUTXOChanged(bsqUTXOMap));
-    }
-
-    private void onBsqTXOChanged() {
-        bsqTxoListeners.stream().forEach(e -> e.onBsqTxoChanged(bsqTXOMap));
-        if (dumpBlockchainData)
-            doDumpBlockchainData();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -218,89 +106,88 @@ public class BsqBlockchainManager {
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
         if (connectToBtcCore)
-            blockchainService.setup(this::blockchainServiceSetupCompleted, errorMessageHandler);
+            blockchainService.setup(this::onSetupComplete, errorMessageHandler);
     }
 
-    public Set<String> getUtxoTxIdSet() {
-        return bsqUTXOMap.getTxIdSet();
-    }
-
-    public Set<String> getTxoTxIdSet() {
-        return bsqTXOMap.getTxIdSet();
-    }
-
-    public void addUtxoListener(BsqUTXOListener bsqUTXOListener) {
-        bsqUTXOListeners.add(bsqUTXOListener);
-    }
-
-    public void removeUtxoListener(BsqUTXOListener bsqUTXOListener) {
-        bsqUTXOListeners.remove(bsqUTXOListener);
-    }
-
-    public void addTxoListener(BsqTxoListener bsqTxoListener) {
-        bsqTxoListeners.add(bsqTxoListener);
-    }
-
-    public void removeTxoListener(BsqTxoListener bsqTxoListener) {
-        bsqTxoListeners.remove(bsqTxoListener);
+    public void addTxOutputMapListener(TxOutputMap.Listener listener) {
+        txOutputMapListeners.add(listener);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // private methods
+    // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void blockchainServiceSetupCompleted() {
+    private void onSetupComplete() {
         final int genesisBlockHeight = getGenesisBlockHeight();
         final String genesisTxId = getGenesisTxId();
-        int startBlockHeight = Math.max(genesisBlockHeight, bsqUTXOMap.getSnapshotHeight());
-        log.info("genesisTxId=" + genesisTxId);
-        log.info("genesisBlockHeight=" + genesisBlockHeight);
-        log.info("startBlockHeight=" + startBlockHeight);
-        log.info("bsqUTXOMap.getSnapshotHeight()=" + bsqUTXOMap.getSnapshotHeight());
+        int startBlockHeight = Math.max(genesisBlockHeight, txOutputMap.getSnapshotHeight());
+        log.info("parseBlocks with: genesisTxId={}\ngenesisBlockHeight={}\nstartBlockHeight={}\nsnapshotHeight={}",
+                genesisTxId, genesisBlockHeight, startBlockHeight, txOutputMap.getSnapshotHeight());
 
-        if (bsqUTXOMap.getSnapshotHeight() > 0)
-            onBsqUTXOChanged();
+        // If we have past data we notify our listeners
+        if (txOutputMap.getSnapshotHeight() > 0)
+            onBsqTxoChanged();
 
-        ListenableFuture<Integer> future =
-                blockchainService.executeParseBlockchain(bsqUTXOMap,
-                        bsqTXOMap,
-                        startBlockHeight,
+        parseBlocks(startBlockHeight,
+                genesisBlockHeight,
+                genesisTxId);
+    }
+
+    // TODO handle reorgs
+
+    private void parseBlocks(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
+        blockchainService.requestChainHeadHeight(chainHeadHeight -> {
+            if (chainHeadHeight != startBlockHeight) {
+                blockchainService.parseBlocks(startBlockHeight,
+                        chainHeadHeight,
                         genesisBlockHeight,
-                        genesisTxId);
+                        genesisTxId,
+                        txOutputMap,
+                        () -> {
+                            // we are done but it might be that new blocks have arrived in the meantime,
+                            // so we try again with startBlockHeight set to current chainHeadHeight
+                            parseBlocks(chainHeadHeight,
+                                    genesisBlockHeight,
+                                    genesisTxId);
+                        }, throwable -> {
+                            log.error(throwable.toString());
+                            throwable.printStackTrace();
+                        });
+            } else {
+                // We dont have received new blocks in the meantime so we are completed and we register our handler
+                BsqBlockchainManager.this.chainHeadHeight = chainHeadHeight;
+                parseBlockchainComplete = true;
 
-        Futures.addCallback(future, new FutureCallback<Integer>() {
-            @Override
-            public void onSuccess(Integer height) {
-                UserThread.execute(() -> {
-                    chainHeadHeight = height;
-                    isUtxoSyncWithChainHeadHeight = true;
-                    blockchainService.parseBlockchainCompete(btcdBlock -> {
-                        if (btcdBlock != null) {
-                            UserThread.execute(() -> {
-                                try {
-                                    final BsqBlock bsqBlock = new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight());
-                                    blockchainService.parseBlock(bsqBlock,
-                                            genesisBlockHeight,
-                                            genesisTxId,
-                                            bsqUTXOMap,
-                                            bsqTXOMap);
-                                } catch (BsqBlockchainException e) {
-                                    //TODO
-                                    e.printStackTrace();
-                                }
+                // We register our handler for new blocks
+                blockchainService.addBlockHandler(bsqBlock -> {
+                    blockchainService.parseBlock(bsqBlock,
+                            genesisBlockHeight,
+                            genesisTxId,
+                            txOutputMap,
+                            () -> {
+                                log.debug("new block parsed. bsqBlock={}", bsqBlock);
+                            }, throwable -> {
+                                log.error(throwable.toString());
+                                throwable.printStackTrace();
                             });
-                        }
-                    });
                 });
             }
-
-            @Override
-            public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> log.error("syncFromGenesis failed" + throwable.toString()));
-            }
+        }, throwable -> {
+            log.error(throwable.toString());
+            throwable.printStackTrace();
         });
     }
+
+    private void onBsqTxoChanged() {
+        txOutputMapListeners.stream().forEach(e -> e.onMapChanged(txOutputMap));
+        jsonExporter.export(txOutputMap);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private String getGenesisTxId() {
         return bitcoinNetwork == BitcoinNetwork.REGTEST ? REG_TEST_GENESIS_TX_ID : GENESIS_TX_ID;

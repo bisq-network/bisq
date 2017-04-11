@@ -22,7 +22,6 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
-import io.bisq.core.dao.blockchain.Tx;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
@@ -46,7 +45,8 @@ import javafx.util.Callback;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -112,7 +112,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     @Override
     protected void activate() {
         balanceUtil.activate();
-        bsqWalletService.getWalletBsqTransactions().addListener(walletBsqTransactionsListener);
+        bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
@@ -124,25 +124,30 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     protected void deactivate() {
         balanceUtil.deactivate();
         sortedList.comparatorProperty().unbind();
-        bsqWalletService.getWalletBsqTransactions().removeListener(walletBsqTransactionsListener);
+        bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         observableList.forEach(BsqTxListItem::cleanup);
     }
 
     private void updateList() {
         observableList.forEach(BsqTxListItem::cleanup);
 
-        Map<String, Tx> burnedBSQTxIdMap = bsqBlockchainManager.getBsqTXOMap().getBurnedBSQTxMap();
-        Set<BsqTxListItem> list = bsqWalletService.getWalletBsqTransactions().stream()
-                .map(transaction -> new BsqTxListItem(transaction,
-                                bsqWalletService,
-                                btcWalletService,
-                                burnedBSQTxIdMap.containsKey(transaction.getHashAsString()), bsqFormatter)
+        // clone to avoid ConcurrentModificationException
+        final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
+        Set<BsqTxListItem> list = walletTransactions.stream()
+                .map(transaction -> {
+                            // The burned fee is added to all outputs of a tx, so we just ask at index 0
+                            return new BsqTxListItem(transaction,
+                                    bsqWalletService,
+                                    btcWalletService,
+                                    bsqBlockchainManager.getTxOutputMap().hasTxBurnedFee(transaction.getHashAsString()),
+                                    bsqFormatter);
+                        }
                 )
                 .collect(Collectors.toSet());
         observableList.setAll(list);
 
         final Set<Transaction> invalidBsqTransactions = bsqWalletService.getInvalidBsqTransactions();
-        if (!invalidBsqTransactions.isEmpty() && bsqBlockchainManager.isUtxoSyncWithChainHeadHeight()) {
+        if (!invalidBsqTransactions.isEmpty() && bsqBlockchainManager.isParseBlockchainComplete()) {
             Set<String> txIds = invalidBsqTransactions.stream()
                     .filter(t -> t != null)
                     .map(t -> t.getHashAsString()).collect(Collectors.toSet());

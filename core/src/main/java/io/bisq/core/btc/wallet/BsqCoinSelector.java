@@ -17,51 +17,29 @@
 
 package io.bisq.core.btc.wallet;
 
-import io.bisq.core.dao.blockchain.BsqUTXO;
-import io.bisq.core.dao.blockchain.BsqUTXOMap;
+import io.bisq.core.dao.blockchain.TxOutputMap;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.TransactionOutput;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches our address of our address.
  */
+@Slf4j
 class BsqCoinSelector extends BisqDefaultCoinSelector {
-    private static final Logger log = LoggerFactory.getLogger(BsqCoinSelector.class);
-
-    private final Map<String, Set<BsqUTXO>> utxoSetByAddressMap = new HashMap<>();
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    private TxOutputMap txOutputMap;
 
     public BsqCoinSelector(boolean permitForeignPendingTx) {
         super(permitForeignPendingTx);
     }
 
-    public void setUtxoMap(BsqUTXOMap bsqUTXOMap) {
-        bsqUTXOMap.values().stream().forEach(utxo -> {
-            String address = utxo.getAddress();
-            if (!utxoSetByAddressMap.containsKey(address))
-                utxoSetByAddressMap.put(address, new HashSet<>());
-
-            utxoSetByAddressMap.get(address).add(utxo);
-        });
+    public void setTxoMap(TxOutputMap txOutputMap) {
+        this.txOutputMap = txOutputMap;
     }
 
     @Override
     protected boolean isTxOutputSpendable(TransactionOutput output) {
-        if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
-            return utxoSetByAddressMap.containsKey(WalletUtils.getAddressStringFromOutput(output));
-        } else {
-            log.warn("output.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
-            return false;
-        }
+        return output.getParentTransaction() != null &&
+                txOutputMap.isTxOutputUnSpent(output.getParentTransaction().getHashAsString(), output.getIndex());
     }
 }

@@ -19,8 +19,6 @@ package io.bisq.gui.main.dao.wallet;
 
 import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.dao.blockchain.BsqBlockchainManager;
-import io.bisq.core.dao.blockchain.BsqUTXOListener;
 import io.bisq.gui.util.BsqFormatter;
 import javafx.scene.control.TextField;
 import lombok.extern.slf4j.Slf4j;
@@ -32,15 +30,13 @@ import javax.inject.Inject;
 public class BalanceUtil implements BsqBalanceListener {
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter formatter;
-    private BsqBlockchainManager bsqBlockchainManager;
     private TextField balanceTextField;
-    private BsqUTXOListener bsqUTXOListener;
 
     @Inject
-    private BalanceUtil(BsqWalletService bsqWalletService, BsqFormatter formatter, BsqBlockchainManager bsqBlockchainManager) {
+    private BalanceUtil(BsqWalletService bsqWalletService,
+                        BsqFormatter formatter) {
         this.bsqWalletService = bsqWalletService;
         this.formatter = formatter;
-        this.bsqBlockchainManager = bsqBlockchainManager;
     }
 
     public void setBalanceTextField(TextField balanceTextField) {
@@ -49,18 +45,15 @@ public class BalanceUtil implements BsqBalanceListener {
     }
 
     public void initialize() {
-        bsqUTXOListener = bsqUTXOMap -> updateAvailableBalance(bsqWalletService.getAvailableBalance());
     }
 
     public void activate() {
         updateAvailableBalance(bsqWalletService.getAvailableBalance());
         bsqWalletService.addBsqBalanceListener(this);
-        bsqBlockchainManager.addUtxoListener(bsqUTXOListener);
     }
 
     public void deactivate() {
         bsqWalletService.removeBsqBalanceListener(this);
-        bsqBlockchainManager.removeUtxoListener(bsqUTXOListener);
     }
 
     @Override
