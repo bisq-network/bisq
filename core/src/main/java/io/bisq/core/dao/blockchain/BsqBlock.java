@@ -17,7 +17,6 @@
 
 package io.bisq.core.dao.blockchain;
 
-import lombok.Getter;
 import lombok.Value;
 
 import java.util.ArrayList;
@@ -25,11 +24,8 @@ import java.util.List;
 
 @Value
 public class BsqBlock {
-    @Getter
     private final int height;
-    @Getter
     private final List<String> txIds;
-    // private final Map<String, Tx> txByTxIdMap = new HashMap<>();
     private final List<Tx> txList = new ArrayList<>();
     
     public BsqBlock(List<String> txIds, int height) {
@@ -38,17 +34,12 @@ public class BsqBlock {
     }
 
     public void addTx(Tx tx) {
-        //txByTxIdMap.put(tx.getId(), tx);
         txList.add(tx);
     }
 
-  /*  public Tx getTxByTxId(String txId) {
-        return txByTxIdMap.get(txId);
-    }*/
-
     @Override
     public String toString() {
-        return "BsqBlock{" +
+        return "Block{" +
                 "\nheight=" + height +
                 ",\ntxIds=" + txIds +
                 ",\ntxList=" + txList +

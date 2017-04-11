@@ -31,13 +31,8 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
-/*
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
- */
 @Slf4j
 public class BsqBlockchainServiceTest {
 
@@ -64,16 +59,14 @@ public class BsqBlockchainServiceTest {
     public static final long ADDRESS_TX_2_VALUE = Coin.parseCoin("0.00001000").value;
 
     private MockBsqBlockchainService service;
-    private BsqUTXOMap bsqUTXOMap;
-    private BsqTXOMap bsqTXOMap;
+    private TxOutputMap txOutputMap;
 
     @Before
     public void setup() {
         final URL resource = this.getClass().getClassLoader().getResource("");
         final String path = resource != null ? resource.getFile() : "";
         log.info("path for BsqUTXOMap=" + path);
-        bsqUTXOMap = new BsqUTXOMap(new File(path), null);
-        bsqTXOMap = new BsqTXOMap(new File(path), null);
+        txOutputMap = new TxOutputMap(new File(path));
         service = new MockBsqBlockchainService();
     }
 
@@ -98,13 +91,13 @@ public class BsqBlockchainServiceTest {
 
         parseAllBlocksFromGenesis();
 
-        BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
-        BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(GEN_TX_ID, 1);
-        assertEquals(bsqUTXO1.getUtxoId(), getUTXOId(GEN_TX_ID, 0));
-        assertEquals(bsqUTXO2.getUtxoId(), getUTXOId(GEN_TX_ID, 1));
-        assertEquals(ADDRESS_GEN_1_VALUE, bsqUTXO1.getValue());
-        assertEquals(ADDRESS_GEN_2_VALUE, bsqUTXO2.getValue());
-        assertEquals(2, bsqUTXOMap.size());
+        TxOutput bsqTxo1 = txOutputMap.get(GEN_TX_ID, 0);
+        TxOutput bsqTxo2 = txOutputMap.get(GEN_TX_ID, 1);
+        assertEquals(bsqTxo1.getTxoId(), getTxoId(GEN_TX_ID, 0));
+        assertEquals(bsqTxo2.getTxoId(), getTxoId(GEN_TX_ID, 1));
+        assertEquals(ADDRESS_GEN_1_VALUE, bsqTxo1.getValue());
+        assertEquals(ADDRESS_GEN_2_VALUE, bsqTxo2.getValue());
+        assertEquals(2, txOutputMap.size());
     }
 
 
@@ -137,13 +130,15 @@ public class BsqBlockchainServiceTest {
 
         parseAllBlocksFromGenesis();
 
-        BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
-        BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(TX1_ID, 0);
-        assertEquals(bsqUTXO1.getUtxoId(), getUTXOId(GEN_TX_ID, 0));
-        assertEquals(bsqUTXO2.getUtxoId(), getUTXOId(TX1_ID, 0));
-        assertEquals(ADDRESS_GEN_1_VALUE, bsqUTXO1.getValue());
-        assertEquals(ADDRESS_TX_1_VALUE, bsqUTXO2.getValue());
-        assertEquals(2, bsqUTXOMap.size());
+        TxOutput bsqTxo1 = txOutputMap.get(GEN_TX_ID, 0);
+        TxOutput bsqTxo2 = txOutputMap.get(TX1_ID, 0);
+        assertTrue(bsqTxo1.isUnSpend());
+        assertTrue(bsqTxo2.isUnSpend());
+        assertEquals(bsqTxo1.getTxoId(), getTxoId(GEN_TX_ID, 0));
+        assertEquals(bsqTxo2.getTxoId(), getTxoId(TX1_ID, 0));
+        assertEquals(ADDRESS_GEN_1_VALUE, bsqTxo1.getValue());
+        assertEquals(ADDRESS_TX_1_VALUE, bsqTxo2.getValue());
+        assertEquals(3, txOutputMap.size());
     }
 
     @Test
@@ -189,13 +184,20 @@ public class BsqBlockchainServiceTest {
 
         parseAllBlocksFromGenesis();
 
-        BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
-        BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(TX2_ID, 0);
-        assertEquals(bsqUTXO1.getUtxoId(), getUTXOId(GEN_TX_ID, 0));
-        assertEquals(bsqUTXO2.getUtxoId(), getUTXOId(TX2_ID, 0));
-        assertEquals(ADDRESS_GEN_1_VALUE, bsqUTXO1.getValue());
-        assertEquals(ADDRESS_TX_2_VALUE, bsqUTXO2.getValue());
-        assertEquals(2, bsqUTXOMap.size());
+        TxOutput bsqTxo1 = txOutputMap.get(GEN_TX_ID, 0);
+        TxOutput bsqTxo2 = txOutputMap.get(TX2_ID, 0);
+
+        txOutputMap.values().forEach(e -> {
+            if (e.equals(bsqTxo1) || e.equals(bsqTxo2))
+                assertTrue(e.isUnSpend());
+            else
+                assertFalse(e.isUnSpend());
+        });
+        assertEquals(bsqTxo1.getTxoId(), getTxoId(GEN_TX_ID, 0));
+        assertEquals(bsqTxo2.getTxoId(), getTxoId(TX2_ID, 0));
+        assertEquals(ADDRESS_GEN_1_VALUE, bsqTxo1.getValue());
+        assertEquals(ADDRESS_TX_2_VALUE, bsqTxo2.getValue());
+        assertEquals(4, txOutputMap.size());
     }
 
     @Test
@@ -241,13 +243,19 @@ public class BsqBlockchainServiceTest {
 
         parseAllBlocksFromGenesis();
 
-        BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(GEN_TX_ID, 0);
-        BsqUTXO bsqUTXO2 = bsqUTXOMap.getByTuple(TX2_ID, 0);
-        assertEquals(bsqUTXO1.getUtxoId(), getUTXOId(GEN_TX_ID, 0));
-        assertEquals(bsqUTXO2.getUtxoId(), getUTXOId(TX2_ID, 0));
-        assertEquals(ADDRESS_GEN_1_VALUE, bsqUTXO1.getValue());
-        assertEquals(ADDRESS_TX_2_VALUE, bsqUTXO2.getValue());
-        assertEquals(2, bsqUTXOMap.size());
+        TxOutput bsqTxo1 = txOutputMap.get(GEN_TX_ID, 0);
+        TxOutput bsqTxo2 = txOutputMap.get(TX2_ID, 0);
+        txOutputMap.values().forEach(e -> {
+            if (e.equals(bsqTxo1) || e.equals(bsqTxo2))
+                assertTrue(e.isUnSpend());
+            else
+                assertFalse(e.isUnSpend());
+        });
+        assertEquals(bsqTxo1.getTxoId(), getTxoId(GEN_TX_ID, 0));
+        assertEquals(bsqTxo2.getTxoId(), getTxoId(TX2_ID, 0));
+        assertEquals(ADDRESS_GEN_1_VALUE, bsqTxo1.getValue());
+        assertEquals(ADDRESS_TX_2_VALUE, bsqTxo2.getValue());
+        assertEquals(4, txOutputMap.size());
     }
 
     @Test
@@ -295,10 +303,16 @@ public class BsqBlockchainServiceTest {
 
         parseAllBlocksFromGenesis();
 
-        BsqUTXO bsqUTXO1 = bsqUTXOMap.getByTuple(TX2_ID, 0);
-        assertEquals(bsqUTXO1.getUtxoId(), getUTXOId(TX2_ID, 0));
-        assertEquals(ADDRESS_GEN_1_VALUE + ADDRESS_GEN_2_VALUE, bsqUTXO1.getValue());
-        assertEquals(1, bsqUTXOMap.size());
+        TxOutput bsqTxo1 = txOutputMap.get(TX2_ID, 0);
+        txOutputMap.values().forEach(e -> {
+            if (e.equals(bsqTxo1))
+                assertTrue(e.isUnSpend());
+            else
+                assertFalse(e.isUnSpend());
+        });
+        assertEquals(bsqTxo1.getTxoId(), getTxoId(TX2_ID, 0));
+        assertEquals(ADDRESS_GEN_1_VALUE + ADDRESS_GEN_2_VALUE, bsqTxo1.getValue());
+        assertEquals(4, txOutputMap.size());
     }
 
 
@@ -388,16 +402,16 @@ public class BsqBlockchainServiceTest {
 
     private void parseAllBlocksFromGenesis()
             throws BitcoindException, CommunicationException, BsqBlockchainException {
-        service.parseBlockchain(bsqUTXOMap,
-                bsqTXOMap,
+        BsqParser bsqParser = new BsqParser(service);
+        bsqParser.parseBlocks(BLOCK_0,
                 service.requestChainHeadHeight(),
                 BLOCK_0,
-                BLOCK_0,
-                GEN_TX_ID);
+                GEN_TX_ID,
+                txOutputMap);
     }
 
-    private String getUTXOId(String TxId, int index) {
-        return TxId + ":" + index;
+    private String getTxoId(String txId, int index) {
+        return txId + ":" + index;
     }
 }
 
@@ -416,7 +430,7 @@ class MockBsqBlockchainService extends BsqBlockchainRpcService {
     private final Map<Integer, List<String>> txIdsInBlockMap = new HashMap<>();
 
     public MockBsqBlockchainService() {
-        super(null, null, null, null, null);
+        super(null, null, null, null);
     }
 
     public void buildBlocks(int from, int to) {
@@ -489,7 +503,7 @@ class MockBsqBlockchainService extends BsqBlockchainRpcService {
     }
 
     @Override
-    protected RawTransaction getRawTransaction(String txId) throws BitcoindException, CommunicationException {
+    RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException {
         return txByIdMap.get(txId);
     }
 }

@@ -18,31 +18,18 @@
 package io.bisq.core.dao.blockchain;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Inject;
 import com.neemre.btcdcli4j.core.BitcoindException;
 import com.neemre.btcdcli4j.core.CommunicationException;
-import com.neemre.btcdcli4j.core.domain.Block;
-import io.bisq.common.app.DevEnv;
+import com.neemre.btcdcli4j.core.domain.RawTransaction;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 abstract public class BsqBlockchainService {
-    private int snapshotHeight;
-    // todo just temp
-    // Map<Integer, String> recursionMap = new HashMap<>();
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -54,295 +41,44 @@ abstract public class BsqBlockchainService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected methods
+    // Non blocking methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     abstract void setup(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
 
-    abstract ListenableFuture<Integer> executeParseBlockchain(BsqUTXOMap bsqUTXOMap,
-                                                              BsqTXOMap bsqTXOMap,
-                                                              int startBlockHeight,
-                                                              int genesisBlockHeight,
-                                                              String genesisTxId);
+    abstract void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler);
 
-    abstract void parseBlockchainCompete(Consumer<Block> onNewBlockHandler);
+    abstract void parseBlocks(int startBlockHeight,
+                              int chainHeadHeight,
+                              int genesisBlockHeight,
+                              String genesisTxId,
+                              TxOutputMap txOutputMap,
+                              ResultHandler resultHandler,
+                              Consumer<Throwable> errorHandler);
 
+    abstract void addBlockHandler(Consumer<BsqBlock> onNewBlockHandler);
+
+    abstract void parseBlock(BsqBlock block,
+                             int genesisBlockHeight,
+                             String genesisTxId,
+                             TxOutputMap txOutputMap,
+                             ResultHandler resultHandler,
+                             Consumer<Throwable> errorHandler);
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Blocking methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @VisibleForTesting
     abstract int requestChainHeadHeight() throws BitcoindException, CommunicationException;
 
-    abstract Block requestBlock(int i) throws BitcoindException, CommunicationException;
+    @VisibleForTesting
+    abstract com.neemre.btcdcli4j.core.domain.Block requestBlock(int i) throws BitcoindException, CommunicationException;
 
+    @VisibleForTesting
     abstract Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException;
 
     @VisibleForTesting
-    void parseBlockchain(BsqUTXOMap bsqUTXOMap,
-                         BsqTXOMap bsqTXOMap,
-                         int chainHeadHeight,
-                         int startBlockHeight,
-                         int genesisBlockHeight,
-                         String genesisTxId) throws BsqBlockchainException {
-        try {
-            log.info("chainHeadHeight=" + chainHeadHeight);
-            long startTotalTs = System.currentTimeMillis();
-            for (int height = startBlockHeight; height <= chainHeadHeight; height++) {
-                long startBlockTs = System.currentTimeMillis();
-                Block btcdBlock = requestBlock(height);
-                log.debug("Current block height=" + height);
-
-                // 1 block has about 3 MB
-                final BsqBlock bsqBlock = new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight());
-
-                // String oldBsqUTXOMap = bsqUTXOMap.toString();
-                parseBlock(bsqBlock,
-                        genesisBlockHeight,
-                        genesisTxId,
-                        bsqUTXOMap,
-                        bsqTXOMap);
-                // String newBsqUTXOMap = bsqUTXOMap.toString();
-
-              /*  StringBuilder sb = new StringBuilder("recursionMap:\n");
-                List<String> list = new ArrayList<>();
-                //recursionMap.entrySet().stream().forEach(e -> sb.append(e.getKey()).append(": ").append(e.getValue()).append("\n"));
-                recursionMap.entrySet().stream().forEach(e -> list.add("\nBlock height / Tx graph depth / Nr. of Txs: " + e.getKey()
-                        + " / " + e.getValue()));
-                Collections.sort(list);
-                list.stream().forEach(e -> sb.append(e).append("\n"));
-                log.warn(list.toString().replace(",", "").replace("[", "").replace("]", ""));*/
-
-               /* log.info("Parsing for block {} took {} ms. Total: {} ms for {} blocks",
-                        height,
-                        (System.currentTimeMillis() - startBlockTs),
-                        (System.currentTimeMillis() - startTotalTs),
-                        (height - startBlockHeight + 1));
-                Profiler.printSystemLoad(log);*/
-            }
-            log.info("Parsing for all blocks since genesis took {} ms", System.currentTimeMillis() - startTotalTs);
-        } catch (Throwable t) {
-            log.error(t.toString());
-            t.printStackTrace();
-            throw new BsqBlockchainException(t);
-        }
-    }
-
-    void parseBlock(BsqBlock block,
-                    int genesisBlockHeight,
-                    String genesisTxId,
-                    BsqUTXOMap bsqUTXOMap,
-                    BsqTXOMap bsqTXOMap)
-            throws BsqBlockchainException {
-        int blockHeight = block.getHeight();
-        log.debug("Parse block at height={} ", blockHeight);
-        // We add all transactions to the block
-
-        // TODO here we hve the performance bottleneck. takes about 4 sec.
-        // check if there is more efficient rpc calls for tx ranges or all txs in a block with btcd 14
-        List<String> txIds = block.getTxIds();
-        Tx genesisTx = null;
-        for (String txId : txIds) {
-            final Tx tx = requestTransaction(txId, blockHeight);
-            block.addTx(tx);
-            if (txId.equals(genesisTxId))
-                genesisTx = tx;
-        }
-
-        // First we check for the genesis tx
-        // All outputs of genesis are valid BSQ UTXOs
-        if (genesisTx != null) {
-            checkArgument(blockHeight == genesisBlockHeight,
-                    "If we have a matching genesis tx the block height must mathc as well");
-            parseGenesisTx(genesisTx, blockHeight, bsqUTXOMap, bsqTXOMap);
-        }
-        //txSize = block.getTxList().size();
-
-        // Worst case is that all txs in a block are depending on another, so only once get resolved at each iteration.
-        // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
-        // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
-        // Realistically we don't expect more then a few recursive calls.
-        // There are some blocks with testing such dependency chains like block 130768 where at each iteration only 
-        // one get resolved.
-        updateBsqUtxoMapFromBlock(block.getTxList(), bsqUTXOMap, bsqTXOMap, blockHeight, 0, 5300);
-
-        int trigger = BsqBlockchainManager.getSnapshotTrigger();
-        if (blockHeight % trigger == 0 && blockHeight > snapshotHeight - trigger) {
-            snapshotHeight = blockHeight - trigger;
-            log.info("We reached a new snapshot trigger at height {}. New snapshotHeight is {}",
-                    blockHeight, snapshotHeight);
-            bsqUTXOMap.setSnapshotHeight(snapshotHeight);
-            bsqUTXOMap.persist();
-            bsqTXOMap.setSnapshotHeight(snapshotHeight);
-            bsqTXOMap.persist();
-        }
-    }
-
-    //private int txSize;
-
-    // Recursive method
-    // Performance-wise the recursion does not hurt (e.g. 5-20 ms).  
-    void updateBsqUtxoMapFromBlock(List<Tx> transactions,
-                                   BsqUTXOMap bsqUTXOMap,
-                                   BsqTXOMap bsqTXOMap,
-                                   int blockHeight,
-                                   int recursionCounter,
-                                   int maxRecursions) {
-        //recursionMap.put(blockHeight, recursionCounter + " / " + txSize);
-
-        // The set of txIds of txs which are used for inputs of another tx in same block
-        Set<String> intraBlockSpendingTxIdSet = getIntraBlockSpendingTxIdSet(transactions);
-
-        List<Tx> txsWithoutInputsFromSameBlock = new ArrayList<>();
-        List<Tx> txsWithInputsFromSameBlock = new ArrayList<>();
-
-        // First we find the txs which have no intra-block inputs
-        outerLoop:
-        for (Tx tx : transactions) {
-            for (TxInput input : tx.getInputs()) {
-                if (intraBlockSpendingTxIdSet.contains(input.getSpendingTxId())) {
-                    // We have an input from one of the intra-block-transactions, so we cannot process that tx now.
-                    // We add the tx for later parsing to the txsWithInputsFromSameBlock and move to the next 
-                    // outerLoop iteration .
-                    txsWithInputsFromSameBlock.add(tx);
-
-                    continue outerLoop;
-                }
-            }
-            // If we have not found any tx input pointing to anther tx in the same block we add it to our
-            // txsWithoutInputsFromSameBlock for first pass of BSQ validation
-            txsWithoutInputsFromSameBlock.add(tx);
-        }
-
-        // Usual values is up to 25
-        // There are some blocks where it seems devs have tested graphs of many depending txs, but even 
-        // those dont exceed 200 recursions and are mostly old blocks from 2012 when fees have been low ;-).
-        // TODO check strategy btc core uses (sorting the dependency graph would be an optimisation)
-        // Seems btc core delivers tx list sorted by dependency graph. -> TODO verify and test
-        if (recursionCounter > 100) {
-            log.warn("Unusual high recursive calls at resolveConnectedTxs. recursionCounter=" + recursionCounter);
-            log.warn("blockHeight=" + blockHeight);
-            log.warn("txsWithoutInputsFromSameBlock.size " + txsWithoutInputsFromSameBlock.size());
-            log.warn("txsWithInputsFromSameBlock.size " + txsWithInputsFromSameBlock.size());
-            //  if (txsWithoutInputsFromSameBlock.size() == 1)
-            //  log.warn("txsWithInputsFromSameBlock " + txsWithInputsFromSameBlock.stream().map(e->e.getId()).collect(Collectors.toList()));
-        }
-
-        // we check if we have any valid BSQ utxo from that tx set
-        if (!txsWithoutInputsFromSameBlock.isEmpty()) {
-            for (Tx tx : txsWithoutInputsFromSameBlock) {
-                updateBsqUtxoMapFromTx(tx, blockHeight, bsqUTXOMap, bsqTXOMap);
-            }
-        }
-
-        // we check if we have any valid BSQ utxo from that tx set
-        // We might have InputsFromSameBlock whcih are BTC only but not BSQ, so we cannot 
-        // optimize here and need to iterate further.
-        // TODO recursion risk?
-        if (!txsWithInputsFromSameBlock.isEmpty()) {
-            if (recursionCounter < maxRecursions) {
-                updateBsqUtxoMapFromBlock(txsWithInputsFromSameBlock, bsqUTXOMap, bsqTXOMap, blockHeight,
-                        ++recursionCounter, maxRecursions);
-            } else {
-                final String msg = "We exceeded our max. recursions for resolveConnectedTxs.\n" +
-                        "txsWithInputsFromSameBlock=" + txsWithInputsFromSameBlock.toString() + "\n" +
-                        "txsWithoutInputsFromSameBlock=" + txsWithoutInputsFromSameBlock;
-                log.warn(msg);
-                if (DevEnv.DEV_MODE)
-                    throw new RuntimeException(msg);
-            }
-        } else {
-            log.debug("We have no more txsWithInputsFromSameBlock.");
-        }
-    }
-
-    private Set<String> getIntraBlockSpendingTxIdSet(List<Tx> transactions) {
-        Set<String> txIdSet = transactions.stream().map(Tx::getId).collect(Collectors.toSet());
-        Set<String> intraBlockSpendingTxIdSet = new HashSet<>();
-        transactions.stream()
-                .forEach(tx -> tx.getInputs().stream()
-                        .filter(input -> txIdSet.contains(input.getSpendingTxId()))
-                        .forEach(input -> intraBlockSpendingTxIdSet.add(input.getSpendingTxId())));
-        return intraBlockSpendingTxIdSet;
-    }
-
-    private boolean updateBsqUtxoMapFromTx(Tx tx,
-                                           int blockHeight,
-                                           BsqUTXOMap bsqUTXOMap,
-                                           BsqTXOMap bsqTXOMap) {
-        List<TxOutput> outputs = tx.getOutputs();
-        boolean utxoChanged = false;
-        long availableValue = 0;
-        long totalAvailableBSQInputs = 0;
-        long totalSpendBSQOutputs = 0;
-        final String txId = tx.getId();
-        for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
-            TxInput input = tx.getInputs().get(inputIndex);
-            String spendingTxId = input.getSpendingTxId();
-            final int spendingTxOutputIndex = input.getSpendingTxOutputIndex();
-
-            if (bsqTXOMap.containsTuple(spendingTxId, spendingTxOutputIndex)) {
-                TxOutput txOutputFromSpendingTx = bsqTXOMap.getByTuple(spendingTxId, spendingTxOutputIndex);
-                txOutputFromSpendingTx.setSpendInfo(new SpendInfo(blockHeight, txId, inputIndex));
-            }
-
-            if (bsqUTXOMap.containsTuple(spendingTxId, spendingTxOutputIndex)) {
-                BsqUTXO bsqUTXO = bsqUTXOMap.getByTuple(spendingTxId, spendingTxOutputIndex);
-                availableValue = availableValue + bsqUTXO.getValue();
-                totalAvailableBSQInputs += bsqUTXO.getValue();
-                bsqUTXOMap.removeByTuple(spendingTxId, spendingTxOutputIndex);
-                utxoChanged = true;
-
-                if (bsqUTXOMap.isEmpty())
-                    break;
-            }
-        }
-
-        // If we have an input spending tokens we iterate the outputs
-        if (availableValue > 0) {
-            // We use order of output index. An output is a BSQ utxo as long there is enough input value
-            for (TxOutput txOutput : outputs) {
-                availableValue = availableValue - txOutput.getValue();
-                if (availableValue >= 0) {
-                    // We are spending available tokens
-                    txOutput.setVerified(true);
-                    bsqUTXOMap.add(new BsqUTXO(blockHeight, txOutput, false));
-                    bsqTXOMap.add(txOutput);
-                    totalSpendBSQOutputs += txOutput.getValue();
-
-                    if (availableValue == 0) {
-                        log.debug("We don't have anymore BSQ to spend");
-                        break;
-                    }
-                } else {
-                    log.debug("We tried to spend more BSQ as we have in our inputs");
-                    break;
-                }
-            }
-        }
-
-        final long burnedAmount = totalAvailableBSQInputs - totalSpendBSQOutputs;
-        if (burnedAmount > 0) {
-            log.debug("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
-                    availableValue,
-                    tx.toString());
-            tx.getOutputs().stream().forEach(e -> e.setBurnedFee(burnedAmount));
-            bsqTXOMap.addBurnedBSQTx(tx);
-        }
-
-        return utxoChanged;
-    }
-
-    @VisibleForTesting
-    void parseGenesisTx(Tx tx,
-                        int blockHeight,
-                        BsqUTXOMap bsqUTXOMap,
-                        BsqTXOMap bsqTXOMap) {
-        List<TxOutput> outputs = tx.getOutputs();
-
-        //TODO use BsqTXO not BsqUTXO as we dont know if they are unspent
-        // Genesis tx uses all outputs as BSQ outputs
-        for (TxOutput txOutput : outputs) {
-            txOutput.setVerified(true);
-            txOutput.setBsqCoinBase(true);
-            bsqUTXOMap.add(new BsqUTXO(blockHeight, txOutput, true));
-            bsqTXOMap.add(txOutput);
-        }
-        checkArgument(!bsqUTXOMap.isEmpty(), "Genesis tx need to have BSQ utxo when parsing genesis block");
-    }
+    abstract RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException;
 }

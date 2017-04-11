@@ -707,7 +707,8 @@ public abstract class Overlay<T extends Overlay> {
         gridPane.getChildren().add(gitHubButton);
 
         gitHubButton.setOnAction(event -> {
-            Utilities.copyToClipboard(message);
+            if (message != null)
+                Utilities.copyToClipboard(message);
             GUIUtil.openWebPage("https://github.com/bisq/bisq/issues", preferences);
         });
 
@@ -718,7 +719,8 @@ public abstract class Overlay<T extends Overlay> {
         gridPane.getChildren().add(forumButton);
 
         forumButton.setOnAction(event -> {
-            Utilities.copyToClipboard(message);
+            if (message != null)
+                Utilities.copyToClipboard(message);
             GUIUtil.openWebPage("http://forum.bisq.io", preferences);
         });
     }
@@ -792,8 +794,10 @@ public abstract class Overlay<T extends Overlay> {
     protected void setTruncatedMessage() {
         if (message != null && message.length() > 1800)
             truncatedMessage = StringUtils.abbreviate(message, 1800);
-        else
+        else if (message != null)
             truncatedMessage = message;
+        else
+            truncatedMessage = "";
     }
 
     protected double getDuration(double duration) {

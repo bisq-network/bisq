@@ -110,7 +110,9 @@ public class LanguageUtil {
     public static String getDisplayName(String code) {
         Locale locale = new Locale(code.toUpperCase());
         if (locale.getLanguage().equals("sr")) {
-            return locale.getDisplayName();
+            // Serbia
+            // shows it in russian by default
+            return "Srpski";
         } else {
             return locale.getDisplayName(locale);
         }
