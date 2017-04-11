@@ -19,6 +19,7 @@ package io.bisq.core.dao.blockchain;
 
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BitcoinNetwork;
@@ -88,13 +89,14 @@ public class BsqBlockchainManager {
     public BsqBlockchainManager(BsqBlockchainService blockchainService,
                                 BisqEnvironment bisqEnvironment,
                                 JsonExporter jsonExporter,
+                                ProtobufferResolver protobufferResolver,
                                 @Named(Storage.DIR_KEY) File storageDir,
                                 @Named(RpcOptionKeys.RPC_USER) String rpcUser) {
         this.blockchainService = blockchainService;
         this.jsonExporter = jsonExporter;
         this.bitcoinNetwork = bisqEnvironment.getBitcoinNetwork();
         connectToBtcCore = rpcUser != null && !rpcUser.isEmpty();
-        txOutputMap = new TxOutputMap(storageDir);
+        txOutputMap = new TxOutputMap(storageDir, protobufferResolver);
         txOutputMap.addListener(bsqTxOutputMap -> onBsqTxoChanged());
     }
 

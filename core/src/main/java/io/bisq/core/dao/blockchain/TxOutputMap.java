@@ -17,6 +17,8 @@
 
 package io.bisq.core.dao.blockchain;
 
+import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,7 +34,7 @@ import java.util.List;
 
 // Map of any ever existing TxOutput which was a valid BSQ
 @Slf4j
-public class TxOutputMap implements Serializable {
+public class TxOutputMap implements Persistable {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Interface
@@ -62,8 +64,8 @@ public class TxOutputMap implements Serializable {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TxOutputMap(File storageDir) {
-        storage = new Storage<>(storageDir);
+    public TxOutputMap(File storageDir, ProtobufferResolver protobufferResolver) {
+        storage = new Storage<>(storageDir, protobufferResolver);
         TxOutputMap persisted = storage.initAndGetPersisted(this, "BsqTxOutputMap");
         if (persisted != null) {
             map.putAll(persisted.getMap());

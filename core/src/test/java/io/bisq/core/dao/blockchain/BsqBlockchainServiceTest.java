@@ -66,7 +66,7 @@ public class BsqBlockchainServiceTest {
         final URL resource = this.getClass().getClassLoader().getResource("");
         final String path = resource != null ? resource.getFile() : "";
         log.info("path for BsqUTXOMap=" + path);
-        txOutputMap = new TxOutputMap(new File(path));
+        txOutputMap = new TxOutputMap(new File(path), null);
         service = new MockBsqBlockchainService();
     }
 
