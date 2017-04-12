@@ -1,6 +1,5 @@
 package io.bisq.core.trade.statistics;
 
-import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.CurrencyUtil;
@@ -11,7 +10,6 @@ import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
 import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
 import lombok.Getter;
@@ -24,13 +22,15 @@ import org.bitcoinj.utils.Fiat;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @ToString
 @Slf4j
 @Immutable
-public final class TradeStatistics implements LazyProcessedStoragePayload, CapabilityRequiringPayload, PersistedStoragePayload {
+public final class TradeStatistics implements LazyProcessedStoragePayload, /*CapabilityRequiringPayload,*/ PersistedStoragePayload {
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     @JsonExclude
@@ -131,12 +131,13 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Capab
         return pubKeyRing.getSignaturePubKey();
     }
 
-    @Override
+    // Not needed anymore
+   /* @Override
     public List<Integer> getRequiredCapabilities() {
         return Collections.singletonList(
                 Capabilities.Capability.TRADE_STATISTICS.ordinal()
         );
-    }
+    }*/
 
     public Date getTradeDate() {
         return new Date(tradeDate);

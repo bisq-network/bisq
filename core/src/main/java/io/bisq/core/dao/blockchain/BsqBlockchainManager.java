@@ -29,7 +29,6 @@ import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Named;
@@ -111,9 +110,6 @@ public class BsqBlockchainManager {
     private final TxOutputMap snapshotTxOutputMap = new TxOutputMap();
     @Getter
     private int chainHeadHeight;
-    @Getter
-    @Setter
-    private int snapshotHeight = 0;
     @Getter
     private boolean parseBlockchainComplete;
     private final boolean connectToBtcCore;
