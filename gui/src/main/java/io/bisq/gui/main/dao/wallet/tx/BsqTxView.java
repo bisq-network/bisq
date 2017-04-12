@@ -22,13 +22,14 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
+import io.bisq.core.dao.blockchain.TxOutputMap;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressWithIconAndDirection;
 import io.bisq.gui.components.HyperlinkWithIcon;
-import io.bisq.gui.main.dao.wallet.BalanceUtil;
+import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
@@ -60,9 +61,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private int gridRow = 0;
     private BsqFormatter bsqFormatter;
     private BsqWalletService bsqWalletService;
+    private TxOutputMap txOutputMap;
     private BsqBlockchainManager bsqBlockchainManager;
     private BtcWalletService btcWalletService;
-    private BalanceUtil balanceUtil;
+    private BsqBalanceUtil bsqBalanceUtil;
     private Preferences preferences;
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private final ObservableList<BsqTxListItem> observableList = FXCollections.observableArrayList();
@@ -75,13 +77,16 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     @Inject
     private BsqTxView(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
+                      TxOutputMap txOutputMap,
                       BsqBlockchainManager bsqBlockchainManager,
-                      BtcWalletService btcWalletService, BalanceUtil balanceUtil, Preferences preferences) {
+
+                      BtcWalletService btcWalletService, BsqBalanceUtil bsqBalanceUtil, Preferences preferences) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
+        this.txOutputMap = txOutputMap;
         this.bsqBlockchainManager = bsqBlockchainManager;
         this.btcWalletService = btcWalletService;
-        this.balanceUtil = balanceUtil;
+        this.bsqBalanceUtil = bsqBalanceUtil;
         this.preferences = preferences;
     }
 
@@ -90,8 +95,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         addTitledGroupBg(root, gridRow, 1, Res.get("shared.balance"));
         TextField balanceTextField = addLabelTextField(root, gridRow, Res.get("shared.bsqBalance"),
                 Layout.FIRST_ROW_DISTANCE).second;
-        balanceUtil.setBalanceTextField(balanceTextField);
-        balanceUtil.initialize();
+        bsqBalanceUtil.setBalanceTextField(balanceTextField);
+        bsqBalanceUtil.initialize();
 
         tableView = new TableView<>();
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -111,7 +116,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
-        balanceUtil.activate();
+        bsqBalanceUtil.activate();
         bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
@@ -122,7 +127,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void deactivate() {
-        balanceUtil.deactivate();
+        bsqBalanceUtil.deactivate();
         sortedList.comparatorProperty().unbind();
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         observableList.forEach(BsqTxListItem::cleanup);
@@ -139,7 +144,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                             return new BsqTxListItem(transaction,
                                     bsqWalletService,
                                     btcWalletService,
-                                    bsqBlockchainManager.getTxOutputMap().hasTxBurnedFee(transaction.getHashAsString()),
+                                    txOutputMap.hasTxBurnedFee(transaction.getHashAsString()),
                                     bsqFormatter);
                         }
                 )

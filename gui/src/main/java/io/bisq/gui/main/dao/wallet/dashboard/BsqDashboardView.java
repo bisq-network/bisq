@@ -21,7 +21,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
-import io.bisq.gui.main.dao.wallet.BalanceUtil;
+import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.FormBuilder;
 import io.bisq.gui.util.Layout;
@@ -37,7 +37,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> {
 
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter formatter;
-    private final BalanceUtil balanceUtil;
+    private final BsqBalanceUtil bsqBalanceUtil;
 
     private final int gridRow = 0;
 
@@ -46,29 +46,29 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqDashboardView(BsqWalletService bsqWalletService, BsqFormatter formatter, BalanceUtil balanceUtil) {
+    private BsqDashboardView(BsqWalletService bsqWalletService, BsqFormatter formatter, BsqBalanceUtil bsqBalanceUtil) {
         this.bsqWalletService = bsqWalletService;
         this.formatter = formatter;
 
-        this.balanceUtil = balanceUtil;
+        this.bsqBalanceUtil = bsqBalanceUtil;
     }
 
     @Override
     public void initialize() {
         FormBuilder.addTitledGroupBg(root, gridRow, 1, Res.get("shared.balance"));
         balanceTextField = FormBuilder.addLabelTextField(root, gridRow, Res.get("shared.bsqBalance"), Layout.FIRST_ROW_DISTANCE).second;
-        balanceUtil.setBalanceTextField(balanceTextField);
-        balanceUtil.initialize();
+        bsqBalanceUtil.setBalanceTextField(balanceTextField);
+        bsqBalanceUtil.initialize();
     }
 
     @Override
     protected void activate() {
-        balanceUtil.activate();
+        bsqBalanceUtil.activate();
     }
 
     @Override
     protected void deactivate() {
-        balanceUtil.deactivate();
+        bsqBalanceUtil.deactivate();
     }
 }
 

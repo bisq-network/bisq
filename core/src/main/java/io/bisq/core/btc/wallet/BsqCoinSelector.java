@@ -39,7 +39,8 @@ class BsqCoinSelector extends BisqDefaultCoinSelector {
 
     @Override
     protected boolean isTxOutputSpendable(TransactionOutput output) {
-        return output.getParentTransaction() != null &&
+        return txOutputMap != null &&
+                output.getParentTransaction() != null &&
                 txOutputMap.isTxOutputUnSpent(output.getParentTransaction().getHashAsString(), output.getIndex());
     }
 }

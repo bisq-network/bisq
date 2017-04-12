@@ -17,58 +17,73 @@
 
 package io.bisq.core.dao.blockchain;
 
-import io.bisq.common.storage.Storage;
+import io.bisq.common.util.Utilities;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.io.File;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-// Map of any ever existing TxOutput which was a valid BSQ
+// Map of any TxOutput which was ever used in context of a BSQ TX.
+// Outputs can come from various txs : 
+// - genesis tx 
+// - spend BSQ tx
+// - burn fee
+// - voting
+// - comp. request
+// - sponsoring tx (new genesis)
 @Slf4j
 public class TxOutputMap implements Serializable {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface
+    // Statics
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public interface Listener {
-        void onMapChanged(TxOutputMap txOutputMap);
+    public static TxOutputMap getClonedMap(TxOutputMap txOutputMap) {
+        return new TxOutputMap(txOutputMap);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Instance fields
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public static TxOutputMap getClonedMapUpToHeight(TxOutputMap txOutputMap, int snapshotHeight) {
+        final TxOutputMap txOutputMapClone = new TxOutputMap();
+        txOutputMapClone.setBlockHeight(txOutputMap.getBlockHeight());
+        txOutputMapClone.setSnapshotHeight(txOutputMap.getSnapshotHeight());
 
+        Map<TxIdIndexTuple, TxOutput> map = txOutputMap.entrySet().stream()
+                .filter(entry -> entry.getValue().getBlockHeight() <= snapshotHeight)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        txOutputMapClone.putAll(map);
 
-    // We don't use a Lombok delegate here as we want control the access to our map
+        return txOutputMapClone;
+    }
+    
+    
     @Getter
     private HashMap<TxIdIndexTuple, TxOutput> map = new HashMap<>();
     @Getter
     @Setter
     private int snapshotHeight = 0;
-
-    private transient final Storage<TxOutputMap> storage;
-    private final List<Listener> listeners = new ArrayList<>();
+    @Getter
+    @Setter
+    private int blockHeight;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TxOutputMap(File storageDir) {
-        storage = new Storage<>(storageDir);
-        TxOutputMap persisted = storage.initAndGetPersisted(this, "BsqTxOutputMap");
-        if (persisted != null) {
-            map.putAll(persisted.getMap());
-            snapshotHeight = persisted.getSnapshotHeight();
-        }
+    public TxOutputMap() {
+    }
+
+    private TxOutputMap(TxOutputMap txOutputMap) {
+        map = txOutputMap.getMap();
+        snapshotHeight = txOutputMap.getSnapshotHeight();
+        blockHeight = txOutputMap.getBlockHeight();
     }
 
 
@@ -86,36 +101,47 @@ public class TxOutputMap implements Serializable {
         return txOutput != null && txOutput.hasBurnedFee();
     }
 
-    public void persist() {
-        storage.queueUpForSave();
-    }
-
-    public void addListener(Listener listener) {
-        listeners.add(listener);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegated map methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Object put(TxOutput txOutput) {
-        final TxOutput result = map.put(new TxIdIndexTuple(txOutput.getTxId(), txOutput.getIndex()), txOutput);
-        listeners.stream().forEach(l -> l.onMapChanged(this));
-        return result;
+        return map.put(txOutput.getTxIdIndexTuple(), txOutput);
+    }
+
+    public void putAll(Map<TxIdIndexTuple, TxOutput> txOutputs) {
+        map.putAll(txOutputs);
+    }
+
+    public void putAll(TxOutputMap txOutputMap) {
+        map.putAll(txOutputMap.getMap());
     }
 
     @Nullable
     public TxOutput get(String txId, int index) {
-        return map.get(new TxIdIndexTuple(txId, index));
+        return get(new TxIdIndexTuple(txId, index));
+    }
+
+    @Nullable
+    public TxOutput get(TxIdIndexTuple txIdIndexTuple) {
+        return map.get(txIdIndexTuple);
     }
 
     public boolean contains(String txId, int index) {
-        return map.containsKey(new TxIdIndexTuple(txId, index));
+        return contains(new TxIdIndexTuple(txId, index));
+    }
+
+    public boolean contains(TxIdIndexTuple txIdIndexTuple) {
+        return map.containsKey(txIdIndexTuple);
     }
 
     public Collection<TxOutput> values() {
         return map.values();
+    }
+
+    public Set<Map.Entry<TxIdIndexTuple, TxOutput>> entrySet() {
+        return map.entrySet();
     }
 
     public boolean isEmpty() {
@@ -128,7 +154,11 @@ public class TxOutputMap implements Serializable {
 
     @Override
     public String toString() {
-        return "BsqTxOutputMap " + map.toString();
+        return "TxOutputMap " + map.toString();
+    }
+
+    public void printSize() {
+        log.info("Nr of entries={}; Size in kb={}", size(), Utilities.serialize(this).length / 1000);
     }
 }
 

@@ -25,7 +25,7 @@ import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressTextField;
 import io.bisq.gui.components.InputTextField;
-import io.bisq.gui.main.dao.wallet.BalanceUtil;
+import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
 import io.bisq.gui.main.overlays.windows.QRCodeWindow;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
@@ -60,7 +60,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
-    private final BalanceUtil balanceUtil;
+    private final BsqBalanceUtil bsqBalanceUtil;
 
     private int gridRow = 0;
     private final String paymentLabelString;
@@ -72,10 +72,10 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter bsqFormatter, BalanceUtil balanceUtil) {
+    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter bsqFormatter, BsqBalanceUtil bsqBalanceUtil) {
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
-        this.balanceUtil = balanceUtil;
+        this.bsqBalanceUtil = bsqBalanceUtil;
         paymentLabelString = Res.get("dao.wallet.receive.fundBSQWallet");
     }
 
@@ -83,8 +83,8 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     public void initialize() {
         addTitledGroupBg(root, gridRow, 1, Res.get("shared.balance"));
         balanceTextField = addLabelTextField(root, gridRow, Res.get("shared.bsqBalance"), Layout.FIRST_ROW_DISTANCE).second;
-        balanceUtil.setBalanceTextField(balanceTextField);
-        balanceUtil.initialize();
+        bsqBalanceUtil.setBalanceTextField(balanceTextField);
+        bsqBalanceUtil.initialize();
 
         addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.wallet.receive.fundYourWallet"), Layout.GROUP_DISTANCE);
 
@@ -106,7 +106,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
-        balanceUtil.activate();
+        bsqBalanceUtil.activate();
 
         amountTextFieldSubscription = EasyBind.subscribe(amountTextField.textProperty(), t -> {
             addressTextField.setAmountAsCoin(bsqFormatter.parseToCoin(t));
@@ -123,7 +123,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void deactivate() {
-        balanceUtil.deactivate();
+        bsqBalanceUtil.deactivate();
 
         qrCodeImageView.setOnMouseClicked(null);
         amountTextFieldSubscription.unsubscribe();

@@ -17,22 +17,34 @@
 
 package io.bisq.core.dao.blockchain;
 
-import com.neemre.btcdcli4j.core.domain.PubKeyScript;
+import com.google.protobuf.Message;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
+import io.bisq.common.util.JsonExclude;
+import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
+import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
+import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
+import java.security.PublicKey;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public class TxOutput implements Serializable {
+public class TxOutput implements LazyProcessedStoragePayload, PersistedStoragePayload {
+    @JsonExclude
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
+    @JsonExclude
+    public static final long TTL = TimeUnit.DAYS.toMillis(30);
+
     // Immutable
     private final int index;
     private final long value;
@@ -41,6 +53,8 @@ public class TxOutput implements Serializable {
     private final int blockHeight;
     private final long time;
     private final String txVersion = Version.BSQ_TX_VERSION;
+    @JsonExclude
+    private PublicKey signaturePubKey;
 
     // Mutable
     @Setter
@@ -62,18 +76,43 @@ public class TxOutput implements Serializable {
     @Nullable
     private String address;
 
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // field in a class would break that hash and therefore break the storage mechanism.
+    @Getter
+    @Nullable
+    private HashMap<String, String> extraDataMap;
+
     public TxOutput(int index,
                     long value,
                     String txId,
                     PubKeyScript pubKeyScript,
                     int blockHeight,
-                    long time) {
+                    long time,
+                    PublicKey signaturePubKey) {
         this.index = index;
         this.value = value;
         this.txId = txId;
         this.pubKeyScript = pubKeyScript;
         this.blockHeight = blockHeight;
         this.time = time;
+        this.signaturePubKey = signaturePubKey;
+    }
+
+    @Override
+    public long getTTL() {
+        return TTL;
+    }
+
+    @Override
+    public PublicKey getOwnerPubKey() {
+        return signaturePubKey;
+    }
+
+    @Nullable
+    @Override
+    public Map<String, String> getExtraDataMap() {
+        return extraDataMap;
     }
 
     public List<String> getAddresses() {
@@ -116,6 +155,14 @@ public class TxOutput implements Serializable {
         return txId + ":" + index;
     }
 
+    public TxIdIndexTuple getTxIdIndexTuple() {
+        return new TxIdIndexTuple(txId, index);
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
+    }
 
     @Override
     public String toString() {

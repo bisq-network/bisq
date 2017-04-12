@@ -24,6 +24,7 @@ import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.blockchain.TxOutput;
+import io.bisq.core.dao.blockchain.TxOutputMap;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import javafx.collections.FXCollections;
@@ -37,12 +38,9 @@ import org.bitcoinj.wallet.CoinSelection;
 import javax.inject.Inject;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -50,6 +48,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class BsqWalletService extends WalletService {
 
     private final BsqBlockchainManager bsqBlockchainManager;
+    private TxOutputMap txOutputMap;
     private final BsqCoinSelector bsqCoinSelector;
     @Getter
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
@@ -64,6 +63,7 @@ public class BsqWalletService extends WalletService {
     @Inject
     public BsqWalletService(WalletsSetup walletsSetup,
                             BsqBlockchainManager bsqBlockchainManager,
+                            TxOutputMap txOutputMap,
                             Preferences preferences,
                             FeeService feeService) {
         super(walletsSetup,
@@ -71,6 +71,7 @@ public class BsqWalletService extends WalletService {
                 feeService);
 
         this.bsqBlockchainManager = bsqBlockchainManager;
+        this.txOutputMap = txOutputMap;
         this.bsqCoinSelector = new BsqCoinSelector(true);
 
         walletsSetup.addSetupCompletedHandler(() -> {
@@ -166,50 +167,48 @@ public class BsqWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateBsqWalletTransactions() {
-        walletTransactions.setAll(getAllBsqTransactionsFromWallet());
+        walletTransactions.setAll(getUnconfirmedWalletTransactions());
+        walletTransactions.addAll(getConfirmedBsqWalletTransactions());
     }
 
-    private Set<TransactionOutput> getAllBsqTxOutputsFromWallet() {
-        return getWalletTransactionOutputStream()
-                .filter(out -> out.getParentTransaction() != null && bsqBlockchainManager.getTxOutputMap()
-                        .contains(out.getParentTransaction().getHashAsString(), out.getIndex()))
+    private Set<Transaction> getUnconfirmedWalletTransactions() {
+        return getTransactions(false).stream()
+                .filter(tx -> tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING)
                 .collect(Collectors.toSet());
     }
 
-    private Set<TransactionOutput> getAllUnspentBsqTxOutputsFromWallet() {
-        return getAllBsqTxOutputsFromWallet().stream()
+    private Set<Transaction> getConfirmedBsqWalletTransactions() {
+        return getTransactions(false).stream()
+                .filter(tx -> tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING)
+                .flatMap(tx -> tx.getOutputs().stream())
+                .filter(out -> out.getParentTransaction() != null && txOutputMap
+                        .contains(out.getParentTransaction().getHashAsString(), out.getIndex()))
+                .map(TransactionOutput::getParentTransaction)
+                .collect(Collectors.toSet());
+    }
+
+    // for sending funds
+    private Set<TransactionOutput> getMyUnspentBsqTxOutputsFromWallet() {
+        return wallet.calculateAllSpendCandidates().stream()
+                .filter(out -> out.getParentTransaction() != null && txOutputMap
+                        .contains(out.getParentTransaction().getHashAsString(), out.getIndex()))
                 .filter(out -> {
                     final Transaction tx = out.getParentTransaction();
                     if (tx == null) {
                         return false;
                     } else {
-                        final TxOutput txOutput = bsqBlockchainManager.getTxOutputMap()
-                                .get(tx.getHashAsString(), out.getIndex());
+                        final TxOutput txOutput = txOutputMap.get(tx.getHashAsString(), out.getIndex());
                         return txOutput != null && txOutput.isUnSpend();
                     }
                 })
-                .collect(Collectors.toSet());
-    }
-
-    private Set<TransactionOutput> getMyUnspentBsqTxOutputsFromWallet() {
-        return getAllUnspentBsqTxOutputsFromWallet().stream()
                 .filter(out -> out.isMine(wallet))
                 .collect(Collectors.toSet());
     }
 
-    private Stream<TransactionOutput> getWalletTransactionOutputStream() {
-        return getTransactions(true).stream()
-                .flatMap(tx -> tx.getOutputs().stream());
-    }
 
-    private Set<Transaction> getAllBsqTransactionsFromWallet() {
-        return getAllBsqTxOutputsFromWallet().stream()
-                .map(TransactionOutput::getParentTransaction)
-                .collect(Collectors.toSet());
-    }
-
+    // TODO
     public Set<Transaction> getInvalidBsqTransactions() {
-        Set<Transaction> txsWithOutputsFoundInBsqTxo = getAllBsqTransactionsFromWallet();
+      /*  Set<Transaction> txsWithOutputsFoundInBsqTxo = getAllBsqTransactionsFromWallet();
         Set<Transaction> walletTxs = getTransactions(true).stream().collect(Collectors.toSet());
         checkArgument(walletTxs.size() >= txsWithOutputsFoundInBsqTxo.size(),
                 "We cannot have more txsWithOutputsFoundInBsqTxo than walletTxs");
@@ -227,9 +226,9 @@ public class BsqWalletService extends WalletService {
                     .forEach(map::remove);
 
             return new HashSet<>(map.values());
-        } else {
-            return new HashSet<>();
-        }
+        } else {*/
+        return new HashSet<>();
+        // }
     }
 
 

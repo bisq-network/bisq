@@ -17,10 +17,17 @@
 
 package io.bisq.core.dao.blockchain;
 
+import io.bisq.common.app.Version;
+import io.bisq.common.util.JsonExclude;
 import lombok.Value;
 
+import java.io.Serializable;
+
 @Value
-public class SpendInfo {
+public class SpendInfo implements Serializable {
+    @JsonExclude
+    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
+  
     private final long blockHeight;
     private final String txId;
     private final int inputIndex;

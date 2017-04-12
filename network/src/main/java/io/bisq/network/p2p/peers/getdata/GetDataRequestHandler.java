@@ -121,7 +121,8 @@ public class GetDataRequestHandler {
             }
         }
 
-        GetDataResponse getDataResponse = new GetDataResponse(filteredDataSet, getDataRequest.getNonce(), getDataRequest instanceof GetUpdatedDataRequest);
+        GetDataResponse getDataResponse = new GetDataResponse(filteredDataSet, getDataRequest.getNonce(),
+                getDataRequest instanceof GetUpdatedDataRequest);
 
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions

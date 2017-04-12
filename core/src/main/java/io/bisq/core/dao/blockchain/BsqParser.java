@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -53,7 +54,8 @@ public class BsqParser {
                      int chainHeadHeight,
                      int genesisBlockHeight,
                      String genesisTxId,
-                     TxOutputMap txOutputMap) throws BsqBlockchainException {
+                     TxOutputMap txOutputMap,
+                     Consumer<TxOutputMap> snapShotHandler) throws BsqBlockchainException {
         try {
             log.info("chainHeadHeight=" + chainHeadHeight);
             long startTotalTs = System.currentTimeMillis();
@@ -70,6 +72,15 @@ public class BsqParser {
                         genesisTxId,
                         txOutputMap);
 
+                txOutputMap.setBlockHeight(height);
+
+                if (BsqBlockchainManager.triggersSnapshot(height)) {
+                    // We clone the map to isolate thread context. TxOutputMap is used in UserThread.
+                    final TxOutputMap clonedSnapShotMap = TxOutputMap.getClonedMapUpToHeight(txOutputMap,
+                            BsqBlockchainManager.getSnapshotHeight(height));
+                    snapShotHandler.accept(clonedSnapShotMap);
+                }
+                
               /*  StringBuilder sb = new StringBuilder("recursionMap:\n");
                 List<String> list = new ArrayList<>();
                 //recursionMap.entrySet().stream().forEach(e -> sb.append(e.getKey()).append(": ").append(e.getValue()).append("\n"));
@@ -86,7 +97,10 @@ public class BsqParser {
                         (height - startBlockHeight + 1));
                 Profiler.printSystemLoad(log);*/
             }
-            log.info("Parsing for all blocks since genesis took {} ms", System.currentTimeMillis() - startTotalTs);
+            log.info("Parsing for blocks {} to {} took {} ms",
+                    startBlockHeight,
+                    chainHeadHeight,
+                    System.currentTimeMillis() - startTotalTs);
         } catch (Throwable t) {
             log.error(t.toString());
             t.printStackTrace();
@@ -125,18 +139,6 @@ public class BsqParser {
         // one get resolved.
         // Lately there is a patter with 24 iterations observed 
         parseTransactions(block.getTxList(), txOutputMap, blockHeight, 0, 5300);
-
-        // We persist only at certain snapshots. They have a safety distance from head so re-orgs should not cause 
-        // issues in our persisted data.
-        int trigger = BsqBlockchainManager.getSnapshotTrigger();
-        int snapshotHeight = txOutputMap.getSnapshotHeight();
-        if (blockHeight % trigger == 0 && blockHeight > snapshotHeight - trigger) {
-            snapshotHeight = blockHeight - trigger;
-            log.info("We reached a new snapshot trigger at height {}. New snapshotHeight is {}",
-                    blockHeight, snapshotHeight);
-            txOutputMap.setSnapshotHeight(snapshotHeight);
-            txOutputMap.persist();
-        }
     }
 
     @VisibleForTesting

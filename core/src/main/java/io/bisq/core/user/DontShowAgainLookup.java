@@ -26,7 +26,7 @@ public class DontShowAgainLookup {
     }
 
     public static boolean showAgain(String key) {
-        return !preferences.showAgain(key);
+        return preferences.showAgain(key);
     }
 
     public static void dontShowAgain(String key, boolean dontShowAgain) {

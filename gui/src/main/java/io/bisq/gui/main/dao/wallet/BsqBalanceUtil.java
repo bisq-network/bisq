@@ -17,6 +17,7 @@
 
 package io.bisq.gui.main.dao.wallet;
 
+import io.bisq.common.app.DevEnv;
 import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.gui.util.BsqFormatter;
@@ -27,16 +28,16 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 
 @Slf4j
-public class BalanceUtil implements BsqBalanceListener {
+public class BsqBalanceUtil implements BsqBalanceListener {
     private final BsqWalletService bsqWalletService;
-    private final BsqFormatter formatter;
+    private final BsqFormatter bsqFormatter;
     private TextField balanceTextField;
 
     @Inject
-    private BalanceUtil(BsqWalletService bsqWalletService,
-                        BsqFormatter formatter) {
+    private BsqBalanceUtil(BsqWalletService bsqWalletService,
+                           BsqFormatter bsqFormatter) {
         this.bsqWalletService = bsqWalletService;
-        this.formatter = formatter;
+        this.bsqFormatter = bsqFormatter;
     }
 
     public void setBalanceTextField(TextField balanceTextField) {
@@ -58,6 +59,16 @@ public class BalanceUtil implements BsqBalanceListener {
 
     @Override
     public void updateAvailableBalance(Coin availableBalance) {
-        balanceTextField.setText(formatter.formatCoinWithCode(availableBalance));
+        if (balanceTextField != null)
+            balanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance));
+        else {
+            log.error("balanceTextField is null");
+            if (DevEnv.DEV_MODE) {
+                final Throwable throwable = new Throwable("balanceTextField is null");
+                throwable.printStackTrace();
+                throw new RuntimeException(throwable);
+            }
+        }
     }
+
 }

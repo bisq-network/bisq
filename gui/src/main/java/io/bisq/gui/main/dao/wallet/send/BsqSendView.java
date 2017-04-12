@@ -28,7 +28,7 @@ import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.InputTextField;
-import io.bisq.gui.main.dao.wallet.BalanceUtil;
+import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.BsqFormatter;
@@ -55,7 +55,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     private final BtcWalletService btcWalletService;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
-    private final BalanceUtil balanceUtil;
+    private final BsqBalanceUtil bsqBalanceUtil;
     private BsqValidator bsqValidator;
     private BsqAddressValidator bsqAddressValidator;
 
@@ -73,12 +73,12 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     @Inject
     private BsqSendView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService,
                         BsqFormatter bsqFormatter, BSFormatter btcFormatter,
-                        BalanceUtil balanceUtil, BsqValidator bsqValidator, BsqAddressValidator bsqAddressValidator) {
+                        BsqBalanceUtil bsqBalanceUtil, BsqValidator bsqValidator, BsqAddressValidator bsqAddressValidator) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
-        this.balanceUtil = balanceUtil;
+        this.bsqBalanceUtil = bsqBalanceUtil;
         this.bsqValidator = bsqValidator;
         this.bsqAddressValidator = bsqAddressValidator;
     }
@@ -87,8 +87,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     public void initialize() {
         addTitledGroupBg(root, gridRow, 1, Res.get("shared.balance"));
         TextField balanceTextField = addLabelTextField(root, gridRow, Res.get("shared.bsqBalance"), Layout.FIRST_ROW_DISTANCE).second;
-        balanceUtil.setBalanceTextField(balanceTextField);
-        balanceUtil.initialize();
+        bsqBalanceUtil.setBalanceTextField(balanceTextField);
+        bsqBalanceUtil.initialize();
 
         addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.wallet.send.sendFunds"), Layout.GROUP_DISTANCE);
         amountInputTextField = addLabelInputTextField(root, gridRow, Res.get("dao.wallet.send.amount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
@@ -168,7 +168,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void activate() {
-        balanceUtil.activate();
+        bsqBalanceUtil.activate();
         receiversAddressInputTextField.focusedProperty().addListener(focusOutListener);
         amountInputTextField.focusedProperty().addListener(focusOutListener);
         verifyInputs();
@@ -176,7 +176,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void deactivate() {
-        balanceUtil.deactivate();
+        bsqBalanceUtil.deactivate();
         receiversAddressInputTextField.focusedProperty().removeListener(focusOutListener);
         amountInputTextField.focusedProperty().removeListener(focusOutListener);
     }

@@ -18,7 +18,6 @@
 package io.bisq.core.dao.blockchain.json;
 
 import com.google.inject.Inject;
-import com.neemre.btcdcli4j.core.domain.PubKeyScript;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -26,6 +25,7 @@ import io.bisq.core.dao.RpcOptionKeys;
 import io.bisq.core.dao.blockchain.SpendInfo;
 import io.bisq.core.dao.blockchain.TxOutput;
 import io.bisq.core.dao.blockchain.TxOutputMap;
+import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 
 import javax.inject.Named;
 import java.io.File;

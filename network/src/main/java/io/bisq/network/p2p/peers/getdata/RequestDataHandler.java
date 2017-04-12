@@ -176,14 +176,18 @@ public class RequestDataHandler implements MessageListener {
                             log.warn("StoragePayload was null: {}", msg.toString());
                             return;
                         }
+
+                        // For logging different data types
                         String className = storagePayload.getClass().getSimpleName();
                         if (!payloadByClassName.containsKey(className))
                             payloadByClassName.put(className, new HashSet<>());
 
                         payloadByClassName.get(className).add(storagePayload);
                     });
+                    // Log different data types
                     StringBuilder sb = new StringBuilder("Received data size: ").append(dataSet.size()).append(", data items: ");
-                    payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getValue().size()).append(" items of ").append(e.getKey()).append("; "));
+                    payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getValue().size()).append(" items of ")
+                            .append(e.getKey()).append("; "));
                     log.info(sb.toString());
 
                     if (getDataResponse.requestNonce == nonce) {

@@ -22,21 +22,25 @@ import com.google.inject.Inject;
 import com.neemre.btcdcli4j.core.BitcoindException;
 import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
+import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.PublicKey;
 import java.util.function.Consumer;
 
 @Slf4j
 abstract public class BsqBlockchainService {
+    protected final PublicKey signaturePubKey;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BsqBlockchainService() {
+    public BsqBlockchainService(KeyRing keyRing) {
+        signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
     }
 
 
@@ -53,17 +57,18 @@ abstract public class BsqBlockchainService {
                               int genesisBlockHeight,
                               String genesisTxId,
                               TxOutputMap txOutputMap,
-                              ResultHandler resultHandler,
+                              Consumer<TxOutputMap> snapShotHandler,
+                              Consumer<TxOutputMap> resultHandler,
                               Consumer<Throwable> errorHandler);
-
-    abstract void addBlockHandler(Consumer<BsqBlock> onNewBlockHandler);
 
     abstract void parseBlock(BsqBlock block,
                              int genesisBlockHeight,
                              String genesisTxId,
                              TxOutputMap txOutputMap,
-                             ResultHandler resultHandler,
+                             Consumer<TxOutputMap> resultHandler,
                              Consumer<Throwable> errorHandler);
+
+    abstract void addBlockHandler(Consumer<BsqBlock> onNewBlockHandler);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

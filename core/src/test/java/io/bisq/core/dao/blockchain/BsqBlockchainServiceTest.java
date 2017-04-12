@@ -26,9 +26,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 import java.math.BigDecimal;
-import java.net.URL;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -63,10 +61,7 @@ public class BsqBlockchainServiceTest {
 
     @Before
     public void setup() {
-        final URL resource = this.getClass().getClassLoader().getResource("");
-        final String path = resource != null ? resource.getFile() : "";
-        log.info("path for BsqUTXOMap=" + path);
-        txOutputMap = new TxOutputMap(new File(path));
+        txOutputMap = new TxOutputMap();
         service = new MockBsqBlockchainService();
     }
 
@@ -407,7 +402,9 @@ public class BsqBlockchainServiceTest {
                 service.requestChainHeadHeight(),
                 BLOCK_0,
                 GEN_TX_ID,
-                txOutputMap);
+                txOutputMap,
+                txOutputMap -> {
+                });
     }
 
     private String getTxoId(String txId, int index) {
@@ -430,7 +427,7 @@ class MockBsqBlockchainService extends BsqBlockchainRpcService {
     private final Map<Integer, List<String>> txIdsInBlockMap = new HashMap<>();
 
     public MockBsqBlockchainService() {
-        super(null, null, null, null);
+        super(null, null, null, null, null);
     }
 
     public void buildBlocks(int from, int to) {
