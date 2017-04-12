@@ -120,8 +120,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
                 SellerAsTakerSignAndPublishDepositTx.class,
-                TakerSendDepositTxPublishedMessage.class,
-                TakerPublishTradeStatistics.class
+                TakerSendDepositTxPublishedMessage.class
         );
         taskRunner.run();
     }
