@@ -33,7 +33,6 @@ import javax.annotation.Nullable;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Getter
@@ -111,7 +110,7 @@ public class TxOutput implements LazyProcessedStoragePayload, PersistedStoragePa
 
     @Nullable
     @Override
-    public Map<String, String> getExtraDataMap() {
+    public HashMap<String, String> getExtraDataMap() {
         return extraDataMap;
     }
 

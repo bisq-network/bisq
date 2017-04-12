@@ -263,6 +263,7 @@ public class BsqBlockchainManager {
     private void applyNewTxOutputMap(TxOutputMap newTxOutputMap) {
         this.txOutputMap.putAll(newTxOutputMap.getMap());
         txOutputMapListeners.stream().forEach(l -> l.onTxOutputMapChanged(txOutputMap));
+        txOutputMap.printSize();
     }
 
     private void checkForSnapshotUpdate(int blockHeight) {

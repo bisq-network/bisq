@@ -17,21 +17,27 @@
 
 package io.bisq.gui.main.dao.wallet;
 
-import io.bisq.common.app.DevEnv;
+import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.gui.util.BsqFormatter;
+import io.bisq.gui.util.Layout;
+import javafx.geometry.Pos;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
+import static io.bisq.gui.util.FormBuilder.addLabelTextField;
+import static io.bisq.gui.util.FormBuilder.addTitledGroupBg;
+
 @Slf4j
 public class BsqBalanceUtil implements BsqBalanceListener {
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
-    private TextField balanceTextField;
+    private TextField availableBalanceTextField, unverifiedBalanceTextField, totalBalanceTextField;
 
     @Inject
     private BsqBalanceUtil(BsqWalletService bsqWalletService,
@@ -40,12 +46,24 @@ public class BsqBalanceUtil implements BsqBalanceListener {
         this.bsqFormatter = bsqFormatter;
     }
 
-    public void setBalanceTextField(TextField balanceTextField) {
-        this.balanceTextField = balanceTextField;
-        balanceTextField.setMouseTransparent(false);
-    }
+    public int addGroup(GridPane gridPane, int gridRow) {
+        addTitledGroupBg(gridPane, gridRow, 3, Res.get("shared.balance"));
+        availableBalanceTextField = addLabelTextField(gridPane, gridRow, Res.getWithCol("shared.availableBsqBalance"),
+                Layout.FIRST_ROW_DISTANCE).second;
+        availableBalanceTextField.setMouseTransparent(false);
+        availableBalanceTextField.setMaxWidth(150);
+        availableBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
 
-    public void initialize() {
+        unverifiedBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.unverifiedBsqBalance")).second;
+        unverifiedBalanceTextField.setMouseTransparent(false);
+        unverifiedBalanceTextField.setMaxWidth(availableBalanceTextField.getMaxWidth());
+        unverifiedBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
+
+        totalBalanceTextField = addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.totalBsqBalance")).second;
+        totalBalanceTextField.setMouseTransparent(false);
+        totalBalanceTextField.setMaxWidth(availableBalanceTextField.getMaxWidth());
+        totalBalanceTextField.setAlignment(Pos.CENTER_RIGHT);
+        return gridRow;
     }
 
     public void activate() {
@@ -59,16 +77,8 @@ public class BsqBalanceUtil implements BsqBalanceListener {
 
     @Override
     public void updateAvailableBalance(Coin availableBalance) {
-        if (balanceTextField != null)
-            balanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance));
-        else {
-            log.error("balanceTextField is null");
-            if (DevEnv.DEV_MODE) {
-                final Throwable throwable = new Throwable("balanceTextField is null");
-                throwable.printStackTrace();
-                throw new RuntimeException(throwable);
-            }
-        }
+        availableBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance));
+        unverifiedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(bsqWalletService.getUnverifiedBalance()));
+        totalBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance.add(bsqWalletService.getUnverifiedBalance())));
     }
-
 }

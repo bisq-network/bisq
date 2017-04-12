@@ -98,7 +98,7 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
         return Coin.valueOf(change);
     }
 
-    // We allow spending own unconfirmed txs and if permitForeignPendingTx is set as well foreign unconfirmed txs.
+    // We allow spending own pending txs and if permitForeignPendingTx is set as well foreign unconfirmed txs.
     protected boolean isTxSpendable(Transaction tx) {
         if (tx != null) {
             TransactionConfidence confidence = tx.getConfidence();

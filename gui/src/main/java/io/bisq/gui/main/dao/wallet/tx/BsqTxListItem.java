@@ -103,31 +103,32 @@ class BsqTxListItem {
             direction = "";
         }
 
-        String foreignReceiverAddress = null;
+        String sendToAddress = null;
         for (TransactionOutput output : transaction.getOutputs()) {
             if (!bsqWalletService.isTransactionOutputMine(output) &&
                     !btcWalletService.isTransactionOutputMine(output) &&
                     WalletUtils.isOutputScriptConvertableToAddress(output)) {
                 // We don't support send txs with multiple outputs to multiple receivers, so we can 
                 // assume that only one output is not from our own wallets.
-                foreignReceiverAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletUtils.getAddressFromOutput(output));
+                sendToAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletUtils.getAddressFromOutput(output));
                 break;
             }
         }
 
         // In the case we sent to ourselves (either to BSQ or BTC wallet) we show the first as the other is
         // usually the change output.
-        String ownReceiverAddress = Res.get("shared.na");
-        if (foreignReceiverAddress != null) {
+        String receivedWithAddress = Res.get("shared.na");
+        if (sendToAddress != null) {
             for (TransactionOutput output : transaction.getOutputs()) {
                 if (WalletUtils.isOutputScriptConvertableToAddress(output)) {
-                    ownReceiverAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletUtils.getAddressFromOutput(output));
+                    receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletUtils.getAddressFromOutput(output));
                     break;
                 }
             }
         }
+
         if (!isBurnedBsqTx)
-            address = foreignReceiverAddress != null ? foreignReceiverAddress : ownReceiverAddress;
+            address = received ? receivedWithAddress : sendToAddress;
         else
             address = Res.get("dao.wallet.burned");
     }

@@ -81,10 +81,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 1, Res.get("shared.balance"));
-        balanceTextField = addLabelTextField(root, gridRow, Res.get("shared.bsqBalance"), Layout.FIRST_ROW_DISTANCE).second;
-        bsqBalanceUtil.setBalanceTextField(balanceTextField);
-        bsqBalanceUtil.initialize();
+        gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.wallet.receive.fundYourWallet"), Layout.GROUP_DISTANCE);
 

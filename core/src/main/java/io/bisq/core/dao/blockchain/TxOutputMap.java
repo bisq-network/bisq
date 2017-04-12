@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 // - voting
 // - comp. request
 // - sponsoring tx (new genesis)
+
 @Slf4j
 public class TxOutputMap implements Serializable {
 
@@ -61,8 +62,8 @@ public class TxOutputMap implements Serializable {
 
         return txOutputMapClone;
     }
-    
-    
+
+
     @Getter
     private HashMap<TxIdIndexTuple, TxOutput> map = new HashMap<>();
     @Getter
@@ -158,7 +159,7 @@ public class TxOutputMap implements Serializable {
     }
 
     public void printSize() {
-        log.info("Nr of entries={}; Size in kb={}", size(), Utilities.serialize(this).length / 1000);
+        log.info("Nr of entries={}; Size in kb={}", size(), Utilities.serialize(this).length / 1000d);
     }
 }
 

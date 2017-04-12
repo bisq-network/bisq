@@ -17,14 +17,11 @@
 
 package io.bisq.gui.main.dao.wallet.dashboard;
 
-import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
 import io.bisq.gui.util.BsqFormatter;
-import io.bisq.gui.util.FormBuilder;
-import io.bisq.gui.util.Layout;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
@@ -39,7 +36,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> {
     private final BsqFormatter formatter;
     private final BsqBalanceUtil bsqBalanceUtil;
 
-    private final int gridRow = 0;
+    private int gridRow = 0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -55,10 +52,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        FormBuilder.addTitledGroupBg(root, gridRow, 1, Res.get("shared.balance"));
-        balanceTextField = FormBuilder.addLabelTextField(root, gridRow, Res.get("shared.bsqBalance"), Layout.FIRST_ROW_DISTANCE).second;
-        bsqBalanceUtil.setBalanceTextField(balanceTextField);
-        bsqBalanceUtil.initialize();
+        gridRow = bsqBalanceUtil.addGroup(root, gridRow);
     }
 
     @Override

@@ -264,7 +264,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         Stream<Tradable> concat3 = Stream.concat(concat2, failedTradesManager.getFailedTrades().stream());
         Set<Tradable> all = concat3.collect(Collectors.toSet());
 
-        Set<Transaction> transactions = btcWalletService.getTransactions(true);
+        Set<Transaction> transactions = btcWalletService.getTransactions(false);
         List<TransactionsListItem> transactionsListItems = transactions.stream()
                 .map(transaction -> {
                     Optional<Tradable> tradableOptional = all.stream()

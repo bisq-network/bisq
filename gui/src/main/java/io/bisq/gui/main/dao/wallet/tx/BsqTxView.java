@@ -33,7 +33,6 @@ import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
-import io.bisq.gui.util.Layout;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -50,9 +49,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static io.bisq.gui.util.FormBuilder.addLabelTextField;
-import static io.bisq.gui.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class BsqTxView extends ActivatableView<GridPane, Void> {
@@ -92,11 +88,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 1, Res.get("shared.balance"));
-        TextField balanceTextField = addLabelTextField(root, gridRow, Res.get("shared.bsqBalance"),
-                Layout.FIRST_ROW_DISTANCE).second;
-        bsqBalanceUtil.setBalanceTextField(balanceTextField);
-        bsqBalanceUtil.initialize();
+        gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
         tableView = new TableView<>();
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -156,6 +148,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
             Set<String> txIds = invalidBsqTransactions.stream()
                     .filter(t -> t != null)
                     .map(t -> t.getHashAsString()).collect(Collectors.toSet());
+
+            log.error("invalidBsqTransactions " + txIds);
             String key = "invalidBsqTransactionsWarning_" + txIds;
             if (DontShowAgainLookup.showAgain(key))
                 new Popup().warning("We detected invalid Bsq transactions.\n" +

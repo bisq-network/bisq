@@ -20,6 +20,7 @@ package io.bisq.gui.util.validation;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.gui.util.BsqFormatter;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,20 +28,27 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.math.BigDecimal;
 
+@Slf4j
 public class BsqValidator extends NumberValidator {
-    protected final BsqFormatter formatter;
+    protected final BsqFormatter bsqFormatter;
 
     @Nullable
     protected Coin maxValue;
+    @Nullable
+    private Coin availableBalance;
 
     @Inject
-    public BsqValidator(BsqFormatter formatter) {
-        this.formatter = formatter;
-        setMaxValue(formatter.parseToCoin("2300000")); // TODO make it lower
+    public BsqValidator(BsqFormatter bsqFormatter) {
+        this.bsqFormatter = bsqFormatter;
+        setMaxValue(bsqFormatter.parseToCoin("2300000")); // TODO make it lower
     }
 
     public void setMaxValue(@NotNull Coin maxValue) {
         this.maxValue = maxValue;
+    }
+
+    public void setAvailableBalance(@NotNull Coin availableBalance) {
+        this.availableBalance = availableBalance;
     }
 
     @Override
@@ -56,6 +64,7 @@ public class BsqValidator extends NumberValidator {
                     .and(validateIfNotNegative(input))
                     .and(validateIfNotFractionalBtcValue(input))
                     .and(validateIfNotExceedsMaxBtcValue(input))
+                    .and(validateIfSufficientAvailableBalance(input))
                     .and(validateIfAboveDust(input));
         }
 
@@ -63,7 +72,7 @@ public class BsqValidator extends NumberValidator {
     }
 
     protected ValidationResult validateIfAboveDust(String input) {
-        final Coin coin = formatter.parseToCoin(input);
+        final Coin coin = bsqFormatter.parseToCoin(input);
         if (Restrictions.isAboveDust(coin))
             return new ValidationResult(true);
         else
@@ -81,9 +90,23 @@ public class BsqValidator extends NumberValidator {
 
     protected ValidationResult validateIfNotExceedsMaxBtcValue(String input) {
         try {
-            final Coin coin = formatter.parseToCoin(input);
+            final Coin coin = bsqFormatter.parseToCoin(input);
             if (maxValue != null && coin.compareTo(maxValue) > 0)
-                return new ValidationResult(false, Res.get("validation.btc.toLarge", formatter.formatCoinWithCode(maxValue)));
+                return new ValidationResult(false, Res.get("validation.btc.toLarge", bsqFormatter.formatCoinWithCode(maxValue)));
+            else
+                return new ValidationResult(true);
+        } catch (Throwable t) {
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
+        }
+    }
+
+    protected ValidationResult validateIfSufficientAvailableBalance(String input) {
+        try {
+            final Coin coin = bsqFormatter.parseToCoin(input);
+            log.error("coin.compareTo(availableBalance) " + coin.compareTo(availableBalance));
+            if (availableBalance != null && coin.compareTo(availableBalance) > 0)
+                return new ValidationResult(false, Res.get("validation.bsq.insufficientBalance",
+                        bsqFormatter.formatCoinWithCode(availableBalance)));
             else
                 return new ValidationResult(true);
         } catch (Throwable t) {

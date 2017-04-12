@@ -37,7 +37,6 @@ import io.bisq.gui.util.validation.BsqAddressValidator;
 import io.bisq.gui.util.validation.BsqValidator;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -85,16 +84,13 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        addTitledGroupBg(root, gridRow, 1, Res.get("shared.balance"));
-        TextField balanceTextField = addLabelTextField(root, gridRow, Res.get("shared.bsqBalance"), Layout.FIRST_ROW_DISTANCE).second;
-        bsqBalanceUtil.setBalanceTextField(balanceTextField);
-        bsqBalanceUtil.initialize();
+        gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
         addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.wallet.send.sendFunds"), Layout.GROUP_DISTANCE);
         amountInputTextField = addLabelInputTextField(root, gridRow, Res.get("dao.wallet.send.amount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         amountInputTextField.setPromptText(Res.get("dao.wallet.send.setAmount", Transaction.MIN_NONDUST_OUTPUT.value));
         amountInputTextField.setValidator(bsqValidator);
-        
+
         receiversAddressInputTextField = addLabelInputTextField(root, ++gridRow,
                 Res.get("dao.wallet.send.receiverAddress")).second;
         receiversAddressInputTextField.setPromptText(Res.get("dao.wallet.send.setDestinationAddress"));
@@ -182,6 +178,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     }
 
     private void verifyInputs() {
+        bsqValidator.setAvailableBalance(bsqWalletService.getAvailableBalance());
         boolean isValid = bsqAddressValidator.validate(receiversAddressInputTextField.getText()).isValid &&
                 bsqValidator.validate(amountInputTextField.getText()).isValid;
         sendButton.setDisable(!isValid);
