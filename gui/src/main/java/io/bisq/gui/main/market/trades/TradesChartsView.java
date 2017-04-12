@@ -93,6 +93,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private Subscription currencySelectionSubscriber;
     private HBox toolBox;
     private ChangeListener<Number> parentHeightListener;
+    private Pane rootParent;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -219,8 +220,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         UserThread.runAfter(this::updateChartData, 100, TimeUnit.MILLISECONDS);
 
-        if (root.getParent() instanceof Pane)
-            ((Pane) root.getParent()).heightProperty().addListener(parentHeightListener);
+        if (root.getParent() instanceof Pane) {
+            rootParent = (Pane) root.getParent();
+            rootParent.heightProperty().addListener(parentHeightListener);
+        }
 
         layout();
     }
@@ -246,8 +249,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceSeries.getData().clear();
         priceChart.getData().clear();
 
-        if (root.getParent() instanceof Pane)
-            ((Pane) root.getParent()).heightProperty().removeListener(parentHeightListener);
+        if (rootParent != null)
+            rootParent.heightProperty().removeListener(parentHeightListener);
     }
 
 

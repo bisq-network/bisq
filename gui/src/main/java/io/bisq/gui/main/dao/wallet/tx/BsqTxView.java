@@ -33,7 +33,10 @@ import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -41,6 +44,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.util.Callback;
 import org.bitcoinj.core.Transaction;
 
@@ -65,6 +69,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private final ObservableList<BsqTxListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<BsqTxListItem> sortedList = new SortedList<>(observableList);
+    private ChangeListener<Number> parentHeightListener;
+    private Pane rootParent;
+    // Need to be DoubleProperty as we pass it as reference
+    private DoubleProperty initialOccupiedHeight = new SimpleDoubleProperty(-1);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -104,6 +112,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         addConfidenceColumn();
 
         walletBsqTransactionsListener = change -> updateList();
+        parentHeightListener = (observable, oldValue, newValue) -> layout();
     }
 
     @Override
@@ -115,6 +124,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         tableView.setItems(sortedList);
 
         updateList();
+
+        if (root.getParent() instanceof Pane) {
+            rootParent = (Pane) root.getParent();
+            rootParent.heightProperty().addListener(parentHeightListener);
+        }
+        layout();
     }
 
     @Override
@@ -123,6 +138,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         sortedList.comparatorProperty().unbind();
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         observableList.forEach(BsqTxListItem::cleanup);
+        if (rootParent != null)
+            ((Pane) root.getParent()).heightProperty().removeListener(parentHeightListener);
     }
 
     private void updateList() {
@@ -159,6 +176,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                         .dontShowAgainId(key)
                         .show();
         }
+    }
+
+    private void layout() {
+        GUIUtil.fillAvailableHeight(root, tableView, initialOccupiedHeight);
     }
 
     private void addDateColumn() {

@@ -22,6 +22,7 @@ import com.googlecode.jcsv.CSVStrategy;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
+import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
@@ -34,11 +35,14 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.main.overlays.popups.Popup;
+import javafx.beans.property.DoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -58,6 +62,7 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class GUIUtil {
@@ -349,12 +354,28 @@ public class GUIUtil {
         return parent != null ? (T) parent : null;
     }
 
-    public static void showClearXchangeWarning(Preferences preferences) {
+    public static void showClearXchangeWarning() {
         String key = "confirmClearXchangeRequirements";
         new Popup().information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
                 .dontShowAgainId(key)
                 .show();
+    }
+
+    public static void fillAvailableHeight(Pane container, Region component, DoubleProperty initialOccupiedHeight) {
+        UserThread.runAfter(() -> {
+
+            double available;
+            if (container.getParent() instanceof Pane)
+                available = ((Pane) container.getParent()).getHeight();
+            else
+                available = container.getHeight();
+
+            if (initialOccupiedHeight.get() == -1 && component.getHeight() > 0) {
+                initialOccupiedHeight.set(available - component.getHeight());
+            }
+            component.setPrefHeight(available - initialOccupiedHeight.get());
+        }, 100, TimeUnit.MILLISECONDS);
     }
 }
