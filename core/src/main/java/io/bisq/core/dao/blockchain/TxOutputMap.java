@@ -54,6 +54,9 @@ public class TxOutputMap implements Serializable {
     @Getter
     @Setter
     private int blockHeight;
+    @Getter
+    @Setter
+    private String blockHash;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

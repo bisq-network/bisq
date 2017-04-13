@@ -23,10 +23,7 @@ import io.bisq.common.app.DevEnv;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -40,6 +37,7 @@ public class BsqParser {
     // Map<Integer, String> recursionMap = new HashMap<>();
 
     private final BsqBlockchainService bsqBlockchainService;
+    private Map<String, Integer> blockHeightByHashMap = new HashMap<>();
 
     public BsqParser(BsqBlockchainService bsqBlockchainService) {
         this.bsqBlockchainService = bsqBlockchainService;
@@ -51,7 +49,7 @@ public class BsqParser {
                      int genesisBlockHeight,
                      String genesisTxId,
                      TxOutputMap txOutputMap,
-                     Consumer<TxOutputMap> snapShotHandler) throws BsqBlockchainException {
+                     Consumer<TxOutputMap> snapShotHandler) throws BsqBlockchainException, OrphanDetectedException {
         try {
             log.info("chainHeadHeight=" + chainHeadHeight);
             long startTotalTs = System.currentTimeMillis();
@@ -59,7 +57,6 @@ public class BsqParser {
                 long startBlockTs = System.currentTimeMillis();
                 Block block = bsqBlockchainService.requestBlock(blockHeight);
                 log.debug("Current block blockHeight=" + blockHeight);
-
                 parseBlock(block,
                         genesisBlockHeight,
                         genesisTxId,
@@ -91,6 +88,8 @@ public class BsqParser {
                     startBlockHeight,
                     chainHeadHeight,
                     System.currentTimeMillis() - startTotalTs);
+        } catch (OrphanDetectedException e) {
+            throw e;
         } catch (Throwable t) {
             log.error(t.toString());
             t.printStackTrace();
@@ -102,37 +101,53 @@ public class BsqParser {
                     int genesisBlockHeight,
                     String genesisTxId,
                     TxOutputMap txOutputMap)
-            throws BsqBlockchainException {
+            throws BsqBlockchainException, OrphanDetectedException {
         int blockHeight = block.getHeight();
-        log.debug("Parse block at height={} ", blockHeight);
-        // We add all transactions to the block
-        List<Tx> txList = new ArrayList<>();
-        Tx genesisTx = null;
-        for (String txId : block.getTx()) {
-            final Tx tx = bsqBlockchainService.requestTransaction(txId, blockHeight);
-            txList.add(tx);
-            if (txId.equals(genesisTxId))
-                genesisTx = tx;
+
+        if (txOutputMap.getBlockHeight() >= blockHeight) {
+            log.warn("blockHeight from txOutputMap must not be larger than blockHeight in parser iteration");
+            throw new OrphanDetectedException(blockHeight);
         }
 
-        if (genesisTx != null) {
-            checkArgument(blockHeight == genesisBlockHeight,
-                    "If we have a matching genesis tx the block height must match as well");
-            parseGenesisTx(genesisTx, txOutputMap);
+        final String previousBlockHash = block.getPreviousBlockHash();
+        if (blockHeightByHashMap.isEmpty() ||
+                (blockHeightByHashMap.containsKey(previousBlockHash) &&
+                        blockHeightByHashMap.containsKey(previousBlockHash) &&
+                        blockHeight == blockHeightByHashMap.get(previousBlockHash) + 1)) {
+            blockHeightByHashMap.put(block.getHash(), blockHeight);
+
+            // check if the new block is the same chain we have built on.
+            log.debug("Parse block at height={} ", blockHeight);
+            // We add all transactions to the block
+            List<Tx> txList = new ArrayList<>();
+            Tx genesisTx = null;
+            for (String txId : block.getTx()) {
+                final Tx tx = bsqBlockchainService.requestTransaction(txId, blockHeight);
+                txList.add(tx);
+                if (txId.equals(genesisTxId))
+                    genesisTx = tx;
+            }
+
+            if (genesisTx != null) {
+                checkArgument(blockHeight == genesisBlockHeight,
+                        "If we have a matching genesis tx the block height must match as well");
+                parseGenesisTx(genesisTx, txOutputMap);
+            }
+            //txSize = block.getTxList().size();
+
+            // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
+            // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
+            // Realistically we don't expect more then a few recursive calls.
+            // There are some blocks with testing such dependency chains like block 130768 where at each iteration only 
+            // one get resolved.
+            // Lately there is a patter with 24 iterations observed 
+            parseTransactions(txList, txOutputMap, blockHeight, 0, 5300);
+            txOutputMap.setBlockHeight(blockHeight);
+            txOutputMap.setBlockHash(block.getHash());
+        } else {
+            log.warn("We need to do a re-org. We got a new block which does not connect to our current chain.");
+            throw new OrphanDetectedException(blockHeight);
         }
-        //txSize = block.getTxList().size();
-
-        // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
-        // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
-        // Realistically we don't expect more then a few recursive calls.
-        // There are some blocks with testing such dependency chains like block 130768 where at each iteration only 
-        // one get resolved.
-        // Lately there is a patter with 24 iterations observed 
-        parseTransactions(txList, txOutputMap, blockHeight, 0, 5300);
-
-        checkArgument(txOutputMap.getBlockHeight() <= blockHeight,
-                "blockHeight from txOutputMap must not be larger than blockHeight in parser iteration");
-        txOutputMap.setBlockHeight(blockHeight);
     }
 
     @VisibleForTesting

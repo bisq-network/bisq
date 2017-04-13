@@ -70,7 +70,7 @@ public class BsqBlockchainServiceTest {
     }
 
     @Test
-    public void testGenTx() throws BsqBlockchainException, BitcoindException, CommunicationException {
+    public void testGenTx() throws BsqBlockchainException, BitcoindException, CommunicationException, OrphanDetectedException {
         // GENESIS_TX (block 0):
         // Input 0: output from GEN_FUNDING_TX_ID
         // Output 0: ADDRESS_GEN_1 ADDRESS_GEN_1_VALUE
@@ -97,7 +97,7 @@ public class BsqBlockchainServiceTest {
 
 
     @Test
-    public void testGenToTx1() throws BsqBlockchainException, BitcoindException, CommunicationException {
+    public void testGenToTx1() throws BsqBlockchainException, BitcoindException, CommunicationException, OrphanDetectedException {
         // GENESIS_TX (block 0):
         // Input 0: Output 0 from GEN_FUNDING_TX_ID
         // Output 0: ADDRESS_GEN_1 ADDRESS_GEN_1_VALUE
@@ -137,7 +137,7 @@ public class BsqBlockchainServiceTest {
     }
 
     @Test
-    public void testGenToTx1ToTx2InBlock1() throws BsqBlockchainException, BitcoindException, CommunicationException {
+    public void testGenToTx1ToTx2InBlock1() throws BsqBlockchainException, BitcoindException, CommunicationException, OrphanDetectedException {
         // GENESIS_TX (block 0):
         // Input 0: Output 0 from GEN_FUNDING_TX_ID
         // Output 0: ADDRESS_GEN_1 ADDRESS_GEN_1_VALUE
@@ -196,7 +196,7 @@ public class BsqBlockchainServiceTest {
     }
 
     @Test
-    public void testGenToTx1ToTx2InBlock2() throws BsqBlockchainException, BitcoindException, CommunicationException {
+    public void testGenToTx1ToTx2InBlock2() throws BsqBlockchainException, BitcoindException, CommunicationException, OrphanDetectedException {
         // GENESIS_TX (block 0):
         // Input 0: Output 0 from GEN_FUNDING_TX_ID
         // Output 0: ADDRESS_GEN_1 ADDRESS_GEN_1_VALUE
@@ -254,7 +254,7 @@ public class BsqBlockchainServiceTest {
     }
 
     @Test
-    public void testGenToTx1ToTx2AndGenToTx2InBlock1() throws BsqBlockchainException, BitcoindException, CommunicationException {
+    public void testGenToTx1ToTx2AndGenToTx2InBlock1() throws BsqBlockchainException, BitcoindException, CommunicationException, OrphanDetectedException {
         // GENESIS_TX (block 0):
         // Input 0: Output 0 from GEN_FUNDING_TX_ID
         // Output 0: ADDRESS_GEN_1 ADDRESS_GEN_1_VALUE
@@ -396,7 +396,7 @@ public class BsqBlockchainServiceTest {
 
 
     private void parseAllBlocksFromGenesis()
-            throws BitcoindException, CommunicationException, BsqBlockchainException {
+            throws BitcoindException, CommunicationException, BsqBlockchainException, OrphanDetectedException {
         BsqParser bsqParser = new BsqParser(service);
         bsqParser.parseBlocks(BLOCK_0,
                 service.requestChainHeadHeight(),

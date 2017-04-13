@@ -92,6 +92,7 @@ public class BsqWalletService extends WalletService {
 
                 @Override
                 public void onReorganize(Wallet wallet) {
+                    log.warn("onReorganize ");
                     updateBsqWalletTransactions();
                 }
 
@@ -196,7 +197,7 @@ public class BsqWalletService extends WalletService {
                     final boolean isPending = parentTx.getConfidence().getConfidenceType() == PENDING;
                     final boolean isMine = out.isMine(wallet);
                     return (isPending && isMine) ||
-                            bsqBlockchainManager.getTxOutputMap().contains(parentTx.getHashAsString(), out.getIndex());
+                            bsqBlockchainManager.getTxOutputMap() != null && bsqBlockchainManager.getTxOutputMap().contains(parentTx.getHashAsString(), out.getIndex());
                 })
                 .map(TransactionOutput::getParentTransaction)
                 .collect(Collectors.toSet());

@@ -288,7 +288,7 @@ public abstract class WalletService {
     public TransactionConfidence getConfidenceForAddress(Address address) {
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
         if (wallet != null) {
-            Set<Transaction> transactions = wallet.getTransactions(true);
+            Set<Transaction> transactions = wallet.getTransactions(false);
             if (transactions != null) {
                 transactionConfidenceList.addAll(transactions.stream().map(tx ->
                         getTransactionConfidence(tx, address)).collect(Collectors.toList()));
@@ -300,8 +300,7 @@ public abstract class WalletService {
     @Nullable
     public TransactionConfidence getConfidenceForTxId(String txId) {
         if (wallet != null) {
-            // TODO includeDead txs?
-            Set<Transaction> transactions = wallet.getTransactions(true);
+            Set<Transaction> transactions = wallet.getTransactions(false);
             for (Transaction tx : transactions) {
                 if (tx.getHashAsString().equals(txId))
                     return tx.getConfidence();
@@ -384,7 +383,7 @@ public abstract class WalletService {
 
     public int getNumTxOutputsForAddress(Address address) {
         List<TransactionOutput> transactionOutputs = new ArrayList<>();
-        wallet.getTransactions(true).stream().forEach(t -> transactionOutputs.addAll(t.getOutputs()));
+        wallet.getTransactions(false).stream().forEach(t -> transactionOutputs.addAll(t.getOutputs()));
         int outputs = 0;
         for (TransactionOutput output : transactionOutputs) {
             if (WalletUtils.isOutputScriptConvertableToAddress(output) &&
@@ -572,6 +571,11 @@ public abstract class WalletService {
         @Override
         public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
             notifyBalanceListeners(tx);
+        }
+
+        @Override
+        public void onReorganize(Wallet wallet) {
+            log.warn("onReorganize ");
         }
 
         @Override

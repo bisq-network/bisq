@@ -183,12 +183,12 @@ public class BsqBlockchainManager {
     private void onSetupComplete() {
         final int genesisBlockHeight = getGenesisBlockHeight();
         final String genesisTxId = getGenesisTxId();
-        int startBlockHeight = Math.max(genesisBlockHeight, txOutputMap.getBlockHeight());
+        int startBlockHeight = Math.max(genesisBlockHeight, txOutputMap.getBlockHeight() + 1);
         log.info("parseBlocks with:\n" +
                         "genesisTxId={}\n" +
                         "genesisBlockHeight={}\n" +
                         "startBlockHeight={}\n" +
-                        "txOutputMap.lastBlockHeight={}",
+                        "txOutputMap.blockHeight={}",
                 genesisTxId,
                 genesisBlockHeight,
                 startBlockHeight,
@@ -198,8 +198,6 @@ public class BsqBlockchainManager {
                 genesisBlockHeight,
                 genesisTxId);
     }
-
-    // TODO handle reorgs
 
     private void parseBlocks(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
         blockchainService.requestChainHeadHeight(chainHeadHeight -> {
@@ -220,8 +218,12 @@ public class BsqBlockchainManager {
                                     genesisBlockHeight,
                                     genesisTxId);
                         }, throwable -> {
-                            log.error(throwable.toString());
-                            throwable.printStackTrace();
+                            if (throwable instanceof OrphanDetectedException) {
+                                startReOrgFromLastSnapshot(((OrphanDetectedException) throwable).getBlockHeight());
+                            } else {
+                                log.error(throwable.toString());
+                                throwable.printStackTrace();
+                            }
                         });
             } else {
                 // We dont have received new blocks in the meantime so we are completed and we register our handler
@@ -230,7 +232,6 @@ public class BsqBlockchainManager {
 
                 // We register our handler for new blocks
                 blockchainService.addBlockHandler(bsqBlock -> {
-
                     blockchainService.parseBlock(bsqBlock,
                             genesisBlockHeight,
                             genesisTxId,
@@ -241,21 +242,25 @@ public class BsqBlockchainManager {
                                     updateSnapshotOnTrigger(newTxOutputMap.getBlockHeight());
                                     log.debug("new block parsed. bsqBlock={}", bsqBlock);
                                 } else {
-                                    log.warn("We got a newTxOutputMap with a lower block height than the one form the " +
+                                    log.warn("We got a newTxOutputMap with a lower block height than the one from the " +
                                                     "map we requested. That should not happen, but theoretically could be " +
                                                     "if 2 blocks arrive at nearly the same time and the second is faster in " +
                                                     "parsing than the first, so the callback of the first will have a lower " +
                                                     "height. " +
                                                     "txOutputMap.getBlockHeight()={}; " +
-                                                    "newTxOutputMap.getBlockHeight()={}",
+                                                    "newTxOutputMap.getBlockHeight()={}\n" +
+                                                    "To avoid conflicts we start a reorg from the last snapshot.",
                                             txOutputMap.getBlockHeight(),
                                             newTxOutputMap.getBlockHeight());
-                                    checkArgument(txOutputMap.getBlockHeight() < newTxOutputMap.getBlockHeight(),
-                                            "blockheight of requesting map and callback cannot be the same");
+                                    startReOrgFromLastSnapshot(newTxOutputMap.getBlockHeight());
                                 }
                             }, throwable -> {
-                                log.error(throwable.toString());
-                                throwable.printStackTrace();
+                                if (throwable instanceof OrphanDetectedException) {
+                                    startReOrgFromLastSnapshot(((OrphanDetectedException) throwable).getBlockHeight());
+                                } else {
+                                    log.error(throwable.toString());
+                                    throwable.printStackTrace();
+                                }
                             });
                 });
             }
@@ -265,6 +270,27 @@ public class BsqBlockchainManager {
         });
     }
 
+    private void startReOrgFromLastSnapshot(int blockHeight) {
+        log.warn("We have to do a re-org because a new block did not connect to our chain.");
+        int startBlockHeight = snapshotTxOutputMap != null ? snapshotTxOutputMap.getBlockHeight() : getGenesisBlockHeight();
+        checkArgument(snapshotTxOutputMap == null || startBlockHeight >= blockHeight - SNAPSHOT_TRIGGER);
+        blockchainService.requestBlock(startBlockHeight,
+                block -> {
+                    if (snapshotTxOutputMap != null) {
+                        checkArgument(startBlockHeight <= block.getHeight());
+                        checkArgument(block.getHash().equals(snapshotTxOutputMap.getBlockHash()));
+                        applyNewTxOutputMap(snapshotTxOutputMap);
+                    } else {
+                        applyNewTxOutputMap(new TxOutputMap());
+                    }
+                    parseBlocks(startBlockHeight,
+                            getGenesisBlockHeight(),
+                            getGenesisTxId());
+                }, throwable -> {
+                    log.error(throwable.toString());
+                    throwable.printStackTrace();
+                });
+    }
 
     private void applyNewTxOutputMap(TxOutputMap newTxOutputMap) {
         txOutputMap = newTxOutputMap;

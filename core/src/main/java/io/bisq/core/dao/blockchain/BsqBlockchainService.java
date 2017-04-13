@@ -53,6 +53,8 @@ abstract public class BsqBlockchainService {
 
     abstract void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler);
 
+    abstract void requestBlock(int blockHeight, Consumer<Block> resultHandler, Consumer<Throwable> errorHandler);
+
     abstract void parseBlocks(int startBlockHeight,
                               int chainHeadHeight,
                               int genesisBlockHeight,

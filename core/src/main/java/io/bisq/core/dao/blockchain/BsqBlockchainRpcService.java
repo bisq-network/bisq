@@ -65,6 +65,7 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     private final ListeningExecutorService setupExecutor = Utilities.getListeningExecutorService("RpcServiceSetup", 1, 1, 5);
     private final ListeningExecutorService parseBlocksExecutor = Utilities.getListeningExecutorService("ParseBlocks", 1, 1, 60);
     private final ListeningExecutorService getChainHeightExecutor = Utilities.getListeningExecutorService("GetChainHeight", 1, 1, 60);
+    private final ListeningExecutorService getBlockExecutor = Utilities.getListeningExecutorService("GetBlock", 1, 1, 60);
     private BtcdClientImpl client;
     private BtcdDaemonImpl daemon;
 
@@ -150,6 +151,21 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
         Futures.addCallback(future, new FutureCallback<Integer>() {
             public void onSuccess(Integer chainHeadHeight) {
                 UserThread.execute(() -> resultHandler.accept(chainHeadHeight));
+            }
+
+            public void onFailure(@NotNull Throwable throwable) {
+                UserThread.execute(() -> errorHandler.accept(throwable));
+            }
+        });
+    }
+
+    @Override
+    void requestBlock(int blockHeight, Consumer<Block> resultHandler, Consumer<Throwable> errorHandler) {
+        ListenableFuture<Block> future = getBlockExecutor.submit(() -> requestBlock(blockHeight));
+
+        Futures.addCallback(future, new FutureCallback<Block>() {
+            public void onSuccess(Block block) {
+                UserThread.execute(() -> resultHandler.accept(block));
             }
 
             public void onFailure(@NotNull Throwable throwable) {
@@ -266,7 +282,8 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     @VisibleForTesting
     @Override
     Block requestBlock(int blockHeight) throws BitcoindException, CommunicationException {
-        return client.getBlock(client.getBlockHash(blockHeight));
+        final String blockHash = client.getBlockHash(blockHeight);
+        return client.getBlock(blockHash);
     }
 
     @VisibleForTesting
