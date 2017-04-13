@@ -22,6 +22,7 @@ import io.bisq.common.Clock;
 import io.bisq.common.app.AppModule;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.AlertModule;
 import io.bisq.core.app.BisqEnvironment;
@@ -36,7 +37,6 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
-import io.bisq.network.p2p.network.ProtobufferResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -54,6 +54,7 @@ class SeedNodeModule extends AppModule {
 
     @Override
     protected void configure() {
+        bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
@@ -66,8 +67,6 @@ class SeedNodeModule extends AppModule {
 
         File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.DIR_KEY));
         bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
-
-        bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
 
         // ordering is used for shut down sequence
         install(tradeModule());

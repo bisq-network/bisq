@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.PaymentAccount;
@@ -49,15 +50,17 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
     private final SetChangeListener<PaymentAccount> setChangeListener;
     private final String accountsFileName = "AltcoinPaymentAccounts";
+    private final ProtobufferResolver protobufferResolver;
 
     @Inject
     public AltCoinAccountsDataModel(User user, Preferences preferences, OpenOfferManager openOfferManager,
-                                    TradeManager tradeManager, Stage stage) {
+                                    TradeManager tradeManager, Stage stage, ProtobufferResolver protobufferResolver) {
         this.user = user;
         this.preferences = preferences;
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
         this.stage = stage;
+        this.protobufferResolver = protobufferResolver;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
 
@@ -126,10 +129,10 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
         ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
                 .filter(paymentAccount -> paymentAccount instanceof CryptoCurrencyAccount)
                 .collect(Collectors.toList()));
-        GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage);
+        GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, protobufferResolver);
     }
 
     public void importAccounts() {
-        GUIUtil.importAccounts(user, accountsFileName, preferences, stage);
+        GUIUtil.importAccounts(user, accountsFileName, preferences, stage, protobufferResolver);
     }
 }

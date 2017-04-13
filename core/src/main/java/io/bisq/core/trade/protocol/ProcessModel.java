@@ -57,15 +57,20 @@ public class ProcessModel implements Model, Serializable {
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     // Transient/Immutable
+    @Getter
     transient private TradeManager tradeManager;
+    @Getter
     transient private OpenOfferManager openOfferManager;
     transient private BtcWalletService btcWalletService;
     transient private BsqWalletService bsqWalletService;
     transient private TradeWalletService tradeWalletService;
     transient private Offer offer;
+    @Getter
     transient private User user;
     transient private FilterManager filterManager;
+    @Getter
     transient private KeyRing keyRing;
+    @Getter
     transient private P2PService p2PService;
 
     // Immutable
@@ -163,6 +168,7 @@ public class ProcessModel implements Model, Serializable {
             paymentAccount = user.getPaymentAccount(trade.getTakerPaymentAccountId());
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
     }
+
 
     public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,
                                                       PaymentAccountFilter[] appliedPaymentAccountFilter) {

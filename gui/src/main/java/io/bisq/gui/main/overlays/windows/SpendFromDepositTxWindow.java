@@ -22,6 +22,7 @@ import io.bisq.common.UserThread;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.TradeWalletService;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -48,7 +49,8 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SpendFromDepositTxWindow(TradeWalletService tradeWalletService) {
+    public SpendFromDepositTxWindow(TradeWalletService tradeWalletService, Preferences preferences) {
+        super(preferences);
         this.tradeWalletService = tradeWalletService;
         type = Type.Attention;
     }
@@ -107,12 +109,12 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
         InputTextField P2SHMultiSigOutputScript = addLabelInputTextField(gridPane, ++rowIndex, "P2SHMultiSigOutputScript:").second;
 
 
-        // Notes: 
+        // Notes:
         // Open with alt+g and enable DEV mode
         // Priv key is only visible if pw protection is removed (wallet details data (alt+j))
-        // Take P2SHMultiSigOutputScript from depositTx in blockexplorer 
+        // Take P2SHMultiSigOutputScript from depositTx in blockexplorer
         // Take missing buyerPubKeyAsHex and sellerPubKeyAsHex from contract data!
-        // Lookup sellerPrivateKeyAsHex associated with sellerPubKeyAsHex (or buyers) in wallet details data 
+        // Lookup sellerPrivateKeyAsHex associated with sellerPubKeyAsHex (or buyers) in wallet details data
         // sellerPubKeys/buyerPubKeys are auto generated if used the fields below
         // Never set the priv arbitr. key here!
 
@@ -147,7 +149,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
                 log.error("onSuccess");
                 UserThread.execute(() -> {
                     String txId = result != null ? result.getHashAsString() : "null";
-                    new Popup<>()
+                    new Popup<>(preferences)
                             .information("Transaction successful published. Transaction ID: " + txId)
                             .show();
                 });
@@ -157,7 +159,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
             public void onFailure(@NotNull Throwable t) {
                 log.error(t.toString());
                 log.error("onFailure");
-                UserThread.execute(() -> new Popup<>().warning(t.toString()).show());
+                UserThread.execute(() -> new Popup<>(preferences).warning(t.toString()).show());
             }
         };
         onAction(() -> {
@@ -181,7 +183,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
             } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
                 log.error(e.toString());
                 e.printStackTrace();
-                UserThread.execute(() -> new Popup<>().warning(e.toString()).show());
+                UserThread.execute(() -> new Popup<>(preferences).warning(e.toString()).show());
             }
         });
     }

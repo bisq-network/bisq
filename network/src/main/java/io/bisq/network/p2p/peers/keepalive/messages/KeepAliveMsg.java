@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.peers.keepalive.messages;
 
 import io.bisq.common.app.Version;
-import io.bisq.network.p2p.Msg;
+import io.bisq.common.persistance.Msg;
 
 public abstract class KeepAliveMsg implements Msg {
     //TODO add serialVersionUID also in superclasses as changes would break compatibility

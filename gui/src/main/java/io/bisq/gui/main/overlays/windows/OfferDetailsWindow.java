@@ -76,7 +76,9 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferDetailsWindow(BSFormatter formatter, Preferences preferences, User user, KeyRing keyRing, Navigation navigation) {
+    public OfferDetailsWindow(BSFormatter formatter, Preferences preferences, User user, KeyRing keyRing,
+                              Navigation navigation) {
+        super(preferences);
         this.formatter = formatter;
         this.preferences = preferences;
         this.user = user;
@@ -376,7 +378,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                     takeOfferHandlerOptional.get().run();
                 }
             } else {
-                new Popup().warning(Res.get("offerDetailsWindow.warn.noArbitrator")).show();
+                new Popup(preferences).warning(Res.get("offerDetailsWindow.warn.noArbitrator")).show();
 
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class,
                         ArbitratorSelectionView.class);

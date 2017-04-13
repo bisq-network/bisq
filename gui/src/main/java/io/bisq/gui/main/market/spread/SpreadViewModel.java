@@ -24,6 +24,7 @@ import io.bisq.common.monetary.Price;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
@@ -51,6 +52,7 @@ class SpreadViewModel extends ActivatableViewModel {
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
     final ObservableList<SpreadItem> spreadItems = FXCollections.observableArrayList();
+    private final Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -58,10 +60,12 @@ class SpreadViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SpreadViewModel(OfferBook offerBook, PriceFeedService priceFeedService, BSFormatter formatter) {
+    public SpreadViewModel(OfferBook offerBook, PriceFeedService priceFeedService, BSFormatter formatter,
+                           Preferences preferences) {
         this.offerBook = offerBook;
         this.priceFeedService = priceFeedService;
         this.formatter = formatter;
+        this.preferences = preferences;
 
         offerBookListItems = offerBook.getOfferBookListItems();
         listChangeListener = c -> update(offerBookListItems);
@@ -134,7 +138,7 @@ class SpreadViewModel extends ActivatableViewModel {
                 MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
 
                 // There have been some bug reports that an offer caused an overflow exception.
-                // We never found out which offer it was. So add here a try/catch to get better info if it 
+                // We never found out which offer it was. So add here a try/catch to get better info if it
                 // happens again
                 try {
                     if (isFiatCurrency)
@@ -142,7 +146,7 @@ class SpreadViewModel extends ActivatableViewModel {
                     else
                         spread = bestBuyOfferPrice.subtract(bestSellOfferPrice);
 
-                    // TODO maybe show extra colums with spread and use real amount diff 
+                    // TODO maybe show extra colums with spread and use real amount diff
                     // not % based. e.g. diff between best buy and sell offer (of small amounts its a smaller gain)
 
                     if (spread != null && marketPrice != null && marketPrice.isValid()) {
@@ -162,7 +166,7 @@ class SpreadViewModel extends ActivatableViewModel {
                     }
                 } catch (Throwable t) {
                     try {
-                        // Don't translate msg. It is just for rare error cases and can be removed probably later if 
+                        // Don't translate msg. It is just for rare error cases and can be removed probably later if
                         // that error never gets reported again.
                         String msg = "An error occurred at the spread calculation.\n" +
                                 "Error msg: " + t.toString() + "\n" +
@@ -172,7 +176,7 @@ class SpreadViewModel extends ActivatableViewModel {
                                 "sellOffer getCurrencyCode: " + sellOffers.get(0).getCurrencyCode() + "\n" +
                                 "buyOffer getCurrencyCode: " + buyOffers.get(0).getCurrencyCode() + "\n\n" +
                                 "Please copy and paste this data and send it to the developers so they can investigate the issue.";
-                        new Popup<>().error(msg).show();
+                        new Popup<>(preferences).error(msg).show();
                         log.error(t.toString());
                         t.printStackTrace();
                     } catch (Throwable t2) {

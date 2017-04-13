@@ -24,6 +24,7 @@ import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.Contract;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
@@ -66,7 +67,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeDetailsWindow(BSFormatter formatter, DisputeManager disputeManager, TradeManager tradeManager) {
+    public TradeDetailsWindow(BSFormatter formatter, DisputeManager disputeManager, TradeManager tradeManager, Preferences preferences) {
+        super(preferences);
         this.formatter = formatter;
         this.disputeManager = disputeManager;
         this.tradeManager = tradeManager;
@@ -198,7 +200,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 " / " +
                 Res.get("shared.takerTxFee", formatter.formatCoinWithCode(offer.getTxFee().multiply(3L)));
         addLabelTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.txFee"), txFee);
-        
+
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"),
                 trade.getArbitratorNodeAddress().getFullAddress());
 

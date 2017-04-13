@@ -24,6 +24,7 @@ import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.user.Preferences;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -49,6 +50,7 @@ import static io.bisq.gui.util.FormBuilder.*;
 
 @FxmlView
 public class BsqSendView extends ActivatableView<GridPane, Void> {
+    private final Preferences preferences;
 
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
@@ -117,7 +119,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                 Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                 Coin miningFee = signedTx.getFee();
                 int txSize = signedTx.bitcoinSerialize().length;
-                new Popup().headLine(Res.get("dao.wallet.send.sendFunds.headline"))
+                new Popup(preferences).headLine(Res.get("dao.wallet.send.sendFunds.headline"))
                         .confirmation(Res.get("dao.wallet.send.sendFunds.details",
                                 bsqFormatter.formatCoinWithCode(receiverAmount),
                                 receiversAddressInputTextField.getText(),
@@ -129,8 +131,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                         .onAction(() -> {
                             try {
                                 bsqWalletService.commitTx(txWithBtcFee);
-                                // We need to create another instance, otherwise the tx would trigger an invalid state exception 
-                                // if it gets committed 2 times 
+                                // We need to create another instance, otherwise the tx would trigger an invalid state exception
+                                // if it gets committed 2 times
                                 btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
                                 bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                                     @Override
@@ -143,13 +145,13 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                                     @Override
                                     public void onFailure(@NotNull Throwable t) {
                                         log.error(t.toString());
-                                        new Popup<>().warning(t.toString());
+                                        new Popup<>(preferences).warning(t.toString());
                                     }
                                 });
                             } catch (WalletException | TransactionVerificationException e) {
                                 log.error(e.toString());
                                 e.printStackTrace();
-                                new Popup<>().warning(e.toString());
+                                new Popup<>(preferences).warning(e.toString());
                             }
                         })
                         .closeButtonText(Res.get("shared.cancel"))
@@ -157,7 +159,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
             } catch (Throwable t) {
                 log.error(t.toString());
                 t.printStackTrace();
-                new Popup<>().warning(t.getMessage()).show();
+                new Popup<>(preferences).warning(t.getMessage()).show();
             }
         });
     }

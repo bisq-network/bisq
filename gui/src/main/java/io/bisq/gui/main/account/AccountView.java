@@ -121,7 +121,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
         String key = "accountPrivacyInfo";
         if (!DevEnv.DEV_MODE)
-            new Popup()
+            new Popup(preferences)
                     .headLine(Res.get("account.info.headline"))
                     .backgroundInfo(Res.get("account.info.msg"))
                     .dontShowAgainId(key)

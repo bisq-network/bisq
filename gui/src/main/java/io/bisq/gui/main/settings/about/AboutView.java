@@ -19,6 +19,7 @@ package io.bisq.gui.main.settings.about;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Res;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -37,10 +38,12 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
 
     private int gridRow = 0;
+    private Preferences preferences;
 
     @Inject
-    public AboutView() {
+    public AboutView(Preferences preferences) {
         super();
+        this.preferences = preferences;
     }
 
     public void initialize() {
@@ -50,11 +53,11 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
-        HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.web"), "https://bisq.io");
+        HyperlinkWithIcon hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.web"), "https://bisq.io", preferences);
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
-        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.code"), "https://github.com/bisq/bisq");
+        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.code"), "https://github.com/bisq/bisq", preferences);
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
-        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.agpl"), "https://github.com/bisq/bisq/blob/master/LICENSE");
+        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.agpl"), "https://github.com/bisq/bisq/blob/master/LICENSE", preferences);
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("setting.about.support"), Layout.GROUP_DISTANCE);
@@ -63,9 +66,9 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
-        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.contribute"), "https://bisq.io/contribute");
+        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.contribute"), "https://bisq.io/contribute", preferences);
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
-        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.donate"), "https://bisq.io/contribute/#donation");
+        hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, Res.get("setting.about.donate"), "https://bisq.io/contribute/#donation", preferences);
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
 
         titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, Res.get("setting.about.providers"), Layout.GROUP_DISTANCE);

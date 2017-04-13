@@ -228,7 +228,7 @@ public abstract class TradeStepView extends AnchorPane {
     // Dispute/warning label and button
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We have the dispute button and text field on the left side, but we handle the content here as it 
+    // We have the dispute button and text field on the left side, but we handle the content here as it
     // is trade state specific
     public void setNotificationGroup(TradeSubView.NotificationGroup notificationGroup) {
         this.notificationGroup = notificationGroup;
@@ -296,7 +296,7 @@ public abstract class TradeStepView extends AnchorPane {
             notificationGroup.button.setId("open-support-button");
             notificationGroup.button.setOnAction(e -> model.dataModel.onOpenSupportTicket());
         }
-        new Popup().warning(trade.errorMessageProperty().getValue()
+        new Popup(preferences).warning(trade.errorMessageProperty().getValue()
                 + "\n\n" + Res.get("portfolio.pending.error.requestSupport"))
                 .show();
 

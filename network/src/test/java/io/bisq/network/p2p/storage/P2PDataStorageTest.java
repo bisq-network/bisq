@@ -3,6 +3,7 @@ package io.bisq.network.p2p.storage;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.NodeAddress;
@@ -43,6 +44,8 @@ public class P2PDataStorageTest {
     Broadcaster broadcaster;
     @Mocked
     NetworkNode networkNode;
+    @Mocked
+    ProtobufferResolver protobufferResolver;
 
     @Before
     public void setup() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
@@ -62,7 +65,7 @@ public class P2PDataStorageTest {
         keyRing2 = new KeyRing(new KeyStorage(dir2));
         storageSignatureKeyPair2 = keyRing2.getSignatureKeyPair();
         encryptionService2 = new EncryptionService(keyRing2, TestUtils.getProtobufferResolver());
-        dataStorage1 = new P2PDataStorage(broadcaster, networkNode, dir1);
+        dataStorage1 = new P2PDataStorage(broadcaster, networkNode, dir1, protobufferResolver);
     }
 
     @After
@@ -75,7 +78,7 @@ public class P2PDataStorageTest {
     }
 
     //TODO CoreProtobufferResolver is not accessible here
-// We should refactor it so that the classes themselves know how to deserialize 
+// We should refactor it so that the classes themselves know how to deserialize
 // so we don't get dependencies from core objects here
 
    /* @Test
@@ -110,9 +113,9 @@ public class P2PDataStorageTest {
 
         ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
         data.toProto().writeTo(byteOutputStream);
-        
+
         //TODO CoreProtobufferResolver is not accessible here
-        // We should refactor it so that the classes themselves know how to deserialize 
+        // We should refactor it so that the classes themselves know how to deserialize
         // so we don't get dependencies from core objects here
        ProtectedStorageEntry protectedStorageEntry = ProtoBufferUtilities.getProtectedStorageEntry(PB.ProtectedStorageEntry.parseFrom(new ByteArrayInputStream(byteOutputStream.toByteArray())));
 
@@ -122,7 +125,7 @@ public class P2PDataStorageTest {
     }*/
 
     //TODO CoreProtobufferResolver is not accessible here
-    // We should refactor it so that the classes themselves know how to deserialize 
+    // We should refactor it so that the classes themselves know how to deserialize
     // so we don't get dependencies from core objects here
    /* @Test
     public void testOfferRoundtrip() throws InvalidProtocolBufferException {

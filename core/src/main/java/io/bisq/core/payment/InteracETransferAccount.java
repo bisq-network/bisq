@@ -17,7 +17,6 @@
 
 package io.bisq.core.payment;
 
-import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.InteracETransferAccountPayload;
@@ -30,7 +29,7 @@ public final class InteracETransferAccount extends PaymentAccount {
 
     public InteracETransferAccount() {
         super(PaymentMethod.INTERAC_E_TRANSFER);
-        setSingleTradeCurrency(new FiatCurrency("CAD", GlobalSettings.getLocale()));
+        setSingleTradeCurrency(new FiatCurrency("CAD"));
     }
 
     @Override

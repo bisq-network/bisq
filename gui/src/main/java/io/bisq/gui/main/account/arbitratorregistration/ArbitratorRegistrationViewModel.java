@@ -81,7 +81,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                 Arbitrator myRegisteredArbitrator = user.getRegisteredArbitrator();
                 myArbitratorProperty.set(myRegisteredArbitrator);
 
-                // We don't reset the languages in case of revocation, as its likely that the arbitrator will use the same again when he re-activate 
+                // We don't reset the languages in case of revocation, as its likely that the arbitrator will use the same again when he re-activate
                 // registration later
                 if (myRegisteredArbitrator != null)
                     languageCodes.setAll(myRegisteredArbitrator.getLanguageCodes());
@@ -145,7 +145,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
         if (allDataValid) {
             AddressEntry arbitratorDepositAddressEntry = walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR);
             String registrationSignature = arbitratorManager.signStorageSignaturePubKey(registrationKey);
-            // TODO not impl in UI    
+            // TODO not impl in UI
             String emailAddress = null;
             Arbitrator arbitrator = new Arbitrator(
                     p2PService.getAddress(),

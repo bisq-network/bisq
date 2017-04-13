@@ -31,6 +31,7 @@ import io.bisq.core.btc.wallet.ChangeBelowDustException;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.provider.fee.FeeService;
+import io.bisq.core.user.Preferences;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -61,6 +62,7 @@ import static io.bisq.gui.util.FormBuilder.addButtonAfterGroup;
 @FxmlView
 public class CreateCompensationRequestView extends ActivatableView<GridPane, Void> {
 
+    private final Preferences preferences;
     private CompensationRequestDisplay compensationRequestDisplay;
     private Button createButton;
 
@@ -81,13 +83,15 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
     @Inject
     private CreateCompensationRequestView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService, FeeService feeService,
-                                          CompensationRequestManager compensationRequestManager, P2PService p2PService, KeyRing keyRing, BSFormatter btcFormatter) {
+                                          CompensationRequestManager compensationRequestManager, P2PService p2PService,
+                                          KeyRing keyRing, BSFormatter btcFormatter, Preferences preferences) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
         this.compensationRequestManager = compensationRequestManager;
         this.p2PService = p2PService;
         this.btcFormatter = btcFormatter;
+        this.preferences = preferences;
 
         p2pStorageSignaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
     }
@@ -161,7 +165,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                 Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                 Coin miningFee = signedTx.getFee();
                 int txSize = signedTx.bitcoinSerialize().length;
-                new Popup().headLine(Res.get("dao.compensation.create.confirm"))
+                new Popup(preferences).headLine(Res.get("dao.compensation.create.confirm"))
                         .confirmation(Res.get("dao.tx.summary",
                                 btcFormatter.formatCoinWithCode(createCompensationRequestFee),
                                 btcFormatter.formatCoinWithCode(miningFee),
@@ -171,8 +175,8 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                         .onAction(() -> {
                             try {
                                 bsqWalletService.commitTx(txWithBtcFee);
-                                // We need to create another instance, otherwise the tx would trigger an invalid state exception 
-                                // if it gets committed 2 times 
+                                // We need to create another instance, otherwise the tx would trigger an invalid state exception
+                                // if it gets committed 2 times
                                 btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
                                 bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
                                     @Override
@@ -181,19 +185,19 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                                         compensationRequestPayload.setFeeTxId(transaction.getHashAsString());
                                         compensationRequestManager.addToP2PNetwork(compensationRequestPayload);
                                         compensationRequestDisplay.clearForm();
-                                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                                        new Popup<>(preferences).confirmation(Res.get("dao.tx.published.success")).show();
                                     }
 
                                     @Override
                                     public void onFailure(@NotNull Throwable t) {
                                         log.error(t.toString());
-                                        new Popup<>().warning(t.toString()).show();
+                                        new Popup<>(preferences).warning(t.toString()).show();
                                     }
                                 });
                             } catch (WalletException | TransactionVerificationException e) {
                                 log.error(e.toString());
                                 e.printStackTrace();
-                                new Popup<>().warning(e.toString());
+                                new Popup<>(preferences).warning(e.toString());
                             }
                         })
                         .closeButtonText(Res.get("shared.cancel"))
@@ -202,7 +206,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                     TransactionVerificationException | WalletException | InsufficientMoneyException | ChangeBelowDustException e) {
                 log.error(e.toString());
                 e.printStackTrace();
-                new Popup<>().warning(e.toString()).show();
+                new Popup<>(preferences).warning(e.toString()).show();
             }
         });
     }

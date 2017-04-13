@@ -19,6 +19,7 @@ package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
 import javafx.scene.layout.GridPane;
@@ -33,7 +34,8 @@ public class NationalBankForm extends BankForm {
     }
 
     public NationalBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
-                            GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter, closeHandler);
+                            GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler,
+                            Preferences preferences) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter, closeHandler, preferences);
     }
 }

@@ -58,7 +58,7 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatable> {
 
     // not supported yet
-    //private ComboBox<String> btcDenominationComboBox; 
+    //private ComboBox<String> btcDenominationComboBox;
     private ComboBox<BlockChainExplorer> blockChainExplorerComboBox;
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
@@ -168,7 +168,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 if (value <= 0.3) {
                     preferences.setMaxPriceDistanceInPercent(value);
                 } else {
-                    new Popup().warning(Res.get("setting.preferences.deviationToLarge")).show();
+                    new Popup(preferences).warning(Res.get("setting.preferences.deviationToLarge")).show();
                     UserThread.runAfter(() -> deviationInputTextField.setText(formatter.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
                 }
             } catch (NumberFormatException t) {
@@ -207,10 +207,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 try {
                     int withdrawalTxFeeInBytes = Integer.parseInt(transactionFeeInputTextField.getText());
                     if (withdrawalTxFeeInBytes * 1000 < Transaction.REFERENCE_DEFAULT_MIN_TX_FEE.value) {
-                        new Popup().warning(Res.get("setting.preferences.txFeeMin")).show();
+                        new Popup(preferences).warning(Res.get("setting.preferences.txFeeMin")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else if (withdrawalTxFeeInBytes > 5000) {
-                        new Popup().warning(Res.get("setting.preferences.txFeeTooLarge")).show();
+                        new Popup(preferences).warning(Res.get("setting.preferences.txFeeTooLarge")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else {
                         preferences.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes);
@@ -218,12 +218,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 } catch (NumberFormatException t) {
                     log.error(t.toString());
                     t.printStackTrace();
-                    new Popup().warning(Res.get("validation.integerOnly")).show();
+                    new Popup(preferences).warning(Res.get("validation.integerOnly")).show();
                     transactionFeeInputTextField.setText(estimatedFee);
                 } catch (Throwable t) {
                     log.error(t.toString());
                     t.printStackTrace();
-                    new Popup().warning(Res.get("validation.inputError", t.getMessage())).show();
+                    new Popup(preferences).warning(Res.get("validation.inputError", t.getMessage())).show();
                     transactionFeeInputTextField.setText(estimatedFee);
                 }
             }
@@ -287,7 +287,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                             label.setText(item.getNameAndCode());
                             removeButton.setOnAction(e -> {
                                 if (item.equals(preferences.getPreferredTradeCurrency())) {
-                                    new Popup().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
+                                    new Popup(preferences).warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
                                 } else {
                                     preferences.removeFiatCurrency(item);
                                     if (!allFiatCurrencies.contains(item))
@@ -337,7 +337,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                             label.setText(item.getNameAndCode());
                             removeButton.setOnAction(e -> {
                                 if (item.equals(preferences.getPreferredTradeCurrency())) {
-                                    new Popup().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
+                                    new Popup(preferences).warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
                                 } else {
                                     preferences.removeCryptoCurrency(item);
                                     if (!allCryptoCurrencies.contains(item))
@@ -413,7 +413,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         transactionFeeInputTextField.setText(getNonTradeTxFeePerBytes());
         ignoreTradersListInputTextField.setText(preferences.getIgnoreTradersList().stream().collect(Collectors.joining(", ")));
-        
+
     /* btcDenominationComboBox.setDisable(true);
      btcDenominationComboBox.setItems(btcDenominations);
      btcDenominationComboBox.getSelectionModel().select(getBtcDenomination());
@@ -437,12 +437,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             String selectedItem = userLanguageComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 preferences.setUserLanguage(selectedItem);
-                new Popup<>().information(Res.get("settings.preferences.languageChange"))
+                new Popup<>(preferences).information(Res.get("settings.preferences.languageChange"))
                         .closeButtonText(Res.get("shared.ok"))
                         .show();
             }
             // Should we apply the changed currency immediately to the language list?
-            // If so and the user selects a unknown language he might get lost and it is hard to find 
+            // If so and the user selects a unknown language he might get lost and it is hard to find
             // again the language he understands
            /* if (selectedItem != null && !selectedItem.equals(preferences.getUserLanguage())) {
                 preferences.setUserLanguage(selectedItem);
@@ -541,21 +541,21 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private void activateDisplayPreferences() {
-        showOwnOffersInOfferBook.setSelected(preferences.getShowOwnOffersInOfferBook());
+        showOwnOffersInOfferBook.setSelected(preferences.isShowOwnOffersInOfferBook());
         showOwnOffersInOfferBook.setOnAction(e -> preferences.setShowOwnOffersInOfferBook(showOwnOffersInOfferBook.isSelected()));
 
         useAnimationsCheckBox.setSelected(preferences.getUseAnimations());
         useAnimationsCheckBox.setOnAction(e -> preferences.setUseAnimations(useAnimationsCheckBox.isSelected()));
 
-        // useStickyMarketPriceCheckBox.setSelected(preferences.getUseStickyMarketPrice());
+        // useStickyMarketPriceCheckBox.setSelected(preferences.isUseStickyMarketPrice());
         // useStickyMarketPriceCheckBox.setOnAction(e -> preferences.setUseStickyMarketPrice(useStickyMarketPriceCheckBox.isSelected()));
 
-        sortMarketCurrenciesNumericallyCheckBox.setSelected(preferences.getSortMarketCurrenciesNumerically());
+        sortMarketCurrenciesNumericallyCheckBox.setSelected(preferences.isSortMarketCurrenciesNumerically());
         sortMarketCurrenciesNumericallyCheckBox.setOnAction(e -> preferences.setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumericallyCheckBox.isSelected()));
 
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgain());
 
-        autoSelectArbitratorsCheckBox.setSelected(preferences.getAutoSelectArbitrators());
+        autoSelectArbitratorsCheckBox.setSelected(preferences.isAutoSelectArbitrators());
         autoSelectArbitratorsCheckBox.setOnAction(e -> preferences.setAutoSelectArbitrators(autoSelectArbitratorsCheckBox.isSelected()));
     }
 

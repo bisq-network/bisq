@@ -18,10 +18,13 @@
 package io.bisq.network.p2p;
 
 import io.bisq.common.app.Version;
+import io.bisq.common.persistance.Msg;
 import io.bisq.common.persistance.Persistable;
+import lombok.EqualsAndHashCode;
 
 import java.security.PublicKey;
 
+@EqualsAndHashCode
 public final class DecryptedMsgWithPubKey implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -32,25 +35,6 @@ public final class DecryptedMsgWithPubKey implements Persistable {
     public DecryptedMsgWithPubKey(Msg msg, PublicKey signaturePubKey) {
         this.msg = msg;
         this.signaturePubKey = signaturePubKey;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof DecryptedMsgWithPubKey)) return false;
-
-        DecryptedMsgWithPubKey that = (DecryptedMsgWithPubKey) o;
-
-        if (msg != null ? !msg.equals(that.msg) : that.msg != null) return false;
-        return !(signaturePubKey != null ? !signaturePubKey.equals(that.signaturePubKey) : that.signaturePubKey != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = msg != null ? msg.hashCode() : 0;
-        result = 31 * result + (signaturePubKey != null ? signaturePubKey.hashCode() : 0);
-        return result;
     }
 
     @Override

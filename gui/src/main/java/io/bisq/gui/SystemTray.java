@@ -21,6 +21,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.exceptions.BisqException;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.ImageUtil;
 import javafx.application.Platform;
@@ -52,15 +53,17 @@ public class SystemTray {
     private final Stage stage;
     private final Runnable onExit;
     private final MenuItem toggleShowHideItem = new MenuItem(HIDE_WINDOW_LABEL);
+    private final Preferences preferences;
 
-    public static SystemTray create(Stage stage, Runnable onExit) {
-        systemTray = new SystemTray(stage, onExit);
+    public static SystemTray create(Stage stage, Runnable onExit, Preferences preferences) {
+        systemTray = new SystemTray(stage, onExit, preferences);
         return systemTray;
     }
 
-    private SystemTray(Stage stage, Runnable onExit) {
+    private SystemTray(Stage stage, Runnable onExit, Preferences preferences) {
         this.stage = stage;
         this.onExit = onExit;
+        this.preferences = preferences;
         init();
     }
 
@@ -71,7 +74,7 @@ public class SystemTray {
         }
 
         // prevent exiting the app when the last window gets closed
-        // For now we allow to close the app by closing the window. 
+        // For now we allow to close the app by closing the window.
         // Later we only let it close via the system trays exit.
         Platform.setImplicitExit(false);
 
@@ -97,7 +100,7 @@ public class SystemTray {
             BufferedImage trayIconImage = ImageIO.read(getClass().getResource(path));
             TrayIcon trayIcon = new TrayIcon(trayIconImage);
             // On Windows and Linux the icon needs to be scaled
-            // On OSX we get the correct size from the provided image 
+            // On OSX we get the correct size from the provided image
             if (!Utilities.isOSX()) {
                 int trayIconWidth = trayIcon.getSize().width;
                 trayIcon = new TrayIcon(trayIconImage.getScaledInstance(trayIconWidth, -1, Image.SCALE_SMOOTH));
@@ -125,7 +128,7 @@ public class SystemTray {
 
         aboutItem.addActionListener(e -> {
             try {
-                UserThread.execute(() -> GUIUtil.openWebPage("https://bisq.io"));
+                UserThread.execute(() -> GUIUtil.openWebPage("https://bisq.io", preferences));
             } catch (Exception e1) {
                 e1.printStackTrace();
             }

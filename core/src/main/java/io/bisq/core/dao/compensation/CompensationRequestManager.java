@@ -19,6 +19,7 @@ package io.bisq.core.dao.compensation;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
+import io.bisq.common.persistance.ListPersistable;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -40,14 +41,14 @@ import java.util.ArrayList;
 public class CompensationRequestManager {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);
 
-    private static final int GENESIS_BLOCK_HEIGHT = 391; // TODO dev version regtest 
+    private static final int GENESIS_BLOCK_HEIGHT = 391; // TODO dev version regtest
 
     private final P2PService p2PService;
     private final DaoPeriodService daoPeriodService;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final VotingDefaultValues votingDefaultValues;
-    private final Storage<ArrayList<CompensationRequest>> compensationRequestsStorage;
+    private final Storage<ListPersistable<CompensationRequest>> compensationRequestsStorage;
 
     private final ObservableList<CompensationRequest> observableCompensationRequestsList = FXCollections.observableArrayList();
     private CompensationRequest selectedCompensationRequest;
@@ -64,7 +65,7 @@ public class CompensationRequestManager {
                                       BsqWalletService bsqWalletService,
                                       DaoPeriodService daoPeriodService,
                                       VotingDefaultValues votingDefaultValues,
-                                      Storage<ArrayList<CompensationRequest>> compensationRequestsStorage) {
+                                      Storage<ListPersistable<CompensationRequest>> compensationRequestsStorage) {
         this.p2PService = p2PService;
         this.daoPeriodService = daoPeriodService;
         this.btcWalletService = btcWalletService;
@@ -72,9 +73,9 @@ public class CompensationRequestManager {
         this.votingDefaultValues = votingDefaultValues;
         this.compensationRequestsStorage = compensationRequestsStorage;
 
-        ArrayList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
+        ListPersistable<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
         if (persisted != null)
-            observableCompensationRequestsList.addAll(persisted);
+            observableCompensationRequestsList.addAll(persisted.getListPayload());
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
@@ -112,7 +113,7 @@ public class CompensationRequestManager {
         if (!contains(compensationRequestPayload)) {
             observableCompensationRequestsList.add(new CompensationRequest(compensationRequestPayload));
             if (storeLocally)
-                compensationRequestsStorage.queueUpForSave(new ArrayList<>(observableCompensationRequestsList), 500);
+                compensationRequestsStorage.queueUpForSave(new ListPersistable<>(observableCompensationRequestsList), 500);
         } else {
             log.warn("We have already an item with the same CompensationRequest.");
         }

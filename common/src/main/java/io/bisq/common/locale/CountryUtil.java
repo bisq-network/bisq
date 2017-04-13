@@ -150,7 +150,7 @@ public class CountryUtil {
     private static List<Locale> getAllCountryLocales() {
         List<Locale> allLocales = LocaleUtil.getAllLocales();
 
-        // Filter duplicate locale entries 
+        // Filter duplicate locale entries
         Set<Locale> allLocalesAsSet = allLocales.stream().filter(locale -> !locale.getCountry().isEmpty())
                 .collect(Collectors.toSet());
 

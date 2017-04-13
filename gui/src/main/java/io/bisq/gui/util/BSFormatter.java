@@ -69,7 +69,7 @@ public class BSFormatter {
     @Inject
     public BSFormatter() {
         coinFormat = MonetaryFormat.BTC;
-        
+
       /*  if (user.tradeCurrencyProperty().get() == null)
             setFiatCurrencyCode(CurrencyUtil.getDefaultFiatCurrencyAsCode());
         else if (user.tradeCurrencyProperty().get() != null)
@@ -322,8 +322,7 @@ public class BSFormatter {
 
     public String formatVolumeLabel(String currencyCode, String postFix) {
         return Res.get("formatter.formatVolumeLabel",
-                CurrencyUtil.getNameByCode(currencyCode),
-                postFix);
+                CurrencyUtil.getNameByCode(currencyCode), postFix);
     }
 
     public String formatMinVolumeAndVolume(Offer offer) {

@@ -22,7 +22,6 @@ import io.bisq.common.locale.CountryUtil;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.payment.payload.SepaAccountPayload;
-
 import java.util.List;
 
 public final class SepaAccount extends CountryBasedPaymentAccount implements BankAccount {

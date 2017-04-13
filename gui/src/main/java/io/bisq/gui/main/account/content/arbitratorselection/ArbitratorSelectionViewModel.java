@@ -141,7 +141,7 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     }
 
     private void updateAutoSelectArbitrators() {
-        if (preferences.getAutoSelectArbitrators()) {
+        if (preferences.isAutoSelectArbitrators()) {
             arbitratorListItems.stream().forEach(item -> {
                 Arbitrator arbitrator = item.arbitrator;
                 if (!isMyOwnRegisteredArbitrator(arbitrator)) {
@@ -165,6 +165,6 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     }
 
     public boolean getAutoSelectArbitrators() {
-        return preferences.getAutoSelectArbitrators();
+        return preferences.isAutoSelectArbitrators();
     }
 }

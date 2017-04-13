@@ -228,7 +228,7 @@ public class SellerStep3View extends TradeStepView {
                     }
                 }
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
-                new Popup()
+                new Popup(preferences)
                         .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
                         .confirmation(message)
                         .width(700)
@@ -240,7 +240,7 @@ public class SellerStep3View extends TradeStepView {
                 confirmPaymentReceived();
             }
         } else {
-            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -273,25 +273,25 @@ public class SellerStep3View extends TradeStepView {
         }
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
-            new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
+            new Popup(preferences).headLine(Res.get("popup.attention.forTradeWithId", id))
                     .attention(message)
                     .show();
         }
     }
-    
+
     private void confirmPaymentReceived() {
         confirmButton.setDisable(true);
 
         model.dataModel.onFiatPaymentReceived(() -> {
-            // In case the first send failed we got the support button displayed. 
+            // In case the first send failed we got the support button displayed.
             // If it succeeds at a second try we remove the support button again.
             //TODO check for support. in case of a dispute we dont want to hide the button
-            //if (notificationGroup != null) 
+            //if (notificationGroup != null)
             //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
             confirmButton.setDisable(false);
             busyAnimation.stop();
-            new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
+            new Popup(preferences).warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 

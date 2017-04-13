@@ -17,11 +17,13 @@
 
 package io.bisq.core.payment;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -43,8 +45,8 @@ public abstract class PaymentAccount implements Persistable {
 
     @Getter
     protected final String id;
-    @Getter
-    protected final Date creationDate;
+
+    protected final long creationDate;
     @Getter
     protected final PaymentMethod paymentMethod;
     @Getter
@@ -58,16 +60,14 @@ public abstract class PaymentAccount implements Persistable {
     @Getter
     public final PaymentAccountPayload paymentAccountPayload;
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     protected PaymentAccount(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
         id = UUID.randomUUID().toString();
-        creationDate = new Date();
+        creationDate = new Date().getTime();
         paymentAccountPayload = getPayload();
     }
 
@@ -75,6 +75,10 @@ public abstract class PaymentAccount implements Persistable {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Date getCreationDate() {
+        return new Date(creationDate);
+    }
 
     public void addCurrency(TradeCurrency tradeCurrency) {
         if (!tradeCurrencies.contains(tradeCurrency))
@@ -111,5 +115,8 @@ public abstract class PaymentAccount implements Persistable {
 
     protected abstract PaymentAccountPayload getPayload();
 
-
+    @Override
+    public PB.PaymentAccount toProtobuf() {
+        return PB.PaymentAccount.newBuilder().setPaymentMethod(PB.PaymentMethod.newBuilder().setId(getId())).build();
+    }
 }

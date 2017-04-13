@@ -22,6 +22,8 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.core.payment.payload.OKPayAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 //TODO missing support for selected trade currency
 public final class OKPayAccount extends PaymentAccount {

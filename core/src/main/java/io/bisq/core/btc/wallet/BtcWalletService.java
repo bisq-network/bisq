@@ -31,6 +31,7 @@ import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.wallet.KeyBag;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class BtcWalletService extends WalletService {
+public class BtcWalletService extends WalletService implements KeyBagSupplier {
     private static final Logger log = LoggerFactory.getLogger(BtcWalletService.class);
 
     private final AddressEntryList addressEntryList;
@@ -80,7 +81,7 @@ public class BtcWalletService extends WalletService {
     void decryptWallet(@NotNull KeyParameter key) {
         super.decryptWallet(key);
 
-        addressEntryList.stream().forEach(e -> {
+        addressEntryList.getAddressEntryList().stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
             if (keyPair != null && keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.decrypt(key));
@@ -92,7 +93,7 @@ public class BtcWalletService extends WalletService {
     void encryptWallet(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
         super.encryptWallet(keyCrypterScrypt, key);
 
-        addressEntryList.stream().forEach(e -> {
+        addressEntryList.getAddressEntryList().stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
             if (keyPair != null && keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
@@ -110,6 +111,21 @@ public class BtcWalletService extends WalletService {
                 sb.toString() +
                 "All pubkeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // KeyBagSupplier
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public KeyBag getKeyBag() {
+        return wallet;
+    }
+
+    @Override
+    public boolean isKeyBagReady() {
+        return wallet != null;
     }
 
 
@@ -159,7 +175,7 @@ public class BtcWalletService extends WalletService {
         // mining fee: BTC mining fee + optional burned BSQ fee (only if opReturnData != null)
 
         // In case of txs for burned BSQ fees we have no receiver output and it might be that there is no change outputs
-        // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input 
+        // We need to guarantee that min. 1 valid output is added (OP_RETURN does not count). So we use a higher input
         // for BTC to force an additional change output.
 
         // safety check counter to avoid endless loops
@@ -215,7 +231,7 @@ public class BtcWalletService extends WalletService {
 
             resultTx = sendRequest.tx;
 
-            // We might have the rare case that both inputs matched the required fees, so both did not require 
+            // We might have the rare case that both inputs matched the required fees, so both did not require
             // a change output.
             // In such cases we need to add artificially a change output (OP_RETURN is not allowed as only output)
             forcedChangeValue = resultTx.getOutputs().size() == 0 ? Transaction.MIN_NONDUST_OUTPUT : Coin.ZERO;
@@ -249,7 +265,7 @@ public class BtcWalletService extends WalletService {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Commit tx 
+    // Commit tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void commitTx(Transaction tx) {
@@ -349,7 +365,7 @@ public class BtcWalletService extends WalletService {
     }
 
     private List<AddressEntry> getAddressEntryListAsImmutableList() {
-        return ImmutableList.copyOf(addressEntryList);
+        return ImmutableList.copyOf(addressEntryList.getAddressEntryList());
     }
 
     public void swapTradeEntryToAvailableEntry(String offerId, AddressEntry.Context context) {

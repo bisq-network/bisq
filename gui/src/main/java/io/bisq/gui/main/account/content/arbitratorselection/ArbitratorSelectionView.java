@@ -21,6 +21,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.TableGroupHeadline;
@@ -49,6 +50,7 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, ArbitratorSelectionViewModel> {
 
     private final ArbitratorSelectionViewModel model;
+    private final Preferences preferences;
 
     private ListView<String> languagesListView;
     private ComboBox<String> languageComboBox;
@@ -65,9 +67,10 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ArbitratorSelectionView(ArbitratorSelectionViewModel model) {
+    private ArbitratorSelectionView(ArbitratorSelectionViewModel model, Preferences preferences) {
         super(model);
         this.model = model;
+        this.preferences = preferences;
     }
 
     @Override
@@ -109,7 +112,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         model.onRemoveLanguage(locale);
 
         if (languagesListView.getItems().size() == 0) {
-            new Popup().warning(Res.get("account.arbitratorSelection.minOneArbitratorRequired")).show();
+            new Popup(preferences).warning(Res.get("account.arbitratorSelection.minOneArbitratorRequired")).show();
             model.onAddLanguage(LanguageUtil.getDefaultLanguageLocaleAsCode());
         }
     }
@@ -257,11 +260,11 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                                     if (isMyOwnRegisteredArbitrator) {
                                         String text = Res.get("account.arbitratorSelection.cannotSelectHimself");
                                         tableRow.setTooltip(new Tooltip(text));
-                                        tableRow.setOnMouseClicked(e -> new Popup().warning(
+                                        tableRow.setOnMouseClicked(e -> new Popup(preferences).warning(
                                                 text).show());
                                     } else if (!hasMatchingLanguage) {
                                         tableRow.setTooltip(new Tooltip(Res.get("account.arbitratorSelection.noMatchingLang")));
-                                        tableRow.setOnMouseClicked(e -> new Popup()
+                                        tableRow.setOnMouseClicked(e -> new Popup(preferences)
                                                 .warning(Res.get("account.arbitratorSelection.noLang")).show());
                                     } else {
                                         tableRow.setOnMouseClicked(null);
@@ -289,7 +292,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                                                 } else if (model.isDeselectAllowed(item)) {
                                                     onRemoveArbitrator(item);
                                                 } else {
-                                                    new Popup().warning(Res.get("account.arbitratorSelection.minOne")).show();
+                                                    new Popup(preferences).warning(Res.get("account.arbitratorSelection.minOne")).show();
                                                     checkBox.setSelected(true);
                                                 }
                                                 item.setIsSelected(checkBox.isSelected());

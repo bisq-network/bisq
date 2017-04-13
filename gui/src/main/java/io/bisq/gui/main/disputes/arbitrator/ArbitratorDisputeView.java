@@ -21,6 +21,7 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.disputes.trader.TraderDisputeView;
 import io.bisq.gui.main.overlays.windows.ContractWindow;
@@ -39,9 +40,10 @@ public class ArbitratorDisputeView extends TraderDisputeView {
     @Inject
     public ArbitratorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
                                  BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow, PrivateNotificationManager privateNotificationManager,
-                                 ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow, P2PService p2PService) {
+                                 ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow, P2PService p2PService,
+                                 Preferences preferences) {
         super(disputeManager, keyRing, tradeManager, stage, formatter,
-                disputeSummaryWindow, privateNotificationManager, contractWindow, tradeDetailsWindow, p2PService);
+                disputeSummaryWindow, privateNotificationManager, contractWindow, tradeDetailsWindow, p2PService, preferences);
     }
 
     @Override

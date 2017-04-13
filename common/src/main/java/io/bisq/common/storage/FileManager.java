@@ -17,21 +17,27 @@
 
 package io.bisq.common.storage;
 
+import com.google.inject.Inject;
+import com.google.protobuf.Message;
 import io.bisq.common.UserThread;
 import io.bisq.common.io.LookAheadObjectInputStream;
+import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.util.Utilities;
+import io.bisq.generated.protobuffer.PB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class FileManager<T> {
+public class FileManager<T extends Persistable> {
     private static final Logger log = LoggerFactory.getLogger(FileManager.class);
 
     private final File dir;
@@ -41,15 +47,17 @@ public class FileManager<T> {
     private final long delay;
     private final Callable<Void> saveFileTask;
     private T serializable;
-
+    private ProtobufferResolver protobufferResolver;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public FileManager(File dir, File storageFile, long delay) {
+    @Inject
+    public FileManager(File dir, File storageFile, long delay, ProtobufferResolver protobufferResolver) {
         this.dir = dir;
         this.storageFile = storageFile;
+        this.protobufferResolver = protobufferResolver;
 
         executor = Utilities.getScheduledThreadPoolExecutor("FileManager", 1, 10, 5);
 
@@ -102,6 +110,19 @@ public class FileManager<T> {
 
     public synchronized T read(File file) throws IOException, ClassNotFoundException {
         log.debug("read" + file);
+        Optional<Persistable> persistable = Optional.empty();
+
+        try (final FileInputStream fileInputStream = new FileInputStream(file)) {
+            persistable = protobufferResolver.fromProto(PB.DiskEnvelope.parseDelimitedFrom(fileInputStream));
+        } catch (Throwable t) {
+            log.error("Exception at proto read: " + t.getMessage() + " " + file.getName());
+        }
+
+        if(persistable.isPresent()) {
+            log.error("Persistable found");
+            return (T) persistable.get();
+        }
+
         try (final FileInputStream fileInputStream = new FileInputStream(file);
              final ObjectInputStream objectInputStream = new LookAheadObjectInputStream(fileInputStream, false)) {
             return (T) objectInputStream.readObject();
@@ -172,6 +193,16 @@ public class FileManager<T> {
         FileOutputStream fileOutputStream = null;
         ObjectOutputStream objectOutputStream = null;
         PrintWriter printWriter = null;
+
+        // is it a protobuffer thing?
+
+        PB.DiskEnvelope protoDiskEnvelope = null;
+        try {
+            protoDiskEnvelope = (PB.DiskEnvelope) ((T) serializable).toProtobuf();
+        } catch (Throwable e) {
+            log.info("Not protobufferable: {}, {}, {}", serializable.getClass().getSimpleName(), storageFile, e.getStackTrace());
+        }
+
         try {
             if (!dir.exists())
                 if (!dir.mkdir())
@@ -183,6 +214,20 @@ public class FileManager<T> {
                 // When we dump json files we don't want to safe it as java serialized string objects, so we use PrintWriter instead.
                 printWriter = new PrintWriter(tempFile);
                 printWriter.println(((PlainTextWrapper) serializable).plainText);
+            } else if (protoDiskEnvelope != null) {
+                fileOutputStream = new FileOutputStream(tempFile);
+
+                log.info("Writing protobuffer to disc");
+                protoDiskEnvelope.writeDelimitedTo(fileOutputStream);
+
+                // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
+                // to not write through to physical media for at least a few seconds, but this is the best we can do.
+                fileOutputStream.flush();
+                fileOutputStream.getFD().sync();
+
+                // Close resources before replacing file with temp file because otherwise it causes problems on windows
+                // when rename temp file
+                fileOutputStream.close();
             } else {
                 // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
                 // and we need to close it

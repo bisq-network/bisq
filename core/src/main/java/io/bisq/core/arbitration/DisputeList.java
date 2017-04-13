@@ -22,31 +22,38 @@ import io.bisq.common.persistance.Persistable;
 import io.bisq.common.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public final class DisputeList<Dispute> extends ArrayList<Dispute> implements Persistable {
+@Slf4j
+@ToString
+/**
+ * Holds a List of Dispute objects.
+ *
+ * Calls to the List are delegated because this class intercepts the add/remove calls so changes
+ * can be saved to disc.
+ */
+public final class DisputeList implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(DisputeList.class);
+    final transient private Storage<DisputeList> storage;
+    final private List<Dispute> disputeList = new ArrayList<>();
 
-    final transient private Storage<DisputeList<Dispute>> storage;
-    transient private ObservableList<Dispute> observableList;
-
-    public DisputeList(Storage<DisputeList<Dispute>> storage) {
+    public DisputeList(Storage<DisputeList> storage) {
         this.storage = storage;
 
         DisputeList persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
-            this.addAll(persisted);
+            disputeList.addAll(persisted.stream().collect(Collectors.toList()));
         }
-        observableList = FXCollections.observableArrayList(this);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -57,11 +64,13 @@ public final class DisputeList<Dispute> extends ArrayList<Dispute> implements Pe
         }
     }
 
-    @Override
+    public ObservableList<Dispute> getObservableList() {
+        return FXCollections.observableArrayList(disputeList);
+    }
+
     public boolean add(Dispute dispute) {
-        if (!super.contains(dispute)) {
-            boolean changed = super.add(dispute);
-            getObservableList().add(dispute);
+        if (!disputeList.contains(dispute)) {
+            boolean changed = disputeList.add(dispute);
             if (changed)
                 storage.queueUpForSave();
             return changed;
@@ -70,26 +79,28 @@ public final class DisputeList<Dispute> extends ArrayList<Dispute> implements Pe
         }
     }
 
-    @Override
     public boolean remove(Object dispute) {
-        boolean changed = super.remove(dispute);
-        getObservableList().remove(dispute);
+        boolean changed = disputeList.remove(dispute);
         if (changed)
             storage.queueUpForSave();
         return changed;
     }
 
-    private ObservableList<Dispute> getObservableList() {
-        if (observableList == null)
-            observableList = FXCollections.observableArrayList(this);
-        return observableList;
+    //// Delegate methods to List implementation /////
+
+    public int size() {
+        return disputeList.size();
     }
 
-    @NotNull
-    @Override
-    public String toString() {
-        return "DisputeList{" +
-                ", observableList=" + observableList +
-                '}';
+    public boolean isEmpty() {
+        return disputeList.isEmpty();
+    }
+
+    public boolean contains(Object o) {
+        return disputeList.contains(o);
+    }
+
+    public Stream<Dispute> stream() {
+        return disputeList.stream();
     }
 }

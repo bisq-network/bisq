@@ -18,7 +18,7 @@
 package io.bisq.network.crypto;
 
 
-import io.bisq.network.p2p.Msg;
+import io.bisq.common.persistance.Msg;
 
 import java.security.PublicKey;
 

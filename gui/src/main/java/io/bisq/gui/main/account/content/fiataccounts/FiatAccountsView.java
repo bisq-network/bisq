@@ -25,6 +25,7 @@ import io.bisq.core.payment.ClearXchangeAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.TitledGroupBg;
@@ -56,6 +57,7 @@ import static io.bisq.gui.util.FormBuilder.*;
 @FxmlView
 public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAccountsViewModel> {
 
+    private final Preferences preferences;
     private ListView<PaymentAccount> paymentAccountsListView;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
 
@@ -92,7 +94,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             ChaseQuickPayValidator chaseQuickPayValidator,
                             InteracETransferValidator interacETransferValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
-                            BSFormatter formatter) {
+                            BSFormatter formatter, Preferences preferences) {
         super(model);
 
         this.ibanValidator = ibanValidator;
@@ -107,6 +109,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.interacETransferValidator = interacETransferValidator;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
         this.formatter = formatter;
+        this.preferences = preferences;
     }
 
     @Override
@@ -145,7 +148,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
 
     private void onSaveNewAccount(PaymentAccount paymentAccount) {
         if (paymentAccount instanceof ClearXchangeAccount) {
-            new Popup().information(Res.get("payment.clearXchange.info"))
+            new Popup(preferences).information(Res.get("payment.clearXchange.info"))
                     .width(900)
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iConfirm"))
@@ -166,7 +169,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
         } else {
-            new Popup().warning(Res.get("shared.accountNameAlreadyUsed")).show();
+            new Popup(preferences).warning(Res.get("shared.accountNameAlreadyUsed")).show();
         }
     }
 
@@ -175,14 +178,14 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     }
 
     private void onDeleteAccount(PaymentAccount paymentAccount) {
-        new Popup().warning(Res.get("shared.askConfirmDeleteAccount"))
+        new Popup(preferences).warning(Res.get("shared.askConfirmDeleteAccount"))
                 .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
                     boolean isPaymentAccountUsed = model.onDeleteAccount(paymentAccount);
                     if (!isPaymentAccountUsed)
                         removeSelectAccountForm();
                     else
-                        UserThread.runAfter(() -> new Popup().warning(
+                        UserThread.runAfter(() -> new Popup(preferences).warning(
                                 Res.get("shared.cannotDeleteAccount"))
                                 .show(), 100, TimeUnit.MILLISECONDS);
                 })
@@ -329,11 +332,11 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             case PaymentMethod.FASTER_PAYMENTS_ID:
                 return new FasterPaymentsForm(paymentAccount, inputValidator, root, gridRow, formatter);
             case PaymentMethod.NATIONAL_BANK_ID:
-                return new NationalBankForm(paymentAccount, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
+                return new NationalBankForm(paymentAccount, inputValidator, root, gridRow, formatter, this::onCancelNewAccount, preferences);
             case PaymentMethod.SAME_BANK_ID:
-                return new SameBankForm(paymentAccount, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
+                return new SameBankForm(paymentAccount, inputValidator, root, gridRow, formatter, this::onCancelNewAccount, preferences);
             case PaymentMethod.SPECIFIC_BANKS_ID:
-                return new SpecificBankForm(paymentAccount, inputValidator, root, gridRow, formatter, this::onCancelNewAccount);
+                return new SpecificBankForm(paymentAccount, inputValidator, root, gridRow, formatter, this::onCancelNewAccount, preferences);
             case PaymentMethod.ALI_PAY_ID:
                 return new AliPayForm(paymentAccount, aliPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SWISH_ID:
@@ -347,7 +350,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 return new USPostalMoneyOrderForm(paymentAccount, usPostalMoneyOrderValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CASH_DEPOSIT_ID:
-                return new CashDepositForm(paymentAccount, inputValidator, root, gridRow, formatter);
+                return new CashDepositForm(paymentAccount, inputValidator, root, gridRow, formatter, preferences);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;

@@ -19,6 +19,7 @@ package io.bisq.core.dao.blockchain;
 
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.dao.RpcOptionKeys;
@@ -54,11 +55,11 @@ public class BsqBlockchainManager {
     // Static fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Modulo of blocks for making snapshots of UTXO. 
+    // Modulo of blocks for making snapshots of UTXO.
     // We stay also the value behind for safety against reorgs.
     // E.g. for SNAPSHOT_TRIGGER = 30:
     // If we are block 119 and last snapshot was 60 then we get a new trigger for a snapshot at block 120 and
-    // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after 
+    // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after
     // a restart.
     // As we only store snapshots when Txos are added it might be that there are bigger gaps than SNAPSHOT_TRIGGER.
     private static final int SNAPSHOT_TRIGGER = 50;  // set high to deactivate
@@ -69,7 +70,7 @@ public class BsqBlockchainManager {
 
     //mainnet
     private static final String GENESIS_TX_ID = "cabbf6073aea8f22ec678e973ac30c6d8fc89321011da6a017f63e67b9f66667";
-    // block 300000 2014-05-10 
+    // block 300000 2014-05-10
     // block 350000 2015-03-30
     // block 400000 2016-02-25
     // block 450000 2017-01-25
@@ -123,12 +124,13 @@ public class BsqBlockchainManager {
     public BsqBlockchainManager(BsqBlockchainService blockchainService,
                                 P2PService p2PService,
                                 JsonExporter jsonExporter,
+                                ProtobufferResolver protobufferResolver,
                                 @Named(Storage.DIR_KEY) File storageDir,
                                 @Named(RpcOptionKeys.RPC_USER) String rpcUser) {
         this.blockchainService = blockchainService;
         this.p2PService = p2PService;
         this.jsonExporter = jsonExporter;
-        snapshotTxOutputMapStorage = new Storage<>(storageDir);
+        snapshotTxOutputMapStorage = new Storage<>(storageDir, protobufferResolver);
 
         connectToBtcCore = rpcUser != null && !rpcUser.isEmpty();
     }

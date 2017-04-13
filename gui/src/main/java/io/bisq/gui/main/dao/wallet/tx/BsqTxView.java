@@ -165,7 +165,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
             log.error("invalidBsqTransactions " + txIds);
             String key = "invalidBsqTransactionsWarning_" + txIds;
             if (DontShowAgainLookup.showAgain(key))
-                new Popup().warning("We detected invalid Bsq transactions.\n" +
+                new Popup(preferences).warning("We detected invalid Bsq transactions.\n" +
                         "This must not happen if you used the bisq application only to send or receive BSQ.\n\n" +
                         "invalidBsqTransactionIds=" + txIds.toString())
                         .width(800)
@@ -356,12 +356,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     private void openTxInBlockExplorer(BsqTxListItem item) {
         if (item.getTxId() != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId());
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId(), preferences);
     }
 
     private void openAddressInBlockExplorer(BsqTxListItem item) {
         if (item.getAddress() != null) {
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().addressUrl + item.getAddress());
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().addressUrl + item.getAddress(), preferences);
         }
     }
 

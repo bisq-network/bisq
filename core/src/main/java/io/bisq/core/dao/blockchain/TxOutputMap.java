@@ -17,6 +17,13 @@
 
 package io.bisq.core.dao.blockchain;
 
+import io.bisq.common.persistance.Persistable;
+import io.bisq.common.util.Utilities;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.HashMap;
 import io.bisq.common.util.Utilities;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,8 +36,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 // Map of any TxOutput which was ever used in context of a BSQ TX.
-// Outputs can come from various txs : 
-// - genesis tx 
+// Outputs can come from various txs :
+// - genesis tx
 // - spend BSQ tx
 // - burn fee
 // - voting
@@ -38,7 +45,7 @@ import java.util.stream.Collectors;
 // - sponsoring tx (new genesis)
 
 @Slf4j
-public class TxOutputMap implements Serializable {
+public class TxOutputMap implements Persistable {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Statics
