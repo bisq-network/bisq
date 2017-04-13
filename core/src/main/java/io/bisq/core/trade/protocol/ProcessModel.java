@@ -142,12 +142,10 @@ public class ProcessModel implements Model, Serializable {
         offerId = offer.getId();
         accountId = user.getAccountId();
         pubKeyRing = keyRing.getPubKeyRing();
+    }
 
-        log.error("onAllServicesInitialized myNodeAddress=" + p2PService.getAddress());
-    }  // TODO need lazy access?
-
+    // TODO need lazy access?
     public NodeAddress getMyNodeAddress() {
-        log.error("getMyNodeAddress myNodeAddress=" + p2PService.getAddress());
         return p2PService.getAddress();
     }
 
