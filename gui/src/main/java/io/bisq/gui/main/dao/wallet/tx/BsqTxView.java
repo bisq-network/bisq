@@ -160,7 +160,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         if (!invalidBsqTransactions.isEmpty() && bsqBlockchainManager.isParseBlockchainComplete()) {
             Set<String> txIds = invalidBsqTransactions.stream()
                     .filter(t -> t != null)
-                    .map(t -> t.getHashAsString()).collect(Collectors.toSet());
+                    .map(Transaction::getHashAsString).collect(Collectors.toSet());
 
             log.error("invalidBsqTransactions " + txIds);
             String key = "invalidBsqTransactionsWarning_" + txIds;

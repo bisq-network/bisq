@@ -49,7 +49,7 @@ public class BsqParser {
                      int genesisBlockHeight,
                      String genesisTxId,
                      TxOutputMap txOutputMap,
-                     Consumer<TxOutputMap> snapShotHandler) throws BsqBlockchainException, OrphanDetectedException {
+                     Consumer<TxOutputMap> newBlockHandler) throws BsqBlockchainException, OrphanDetectedException {
         try {
             log.info("chainHeadHeight=" + chainHeadHeight);
             long startTotalTs = System.currentTimeMillis();
@@ -62,11 +62,7 @@ public class BsqParser {
                         genesisTxId,
                         txOutputMap);
 
-                if (BsqBlockchainManager.triggersSnapshot(blockHeight)) {
-                    TxOutputMap clonedSnapShotMap = TxOutputMap.getClonedMap(txOutputMap);
-                    //clonedSnapShotMap.printUnspentTxOutputs("triggersSnapshot");
-                    snapShotHandler.accept(clonedSnapShotMap);
-                }
+                newBlockHandler.accept(TxOutputMap.getClonedMap(txOutputMap));
                 
               /*  StringBuilder sb = new StringBuilder("recursionMap:\n");
                 List<String> list = new ArrayList<>();

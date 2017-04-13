@@ -207,9 +207,9 @@ public class BsqBlockchainManager {
                         genesisBlockHeight,
                         genesisTxId,
                         txOutputMap,
-                        snapshotTxOutputMap -> {
-                            applyNewTxOutputMap(snapshotTxOutputMap);
-                            updateSnapshotOnTrigger(snapshotTxOutputMap.getBlockHeight());
+                        newBlockMap -> {
+                            applyNewTxOutputMap(newBlockMap);
+                            updateSnapshotIfTrigger(newBlockMap.getBlockHeight());
                         }, chainTipTxOutputMap -> {
                             // we are done but it might be that new blocks have arrived in the meantime,
                             // so we try again with startBlockHeight set to current chainHeadHeight
@@ -236,23 +236,23 @@ public class BsqBlockchainManager {
                             genesisBlockHeight,
                             genesisTxId,
                             txOutputMap,
-                            newTxOutputMap -> {
-                                if (txOutputMap.getBlockHeight() < newTxOutputMap.getBlockHeight()) {
-                                    applyNewTxOutputMap(newTxOutputMap);
-                                    updateSnapshotOnTrigger(newTxOutputMap.getBlockHeight());
+                            newBlockMap -> {
+                                if (txOutputMap.getBlockHeight() < newBlockMap.getBlockHeight()) {
+                                    applyNewTxOutputMap(newBlockMap);
+                                    updateSnapshotIfTrigger(newBlockMap.getBlockHeight());
                                     log.debug("new block parsed. bsqBlock={}", bsqBlock);
                                 } else {
-                                    log.warn("We got a newTxOutputMap with a lower block height than the one from the " +
+                                    log.warn("We got a newBlockMap with a lower block height than the one from the " +
                                                     "map we requested. That should not happen, but theoretically could be " +
                                                     "if 2 blocks arrive at nearly the same time and the second is faster in " +
                                                     "parsing than the first, so the callback of the first will have a lower " +
                                                     "height. " +
                                                     "txOutputMap.getBlockHeight()={}; " +
-                                                    "newTxOutputMap.getBlockHeight()={}\n" +
+                                                    "newBlockMap.getBlockHeight()={}\n" +
                                                     "To avoid conflicts we start a reorg from the last snapshot.",
                                             txOutputMap.getBlockHeight(),
-                                            newTxOutputMap.getBlockHeight());
-                                    startReOrgFromLastSnapshot(newTxOutputMap.getBlockHeight());
+                                            newBlockMap.getBlockHeight());
+                                    startReOrgFromLastSnapshot(newBlockMap.getBlockHeight());
                                 }
                             }, throwable -> {
                                 if (throwable instanceof OrphanDetectedException) {
@@ -297,16 +297,18 @@ public class BsqBlockchainManager {
         txOutputMapListeners.stream().forEach(l -> l.onTxOutputMapChanged(txOutputMap));
     }
 
-    private void updateSnapshotOnTrigger(int blockHeight) {
-        // At trigger time we store the last memory stored map to disc
-        if (snapshotTxOutputMap != null) {
-            // We clone because storage is in a threaded context
-            TxOutputMap clonedSnapshotTxOutputMap = TxOutputMap.getClonedMap(snapshotTxOutputMap);
-            snapshotTxOutputMapStorage.queueUpForSave(clonedSnapshotTxOutputMap);
-        }
+    private void updateSnapshotIfTrigger(int blockHeight) {
+        if (triggersSnapshot(blockHeight)) {
+            // At trigger time we store the last memory stored map to disc
+            if (snapshotTxOutputMap != null) {
+                // We clone because storage is in a threaded context
+                TxOutputMap clonedSnapshotTxOutputMap = TxOutputMap.getClonedMap(snapshotTxOutputMap);
+                snapshotTxOutputMapStorage.queueUpForSave(clonedSnapshotTxOutputMap);
+            }
 
-        // Now we save the map in memory for the next trigger
-        snapshotTxOutputMap = TxOutputMap.getClonedMap(txOutputMap);
+            // Now we save the map in memory for the next trigger
+            snapshotTxOutputMap = TxOutputMap.getClonedMap(txOutputMap);
+        }
     }
 
     private void onBsqTxoChanged() {

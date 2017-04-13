@@ -180,7 +180,7 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
                      int genesisBlockHeight,
                      String genesisTxId,
                      TxOutputMap txOutputMap,
-                     Consumer<TxOutputMap> snapShotHandler,
+                     Consumer<TxOutputMap> newBlockHandler,
                      Consumer<TxOutputMap> resultHandler,
                      Consumer<Throwable> errorHandler) {
         ListenableFuture<TxOutputMap> future = parseBlocksExecutor.submit(() -> {
@@ -193,9 +193,9 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
                     genesisBlockHeight,
                     genesisTxId,
                     clonedMap,
-                    clonedSnapShotMap -> {
+                    newBlockMap -> {
                         // We map to UserThread. We don't need to clone as it was created already newly in the parser.
-                        UserThread.execute(() -> snapShotHandler.accept(clonedSnapShotMap));
+                        UserThread.execute(() -> newBlockHandler.accept(newBlockMap));
                     });
             log.info("parseBlockchain took {} ms", System.currentTimeMillis() - startTs);
             return clonedMap;

@@ -60,7 +60,7 @@ abstract public class BsqBlockchainService {
                               int genesisBlockHeight,
                               String genesisTxId,
                               TxOutputMap txOutputMap,
-                              Consumer<TxOutputMap> snapShotHandler,
+                              Consumer<TxOutputMap> newBlockHandler,
                               Consumer<TxOutputMap> resultHandler,
                               Consumer<Throwable> errorHandler);
 
