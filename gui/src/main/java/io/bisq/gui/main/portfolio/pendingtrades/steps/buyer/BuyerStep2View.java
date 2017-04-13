@@ -23,7 +23,6 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple3;
 import io.bisq.core.payment.payload.*;
 import io.bisq.core.user.DontShowAgainLookup;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
 import io.bisq.gui.components.TitledGroupBg;

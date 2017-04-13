@@ -41,7 +41,6 @@ import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.SystemTray;
 import io.bisq.gui.common.UITimer;
 import io.bisq.gui.common.view.CachingViewLoader;
@@ -77,9 +76,7 @@ import org.reactfx.EventStreams;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
@@ -170,7 +167,8 @@ public class BisqApp extends Application {
             grapher.setRankdir("TB");
             grapher.graph(injector);
 */
-            this.preferences = injector.getInstance(PreferencesImpl.class);
+            this.preferences = injector.getInstance(Preferences.class);
+            preferences.init();
 
             Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
 

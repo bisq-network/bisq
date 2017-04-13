@@ -1,6 +1,5 @@
 package io.bisq.core.p2p.network;
 
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
@@ -25,6 +24,8 @@ import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.messages.OfferAvailabilityRequest;
 import io.bisq.core.offer.messages.OfferAvailabilityResponse;
+import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.core.payment.payload.*;
 import io.bisq.core.trade.Contract;
 import io.bisq.core.trade.messages.*;
@@ -57,6 +58,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
 
+import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -77,11 +79,15 @@ import static io.bisq.generated.protobuffer.PB.Envelope.MessageCase.*;
 @Slf4j
 public class CoreProtobufferResolver implements ProtobufferResolver {
 
-    //@Inject
     private Provider<AddressEntryList> addressEntryList;
-
-    //@Inject
     private Provider<Preferences> preferencesProvider;
+
+    @Inject
+    public CoreProtobufferResolver(Provider<Preferences> preferencesProvider,
+                                   Provider<AddressEntryList> addressEntryList) {
+        this.preferencesProvider = preferencesProvider;
+        this.addressEntryList = addressEntryList;
+    }
 
     @Override
     public Optional<Msg> fromProto(PB.Envelope envelope) {
@@ -907,45 +913,64 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
     }
 
     private void setPreferences(PB.DiskEnvelope envelope) {
-        Preferences preferences = preferencesProvider.get();
-        preferences.setUserLanguage(envelope.getPreferences().getUserLanguage());
-        PB.Country userCountry = envelope.getPreferences().getUserCountry();
+        final PB.Preferences env = envelope.getPreferences();
+        Preferences preferences = this.preferencesProvider.get();
+        preferences.setUserLanguage(env.getUserLanguage());
+        PB.Country userCountry = env.getUserCountry();
         preferences.setUserCountry(new Country(userCountry.getCode(), userCountry.getName(), new Region(userCountry.getRegion().getCode(), userCountry.getRegion().getName())));
-        envelope.getPreferences().getFiatCurrenciesList().stream()
+        env.getFiatCurrenciesList().stream()
                 .forEach(tradeCurrency -> preferences.addFiatCurrency((FiatCurrency) getTradeCurrency(tradeCurrency)));
-        envelope.getPreferences().getCryptoCurrenciesList().stream()
+        env.getCryptoCurrenciesList().stream()
                 .forEach(tradeCurrency -> preferences.addCryptoCurrency((CryptoCurrency) getTradeCurrency(tradeCurrency)));
-        PB.BlockChainExplorer bceMain = envelope.getPreferences().getBlockChainExplorerMainNet();
+        PB.BlockChainExplorer bceMain = env.getBlockChainExplorerMainNet();
         preferences.setBlockChainExplorerMainNet(new BlockChainExplorer(bceMain.getName(), bceMain.getTxUrl(), bceMain.getAddressUrl()));
-        PB.BlockChainExplorer bceTest = envelope.getPreferences().getBlockChainExplorerTestNet();
+        PB.BlockChainExplorer bceTest = env.getBlockChainExplorerTestNet();
         preferences.setBlockChainExplorerTestNet(new BlockChainExplorer(bceTest.getName(), bceTest.getTxUrl(), bceTest.getAddressUrl()));
-        preferences.setBackupDirectory(envelope.getPreferences().getBackupDirectory());
-        preferences.setAutoSelectArbitrators(envelope.getPreferences().getAutoSelectArbitrators());
-        preferences.setDontShowAgainMap(envelope.getPreferences().getDontShowAgainMapMap());
-        preferences.setTacAccepted(envelope.getPreferences().getTacAccepted());
-        preferences.setUseTorForBitcoinJ(envelope.getPreferences().getUseTorForBitcoinJ());
-        preferences.setShowOwnOffersInOfferBook(envelope.getPreferences().getShowOwnOffersInOfferBook());
-        PB.Locale preferredLocale = envelope.getPreferences().getPreferredLocale();
-        PB.TradeCurrency preferredTradeCurrency = envelope.getPreferences().getPreferredTradeCurrency();
+
+        preferences.setAutoSelectArbitrators(env.getAutoSelectArbitrators());
+        preferences.setDontShowAgainMap(env.getDontShowAgainMapMap());
+        preferences.setTacAccepted(env.getTacAccepted());
+        preferences.setUseTorForBitcoinJ(env.getUseTorForBitcoinJ());
+        preferences.setShowOwnOffersInOfferBook(env.getShowOwnOffersInOfferBook());
+        PB.TradeCurrency preferredTradeCurrency = env.getPreferredTradeCurrency();
         preferences.setPreferredTradeCurrency(getTradeCurrency(preferredTradeCurrency));
-        preferences.setWithdrawalTxFeeInBytes(envelope.getPreferences().getWithdrawalTxFeeInBytes());
-        preferences.setMaxPriceDistanceInPercent(envelope.getPreferences().getMaxPriceDistanceInPercent());
-        preferences.setOfferBookChartScreenCurrencyCode(envelope.getPreferences().getOfferBookChartScreenCurrencyCode());
-        preferences.setTradeChartsScreenCurrencyCode(envelope.getPreferences().getTradeChartsScreenCurrencyCode());
-        preferences.setUseStickyMarketPrice(envelope.getPreferences().getUseStickyMarketPrice());
-        preferences.setSortMarketCurrenciesNumerically(envelope.getPreferences().getSortMarketCurrenciesNumerically());
-        preferences.setUsePercentageBasedPrice(envelope.getPreferences().getUsePercentageBasedPrice());
-        preferences.setPeerTagMap(envelope.getPreferences().getPeerTagMapMap());
-        preferences.setBitcoinNodes(envelope.getPreferences().getBitcoinNodes());
-        preferences.setIgnoreTradersList(envelope.getPreferences().getIgnoreTradersListList());
-        preferences.setDirectoryChooserPath(envelope.getPreferences().getDirectoryChooserPath());
-        preferences.setBuyerSecurityDepositAsLong(envelope.getPreferences().getBuyerSecurityDepositAsLong());
+        preferences.setWithdrawalTxFeeInBytes(env.getWithdrawalTxFeeInBytes());
+        preferences.setMaxPriceDistanceInPercent(env.getMaxPriceDistanceInPercent());
+
+        preferences.setSortMarketCurrenciesNumerically(env.getSortMarketCurrenciesNumerically());
+        preferences.setUsePercentageBasedPrice(env.getUsePercentageBasedPrice());
+        preferences.setPeerTagMap(env.getPeerTagMapMap());
+        preferences.setBitcoinNodes(env.getBitcoinNodes());
+        preferences.setIgnoreTradersList(env.getIgnoreTradersListList());
+        preferences.setDirectoryChooserPath(env.getDirectoryChooserPath());
+        preferences.setBuyerSecurityDepositAsLong(env.getBuyerSecurityDepositAsLong());
+
+        final PB.BlockChainExplorer bsqExPl = env.getBsqBlockChainExplorer();
+        preferences.setBsqBlockChainExplorer(new BlockChainExplorer(bsqExPl.getName(), bsqExPl.getTxUrl(), bsqExPl.getAddressUrl()));
+
+        preferences.setBtcDenomination(env.getBtcDenomination());
+        preferences.setUseAnimations(env.getUseAnimations());
+        final PB.PaymentAccount account = env.getSelectedPaymentAccountForCreateOffer();
+        preferences.setSelectedPaymentAccountForCreateOffer(getPaymentAccount(account));
+        preferences.setPayFeeInBtc(env.getPayFeeInBtc());
+        preferences.setResyncSpvRequested(env.getResyncSpvRequested());
+
+        // optional
+        preferences.setBackupDirectory(env.getBackupDirectory().isEmpty() ? null : env.getBackupDirectory());
+        preferences.setOfferBookChartScreenCurrencyCode(env.getOfferBookChartScreenCurrencyCode().isEmpty() ? null : env.getOfferBookChartScreenCurrencyCode());
+        preferences.setTradeChartsScreenCurrencyCode(env.getTradeChartsScreenCurrencyCode().isEmpty() ? null : env.getTradeChartsScreenCurrencyCode());
+        preferences.setBuyScreenCurrencyCode(env.getBuyScreenCurrencyCode().isEmpty() ? null : env.getBuyScreenCurrencyCode());
+        preferences.setSellScreenCurrencyCode(env.getSellScreenCurrencyCode().isEmpty() ? null : env.getSellScreenCurrencyCode());
+    }
+
+    private PaymentAccount getPaymentAccount(PB.PaymentAccount account) {
+        return PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(account.getPaymentMethod().getId()));
     }
 
     private TradeCurrency getTradeCurrency(PB.TradeCurrency tradeCurrency) {
         switch (tradeCurrency.getMessageCase()) {
             case FIAT_CURRENCY:
-                return new FiatCurrency(tradeCurrency.getCode(), getLocale(tradeCurrency.getFiatCurrency().getDefaultLocale()));
+                return new FiatCurrency(tradeCurrency.getCode());
             case CRYPTO_CURRENCY:
                 return new CryptoCurrency(tradeCurrency.getCode(), tradeCurrency.getName(), tradeCurrency.getSymbol(),
                         tradeCurrency.getCryptoCurrency().getIsAsset());

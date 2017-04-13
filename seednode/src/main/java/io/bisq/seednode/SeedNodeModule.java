@@ -22,6 +22,7 @@ import io.bisq.common.Clock;
 import io.bisq.common.app.AppModule;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.AlertModule;
 import io.bisq.core.app.BisqEnvironment;
@@ -33,11 +34,9 @@ import io.bisq.core.offer.OfferModule;
 import io.bisq.core.p2p.network.CoreProtobufferResolver;
 import io.bisq.core.trade.TradeModule;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
-import io.bisq.common.persistance.ProtobufferResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -56,11 +55,10 @@ class SeedNodeModule extends AppModule {
     @Override
     protected void configure() {
         bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
-        bind(Preferences.class).to(PreferencesImpl.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
-        bind(PreferencesImpl.class).in(Singleton.class);
+        bind(Preferences.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
         bind(ProtobufferResolver.class).to(CoreProtobufferResolver.class).in(Singleton.class);
 

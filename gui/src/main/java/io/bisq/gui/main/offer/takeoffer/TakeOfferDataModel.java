@@ -110,7 +110,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.formatter = formatter;
 
         // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
-        isCurrencyForTakerFeeBtc = preferences.getPayFeeInBTC();
+        isCurrencyForTakerFeeBtc = preferences.getPayFeeInBtc();
     }
 
     @Override
@@ -298,7 +298,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     void setCurrencyForTakerFeeBtc(boolean currencyForTakerFeeBtc) {
-        preferences.setPayFeeInBTC(currencyForTakerFeeBtc);
+        preferences.setPayFeeInBtc(currencyForTakerFeeBtc);
         this.isCurrencyForTakerFeeBtc = currencyForTakerFeeBtc;
         updateTradeFee();
     }

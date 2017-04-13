@@ -33,7 +33,7 @@ import io.bisq.core.filter.FilterModule;
 import io.bisq.core.offer.OfferModule;
 import io.bisq.core.p2p.network.CoreProtobufferResolver;
 import io.bisq.core.trade.TradeModule;
-import io.bisq.core.user.PreferencesImpl;
+import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
@@ -57,7 +57,7 @@ class StatisticsModule extends AppModule {
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
-        bind(PreferencesImpl.class).in(Singleton.class);
+        bind(Preferences.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
         bind(ProtobufferResolver.class).to(CoreProtobufferResolver.class).in(Singleton.class);
 

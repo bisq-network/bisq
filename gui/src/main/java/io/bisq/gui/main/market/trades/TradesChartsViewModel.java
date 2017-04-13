@@ -29,7 +29,6 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.gui.main.MainView;

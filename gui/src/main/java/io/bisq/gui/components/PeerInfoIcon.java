@@ -1,11 +1,9 @@
 package io.bisq.gui.components;
 
-import com.google.inject.Inject;
 import io.bisq.common.locale.Res;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.main.overlays.editor.PeerInfoWithTagEditor;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
@@ -16,10 +14,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

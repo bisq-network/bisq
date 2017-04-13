@@ -55,7 +55,10 @@ public final class CryptoCurrency extends TradeCurrency {
 
     @Override
     public Message toProtobuf() {
-        PB.TradeCurrency.Builder builder = PB.TradeCurrency.newBuilder().setCode(code).setName(name).setCryptoCurrency(PB.CryptoCurrency.newBuilder().setIsAsset(isAsset));
+        PB.TradeCurrency.Builder builder = PB.TradeCurrency.newBuilder()
+                .setCode(code)
+                .setName(name)
+                .setCryptoCurrency(PB.CryptoCurrency.newBuilder().setIsAsset(isAsset));
         Optional.ofNullable(symbol).ifPresent(symbol -> builder.setSymbol(symbol));
         return builder.build();
     }

@@ -5,7 +5,6 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.windows.SendPrivateNotificationWindow;
@@ -32,10 +31,7 @@ import javafx.scene.transform.Rotate;
 import javafx.stage.Modality;
 import javafx.stage.Window;
 import javafx.util.Duration;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.function.Consumer;

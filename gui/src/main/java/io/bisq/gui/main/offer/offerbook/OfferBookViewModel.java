@@ -35,7 +35,6 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.ActivatableViewModel;

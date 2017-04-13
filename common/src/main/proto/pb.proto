@@ -842,15 +842,15 @@ message Navigation {
 }
 
 // there is a paymentaccountfactory !!!
-//message PaymentAccount {
-//    string id = 1;
-//    int64 creation_date = 2;
-//    PaymentMethod payment_method = 3;
-//    string account_name = 4;
-//    repeated TradeCurrency trade_currencies = 5;
-//    TradeCurrency selected_trade_currency = 6;
-//    PaymentAccountPayload payment_account_payload = 7;
-//}
+message PaymentAccount {
+    string id = 1;
+    int64 creation_date = 2;
+    PaymentMethod payment_method = 3;
+    string account_name = 4;
+    repeated TradeCurrency trade_currencies = 5;
+    TradeCurrency selected_trade_currency = 6;
+    PaymentAccountPayload payment_account_payload = 7;
+}
 
 message PaymentMethod {
     string id = 1;
@@ -873,7 +873,7 @@ message Preferences {
     bool tac_accepted = 12;
     bool use_tor_for_bitcoin_j = 13;
     bool show_own_offers_in_offer_book = 14;
-    Locale preferred_locale = 15;
+    BlockChainExplorer bsq_block_chain_explorer = 15;
     TradeCurrency preferred_trade_currency = 16;
     int64 withdrawal_tx_fee_in_bytes = 17;
     bool use_custom_withdrawal_tx_fee = 18;
@@ -883,7 +883,7 @@ message Preferences {
     string buy_screen_currency_code = 22;
     string sell_screen_currency_code = 23;
     int32 trade_statistics_tick_unit_index = 24;
-    bool use_sticky_market_price = 25;
+    bool resync_Spv_requested = 25;
     bool sort_market_currencies_numerically = 26;
     bool use_percentage_based_price = 27;
     map<string, string> peer_tag_map = 28;
@@ -891,7 +891,12 @@ message Preferences {
     repeated string ignore_traders_list = 30;
     string directory_chooser_path = 31;
     int64 buyer_security_deposit_as_long = 32;
+    string btc_denomination = 33;
+    bool use_animations = 34;
+    PaymentAccount selectedPayment_account_for_createOffer = 35;
+    bool pay_fee_in_Btc = 36;
 }
+
 message Region {
     string code = 1;
     string name = 2;
@@ -1041,7 +1046,7 @@ message CryptoCurrency {
 }
 
 message FiatCurrency {
-    Locale defaultLocale = 1;
+    Currency currency = 1;
 }
 
 message TradingPeer {

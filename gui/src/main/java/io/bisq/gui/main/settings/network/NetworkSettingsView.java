@@ -168,7 +168,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                         .useShutDownButton()
                         .actionButtonText(Res.get("shared.shutDown"))
                         .onAction(() -> {
-                            preferences.setResyncSPVRequested(true);
+                            preferences.setResyncSpvRequested(true);
                             UserThread.runAfter(BisqApp.shutDownHandler::run, 100, TimeUnit.MILLISECONDS);
                         })
                         .hideCloseButton()

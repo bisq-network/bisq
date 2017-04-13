@@ -24,7 +24,6 @@ import io.bisq.common.util.Tuple3;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;

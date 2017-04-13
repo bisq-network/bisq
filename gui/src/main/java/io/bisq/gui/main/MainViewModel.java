@@ -41,6 +41,7 @@ import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.dao.DaoManager;
@@ -57,7 +58,6 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.components.BalanceWithConfirmationTextField;
@@ -213,7 +213,7 @@ public class MainViewModel implements ViewModel {
         this.keyRing = keyRing;
         this.formatter = formatter;
 
-        btcNetworkAsString = Res.get(preferences.getBitcoinNetwork().name()) +
+        btcNetworkAsString = Res.get(WalletUtils.getBitcoinNetwork().name()) +
                 (preferences.getUseTorForBitcoinJ() ? (" " + Res.get("mainView.footer.usingTor")) : "");
 
         TxIdTextField.setPreferences(preferences);
@@ -488,7 +488,7 @@ public class MainViewModel implements ViewModel {
                         walletPasswordWindow
                                 .onAesKey(aesKey -> {
                                     walletsManager.setAesKey(aesKey);
-                                    if (preferences.isResyncSPVRequested()) {
+                                    if (preferences.isResyncSpvRequested()) {
                                         showFirstPopupIfResyncSPVRequested();
                                     } else {
                                         walletInitialized.set(true);
@@ -497,7 +497,7 @@ public class MainViewModel implements ViewModel {
                                 .hideCloseButton()
                                 .show();
                     } else {
-                        if (preferences.isResyncSPVRequested()) {
+                        if (preferences.isResyncSpvRequested()) {
                             showFirstPopupIfResyncSPVRequested();
                         } else {
                             walletInitialized.set(true);
@@ -596,7 +596,7 @@ public class MainViewModel implements ViewModel {
 
     private void showSecondPopupIfResyncSPVRequested(Popup firstPopup) {
         firstPopup.hide();
-        preferences.setResyncSPVRequested(false);
+        preferences.setResyncSpvRequested(false);
         new Popup<>(preferences).information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
                 .hideCloseButton()
                 .useShutDownButton()

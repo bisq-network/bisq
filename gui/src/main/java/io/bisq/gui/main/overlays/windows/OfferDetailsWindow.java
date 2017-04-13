@@ -28,7 +28,6 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.components.BusyAnimation;

@@ -26,7 +26,6 @@ import io.bisq.common.monetary.Price;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.gui.main.MainView;

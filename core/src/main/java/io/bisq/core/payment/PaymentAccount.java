@@ -43,8 +43,8 @@ public abstract class PaymentAccount implements Persistable {
 
     @Getter
     protected final String id;
-    @Getter
-    protected final Date creationDate;
+
+    protected final long creationDate;
     @Getter
     protected final PaymentMethod paymentMethod;
     @Getter
@@ -62,11 +62,10 @@ public abstract class PaymentAccount implements Persistable {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     protected PaymentAccount(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
         id = UUID.randomUUID().toString();
-        creationDate = new Date();
+        creationDate = new Date().getTime();
         paymentAccountPayload = getPayload();
     }
 
@@ -75,6 +74,10 @@ public abstract class PaymentAccount implements Persistable {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public Date getCreationDate() {
+        return new Date(creationDate);
+    }
+    
     public void addCurrency(TradeCurrency tradeCurrency) {
         if (!tradeCurrencies.contains(tradeCurrency))
             tradeCurrencies.add(tradeCurrency);

@@ -24,7 +24,6 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.View;

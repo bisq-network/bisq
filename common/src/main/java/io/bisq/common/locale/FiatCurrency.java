@@ -23,7 +23,6 @@ import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 
 import java.util.Currency;
@@ -43,11 +42,7 @@ public final class FiatCurrency extends TradeCurrency {
     private final Currency currency;
 
     public FiatCurrency(String currencyCode) {
-        this(currencyCode, getLocale());
-    }
-
-    public FiatCurrency(String currencyCode, Locale locale) {
-        this(Currency.getInstance(currencyCode), locale);
+        this(Currency.getInstance(currencyCode), getLocale());
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -72,11 +67,13 @@ public final class FiatCurrency extends TradeCurrency {
 
     @Override
     public Message toProtobuf() {
-        PB.TradeCurrency.Builder builder = PB.TradeCurrency.newBuilder().setCode(code).setName(name)
-                .setFiatCurrency(PB.FiatCurrency.newBuilder().setDefaultLocale(
-                        PB.Locale.newBuilder().setLanguage(GlobalSettings.getLocale().getLanguage())
-                                .setCountry(GlobalSettings.getLocale().getCountry())
-                                .setVariant(GlobalSettings.getLocale().getVariant())));
+        PB.Currency.Builder currencyBuilder = PB.Currency.newBuilder().setCurrencyCode(currency.getCurrencyCode());
+        PB.FiatCurrency.Builder fiatCurrencyBuilder = PB.FiatCurrency.newBuilder().setCurrency(currencyBuilder);
+
+        PB.TradeCurrency.Builder builder = PB.TradeCurrency.newBuilder()
+                .setCode(code)
+                .setName(name)
+                .setFiatCurrency(fiatCurrencyBuilder);
         Optional.ofNullable(symbol).ifPresent(symbol -> builder.setSymbol(symbol));
         return builder.build();
     }

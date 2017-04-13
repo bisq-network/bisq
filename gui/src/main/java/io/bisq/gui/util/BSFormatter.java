@@ -26,7 +26,6 @@ import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
 import io.bisq.core.offer.Offer;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.network.p2p.NodeAddress;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;

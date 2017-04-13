@@ -118,10 +118,11 @@ public final class AddressEntryList implements Persistable {
 
     @Override
     public Message toProtobuf() {
-        return PB.DiskEnvelope.newBuilder().setAddressEntryList(PB.AddressEntryList.newBuilder()
+        final PB.DiskEnvelope build = PB.DiskEnvelope.newBuilder().setAddressEntryList(PB.AddressEntryList.newBuilder()
                 .addAllAddressEntry(getAddressEntryList().stream()
                         .map(addressEntry -> ((PB.AddressEntry) addressEntry.toProtobuf()))
                         .collect(Collectors.toList())))
                 .build();
+        return build;
     }
 }

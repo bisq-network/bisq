@@ -176,7 +176,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         };
 
         paymentAccountsChangeListener = change -> fillPaymentAccounts();
-        isCurrencyForMakerFeeBtc = preferences.getPayFeeInBTC();
+        isCurrencyForMakerFeeBtc = preferences.getPayFeeInBtc();
     }
 
     @Override
@@ -461,7 +461,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     void setCurrencyForMakerFeeBtc(boolean currencyForMakerFeeBtc) {
-        preferences.setPayFeeInBTC(currencyForMakerFeeBtc);
+        preferences.setPayFeeInBtc(currencyForMakerFeeBtc);
         this.isCurrencyForMakerFeeBtc = currencyForMakerFeeBtc;
         updateTradeFee();
     }

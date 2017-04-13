@@ -18,7 +18,6 @@
 package io.bisq.gui.util;
 
 import com.google.common.base.Charsets;
-import com.google.inject.Inject;
 import com.googlecode.jcsv.CSVStrategy;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 import com.googlecode.jcsv.writer.CSVWriter;
@@ -34,7 +33,6 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.core.user.User;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -47,12 +45,9 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;

@@ -25,7 +25,6 @@ import io.bisq.core.payment.payload.*;
 import io.bisq.core.trade.Contract;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.PreferencesImpl;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
 import io.bisq.gui.components.TitledGroupBg;
