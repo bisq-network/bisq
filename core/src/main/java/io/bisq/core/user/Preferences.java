@@ -222,8 +222,8 @@ public final class Preferences implements Persistable {
 
         TradeCurrency defaultTradeCurrency;
         Preferences persisted = storage.initAndGetPersisted(this);
+        doPersist = true;
         if (persisted != null) {
-            doPersist = true;
             userLanguage = persisted.getUserLanguage();
             userCountry = persisted.getUserCountry();
             GlobalSettings.setLocale(new Locale(userLanguage, userCountry.code));
