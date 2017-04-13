@@ -129,7 +129,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // if (isWalletFunded.get())
         //     feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx());
 
-        if (!preferences.isUseStickyMarketPrice() && isTabSelected)
+        if (isTabSelected)
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
 
         tradeManager.checkOfferAvailability(offer,
@@ -236,8 +236,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         offer.resetState();
 
-        if (!preferences.isUseStickyMarketPrice())
-            priceFeedService.setCurrencyCode(offer.getCurrencyCode());
+        priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
     void requestTxFee() {
@@ -249,7 +248,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
-        if (!preferences.isUseStickyMarketPrice() && isTabSelected)
+        if (isTabSelected)
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
     }
 
@@ -383,7 +382,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
                 totalToPayAsCoin.set(feeAndSecDeposit.add(amount.get()));
             else
                 totalToPayAsCoin.set(feeAndSecDeposit);
-            
+
             updateBalance();
             log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
         }

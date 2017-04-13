@@ -184,7 +184,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         addBindings();
         addListeners();
 
-        if (!preferences.isUseStickyMarketPrice() && isTabSelected)
+        if (isTabSelected)
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
         updateBalance();
@@ -250,8 +250,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         if (this.tradeCurrency != null)
             tradeCurrencyCode.set(this.tradeCurrency.getCode());
 
-        if (!preferences.isUseStickyMarketPrice())
-            priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
+        priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
         // We request to get the actual estimated fee
         requestTxFee();
@@ -279,7 +278,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
-        if (!preferences.isUseStickyMarketPrice() && isTabSelected)
+        if (isTabSelected)
             priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
     }
 
@@ -426,8 +425,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
             if (paymentAccount != null)
                 paymentAccount.setSelectedTradeCurrency(tradeCurrency);
 
-            if (!preferences.isUseStickyMarketPrice())
-                priceFeedService.setCurrencyCode(code);
+            priceFeedService.setCurrencyCode(code);
 
             Optional<TradeCurrency> tradeCurrencyOptional = preferences.getTradeCurrenciesAsObservable().stream().filter(e -> e.getCode().equals(code)).findAny();
             if (!tradeCurrencyOptional.isPresent()) {

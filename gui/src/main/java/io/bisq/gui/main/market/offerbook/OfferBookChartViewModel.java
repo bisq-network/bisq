@@ -175,8 +175,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
                 updateChartData();
 
-                if (!preferences.isUseStickyMarketPrice())
-                    priceFeedService.setCurrencyCode(code);
+                priceFeedService.setCurrencyCode(code);
             }
         }
     }
@@ -229,7 +228,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void syncPriceFeedCurrency() {
-        if (!preferences.isUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX)
+        if (selectedTabIndex == TAB_INDEX)
             priceFeedService.setCurrencyCode(selectedTradeCurrencyProperty.get().getCode());
     }
 

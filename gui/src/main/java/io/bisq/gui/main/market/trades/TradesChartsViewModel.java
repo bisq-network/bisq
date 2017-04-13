@@ -182,12 +182,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
                 updateChartData();
 
-                if (!preferences.isUseStickyMarketPrice()) {
-                    if (showAllEntry)
-                        priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());
-                    else
-                        priceFeedService.setCurrencyCode(code);
-                }
+                if (showAllEntry)
+                    priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());
+                else
+                    priceFeedService.setCurrencyCode(code);
             }
         }
     }
@@ -227,7 +225,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setMarketPriceFeedCurrency() {
-        if (!preferences.isUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX) {
+        if (selectedTabIndex == TAB_INDEX) {
             if (showAllTradeCurrenciesProperty.get())
                 priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());
             else
@@ -236,7 +234,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     }
 
     private void syncPriceFeedCurrency() {
-        if (!preferences.isUseStickyMarketPrice() && selectedTabIndex == TAB_INDEX)
+        if (selectedTabIndex == TAB_INDEX)
             priceFeedService.setCurrencyCode(selectedTradeCurrencyProperty.get().getCode());
     }
 

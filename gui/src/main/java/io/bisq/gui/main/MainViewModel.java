@@ -816,15 +816,11 @@ public class MainViewModel implements ViewModel {
             if (newValue != null && !newValue.equals(oldValue)) {
                 setMarketPriceInItems();
 
-                String code = preferences.isUseStickyMarketPrice() ?
-                        preferences.getPreferredTradeCurrency().getCode() :
-                        priceFeedService.currencyCodeProperty().get();
+                String code = priceFeedService.currencyCodeProperty().get();
                 Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(code);
                 if (itemOptional.isPresent()) {
-                    if (selectedPriceFeedComboBoxItemProperty.get() == null || !preferences.isUseStickyMarketPrice()) {
-                        itemOptional.get().setDisplayString(newValue);
-                        selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
-                    }
+                    itemOptional.get().setDisplayString(newValue);
+                    selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
                 } else {
                     if (CurrencyUtil.isCryptoCurrency(code)) {
                         CurrencyUtil.getCryptoCurrency(code).ifPresent(cryptoCurrency -> {
@@ -871,7 +867,7 @@ public class MainViewModel implements ViewModel {
     }
 
     public void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
-        if (!preferences.isUseStickyMarketPrice() && item != null) {
+        if (item != null) {
             Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(priceFeedService.currencyCodeProperty().get());
             if (itemOptional.isPresent())
                 selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
@@ -879,9 +875,6 @@ public class MainViewModel implements ViewModel {
                 findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
                         .ifPresent(selectedPriceFeedComboBoxItemProperty::set);
 
-            priceFeedService.setCurrencyCode(item.currencyCode);
-        } else if (item != null) {
-            selectedPriceFeedComboBoxItemProperty.set(item);
             priceFeedService.setCurrencyCode(item.currencyCode);
         } else {
             findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())

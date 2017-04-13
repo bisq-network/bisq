@@ -475,11 +475,6 @@ public final class Preferences implements Persistable {
         persist();
     }
 
-    // not used anymore
-    public boolean isUseStickyMarketPrice() {
-        return false;
-    }
-
     public void setSortMarketCurrenciesNumerically(boolean sortMarketCurrenciesNumerically) {
         this.sortMarketCurrenciesNumerically = sortMarketCurrenciesNumerically;
         persist();
