@@ -20,6 +20,7 @@ package io.bisq.gui.main.dao.wallet.receive;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
@@ -73,7 +74,8 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter bsqFormatter, BsqBalanceUtil bsqBalanceUtil) {
+    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter bsqFormatter, BsqBalanceUtil bsqBalanceUtil,
+                           Preferences preferences) {
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
         this.bsqBalanceUtil = bsqBalanceUtil;

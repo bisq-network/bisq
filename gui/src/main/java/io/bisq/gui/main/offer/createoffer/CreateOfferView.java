@@ -391,7 +391,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
                 !clearXchangeWarningDisplayed) {
             clearXchangeWarningDisplayed = true;
-            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(),
+            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(preferences),
                     500, TimeUnit.MILLISECONDS);
         }
     }

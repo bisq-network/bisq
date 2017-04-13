@@ -74,7 +74,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     @Inject
     private BsqSendView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService,
                         BsqFormatter bsqFormatter, BSFormatter btcFormatter,
-                        BsqBalanceUtil bsqBalanceUtil, BsqValidator bsqValidator, BsqAddressValidator bsqAddressValidator) {
+                        BsqBalanceUtil bsqBalanceUtil, BsqValidator bsqValidator, BsqAddressValidator bsqAddressValidator,
+                        Preferences preferences) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.bsqFormatter = bsqFormatter;
@@ -82,6 +83,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         this.bsqBalanceUtil = bsqBalanceUtil;
         this.bsqValidator = bsqValidator;
         this.bsqAddressValidator = bsqAddressValidator;
+        this.preferences = preferences;
     }
 
     @Override

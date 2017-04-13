@@ -356,7 +356,7 @@ public class GUIUtil {
         return parent != null ? (T) parent : null;
     }
 
-    public static void showClearXchangeWarning() {
+    public static void showClearXchangeWarning(Preferences preferences) {
         String key = "confirmClearXchangeRequirements";
         new Popup(preferences).information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
                 .width(900)
