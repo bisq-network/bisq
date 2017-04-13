@@ -20,6 +20,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
@@ -161,6 +162,8 @@ public final class Preferences implements Persistable {
     transient private final Storage<Preferences> storage;
     transient private final String btcNodesFromOptions;
     transient private final String useTorFlagFromOptions;
+    @Setter
+    transient private boolean doPersist;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -187,39 +190,40 @@ public final class Preferences implements Persistable {
         btcDenominationProperty.addListener((ov) -> {
             btcDenomination = btcDenominationProperty.get();
             GlobalSettings.setBtcDenomination(btcDenomination);
-            storage.queueUpForSave();
+            persist();
         });
         useAnimationsProperty.addListener((ov) -> {
             useAnimations = useAnimationsProperty.get();
             GlobalSettings.setUseAnimations(useAnimations);
-            storage.queueUpForSave();
+            persist();
         });
         fiatCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
             fiatCurrencies.clear();
             fiatCurrencies.addAll(fiatCurrenciesAsObservable);
             fiatCurrencies.sort(TradeCurrency::compareTo);
-            storage.queueUpForSave();
+            persist();
         });
         cryptoCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
             cryptoCurrencies.clear();
             cryptoCurrencies.addAll(cryptoCurrenciesAsObservable);
             cryptoCurrencies.sort(TradeCurrency::compareTo);
-            storage.queueUpForSave();
+            persist();
         });
 
         useCustomWithdrawalTxFeeProperty.addListener((ov) -> {
             useCustomWithdrawalTxFee = useCustomWithdrawalTxFeeProperty.get();
-            storage.queueUpForSave();
+            persist();
         });
 
         withdrawalTxFeeInBytesProperty.addListener((ov) -> {
             withdrawalTxFeeInBytes = withdrawalTxFeeInBytesProperty.get();
-            storage.queueUpForSave();
+            persist();
         });
 
         TradeCurrency defaultTradeCurrency;
         Preferences persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
+            doPersist = true;
             userLanguage = persisted.getUserLanguage();
             userCountry = persisted.getUserCountry();
             GlobalSettings.setLocale(new Locale(userLanguage, userCountry.code));
@@ -276,7 +280,7 @@ public final class Preferences implements Persistable {
             directoryChooserPath = Utilities.getSystemHomeDirectory();
             dontShowAgainMap = new HashMap<>();
 
-            storage.queueUpForSave();
+            persist();
         }
         GlobalSettings.setDefaultTradeCurrency(defaultTradeCurrency);
         offerBookChartScreenCurrencyCode = defaultTradeCurrency.getCode();
@@ -307,12 +311,12 @@ public final class Preferences implements Persistable {
 
     public void dontShowAgain(String key, boolean dontShowAgain) {
         dontShowAgainMap.put(key, dontShowAgain);
-        storage.queueUpForSave();
+        persist();
     }
 
     public void resetDontShowAgain() {
         dontShowAgainMap.clear();
-        storage.queueUpForSave();
+        persist();
     }
 
 
@@ -371,99 +375,104 @@ public final class Preferences implements Persistable {
 
     public void setTacAccepted(boolean tacAccepted) {
         this.tacAccepted = tacAccepted;
-        storage.queueUpForSave();
+        persist();
+    }
+
+    private void persist() {
+        if (doPersist)
+            storage.queueUpForSave();
     }
 
     public void setUserLanguage(@NotNull String userLanguageCode) {
         this.userLanguage = userLanguageCode;
         if (userCountry != null && userLanguage != null)
             GlobalSettings.setLocale(new Locale(userLanguage, userCountry.code));
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setUserCountry(@NotNull Country userCountry) {
         this.userCountry = userCountry;
         if (userLanguage != null)
             GlobalSettings.setLocale(new Locale(userLanguage, userCountry.code));
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setPreferredTradeCurrency(TradeCurrency preferredTradeCurrency) {
         if (preferredTradeCurrency != null) {
             this.preferredTradeCurrency = preferredTradeCurrency;
             GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
-            storage.queueUpForSave();
+            persist();
         }
     }
 
     public void setUseTorForBitcoinJ(boolean useTorForBitcoinJ) {
         this.useTorForBitcoinJ = useTorForBitcoinJ;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook) {
         this.showOwnOffersInOfferBook = showOwnOffersInOfferBook;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent) {
         this.maxPriceDistanceInPercent = maxPriceDistanceInPercent;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setBackupDirectory(String backupDirectory) {
         this.backupDirectory = backupDirectory;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setAutoSelectArbitrators(boolean autoSelectArbitrators) {
         this.autoSelectArbitrators = autoSelectArbitrators;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setUsePercentageBasedPrice(boolean usePercentageBasedPrice) {
         this.usePercentageBasedPrice = usePercentageBasedPrice;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setTagForPeer(String hostName, String tag) {
         peerTagMap.put(hostName, tag);
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setOfferBookChartScreenCurrencyCode(String offerBookChartScreenCurrencyCode) {
         this.offerBookChartScreenCurrencyCode = offerBookChartScreenCurrencyCode;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setBuyScreenCurrencyCode(String buyScreenCurrencyCode) {
         this.buyScreenCurrencyCode = buyScreenCurrencyCode;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setSellScreenCurrencyCode(String sellScreenCurrencyCode) {
         this.sellScreenCurrencyCode = sellScreenCurrencyCode;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setIgnoreTradersList(List<String> ignoreTradersList) {
         this.ignoreTradersList = ignoreTradersList;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setDirectoryChooserPath(String directoryChooserPath) {
         this.directoryChooserPath = directoryChooserPath;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setTradeChartsScreenCurrencyCode(String tradeChartsScreenCurrencyCode) {
         this.tradeChartsScreenCurrencyCode = tradeChartsScreenCurrencyCode;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setTradeStatisticsTickUnitIndex(int tradeStatisticsTickUnitIndex) {
         this.tradeStatisticsTickUnitIndex = tradeStatisticsTickUnitIndex;
-        storage.queueUpForSave();
+        persist();
     }
 
     // not used anymore
@@ -473,12 +482,12 @@ public final class Preferences implements Persistable {
 
     public void setSortMarketCurrenciesNumerically(boolean sortMarketCurrenciesNumerically) {
         this.sortMarketCurrenciesNumerically = sortMarketCurrenciesNumerically;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setBitcoinNodes(String bitcoinNodes) {
         this.bitcoinNodes = bitcoinNodes;
-        storage.queueUpForSave(50);
+        persist();
     }
 
     public void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee) {
@@ -493,22 +502,22 @@ public final class Preferences implements Persistable {
         this.buyerSecurityDepositAsLong = Math.min(Restrictions.MAX_BUYER_SECURITY_DEPOSIT.value,
                 Math.max(Restrictions.MIN_BUYER_SECURITY_DEPOSIT.value,
                         buyerSecurityDepositAsLong));
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount) {
         this.selectedPaymentAccountForCreateOffer = paymentAccount;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer) {
         this.bsqBlockChainExplorer = bsqBlockChainExplorer;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setPayFeeInBtc(boolean payFeeInBtc) {
         this.payFeeInBtc = payFeeInBtc;
-        storage.queueUpForSave();
+        persist();
     }
 
     private void setFiatCurrencies(List<FiatCurrency> currencies) {
@@ -521,24 +530,33 @@ public final class Preferences implements Persistable {
 
     public void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
         this.blockChainExplorerTestNet = blockChainExplorerTestNet;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
         this.blockChainExplorerMainNet = blockChainExplorerMainNet;
-        storage.queueUpForSave();
+        persist();
     }
 
     public void setResyncSpvRequested(boolean resyncSpvRequested) {
         this.resyncSpvRequested = resyncSpvRequested;
         // We call that before shutdown so we dont want a delay here
-        storage.queueUpForSave(1);
+        if (doPersist)
+            storage.queueUpForSave(1);
     }
 
-    // Only used from PB
+    // Only used from PB but keep it explicit as maybe it get used from the client and then we want to persist
     public void setDontShowAgainMap(Map<String, Boolean> dontShowAgainMap) {
         this.dontShowAgainMap = dontShowAgainMap;
+        persist();
     }
+
+    // Only used from PB but keep it explicit as maybe it get used from the client and then we want to persist
+    public void setPeerTagMap(Map<String, String> peerTagMap) {
+        this.peerTagMap = peerTagMap;
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter

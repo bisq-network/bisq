@@ -961,6 +961,8 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         preferences.setTradeChartsScreenCurrencyCode(env.getTradeChartsScreenCurrencyCode().isEmpty() ? null : env.getTradeChartsScreenCurrencyCode());
         preferences.setBuyScreenCurrencyCode(env.getBuyScreenCurrencyCode().isEmpty() ? null : env.getBuyScreenCurrencyCode());
         preferences.setSellScreenCurrencyCode(env.getSellScreenCurrencyCode().isEmpty() ? null : env.getSellScreenCurrencyCode());
+
+        preferences.setDoPersist(true);
     }
 
     private PaymentAccount getPaymentAccount(PB.PaymentAccount account) {
