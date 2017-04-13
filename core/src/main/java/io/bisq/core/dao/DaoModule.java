@@ -22,7 +22,6 @@ import io.bisq.common.app.AppModule;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.blockchain.BsqBlockchainRpcService;
 import io.bisq.core.dao.blockchain.BsqBlockchainService;
-import io.bisq.core.dao.blockchain.TxOutputMap;
 import io.bisq.core.dao.blockchain.json.JsonExporter;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingDefaultValues;
@@ -46,7 +45,6 @@ public class DaoModule extends AppModule {
         bind(DaoManager.class).in(Singleton.class);
         bind(BsqBlockchainManager.class).in(Singleton.class);
         bind(BsqBlockchainService.class).to(BsqBlockchainRpcService.class).in(Singleton.class);
-        bind(TxOutputMap.class).in(Singleton.class);
         bind(JsonExporter.class).in(Singleton.class);
         bind(DaoPeriodService.class).in(Singleton.class);
         bind(VotingService.class).in(Singleton.class);

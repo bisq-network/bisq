@@ -24,8 +24,7 @@ import io.bisq.common.util.JsonExclude;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
 import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Data;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,16 +34,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@Getter
-@EqualsAndHashCode
 @Slf4j
+@Data
 public class TxOutput implements LazyProcessedStoragePayload, PersistedStoragePayload {
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     @JsonExclude
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
-    // Immutable
     private final int index;
     private final long value;
     private final String txId;
@@ -53,33 +50,27 @@ public class TxOutput implements LazyProcessedStoragePayload, PersistedStoragePa
     private final long time;
     private final String txVersion = Version.BSQ_TX_VERSION;
     @JsonExclude
-    private PublicKey signaturePubKey;
+    private final PublicKey signaturePubKey;
 
-    // Mutable
+    // mutable
     @Setter
     private boolean isBsqCoinBase;
     @Setter
     private boolean isVerified;
     @Setter
     private long burnedFee;
-
     @Nullable
     @Setter
     private long btcTxFee;
-
     @Nullable
     @Setter
     private SpendInfo spendInfo;
 
-    // Lazy set
-    @Nullable
-    private String address;
-
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
     // field in a class would break that hash and therefore break the storage mechanism.
-    @Getter
     @Nullable
+    @Setter
     private HashMap<String, String> extraDataMap;
 
     public TxOutput(int index,
@@ -108,36 +99,28 @@ public class TxOutput implements LazyProcessedStoragePayload, PersistedStoragePa
         return signaturePubKey;
     }
 
-    @Nullable
-    @Override
-    public HashMap<String, String> getExtraDataMap() {
-        return extraDataMap;
-    }
-
     public List<String> getAddresses() {
         return pubKeyScript.getAddresses();
     }
 
     public String getAddress() {
-        if (address == null) {
-            // Only at raw MS outputs addresses have more then 1 entry 
-            // We do not support raw MS for BSQ but lets see if is needed anyway, might be removed 
-            final List<String> addresses = pubKeyScript.getAddresses();
-            if (addresses.size() == 1) {
-                address = addresses.get(0);
-            } else if (addresses.size() > 1) {
-                final String msg = "We got a raw Multisig script. That is not supported for BSQ tokens.";
-                log.warn(msg);
-                address = addresses.toString();
-                if (DevEnv.DEV_MODE)
-                    throw new RuntimeException(msg);
-            } else if (addresses.isEmpty()) {
-                final String msg = "We got no address. Unsupported pubKeyScript";
-                log.warn(msg);
-                address = "";
-                if (DevEnv.DEV_MODE)
-                    throw new RuntimeException(msg);
-            }
+        String address = "";
+        // Only at raw MS outputs addresses have more then 1 entry 
+        // We do not support raw MS for BSQ but lets see if is needed anyway, might be removed 
+        final List<String> addresses = pubKeyScript.getAddresses();
+        if (addresses.size() == 1) {
+            address = addresses.get(0);
+        } else if (addresses.size() > 1) {
+            final String msg = "We got a raw Multisig script. That is not supported for BSQ tokens.";
+            log.warn(msg);
+            address = addresses.toString();
+            if (DevEnv.DEV_MODE)
+                throw new RuntimeException(msg);
+        } else {
+            final String msg = "We got no address. Unsupported pubKeyScript";
+            log.warn(msg);
+            if (DevEnv.DEV_MODE)
+                throw new RuntimeException(msg);
         }
         return address;
     }
@@ -152,6 +135,10 @@ public class TxOutput implements LazyProcessedStoragePayload, PersistedStoragePa
 
     public String getTxoId() {
         return txId + ":" + index;
+    }
+
+    public String getBlockHeightWithTxoId() {
+        return blockHeight + "/" + getTxoId();
     }
 
     public TxIdIndexTuple getTxIdIndexTuple() {

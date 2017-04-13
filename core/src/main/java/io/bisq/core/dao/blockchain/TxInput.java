@@ -19,9 +19,11 @@ package io.bisq.core.dao.blockchain;
 
 import lombok.Value;
 
+import javax.annotation.concurrent.Immutable;
 import java.io.Serializable;
 
 @Value
+@Immutable
 public class TxInput implements Serializable {
     private final int spendingTxOutputIndex;
     private final String spendingTxId;

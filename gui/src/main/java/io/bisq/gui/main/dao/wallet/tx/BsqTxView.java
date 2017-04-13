@@ -22,7 +22,6 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
-import io.bisq.core.dao.blockchain.TxOutputMap;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
@@ -61,7 +60,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private int gridRow = 0;
     private BsqFormatter bsqFormatter;
     private BsqWalletService bsqWalletService;
-    private TxOutputMap txOutputMap;
     private BsqBlockchainManager bsqBlockchainManager;
     private BtcWalletService btcWalletService;
     private BsqBalanceUtil bsqBalanceUtil;
@@ -81,13 +79,11 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     @Inject
     private BsqTxView(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
-                      TxOutputMap txOutputMap,
                       BsqBlockchainManager bsqBlockchainManager,
 
                       BtcWalletService btcWalletService, BsqBalanceUtil bsqBalanceUtil, Preferences preferences) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
-        this.txOutputMap = txOutputMap;
         this.bsqBlockchainManager = bsqBlockchainManager;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
@@ -139,7 +135,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
         observableList.forEach(BsqTxListItem::cleanup);
         if (rootParent != null)
-            ((Pane) root.getParent()).heightProperty().removeListener(parentHeightListener);
+            rootParent.heightProperty().removeListener(parentHeightListener);
     }
 
     private void updateList() {
@@ -153,7 +149,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                             return new BsqTxListItem(transaction,
                                     bsqWalletService,
                                     btcWalletService,
-                                    txOutputMap.hasTxBurnedFee(transaction.getHashAsString()),
+                                    bsqBlockchainManager.getTxOutputMap().hasTxBurnedFee(transaction),
                                     bsqFormatter);
                         }
                 )
@@ -273,11 +269,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
                                 if (item != null && !empty) {
                                     String addressString = item.getAddress();
-                                    if (item.isBurnedBsqTx()) {
+                                    if (item.isBurnedBsqTx() || item.getAmount().isZero()) {
                                         if (field != null)
                                             field.setOnAction(null);
 
-                                        label = new Label(addressString);
+                                        label = new Label(item.isBurnedBsqTx() ?
+                                                Res.get("dao.wallet.bsqFee") : Res.get("funds.tx.direction.self"));
                                         setGraphic(label);
                                     } else {
                                         field = new AddressWithIconAndDirection(item.getDirection(), addressString,

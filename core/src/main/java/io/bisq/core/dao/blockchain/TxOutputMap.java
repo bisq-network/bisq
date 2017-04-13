@@ -21,13 +21,11 @@ import io.bisq.common.util.Utilities;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 // Map of any TxOutput which was ever used in context of a BSQ TX.
@@ -47,28 +45,12 @@ public class TxOutputMap implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static TxOutputMap getClonedMap(TxOutputMap txOutputMap) {
-        return new TxOutputMap(txOutputMap);
-    }
-
-    public static TxOutputMap getClonedMapUpToHeight(TxOutputMap txOutputMap, int snapshotHeight) {
-        final TxOutputMap txOutputMapClone = new TxOutputMap();
-        txOutputMapClone.setBlockHeight(txOutputMap.getBlockHeight());
-        txOutputMapClone.setSnapshotHeight(txOutputMap.getSnapshotHeight());
-
-        Map<TxIdIndexTuple, TxOutput> map = txOutputMap.entrySet().stream()
-                .filter(entry -> entry.getValue().getBlockHeight() <= snapshotHeight)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        txOutputMapClone.putAll(map);
-
-        return txOutputMapClone;
+        return Utilities.<TxOutputMap>deserialize(Utilities.serialize(txOutputMap));
     }
 
 
     @Getter
-    private HashMap<TxIdIndexTuple, TxOutput> map = new HashMap<>();
-    @Getter
-    @Setter
-    private int snapshotHeight = 0;
+    private HashMap<TxIdIndexTuple, TxOutput> map;
     @Getter
     @Setter
     private int blockHeight;
@@ -79,14 +61,8 @@ public class TxOutputMap implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public TxOutputMap() {
+        map = new HashMap<>();
     }
-
-    private TxOutputMap(TxOutputMap txOutputMap) {
-        map = txOutputMap.getMap();
-        snapshotHeight = txOutputMap.getSnapshotHeight();
-        blockHeight = txOutputMap.getBlockHeight();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -97,9 +73,13 @@ public class TxOutputMap implements Serializable {
         return txOutput != null && txOutput.isUnSpend();
     }
 
-    public boolean hasTxBurnedFee(String txId) {
-        final TxOutput txOutput = get(txId, 0);
-        return txOutput != null && txOutput.hasBurnedFee();
+    public boolean hasTxBurnedFee(Transaction tx) {
+        for (int i = 0; i < tx.getOutputs().size(); i++) {
+            final TxOutput txOutput = get(tx.getHashAsString(), i);
+            if (txOutput != null && txOutput.hasBurnedFee())
+                return true;
+        }
+        return false;
     }
 
 
@@ -108,15 +88,8 @@ public class TxOutputMap implements Serializable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Object put(TxOutput txOutput) {
+        blockHeight = txOutput.getBlockHeight();
         return map.put(txOutput.getTxIdIndexTuple(), txOutput);
-    }
-
-    public void putAll(Map<TxIdIndexTuple, TxOutput> txOutputs) {
-        map.putAll(txOutputs);
-    }
-
-    public void putAll(TxOutputMap txOutputMap) {
-        map.putAll(txOutputMap.getMap());
     }
 
     @Nullable
@@ -153,6 +126,10 @@ public class TxOutputMap implements Serializable {
         return map.size();
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public String toString() {
         return "TxOutputMap " + map.toString();
@@ -160,6 +137,39 @@ public class TxOutputMap implements Serializable {
 
     public void printSize() {
         log.info("Nr of entries={}; Size in kb={}", size(), Utilities.serialize(this).length / 1000d);
+    }
+
+    public String getTuplesAsString() {
+        return map.keySet().stream().map(TxIdIndexTuple::toString).collect(Collectors.joining(","));
+    }
+
+    public Set<TxOutput> getUnspentTxOutputs() {
+        return map.values().stream().filter(TxOutput::isUnSpend).collect(Collectors.toSet());
+    }
+
+    public List<TxOutput> getSortedUnspentTxOutputs() {
+        List<TxOutput> list = getUnspentTxOutputs().stream().collect(Collectors.toList());
+        Collections.sort(list, (o1, o2) -> o1.getBlockHeightWithTxoId().compareTo(o2.getBlockHeightWithTxoId()));
+        return list;
+    }
+
+    public void printUnspentTxOutputs(String prefix) {
+        final String txoIds = getBlocHeightSortedTxoIds();
+        log.info(prefix + " utxo: size={}, blockHeight={}, hashCode={}, txoids={}",
+                getSortedUnspentTxOutputs().size(),
+                blockHeight,
+                getBlockHeightSortedTxoIdsHashCode(),
+                txoIds);
+    }
+
+    public int getBlockHeightSortedTxoIdsHashCode() {
+        return getBlocHeightSortedTxoIds().hashCode();
+    }
+
+    private String getBlocHeightSortedTxoIds() {
+        return getSortedUnspentTxOutputs().stream()
+                .map(e -> e.getBlockHeight() + "/" + e.getTxoId())
+                .collect(Collectors.joining("\n"));
     }
 }
 

@@ -19,10 +19,12 @@ package io.bisq.core.dao.blockchain;
 
 import lombok.Value;
 
+import javax.annotation.concurrent.Immutable;
 import java.io.Serializable;
 import java.util.List;
 
 @Value
+@Immutable
 public class Tx implements Serializable {
     private final String id;
     private final List<TxInput> inputs;

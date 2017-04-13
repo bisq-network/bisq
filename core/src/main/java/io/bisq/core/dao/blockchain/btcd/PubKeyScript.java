@@ -22,27 +22,27 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.bisq.common.app.Version;
 import io.bisq.common.util.JsonExclude;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Value;
 
+import javax.annotation.concurrent.Immutable;
 import java.io.Serializable;
 import java.util.List;
 
-@Data
-@NoArgsConstructor
+@Value
 @AllArgsConstructor
-@ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = false)
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Immutable
 public class PubKeyScript implements Serializable {
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private Integer reqSigs;
-    private ScriptTypes type;
-    private List<String> addresses;
-    private String asm;
-    private String hex;
+    private final Integer reqSigs;
+    private final ScriptTypes type;
+    private final List<String> addresses;
+    private final String asm;
+    private final String hex;
 
     public PubKeyScript(com.neemre.btcdcli4j.core.domain.PubKeyScript scriptPubKey) {
         this(scriptPubKey.getReqSigs(),

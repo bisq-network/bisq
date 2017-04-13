@@ -130,7 +130,7 @@ class BsqTxListItem {
         if (!isBurnedBsqTx)
             address = received ? receivedWithAddress : sendToAddress;
         else
-            address = Res.get("dao.wallet.burned");
+            address = "";
     }
 
     private void setupConfidence(BsqWalletService bsqWalletService) {

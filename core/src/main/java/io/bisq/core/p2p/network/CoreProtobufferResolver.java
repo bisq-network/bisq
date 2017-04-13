@@ -79,7 +79,8 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
             log.warn("fromProtoBuf called with empty envelope.");
             return Optional.empty();
         }
-        if (envelope.getMessageCase() != PING && envelope.getMessageCase() != PONG && envelope.getMessageCase() != REFRESH_TTL_MESSAGE) {
+        if (envelope.getMessageCase() != PING && envelope.getMessageCase() != PONG &&
+                envelope.getMessageCase() != REFRESH_TTL_MESSAGE) {
             log.debug("Convert protobuffer envelope: {}, {}", envelope.getMessageCase(), envelope.toString());
         } else {
             log.debug("Convert protobuffer envelope: {}", envelope.getMessageCase());

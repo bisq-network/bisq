@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.neemre.btcdcli4j.core.BitcoindException;
 import com.neemre.btcdcli4j.core.CommunicationException;
+import com.neemre.btcdcli4j.core.domain.Block;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
@@ -61,14 +62,14 @@ abstract public class BsqBlockchainService {
                               Consumer<TxOutputMap> resultHandler,
                               Consumer<Throwable> errorHandler);
 
-    abstract void parseBlock(BsqBlock block,
+    abstract void parseBlock(Block block,
                              int genesisBlockHeight,
                              String genesisTxId,
                              TxOutputMap txOutputMap,
                              Consumer<TxOutputMap> resultHandler,
                              Consumer<Throwable> errorHandler);
 
-    abstract void addBlockHandler(Consumer<BsqBlock> onNewBlockHandler);
+    abstract void addBlockHandler(Consumer<Block> onNewBlockHandler);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +80,7 @@ abstract public class BsqBlockchainService {
     abstract int requestChainHeadHeight() throws BitcoindException, CommunicationException;
 
     @VisibleForTesting
-    abstract com.neemre.btcdcli4j.core.domain.Block requestBlock(int i) throws BitcoindException, CommunicationException;
+    abstract Block requestBlock(int i) throws BitcoindException, CommunicationException;
 
     @VisibleForTesting
     abstract Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException;

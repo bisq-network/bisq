@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 import com.neemre.btcdcli4j.core.BitcoindException;
 import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.client.BtcdClientImpl;
+import com.neemre.btcdcli4j.core.domain.Block;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
 import com.neemre.btcdcli4j.daemon.BtcdDaemonImpl;
 import com.neemre.btcdcli4j.daemon.event.BlockListener;
@@ -61,9 +62,9 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     private final String rpcPassword;
     private final String rpcPort;
     private final String rpcBlockPort;
-    private final ListeningExecutorService setupExecutor = Utilities.getListeningExecutorService("RpcService.setup", 1, 1, 5);
-    private final ListeningExecutorService parseBlockchainExecutor = Utilities.getListeningExecutorService("RpcService.requests", 1, 1, 10);
-    private final ListeningExecutorService getChainHeightExecutor = Utilities.getListeningExecutorService("RpcService.requests", 1, 1, 10);
+    private final ListeningExecutorService setupExecutor = Utilities.getListeningExecutorService("RpcServiceSetup", 1, 1, 5);
+    private final ListeningExecutorService parseBlocksExecutor = Utilities.getListeningExecutorService("ParseBlocks", 1, 1, 60);
+    private final ListeningExecutorService getChainHeightExecutor = Utilities.getListeningExecutorService("GetChainHeight", 1, 1, 60);
     private BtcdClientImpl client;
     private BtcdDaemonImpl daemon;
 
@@ -166,7 +167,7 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
                      Consumer<TxOutputMap> snapShotHandler,
                      Consumer<TxOutputMap> resultHandler,
                      Consumer<Throwable> errorHandler) {
-        ListenableFuture<TxOutputMap> future = parseBlockchainExecutor.submit(() -> {
+        ListenableFuture<TxOutputMap> future = parseBlocksExecutor.submit(() -> {
             long startTs = System.currentTimeMillis();
             BsqParser bsqParser = new BsqParser(this);
             // txOutputMap us used in UserThread context, so we clone
@@ -188,7 +189,7 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
             @Override
             public void onSuccess(TxOutputMap clonedMap) {
                 UserThread.execute(() -> {
-                    // We map to UserThread. Map was already cloned
+                    // We map to UserThread. Map was already cloned initially.
                     UserThread.execute(() -> resultHandler.accept(clonedMap));
                 });
             }
@@ -202,13 +203,13 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     }
 
     @Override
-    void parseBlock(BsqBlock block,
+    void parseBlock(Block block,
                     int genesisBlockHeight,
                     String genesisTxId,
                     TxOutputMap txOutputMap,
                     Consumer<TxOutputMap> resultHandler,
                     Consumer<Throwable> errorHandler) {
-        ListenableFuture<TxOutputMap> future = parseBlockchainExecutor.submit(() -> {
+        ListenableFuture<TxOutputMap> future = parseBlocksExecutor.submit(() -> {
             BsqParser bsqParser = new BsqParser(this);
             // txOutputMap us used in UserThread context, so we clone);
             final TxOutputMap clonedMap = TxOutputMap.getClonedMap(txOutputMap);
@@ -237,14 +238,14 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
     }
 
     @Override
-    void addBlockHandler(Consumer<BsqBlock> blockHandler) {
+    void addBlockHandler(Consumer<Block> blockHandler) {
         daemon.addBlockListener(new BlockListener() {
             @Override
-            public void blockDetected(com.neemre.btcdcli4j.core.domain.Block btcdBlock) {
-                if (btcdBlock != null) {
+            public void blockDetected(Block block) {
+                if (block != null) {
                     UserThread.execute(() -> {
-                        log.info("New block received: height={}, id={}", btcdBlock.getHeight(), btcdBlock.getHash());
-                        blockHandler.accept(new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight()));
+                        log.info("New block received: height={}, id={}", block.getHeight(), block.getHash());
+                        blockHandler.accept(block);
                     });
                 }
             }
@@ -264,7 +265,7 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
 
     @VisibleForTesting
     @Override
-    com.neemre.btcdcli4j.core.domain.Block requestBlock(int blockHeight) throws BitcoindException, CommunicationException {
+    Block requestBlock(int blockHeight) throws BitcoindException, CommunicationException {
         return client.getBlock(client.getBlockHash(blockHeight));
     }
 
@@ -285,12 +286,13 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
                     .stream()
                     .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
                     .map(rawOutput -> new TxOutput(rawOutput.getN(),
-                            rawOutput.getValue().movePointRight(8).longValue(),
-                            rawTransaction.getTxId(),
-                            new PubKeyScript(rawOutput.getScriptPubKey()),
-                            blockHeight,
-                            time,
-                            signaturePubKey))
+                                    rawOutput.getValue().movePointRight(8).longValue(),
+                                    rawTransaction.getTxId(),
+                                    new PubKeyScript(rawOutput.getScriptPubKey()),
+                                    blockHeight,
+                                    time,
+                                    signaturePubKey)
+                    )
                     .collect(Collectors.toList());
             return new Tx(txId,
                     txInputs,

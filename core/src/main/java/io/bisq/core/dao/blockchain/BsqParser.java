@@ -18,6 +18,7 @@
 package io.bisq.core.dao.blockchain;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.neemre.btcdcli4j.core.domain.Block;
 import io.bisq.common.app.DevEnv;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,11 +45,6 @@ public class BsqParser {
         this.bsqBlockchainService = bsqBlockchainService;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Parsing
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @VisibleForTesting
     void parseBlocks(int startBlockHeight,
                      int chainHeadHeight,
@@ -59,42 +55,36 @@ public class BsqParser {
         try {
             log.info("chainHeadHeight=" + chainHeadHeight);
             long startTotalTs = System.currentTimeMillis();
-            for (int height = startBlockHeight; height <= chainHeadHeight; height++) {
+            for (int blockHeight = startBlockHeight; blockHeight <= chainHeadHeight; blockHeight++) {
                 long startBlockTs = System.currentTimeMillis();
-                com.neemre.btcdcli4j.core.domain.Block btcdBlock = bsqBlockchainService.requestBlock(height);
-                log.debug("Current block height=" + height);
+                Block block = bsqBlockchainService.requestBlock(blockHeight);
+                log.debug("Current block blockHeight=" + blockHeight);
 
-                // 1 block has about 3 MB, but we keep it only in memory as long as needed
-                final BsqBlock bsqBlock = new BsqBlock(btcdBlock.getTx(), btcdBlock.getHeight());
-
-                parseBlock(bsqBlock,
+                parseBlock(block,
                         genesisBlockHeight,
                         genesisTxId,
                         txOutputMap);
 
-                txOutputMap.setBlockHeight(height);
-
-                if (BsqBlockchainManager.triggersSnapshot(height)) {
-                    // We clone the map to isolate thread context. TxOutputMap is used in UserThread.
-                    final TxOutputMap clonedSnapShotMap = TxOutputMap.getClonedMapUpToHeight(txOutputMap,
-                            BsqBlockchainManager.getSnapshotHeight(height));
+                if (BsqBlockchainManager.triggersSnapshot(blockHeight)) {
+                    TxOutputMap clonedSnapShotMap = TxOutputMap.getClonedMap(txOutputMap);
+                    //clonedSnapShotMap.printUnspentTxOutputs("triggersSnapshot");
                     snapShotHandler.accept(clonedSnapShotMap);
                 }
                 
               /*  StringBuilder sb = new StringBuilder("recursionMap:\n");
                 List<String> list = new ArrayList<>();
                 //recursionMap.entrySet().stream().forEach(e -> sb.append(e.getKey()).append(": ").append(e.getValue()).append("\n"));
-                recursionMap.entrySet().stream().forEach(e -> list.add("\nBlock height / Tx graph depth / Nr. of Txs: " + e.getKey()
+                recursionMap.entrySet().stream().forEach(e -> list.add("\nBlock blockHeight / Tx graph depth / Nr. of Txs: " + e.getKey()
                         + " / " + e.getValue()));
                 Collections.sort(list);
                 list.stream().forEach(e -> sb.append(e).append("\n"));
                 log.warn(list.toString().replace(",", "").replace("[", "").replace("]", ""));*/
 
                /* log.info("Parsing for block {} took {} ms. Total: {} ms for {} blocks",
-                        height,
+                        blockHeight,
                         (System.currentTimeMillis() - startBlockTs),
                         (System.currentTimeMillis() - startTotalTs),
-                        (height - startBlockHeight + 1));
+                        (blockHeight - startBlockHeight + 1));
                 Profiler.printSystemLoad(log);*/
             }
             log.info("Parsing for blocks {} to {} took {} ms",
@@ -108,7 +98,7 @@ public class BsqParser {
         }
     }
 
-    void parseBlock(BsqBlock block,
+    void parseBlock(Block block,
                     int genesisBlockHeight,
                     String genesisTxId,
                     TxOutputMap txOutputMap)
@@ -116,11 +106,11 @@ public class BsqParser {
         int blockHeight = block.getHeight();
         log.debug("Parse block at height={} ", blockHeight);
         // We add all transactions to the block
-        List<String> txIds = block.getTxIds();
+        List<Tx> txList = new ArrayList<>();
         Tx genesisTx = null;
-        for (String txId : txIds) {
+        for (String txId : block.getTx()) {
             final Tx tx = bsqBlockchainService.requestTransaction(txId, blockHeight);
-            block.addTx(tx);
+            txList.add(tx);
             if (txId.equals(genesisTxId))
                 genesisTx = tx;
         }
@@ -138,12 +128,15 @@ public class BsqParser {
         // There are some blocks with testing such dependency chains like block 130768 where at each iteration only 
         // one get resolved.
         // Lately there is a patter with 24 iterations observed 
-        parseTransactions(block.getTxList(), txOutputMap, blockHeight, 0, 5300);
+        parseTransactions(txList, txOutputMap, blockHeight, 0, 5300);
+
+        checkArgument(txOutputMap.getBlockHeight() <= blockHeight,
+                "blockHeight from txOutputMap must not be larger than blockHeight in parser iteration");
+        txOutputMap.setBlockHeight(blockHeight);
     }
 
     @VisibleForTesting
-    void parseGenesisTx(Tx tx,
-                        TxOutputMap txOutputMap) {
+    void parseGenesisTx(Tx tx, TxOutputMap txOutputMap) {
         // Genesis tx uses all outputs as BSQ outputs
         tx.getOutputs().stream().forEach(txOutput -> {
             txOutput.setVerified(true);

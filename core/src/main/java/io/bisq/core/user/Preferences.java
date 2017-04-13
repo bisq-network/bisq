@@ -110,7 +110,9 @@ public final class Preferences implements Persistable {
     private String sellScreenCurrencyCode;
     private int tradeStatisticsTickUnitIndex = 3;
 
+    // TODO can be removed (wait for PB merge)
     private boolean useStickyMarketPrice = false;
+
     private boolean sortMarketCurrenciesNumerically = true;
     private boolean usePercentageBasedPrice = true;
     private Map<String, String> peerTagMap = new HashMap<>();

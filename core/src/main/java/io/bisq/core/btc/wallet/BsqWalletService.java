@@ -23,7 +23,6 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
-import io.bisq.core.dao.blockchain.TxOutputMap;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import javafx.collections.FXCollections;
@@ -50,7 +49,6 @@ import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 public class BsqWalletService extends WalletService {
 
     private final BsqBlockchainManager bsqBlockchainManager;
-    private TxOutputMap txOutputMap;
     private final BsqCoinSelector bsqCoinSelector;
     @Getter
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
@@ -66,7 +64,6 @@ public class BsqWalletService extends WalletService {
     @Inject
     public BsqWalletService(WalletsSetup walletsSetup,
                             BsqBlockchainManager bsqBlockchainManager,
-                            TxOutputMap txOutputMap,
                             Preferences preferences,
                             FeeService feeService) {
         super(walletsSetup,
@@ -74,7 +71,6 @@ public class BsqWalletService extends WalletService {
                 feeService);
 
         this.bsqBlockchainManager = bsqBlockchainManager;
-        this.txOutputMap = txOutputMap;
         this.bsqCoinSelector = new BsqCoinSelector(true);
 
         walletsSetup.addSetupCompletedHandler(() -> {
@@ -200,7 +196,7 @@ public class BsqWalletService extends WalletService {
                     final boolean isPending = parentTx.getConfidence().getConfidenceType() == PENDING;
                     final boolean isMine = out.isMine(wallet);
                     return (isPending && isMine) ||
-                            txOutputMap.contains(parentTx.getHashAsString(), out.getIndex());
+                            bsqBlockchainManager.getTxOutputMap().contains(parentTx.getHashAsString(), out.getIndex());
                 })
                 .map(TransactionOutput::getParentTransaction)
                 .collect(Collectors.toSet());
