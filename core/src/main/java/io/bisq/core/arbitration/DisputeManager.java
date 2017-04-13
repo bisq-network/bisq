@@ -27,6 +27,8 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.Res;
+import io.bisq.common.persistance.Msg;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.arbitration.messages.*;
 import io.bisq.core.btc.AddressEntry;
@@ -42,7 +44,6 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.network.p2p.*;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Transaction;
@@ -68,9 +69,8 @@ public class DisputeManager {
     private final OpenOfferManager openOfferManager;
     private final P2PService p2PService;
     private final KeyRing keyRing;
-    private final Storage<DisputeList<Dispute>> disputeStorage;
-    private final DisputeList<Dispute> disputes;
-    transient private final ObservableList<Dispute> disputesObservableList;
+    private final Storage<DisputeList> disputeStorage;
+    private final DisputeList disputes;
     private final String disputeInfo;
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
@@ -91,6 +91,7 @@ public class DisputeManager {
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
                           KeyRing keyRing,
+                          ProtobufferResolver protobufferResolver,
                           @Named(Storage.DIR_KEY) File storageDir) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
@@ -100,9 +101,8 @@ public class DisputeManager {
         this.openOfferManager = openOfferManager;
         this.keyRing = keyRing;
 
-        disputeStorage = new Storage<>(storageDir);
-        disputes = new DisputeList<>(disputeStorage);
-        disputesObservableList = FXCollections.observableArrayList(disputes);
+        disputeStorage = new Storage<>(storageDir, protobufferResolver);
+        disputes = new DisputeList(disputeStorage);
 
         openDisputes = new HashMap<>();
         closedDisputes = new HashMap<>();
@@ -151,7 +151,7 @@ public class DisputeManager {
                 openDisputes.put(dispute.getTradeId(), dispute);
         });
 
-        // If we have duplicate disputes we close the second one (might happen if both traders opened a dispute and arbitrator 
+        // If we have duplicate disputes we close the second one (might happen if both traders opened a dispute and arbitrator
         // was offline, so could not forward msg to other peer, then the arbitrator might have 4 disputes open for 1 trade)
         openDisputes.entrySet().stream().forEach(openDisputeEntry -> {
             String key = openDisputeEntry.getKey();
@@ -226,7 +226,6 @@ public class DisputeManager {
                 dispute.addDisputeMessage(disputeCommunicationMessage);
                 if (!reOpen) {
                     disputes.add(dispute);
-                    disputesObservableList.add(dispute);
                 }
 
                 p2PService.sendEncryptedMailboxMessage(dispute.getContract().arbitratorNodeAddress,
@@ -310,7 +309,6 @@ public class DisputeManager {
             disputeCommunicationMessage.setSystemMessage(true);
             dispute.addDisputeMessage(disputeCommunicationMessage);
             disputes.add(dispute);
-            disputesObservableList.add(dispute);
 
             // we mirrored dispute already!
             Contract contract = dispute.getContract();
@@ -359,7 +357,7 @@ public class DisputeManager {
                 false,
                 UUID.randomUUID().toString()
         );
-        
+
         disputeCommunicationMessage.addAllAttachments(attachments);
         PubKeyRing receiverPubKeyRing = null;
         NodeAddress peerNodeAddress = null;
@@ -420,7 +418,7 @@ public class DisputeManager {
                 false,
                 UUID.randomUUID().toString()
         );
-        
+
         dispute.addDisputeMessage(disputeCommunicationMessage);
         disputeResult.setDisputeCommunicationMessage(disputeCommunicationMessage);
 
@@ -497,7 +495,6 @@ public class DisputeManager {
                 if (!storedDisputeOptional.isPresent()) {
                     dispute.setStorage(getDisputeStorage());
                     disputes.add(dispute);
-                    disputesObservableList.add(dispute);
                     sendPeerOpenedDisputeMessage(dispute);
                 } else {
                     log.warn("We got a dispute already open for that trade and trading peer.\n" +
@@ -524,7 +521,6 @@ public class DisputeManager {
 
                     dispute.setStorage(getDisputeStorage());
                     disputes.add(dispute);
-                    disputesObservableList.add(dispute);
                 } else {
                     log.warn("We got a dispute already open for that trade and trading peer.\n" +
                             "TradeId = " + dispute.getTradeId());
@@ -590,7 +586,7 @@ public class DisputeManager {
 
                 // We need to avoid publishing the tx from both traders as it would create problems with zero confirmation withdrawals
                 // There would be different transactions if both sign and publish (signers: once buyer+arb, once seller+arb)
-                // The tx publisher is the winner or in case both get 50% the buyer, as the buyer has more inventive to publish the tx as he receives 
+                // The tx publisher is the winner or in case both get 50% the buyer, as the buyer has more inventive to publish the tx as he receives
                 // more BTC as he has deposited
                 final Contract contract = dispute.getContract();
 
@@ -652,7 +648,7 @@ public class DisputeManager {
                                         dispute.setDisputePayoutTxId(transaction.getHashAsString());
                                         sendPeerPublishedPayoutTxMessage(transaction, dispute, contract);
 
-                                        // set state after payout as we call swapTradeEntryToAvailableEntry 
+                                        // set state after payout as we call swapTradeEntryToAvailableEntry
                                         if (tradeManager.getTradeById(dispute.getTradeId()).isPresent())
                                             tradeManager.closeDisputedTrade(dispute.getTradeId());
                                         else {
@@ -736,12 +732,12 @@ public class DisputeManager {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Storage<DisputeList<Dispute>> getDisputeStorage() {
+    public Storage<DisputeList> getDisputeStorage() {
         return disputeStorage;
     }
 
     public ObservableList<Dispute> getDisputesAsObservableList() {
-        return disputesObservableList;
+        return disputes.getObservableList();
     }
 
     public boolean isTrader(Dispute dispute) {

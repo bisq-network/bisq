@@ -240,7 +240,7 @@ public final class DisputeResult implements Payload {
         return PB.DisputeResult.newBuilder()
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
-                .setWinner(PB.DisputeResult.Winner.forNumber(winner.ordinal()))
+                .setWinner(PB.DisputeResult.Winner.valueOf(winner.name()))
                 .setReasonOrdinal(reasonOrdinal)
                 .setTamperProofEvidence(tamperProofEvidence)
                 .setIdVerification(idVerification)

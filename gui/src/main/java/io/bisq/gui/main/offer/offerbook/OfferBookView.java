@@ -27,6 +27,7 @@ import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.DontShowAgainLookup;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -75,6 +76,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final OfferDetailsWindow offerDetailsWindow;
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
+    private final Preferences preferences;
 
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
@@ -95,13 +97,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, BSFormatter formatter, PrivateNotificationManager privateNotificationManager) {
+    OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, BSFormatter formatter,
+                  PrivateNotificationManager privateNotificationManager, Preferences preferences) {
         super(model);
 
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
+        this.preferences = preferences;
     }
 
     @Override
@@ -215,7 +219,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         model.getOfferList().comparatorProperty().bind(tableView.comparatorProperty());
         // We dont get it sorted without the delay at startup
         UserThread.execute(() -> priceColumn.sortTypeProperty().bind(model.priceSortTypeProperty));
-        
+
         paymentMethodComboBox.setItems(model.getPaymentMethods());
         paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
         if (model.showAllPaymentMethods)
@@ -328,7 +332,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     FiatAccountsView.class,
                     "navigation.account");
         } else if (!model.hasPaymentAccountForCurrency()) {
-            new Popup().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
+            new Popup(preferences).headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
                     .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
                     .actionButtonText(Res.get("offerbook.yesCreateOffer"))
                     .onAction(() -> {
@@ -366,13 +370,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     FiatAccountsView.class,
                     "navigation.account");
         } else if (!hasSameProtocolVersion) {
-            new Popup().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
+            new Popup(preferences).warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
         } else if (isIgnored) {
-            new Popup().warning(Res.get("offerbook.warning.userIgnored")).show();
+            new Popup(preferences).warning(Res.get("offerbook.warning.userIgnored")).show();
         } else if (isOfferBanned) {
-            new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
+            new Popup(preferences).warning(Res.get("offerbook.warning.offerBlocked")).show();
         } else if (isNodeBanned) {
-            new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
+            new Popup(preferences).warning(Res.get("offerbook.warning.nodeBlocked")).show();
         }
     }
 
@@ -380,14 +384,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         if (model.isBootstrapped())
             offerActionHandler.onTakeOffer(offer);
         else
-            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
     }
 
     private void onRemoveOpenOffer(Offer offer) {
         if (model.isBootstrapped()) {
             String key = "RemoveOfferWarning";
             if (DontShowAgainLookup.showAgain(key))
-                new Popup().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(offer.getMakerFee())))
+                new Popup(preferences).warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(offer.getMakerFee())))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOffer(offer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
@@ -396,7 +400,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             else
                 doRemoveOffer(offer);
         } else {
-            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -406,7 +410,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 () -> {
                     log.debug(Res.get("offerbook.removeOffer.success"));
                     if (DontShowAgainLookup.showAgain(key))
-                        new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
+                        new Popup(preferences).instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
                                 .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                                 .dontShowAgainId(key)
@@ -414,12 +418,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 },
                 (message) -> {
                     log.error(message);
-                    new Popup().warning(Res.get("offerbook.removeOffer.failed", message)).show();
+                    new Popup(preferences).warning(Res.get("offerbook.removeOffer.failed", message)).show();
                 });
     }
 
     private void openPopupForMissingAccountSetup(String headLine, String message, Class target, String targetAsString) {
-        new Popup().headLine(headLine)
+        new Popup(preferences).headLine(headLine)
                 .instruction(message)
                 .actionButtonTextWithGoTo(targetAsString)
                 .onAction(() -> {

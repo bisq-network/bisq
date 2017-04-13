@@ -42,8 +42,6 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
     private static final Logger log = LoggerFactory.getLogger(AddBitcoinNodesWindow.class);
     private Button saveButton;
-    private final Preferences preferences;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -51,7 +49,7 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
 
     @Inject
     public AddBitcoinNodesWindow(Preferences preferences) {
-        this.preferences = preferences;
+        super(preferences);
         type = Type.Attention;
     }
 
@@ -96,7 +94,7 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
         GridPane.setHalignment(label, HPos.LEFT);
 
         HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon("Open bisq FAQ", AwesomeIcon.EXTERNAL_LINK);
-        hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage("https://bisq.io/faq/#privacy_btc"));
+        hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage("https://bisq.io/faq/#privacy_btc", preferences));
         GridPane.setRowIndex(hyperlinkWithIcon, ++rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(0, 0, 0, -4));

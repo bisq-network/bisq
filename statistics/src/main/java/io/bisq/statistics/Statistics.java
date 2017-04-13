@@ -59,7 +59,7 @@ public class Statistics {
 
         // setup UncaughtExceptionHandler
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
-            // Might come from another thread 
+            // Might come from another thread
             if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
                     throwable.getCause().getCause() instanceof BlockStoreException) {
                 log.error(throwable.getMessage());

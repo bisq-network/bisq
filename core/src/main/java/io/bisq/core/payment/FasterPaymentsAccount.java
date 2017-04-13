@@ -17,7 +17,6 @@
 
 package io.bisq.core.payment;
 
-import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.FasterPaymentsAccountPayload;
@@ -30,7 +29,7 @@ public final class FasterPaymentsAccount extends PaymentAccount {
 
     public FasterPaymentsAccount() {
         super(PaymentMethod.FASTER_PAYMENTS);
-        setSingleTradeCurrency(new FiatCurrency("GBP", GlobalSettings.getLocale()));
+        setSingleTradeCurrency(new FiatCurrency("GBP"));
     }
 
     @Override

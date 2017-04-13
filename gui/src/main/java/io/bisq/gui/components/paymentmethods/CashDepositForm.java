@@ -25,6 +25,7 @@ import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.CashDepositAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
@@ -49,6 +50,7 @@ public class CashDepositForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(CashDepositForm.class);
 
     protected final CashDepositAccountPayload cashDepositAccountPayload;
+    private final Preferences preferences;
     private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
     private Label holderIdLabel;
     protected InputTextField holderNameInputTextField, holderEmailInputTextField;
@@ -213,9 +215,10 @@ public class CashDepositForm extends PaymentMethodForm {
     }
 
     public CashDepositForm(PaymentAccount paymentAccount, InputValidator inputValidator,
-                           GridPane gridPane, int gridRow, BSFormatter formatter) {
+                           GridPane gridPane, int gridRow, BSFormatter formatter, Preferences preferences) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.cashDepositAccountPayload = (CashDepositAccountPayload) paymentAccount.paymentAccountPayload;
+        this.preferences = preferences;
     }
 
     @Override
@@ -425,7 +428,7 @@ public class CashDepositForm extends PaymentMethodForm {
             TradeCurrency selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
             FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(countryComboBox.getSelectionModel().getSelectedItem().code);
             if (!defaultCurrency.equals(selectedItem)) {
-                new Popup<>().warning(Res.get("payment.foreign.currency"))
+                new Popup<>(preferences).warning(Res.get("payment.foreign.currency"))
                         .actionButtonText(Res.get("shared.yes"))
                         .onAction(() -> {
                             paymentAccount.setSingleTradeCurrency(selectedItem);

@@ -41,6 +41,7 @@ import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.dao.DaoManager;
@@ -212,7 +213,7 @@ public class MainViewModel implements ViewModel {
         this.keyRing = keyRing;
         this.formatter = formatter;
 
-        btcNetworkAsString = Res.get(preferences.getBitcoinNetwork().name()) +
+        btcNetworkAsString = Res.get(WalletUtils.getBitcoinNetwork().name()) +
                 (preferences.getUseTorForBitcoinJ() ? (" " + Res.get("mainView.footer.usingTor")) : "");
 
         TxIdTextField.setPreferences(preferences);
@@ -251,7 +252,7 @@ public class MainViewModel implements ViewModel {
 
         p2pNetWorkReady = initP2PNetwork();
 
-        // We only init wallet service here if not using Tor for bitcoinj.        
+        // We only init wallet service here if not using Tor for bitcoinj.
         // When using Tor, wallet init must be deferred until Tor is ready.
         if (!preferences.getUseTorForBitcoinJ())
             initWalletService();
@@ -280,7 +281,7 @@ public class MainViewModel implements ViewModel {
             log.error("Startup timeout with unknown problem.");
             details = Res.get("popup.warning.unknownProblemAtStartup");
         }
-        startupTimeoutPopup = new Popup();
+        startupTimeoutPopup = new Popup(preferences);
         startupTimeoutPopup.warning(Res.get("popup.warning.startupFailed.timeout", details))
                 .useShutDownButton()
                 .show();
@@ -448,19 +449,19 @@ public class MainViewModel implements ViewModel {
                             log.error(exception.getMessage());
                             // Ugly, but no other way to cover that specific case
                             if (exception.getMessage().equals("org.bitcoinj.store.BlockStoreException: org.bitcoinj.store.BlockStoreException: Store file is already locked by another process")) {
-                                new Popup().warning(Res.get("popup.warning.startupFailed.twoInstances"))
+                                new Popup(preferences).warning(Res.get("popup.warning.startupFailed.twoInstances"))
                                         .useShutDownButton()
                                         .show();
                             } else {
-                                new Popup().warning(Res.get("error.spvFileCorrupted",
+                                new Popup(preferences).warning(Res.get("error.spvFileCorrupted",
                                         exception.getMessage()))
                                         .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
                                         .onAction(() -> {
                                             if (walletsSetup.reSyncSPVChain())
-                                                new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
+                                                new Popup<>(preferences).feedback(Res.get("settings.net.reSyncSPVSuccess"))
                                                         .useShutDownButton().show();
                                             else
-                                                new Popup<>().error(Res.get("settings.net.reSyncSPVFailed")).show();
+                                                new Popup<>(preferences).error(Res.get("settings.net.reSyncSPVFailed")).show();
                                         })
                                         .show();
                             }
@@ -487,7 +488,7 @@ public class MainViewModel implements ViewModel {
                         walletPasswordWindow
                                 .onAesKey(aesKey -> {
                                     walletsManager.setAesKey(aesKey);
-                                    if (preferences.isResyncSPVRequested()) {
+                                    if (preferences.isResyncSpvRequested()) {
                                         showFirstPopupIfResyncSPVRequested();
                                     } else {
                                         walletInitialized.set(true);
@@ -496,7 +497,7 @@ public class MainViewModel implements ViewModel {
                                 .hideCloseButton()
                                 .show();
                     } else {
-                        if (preferences.isResyncSPVRequested()) {
+                        if (preferences.isResyncSpvRequested()) {
                             showFirstPopupIfResyncSPVRequested();
                         } else {
                             walletInitialized.set(true);
@@ -551,7 +552,7 @@ public class MainViewModel implements ViewModel {
 
         feeService.onAllServicesInitialized();
 
-        daoManager.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
+        daoManager.onAllServicesInitialized(errorMessage -> new Popup<>(preferences).error(errorMessage).show());
 
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
@@ -570,7 +571,7 @@ public class MainViewModel implements ViewModel {
         String key = "remindPasswordAndBackup";
         user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
             if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(key) && change.wasAdded()) {
-                new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
+                new Popup<>(preferences).headLine(Res.get("popup.securityRecommendation.headline"))
                         .information(Res.get("popup.securityRecommendation.msg"))
                         .dontShowAgainId(key)
                         .show();
@@ -581,7 +582,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void showFirstPopupIfResyncSPVRequested() {
-        Popup firstPopup = new Popup<>();
+        Popup firstPopup = new Popup<>(preferences);
         firstPopup.information(Res.get("settings.net.reSyncSPVAfterRestart")).show();
         if (btcSyncProgress.get() == 1) {
             showSecondPopupIfResyncSPVRequested(firstPopup);
@@ -595,15 +596,15 @@ public class MainViewModel implements ViewModel {
 
     private void showSecondPopupIfResyncSPVRequested(Popup firstPopup) {
         firstPopup.hide();
-        preferences.setResyncSPVRequested(false);
-        new Popup<>().information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
+        preferences.setResyncSpvRequested(false);
+        new Popup<>(preferences).information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
                 .hideCloseButton()
                 .useShutDownButton()
                 .show();
     }
 
     private void checkCryptoSetup() {
-        // We want to test if the client is compiled with the correct crypto provider (BountyCastle) 
+        // We want to test if the client is compiled with the correct crypto provider (BountyCastle)
         // and if the unlimited Strength for cryptographic keys is set.
         // If users compile themselves they might miss that step and then would get an exception in the trade.
         // To avoid that we add here at startup a sample encryption and signing to see if it don't causes an exception.
@@ -636,7 +637,7 @@ public class MainViewModel implements ViewModel {
                     e.printStackTrace();
                     String msg = Res.get("popup.warning.cryptoTestFailed", e.getMessage());
                     log.error(msg);
-                    UserThread.execute(() -> new Popup<>().warning(msg)
+                    UserThread.execute(() -> new Popup<>(preferences).warning(msg)
                             .useShutDownButton()
                             .useReportBugButton()
                             .show());
@@ -656,7 +657,7 @@ public class MainViewModel implements ViewModel {
                     .map(e -> e.getId() + "\n")
                     .collect(Collectors.toList()).toString()
                     .replace("[", "").replace("]", "");
-            new Popup<>()
+            new Popup<>(preferences)
                     .warning(Res.get("popup.warning.oldOffers.msg", offers))
                     .actionButtonText(Res.get("popup.warning.oldOffers.buttonText"))
                     .onAction(() -> openOfferManager.removeOpenOffers(outDatedOffers, null))
@@ -674,7 +675,7 @@ public class MainViewModel implements ViewModel {
     void onSplashScreenRemoved() {
         isSplashScreenRemoved.set(true);
 
-        // Delay that as we want to know what is the current path of the navigation which is set 
+        // Delay that as we want to know what is the current path of the navigation which is set
         // in MainView showAppScreen handler
         notificationCenter.onAllServicesAndViewsInitialized();
     }
@@ -722,7 +723,7 @@ public class MainViewModel implements ViewModel {
                             key = "displayHalfTradePeriodOver" + trade.getId();
                             if (DontShowAgainLookup.showAgain(key)) {
                                 DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup().warning(Res.get("popup.warning.tradePeriod.halfReached",
+                                new Popup(preferences).warning(Res.get("popup.warning.tradePeriod.halfReached",
                                         trade.getShortId(),
                                         formatter.formatDateTime(maxTradePeriodDate)))
                                         .show();
@@ -732,7 +733,7 @@ public class MainViewModel implements ViewModel {
                             key = "displayTradePeriodOver" + trade.getId();
                             if (DontShowAgainLookup.showAgain(key)) {
                                 DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup().warning(Res.get("popup.warning.tradePeriod.ended",
+                                new Popup(preferences).warning(Res.get("popup.warning.tradePeriod.ended",
                                         trade.getShortId(),
                                         formatter.formatDateTime(maxTradePeriodDate)))
                                         .show();
@@ -815,15 +816,11 @@ public class MainViewModel implements ViewModel {
             if (newValue != null && !newValue.equals(oldValue)) {
                 setMarketPriceInItems();
 
-                String code = preferences.getUseStickyMarketPrice() ?
-                        preferences.getPreferredTradeCurrency().getCode() :
-                        priceFeedService.currencyCodeProperty().get();
+                String code = priceFeedService.currencyCodeProperty().get();
                 Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(code);
                 if (itemOptional.isPresent()) {
-                    if (selectedPriceFeedComboBoxItemProperty.get() == null || !preferences.getUseStickyMarketPrice()) {
-                        itemOptional.get().setDisplayString(newValue);
-                        selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
-                    }
+                    itemOptional.get().setDisplayString(newValue);
+                    selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
                 } else {
                     if (CurrencyUtil.isCryptoCurrency(code)) {
                         CurrencyUtil.getCryptoCurrency(code).ifPresent(cryptoCurrency -> {
@@ -870,7 +867,7 @@ public class MainViewModel implements ViewModel {
     }
 
     public void setPriceFeedComboBoxItem(PriceFeedComboBoxItem item) {
-        if (!preferences.getUseStickyMarketPrice() && item != null) {
+        if (item != null) {
             Optional<PriceFeedComboBoxItem> itemOptional = findPriceFeedComboBoxItem(priceFeedService.currencyCodeProperty().get());
             if (itemOptional.isPresent())
                 selectedPriceFeedComboBoxItemProperty.set(itemOptional.get());
@@ -879,15 +876,12 @@ public class MainViewModel implements ViewModel {
                         .ifPresent(selectedPriceFeedComboBoxItemProperty::set);
 
             priceFeedService.setCurrencyCode(item.currencyCode);
-        } else if (item != null) {
-            selectedPriceFeedComboBoxItemProperty.set(item);
-            priceFeedService.setCurrencyCode(item.currencyCode);
         } else {
             findPriceFeedComboBoxItem(preferences.getPreferredTradeCurrency().getCode())
                     .ifPresent(selectedPriceFeedComboBoxItemProperty::set);
         }
 
-        // Need a delay a bit as we get item.isPriceAvailable() set after that call. 
+        // Need a delay a bit as we get item.isPriceAvailable() set after that call.
         // (In case we add a new currency in settings)
         UserThread.runAfter(() -> {
             if (item != null) {
@@ -918,11 +912,11 @@ public class MainViewModel implements ViewModel {
         if (alert != null &&
                 !alreadyDisplayed &&
                 (!alert.isUpdateInfo() || alert.isNewVersion()))
-            new DisplayAlertMessageWindow().alertMessage(alert).show();
+            new DisplayAlertMessageWindow(preferences).alertMessage(alert).show();
     }
 
     private void displayPrivateNotification(PrivateNotificationPayload privateNotification) {
-        new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
+        new Popup<>(preferences).headLine(Res.get("popup.privateNotification.headline"))
                 .attention(privateNotification.message)
                 .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
                 .onClose(privateNotificationManager::removePrivateNotification)
@@ -937,7 +931,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateBalance() {
-        // Without delaying to the next cycle it does not update. 
+        // Without delaying to the next cycle it does not update.
         // Seems order of events we are listening on causes that...
         UserThread.execute(() -> {
             updateAvailableBalance();

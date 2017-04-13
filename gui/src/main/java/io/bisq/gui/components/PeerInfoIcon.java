@@ -14,16 +14,14 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
+@Slf4j
 public class PeerInfoIcon extends Group {
-    private static final Logger log = LoggerFactory.getLogger(PeerInfoIcon.class);
-
     private final String hostName;
     private final String tooltipText;
     private final int numTrades;

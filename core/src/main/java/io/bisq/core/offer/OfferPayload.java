@@ -255,7 +255,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .map(NodeAddress::toProto)
                 .collect(Collectors.toList());
         PB.OfferPayload.Builder offerBuilder = PB.OfferPayload.newBuilder()
-                .setDirectionValue(direction.ordinal())
+                .setDirection(PB.OfferPayload.Direction.valueOf(direction.name()))
                 .setBaseCurrencyCode(baseCurrencyCode)
                 .setCounterCurrencyCode(counterCurrencyCode)
                 .setPaymentMethodId(paymentMethodId)

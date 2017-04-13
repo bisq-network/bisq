@@ -31,17 +31,15 @@ import javafx.scene.transform.Rotate;
 import javafx.stage.Modality;
 import javafx.stage.Window;
 import javafx.util.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.function.Consumer;
 
+@Slf4j
 public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
-    private static final Logger log = LoggerFactory.getLogger(PeerInfoWithTagEditor.class);
     private InputTextField inputTextField;
     private Point2D position;
-
     private static PeerInfoWithTagEditor INSTANCE;
     private Consumer<String> saveHandler;
     private String hostName;
@@ -54,6 +52,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
 
     public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences) {
+        super(preferences);
         this.privateNotificationManager = privateNotificationManager;
         this.offer = offer;
         this.preferences = preferences;
@@ -152,7 +151,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
         keyEventEventHandler = event -> {
             if (new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN).match(event)) {
-                new SendPrivateNotificationWindow(offer.getPubKeyRing(), offer.getMakerNodeAddress())
+                new SendPrivateNotificationWindow(offer.getPubKeyRing(), offer.getMakerNodeAddress(), preferences)
                         .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                         .show();
             }

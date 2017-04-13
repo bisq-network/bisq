@@ -29,7 +29,7 @@ import io.bisq.core.offer.messages.OfferAvailabilityResponse;
 import io.bisq.core.offer.messages.OfferMsg;
 import io.bisq.core.util.Validator;
 import io.bisq.network.p2p.DecryptedDirectMessageListener;
-import io.bisq.network.p2p.Msg;
+import io.bisq.common.persistance.Msg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

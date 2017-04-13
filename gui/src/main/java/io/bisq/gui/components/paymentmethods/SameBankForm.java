@@ -23,6 +23,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.validation.InputValidator;
@@ -43,8 +44,9 @@ public class SameBankForm extends BankForm {
     }
 
     public SameBankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
-                        GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
-        super(paymentAccount, inputValidator, gridPane, gridRow, formatter, closeHandler);
+                        GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler,
+                        Preferences preferences) {
+        super(paymentAccount, inputValidator, gridPane, gridRow, formatter, closeHandler, preferences);
     }
 
     @Override

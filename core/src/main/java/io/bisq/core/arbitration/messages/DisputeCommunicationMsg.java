@@ -20,7 +20,7 @@ package io.bisq.core.arbitration.messages;
 import io.bisq.common.app.Version;
 import io.bisq.core.arbitration.Attachment;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.Msg;
+import io.bisq.common.persistance.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @ToString
 @Getter
 @Slf4j

@@ -250,7 +250,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         boolean result = model.initWithData(direction, tradeCurrency);
 
         if (!result) {
-            new Popup().headLine(Res.get("popup.warning.noTradingAccountSetup.headline"))
+            new Popup(preferences).headLine(Res.get("popup.warning.noTradingAccountSetup.headline"))
                     .instruction(Res.get("popup.warning.noTradingAccountSetup.msg"))
                     .actionButtonTextWithGoTo("navigation.account")
                     .onAction(() -> {
@@ -281,7 +281,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         // we use model.placeOfferCompleted to not react on close which was triggered by a successful placeOffer
         if (model.dataModel.getBalance().get().isPositive() && !model.placeOfferCompleted.get()) {
             model.dataModel.swapTradeToSavings();
-            new Popup().information(Res.get("createOffer.alreadyFunded"))
+            new Popup(preferences).information(Res.get("createOffer.alreadyFunded"))
                     .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                     .show();
@@ -310,7 +310,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     model.onPlaceOffer(offer, () -> {
                     });
             } else {
-                new Popup().headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
+                new Popup(preferences).headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
                         .instruction(Res.get("popup.warning.noArbitratorSelected.msg"))
                         .actionButtonTextWithGoTo("navigation.arbitratorSelection")
                         .onAction(() -> {
@@ -319,7 +319,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                         }).show();
             }
         } else {
-            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -336,9 +336,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         //noinspection PointlessBooleanExpression
         if (!DevEnv.DEV_MODE) {
             String key = "securityDepositInfo";
-            new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
+            new Popup(preferences).backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
-                    .onAction(() -> GUIUtil.openWebPage("https://bisq.io/faq#6"))
+                    .onAction(() -> GUIUtil.openWebPage("https://bisq.io/faq#6", preferences))
                     .useIUnderstandButton()
                     .dontShowAgainId(key)
                     .show();
@@ -355,7 +355,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             );
             //TODO remove
             log.error(message);
-            new Popup().headLine(Res.get("createOffer.createOfferFundWalletInfo.headline"))
+            new Popup(preferences).headLine(Res.get("createOffer.createOfferFundWalletInfo.headline"))
                     .instruction(message)
                     .dontShowAgainId(key)
                     .show();
@@ -391,7 +391,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
                 !clearXchangeWarningDisplayed) {
             clearXchangeWarningDisplayed = true;
-            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(),
+            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(preferences),
                     500, TimeUnit.MILLISECONDS);
         }
     }
@@ -597,14 +597,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         errorMessageListener = (o, oldValue, newValue) -> {
             if (newValue != null)
-                UserThread.runAfter(() -> new Popup().error(Res.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()))
+                UserThread.runAfter(() -> new Popup(preferences).error(Res.get("createOffer.amountPriceBox.error.message", model.errorMessage.get()))
                         .show(), 100, TimeUnit.MILLISECONDS);
         };
 
        /* feeFromFundingTxListener = (observable, oldValue, newValue) -> {
             log.debug("feeFromFundingTxListener " + newValue);
             if (!model.dataModel.isFeeFromFundingTxSufficient()) {
-                new Popup().warning("The mining fee from your funding transaction is not sufficiently high.\n\n" +
+                new Popup(preferences).warning("The mining fee from your funding transaction is not sufficiently high.\n\n" +
                         "You need to use at least a mining fee of " +
                         model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + ".\n\n" +
                         "The fee used in your funding transaction was only " +
@@ -640,7 +640,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                 // We need a bit of delay to avoid issues with fade out/fade in of 2 popups
                 String key = "createOfferSuccessInfo";
                 if (DontShowAgainLookup.showAgain(key)) {
-                    UserThread.runAfter(() -> new Popup().headLine(Res.get("createOffer.success.headline"))
+                    UserThread.runAfter(() -> new Popup(preferences).headLine(Res.get("createOffer.success.headline"))
                                     .feedback(Res.get("createOffer.success.info"))
                                     .dontShowAgainId(key)
                                     .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
@@ -988,9 +988,9 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
-                        () -> new QRCodeWindow(getBitcoinURI()).show(),
+                        () -> new QRCodeWindow(getBitcoinURI(), preferences).show(),
                         200, TimeUnit.MILLISECONDS)
-        ));
+        , preferences));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 2);
         GridPane.setRowSpan(qrCodeImageView, 3);
@@ -998,7 +998,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         gridPane.getChildren().add(qrCodeImageView);
 
         Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow,
-                Res.get("shared.tradeWalletAddress"));
+                Res.get("shared.tradeWalletAddress"), preferences);
         addressLabel = addressTuple.first;
         addressLabel.setVisible(false);
         addressTextField = addressTuple.second;
@@ -1023,7 +1023,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         label.setPadding(new Insets(5, 0, 0, 0));
         Button fundFromExternalWalletButton = new Button(Res.get("shared.fundFromExternalWalletButton"));
         fundFromExternalWalletButton.setDefaultButton(false);
-        fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
+        fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet, preferences));
         waitingForFundsBusyAnimation = new BusyAnimation();
         waitingForFundsLabel = new Label();
         waitingForFundsLabel.setPadding(new Insets(5, 0, 0, 0));
@@ -1043,7 +1043,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         cancelButton2 = addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.getIsWalletFunded().get()) {
-                new Popup().warning(Res.get("createOffer.warnCancelOffer"))
+                new Popup(preferences).warning(Res.get("createOffer.warnCancelOffer"))
                         .closeButtonText(Res.get("shared.no"))
                         .actionButtonText(Res.get("shared.yesCancel"))
                         .onAction(() -> {
@@ -1065,7 +1065,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception ex) {
             log.warn(ex.getMessage());
-            new Popup().warning(Res.get("shared.openDefaultWalletFailed")).show();
+            new Popup(preferences).warning(Res.get("shared.openDefaultWalletFailed")).show();
         }
     }
 

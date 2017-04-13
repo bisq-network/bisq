@@ -33,7 +33,7 @@ import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepos
 import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndPublishDepositTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
 import io.bisq.network.p2p.MailboxMsg;
-import io.bisq.network.p2p.Msg;
+import io.bisq.common.persistance.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 

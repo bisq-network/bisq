@@ -45,17 +45,16 @@ public class CurrencyUtil {
 
 
     public static List<FiatCurrency> getMainFiatCurrencies() {
-        Locale locale = getLocale();
         TradeCurrency defaultTradeCurrency = getDefaultTradeCurrency();
         List<FiatCurrency> list = new ArrayList<>();
         // Top traded currencies
-        list.add(new FiatCurrency("USD", locale));
-        list.add(new FiatCurrency("EUR", locale));
-        list.add(new FiatCurrency("GBP", locale));
-        list.add(new FiatCurrency("CAD", locale));
-        list.add(new FiatCurrency("AUD", locale));
-        list.add(new FiatCurrency("RUB", locale));
-        list.add(new FiatCurrency("INR", locale));
+        list.add(new FiatCurrency("USD"));
+        list.add(new FiatCurrency("EUR"));
+        list.add(new FiatCurrency("GBP"));
+        list.add(new FiatCurrency("CAD"));
+        list.add(new FiatCurrency("AUD"));
+        list.add(new FiatCurrency("RUB"));
+        list.add(new FiatCurrency("INR"));
 
         list.sort(TradeCurrency::compareTo);
 
@@ -254,29 +253,28 @@ public class CurrencyUtil {
 
     // At OKPay you can exchange internally those currencies
     public static List<TradeCurrency> getAllOKPayCurrencies() {
-        Locale locale = getLocale();
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("EUR", locale),
-                new FiatCurrency("USD", locale),
-                new FiatCurrency("GBP", locale),
-                new FiatCurrency("CHF", locale),
-                new FiatCurrency("RUB", locale),
-                new FiatCurrency("PLN", locale),
-                new FiatCurrency("JPY", locale),
-                new FiatCurrency("CAD", locale),
-                new FiatCurrency("AUD", locale),
-                new FiatCurrency("CZK", locale),
-                new FiatCurrency("NOK", locale),
-                new FiatCurrency("SEK", locale),
-                new FiatCurrency("DKK", locale),
-                new FiatCurrency("HRK", locale),
-                new FiatCurrency("HUF", locale),
-                new FiatCurrency("NZD", locale),
-                new FiatCurrency("RON", locale),
-                new FiatCurrency("TRY", locale),
-                new FiatCurrency("ZAR", locale),
-                new FiatCurrency("HKD", locale),
-                new FiatCurrency("CNY", locale)
+                new FiatCurrency("EUR"),
+                new FiatCurrency("USD"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("CHF"),
+                new FiatCurrency("RUB"),
+                new FiatCurrency("PLN"),
+                new FiatCurrency("JPY"),
+                new FiatCurrency("CAD"),
+                new FiatCurrency("AUD"),
+                new FiatCurrency("CZK"),
+                new FiatCurrency("NOK"),
+                new FiatCurrency("SEK"),
+                new FiatCurrency("DKK"),
+                new FiatCurrency("HRK"),
+                new FiatCurrency("HUF"),
+                new FiatCurrency("NZD"),
+                new FiatCurrency("RON"),
+                new FiatCurrency("TRY"),
+                new FiatCurrency("ZAR"),
+                new FiatCurrency("HKD"),
+                new FiatCurrency("CNY")
         ));
         currencies.sort(TradeCurrency::compareTo);
         return currencies;

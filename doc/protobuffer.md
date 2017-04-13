@@ -11,21 +11,42 @@ There are a number of reasons why protobuffer was chosen, here are some of them:
 
 ## Which classes are transformed to protobuffer?
 
-* classes sent over the wire (P2P network)
+All classes in the 'wire' module. This module contains the following classes:
+
+* classes sent over the wire (P2P network) 
 * classes serialized to disk
 
 ## Where are the protobuffer related files? 
 
 The protobuffer schema file(s), generated classes and domain classes are in the 'wire' module.
+Look for *.proto for the schema files.
 
 ## How is serialisation done (Java -> Protobuffer)
 
 Some interfaces have a 'toProtobuf' method to force all extending classes to implement that method.
 
-## default values?
+## How is deserialisation done (Java -> Protobuffer)
 
-## 
+Some interfaces have a 'toProtobuf' method to force all extending classes to implement that method.
 
+
+## If fields are not filled in, what are protobuffer's default values?
+
+Read this very carefully:
+
+https://developers.google.com/protocol-buffers/docs/proto3#default
+
+## How to handle Enums 
+ 
+For Java -> Protobuffer, you should extract the name from the Java enum:
+
+    .setContext(Messages.AddressEntry.Context.valueOf(context.name()))
+
+For Protobuffer -> Java, do the opposite:
+
+    OfferPayload.Direction.valueOf(direction.name());
+  
+# Other Stuff
 
 ## Frameworks
 

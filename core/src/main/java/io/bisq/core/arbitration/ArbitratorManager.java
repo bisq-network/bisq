@@ -179,7 +179,7 @@ public class ArbitratorManager {
                     );
                 });
 
-        if (preferences.getAutoSelectArbitrators()) {
+        if (preferences.isAutoSelectArbitrators()) {
             arbitratorsObservableMap.values().stream()
                     .filter(user::hasMatchingLanguage)
                     .forEach(a -> {

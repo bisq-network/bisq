@@ -54,8 +54,8 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, /*Cap
     public final String depositTxId;
     @JsonExclude
     public final PubKeyRing pubKeyRing;
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Getter
     @Nullable
@@ -167,7 +167,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, /*Cap
         final PB.TradeStatistics.Builder builder = PB.TradeStatistics.newBuilder()
                 .setBaseCurrency(baseCurrency)
                 .setCounterCurrency(counterCurrency)
-                .setDirection(PB.OfferPayload.Direction.forNumber(direction.ordinal()))
+                .setDirection(PB.OfferPayload.Direction.valueOf(direction.name()))
                 .setTradePrice(tradePrice)
                 .setTradeAmount(tradeAmount)
                 .setTradeDate(tradeDate)

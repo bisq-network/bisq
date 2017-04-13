@@ -17,7 +17,6 @@
 
 package io.bisq.core.payment;
 
-import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.ClearXchangeAccountPayload;
@@ -30,7 +29,7 @@ public final class ClearXchangeAccount extends PaymentAccount {
 
     public ClearXchangeAccount() {
         super(PaymentMethod.CLEAR_X_CHANGE);
-        setSingleTradeCurrency(new FiatCurrency("USD", GlobalSettings.getLocale()));
+        setSingleTradeCurrency(new FiatCurrency("USD"));
     }
 
     @Override

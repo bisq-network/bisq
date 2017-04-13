@@ -17,15 +17,16 @@
 
 package io.bisq.common.storage;
 
+import com.google.inject.Inject;
+import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistance.ProtobufferResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -46,7 +47,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>
  * The write operation used a background thread and supports a delayed write to avoid too many repeated write operations.
  */
-public class Storage<T extends Serializable> {
+public class Storage<T extends Persistable> {
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
     public static final String DIR_KEY = "storageDir";
 
@@ -66,6 +67,8 @@ public class Storage<T extends Serializable> {
     private T serializable;
     private String fileName;
     private int numMaxBackupFiles = 10;
+    @com.google.inject.Inject
+    private ProtobufferResolver protobufferResolver;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,21 +76,28 @@ public class Storage<T extends Serializable> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Storage(@Named(DIR_KEY) File dir) {
+    public Storage(@Named(DIR_KEY) File dir, ProtobufferResolver protobufferResolver) {
         this.dir = dir;
+        this.protobufferResolver = protobufferResolver;
     }
 
+    /*
+    public Storage(@Named(DIR_KEY) File dir) {
+        this.dir = dir;
+        this.protobufferResolver = protobufferResolver;
+    }
+*/
     public void initWithFileName(String fileName) {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 300);
+        fileManager = new FileManager<>(dir, storageFile, 300, protobufferResolver);
     }
 
     @Nullable
     public T initAndGetPersistedWithFileName(String fileName) {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 300);
+        fileManager = new FileManager<>(dir, storageFile, 300, protobufferResolver);
 
         return getPersisted();
     }
@@ -102,7 +112,7 @@ public class Storage<T extends Serializable> {
         this.serializable = serializable;
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 600);
+        fileManager = new FileManager<>(dir, storageFile, 600, protobufferResolver);
 
         return getPersisted();
     }
@@ -151,7 +161,7 @@ public class Storage<T extends Serializable> {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We do the file read on the UI thread to avoid problems from multi threading. 
+    // We do the file read on the UI thread to avoid problems from multi threading.
     // Data are small and read is done only at startup, so it is no performance issue.
     @Nullable
     private T getPersisted() {
@@ -161,7 +171,7 @@ public class Storage<T extends Serializable> {
                 T persistedObject = fileManager.read(storageFile);
                 log.trace("Read {} completed in {}msec", storageFile, System.currentTimeMillis() - now);
 
-                // If we did not get any exception we can be sure the data are consistent so we make a backup 
+                // If we did not get any exception we can be sure the data are consistent so we make a backup
                 now = System.currentTimeMillis();
                 fileManager.backupFile(fileName, numMaxBackupFiles);
                 log.trace("Backup {} completed in {}msec", storageFile, System.currentTimeMillis() - now);
@@ -169,7 +179,7 @@ public class Storage<T extends Serializable> {
                 return persistedObject;
             } catch (Throwable t) {
                 log.error("Version of persisted class has changed. We cannot read the persisted data anymore. " +
-                        "We make a backup and remove the inconsistent file.");
+                        "We make a backup and remove the inconsistent file. fileName=" + fileName);
                 log.error(t.getMessage());
                 try {
                     // We keep a backup which might be used for recovery

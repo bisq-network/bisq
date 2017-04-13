@@ -22,6 +22,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.alert.PrivateNotificationPayload;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -64,7 +65,8 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public SendPrivateNotificationWindow(PubKeyRing pubKeyRing, NodeAddress nodeAddress) {
+    public SendPrivateNotificationWindow(PubKeyRing pubKeyRing, NodeAddress nodeAddress, Preferences preferences) {
+        super(preferences);
         this.pubKeyRing = pubKeyRing;
         this.nodeAddress = nodeAddress;
         type = Type.Attention;
@@ -130,24 +132,24 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
                             @Override
                             public void onArrived() {
                                 log.trace("PrivateNotificationMessage arrived at peer.");
-                                new Popup<>().feedback(Res.get("shared.messageArrived"))
+                                new Popup<>(preferences).feedback(Res.get("shared.messageArrived"))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
                                 log.trace("PrivateNotificationMessage was stored in mailbox.");
-                                new Popup<>().feedback(Res.get("shared.messageStoredInMailbox"))
+                                new Popup<>(preferences).feedback(Res.get("shared.messageStoredInMailbox"))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
 
                             @Override
                             public void onFault(String errorMessage) {
-                                new Popup<>().feedback(Res.get("shared.messageSendingFailed", errorMessage))
+                                new Popup<>(preferences).feedback(Res.get("shared.messageSendingFailed", errorMessage))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
                         }))
-                    new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                    new Popup(preferences).warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 

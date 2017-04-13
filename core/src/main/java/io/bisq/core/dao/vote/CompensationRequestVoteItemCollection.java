@@ -19,21 +19,27 @@ package io.bisq.core.dao.vote;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@ToString
+@EqualsAndHashCode(callSuper = true)
+@Slf4j
 public final class CompensationRequestVoteItemCollection extends VoteItem implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(CompensationRequestVoteItemCollection.class);
 
+    @Getter
     private final List<CompensationRequestVoteItem> compensationRequestVoteItems = new ArrayList<>();
 
-    public List<CompensationRequestVoteItem> getCompensationRequestVoteItems() {
-        return compensationRequestVoteItems;
+    /** constructor */
+    public CompensationRequestVoteItemCollection(VotingType votingType) {
+        super(votingType, null, null);
     }
 
     public List<CompensationRequestVoteItem> getCompensationRequestVoteItemsSortedByTxId() {
@@ -42,20 +48,8 @@ public final class CompensationRequestVoteItemCollection extends VoteItem implem
         return list;
     }
 
-
-    public CompensationRequestVoteItemCollection(VotingType votingType) {
-        super(votingType, null, null);
-    }
-
     public void addCompensationRequestVoteItem(CompensationRequestVoteItem compensationRequestVoteItem) {
         compensationRequestVoteItems.add(compensationRequestVoteItem);
-    }
-
-    @Override
-    public String toString() {
-        return "CompensationRequestVoteItemCollection{" +
-                "compensationRequestVoteItems=" + compensationRequestVoteItems +
-                '}';
     }
 
     public boolean hasVotedOnAnyItem() {

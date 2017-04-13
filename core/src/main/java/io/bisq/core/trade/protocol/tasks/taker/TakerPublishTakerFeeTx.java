@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import org.bitcoinj.core.Sha256Hash;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +37,7 @@ public class TakerPublishTakerFeeTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            processModel.getTradeWalletService().broadcastTx(processModel.getTakeOfferFeeTx(),
+            processModel.getTradeWalletService().broadcastTx(processModel.getTradeWalletService().getWalletTx(processModel.getTakeOfferFeeTx().getHash()),
                     new FutureCallback<Transaction>() {
                         @Override
                         public void onSuccess(Transaction transaction) {

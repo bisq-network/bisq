@@ -17,8 +17,10 @@
 
 package io.bisq.core.user;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
+import io.bisq.generated.protobuffer.PB;
 
 public final class BlockChainExplorer implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -32,5 +34,10 @@ public final class BlockChainExplorer implements Persistable {
         this.name = name;
         this.txUrl = txUrl;
         this.addressUrl = addressUrl;
+    }
+
+    @Override
+    public Message toProtobuf() {
+        return PB.BlockChainExplorer.newBuilder().setName(name).setTxUrl(txUrl).setAddressUrl(addressUrl).build();
     }
 }

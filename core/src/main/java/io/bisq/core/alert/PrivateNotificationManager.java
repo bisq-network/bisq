@@ -22,6 +22,7 @@ import com.google.inject.name.Named;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.persistance.Msg;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.network.p2p.*;
 import javafx.beans.property.ObjectProperty;

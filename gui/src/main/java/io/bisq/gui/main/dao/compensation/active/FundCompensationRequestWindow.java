@@ -19,6 +19,7 @@ package io.bisq.gui.main.dao.compensation.active;
 
 import io.bisq.common.locale.Res;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.scene.Scene;
@@ -43,7 +44,8 @@ public class FundCompensationRequestWindow extends Overlay<FundCompensationReque
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FundCompensationRequestWindow() {
+    public FundCompensationRequestWindow(Preferences preferences) {
+        super(preferences);
         type = Type.Instruction;
     }
 

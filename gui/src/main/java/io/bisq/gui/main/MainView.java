@@ -25,6 +25,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.exceptions.BisqException;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.components.BusyAnimation;
@@ -61,6 +62,7 @@ import static javafx.scene.layout.AnchorPane.*;
 @FxmlView
 public class MainView extends InitializableView<StackPane, MainViewModel> {
     private static final Logger log = LoggerFactory.getLogger(MainView.class);
+    private final Preferences preferences;
 
     public static StackPane getRootContainer() {
         return MainView.rootContainer;
@@ -113,12 +115,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
-                    BisqEnvironment environment, BSFormatter formatter) {
+                    BisqEnvironment environment, BSFormatter formatter, Preferences preferences) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.environment = environment;
         this.formatter = formatter;
+        this.preferences = preferences;
         MainView.transitions = transitions;
     }
 
@@ -233,7 +236,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 if (!persistedFilesCorrupted.isEmpty()) {
                     if (persistedFilesCorrupted.size() > 1 || !persistedFilesCorrupted.get(0).equals("Navigation")) {
                         // show warning that some files has been corrupted
-                        new Popup()
+                        new Popup(preferences)
                                 .warning(Res.get("popup.warning.incompatibleDB",
                                         persistedFilesCorrupted.toString(),
                                         environment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY)))
@@ -306,7 +309,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcAverageIconButton.setFocusTraversable(false);
         btcAverageIconButton.setStyle("-fx-background-color: transparent;");
         HBox.setMargin(btcAverageIconButton, new Insets(0, 5, 0, 0));
-        btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
+        btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com", preferences));
         btcAverageIconButton.setVisible(model.isFiatCurrencyPriceFeedSelected.get());
         btcAverageIconButton.setManaged(model.isFiatCurrencyPriceFeedSelected.get());
         btcAverageIconButton.visibleProperty().bind(model.isFiatCurrencyPriceFeedSelected);
@@ -329,7 +332,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.setFocusTraversable(false);
         poloniexIconButton.setStyle("-fx-background-color: transparent;");
         HBox.setMargin(poloniexIconButton, new Insets(2, 3, 0, 0));
-        poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
+        poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com", preferences));
         poloniexIconButton.setVisible(model.isCryptoCurrencyPriceFeedSelected.get());
         poloniexIconButton.setManaged(model.isCryptoCurrencyPriceFeedSelected.get());
         poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
@@ -492,7 +495,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             if (newValue != null) {
                 btcInfoLabel.setId("splash-error-state-msg");
                 if (btcNetworkWarnMsgPopup == null) {
-                    btcNetworkWarnMsgPopup = new Popup<>().warning(newValue);
+                    btcNetworkWarnMsgPopup = new Popup<>(preferences).warning(newValue);
                     btcNetworkWarnMsgPopup.show();
                 }
             } else {
@@ -543,7 +546,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         p2PNetworkLabel.idProperty().bind(model.p2pNetworkLabelId);
         model.p2pNetworkWarnMsg.addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                p2PNetworkWarnMsgPopup = new Popup<>().warning(newValue);
+                p2PNetworkWarnMsgPopup = new Popup<>(preferences).warning(newValue);
                 p2PNetworkWarnMsgPopup.show();
             } else if (p2PNetworkWarnMsgPopup != null) {
                 p2PNetworkWarnMsgPopup.hide();

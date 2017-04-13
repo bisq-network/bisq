@@ -27,6 +27,8 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.persistance.ListPersistable;
+import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.payment.PaymentAccount;
@@ -47,10 +49,9 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -65,9 +66,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class GUIUtil {
-    private static final Logger log = LoggerFactory.getLogger(GUIUtil.class);
-
     public final static String SHOW_ALL_FLAG = "SHOW_ALL_FLAG";
     public final static String EDIT_FLAG = "EDIT_FLAG";
 
@@ -81,10 +81,10 @@ public class GUIUtil {
         return 0;
     }
 
-    public static void showFeeInfoBeforeExecute(Runnable runnable) {
+    public static void showFeeInfoBeforeExecute(Runnable runnable, Preferences preferences) {
         String key = "miningFeeInfo";
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
-            new Popup<>().information(Res.get("guiUtil.miningFeeInfo"))
+            new Popup<>(preferences).information(Res.get("guiUtil.miningFeeInfo"))
                     .dontShowAgainId(key)
                     .onClose(runnable::run)
                     .useIUnderstandButton()
@@ -94,19 +94,21 @@ public class GUIUtil {
         }
     }
 
-    public static void exportAccounts(ArrayList<PaymentAccount> accounts, String fileName, Preferences preferences, Stage stage) {
+    public static void exportAccounts(ArrayList<PaymentAccount> accounts, String fileName,
+                                      Preferences preferences, Stage stage, ProtobufferResolver protobufferResolver) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
-            Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
-            paymentAccountsStorage.initAndGetPersisted(accounts, fileName);
+            Storage<ListPersistable<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), protobufferResolver);
+            paymentAccountsStorage.initAndGetPersisted(new ListPersistable<>(accounts), fileName);
             paymentAccountsStorage.queueUpForSave();
-            new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
+            new Popup<>(preferences).feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
         } else {
-            new Popup<>().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
+            new Popup<>(preferences).warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
         }
     }
 
-    public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage) {
+    public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage,
+                                      ProtobufferResolver protobufferResolver) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
         fileChooser.setTitle(Res.get("guiUtil.accountExport.selectPath", fileName));
@@ -116,11 +118,11 @@ public class GUIUtil {
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
-                Storage<ArrayList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory));
-                ArrayList<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
+                Storage<ListPersistable<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), protobufferResolver);
+                ListPersistable<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
-                    persisted.stream().forEach(paymentAccount -> {
+                    persisted.getListPayload().stream().forEach(paymentAccount -> {
                         final String id = paymentAccount.getId();
                         if (user.getPaymentAccount(id) == null) {
                             user.addPaymentAccount(paymentAccount);
@@ -129,10 +131,10 @@ public class GUIUtil {
                             msg.append(Res.get("guiUtil.accountImport.noImport", id));
                         }
                     });
-                    new Popup<>().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
+                    new Popup<>(preferences).feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
 
                 } else {
-                    new Popup<>().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
+                    new Popup<>(preferences).warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
                 }
             } else {
                 log.error("The selected file is not the expected file for import. The expected file name is: " + fileName + ".");
@@ -143,7 +145,7 @@ public class GUIUtil {
 
     public static <T> void exportCSV(String fileName, CSVEntryConverter<T> headerConverter,
                                      CSVEntryConverter<T> contentConverter, T emptyItem,
-                                     List<T> list, Stage stage) {
+                                     List<T> list, Stage stage, Preferences preferences) {
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialFileName(fileName);
@@ -163,7 +165,7 @@ public class GUIUtil {
         } catch (RuntimeException | IOException e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            new Popup().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+            new Popup(preferences).error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
         }
     }
 
@@ -194,7 +196,7 @@ public class GUIUtil {
                         return "▼ " + Res.get("list.currency.editList");
                     default:
                         String displayString = CurrencyUtil.getNameByCode(code) + " (" + code + ")";
-                        if (preferences.getSortMarketCurrenciesNumerically())
+                        if (preferences.isSortMarketCurrenciesNumerically())
                             displayString += " - " + item.numTrades + " " + postFix;
                         return tradeCurrency.getDisplayPrefix() + displayString;
                 }
@@ -249,7 +251,7 @@ public class GUIUtil {
                 .map(e -> new CurrencyListItem(e, tradesPerCurrencyMap.get(e.getCode())))
                 .collect(Collectors.toList());
 
-        if (preferences.getSortMarketCurrenciesNumerically()) {
+        if (preferences.isSortMarketCurrenciesNumerically()) {
             list.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
             cryptoList.sort((o1, o2) -> new Integer(o2.numTrades).compareTo(o1.numTrades));
         } else {
@@ -291,10 +293,10 @@ public class GUIUtil {
     }
 
 
-    public static void openWebPage(String target) {
+    public static void openWebPage(String target, Preferences preferences) {
         String key = "warnOpenURLWhenTorEnabled";
         if (DontShowAgainLookup.showAgain(key)) {
-            new Popup<>().information(Res.get("guiUtil.openWebBrowser.warning", target))
+            new Popup<>(preferences).information(Res.get("guiUtil.openWebBrowser.warning", target))
                     .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
                     .onAction(() -> {
                         DontShowAgainLookup.dontShowAgain(key, true);
@@ -354,9 +356,9 @@ public class GUIUtil {
         return parent != null ? (T) parent : null;
     }
 
-    public static void showClearXchangeWarning() {
+    public static void showClearXchangeWarning(Preferences preferences) {
         String key = "confirmClearXchangeRequirements";
-        new Popup().information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
+        new Popup(preferences).information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
                 .dontShowAgainId(key)

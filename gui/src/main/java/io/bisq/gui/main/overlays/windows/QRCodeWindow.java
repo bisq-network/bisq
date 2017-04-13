@@ -1,6 +1,7 @@
 package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.common.locale.Res;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -21,7 +22,8 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
     private final ImageView qrCodeImageView;
     private final String bitcoinURI;
 
-    public QRCodeWindow(String bitcoinURI) {
+    public QRCodeWindow(String bitcoinURI, Preferences preferences) {
+        super(preferences);
         this.bitcoinURI = bitcoinURI;
         final byte[] imageBytes = QRCode
                 .from(bitcoinURI)

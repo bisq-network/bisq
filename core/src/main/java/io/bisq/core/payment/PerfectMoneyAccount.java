@@ -17,7 +17,6 @@
 
 package io.bisq.core.payment;
 
-import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -30,7 +29,7 @@ public final class PerfectMoneyAccount extends PaymentAccount {
 
     public PerfectMoneyAccount() {
         super(PaymentMethod.PERFECT_MONEY);
-        setSingleTradeCurrency(new FiatCurrency("USD", GlobalSettings.getLocale()));
+        setSingleTradeCurrency(new FiatCurrency("USD"));
     }
 
     @Override

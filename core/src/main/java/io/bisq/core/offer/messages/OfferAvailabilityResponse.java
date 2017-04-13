@@ -22,7 +22,7 @@ import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.Msg;
+import io.bisq.common.persistance.Msg;
 import io.bisq.network.p2p.SupportedCapabilitiesMsg;
 
 import javax.annotation.Nullable;
@@ -62,7 +62,7 @@ public final class OfferAvailabilityResponse extends OfferMsg implements Support
         PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
         return baseEnvelope.setOfferAvailabilityResponse(PB.OfferAvailabilityResponse.newBuilder().setMessageVersion(getMessageVersion())
                 .setOfferId(offerId)
-                .setAvailabilityResult(PB.AvailabilityResult.forNumber(availabilityResult.ordinal()))
+                .setAvailabilityResult(PB.AvailabilityResult.valueOf(availabilityResult.name()))
                 .addAllSupportedCapabilities(supportedCapabilities)).build();
     }
 }

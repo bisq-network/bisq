@@ -29,6 +29,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.Contract;
+import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -91,7 +92,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DisputeSummaryWindow(BSFormatter formatter, DisputeManager disputeManager, BtcWalletService walletService, TradeWalletService tradeWalletService) {
+    public DisputeSummaryWindow(BSFormatter formatter, DisputeManager disputeManager, BtcWalletService walletService,
+                                TradeWalletService tradeWalletService, Preferences preferences) {
+        super(preferences);
         this.formatter = formatter;
         this.disputeManager = disputeManager;
         this.walletService = walletService;
@@ -356,7 +359,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin totalAmount = buyerAmount.add(sellerAmount);
 
         if (totalAmount.compareTo(available) > 0) {
-            new Popup<>().warning(Res.get("disputeSummaryWindow.payout.adjustAmount", available.toFriendlyString()))
+            new Popup<>(preferences).warning(Res.get("disputeSummaryWindow.payout.adjustAmount", available.toFriendlyString()))
                     .show();
 
             if (inputTextField == buyerPayoutAmountInputTextField) {
@@ -505,7 +508,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 try {
                     AddressEntry arbitratorAddressEntry = walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR);
                     disputeResult.setArbitratorPubKey(walletService.getOrCreateAddressEntry(AddressEntry.Context.ARBITRATOR).getPubKey());
-                    
+
                    /* byte[] depositTxSerialized,
                     Coin buyerPayoutAmount,
                     Coin sellerPayoutAmount,
@@ -552,7 +555,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
                     if (!finalPeersDispute.isClosed())
                         UserThread.runAfter(() ->
-                                        new Popup().attention(Res.get("disputeSummaryWindow.close.closePeer")).show(),
+                                        new Popup(preferences).attention(Res.get("disputeSummaryWindow.close.closePeer")).show(),
                                 Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
 
                     hide();

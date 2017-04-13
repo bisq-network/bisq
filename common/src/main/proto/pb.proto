@@ -2,7 +2,7 @@ syntax = "proto3";
 package io.bisq.protobuffer;
 
 //
-// A simple protocol for describing signed sets of IP addresses. Intended to be distributed via HTTP[S] or in files.
+// Protobuffer v3 definitions of WIRE and PERSISTED messages.
 //
 
 option java_package = "io.bisq.generated.protobuffer";
@@ -183,7 +183,7 @@ message Payload {
 
 message DataAndSeqNrPair {
     StoragePayload payload = 1;
-    int32 sequence_number =2;
+    int32 sequence_number = 2;
 }
 
 // start storagepayloads
@@ -521,6 +521,10 @@ message PayDepositRequest {
     bool is_currency_for_taker_fee_btc = 20;
 }
 
+message Coin {
+    int64 value = 1;
+}
+
 message RawTransactionInput {
     int64 index = 1;
     bytes parent_transaction = 2;
@@ -734,6 +738,416 @@ message ProtectedMailboxStorageEntry {
     bytes receivers_pub_key_bytes = 2;
 }
 
+////////// Persistable //////////////////
+
+message DiskEnvelope {
+    int64 local_db_version = 1;
+    oneof message {
+        AddressEntryList address_entry_list = 2;
+        Navigation navigation = 3;
+        PersistedPeers persisted_peers = 4;
+        Preferences preferences = 5;
+        User user = 6;
+        PersistedP2PStorageData persisted_p2p_storage_data = 7;
+        SequenceNumberMap sequence_number_map = 8;
+    }
+}
+
+message PersistedP2PStorageData {
+    // TODO ???
+}
+
+message SequenceNumberMap {
+    map<string, MapValue> sequence_number_map = 1;
+}
+
+message MapValue {
+    int32 sequence_nr = 1;
+    int64 time_stamp = 2;
+}
+
+message AddressEntry {
+    enum Context {
+        ARBITRATOR = 0;
+        AVAILABLE = 1;
+        OFFER_FUNDING = 2;
+        RESERVED_FOR_TRADE = 3;
+        MULTI_SIG = 4;
+        TRADE_PAYOUT = 5;
+    }
+
+    string offer_id = 7;
+    Context context = 8;
+    bytes pub_key = 9;
+    bytes pub_key_hash = 10;
+    string param_id = 11;
+    Coin coin_locked_in_multi_sig = 12;
+}
+
+message DeterministicKey {
+    bytes serialized = 1;
+}
+
+message AddressEntryList {
+    repeated AddressEntry address_entry = 1;
+}
+
+message BlockChainExplorer {
+    string name = 1;
+    string tx_url = 2;
+    string address_url = 3;
+}
+
+message ByteArray {
+    bytes bytes = 1;
+}
+message CompensationRequest {
+    CompensationRequestPayload compensation_request_payload = 1;
+    bool accepted = 2;
+    Coin funds_received = 3;
+    bool in_vote_period = 4;
+    bool in_funding_period = 5;
+    bool closed = 6;
+    bool waiting_for_voting_period = 7;
+}
+
+message CompensationRequestVoteItem {
+    CompensationRequest compensation_request = 1;
+    bool decline_vote = 2;
+    bool accepted_vote = 3;
+    bool has_voted = 4;
+}
+
+message CompensationRequestVoteItemCollection {
+    repeated CompensationRequestVoteItem compensation_request_vote_item = 1;
+}
+
+message Country {
+    string code = 1;
+    string name = 2;
+    Region region = 3;
+}
+
+message DecryptedMsgWithPubKey {
+    Message message = 1;
+    PublicKey signaturePubKey = 2;
+}
+
+message DisputeList {
+    repeated Dispute dispute = 1;
+}
+
+message Navigation {
+    ViewPath previous_path = 1;
+}
+
+// there is a paymentaccountfactory !!!
+message PaymentAccount {
+    PaymentMethod payment_method = 1;
+}
+
+message PaymentMethod {
+    string id = 1;
+}
+
+message Preferences {
+    // Persisted fields
+    string user_language = 1;
+    Country user_country = 2;
+    repeated TradeCurrency fiat_currencies = 5;
+    repeated TradeCurrency crypto_currencies = 6;
+    BlockChainExplorer block_chain_explorer_main_net = 7;
+    BlockChainExplorer block_chain_explorer_test_net = 8;
+    string backup_directory = 9;
+    bool auto_select_arbitrators = 10;
+    map<string, bool> dont_show_again_map = 11;
+    bool tac_accepted = 12;
+    bool use_tor_for_bitcoin_j = 13;
+    bool show_own_offers_in_offer_book = 14;
+    BlockChainExplorer bsq_block_chain_explorer = 15;
+    TradeCurrency preferred_trade_currency = 16;
+    int64 withdrawal_tx_fee_in_bytes = 17;
+    bool use_custom_withdrawal_tx_fee = 18;
+    double max_price_distance_in_percent = 19;
+    string offer_book_chart_screen_currency_code = 20;
+    string trade_charts_screen_currency_code = 21;
+    string buy_screen_currency_code = 22;
+    string sell_screen_currency_code = 23;
+    int32 trade_statistics_tick_unit_index = 24;
+    bool resync_Spv_requested = 25;
+    bool sort_market_currencies_numerically = 26;
+    bool use_percentage_based_price = 27;
+    map<string, string> peer_tag_map = 28;
+    string bitcoin_nodes = 29;
+    repeated string ignore_traders_list = 30;
+    string directory_chooser_path = 31;
+    int64 buyer_security_deposit_as_long = 32;
+    string btc_denomination = 33;
+    bool use_animations = 34;
+    PaymentAccount selectedPayment_account_for_createOffer = 35;
+    bool pay_fee_in_Btc = 36;
+}
+
+message Region {
+    string code = 1;
+    string name = 2;
+}
+message Tradable {
+
+    oneof message {
+        OpenOffer open_offer = 1;
+        //+OpenOffer (io.bisq.core.offer)
+        //A Trade (io.bisq.core.trade)
+        //A BuyerTrade (io.bisq.core.trade)
+        //BuyerAsOffererTrade (io.bisq.core.trade)
+        //BuyerAsTakerTrade (io.bisq.core.trade)
+        //A SellerTrade (io.bisq.core.trade)
+        //SellerAsOffererTrade (io.bisq.core.trade)
+        //SellerAsTakerTrade (io.bisq.core.trade)
+    }
+
+}
+
+message OpenOffer {
+    enum State {
+        UNKNOWN_FAILURE = 0;
+        AVAILABLE = 1;
+        RESERVED = 2;
+        CLOSED = 4;
+        CANCELED = 5;
+    }
+
+    Offer offer = 6;
+    State state = 7;
+}
+
+
+message Trade {
+
+    enum State {
+        UNKNOWN_FAILURE = 0;
+        PREPARATION = 1;
+        TAKER_FEE_PAID = 2;
+        OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST = 3;
+        TAKER_PUBLISHED_DEPOSIT_TX = 4;
+        DEPOSIT_SEEN_IN_NETWORK = 5;
+        TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG = 6;
+        OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG = 7;
+        DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN = 8;
+
+        BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED = 9;
+        BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG = 10;
+        SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG = 11;
+
+        SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT = 12;
+        SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG = 13;
+        BUYER_RECEIVED_FIAT_PAYMENT_RECEIPT_MSG = 14;
+
+        BUYER_COMMITTED_PAYOUT_TX = 15;
+        BUYER_STARTED_SEND_PAYOUT_TX = 16;
+        SELLER_RECEIVED_AND_COMMITTED_PAYOUT_TX = 17;
+        PAYOUT_BROAD_CASTED = 18;
+        WITHDRAW_COMPLETED = 19;
+    }
+
+    enum Phase {
+        PHASE_UNKNOWN_FAILURE = 0;
+        PHASE_PREPARATION = 1;
+        PHASE_TAKER_FEE_PAID = 2;
+        DEPOSIT_REQUESTED = 3;
+        DEPOSIT_PAID = 4;
+        FIAT_SENT = 5;
+        FIAT_RECEIVED = 6;
+        PAYOUT_PAID = 7;
+        WITHDRAWN = 8;
+        DISPUT = 9;
+    }
+
+    enum DisputeState {
+        TRADED_DISPUTE_STATE_UNKNOWN_FAILURE = 0;
+        NONE = 1;
+        DISPUTE_REQUESTED = 2;
+        DISPUTE_STARTED_BY_PEER = 3;
+        DISPUTE_CLOSE = 4;
+    }
+
+
+    enum PeriodState {
+        TRADE_PERIOD_STATE_UNKNOWN_FAILURE = 0;
+        NORMAL = 1;
+        HALF_REACHED = 2;
+        TRADE_PERIOD_OVER = 3;
+    }
+
+    Offer offer = 1;
+    ProcessModel process_model = 2;
+    DecryptedMsgWithPubKey decrypted_msg_with_pub_key = 3;
+    int64 take_offerint64 = 4;
+    Coin trade_amount = 5;
+    Coin tx_fee = 6;
+    Coin take_offer_fee = 7;
+    int64 trade_price = 8;
+    NodeAddress trading_peer_node_address = 9;
+    string take_offer_fee_tx_id = 10;
+    State state = 11;
+    DisputeState dispute_state = 12;
+    PeriodState trade_period_state = 13;
+    Transaction deposit_tx = 14;
+    Contract contract = 15;
+    string contract_as_json = 16;
+    bytes contract_hash = 17;
+    string taker_contract_signature = 18;
+    string offerer_contract_signature = 19;
+    Transaction payout_tx = 20;
+    int64 lock_time_as_block_height = 21;
+    NodeAddress arbitrator_node_address = 22;
+    bytes arbitrator_btc_pub_key = 23;
+    string taker_payment_account_id = 24;
+    string error_message = 25;
+}
+
+message BuyerTrade {
+}
+message BuyerAsOffererTrade {
+}
+message BuyerAsTakerTrade {
+}
+message SellerTrade {
+}
+message SellerAsOffererTrade {
+}
+message SellerAsTakerTrade {
+}
+
+message TradableList {
+}
+
+message TradeCurrency {
+    string code = 1;
+    string name = 2;
+    string symbol = 3;
+    oneof message {
+        CryptoCurrency crypto_currency = 4;
+        FiatCurrency fiat_currency = 5;
+    }
+}
+
+message CryptoCurrency {
+    bool is_asset = 1;
+}
+
+message FiatCurrency {
+    Currency currency = 1;
+}
+
+message TradingPeer {
+    string account_id = 1;
+    PaymentAccountPayload payment_account_payload = 2;
+    string payout_address_string = 3;
+    string contract_as_json = 4;
+    string contract_signature = 5;
+    bytes signature = 6;
+    PubKeyRing pub_key_ring = 7;
+    bytes multi_sig_pub_key = 8;
+    repeated RawTransactionInput raw_transaction_inputs = 9;
+    int64 change_output_value = 10;
+    string change_output_address = 11;
+}
+
+message User {
+    string account_i_d = 1;
+    //repeated PaymentAccount payment_accounts = 2;
+    //PaymentAccount current_payment_account = 3;
+    repeated string accepted_language_locale_codes = 4;
+    Alert developers_alert = 5;
+    Alert displayed_alert = 6;
+    Filter developers_filter = 7;
+    repeated Arbitrator accepted_arbitrators = 8;
+    Arbitrator registered_arbitrator = 9;
+}
+
+message ViewPath {
+    // TODO BALLOONS INTO 40 classes !!!!!!!!!!!!!!!!
+}
+
+message VoteItem {
+    enum VotingType {
+        UNKNOWN_FAILURE = 0;
+        CREATE_OFFER_FEE_IN_BTC = 1;
+        TAKE_OFFER_FEE_IN_BTC = 2;
+        CREATE_OFFER_FEE_IN_BSQ = 3;
+        TAKE_OFFER_FEE_IN_BSQ = 4;
+        CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ = 5;
+        VOTING_FEE_IN_BSQ = 6;
+        COMPENSATION_REQUEST_PERIOD_IN_BLOCKS = 7;
+        VOTING_PERIOD_IN_BLOCKS = 8;
+        FUNDING_PERIOD_IN_BLOCKS = 9;
+        BREAK_BETWEEN_PERIODS_IN_BLOCKS = 10;
+        QUORUM_FOR_COMPENSATION_REQUEST_VOTING = 11;
+        QUORUM_FOR_PARAMETER_VOTING = 12;
+        MIN_BTC_AMOUNT_COMPENSATION_REQUEST = 13;
+        MAX_BTC_AMOUNT_COMPENSATION_REQUEST = 14;
+        CONVERSION_RATE = 15;
+        COMP_REQUEST_MAPS = 16;
+    }
+
+    VotingType voting_type = 1;
+    string name = 2;
+    int64 default_value = 3;
+    bool has_voted = 4;
+    bytes value = 5;
+}
+
+message VoteItemsList {
+    repeated VoteItem vote_item = 1;
+}
+
+message Message {
+    // TODO how to do this ????
+}
+
+message PublicKey {
+    bytes encoded = 1;
+}
+
+message Locale {
+    string language = 1;
+    string country = 2;
+    string variant = 3;
+}
+
+// java.util.Currency
+message Currency {
+    string currency_code = 1;
+}
+
+message PersistedPeers {
+    repeated Peer peers = 1; // not sure about this
+}
+
+// stores bitcoin transaction id (which is a hash)
+message Transaction {
+   bytes hash = 1;
+}
+
+message ProcessModel {
+     TradingPeer trading_peer = 1;
+     bytes payout_tx_signature = 2;
+     repeated NodeAddress taker_accepted_arbitrator_node_addresses = 3;
+     NodeAddress temp_trading_peer_node_address = 4;
+     bytes prepared_deposit_tx = 5;
+     repeated RawTransactionInput raw_transaction_inputs = 6;
+     int64 change_output_value = 7;
+     string change_output_address = 8;
+     Transaction take_offer_fee_tx = 9;
+     bool use_savings_wallet = 10;
+     Coin funds_needed_for_trade = 11;
+     bytes my_multi_sig_pub_key = 12;
+}
+
+message Offer {
+
+}
 
 message MockMailboxPayload {
     int32 message_version = 1;
@@ -743,6 +1157,6 @@ message MockMailboxPayload {
 }
 
 message MockPayload {
-    string messageVersion = 1;
+    string message_version = 1;
     string msg = 2;
 }
