@@ -163,7 +163,7 @@ public final class Preferences implements Persistable {
     transient private final String btcNodesFromOptions;
     transient private final String useTorFlagFromOptions;
     @Setter
-    transient private boolean doPersist = true;
+    transient private boolean doPersist;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
