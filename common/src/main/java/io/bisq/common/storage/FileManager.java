@@ -113,7 +113,7 @@ public class FileManager<T extends Persistable> {
         Optional<Persistable> persistable = Optional.empty();
 
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
-            persistable = protobufferResolver.fromProto(PB.DiskEnvelope.parseFrom(fileInputStream));
+            persistable = protobufferResolver.fromProto(PB.DiskEnvelope.parseDelimitedFrom(fileInputStream));
         } catch (Throwable t) {
             log.error("Exception at proto read: " + t.getMessage() + " " + file.getName());
         }
@@ -196,9 +196,9 @@ public class FileManager<T extends Persistable> {
 
         // is it a protobuffer thing?
 
-        Message message = null;
+        PB.DiskEnvelope protoDiskEnvelope = null;
         try {
-            message = ((T) serializable).toProtobuf();
+            protoDiskEnvelope = (PB.DiskEnvelope) ((T) serializable).toProtobuf();
         } catch (Throwable e) {
             log.info("Not protobufferable: {}, {}, {}", serializable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }
@@ -214,11 +214,11 @@ public class FileManager<T extends Persistable> {
                 // When we dump json files we don't want to safe it as java serialized string objects, so we use PrintWriter instead.
                 printWriter = new PrintWriter(tempFile);
                 printWriter.println(((PlainTextWrapper) serializable).plainText);
-            } else if (message != null) {
+            } else if (protoDiskEnvelope != null) {
                 fileOutputStream = new FileOutputStream(tempFile);
 
                 log.info("Writing protobuffer to disc");
-                message.writeTo(fileOutputStream);
+                protoDiskEnvelope.writeDelimitedTo(fileOutputStream);
 
                 // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
                 // to not write through to physical media for at least a few seconds, but this is the best we can do.

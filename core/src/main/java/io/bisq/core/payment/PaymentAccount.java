@@ -17,11 +17,13 @@
 
 package io.bisq.core.payment;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -77,7 +79,7 @@ public abstract class PaymentAccount implements Persistable {
     public Date getCreationDate() {
         return new Date(creationDate);
     }
-    
+
     public void addCurrency(TradeCurrency tradeCurrency) {
         if (!tradeCurrencies.contains(tradeCurrency))
             tradeCurrencies.add(tradeCurrency);
@@ -112,4 +114,9 @@ public abstract class PaymentAccount implements Persistable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected abstract PaymentAccountPayload getPayload();
+
+    @Override
+    public PB.PaymentAccount toProtobuf() {
+        return PB.PaymentAccount.newBuilder().setPaymentMethod(PB.PaymentMethod.newBuilder().setId(getId())).build();
+    }
 }

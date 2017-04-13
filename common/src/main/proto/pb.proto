@@ -843,20 +843,11 @@ message Navigation {
 
 // there is a paymentaccountfactory !!!
 message PaymentAccount {
-    string id = 1;
-    int64 creation_date = 2;
-    PaymentMethod payment_method = 3;
-    string account_name = 4;
-    repeated TradeCurrency trade_currencies = 5;
-    TradeCurrency selected_trade_currency = 6;
-    PaymentAccountPayload payment_account_payload = 7;
+    PaymentMethod payment_method = 1;
 }
 
 message PaymentMethod {
     string id = 1;
-    int64 lock_time = 2;
-    int64 max_trade_period = 3;
-    Coin max_trade_limit = 4;
 }
 
 message Preferences {

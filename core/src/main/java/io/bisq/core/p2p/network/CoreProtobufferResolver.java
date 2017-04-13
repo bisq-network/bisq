@@ -894,6 +894,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
                 */
             case PREFERENCES:
                 setPreferences(envelope);
+                result = preferencesProvider.get();
                 break;
                 /*
             case USER:
@@ -950,8 +951,6 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
 
         preferences.setBtcDenomination(env.getBtcDenomination());
         preferences.setUseAnimations(env.getUseAnimations());
-        final PB.PaymentAccount account = env.getSelectedPaymentAccountForCreateOffer();
-        preferences.setSelectedPaymentAccountForCreateOffer(getPaymentAccount(account));
         preferences.setPayFeeInBtc(env.getPayFeeInBtc());
         preferences.setResyncSpvRequested(env.getResyncSpvRequested());
 
@@ -961,6 +960,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         preferences.setTradeChartsScreenCurrencyCode(env.getTradeChartsScreenCurrencyCode().isEmpty() ? null : env.getTradeChartsScreenCurrencyCode());
         preferences.setBuyScreenCurrencyCode(env.getBuyScreenCurrencyCode().isEmpty() ? null : env.getBuyScreenCurrencyCode());
         preferences.setSellScreenCurrencyCode(env.getSellScreenCurrencyCode().isEmpty() ? null : env.getSellScreenCurrencyCode());
+        preferences.setSelectedPaymentAccountForCreateOffer(env.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod() ? getPaymentAccount(env.getSelectedPaymentAccountForCreateOffer()) : null);
 
         preferences.setDoPersist(true);
     }

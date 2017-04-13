@@ -163,7 +163,7 @@ public final class Preferences implements Persistable {
     transient private final String btcNodesFromOptions;
     transient private final String useTorFlagFromOptions;
     @Setter
-    transient private boolean doPersist;
+    transient private boolean doPersist = true;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -692,15 +692,12 @@ public final class Preferences implements Persistable {
                 .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong);
 
         Optional.ofNullable(backupDirectory).ifPresent(backupDir -> builder.setBackupDirectory(backupDir));
-
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(code -> builder.setOfferBookChartScreenCurrencyCode(code));
         Optional.ofNullable(tradeChartsScreenCurrencyCode).ifPresent(code -> builder.setTradeChartsScreenCurrencyCode(code));
         Optional.ofNullable(buyScreenCurrencyCode).ifPresent(code -> builder.setBuyScreenCurrencyCode(code));
         Optional.ofNullable(sellScreenCurrencyCode).ifPresent(code -> builder.setSellScreenCurrencyCode(code));
-
-        //TODO
-       /* Optional.ofNullable(selectedPaymentAccountForCreateOffer).ifPresent(account -> builder.setSelectedPaymentAccountForCreateOffer(account));*/
-
+        Optional.ofNullable(selectedPaymentAccountForCreateOffer).ifPresent(
+                account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProtobuf()));
         return PB.DiskEnvelope.newBuilder().setPreferences(builder).build();
     }
 
