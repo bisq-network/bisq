@@ -67,7 +67,7 @@ public class Storage<T extends Persistable> {
     private T serializable;
     private String fileName;
     private int numMaxBackupFiles = 10;
-    private ProtobufferResolver protobufferResolver;
+    private final ProtobufferResolver protobufferResolver;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

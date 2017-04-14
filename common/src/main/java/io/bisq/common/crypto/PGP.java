@@ -36,6 +36,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Iterator;
 
+@SuppressWarnings("UnusedAssignment")
 @Slf4j
 public class PGP {
 

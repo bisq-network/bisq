@@ -81,9 +81,7 @@ public class Utilities {
         ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
                 TimeUnit.SECONDS, new ArrayBlockingQueue<>(maximumPoolSize), threadFactory);
         executor.allowCoreThreadTimeOut(true);
-        executor.setRejectedExecutionHandler((r, e) -> {
-            log.debug("RejectedExecutionHandler called");
-        });
+        executor.setRejectedExecutionHandler((r, e) -> log.debug("RejectedExecutionHandler called"));
         return executor;
     }
 
@@ -102,9 +100,7 @@ public class Utilities {
         executor.allowCoreThreadTimeOut(true);
         executor.setMaximumPoolSize(maximumPoolSize);
         executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        executor.setRejectedExecutionHandler((r, e) -> {
-            log.debug("RejectedExecutionHandler called");
-        });
+        executor.setRejectedExecutionHandler((r, e) -> log.debug("RejectedExecutionHandler called"));
         return executor;
     }
 
@@ -315,6 +311,7 @@ public class Utilities {
                 // ignore close exception
             }
         }
+        //noinspection unchecked,ConstantConditions
         return (T) result;
     }
 
@@ -370,8 +367,7 @@ public class Utilities {
             // Make an input stream from the byte array and read
             // a copy of the object back in.
             ObjectInputStream in = new LookAheadObjectInputStream(new ByteArrayInputStream(bos.toByteArray()), true);
-            Object obj = in.readObject();
-            return obj;
+            return in.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             throw e;

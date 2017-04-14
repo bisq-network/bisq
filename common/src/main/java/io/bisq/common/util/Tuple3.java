@@ -30,6 +30,7 @@ public class Tuple3<A, B, C> implements Serializable {
         this.third = third;
     }
 
+    @SuppressWarnings("SimplifiableIfStatement")
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

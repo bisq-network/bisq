@@ -65,7 +65,6 @@ public class CountryUtil {
     }
 
     public static List<Country> getAllSepaCountries() {
-        Locale locale = getLocale();
         List<Country> list = new ArrayList<>();
         list.addAll(getAllSepaEuroCountries());
         list.addAll(getAllSepaNonEuroCountries());
@@ -161,7 +160,7 @@ public class CountryUtil {
     }
 
     private static List<String> getNamesByCodes(List<String> countryCodes) {
-        return countryCodes.stream().map(s -> CountryUtil.getNameByCode(s)).collect(Collectors.toList());
+        return countryCodes.stream().map(CountryUtil::getNameByCode).collect(Collectors.toList());
     }
 
     // other source of countries: https://developers.braintreepayments.com/reference/general/countries/java

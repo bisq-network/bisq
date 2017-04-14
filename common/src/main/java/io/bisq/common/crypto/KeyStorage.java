@@ -109,6 +109,7 @@ public class KeyStorage {
             File filePrivateKey = new File(storageDir + "/" + keyEntry.getFileName() + ".key");
             try (FileInputStream fis = new FileInputStream(filePrivateKey.getPath())) {
                 byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
+                //noinspection ResultOfMethodCallIgnored
                 fis.read(encodedPrivateKey);
 
                 PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
@@ -152,6 +153,7 @@ public class KeyStorage {
 
     private void savePrivateKey(PrivateKey privateKey, String name) {
         if (!storageDir.exists())
+            //noinspection ResultOfMethodCallIgnored
             storageDir.mkdir();
 
         PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());

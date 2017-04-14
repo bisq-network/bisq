@@ -32,7 +32,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Log {
-    private static SizeBasedTriggeringPolicy triggeringPolicy;
     private static Logger logbackLogger;
 
     public static void setLevel(Level logLevel) {
@@ -54,7 +53,7 @@ public class Log {
         rollingPolicy.setMaxIndex(10);
         rollingPolicy.start();
 
-        triggeringPolicy = new SizeBasedTriggeringPolicy();
+        SizeBasedTriggeringPolicy triggeringPolicy = new SizeBasedTriggeringPolicy();
         triggeringPolicy.setMaxFileSize(FileSize.valueOf("10MB"));
         triggeringPolicy.start();
 
@@ -63,12 +62,15 @@ public class Log {
         encoder.setPattern("%d{MMM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{15}: %msg %xEx%n");
         encoder.start();
 
+        //noinspection unchecked
         appender.setEncoder(encoder);
         appender.setRollingPolicy(rollingPolicy);
+        //noinspection unchecked
         appender.setTriggeringPolicy(triggeringPolicy);
         appender.start();
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        //noinspection unchecked
         logbackLogger.addAppender(appender);
         logbackLogger.setLevel(Level.INFO);
 

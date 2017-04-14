@@ -51,6 +51,7 @@ public class ByteArrayUtils {
                 // ignore close exception
             }
         }
+        //noinspection unchecked
         return (T) result;
     }
 

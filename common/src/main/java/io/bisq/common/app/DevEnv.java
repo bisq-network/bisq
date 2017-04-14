@@ -17,5 +17,6 @@ public class DevEnv {
 
     // If set to true we ignore several UI behavior like confirmation popups as well dummy accounts are created and 
     // offers are filled with default values. Intended to make dev testing faster.
+    @SuppressWarnings("PointlessBooleanExpression")
     public static final boolean DEV_MODE = STRESS_TEST_MODE || true;
 }

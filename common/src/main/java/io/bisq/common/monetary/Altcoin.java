@@ -184,11 +184,7 @@ public final class Altcoin implements Monetary, Comparable<Altcoin>, Serializabl
         if (o == null || o.getClass() != getClass())
             return false;
         final Altcoin other = (Altcoin) o;
-        if (this.value != other.value)
-            return false;
-        if (!this.currencyCode.equals(other.currencyCode))
-            return false;
-        return true;
+        return this.value == other.value && this.currencyCode.equals(other.currencyCode);
     }
 
     @Override

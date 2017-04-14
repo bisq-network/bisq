@@ -74,7 +74,7 @@ public final class FiatCurrency extends TradeCurrency {
                 .setCode(code)
                 .setName(name)
                 .setFiatCurrency(fiatCurrencyBuilder);
-        Optional.ofNullable(symbol).ifPresent(symbol -> builder.setSymbol(symbol));
+        Optional.ofNullable(symbol).ifPresent(builder::setSymbol);
         return builder.build();
     }
 }

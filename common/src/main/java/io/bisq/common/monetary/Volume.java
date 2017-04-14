@@ -3,6 +3,7 @@ package io.bisq.common.monetary;
 import io.bisq.common.locale.CurrencyUtil;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.Fiat;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +23,7 @@ public class Volume extends MonetaryWrapper implements Comparable<Volume> {
     }
 
     @Override
-    public int compareTo(Volume other) {
+    public int compareTo(@NotNull Volume other) {
         if (!this.getCurrencyCode().equals(other.getCurrencyCode()))
             return this.getCurrencyCode().compareTo(other.getCurrencyCode());
         if (this.getValue() != other.getValue())

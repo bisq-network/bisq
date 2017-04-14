@@ -28,6 +28,7 @@ public class Tuple2<A, B> implements Serializable {
         this.second = second;
     }
 
+    @SuppressWarnings("SimplifiableIfStatement")
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

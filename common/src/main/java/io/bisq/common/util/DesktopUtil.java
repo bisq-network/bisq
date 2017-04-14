@@ -12,40 +12,25 @@ import java.util.List;
 class DesktopUtil {
 
     public static boolean browse(URI uri) {
-
-        if (openSystemSpecific(uri.toString())) return true;
-
-        return browseDESKTOP(uri);
-
+        return openSystemSpecific(uri.toString()) || browseDESKTOP(uri);
     }
 
 
     public static boolean open(File file) {
-
-        if (openSystemSpecific(file.getPath())) return true;
-
-        return openDESKTOP(file);
-
+        return openSystemSpecific(file.getPath()) || openDESKTOP(file);
     }
 
 
     public static boolean edit(File file) {
-
         // you can try something like
         // runCommand("gimp", "%s", file.getPath())
         // based on user preferences.
-
-        if (openSystemSpecific(file.getPath())) return true;
-
-        return editDESKTOP(file);
-
+        return openSystemSpecific(file.getPath()) || editDESKTOP(file);
     }
 
 
     private static boolean openSystemSpecific(String what) {
-
         EnumOS os = getOs();
-
         if (os.isLinux()) {
             if (runCommand("kde-open", "%s", what)) return true;
             if (runCommand("gnome-open", "%s", what)) return true;

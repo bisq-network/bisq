@@ -32,6 +32,7 @@ public class Tuple4<A, B, C, D> implements Serializable {
         this.forth = forth;
     }
 
+    @SuppressWarnings("SimplifiableIfStatement")
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -5,10 +5,9 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.text.DecimalFormat;
 
 /**
  * Wrapper for price values with variable precision. If monetary is Altcoin we use precision 8 otherwise Fiat with precision 4.
@@ -17,11 +16,8 @@ import java.text.DecimalFormat;
 public class Price extends MonetaryWrapper implements Comparable<Price> {
     private static final Logger log = LoggerFactory.getLogger(Price.class);
 
-    private final DecimalFormat decimalFormat = new DecimalFormat("#.#");
-
     public Price(Monetary monetary) {
         super(monetary);
-        decimalFormat.setMaximumFractionDigits(smallestUnitExponent());
     }
 
     public static Price parse(String currencyCode, String inputValue) {
@@ -72,7 +68,7 @@ public class Price extends MonetaryWrapper implements Comparable<Price> {
     }
 
     @Override
-    public int compareTo(Price other) {
+    public int compareTo(@NotNull Price other) {
         if (!this.getCurrencyCode().equals(other.getCurrencyCode()))
             return this.getCurrencyCode().compareTo(other.getCurrencyCode());
         if (this.getValue() != other.getValue())

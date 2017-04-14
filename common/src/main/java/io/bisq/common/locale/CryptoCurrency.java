@@ -59,7 +59,7 @@ public final class CryptoCurrency extends TradeCurrency {
                 .setCode(code)
                 .setName(name)
                 .setCryptoCurrency(PB.CryptoCurrency.newBuilder().setIsAsset(isAsset));
-        Optional.ofNullable(symbol).ifPresent(symbol -> builder.setSymbol(symbol));
+        Optional.ofNullable(symbol).ifPresent(builder::setSymbol);
         return builder.build();
     }
 }

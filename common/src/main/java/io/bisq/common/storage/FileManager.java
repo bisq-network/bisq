@@ -46,7 +46,7 @@ public class FileManager<T extends Persistable> {
     private final long delay;
     private final Callable<Void> saveFileTask;
     private T serializable;
-    private ProtobufferResolver protobufferResolver;
+    private final ProtobufferResolver protobufferResolver;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -119,11 +119,13 @@ public class FileManager<T extends Persistable> {
 
         if (persistable.isPresent()) {
             log.error("Persistable found");
+            //noinspection unchecked
             return (T) persistable.get();
         }
 
         try (final FileInputStream fileInputStream = new FileInputStream(file);
              final ObjectInputStream objectInputStream = new LookAheadObjectInputStream(fileInputStream, false)) {
+            //noinspection unchecked
             return (T) objectInputStream.readObject();
         } catch (Throwable t) {
             log.error("Exception at read: " + t.getMessage());
@@ -172,7 +174,7 @@ public class FileManager<T extends Persistable> {
         renameTempFileToFile(storageFile, corruptedFile);
     }
 
-    public synchronized void backupFile(String fileName, int numMaxBackupFiles) throws IOException {
+    public synchronized void backupFile(String fileName, int numMaxBackupFiles) {
         FileUtil.rollingBackup(dir, fileName, numMaxBackupFiles);
     }
 
@@ -197,7 +199,7 @@ public class FileManager<T extends Persistable> {
 
         PB.DiskEnvelope protoDiskEnvelope = null;
         try {
-            protoDiskEnvelope = (PB.DiskEnvelope) ((T) serializable).toProtobuf();
+            protoDiskEnvelope = (PB.DiskEnvelope) serializable.toProtobuf();
         } catch (Throwable e) {
             log.info("Not protobufferable: {}, {}, {}", serializable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }

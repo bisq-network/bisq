@@ -39,6 +39,7 @@ public class TaskRunner<T extends Model> {
 
 
     public TaskRunner(T sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        //noinspection unchecked
         this(sharedModel, (Class<T>) sharedModel.getClass(), resultHandler, errorMessageHandler);
     }
 
@@ -49,6 +50,7 @@ public class TaskRunner<T extends Model> {
         this.sharedModelClass = sharedModelClass;
     }
 
+    @SafeVarargs
     public final void addTasks(Class<? extends Task<T>>... items) {
         tasks.addAll(Arrays.asList(items));
     }

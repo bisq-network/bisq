@@ -29,6 +29,7 @@ public class BankUtil {
     private static final Logger log = LoggerFactory.getLogger(BankUtil.class);
 
     // BankName
+    @SuppressWarnings("SameReturnValue")
     public static boolean isBankNameRequired(String countryCode) {
         switch (countryCode) {
             case "GB":
@@ -132,6 +133,7 @@ public class BankUtil {
 
 
     // AccountNr
+    @SuppressWarnings("SameReturnValue")
     public static boolean isAccountNrRequired(String countryCode) {
         switch (countryCode) {
             default:

@@ -22,17 +22,15 @@ public class RestartUtil {
         try {
             String java = System.getProperty("java.home") + "/bin/java";
             List<String> vmArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
-            StringBuffer vmArgsOneLine = new StringBuffer();
-            for (String arg : vmArguments) {
-                // if it's the agent argument : we ignore it otherwise the
-                // address of the old application and the new one will be in conflict
-                if (!arg.contains("-agentlib")) {
-                    vmArgsOneLine.append(arg);
-                    vmArgsOneLine.append(" ");
-                }
-            }
+            StringBuilder vmArgsOneLine = new StringBuilder();
+            // if it's the agent argument : we ignore it otherwise the
+// address of the old application and the new one will be in conflict
+            vmArguments.stream().filter(arg -> !arg.contains("-agentlib")).forEach(arg -> {
+                vmArgsOneLine.append(arg);
+                vmArgsOneLine.append(" ");
+            });
             // init the command to execute, add the vm args
-            final StringBuffer cmd = new StringBuffer(java + " " + vmArgsOneLine);
+            final StringBuilder cmd = new StringBuilder(java + " " + vmArgsOneLine);
 
             // program main and program arguments
             String[] mainCommand = System.getProperty(SUN_JAVA_COMMAND).split(" ");
