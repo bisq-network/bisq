@@ -32,8 +32,7 @@ public final class CloseConnectionMsg implements Msg {
 
     //@Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder envelopeBuilder = PB.Envelope.newBuilder()
-                .setP2PNetworkVersion(Version.P2P_NETWORK_VERSION);
+        PB.Envelope.Builder envelopeBuilder = Msg.getBaseEnvelope();
         return envelopeBuilder.setCloseConnectionMessage(envelopeBuilder.getCloseConnectionMessageBuilder()
                 .setMessageVersion(messageVersion)
                 .setReason(reason)).build();

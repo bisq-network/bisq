@@ -2,6 +2,7 @@ package io.bisq.network.p2p.peers.getdata.messages;
 
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
+import io.bisq.common.persistance.Msg;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.SupportedCapabilitiesMsg;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
@@ -59,7 +60,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMsg {
                         .collect(Collectors.toList()))
                 .setRequestNonce(requestNonce)
                 .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
-        return PB.Envelope.newBuilder().setGetDataResponse(builder).build();
+        return Msg.getBaseEnvelope().setGetDataResponse(builder).build();
     }
 
 

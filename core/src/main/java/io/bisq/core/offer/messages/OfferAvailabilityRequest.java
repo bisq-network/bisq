@@ -20,6 +20,7 @@ package io.bisq.core.offer.messages;
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.persistance.Msg;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.SupportedCapabilitiesMsg;
 
@@ -62,7 +63,7 @@ public final class OfferAvailabilityRequest extends OfferMsg implements Supporte
 
     @Override
     public PB.Envelope toProto() {
-        return PB.Envelope.newBuilder()
+        return Msg.getBaseEnvelope()
                 .setOfferAvailabilityRequest(PB.OfferAvailabilityRequest.newBuilder()
                         .setOfferId(offerId)
                         .setPubKeyRing(pubKeyRing.toProto())

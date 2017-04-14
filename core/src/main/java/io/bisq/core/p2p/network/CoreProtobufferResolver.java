@@ -778,7 +778,8 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
                         .stream()
                         .map(protectedStorageEntry ->
                                 getProtectedOrMailboxStorageEntry(protectedStorageEntry)).collect(Collectors.toList()));
-        return new GetDataResponse(set, envelope.getGetDataResponse().getRequestNonce(), envelope.getGetDataResponse().getIsGetUpdatedDataResponse());
+        return new GetDataResponse(set, envelope.getGetDataResponse().getRequestNonce(),
+                envelope.getGetDataResponse().getIsGetUpdatedDataResponse());
     }
 
     @NotNull

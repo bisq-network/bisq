@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Msg;
@@ -853,13 +854,17 @@ public class Connection implements MessageListener {
                             return;
 
                         // Check P2P network ID
-                        int messageVersion = (int) envelope.getP2PNetworkVersion();
+                        int messageVersion = envelope.getP2PMessageVersion();
                         if (messageVersion != Version.getP2PMessageVersion()) {
+
                             log.warn("message.getMessageVersion()=" + messageVersion);
                             log.warn("Version.getP2PMessageVersion()=" + Version.getP2PMessageVersion());
                             log.warn("message=" + envelope.toString());
                             reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID);
                             // We return anyway here independent of the return value of reportInvalidRequest
+                            if (DevEnv.DEV_MODE)
+                                throw new RuntimeException("messageVersion is not set " + messageVersion +
+                                        " / message=" + envelope.toString());
                             return;
                         }
 

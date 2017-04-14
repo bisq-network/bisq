@@ -7,7 +7,7 @@ import io.bisq.generated.protobuffer.PB;
 
 public interface Msg extends Marshaller {
     static PB.Envelope.Builder getBaseEnvelope() {
-        return PB.Envelope.newBuilder().setP2PNetworkVersion(Version.P2P_NETWORK_VERSION);
+        return PB.Envelope.newBuilder().setP2PMessageVersion(Version.getP2PMessageVersion());
     }
 
     int getMessageVersion();

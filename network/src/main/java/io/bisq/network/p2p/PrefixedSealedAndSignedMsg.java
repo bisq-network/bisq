@@ -3,6 +3,7 @@ package io.bisq.network.p2p;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.SealedAndSigned;
+import io.bisq.common.persistance.Msg;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import org.bouncycastle.util.encoders.Hex;
@@ -46,7 +47,7 @@ public final class PrefixedSealedAndSignedMsg implements MailboxMsg, SendersNode
 
     @Override
     public PB.Envelope toProto() {
-        return PB.Envelope.newBuilder().setPrefixedSealedAndSignedMessage(
+        return Msg.getBaseEnvelope().setPrefixedSealedAndSignedMessage(
                 PB.PrefixedSealedAndSignedMessage.newBuilder()
                         .setMessageVersion(messageVersion).setNodeAddress(senderNodeAddress.toProto())
                         .setSealedAndSigned(sealedAndSigned.toProto())
