@@ -41,7 +41,7 @@ public final class Region implements Persistable {
     }
 
     @Override
-    public Message toProtobuf() {
+    public Message toProto() {
         return null;
     }
 }

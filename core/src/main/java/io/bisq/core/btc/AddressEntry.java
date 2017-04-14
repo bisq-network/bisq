@@ -184,7 +184,7 @@ public final class AddressEntry implements Persistable {
     }
 
     @Override
-    public Message toProtobuf() {
+    public Message toProto() {
         PB.AddressEntry.Builder builder = PB.AddressEntry.newBuilder()
                 .setContext(PB.AddressEntry.Context.valueOf(context.name()))
                 .setPubKey(ByteString.copyFrom(pubKey))

@@ -664,22 +664,22 @@ public final class Preferences implements Persistable {
 
 
     @Override
-    public Message toProtobuf() {
+    public Message toProto() {
         PB.Preferences.Builder builder = PB.Preferences.newBuilder()
                 .setUserLanguage(userLanguage)
-                .setUserCountry((PB.Country) userCountry.toProtobuf())
-                .addAllFiatCurrencies(fiatCurrencies.stream().map(fiatCurrency -> ((PB.TradeCurrency) fiatCurrency.toProtobuf())).collect(Collectors.toList()))
-                .addAllCryptoCurrencies(cryptoCurrencies.stream().map(cryptoCurrency -> ((PB.TradeCurrency) cryptoCurrency.toProtobuf())).collect(Collectors.toList()))
-                .setBlockChainExplorerMainNet((PB.BlockChainExplorer) blockChainExplorerMainNet.toProtobuf())
-                .setBlockChainExplorerTestNet((PB.BlockChainExplorer) blockChainExplorerTestNet.toProtobuf())
-                .setBsqBlockChainExplorer((PB.BlockChainExplorer) bsqBlockChainExplorer.toProtobuf())
+                .setUserCountry((PB.Country) userCountry.toProto())
+                .addAllFiatCurrencies(fiatCurrencies.stream().map(fiatCurrency -> ((PB.TradeCurrency) fiatCurrency.toProto())).collect(Collectors.toList()))
+                .addAllCryptoCurrencies(cryptoCurrencies.stream().map(cryptoCurrency -> ((PB.TradeCurrency) cryptoCurrency.toProto())).collect(Collectors.toList()))
+                .setBlockChainExplorerMainNet((PB.BlockChainExplorer) blockChainExplorerMainNet.toProto())
+                .setBlockChainExplorerTestNet((PB.BlockChainExplorer) blockChainExplorerTestNet.toProto())
+                .setBsqBlockChainExplorer((PB.BlockChainExplorer) bsqBlockChainExplorer.toProto())
                 .setAutoSelectArbitrators(autoSelectArbitrators)
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .setTacAccepted(tacAccepted)
                 .setUseAnimations(useAnimations)
                 .setUseTorForBitcoinJ(useTorForBitcoinJ)
                 .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
-                .setPreferredTradeCurrency((PB.TradeCurrency) preferredTradeCurrency.toProtobuf())
+                .setPreferredTradeCurrency((PB.TradeCurrency) preferredTradeCurrency.toProto())
                 .setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes)
                 .setMaxPriceDistanceInPercent(maxPriceDistanceInPercent)
                 .setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically)
@@ -696,7 +696,7 @@ public final class Preferences implements Persistable {
         Optional.ofNullable(buyScreenCurrencyCode).ifPresent(code -> builder.setBuyScreenCurrencyCode(code));
         Optional.ofNullable(sellScreenCurrencyCode).ifPresent(code -> builder.setSellScreenCurrencyCode(code));
         Optional.ofNullable(selectedPaymentAccountForCreateOffer).ifPresent(
-                account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProtobuf()));
+                account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProto()));
         return PB.DiskEnvelope.newBuilder().setPreferences(builder).build();
     }
 

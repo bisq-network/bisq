@@ -197,7 +197,7 @@ public class FileManager<T extends Persistable> {
 
         PB.DiskEnvelope protoDiskEnvelope = null;
         try {
-            protoDiskEnvelope = (PB.DiskEnvelope) serializable.toProtobuf();
+            protoDiskEnvelope = (PB.DiskEnvelope) serializable.toProto();
         } catch (Throwable e) {
             log.info("Not protobufferable: {}, {}, {}", serializable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }
