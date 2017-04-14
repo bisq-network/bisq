@@ -2,7 +2,7 @@ package io.bisq.network.p2p.peers.peerexchange;
 
 import io.bisq.common.Payload;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistence.Persistable;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.ToString;

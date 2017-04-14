@@ -10,7 +10,7 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.NetworkProtoResolver;
 import io.bisq.common.util.Utilities;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.Utils;
@@ -54,8 +54,8 @@ public class TorNetworkNode extends NetworkNode {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TorNetworkNode(int servicePort, File torDir, ProtobufferResolver protobufferResolver) {
-        super(servicePort, protobufferResolver);
+    public TorNetworkNode(int servicePort, File torDir, NetworkProtoResolver networkProtoResolver) {
+        super(servicePort, networkProtoResolver);
         this.torDir = torDir;
     }
 

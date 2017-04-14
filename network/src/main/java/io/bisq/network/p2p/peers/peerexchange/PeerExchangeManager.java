@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.persistance.Msg;
+import io.bisq.common.network.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.PeerManager;

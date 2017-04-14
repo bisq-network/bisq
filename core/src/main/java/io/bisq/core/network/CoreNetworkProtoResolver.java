@@ -1,20 +1,19 @@
-package io.bisq.core.p2p.network;
+package io.bisq.core.network;
 
 import com.google.inject.Provider;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.crypto.SealedAndSigned;
-import io.bisq.common.locale.*;
+import io.bisq.common.locale.CountryUtil;
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Price;
-import io.bisq.common.persistance.Msg;
-import io.bisq.common.persistance.Persistable;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkProtoResolver;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.alert.PrivateNotificationMsg;
 import io.bisq.core.alert.PrivateNotificationPayload;
 import io.bisq.core.arbitration.*;
 import io.bisq.core.arbitration.messages.*;
-import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
@@ -24,13 +23,10 @@ import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.messages.OfferAvailabilityRequest;
 import io.bisq.core.offer.messages.OfferAvailabilityResponse;
-import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.core.payment.payload.*;
 import io.bisq.core.trade.Contract;
 import io.bisq.core.trade.messages.*;
 import io.bisq.core.trade.statistics.TradeStatistics;
-import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.CloseConnectionMsg;
@@ -77,14 +73,14 @@ import static io.bisq.generated.protobuffer.PB.Envelope.MessageCase.*;
  * idea.max.intellisense.filesize=2500
  */
 @Slf4j
-public class CoreProtobufferResolver implements ProtobufferResolver {
+public class CoreNetworkProtoResolver implements NetworkProtoResolver {
 
     private Provider<AddressEntryList> addressEntryListProvider;
     private Provider<Preferences> preferencesProvider;
 
     @Inject
-    public CoreProtobufferResolver(Provider<Preferences> preferencesProvider,
-                                   Provider<AddressEntryList> addressEntryListProvider) {
+    public CoreNetworkProtoResolver(Provider<Preferences> preferencesProvider,
+                                    Provider<AddressEntryList> addressEntryListProvider) {
         this.preferencesProvider = preferencesProvider;
         this.addressEntryListProvider = addressEntryListProvider;
     }
@@ -249,9 +245,9 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
                         rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
                 .collect(Collectors.toList());
         List<NodeAddress> arbitratorNodeAddresses = payDepositRequest.getAcceptedArbitratorNodeAddressesList().stream()
-                .map(CoreProtobufferResolver::getNodeAddress).collect(Collectors.toList());
+                .map(CoreNetworkProtoResolver::getNodeAddress).collect(Collectors.toList());
         List<NodeAddress> mediatorNodeAddresses = payDepositRequest.getAcceptedMediatorNodeAddressesList().stream()
-                .map(CoreProtobufferResolver::getNodeAddress).collect(Collectors.toList());
+                .map(CoreNetworkProtoResolver::getNodeAddress).collect(Collectors.toList());
         return new PayDepositRequest(getNodeAddress(payDepositRequest.getSenderNodeAddress()),
                 payDepositRequest.getTradeId(),
                 payDepositRequest.getTradeAmount(),
@@ -471,9 +467,9 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
 
     public static OfferPayload getOfferPayload(PB.OfferPayload pbOffer) {
         List<NodeAddress> arbitratorNodeAddresses = pbOffer.getArbitratorNodeAddressesList().stream()
-                .map(CoreProtobufferResolver::getNodeAddress).collect(Collectors.toList());
+                .map(CoreNetworkProtoResolver::getNodeAddress).collect(Collectors.toList());
         List<NodeAddress> mediatorNodeAddresses = pbOffer.getMediatorNodeAddressesList().stream()
-                .map(CoreProtobufferResolver::getNodeAddress).collect(Collectors.toList());
+                .map(CoreNetworkProtoResolver::getNodeAddress).collect(Collectors.toList());
 
         // Nullable object need to be checked against the default values in PB (not nice... ;-( )
 
@@ -868,7 +864,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
                         .map(ByteString::toByteArray).collect(Collectors.toList()));
     }
 
-
+/*
     //////////////////////////////// DISK /////////////////////////////////////
 
     @Override
@@ -885,18 +881,18 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
             case ADDRESS_ENTRY_LIST:
                 result = fillAddressEntryList(envelope, addressEntryListProvider.get());
                 break;
-                /*
+                *//*
             case NAVIGATION:
                 result = getPing(envelope);
                 break;
             case PERSISTED_PEERS:
                 result = getPing(envelope);
                 break;
-                */
+                *//*
             case PREFERENCES:
                 result = fillPreferences(envelope, preferencesProvider.get());
                 break;
-                /*
+                *//*
             case USER:
                 result = getPing(envelope);
                 break;
@@ -906,7 +902,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
             case SEQUENCE_NUMBER_MAP:
                 result = getPing(envelope);
                 break;
-                */
+                *//*
             default:
                 log.warn("Unknown message case:{}:{}", envelope.getMessageCase());
         }
@@ -998,7 +994,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         });
         addressEntryList.setDoPersist(true);
         return addressEntryList;
-    }
+    }*/
 
 
 }

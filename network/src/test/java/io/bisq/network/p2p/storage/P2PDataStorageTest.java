@@ -3,7 +3,8 @@ package io.bisq.network.p2p.storage;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.NetworkProtoResolver;
+import io.bisq.common.persistence.PersistenceProtoResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.NodeAddress;
@@ -45,7 +46,9 @@ public class P2PDataStorageTest {
     @Mocked
     NetworkNode networkNode;
     @Mocked
-    ProtobufferResolver protobufferResolver;
+    NetworkProtoResolver networkProtoResolver;
+    @Mocked
+    PersistenceProtoResolver persistenceProtoResolver;
 
     @Before
     public void setup() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
@@ -59,13 +62,13 @@ public class P2PDataStorageTest {
 
         keyRing1 = new KeyRing(new KeyStorage(dir1));
         storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
-        encryptionService1 = new EncryptionService(keyRing1, TestUtils.getProtobufferResolver());
+        encryptionService1 = new EncryptionService(keyRing1, TestUtils.getNetworkProtoResolver());
 
         // for mailbox
         keyRing2 = new KeyRing(new KeyStorage(dir2));
         storageSignatureKeyPair2 = keyRing2.getSignatureKeyPair();
-        encryptionService2 = new EncryptionService(keyRing2, TestUtils.getProtobufferResolver());
-        dataStorage1 = new P2PDataStorage(broadcaster, networkNode, dir1, protobufferResolver);
+        encryptionService2 = new EncryptionService(keyRing2, TestUtils.getNetworkProtoResolver());
+        dataStorage1 = new P2PDataStorage(broadcaster, networkNode, dir1, persistenceProtoResolver);
     }
 
     @After

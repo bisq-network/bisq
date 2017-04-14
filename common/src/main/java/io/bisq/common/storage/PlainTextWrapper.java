@@ -1,6 +1,6 @@
 package io.bisq.common.storage;
 
-import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistence.Persistable;
 
 /**
  * Used to wrap a plaintext string to distinguish at file storage and safe it as plain text instead of a serialized java object.

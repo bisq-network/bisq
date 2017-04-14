@@ -3,7 +3,7 @@ package io.bisq.network.p2p;
 import io.bisq.common.Payload;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Hash;
-import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistence.Persistable;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

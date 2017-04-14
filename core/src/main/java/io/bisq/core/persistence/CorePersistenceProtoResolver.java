@@ -1,0 +1,179 @@
+package io.bisq.core.persistence;
+
+import com.google.inject.Provider;
+import io.bisq.common.locale.*;
+import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistence.PersistenceProtoResolver;
+import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.btc.AddressEntryList;
+import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.PaymentAccountFactory;
+import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.user.BlockChainExplorer;
+import io.bisq.core.user.Preferences;
+import io.bisq.generated.protobuffer.PB;
+import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Coin;
+
+import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+
+/**
+ * If the Messages class is giving errors in IntelliJ, you should change the IntelliJ IDEA Platform Properties file,
+ * idea.properties, to something bigger like 12500:
+ * <p>
+ * #---------------------------------------------------------------------
+ * # Maximum file size (kilobytes) IDE should provide code assistance for.
+ * # The larger file is the slower its editor works and higher overall system memory requirements are
+ * # if code assistance is enabled. Remove this property or set to very large number if you need
+ * # code assistance for any files available regardless their size.
+ * #---------------------------------------------------------------------
+ * idea.max.intellisense.filesize=2500
+ */
+@Slf4j
+public class CorePersistenceProtoResolver implements PersistenceProtoResolver {
+
+    private Provider<AddressEntryList> addressEntryListProvider;
+    private Provider<Preferences> preferencesProvider;
+
+    @Inject
+    public CorePersistenceProtoResolver(Provider<Preferences> preferencesProvider,
+                                        Provider<AddressEntryList> addressEntryListProvider) {
+        this.preferencesProvider = preferencesProvider;
+        this.addressEntryListProvider = addressEntryListProvider;
+    }
+
+    @Override
+    public Optional<Persistable> fromProto(PB.DiskEnvelope envelope) {
+        if (Objects.isNull(envelope)) {
+            log.warn("fromProtoBuf called with empty disk envelope.");
+            return Optional.empty();
+        }
+
+        log.debug("Convert protobuffer disk envelope: {}", envelope.getMessageCase());
+
+        Persistable result = null;
+        switch (envelope.getMessageCase()) {
+            case ADDRESS_ENTRY_LIST:
+                result = fillAddressEntryList(envelope, addressEntryListProvider.get());
+                break;
+                /*
+            case NAVIGATION:
+                result = getPing(envelope);
+                break;
+            case PERSISTED_PEERS:
+                result = getPing(envelope);
+                break;
+                */
+            case PREFERENCES:
+                result = fillPreferences(envelope, preferencesProvider.get());
+                break;
+                /*
+            case USER:
+                result = getPing(envelope);
+                break;
+            case PERSISTED_P2P_STORAGE_DATA:
+                result = getPing(envelope);
+                break;
+            case SEQUENCE_NUMBER_MAP:
+                result = getPing(envelope);
+                break;
+                */
+            default:
+                log.warn("Unknown message case:{}:{}", envelope.getMessageCase());
+        }
+        return Optional.ofNullable(result);
+    }
+
+    private Preferences fillPreferences(PB.DiskEnvelope envelope, Preferences preferences) {
+        final PB.Preferences env = envelope.getPreferences();
+        preferences.setUserLanguage(env.getUserLanguage());
+        PB.Country userCountry = env.getUserCountry();
+        preferences.setUserCountry(new Country(userCountry.getCode(), userCountry.getName(), new Region(userCountry.getRegion().getCode(), userCountry.getRegion().getName())));
+        env.getFiatCurrenciesList().stream()
+                .forEach(tradeCurrency -> preferences.addFiatCurrency((FiatCurrency) getTradeCurrency(tradeCurrency)));
+        env.getCryptoCurrenciesList().stream()
+                .forEach(tradeCurrency -> preferences.addCryptoCurrency((CryptoCurrency) getTradeCurrency(tradeCurrency)));
+        PB.BlockChainExplorer bceMain = env.getBlockChainExplorerMainNet();
+        preferences.setBlockChainExplorerMainNet(new BlockChainExplorer(bceMain.getName(), bceMain.getTxUrl(), bceMain.getAddressUrl()));
+        PB.BlockChainExplorer bceTest = env.getBlockChainExplorerTestNet();
+        preferences.setBlockChainExplorerTestNet(new BlockChainExplorer(bceTest.getName(), bceTest.getTxUrl(), bceTest.getAddressUrl()));
+
+        preferences.setAutoSelectArbitrators(env.getAutoSelectArbitrators());
+        preferences.setDontShowAgainMap(new HashMap<>(env.getDontShowAgainMapMap()));
+        preferences.setTacAccepted(env.getTacAccepted());
+        preferences.setUseTorForBitcoinJ(env.getUseTorForBitcoinJ());
+        preferences.setShowOwnOffersInOfferBook(env.getShowOwnOffersInOfferBook());
+        PB.TradeCurrency preferredTradeCurrency = env.getPreferredTradeCurrency();
+        preferences.setPreferredTradeCurrency(getTradeCurrency(preferredTradeCurrency));
+        preferences.setWithdrawalTxFeeInBytes(env.getWithdrawalTxFeeInBytes());
+        preferences.setMaxPriceDistanceInPercent(env.getMaxPriceDistanceInPercent());
+
+        preferences.setSortMarketCurrenciesNumerically(env.getSortMarketCurrenciesNumerically());
+        preferences.setUsePercentageBasedPrice(env.getUsePercentageBasedPrice());
+        preferences.setPeerTagMap(env.getPeerTagMapMap());
+        preferences.setBitcoinNodes(env.getBitcoinNodes());
+        preferences.setIgnoreTradersList(env.getIgnoreTradersListList());
+        preferences.setDirectoryChooserPath(env.getDirectoryChooserPath());
+        preferences.setBuyerSecurityDepositAsLong(env.getBuyerSecurityDepositAsLong());
+
+        final PB.BlockChainExplorer bsqExPl = env.getBsqBlockChainExplorer();
+        preferences.setBsqBlockChainExplorer(new BlockChainExplorer(bsqExPl.getName(), bsqExPl.getTxUrl(), bsqExPl.getAddressUrl()));
+
+        preferences.setBtcDenomination(env.getBtcDenomination());
+        preferences.setUseAnimations(env.getUseAnimations());
+        preferences.setPayFeeInBtc(env.getPayFeeInBtc());
+        preferences.setResyncSpvRequested(env.getResyncSpvRequested());
+
+        // optional
+        preferences.setBackupDirectory(env.getBackupDirectory().isEmpty() ? null : env.getBackupDirectory());
+        preferences.setOfferBookChartScreenCurrencyCode(env.getOfferBookChartScreenCurrencyCode().isEmpty() ? null : env.getOfferBookChartScreenCurrencyCode());
+        preferences.setTradeChartsScreenCurrencyCode(env.getTradeChartsScreenCurrencyCode().isEmpty() ? null : env.getTradeChartsScreenCurrencyCode());
+        preferences.setBuyScreenCurrencyCode(env.getBuyScreenCurrencyCode().isEmpty() ? null : env.getBuyScreenCurrencyCode());
+        preferences.setSellScreenCurrencyCode(env.getSellScreenCurrencyCode().isEmpty() ? null : env.getSellScreenCurrencyCode());
+        preferences.setSelectedPaymentAccountForCreateOffer(env.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod() ? getPaymentAccount(env.getSelectedPaymentAccountForCreateOffer()) : null);
+
+        preferences.setDoPersist(true);
+        return preferences;
+    }
+
+    private PaymentAccount getPaymentAccount(PB.PaymentAccount account) {
+        return PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(account.getPaymentMethod().getId()));
+    }
+
+    private TradeCurrency getTradeCurrency(PB.TradeCurrency tradeCurrency) {
+        switch (tradeCurrency.getMessageCase()) {
+            case FIAT_CURRENCY:
+                return new FiatCurrency(tradeCurrency.getCode());
+            case CRYPTO_CURRENCY:
+                return new CryptoCurrency(tradeCurrency.getCode(), tradeCurrency.getName(), tradeCurrency.getSymbol(),
+                        tradeCurrency.getCryptoCurrency().getIsAsset());
+            default:
+                log.warn("Unknown tradecurrency: {}", tradeCurrency.getMessageCase());
+        }
+
+        return null;
+    }
+
+    private Locale getLocale(PB.Locale locale) {
+        return new Locale(locale.getLanguage(), locale.getCountry(), locale.getVariant());
+    }
+
+    private AddressEntryList fillAddressEntryList(PB.DiskEnvelope envelope, AddressEntryList addressEntryList) {
+        envelope.getAddressEntryList().getAddressEntryList().stream().forEach(addressEntry -> {
+            final AddressEntry entry = new AddressEntry(addressEntry.getPubKey().toByteArray(),
+                    addressEntry.getPubKeyHash().toByteArray(),
+                    AddressEntry.Context.valueOf(addressEntry.getContext().name()),
+                    addressEntry.getOfferId(),
+                    Coin.valueOf(addressEntry.getCoinLockedInMultiSig().getValue()));
+            addressEntryList.addAddressEntry(entry);
+        });
+        addressEntryList.setDoPersist(true);
+        return addressEntryList;
+    }
+
+
+}

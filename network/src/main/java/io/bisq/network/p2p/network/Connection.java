@@ -7,8 +7,8 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistance.Msg;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkProtoResolver;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
@@ -118,7 +118,7 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener,
-               @Nullable NodeAddress peersNodeAddress, ProtobufferResolver protobufferResolver) {
+               @Nullable NodeAddress peersNodeAddress, NetworkProtoResolver networkProtoResolver) {
         this.socket = socket;
         this.connectionListener = connectionListener;
         uid = UUID.randomUUID().toString();
@@ -133,10 +133,10 @@ public class Connection implements MessageListener {
         else
             portInfo = "localPort=" + socket.getLocalPort() + "/port=" + socket.getPort();
 
-        init(peersNodeAddress, protobufferResolver);
+        init(peersNodeAddress, networkProtoResolver);
     }
 
-    private void init(@Nullable NodeAddress peersNodeAddress, ProtobufferResolver protobufferResolver) {
+    private void init(@Nullable NodeAddress peersNodeAddress, NetworkProtoResolver networkProtoResolver) {
         try {
             socket.setSoTimeout(SOCKET_TIMEOUT);
             // Need to access first the ObjectOutputStream otherwise the ObjectInputStream would block
@@ -147,7 +147,7 @@ public class Connection implements MessageListener {
             protoOutputStream = socket.getOutputStream();
             InputStream protoInputStream = socket.getInputStream();
             // We create a thread for handling inputStream data
-            inputHandler = new InputHandler(sharedModel, protoInputStream, portInfo, this, protobufferResolver);
+            inputHandler = new InputHandler(sharedModel, protoInputStream, portInfo, this, networkProtoResolver);
             singleThreadExecutor.submit(inputHandler);
 
             // Use Peer as default, in case of other types they will set it as soon as possible.
@@ -693,7 +693,7 @@ public class Connection implements MessageListener {
         private final InputStream protoInputStream;
         private final String portInfo;
         private final MessageListener messageListener;
-        private final ProtobufferResolver protobufferResolver;
+        private final NetworkProtoResolver networkProtoResolver;
 
         private volatile boolean stopped;
         private long lastReadTimeStamp;
@@ -703,12 +703,12 @@ public class Connection implements MessageListener {
                             InputStream protoInputStream,
                             String portInfo,
                             MessageListener messageListener,
-                            ProtobufferResolver protobufferResolver) {
+                            NetworkProtoResolver networkProtoResolver) {
             this.sharedModel = sharedModel;
             this.protoInputStream = protoInputStream;
             this.portInfo = portInfo;
             this.messageListener = messageListener;
-            this.protobufferResolver = protobufferResolver;
+            this.networkProtoResolver = networkProtoResolver;
         }
 
         public void stop() {
@@ -784,7 +784,7 @@ public class Connection implements MessageListener {
                         }
 
                         Msg msg;
-                        Optional<Msg> optMessage = protobufferResolver.fromProto(envelope);
+                        Optional<Msg> optMessage = networkProtoResolver.fromProto(envelope);
                         if (optMessage.isPresent()) {
                             msg = optMessage.get();
                         } else {

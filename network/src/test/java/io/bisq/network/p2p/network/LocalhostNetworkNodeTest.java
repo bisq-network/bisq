@@ -30,7 +30,7 @@ public class LocalhostNetworkNodeTest {
     @Test
     public void testMessage() throws InterruptedException, IOException {
         CountDownLatch msgLatch = new CountDownLatch(2);
-        LocalhostNetworkNode node1 = new LocalhostNetworkNode(9001, TestUtils.getProtobufferResolver());
+        LocalhostNetworkNode node1 = new LocalhostNetworkNode(9001, TestUtils.getNetworkProtoResolver());
         node1.addMessageListener((message, connection) -> {
             log.debug("onMessage node1 " + message);
             msgLatch.countDown();
@@ -54,7 +54,7 @@ public class LocalhostNetworkNodeTest {
             }
         });
 
-        LocalhostNetworkNode node2 = new LocalhostNetworkNode(9002, TestUtils.getProtobufferResolver());
+        LocalhostNetworkNode node2 = new LocalhostNetworkNode(9002, TestUtils.getNetworkProtoResolver());
         node2.addMessageListener((message, connection) -> {
             log.debug("onMessage node2 " + message);
             msgLatch.countDown();

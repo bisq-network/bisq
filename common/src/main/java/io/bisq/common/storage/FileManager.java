@@ -17,11 +17,10 @@
 
 package io.bisq.common.storage;
 
-import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.io.LookAheadObjectInputStream;
-import io.bisq.common.persistance.Persistable;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistence.PersistenceProtoResolver;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import org.slf4j.Logger;
@@ -46,17 +45,16 @@ public class FileManager<T extends Persistable> {
     private final long delay;
     private final Callable<Void> saveFileTask;
     private T serializable;
-    private final ProtobufferResolver protobufferResolver;
+    private final PersistenceProtoResolver persistenceProtoResolver;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
-    public FileManager(File dir, File storageFile, long delay, ProtobufferResolver protobufferResolver) {
+    public FileManager(File dir, File storageFile, long delay, PersistenceProtoResolver persistenceProtoResolver) {
         this.dir = dir;
         this.storageFile = storageFile;
-        this.protobufferResolver = protobufferResolver;
+        this.persistenceProtoResolver = persistenceProtoResolver;
 
         executor = Utilities.getScheduledThreadPoolExecutor("FileManager", 1, 10, 5);
 
@@ -112,7 +110,7 @@ public class FileManager<T extends Persistable> {
         Optional<Persistable> persistable = Optional.empty();
 
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
-            persistable = protobufferResolver.fromProto(PB.DiskEnvelope.parseDelimitedFrom(fileInputStream));
+            persistable = persistenceProtoResolver.fromProto(PB.DiskEnvelope.parseDelimitedFrom(fileInputStream));
         } catch (Throwable t) {
             log.error("Exception at proto read: " + t.getMessage() + " " + file.getName());
         }

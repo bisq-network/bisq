@@ -379,11 +379,12 @@ public class NetworkStressTest {
         // peer keys
         final KeyStorage peerKeyStorage = new KeyStorage(peerKeysDir);
         final KeyRing peerKeyRing = new KeyRing(peerKeyStorage);
-        final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing, TestUtils.getProtobufferResolver());
+        final EncryptionService peerEncryptionService = new EncryptionService(peerKeyRing, TestUtils.getNetworkProtoResolver());
 
         return new P2PService(seedNodesRepository, port, peerTorDir, useLocalhostForP2P,
                 REGTEST_NETWORK_ID, P2PService.MAX_CONNECTIONS_DEFAULT, peerStorageDir, null, null, null,
-                new Clock(), null, peerEncryptionService, peerKeyRing, TestUtils.getProtobufferResolver());
+                new Clock(), null, peerEncryptionService, peerKeyRing,
+                TestUtils.getNetworkProtoResolver(), TestUtils.getPersistenceProtoResolver());
     }
 
     // ## TEST SETUP: P2P service listener classes

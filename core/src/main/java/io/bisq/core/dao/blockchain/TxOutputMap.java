@@ -17,13 +17,7 @@
 
 package io.bisq.core.dao.blockchain;
 
-import io.bisq.common.persistance.Persistable;
-import io.bisq.common.util.Utilities;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.HashMap;
+import io.bisq.common.persistence.Persistable;
 import io.bisq.common.util.Utilities;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 

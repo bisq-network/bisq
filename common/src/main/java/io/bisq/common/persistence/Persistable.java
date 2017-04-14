@@ -1,4 +1,4 @@
-package io.bisq.common.persistance;
+package io.bisq.common.persistence;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.Parser;

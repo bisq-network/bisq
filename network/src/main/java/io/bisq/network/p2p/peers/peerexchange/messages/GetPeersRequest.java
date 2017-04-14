@@ -3,7 +3,7 @@ package io.bisq.network.p2p.peers.peerexchange.messages;
 import io.bisq.common.Marshaller;
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistance.Msg;
+import io.bisq.common.network.Msg;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.SendersNodeAddressMsg;

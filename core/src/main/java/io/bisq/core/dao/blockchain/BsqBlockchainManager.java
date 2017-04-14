@@ -19,7 +19,7 @@ package io.bisq.core.dao.blockchain;
 
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.persistence.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.dao.RpcOptionKeys;
@@ -124,13 +124,13 @@ public class BsqBlockchainManager {
     public BsqBlockchainManager(BsqBlockchainService blockchainService,
                                 P2PService p2PService,
                                 JsonExporter jsonExporter,
-                                ProtobufferResolver protobufferResolver,
+                                PersistenceProtoResolver persistenceProtoResolver,
                                 @Named(Storage.DIR_KEY) File storageDir,
                                 @Named(RpcOptionKeys.RPC_USER) String rpcUser) {
         this.blockchainService = blockchainService;
         this.p2PService = p2PService;
         this.jsonExporter = jsonExporter;
-        snapshotTxOutputMapStorage = new Storage<>(storageDir, protobufferResolver);
+        snapshotTxOutputMapStorage = new Storage<>(storageDir, persistenceProtoResolver);
 
         connectToBtcCore = rpcUser != null && !rpcUser.isEmpty();
     }

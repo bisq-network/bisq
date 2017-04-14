@@ -18,7 +18,7 @@
 package io.bisq.network.crypto;
 
 
-import io.bisq.common.persistance.Msg;
+import io.bisq.common.network.Msg;
 import lombok.EqualsAndHashCode;
 
 import java.security.PublicKey;

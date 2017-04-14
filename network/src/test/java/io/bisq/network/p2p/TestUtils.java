@@ -2,11 +2,12 @@ package io.bisq.network.p2p;
 
 import io.bisq.common.Clock;
 import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.persistance.Msg;
-import io.bisq.common.persistance.Persistable;
+import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkProtoResolver;
+import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistence.PersistenceProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.crypto.EncryptionService;
-import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,7 +137,7 @@ public class TestUtils {
 
         P2PService p2PService = new P2PService(seedNodesRepository, port, new File("seed_node_" + port), useLocalhostForP2P,
                 2, P2PService.MAX_CONNECTIONS_DEFAULT, new File("dummy"), null, null, null,
-                new Clock(), null, encryptionService, keyRing, getProtobufferResolver());
+                new Clock(), null, encryptionService, keyRing, getNetworkProtoResolver(), getPersistenceProtoResolver());
         p2PService.start(new P2PServiceListener() {
             @Override
             public void onRequestingDataCompleted() {
@@ -172,13 +173,17 @@ public class TestUtils {
         return p2PService;
     }
 
-    public static ProtobufferResolver getProtobufferResolver() {
-        return new ProtobufferResolver() {
+    public static NetworkProtoResolver getNetworkProtoResolver() {
+        return new NetworkProtoResolver() {
             @Override
             public Optional<Msg> fromProto(PB.Envelope envelope) {
                 return Optional.empty();
             }
+        };
+    }
 
+    public static PersistenceProtoResolver getPersistenceProtoResolver() {
+        return new PersistenceProtoResolver() {
             @Override
             public Optional<Persistable> fromProto(PB.DiskEnvelope envelope) {
                 return null;

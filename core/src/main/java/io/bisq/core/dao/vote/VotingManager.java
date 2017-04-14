@@ -20,7 +20,7 @@ package io.bisq.core.dao.vote;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistance.ListPersistable;
+import io.bisq.common.persistence.ListPersistable;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.BsqWalletService;

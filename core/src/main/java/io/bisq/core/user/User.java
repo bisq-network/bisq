@@ -21,7 +21,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistence.Persistable;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.arbitration.Arbitrator;

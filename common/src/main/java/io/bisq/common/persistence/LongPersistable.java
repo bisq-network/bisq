@@ -15,19 +15,18 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.persistance;
+package io.bisq.common.persistence;
 
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
-import java.util.List;
+public class LongPersistable implements Persistable {
 
-public class ListPersistable<E> implements Persistable {
     @Delegate
     @Getter
-    List<E> listPayload;
+    Long longPayload;
 
-    public ListPersistable(List<E> listPayload) {
-        this.listPayload = listPayload;
+    public LongPersistable(Long longPayload) {
+        this.longPayload = longPayload;
     }
 }

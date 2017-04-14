@@ -20,7 +20,7 @@ package io.bisq.core.btc;
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistence.Persistable;
 import io.bisq.common.storage.Storage;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;

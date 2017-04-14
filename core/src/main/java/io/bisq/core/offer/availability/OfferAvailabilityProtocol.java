@@ -21,6 +21,7 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.network.Msg;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
@@ -29,7 +30,6 @@ import io.bisq.core.offer.messages.OfferAvailabilityResponse;
 import io.bisq.core.offer.messages.OfferMsg;
 import io.bisq.core.util.Validator;
 import io.bisq.network.p2p.DecryptedDirectMessageListener;
-import io.bisq.common.persistance.Msg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

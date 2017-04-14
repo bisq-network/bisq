@@ -19,7 +19,7 @@ package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistance.Msg;
+import io.bisq.common.network.Msg;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;

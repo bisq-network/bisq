@@ -8,10 +8,10 @@ import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.persistance.HashMapPersistable;
-import io.bisq.common.persistance.Msg;
-import io.bisq.common.persistance.Persistable;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.Msg;
+import io.bisq.common.persistence.HashMapPersistable;
+import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistence.PersistenceProtoResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.ResourceNotFoundException;
 import io.bisq.common.storage.Storage;
@@ -70,14 +70,15 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public P2PDataStorage(Broadcaster broadcaster, NetworkNode networkNode, File storageDir, ProtobufferResolver protobufferResolver) {
+    public P2PDataStorage(Broadcaster broadcaster, NetworkNode networkNode, File storageDir,
+                          PersistenceProtoResolver persistenceProtoResolver) {
         this.broadcaster = broadcaster;
 
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
 
-        sequenceNumberMapStorage = new Storage<>(storageDir, protobufferResolver);
-        persistedEntryMapStorage = new Storage<>(storageDir, protobufferResolver);
+        sequenceNumberMapStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        persistedEntryMapStorage = new Storage<>(storageDir, persistenceProtoResolver);
 
         init(storageDir);
     }

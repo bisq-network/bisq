@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.network;
 
 import io.bisq.common.app.Log;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.NetworkProtoResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,14 +23,14 @@ class Server implements Runnable {
     private final ServerSocket serverSocket;
     private final Set<Connection> connections = new CopyOnWriteArraySet<>();
     private volatile boolean stopped;
-    private final ProtobufferResolver protobufferResolver;
+    private final NetworkProtoResolver networkProtoResolver;
 
 
     public Server(ServerSocket serverSocket,
                   MessageListener messageListener,
                   ConnectionListener connectionListener,
-                  ProtobufferResolver protobufferResolver) {
-        this.protobufferResolver = protobufferResolver;
+                  NetworkProtoResolver networkProtoResolver) {
+        this.networkProtoResolver = networkProtoResolver;
         Log.traceCall();
         this.serverSocket = serverSocket;
         this.messageListener = messageListener;
@@ -52,7 +52,7 @@ class Server implements Runnable {
                         InboundConnection connection = new InboundConnection(socket,
                                 messageListener,
                                 connectionListener,
-                                protobufferResolver);
+                                networkProtoResolver);
 
                         log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "Server created new inbound connection:"

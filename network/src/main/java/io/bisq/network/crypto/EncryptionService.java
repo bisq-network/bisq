@@ -20,8 +20,8 @@ package io.bisq.network.crypto;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.bisq.common.Marshaller;
 import io.bisq.common.crypto.*;
-import io.bisq.common.persistance.Msg;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import lombok.extern.slf4j.Slf4j;
@@ -37,12 +37,12 @@ import static io.bisq.common.crypto.Encryption.decryptSecretKey;
 @Slf4j
 public class EncryptionService {
     private final KeyRing keyRing;
-    private final ProtobufferResolver protobufferResolver;
+    private final NetworkProtoResolver networkProtoResolver;
 
     @Inject
-    public EncryptionService(KeyRing keyRing, ProtobufferResolver protobufferResolver) {
+    public EncryptionService(KeyRing keyRing, NetworkProtoResolver networkProtoResolver) {
         this.keyRing = keyRing;
-        this.protobufferResolver = protobufferResolver;
+        this.networkProtoResolver = networkProtoResolver;
     }
 
     public SealedAndSigned encryptAndSign(PubKeyRing pubKeyRing, Msg msg) throws CryptoException {
@@ -66,7 +66,7 @@ public class EncryptionService {
         try {
             final byte[] bytes = Encryption.decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey);
             final PB.Envelope envelope = PB.Envelope.parseFrom(bytes);
-            Msg decryptedPayload = protobufferResolver.fromProto(envelope).get();
+            Msg decryptedPayload = networkProtoResolver.fromProto(envelope).get();
             return new DecryptedDataTuple(decryptedPayload, sealedAndSigned.sigPublicKey);
         } catch (InvalidProtocolBufferException e) {
             throw new CryptoException("Unable to parse protobuffer message.", e);

@@ -4,8 +4,8 @@ import com.google.common.util.concurrent.*;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.persistance.Msg;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkProtoResolver;
 import io.bisq.common.util.Utilities;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
@@ -35,7 +35,7 @@ public abstract class NetworkNode implements MessageListener {
     private static final int CREATE_SOCKET_TIMEOUT_MILLIS = 10000;
 
     final int servicePort;
-    private final ProtobufferResolver protobufferResolver;
+    private final NetworkProtoResolver networkProtoResolver;
 
     private final CopyOnWriteArraySet<InboundConnection> inBoundConnections = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
@@ -54,9 +54,9 @@ public abstract class NetworkNode implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    NetworkNode(int servicePort, ProtobufferResolver protobufferResolver) {
+    NetworkNode(int servicePort, NetworkProtoResolver networkProtoResolver) {
         this.servicePort = servicePort;
-        this.protobufferResolver = protobufferResolver;
+        this.networkProtoResolver = networkProtoResolver;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +145,7 @@ public abstract class NetworkNode implements MessageListener {
                                 NetworkNode.this,
                                 connectionListener,
                                 peersNodeAddress,
-                                protobufferResolver);
+                                networkProtoResolver);
 
                         log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "NetworkNode created new outbound connection:"
@@ -379,7 +379,7 @@ public abstract class NetworkNode implements MessageListener {
         server = new Server(serverSocket,
                 NetworkNode.this,
                 connectionListener,
-                protobufferResolver);
+                networkProtoResolver);
         executorService.submit(server);
     }
 

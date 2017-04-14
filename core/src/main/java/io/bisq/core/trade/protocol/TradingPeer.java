@@ -19,7 +19,7 @@ package io.bisq.core.trade.protocol;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistence.Persistable;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import lombok.Getter;

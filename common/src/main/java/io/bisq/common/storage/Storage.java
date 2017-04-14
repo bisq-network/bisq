@@ -18,8 +18,8 @@
 package io.bisq.common.storage;
 
 import com.google.inject.Inject;
-import io.bisq.common.persistance.Persistable;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistence.PersistenceProtoResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +67,7 @@ public class Storage<T extends Persistable> {
     private T serializable;
     private String fileName;
     private int numMaxBackupFiles = 10;
-    private final ProtobufferResolver protobufferResolver;
+    private final PersistenceProtoResolver persistenceProtoResolver;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -75,9 +75,9 @@ public class Storage<T extends Persistable> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Storage(@Named(DIR_KEY) File dir, ProtobufferResolver protobufferResolver) {
+    public Storage(@Named(DIR_KEY) File dir, PersistenceProtoResolver persistenceProtoResolver) {
         this.dir = dir;
-        this.protobufferResolver = protobufferResolver;
+        this.persistenceProtoResolver = persistenceProtoResolver;
     }
 
     /*
@@ -89,14 +89,14 @@ public class Storage<T extends Persistable> {
     public void initWithFileName(String fileName) {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 300, protobufferResolver);
+        fileManager = new FileManager<>(dir, storageFile, 300, persistenceProtoResolver);
     }
 
     @Nullable
     public T initAndGetPersistedWithFileName(String fileName) {
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 300, protobufferResolver);
+        fileManager = new FileManager<>(dir, storageFile, 300, persistenceProtoResolver);
 
         return getPersisted();
     }
@@ -111,7 +111,7 @@ public class Storage<T extends Persistable> {
         this.serializable = serializable;
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 600, protobufferResolver);
+        fileManager = new FileManager<>(dir, storageFile, 600, persistenceProtoResolver);
 
         return getPersisted();
     }

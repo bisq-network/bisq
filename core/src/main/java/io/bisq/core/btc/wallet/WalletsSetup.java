@@ -27,8 +27,8 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.persistance.LongPersistable;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.persistence.LongPersistable;
+import io.bisq.common.persistence.PersistenceProtoResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.app.BisqEnvironment;
@@ -102,7 +102,7 @@ public class WalletsSetup {
                         Preferences preferences,
                         BisqEnvironment bisqEnvironment,
                         Socks5ProxyProvider socks5ProxyProvider,
-                        ProtobufferResolver protobufferResolver,
+                        PersistenceProtoResolver persistenceProtoResolver,
                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
                         @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
 
@@ -118,7 +118,7 @@ public class WalletsSetup {
         params = WalletUtils.getParameters();
         walletDir = new File(appDir, "bitcoin");
 
-        storage = new Storage<>(walletDir, protobufferResolver);
+        storage = new Storage<>(walletDir, persistenceProtoResolver);
         LongPersistable nonce = storage.initAndGetPersistedWithFileName("BloomFilterNonce");
         if (nonce != null) {
             bloomFilterTweak = nonce.getLongPayload();

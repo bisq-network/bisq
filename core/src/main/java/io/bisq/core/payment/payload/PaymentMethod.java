@@ -19,7 +19,7 @@ package io.bisq.core.payment.payload;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Res;
-import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistence.Persistable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

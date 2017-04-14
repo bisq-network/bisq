@@ -19,7 +19,7 @@ package io.bisq.core.dao.compensation;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
-import io.bisq.common.persistance.ListPersistable;
+import io.bisq.common.persistence.ListPersistable;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -35,8 +35,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
 
 public class CompensationRequestManager {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);

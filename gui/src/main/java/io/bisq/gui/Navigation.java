@@ -19,7 +19,7 @@ package io.bisq.gui;
 
 import com.google.inject.Inject;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistence.Persistable;
 import io.bisq.common.storage.Storage;
 import io.bisq.gui.common.view.View;
 import io.bisq.gui.common.view.ViewPath;

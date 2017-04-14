@@ -1,6 +1,6 @@
 package io.bisq.network.p2p.peers.getdata.messages;
 
-import io.bisq.common.persistance.Msg;
+import io.bisq.common.network.Msg;
 
 import java.util.Set;
 

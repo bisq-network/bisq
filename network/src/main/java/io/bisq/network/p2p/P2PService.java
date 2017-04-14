@@ -12,8 +12,9 @@ import io.bisq.common.app.Log;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.persistance.Msg;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkProtoResolver;
+import io.bisq.common.persistence.PersistenceProtoResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -120,7 +121,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       Socks5ProxyProvider socks5ProxyProvider,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing,
-                      ProtobufferResolver protobufferResolver) {
+                      NetworkProtoResolver networkProtoResolver,
+                      PersistenceProtoResolver persistenceProtoResolver) {
         this(
                 seedNodesRepository,
                 port,
@@ -136,7 +138,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 socks5ProxyProvider,
                 encryptionService,
                 keyRing,
-                protobufferResolver
+                networkProtoResolver,
+                persistenceProtoResolver
         );
     }
 
@@ -154,7 +157,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       Socks5ProxyProvider socks5ProxyProvider,
                       @Nullable EncryptionService encryptionService,
                       @Nullable KeyRing keyRing,
-                      ProtobufferResolver protobufferResolver) {
+                      NetworkProtoResolver networkProtoResolver,
+                      PersistenceProtoResolver persistenceProtoResolver) {
         this.seedNodesRepository = seedNodesRepository;
         this.port = port;
         this.maxConnections = maxConnections;
@@ -171,7 +175,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 seedNodes,
                 myAddress,
                 banList,
-                protobufferResolver);
+                networkProtoResolver,
+                persistenceProtoResolver);
     }
 
     private void init(boolean useLocalhostForP2P,
@@ -180,7 +185,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       String seedNodes,
                       String myAddress,
                       String banList,
-                      ProtobufferResolver protobufferResolver) {
+                      NetworkProtoResolver networkProtoResolver,
+                      PersistenceProtoResolver persistenceProtoResolver) {
         if (!useLocalhostForP2P)
             FileUtil.rollingBackup(new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString()), "private_key", 20);
 
@@ -190,8 +196,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             seedNodesRepository.setNodeAddressToExclude(new NodeAddress(myAddress));
 
         networkNode = useLocalhostForP2P ?
-                new LocalhostNetworkNode(port, protobufferResolver) :
-                new TorNetworkNode(port, torDir, protobufferResolver);
+                new LocalhostNetworkNode(port, networkProtoResolver) :
+                new TorNetworkNode(port, torDir, networkProtoResolver);
         networkNode.addConnectionListener(this);
         networkNode.addMessageListener(this);
 
@@ -201,11 +207,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         else
             seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhostForP2P, networkId);
 
-        peerManager = new PeerManager(networkNode, maxConnections, seedNodeAddresses, storageDir, clock, protobufferResolver);
+        peerManager = new PeerManager(networkNode, maxConnections, seedNodeAddresses, storageDir, clock, persistenceProtoResolver);
 
         broadcaster = new Broadcaster(networkNode, peerManager);
 
-        p2PDataStorage = new P2PDataStorage(broadcaster, networkNode, storageDir, protobufferResolver);
+        p2PDataStorage = new P2PDataStorage(broadcaster, networkNode, storageDir, persistenceProtoResolver);
         p2PDataStorage.addHashMapChangedListener(this);
 
         requestDataManager = new RequestDataManager(networkNode, p2PDataStorage, peerManager, seedNodeAddresses, this);

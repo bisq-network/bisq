@@ -15,19 +15,19 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.persistance;
+package io.bisq.common.persistence;
 
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
-import java.util.HashSet;
+import java.util.List;
 
-public class HashSetPersistable<E> implements Persistable {
+public class ListPersistable<E> implements Persistable {
     @Delegate
     @Getter
-    private HashSet<E> hashSet = new HashSet<>();
+    List<E> listPayload;
 
-    public HashSetPersistable(HashSet<E> hashSet) {
-        this.hashSet = hashSet;
+    public ListPersistable(List<E> listPayload) {
+        this.listPayload = listPayload;
     }
 }

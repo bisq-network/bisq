@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.network;
 
 import io.bisq.common.UserThread;
-import io.bisq.common.persistance.Msg;
+import io.bisq.common.network.Msg;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleIntegerProperty;

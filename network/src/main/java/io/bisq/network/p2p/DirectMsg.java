@@ -17,7 +17,7 @@
 
 package io.bisq.network.p2p;
 
-import io.bisq.common.persistance.Msg;
+import io.bisq.common.network.Msg;
 
 public interface DirectMsg extends Msg {
 }

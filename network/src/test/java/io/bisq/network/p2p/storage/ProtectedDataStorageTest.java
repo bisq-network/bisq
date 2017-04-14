@@ -64,7 +64,7 @@ public class ProtectedDataStorageTest {
         keyRing1 = new KeyRing(new KeyStorage(dir1));
 
         storageSignatureKeyPair1 = keyRing1.getSignatureKeyPair();
-        encryptionService1 = new EncryptionService(keyRing1, TestUtils.getProtobufferResolver());
+        encryptionService1 = new EncryptionService(keyRing1, TestUtils.getNetworkProtoResolver());
         P2PService p2PService = TestUtils.getAndStartSeedNode(8001, useClearNet, seedNodes).getSeedNodeP2PService();
         networkNode1 = p2PService.getNetworkNode();
         peerManager1 = p2PService.getPeerManager();
@@ -73,7 +73,7 @@ public class ProtectedDataStorageTest {
         // for mailbox
         keyRing2 = new KeyRing(new KeyStorage(dir2));
         storageSignatureKeyPair2 = keyRing2.getSignatureKeyPair();
-        encryptionService2 = new EncryptionService(keyRing2, TestUtils.getProtobufferResolver());
+        encryptionService2 = new EncryptionService(keyRing2, TestUtils.getNetworkProtoResolver());
 
         mockData = new MockData("mockData", keyRing1.getSignatureKeyPair().getPublic());
         Thread.sleep(sleepTime);

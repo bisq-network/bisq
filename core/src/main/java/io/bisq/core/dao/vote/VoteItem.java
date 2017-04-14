@@ -18,7 +18,7 @@
 package io.bisq.core.dao.vote;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistence.Persistable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

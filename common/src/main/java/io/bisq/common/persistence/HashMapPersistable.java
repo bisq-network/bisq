@@ -15,18 +15,19 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.persistance;
+package io.bisq.common.persistence;
 
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
-public class LongPersistable implements Persistable {
+import java.util.HashMap;
 
+public class HashMapPersistable<K, V> implements Persistable {
     @Delegate
     @Getter
-    Long longPayload;
+    private HashMap<K, V> hashMap = new HashMap<>();
 
-    public LongPersistable(Long longPayload) {
-        this.longPayload = longPayload;
+    public HashMapPersistable(HashMap<K, V> hashMap) {
+        this.hashMap = hashMap;
     }
 }

@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bisq.common.locale.CurrencyTuple;
 import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.persistance.HashSetPersistable;
+import io.bisq.common.persistence.HashSetPersistable;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;

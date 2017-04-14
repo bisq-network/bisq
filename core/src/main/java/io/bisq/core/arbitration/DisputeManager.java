@@ -27,8 +27,8 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.Res;
-import io.bisq.common.persistance.Msg;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.Msg;
+import io.bisq.common.persistence.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.arbitration.messages.*;
 import io.bisq.core.btc.AddressEntry;
@@ -91,7 +91,7 @@ public class DisputeManager {
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
                           KeyRing keyRing,
-                          ProtobufferResolver protobufferResolver,
+                          PersistenceProtoResolver persistenceProtoResolver,
                           @Named(Storage.DIR_KEY) File storageDir) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
@@ -101,7 +101,7 @@ public class DisputeManager {
         this.openOfferManager = openOfferManager;
         this.keyRing = keyRing;
 
-        disputeStorage = new Storage<>(storageDir, protobufferResolver);
+        disputeStorage = new Storage<>(storageDir, persistenceProtoResolver);
         disputes = new DisputeList(disputeStorage);
 
         openDisputes = new HashMap<>();

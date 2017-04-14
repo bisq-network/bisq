@@ -19,7 +19,7 @@ package io.bisq.core.arbitration.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistance.Msg;
+import io.bisq.common.network.Msg;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;

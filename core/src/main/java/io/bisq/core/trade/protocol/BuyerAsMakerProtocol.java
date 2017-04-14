@@ -19,6 +19,7 @@ package io.bisq.core.trade.protocol;
 
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.network.Msg;
 import io.bisq.core.trade.BuyerAsMakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.DepositTxPublishedMsg;
@@ -33,7 +34,6 @@ import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx
 import io.bisq.core.trade.protocol.tasks.maker.*;
 import io.bisq.core.util.Validator;
 import io.bisq.network.p2p.MailboxMsg;
-import io.bisq.common.persistance.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 

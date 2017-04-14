@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.storage.messages;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.persistance.Msg;
+import io.bisq.common.network.Msg;
 
 public abstract class BroadcastMsg implements Msg {
     //TODO add serialVersionUID also in superclasses as changes would break compatibility

@@ -1,4 +1,4 @@
-package io.bisq.common.persistance;
+package io.bisq.common.network;
 
 
 import io.bisq.common.Marshaller;

@@ -17,10 +17,9 @@
 
 package io.bisq.core.payment;
 
-import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.persistance.Persistable;
+import io.bisq.common.persistence.Persistable;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.generated.protobuffer.PB;

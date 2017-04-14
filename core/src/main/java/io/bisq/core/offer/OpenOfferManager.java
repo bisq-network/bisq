@@ -25,8 +25,8 @@ import io.bisq.common.app.Log;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.persistance.Msg;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.Msg;
+import io.bisq.common.persistence.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -101,7 +101,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             ClosedTradableManager closedTradableManager,
                             PriceFeedService priceFeedService,
                             Preferences preferences,
-                            ProtobufferResolver protobufferResolver,
+                            PersistenceProtoResolver persistenceProtoResolver,
                             @Named(Storage.DIR_KEY) File storageDir) {
         this.keyRing = keyRing;
         this.user = user;
@@ -113,7 +113,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.closedTradableManager = closedTradableManager;
         this.preferences = preferences;
 
-        openOffersStorage = new Storage<>(storageDir, protobufferResolver);
+        openOffersStorage = new Storage<>(storageDir, persistenceProtoResolver);
         openOffers = new TradableList<>(openOffersStorage, "OpenOffers");
         openOffers.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
 

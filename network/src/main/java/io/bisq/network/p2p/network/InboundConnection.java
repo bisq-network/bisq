@@ -1,6 +1,6 @@
 package io.bisq.network.p2p.network;
 
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.NetworkProtoResolver;
 
 import java.net.Socket;
 
@@ -8,7 +8,7 @@ public class InboundConnection extends Connection {
     public InboundConnection(Socket socket,
                              MessageListener messageListener,
                              ConnectionListener connectionListener,
-                             ProtobufferResolver protobufferResolver) {
-        super(socket, messageListener, connectionListener, null, protobufferResolver);
+                             NetworkProtoResolver networkProtoResolver) {
+        super(socket, messageListener, connectionListener, null, networkProtoResolver);
     }
 }

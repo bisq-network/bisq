@@ -24,8 +24,8 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.persistance.Msg;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.network.Msg;
+import io.bisq.common.persistence.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryException;
@@ -113,7 +113,7 @@ public class TradeManager {
                         PriceFeedService priceFeedService,
                         FilterManager filterManager,
                         TradeStatisticsManager tradeStatisticsManager,
-                        ProtobufferResolver protobufferResolver,
+                        PersistenceProtoResolver persistenceProtoResolver,
                         @Named(Storage.DIR_KEY) File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
@@ -127,7 +127,7 @@ public class TradeManager {
         this.filterManager = filterManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
 
-        tradableListStorage = new Storage<>(storageDir, protobufferResolver);
+        tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
         trades = new TradableList<>(tradableListStorage, "PendingTrades");
         trades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
 

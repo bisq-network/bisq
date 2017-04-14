@@ -17,8 +17,8 @@
 
 package io.bisq.core.dao.blockchain;
 
-import io.bisq.common.persistance.Persistable;
-import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistence.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.*;
 
 // Map of any ever existing TxOutput which was a valid BSQ
@@ -51,8 +50,8 @@ public class BsqTXOMap implements Persistable {
     private transient ObservableMap<String, Tx> observableBurnedBSQTxMap;
     private transient final Storage<BsqTXOMap> storage;
 
-    public BsqTXOMap(File storageDir, ProtobufferResolver protobufferResolver) {
-        storage = new Storage<>(storageDir, protobufferResolver);
+    public BsqTXOMap(File storageDir, PersistenceProtoResolver persistenceProtoResolver) {
+        storage = new Storage<>(storageDir, persistenceProtoResolver);
         BsqTXOMap persisted = storage.initAndGetPersisted(this, "BsqTXOMap");
         if (persisted != null) {
             map.putAll(persisted.getMap());
