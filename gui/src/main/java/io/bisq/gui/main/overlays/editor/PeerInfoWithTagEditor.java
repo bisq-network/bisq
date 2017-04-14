@@ -51,8 +51,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private EventHandler<KeyEvent> keyEventEventHandler;
 
 
-    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences) {
-        super(preferences);
+    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer) {
         this.privateNotificationManager = privateNotificationManager;
         this.offer = offer;
         this.preferences = preferences;
@@ -151,7 +150,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
         keyEventEventHandler = event -> {
             if (new KeyCodeCombination(KeyCode.R, KeyCombination.ALT_DOWN).match(event)) {
-                new SendPrivateNotificationWindow(offer.getPubKeyRing(), offer.getMakerNodeAddress(), preferences)
+                new SendPrivateNotificationWindow(offer.getPubKeyRing(), offer.getMakerNodeAddress())
                         .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                         .show();
             }

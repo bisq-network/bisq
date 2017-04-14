@@ -204,7 +204,7 @@ public class BisqApp extends Application {
                     "/io/bisq/gui/CandleStickChart.css");
 
             // configure the system tray
-            SystemTray.create(primaryStage, shutDownHandler, preferences);
+            SystemTray.create(primaryStage, shutDownHandler);
 
             primaryStage.setOnCloseRequest(event -> {
                 event.consume();
@@ -229,16 +229,16 @@ public class BisqApp extends Application {
                 } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
                     if (walletsManager.areWalletsAvailable())
-                        new ShowWalletDataWindow(walletsManager, preferences).show();
+                        new ShowWalletDataWindow(walletsManager).show();
                     else
-                        new Popup<>(preferences).warning(Res.get("popup.warning.walletNotInitialized")).show();
+                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
                     TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
                     BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
                     if (walletService.isWalletReady())
-                        new SpendFromDepositTxWindow(tradeWalletService, preferences).show();
+                        new SpendFromDepositTxWindow(tradeWalletService).show();
                     else
-                        new Popup<>(preferences).warning(Res.get("popup.warning.walletNotInitialized")).show();
+                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (DevEnv.DEV_MODE && new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showDebugWindow();
                 }
@@ -270,7 +270,7 @@ public class BisqApp extends Application {
                 String osArchitecture = Utilities.getOSArchitecture();
                 // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
                 // Needs at least more testing on different machines...
-                new Popup<>(preferences).warning(Res.get("popup.warning.wrongVersion",
+                new Popup<>().warning(Res.get("popup.warning.wrongVersion",
                         osArchitecture,
                         Utilities.getJVMArchitecture(),
                         osArchitecture))
@@ -284,7 +284,7 @@ public class BisqApp extends Application {
 
     private void showSendAlertMessagePopup() {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
-        new SendAlertMessageWindow(preferences)
+        new SendAlertMessageWindow()
                 .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
                 .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
                 .show();
@@ -292,7 +292,7 @@ public class BisqApp extends Application {
 
     private void showFilterPopup() {
         FilterManager filterManager = injector.getInstance(FilterManager.class);
-        new FilterWindow(filterManager, preferences)
+        new FilterWindow(filterManager)
                 .onAddFilter(filterManager::addFilterMessageIfKeyIsValid)
                 .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
                 .show();
@@ -321,9 +321,9 @@ public class BisqApp extends Application {
                         String message = throwable.getMessage();
                         popupOpened = true;
                         if (message != null)
-                            new Popup(preferences).error(message).onClose(() -> popupOpened = false).show();
+                            new Popup<>().error(message).onClose(() -> popupOpened = false).show();
                         else
-                            new Popup(preferences).error(throwable.toString()).onClose(() -> popupOpened = false).show();
+                            new Popup<>().error(throwable.toString()).onClose(() -> popupOpened = false).show();
                     }
                 } catch (Throwable throwable3) {
                     log.error("Error at displaying Throwable.");
@@ -386,7 +386,7 @@ public class BisqApp extends Application {
     @Override
     public void stop() {
         if (!shutDownRequested) {
-            new Popup(preferences).headLine(Res.get("popup.shutDownInProgress.headline"))
+            new Popup<>().headLine(Res.get("popup.shutDownInProgress.headline"))
                     .backgroundInfo(Res.get("popup.shutDownInProgress.msg"))
                     .hideCloseButton()
                     .useAnimation(false)

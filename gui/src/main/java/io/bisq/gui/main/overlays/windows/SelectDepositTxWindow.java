@@ -19,7 +19,6 @@ package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -52,8 +51,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SelectDepositTxWindow(Preferences preferences) {
-        super(preferences);
+    public SelectDepositTxWindow() {
         type = Type.Attention;
     }
 

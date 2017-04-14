@@ -81,10 +81,10 @@ public class GUIUtil {
         return 0;
     }
 
-    public static void showFeeInfoBeforeExecute(Runnable runnable, Preferences preferences) {
+    public static void showFeeInfoBeforeExecute(Runnable runnable) {
         String key = "miningFeeInfo";
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
-            new Popup<>(preferences).information(Res.get("guiUtil.miningFeeInfo"))
+            new Popup<>().information(Res.get("guiUtil.miningFeeInfo"))
                     .dontShowAgainId(key)
                     .onClose(runnable::run)
                     .useIUnderstandButton()
@@ -101,9 +101,9 @@ public class GUIUtil {
             Storage<ListPersistable<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), protobufferResolver);
             paymentAccountsStorage.initAndGetPersisted(new ListPersistable<>(accounts), fileName);
             paymentAccountsStorage.queueUpForSave();
-            new Popup<>(preferences).feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
+            new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
         } else {
-            new Popup<>(preferences).warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
+            new Popup<>().warning(Res.get("guiUtil.accountExport.noAccountSetup")).show();
         }
     }
 
@@ -131,10 +131,10 @@ public class GUIUtil {
                             msg.append(Res.get("guiUtil.accountImport.noImport", id));
                         }
                     });
-                    new Popup<>(preferences).feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
+                    new Popup<>().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
 
                 } else {
-                    new Popup<>(preferences).warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
+                    new Popup<>().warning(Res.get("guiUtil.accountImport.noAccountsFound", path, fileName)).show();
                 }
             } else {
                 log.error("The selected file is not the expected file for import. The expected file name is: " + fileName + ".");
@@ -165,7 +165,7 @@ public class GUIUtil {
         } catch (RuntimeException | IOException e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            new Popup(preferences).error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+            new Popup<>().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
         }
     }
 
@@ -293,10 +293,10 @@ public class GUIUtil {
     }
 
 
-    public static void openWebPage(String target, Preferences preferences) {
+    public static void openWebPage(String target) {
         String key = "warnOpenURLWhenTorEnabled";
         if (DontShowAgainLookup.showAgain(key)) {
-            new Popup<>(preferences).information(Res.get("guiUtil.openWebBrowser.warning", target))
+            new Popup<>().information(Res.get("guiUtil.openWebBrowser.warning", target))
                     .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
                     .onAction(() -> {
                         DontShowAgainLookup.dontShowAgain(key, true);
@@ -356,9 +356,9 @@ public class GUIUtil {
         return parent != null ? (T) parent : null;
     }
 
-    public static void showClearXchangeWarning(Preferences preferences) {
+    public static void showClearXchangeWarning() {
         String key = "confirmClearXchangeRequirements";
-        new Popup(preferences).information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
+        new Popup<>().information(Res.get("payment.clearXchange.selected") + "\n" + Res.get("payment.clearXchange.info"))
                 .width(900)
                 .closeButtonText(Res.get("shared.iConfirm"))
                 .dontShowAgainId(key)

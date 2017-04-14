@@ -159,7 +159,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                         }
 
                         public void onFailure(@NotNull Throwable throwable) {
-                            UserThread.execute(() -> new Popup(preferences)
+                            UserThread.execute(() -> new Popup<>()
                                     .warning("We did not get a response for the request of the mining fee used " +
                                             "in the funding transaction.\n\n" +
                                             "Are you sure you used a sufficiently high fee of at least " +
@@ -601,7 +601,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         isWalletFunded.set(isBalanceSufficient(balance.get()));
         //noinspection PointlessBooleanExpression
         if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
-            walletFundedNotification = new Notification(preferences)
+            walletFundedNotification = new Notification()
                     .headLine(Res.get("notification.walletUpdate.headline"))
                     .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
                     .autoClose();

@@ -25,7 +25,6 @@ import io.bisq.core.payment.CountryBasedPaymentAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.BankAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
@@ -50,7 +49,6 @@ abstract class BankForm extends PaymentMethodForm {
     private static final Logger log = LoggerFactory.getLogger(BankForm.class);
 
     protected final BankAccountPayload bankAccountPayload;
-    private final Preferences preferences;
     private InputTextField bankNameInputTextField, bankIdInputTextField, branchIdInputTextField, accountNrInputTextField, holderIdInputTextField;
     private Label holderIdLabel;
     protected InputTextField holderNameInputTextField;
@@ -203,11 +201,10 @@ abstract class BankForm extends PaymentMethodForm {
     }
 
     BankForm(PaymentAccount paymentAccount, InputValidator inputValidator,
-             GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler, Preferences preferences) {
+             GridPane gridPane, int gridRow, BSFormatter formatter, Runnable closeHandler) {
         super(paymentAccount, inputValidator, gridPane, gridRow, formatter);
         this.closeHandler = closeHandler;
         this.bankAccountPayload = (BankAccountPayload) paymentAccount.paymentAccountPayload;
-        this.preferences = preferences;
     }
 
     @Override
@@ -291,7 +288,7 @@ abstract class BankForm extends PaymentMethodForm {
             Country selectedItem = countryComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 if (selectedItem.code.equals("US")) {
-                    new Popup<>(preferences).information(Res.get("payment.us.info"))
+                    new Popup<>().information(Res.get("payment.us.info"))
                             .onClose(closeHandler::run)
                             .show();
                 } else {
@@ -411,7 +408,7 @@ abstract class BankForm extends PaymentMethodForm {
             TradeCurrency selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
             FiatCurrency defaultCurrency = CurrencyUtil.getCurrencyByCountryCode(countryComboBox.getSelectionModel().getSelectedItem().code);
             if (!defaultCurrency.equals(selectedItem)) {
-                new Popup<>(preferences).warning(Res.get("payment.foreign.currency"))
+                new Popup<>().warning(Res.get("payment.foreign.currency"))
                         .actionButtonText(Res.get("shared.yes"))
                         .onAction(() -> {
                             paymentAccount.setSingleTradeCurrency(selectedItem);

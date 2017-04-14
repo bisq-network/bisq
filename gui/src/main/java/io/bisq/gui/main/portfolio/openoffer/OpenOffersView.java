@@ -122,7 +122,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         if (model.isBootstrapped()) {
             String key = "RemoveOfferWarning";
             if (DontShowAgainLookup.showAgain(key))
-                new Popup(preferences).warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(openOffer.getOffer().getMakerFee())))
+                new Popup<>().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(openOffer.getOffer().getMakerFee())))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOpenOffer(openOffer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
@@ -131,7 +131,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             else
                 doRemoveOpenOffer(openOffer);
         } else {
-            new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -141,7 +141,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     log.debug("Remove offer was successful");
                     String key = "WithdrawFundsAfterRemoveOfferInfo";
                     if (DontShowAgainLookup.showAgain(key))
-                        new Popup(preferences).instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
+                        new Popup<>().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
                                 .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                                 .dontShowAgainId(key)
@@ -149,7 +149,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 },
                 (message) -> {
                     log.error(message);
-                    new Popup(preferences).warning(Res.get("offerbook.removeOffer.failed", message)).show();
+                    new Popup<>().warning(Res.get("offerbook.removeOffer.failed", message)).show();
                 });
     }
 

@@ -122,7 +122,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         String code = selectedTradeCurrency.getCode();
         if (selectedTradeCurrency instanceof CryptoCurrency && ((CryptoCurrency) selectedTradeCurrency).isAsset()) {
             String name = selectedTradeCurrency.getName();
-            new Popup(preferences).information(Res.get("account.altcoin.popup.wallet.msg",
+            new Popup<>().information(Res.get("account.altcoin.popup.wallet.msg",
                     selectedTradeCurrency.getCodeAndName(),
                     name,
                     name))
@@ -132,17 +132,17 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
         switch (code) {
             case "XMR":
-                new Popup(preferences).information(Res.get("account.altcoin.popup.xmr.msg"))
+                new Popup<>().information(Res.get("account.altcoin.popup.xmr.msg"))
                         .useIUnderstandButton()
                         .show();
                 break;
             case "ZEC":
-                new Popup(preferences).information(Res.get("account.altcoin.popup.transparentTx.msg", "ZEC"))
+                new Popup<>().information(Res.get("account.altcoin.popup.transparentTx.msg", "ZEC"))
                         .useIUnderstandButton()
                         .show();
                 break;
             case "XZC":
-                new Popup(preferences).information(Res.get("account.altcoin.popup.transparentTx.msg", "XZC"))
+                new Popup<>().information(Res.get("account.altcoin.popup.transparentTx.msg", "XZC"))
                         .useIUnderstandButton()
                         .show();
                 break;
@@ -153,7 +153,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
         } else {
-            new Popup(preferences).warning(Res.get("shared.accountNameAlreadyUsed")).show();
+            new Popup<>().warning(Res.get("shared.accountNameAlreadyUsed")).show();
         }
     }
 
@@ -162,14 +162,14 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     }
 
     private void onDeleteAccount(PaymentAccount paymentAccount) {
-        new Popup(preferences).warning(Res.get("shared.askConfirmDeleteAccount"))
+        new Popup<>().warning(Res.get("shared.askConfirmDeleteAccount"))
                 .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
                     boolean isPaymentAccountUsed = model.onDeleteAccount(paymentAccount);
                     if (!isPaymentAccountUsed)
                         removeSelectAccountForm();
                     else
-                        UserThread.runAfter(() -> new Popup(preferences).warning(
+                        UserThread.runAfter(() -> new Popup<>().warning(
                                 Res.get("shared.cannotDeleteAccount"))
                                 .show(), 100, TimeUnit.MILLISECONDS);
                 })

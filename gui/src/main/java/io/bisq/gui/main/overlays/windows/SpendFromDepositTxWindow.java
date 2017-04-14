@@ -22,7 +22,6 @@ import io.bisq.common.UserThread;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.TradeWalletService;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -49,8 +48,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SpendFromDepositTxWindow(TradeWalletService tradeWalletService, Preferences preferences) {
-        super(preferences);
+    public SpendFromDepositTxWindow(TradeWalletService tradeWalletService) {
         this.tradeWalletService = tradeWalletService;
         type = Type.Attention;
     }
@@ -149,7 +147,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
                 log.error("onSuccess");
                 UserThread.execute(() -> {
                     String txId = result != null ? result.getHashAsString() : "null";
-                    new Popup<>(preferences)
+                    new Popup<>()
                             .information("Transaction successful published. Transaction ID: " + txId)
                             .show();
                 });
@@ -159,7 +157,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
             public void onFailure(@NotNull Throwable t) {
                 log.error(t.toString());
                 log.error("onFailure");
-                UserThread.execute(() -> new Popup<>(preferences).warning(t.toString()).show());
+                UserThread.execute(() -> new Popup<>().warning(t.toString()).show());
             }
         };
         onAction(() -> {
@@ -183,7 +181,7 @@ public class SpendFromDepositTxWindow extends Overlay<SpendFromDepositTxWindow> 
             } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
                 log.error(e.toString());
                 e.printStackTrace();
-                UserThread.execute(() -> new Popup<>(preferences).warning(e.toString()).show());
+                UserThread.execute(() -> new Popup<>().warning(e.toString()).show());
             }
         });
     }

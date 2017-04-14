@@ -228,7 +228,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             updateButtonDisableState();
             return true;
         } else {
-            new Popup(preferences).warning(Res.get("shared.notEnoughFunds",
+            new Popup<>().warning(Res.get("shared.notEnoughFunds",
                     btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoin.get()),
                     btcFormatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")

@@ -160,7 +160,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
         } else {
             String key = "showSeedWordsWarning";
             if (DontShowAgainLookup.showAgain(key)) {
-                new Popup(preferences).warning(Res.get("account.seed.warn.noPw.msg"))
+                new Popup<>().warning(Res.get("account.seed.warn.noPw.msg"))
                         .actionButtonText(Res.get("account.seed.warn.noPw.yes"))
                         .onAction(() -> {
                             DontShowAgainLookup.dontShowAgain(key, true);
@@ -216,7 +216,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private void onRestore() {
         if (walletsManager.hasPositiveBalance()) {
-            new Popup(preferences).warning(Res.get("seed.warn.walletNotEmpty.msg"))
+            new Popup<>().warning(Res.get("seed.warn.walletNotEmpty.msg"))
                     .actionButtonText(Res.get("seed.warn.walletNotEmpty.restore"))
                     .onAction(this::checkIfEncrypted)
                     .closeButtonText(Res.get("seed.warn.walletNotEmpty.emptyWallet"))
@@ -228,7 +228,7 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     private void checkIfEncrypted() {
         if (walletsManager.areWalletsEncrypted()) {
-            new Popup(preferences).information(Res.get("seed.warn.notEncryptedAnymore"))
+            new Popup<>().information(Res.get("seed.warn.notEncryptedAnymore"))
                     .closeButtonText(Res.get("shared.no"))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(this::doRestore)
@@ -245,12 +245,12 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
                 seed,
                 () -> UserThread.execute(() -> {
                     log.info("Wallets restored with seed words");
-                    new Popup(preferences).feedback(Res.get("seed.restore.success"))
+                    new Popup<>().feedback(Res.get("seed.restore.success"))
                             .useShutDownButton().show();
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());
-                    new Popup(preferences).error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline",
+                    new Popup<>().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline",
                             throwable.getMessage())))
                             .show();
                 }));

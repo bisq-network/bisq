@@ -22,7 +22,6 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.user.Preferences;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.app.BisqApp;
 import io.bisq.gui.components.BusyAnimation;
@@ -132,7 +131,6 @@ public abstract class Overlay<T extends Overlay> {
     protected Label headLineLabel;
     protected String dontShowAgainId;
     protected String dontShowAgainText;
-    protected Preferences preferences;
     protected ChangeListener<Number> positionListener;
     protected Timer centerTime;
     protected double buttonDistance = 20;
@@ -146,8 +144,7 @@ public abstract class Overlay<T extends Overlay> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Overlay(Preferences preferences) {
-        this.preferences = preferences;
+    public Overlay() {
     }
 
     public void show() {
@@ -323,7 +320,7 @@ public abstract class Overlay<T extends Overlay> {
 
     public T useReportBugButton() {
         this.closeButtonText = Res.get("shared.reportBug");
-        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bisq/bisq/issues", preferences));
+        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bisq/bisq/issues"));
         return (T) this;
     }
 
@@ -709,7 +706,7 @@ public abstract class Overlay<T extends Overlay> {
         gitHubButton.setOnAction(event -> {
             if (message != null)
                 Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("https://github.com/bisq/bisq/issues", preferences);
+            GUIUtil.openWebPage("https://github.com/bisq/bisq/issues");
         });
 
         Button forumButton = new Button(Res.get("popup.reportError.forum"));
@@ -721,7 +718,7 @@ public abstract class Overlay<T extends Overlay> {
         forumButton.setOnAction(event -> {
             if (message != null)
                 Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("http://forum.bisq.io", preferences);
+            GUIUtil.openWebPage("http://forum.bisq.io");
         });
     }
 

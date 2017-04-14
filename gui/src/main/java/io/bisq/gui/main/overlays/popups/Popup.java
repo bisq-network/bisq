@@ -17,7 +17,6 @@
 
 package io.bisq.gui.main.overlays.popups;
 
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.overlays.Overlay;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +24,7 @@ import org.slf4j.LoggerFactory;
 public class Popup<T extends Overlay> extends Overlay<Popup> {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public Popup(Preferences preferences) {
-        super(preferences);
+    public Popup() {
     }
 
     public void onReadyForDisplay() {

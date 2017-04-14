@@ -135,7 +135,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         tradeManager.checkOfferAvailability(offer,
                 () -> {
                 },
-                errorMessage -> new Popup(preferences).warning(errorMessage).show());
+                errorMessage -> new Popup<>().warning(errorMessage).show());
     }
 
     @Override
@@ -215,7 +215,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
                         }
 
                         public void onFailure(@NotNull Throwable throwable) {
-                            UserThread.execute(() -> new Popup(preferences)
+                            UserThread.execute(() -> new Popup<>()
                                     .warning("We did not get a response for the request of the mining fee used " +
                                             "in the funding transaction.\n\n" +
                                             "Are you sure you used a sufficiently high fee of at least " +
@@ -279,7 +279,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
                 tradeResultHandler,
                 errorMessage -> {
                     log.warn(errorMessage);
-                    new Popup<>(preferences).warning(errorMessage).show();
+                    new Popup<>().warning(errorMessage).show();
                 }
         );
     }
@@ -425,7 +425,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         isWalletFunded.set(isBalanceSufficient(balance.get()));
         //noinspection ConstantConditions,ConstantConditions
         if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
-            walletFundedNotification = new Notification(preferences)
+            walletFundedNotification = new Notification()
                     .headLine(Res.get("notification.walletUpdate.headline"))
                     .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
                     .autoClose();

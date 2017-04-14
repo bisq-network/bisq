@@ -176,7 +176,7 @@ class SpreadViewModel extends ActivatableViewModel {
                                 "sellOffer getCurrencyCode: " + sellOffers.get(0).getCurrencyCode() + "\n" +
                                 "buyOffer getCurrencyCode: " + buyOffers.get(0).getCurrencyCode() + "\n\n" +
                                 "Please copy and paste this data and send it to the developers so they can investigate the issue.";
-                        new Popup<>(preferences).error(msg).show();
+                        new Popup<>().error(msg).show();
                         log.error(t.toString());
                         t.printStackTrace();
                     } catch (Throwable t2) {

@@ -26,7 +26,6 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.Contract;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.util.BSFormatter;
@@ -61,8 +60,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ContractWindow(DisputeManager disputeManager, BSFormatter formatter, Preferences preferences) {
-        super(preferences);
+    public ContractWindow(DisputeManager disputeManager, BSFormatter formatter) {
         this.disputeManager = disputeManager;
         this.formatter = formatter;
         type = Type.Confirmation;

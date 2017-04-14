@@ -112,7 +112,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         model.onRemoveLanguage(locale);
 
         if (languagesListView.getItems().size() == 0) {
-            new Popup(preferences).warning(Res.get("account.arbitratorSelection.minOneArbitratorRequired")).show();
+            new Popup<>().warning(Res.get("account.arbitratorSelection.minOneArbitratorRequired")).show();
             model.onAddLanguage(LanguageUtil.getDefaultLanguageLocaleAsCode());
         }
     }
@@ -260,11 +260,11 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                                     if (isMyOwnRegisteredArbitrator) {
                                         String text = Res.get("account.arbitratorSelection.cannotSelectHimself");
                                         tableRow.setTooltip(new Tooltip(text));
-                                        tableRow.setOnMouseClicked(e -> new Popup(preferences).warning(
+                                        tableRow.setOnMouseClicked(e -> new Popup<>().warning(
                                                 text).show());
                                     } else if (!hasMatchingLanguage) {
                                         tableRow.setTooltip(new Tooltip(Res.get("account.arbitratorSelection.noMatchingLang")));
-                                        tableRow.setOnMouseClicked(e -> new Popup(preferences)
+                                        tableRow.setOnMouseClicked(e -> new Popup<>()
                                                 .warning(Res.get("account.arbitratorSelection.noLang")).show());
                                     } else {
                                         tableRow.setOnMouseClicked(null);
@@ -292,7 +292,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                                                 } else if (model.isDeselectAllowed(item)) {
                                                     onRemoveArbitrator(item);
                                                 } else {
-                                                    new Popup(preferences).warning(Res.get("account.arbitratorSelection.minOne")).show();
+                                                    new Popup<>().warning(Res.get("account.arbitratorSelection.minOne")).show();
                                                     checkBox.setSelected(true);
                                                 }
                                                 item.setIsSelected(checkBox.isSelected());

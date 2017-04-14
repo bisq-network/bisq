@@ -332,7 +332,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     FiatAccountsView.class,
                     "navigation.account");
         } else if (!model.hasPaymentAccountForCurrency()) {
-            new Popup(preferences).headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
+            new Popup<>().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
                     .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
                     .actionButtonText(Res.get("offerbook.yesCreateOffer"))
                     .onAction(() -> {
@@ -370,13 +370,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     FiatAccountsView.class,
                     "navigation.account");
         } else if (!hasSameProtocolVersion) {
-            new Popup(preferences).warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
+            new Popup<>().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
         } else if (isIgnored) {
-            new Popup(preferences).warning(Res.get("offerbook.warning.userIgnored")).show();
+            new Popup<>().warning(Res.get("offerbook.warning.userIgnored")).show();
         } else if (isOfferBanned) {
-            new Popup(preferences).warning(Res.get("offerbook.warning.offerBlocked")).show();
+            new Popup<>().warning(Res.get("offerbook.warning.offerBlocked")).show();
         } else if (isNodeBanned) {
-            new Popup(preferences).warning(Res.get("offerbook.warning.nodeBlocked")).show();
+            new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         }
     }
 
@@ -384,14 +384,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         if (model.isBootstrapped())
             offerActionHandler.onTakeOffer(offer);
         else
-            new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
     }
 
     private void onRemoveOpenOffer(Offer offer) {
         if (model.isBootstrapped()) {
             String key = "RemoveOfferWarning";
             if (DontShowAgainLookup.showAgain(key))
-                new Popup(preferences).warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(offer.getMakerFee())))
+                new Popup<>().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(offer.getMakerFee())))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOffer(offer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
@@ -400,7 +400,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             else
                 doRemoveOffer(offer);
         } else {
-            new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -410,7 +410,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 () -> {
                     log.debug(Res.get("offerbook.removeOffer.success"));
                     if (DontShowAgainLookup.showAgain(key))
-                        new Popup(preferences).instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
+                        new Popup<>().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
                                 .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                                 .dontShowAgainId(key)
@@ -418,12 +418,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 },
                 (message) -> {
                     log.error(message);
-                    new Popup(preferences).warning(Res.get("offerbook.removeOffer.failed", message)).show();
+                    new Popup<>().warning(Res.get("offerbook.removeOffer.failed", message)).show();
                 });
     }
 
     private void openPopupForMissingAccountSetup(String headLine, String message, Class target, String targetAsString) {
-        new Popup(preferences).headLine(headLine)
+        new Popup<>().headLine(headLine)
                 .instruction(message)
                 .actionButtonTextWithGoTo(targetAsString)
                 .onAction(() -> {

@@ -3,7 +3,6 @@ package io.bisq.gui.main.overlays.notifications;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.overlays.Overlay;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -26,8 +25,7 @@ public class Notification extends Overlay<Notification> {
     private boolean autoClose;
     private Timer autoCloseTimer;
 
-    public Notification(Preferences preferences) {
-        super(preferences);
+    public Notification() {
         width = 345; // 320 visible bg because of insets
         NotificationCenter.add(this);
         type = Type.Notification;

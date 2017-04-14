@@ -85,8 +85,8 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private final BtcWalletService walletService;
     private final FeeService feeService;
+    private Preferences preferences;
     private final BSFormatter formatter;
-    private final Preferences preferences;
     private String paymentLabelString;
     private final ObservableList<DepositListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<DepositListItem> sortedList = new SortedList<>(observableList);
@@ -102,12 +102,12 @@ public class DepositView extends ActivatableView<VBox, Void> {
     @Inject
     private DepositView(BtcWalletService walletService,
                         FeeService feeService,
-                        BSFormatter formatter,
-                        Preferences preferences) {
+                        Preferences preferences,
+                        BSFormatter formatter) {
         this.walletService = walletService;
         this.feeService = feeService;
-        this.formatter = formatter;
         this.preferences = preferences;
+        this.formatter = formatter;
     }
 
     @Override
@@ -150,15 +150,14 @@ public class DepositView extends ActivatableView<VBox, Void> {
         Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
-                        () -> new QRCodeWindow(getBitcoinURI(), preferences).show(),
-                        200, TimeUnit.MILLISECONDS)
-        , preferences));
+                        () -> new QRCodeWindow(getBitcoinURI()).show(),
+                        200, TimeUnit.MILLISECONDS)));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 1);
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(qrCodeImageView);
 
-        Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, Res.getWithCol("shared.address"), preferences);
+        Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, Res.getWithCol("shared.address"));
         addressLabel = addressTuple.first;
         //GridPane.setValignment(addressLabel, VPos.TOP);
         //GridPane.setMargin(addressLabel, new Insets(3, 0, 0, 0));
@@ -190,7 +189,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         generateNewAddressButton.setOnAction(event -> {
             boolean hasUnUsedAddress = observableList.stream().filter(e -> e.getNumTxOutputs() == 0).findAny().isPresent();
             if (hasUnUsedAddress) {
-                new Popup(preferences).warning(Res.get("funds.deposit.selectUnused")).show();
+                new Popup<>().warning(Res.get("funds.deposit.selectUnused")).show();
             } else {
                 AddressEntry newSavingsAddressEntry = walletService.getOrCreateUnusedAddressEntry(AddressEntry.Context.AVAILABLE);
                 updateList();
@@ -275,7 +274,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private void openBlockExplorer(DepositListItem item) {
         if (item.getAddressString() != null)
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), preferences);
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

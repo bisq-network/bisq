@@ -134,7 +134,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                             () -> compensationRequestsTitledGroupBg.setManaged(!CompensationViewItem.isEmpty()));
                     UserThread.execute(selectionModel::clearSelection);
                 } else {
-                    new Popup<>(preferences).warning(Res.get("dao.voting.requestAlreadyAdded")).show();
+                    new Popup<>().warning(Res.get("dao.voting.requestAlreadyAdded")).show();
                 }
             }
 
@@ -163,7 +163,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                             () -> parametersTitledGroupBg.setManaged(!ParameterViewItem.isEmpty()));
                     UserThread.execute(selectionModel::clearSelection);
                 } else {
-                    new Popup<>(preferences).warning(Res.get("dao.voting.parameterAlreadyAdded")).show();
+                    new Popup<>().warning(Res.get("dao.voting.parameterAlreadyAdded")).show();
                 }
             }
             parametersTitledGroupBg.setManaged(!ParameterViewItem.isEmpty());
@@ -206,11 +206,11 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             log.error(voteItemsList.toString());
             //TODO
             if (voteItemsList.isMyVote()) {
-                new Popup<>(preferences).warning(Res.get("dao.voting.votedAlready")).show();
+                new Popup<>().warning(Res.get("dao.voting.votedAlready")).show();
             } else if (!voteItemsList.getAllVoteItemList().stream().filter(VoteItem::hasVoted).findAny().isPresent() &&
                     !voteItemsList.getAllVoteItemList().stream().filter(e -> e instanceof CompensationRequestVoteItemCollection)
                             .filter(e -> ((CompensationRequestVoteItemCollection) e).hasVotedOnAnyItem()).findAny().isPresent()) {
-                new Popup<>(preferences).warning(Res.get("dao.voting.notVotedOnAnyEntry")).show();
+                new Popup<>().warning(Res.get("dao.voting.notVotedOnAnyEntry")).show();
             } else {
                 try {
                     byte[] opReturnData = voteManager.calculateOpReturnData(voteItemsList);
@@ -221,7 +221,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                         Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                         Coin miningFee = signedTx.getFee();
                         int txSize = signedTx.bitcoinSerialize().length;
-                        new Popup(preferences).headLine(Res.get("dao.voting.confirmTx"))
+                        new Popup<>().headLine(Res.get("dao.voting.confirmTx"))
                                 .confirmation(Res.get("dao.tx.summary",
                                         btcFormatter.formatCoinWithCode(votingTxFee),
                                         btcFormatter.formatCoinWithCode(miningFee),
@@ -239,7 +239,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                                             public void onSuccess(@Nullable Transaction transaction) {
                                                 checkNotNull(transaction, "Transaction must not be null at doSend callback.");
                                                 log.error("tx successful published" + transaction.getHashAsString());
-                                                new Popup<>(preferences).confirmation(Res.get("dao.tx.published.success")).show();
+                                                new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
                                                 voteItemsList.setIsMyVote(true);
 
                                                 //TODO send to P2P network
@@ -247,13 +247,13 @@ public class VoteView extends ActivatableView<GridPane, Void> {
 
                                             @Override
                                             public void onFailure(@NotNull Throwable t) {
-                                                new Popup<>(preferences).warning(t.toString()).show();
+                                                new Popup<>().warning(t.toString()).show();
                                             }
                                         });
                                     } catch (WalletException | TransactionVerificationException e) {
                                         log.error(e.toString());
                                         e.printStackTrace();
-                                        new Popup<>(preferences).warning(e.toString());
+                                        new Popup<>().warning(e.toString());
                                     }
                                 })
                                 .closeButtonText(Res.get("shared.cancel"))
@@ -262,11 +262,11 @@ public class VoteView extends ActivatableView<GridPane, Void> {
                             ChangeBelowDustException | InsufficientFundsException e) {
                         log.error(e.toString());
                         e.printStackTrace();
-                        new Popup<>(preferences).warning(e.toString()).show();
+                        new Popup<>().warning(e.toString()).show();
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    new Popup<>(preferences).error(e.toString()).show();
+                    new Popup<>().error(e.toString()).show();
                 }
             }
         });

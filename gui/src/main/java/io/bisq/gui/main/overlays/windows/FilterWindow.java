@@ -22,7 +22,6 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.filter.Filter;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.filter.PaymentAccountFilter;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -68,8 +67,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public FilterWindow(FilterManager filterManager, Preferences preferences) {
-        super(preferences);
+    public FilterWindow(FilterManager filterManager) {
         this.filterManager = filterManager;
         type = Type.Attention;
     }
@@ -173,7 +171,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             if (sendFilterMessageHandler.handle(new Filter(offerIds, nodes, paymentAccountFilters), keyInputTextField.getText()))
                 hide();
             else
-                new Popup(preferences).warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
         });
 
         Button removeFilterMessageButton = new Button(Res.get("filterWindow.remove"));
@@ -182,7 +180,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 if (removeFilterMessageHandler.handle(keyInputTextField.getText()))
                     hide();
                 else
-                    new Popup(preferences).warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                    new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 

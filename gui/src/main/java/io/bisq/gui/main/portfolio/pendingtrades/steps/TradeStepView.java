@@ -296,7 +296,7 @@ public abstract class TradeStepView extends AnchorPane {
             notificationGroup.button.setId("open-support-button");
             notificationGroup.button.setOnAction(e -> model.dataModel.onOpenSupportTicket());
         }
-        new Popup(preferences).warning(trade.errorMessageProperty().getValue()
+        new Popup<>().warning(trade.errorMessageProperty().getValue()
                 + "\n\n" + Res.get("portfolio.pending.error.requestSupport"))
                 .show();
 

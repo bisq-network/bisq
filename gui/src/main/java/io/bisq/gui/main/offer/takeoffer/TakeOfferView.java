@@ -30,7 +30,6 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.DontShowAgainLookup;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -84,7 +83,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private final BSFormatter formatter;
     private final Transitions transitions;
     private final OfferDetailsWindow offerDetailsWindow;
-    private final Preferences preferences;
 
     private ScrollPane scrollPane;
     private GridPane gridPane;
@@ -133,15 +131,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                           Navigation navigation,
                           BSFormatter formatter,
                           Transitions transitions,
-                          OfferDetailsWindow offerDetailsWindow,
-                          Preferences preferences) {
+                          OfferDetailsWindow offerDetailsWindow) {
         super(model);
 
         this.navigation = navigation;
         this.formatter = formatter;
         this.transitions = transitions;
         this.offerDetailsWindow = offerDetailsWindow;
-        this.preferences = preferences;
     }
 
     @Override
@@ -212,7 +208,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (model.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
                 !clearXchangeWarningDisplayed) {
             clearXchangeWarningDisplayed = true;
-            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(preferences),
+            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(),
                     500, TimeUnit.MILLISECONDS);
         }
     }
@@ -279,7 +275,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         sellerSecurityDepositTextField.setText(model.getSellerSecurityDeposit());
 
         if (offer.getPrice() == null)
-            new Popup(preferences).warning(Res.get("takeOffer.noPriceFeedAvailable"))
+            new Popup<>().warning(Res.get("takeOffer.noPriceFeedAvailable"))
                     .onClose(this::close)
                     .show();
     }
@@ -294,7 +290,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         //noinspection ConstantConditions,ConstantConditions
         if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevEnv.DEV_MODE) {
             model.dataModel.swapTradeToSavings();
-            new Popup(preferences).information(Res.get("takeOffer.alreadyFunded.movedFunds"))
+            new Popup<>().information(Res.get("takeOffer.alreadyFunded.movedFunds"))
                     .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                     .show();
@@ -303,7 +299,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         // TODO need other implementation as it is displayed also if there are old funds in the wallet
         /*
         if (model.dataModel.isWalletFunded.get())
-            new Popup(preferences).warning("You have already funds paid in.\nIn the <Funds/Open for withdrawal> section you can withdraw those funds.").show();*/
+            new Popup<>().warning("You have already funds paid in.\nIn the <Funds/Open for withdrawal> section you can withdraw those funds.").show();*/
     }
 
     public void onTabSelected(boolean isSelected) {
@@ -330,7 +326,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 });
             }
         } else {
-            new Popup(preferences).headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
+            new Popup<>().headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
                     .instruction(Res.get("popup.warning.noArbitratorSelected.msg"))
                     .actionButtonTextWithGoTo("navigation.arbitratorSelection")
                     .onAction(() -> {
@@ -357,9 +353,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         if (!DevEnv.DEV_MODE) {
             String key = "securityDepositInfo";
-            new Popup(preferences).backgroundInfo(Res.get("popup.info.securityDepositInfo"))
+            new Popup<>().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
-                    .onAction(() -> GUIUtil.openWebPage("https://bisq.io/faq#6", preferences))
+                    .onAction(() -> GUIUtil.openWebPage("https://bisq.io/faq#6"))
                     .useIUnderstandButton()
                     .dontShowAgainId(key)
                     .show();
@@ -376,7 +372,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             //TODO remove
             log.error(message);
             key = "takeOfferFundWalletInfo";
-            new Popup(preferences).headLine(Res.get("takeOffer.takeOfferFundWalletInfo.headline"))
+            new Popup<>().headLine(Res.get("takeOffer.takeOfferFundWalletInfo.headline"))
                     .instruction(message)
                     .dontShowAgainId(key)
                     .show();
@@ -401,7 +397,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         if (model.dataModel.isWalletFunded.get()) {
             if (walletFundedNotification == null) {
-                walletFundedNotification = new Notification(preferences)
+                walletFundedNotification = new Notification()
                         .headLine(Res.get("notification.walletUpdate.headline"))
                         .notification(Res.get("notification.takeOffer.walletUpdate.msg", formatter.formatCoinWithCode(model.dataModel.totalToPayAsCoin.get())))
                         .autoClose();
@@ -490,7 +486,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 if (offerDetailsWindowDisplayed)
                     offerDetailsWindow.hide();
 
-                UserThread.runAfter(() -> new Popup(preferences).warning(newValue + "\n\n" +
+                UserThread.runAfter(() -> new Popup<>().warning(newValue + "\n\n" +
                         Res.get("takeOffer.alreadyPaidInFunds"))
                         .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                         .onAction(() -> {
@@ -510,7 +506,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         errorMessageSubscription = EasyBind.subscribe(model.errorMessage, newValue -> {
             if (newValue != null) {
-                new Popup(preferences).error(Res.get("takeOffer.error.message", model.errorMessage.get()) +
+                new Popup<>().error(Res.get("takeOffer.error.message", model.errorMessage.get()) +
                         Res.get("popup.error.tryRestart"))
                         .onClose(() -> {
                             errorPopupDisplayed.set(true);
@@ -537,7 +533,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         showWarningInvalidBtcDecimalPlacesSubscription = EasyBind.subscribe(model.showWarningInvalidBtcDecimalPlaces, newValue -> {
             if (newValue) {
-                new Popup(preferences).warning(Res.get("takeOffer.amountPriceBox.warning.invalidBtcDecimalPlaces")).show();
+                new Popup<>().warning(Res.get("takeOffer.amountPriceBox.warning.invalidBtcDecimalPlaces")).show();
                 model.showWarningInvalidBtcDecimalPlaces.set(false);
             }
         });
@@ -550,7 +546,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
                     String key = "takeOfferSuccessInfo";
                     if (DontShowAgainLookup.showAgain(key)) {
-                        UserThread.runAfter(() -> new Popup(preferences).headLine(Res.get("takeOffer.success.headline"))
+                        UserThread.runAfter(() -> new Popup<>().headLine(Res.get("takeOffer.success.headline"))
                                 .feedback(Res.get("takeOffer.success.info"))
                                 .actionButtonTextWithGoTo("navigation.portfolio.pending")
                                 .dontShowAgainId(key)
@@ -572,7 +568,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 (isWalletFunded, isMainNet, isFeeSufficient) -> isWalletFunded && isMainNet && !isFeeSufficient);
         noSufficientFeeSubscription = noSufficientFeeBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue)
-                new Popup(preferences).warning("The mining fee from your funding transaction is not sufficiently high.\n\n" +
+                new Popup<>().warning("The mining fee from your funding transaction is not sufficiently high.\n\n" +
                         "You need to use at least a mining fee of " +
                         model.formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + ".\n\n" +
                         "The fee used in your funding transaction was only " +
@@ -870,16 +866,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
-                        () -> new QRCodeWindow(getBitcoinURI(), preferences).show(),
-                        200, TimeUnit.MILLISECONDS)
-        , preferences));
+                        () -> new QRCodeWindow(getBitcoinURI()).show(),
+                        200, TimeUnit.MILLISECONDS)));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 2);
         GridPane.setRowSpan(qrCodeImageView, 3);
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE - 9, 0, 0, 5));
         gridPane.getChildren().add(qrCodeImageView);
 
-        Tuple2<Label, AddressTextField> addressTuple = FormBuilder.addLabelAddressTextField(gridPane, ++gridRow, Res.get("shared.tradeWalletAddress"), preferences);
+        Tuple2<Label, AddressTextField> addressTuple = FormBuilder.addLabelAddressTextField(gridPane, ++gridRow, Res.get("shared.tradeWalletAddress"));
         addressLabel = addressTuple.first;
         addressLabel.setVisible(false);
         addressTextField = addressTuple.second;
@@ -903,7 +898,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         label.setPadding(new Insets(5, 0, 0, 0));
         Button fundFromExternalWalletButton = new Button(Res.get("shared.fundFromExternalWalletButton"));
         fundFromExternalWalletButton.setDefaultButton(false);
-        fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet, preferences));
+        fundFromExternalWalletButton.setOnAction(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
         waitingForFundsBusyAnimation = new BusyAnimation(false);
         waitingForFundsLabel = new Label();
         waitingForFundsLabel.setPadding(new Insets(5, 0, 0, 0));
@@ -928,7 +923,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         cancelButton2 = FormBuilder.addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
             if (model.dataModel.isWalletFunded.get()) {
-                new Popup(preferences).warning(Res.get("takeOffer.alreadyFunded.askCancel"))
+                new Popup<>().warning(Res.get("takeOffer.alreadyFunded.askCancel"))
                         .closeButtonText(Res.get("shared.no"))
                         .actionButtonText(Res.get("shared.yesCancel"))
                         .onAction(() -> {
@@ -950,7 +945,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception ex) {
             log.warn(ex.getMessage());
-            new Popup(preferences).warning(Res.get("shared.openDefaultWalletFailed")).show();
+            new Popup<>().warning(Res.get("shared.openDefaultWalletFailed")).show();
         }
     }
 

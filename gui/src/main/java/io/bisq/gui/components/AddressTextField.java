@@ -21,7 +21,6 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.GUIUtil;
 import javafx.beans.property.ObjectProperty;
@@ -46,14 +45,13 @@ public class AddressTextField extends AnchorPane {
     private final StringProperty paymentLabel = new SimpleStringProperty();
     private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>(Coin.ZERO);
     private boolean wasPrimaryButtonDown;
-    private Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressTextField(Preferences preferences) {
+    public AddressTextField() {
         TextField textField = new TextField();
         textField.setId("address-text-field");
         textField.setEditable(false);
@@ -64,7 +62,7 @@ public class AddressTextField extends AnchorPane {
         textField.setOnMousePressed(event -> wasPrimaryButtonDown = event.isPrimaryButtonDown());
         textField.setOnMouseReleased(event -> {
             if (wasPrimaryButtonDown)
-                GUIUtil.showFeeInfoBeforeExecute(AddressTextField.this::openWallet, preferences);
+                GUIUtil.showFeeInfoBeforeExecute(AddressTextField.this::openWallet);
 
             wasPrimaryButtonDown = false;
         });
@@ -78,7 +76,7 @@ public class AddressTextField extends AnchorPane {
         extWalletIcon.getStyleClass().add("copy-icon");
         Tooltip.install(extWalletIcon, new Tooltip(tooltipText));
         AwesomeDude.setIcon(extWalletIcon, AwesomeIcon.SIGNIN);
-        extWalletIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet, preferences));
+        extWalletIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
 
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
@@ -88,7 +86,7 @@ public class AddressTextField extends AnchorPane {
         copyIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(() -> {
             if (address.get() != null && address.get().length() > 0)
                 Utilities.copyToClipboard(address.get());
-        }, preferences));
+        }));
 
         AnchorPane.setRightAnchor(copyIcon, 5.0);
         AnchorPane.setRightAnchor(extWalletIcon, 30.0);
@@ -103,7 +101,7 @@ public class AddressTextField extends AnchorPane {
             Utilities.openURI(URI.create(getBitcoinURI()));
         } catch (Exception e) {
             log.warn(e.getMessage());
-            new Popup(preferences).warning(Res.get("addressTextField.openWallet.failed")).show();
+            new Popup<>().warning(Res.get("addressTextField.openWallet.failed")).show();
         }
     }
 

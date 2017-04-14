@@ -121,7 +121,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                 Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                 Coin miningFee = signedTx.getFee();
                 int txSize = signedTx.bitcoinSerialize().length;
-                new Popup(preferences).headLine(Res.get("dao.wallet.send.sendFunds.headline"))
+                new Popup<>().headLine(Res.get("dao.wallet.send.sendFunds.headline"))
                         .confirmation(Res.get("dao.wallet.send.sendFunds.details",
                                 bsqFormatter.formatCoinWithCode(receiverAmount),
                                 receiversAddressInputTextField.getText(),
@@ -147,13 +147,13 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                                     @Override
                                     public void onFailure(@NotNull Throwable t) {
                                         log.error(t.toString());
-                                        new Popup<>(preferences).warning(t.toString());
+                                        new Popup<>().warning(t.toString());
                                     }
                                 });
                             } catch (WalletException | TransactionVerificationException e) {
                                 log.error(e.toString());
                                 e.printStackTrace();
-                                new Popup<>(preferences).warning(e.toString());
+                                new Popup<>().warning(e.toString());
                             }
                         })
                         .closeButtonText(Res.get("shared.cancel"))
@@ -161,7 +161,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
             } catch (Throwable t) {
                 log.error(t.toString());
                 t.printStackTrace();
-                new Popup<>(preferences).warning(t.getMessage()).show();
+                new Popup<>().warning(t.getMessage()).show();
             }
         });
     }

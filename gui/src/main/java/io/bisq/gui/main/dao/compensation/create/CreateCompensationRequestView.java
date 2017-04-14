@@ -165,7 +165,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                 Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
                 Coin miningFee = signedTx.getFee();
                 int txSize = signedTx.bitcoinSerialize().length;
-                new Popup(preferences).headLine(Res.get("dao.compensation.create.confirm"))
+                new Popup<>().headLine(Res.get("dao.compensation.create.confirm"))
                         .confirmation(Res.get("dao.tx.summary",
                                 btcFormatter.formatCoinWithCode(createCompensationRequestFee),
                                 btcFormatter.formatCoinWithCode(miningFee),
@@ -185,19 +185,19 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                                         compensationRequestPayload.setFeeTxId(transaction.getHashAsString());
                                         compensationRequestManager.addToP2PNetwork(compensationRequestPayload);
                                         compensationRequestDisplay.clearForm();
-                                        new Popup<>(preferences).confirmation(Res.get("dao.tx.published.success")).show();
+                                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
                                     }
 
                                     @Override
                                     public void onFailure(@NotNull Throwable t) {
                                         log.error(t.toString());
-                                        new Popup<>(preferences).warning(t.toString()).show();
+                                        new Popup<>().warning(t.toString()).show();
                                     }
                                 });
                             } catch (WalletException | TransactionVerificationException e) {
                                 log.error(e.toString());
                                 e.printStackTrace();
-                                new Popup<>(preferences).warning(e.toString());
+                                new Popup<>().warning(e.toString());
                             }
                         })
                         .closeButtonText(Res.get("shared.cancel"))
@@ -206,7 +206,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                     TransactionVerificationException | WalletException | InsufficientMoneyException | ChangeBelowDustException e) {
                 log.error(e.toString());
                 e.printStackTrace();
-                new Popup<>(preferences).warning(e.toString()).show();
+                new Popup<>().warning(e.toString()).show();
             }
         });
     }

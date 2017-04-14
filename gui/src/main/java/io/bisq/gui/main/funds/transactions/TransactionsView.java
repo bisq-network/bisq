@@ -304,12 +304,12 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private void openTxInBlockExplorer(TransactionsListItem item) {
         if (item.getTxId() != null)
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + item.getTxId(), preferences);
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + item.getTxId());
     }
 
     private void openAddressInBlockExplorer(TransactionsListItem item) {
         if (item.getAddressString() != null) {
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), preferences);
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
         }
     }
 
@@ -563,10 +563,10 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 if (tradable != null)
                     btcWalletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
 
-                new Popup(preferences).information(Res.get("funds.tx.txSent")).show();
-            }, errorMessage -> new Popup(preferences).warning(errorMessage).show());
+                new Popup<>().information(Res.get("funds.tx.txSent")).show();
+            }, errorMessage -> new Popup<>().warning(errorMessage).show());
         } catch (Throwable e) {
-            new Popup(preferences).warning(e.getMessage()).show();
+            new Popup<>().warning(e.getMessage()).show();
         }
     }
 
@@ -656,7 +656,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         });
         // This is not intended for the public so we don't translate here
         String message = stringBuilder.toString() + "\nNo. of transactions by day:" + transactionsByDayStringBuilder.toString();
-        new Popup(preferences).headLine("Statistical info")
+        new Popup<>().headLine("Statistical info")
                 .information(message)
                 .actionButtonText("Copy")
                 .onAction(() -> Utilities.copyToClipboard(message +

@@ -81,13 +81,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private BsqTxView(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
                       BsqBlockchainManager bsqBlockchainManager,
 
-                      BtcWalletService btcWalletService, BsqBalanceUtil bsqBalanceUtil, Preferences preferences) {
+                      BtcWalletService btcWalletService, BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bsqBlockchainManager = bsqBlockchainManager;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
-        this.preferences = preferences;
     }
 
     @Override
@@ -165,7 +164,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
             log.error("invalidBsqTransactions " + txIds);
             String key = "invalidBsqTransactionsWarning_" + txIds;
             if (DontShowAgainLookup.showAgain(key))
-                new Popup(preferences).warning("We detected invalid Bsq transactions.\n" +
+                new Popup<>().warning("We detected invalid Bsq transactions.\n" +
                         "This must not happen if you used the bisq application only to send or receive BSQ.\n\n" +
                         "invalidBsqTransactionIds=" + txIds.toString())
                         .width(800)
@@ -356,12 +355,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     private void openTxInBlockExplorer(BsqTxListItem item) {
         if (item.getTxId() != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId(), preferences);
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId());
     }
 
     private void openAddressInBlockExplorer(BsqTxListItem item) {
         if (item.getAddress() != null) {
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().addressUrl + item.getAddress(), preferences);
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().addressUrl + item.getAddress());
         }
     }
 

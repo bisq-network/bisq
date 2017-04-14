@@ -36,7 +36,6 @@ import io.bisq.core.arbitration.messages.DisputeCommunicationMsg;
 import io.bisq.core.trade.Contract;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.BusyAnimation;
@@ -109,7 +108,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final P2PService p2PService;
 
     private final List<Attachment> tempAttachments = new ArrayList<>();
-    private final Preferences preferences;
 
     private TableView<Dispute> tableView;
     private SortedList<Dispute> sortedList;
@@ -145,10 +143,16 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TraderDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager, Stage stage,
-                             BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow, PrivateNotificationManager privateNotificationManager,
-                             ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow, P2PService p2PService,
-                             Preferences preferences) {
+    public TraderDisputeView(DisputeManager disputeManager,
+                             KeyRing keyRing,
+                             TradeManager tradeManager,
+                             Stage stage,
+                             BSFormatter formatter,
+                             DisputeSummaryWindow disputeSummaryWindow,
+                             PrivateNotificationManager privateNotificationManager,
+                             ContractWindow contractWindow,
+                             TradeDetailsWindow tradeDetailsWindow,
+                             P2PService p2PService) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
         this.tradeManager = tradeManager;
@@ -159,7 +163,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         this.contractWindow = contractWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.p2PService = p2PService;
-        this.preferences = preferences;
     }
 
     @Override
@@ -296,7 +299,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 });
                 String message = stringBuilder.toString();
                 // We don't translate that as it is not intended for the public
-                new Popup(preferences).headLine("All disputes (" + disputeGroups.size() + ")")
+                new Popup<>().headLine("All disputes (" + disputeGroups.size() + ")")
                         .information(message)
                         .width(1000)
                         .actionButtonText("Copy")
@@ -318,7 +321,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     else
                         nodeAddress = selectedDispute.getContract().getSellerNodeAddress();
 
-                    new SendPrivateNotificationWindow(pubKeyRing, nodeAddress, preferences)
+                    new SendPrivateNotificationWindow(pubKeyRing, nodeAddress)
                             .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                             .show();
                 }
@@ -482,7 +485,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             disputeSummaryWindow.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
                     .show(dispute);
         } else {
-            new Popup<>(preferences)
+            new Popup<>()
                     .warning(Res.get("support.wrongVersion", protocolVersion))
                     .show();
         }
@@ -506,9 +509,9 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                         int size = filesAsBytes.length;
                         int newSize = totalSize + size;
                         if (newSize > maxMsgSize) {
-                            new Popup(preferences).warning(Res.get("support.attachmentTooLarge", (newSize / 1024), maxSizeInKB)).show();
+                            new Popup<>().warning(Res.get("support.attachmentTooLarge", (newSize / 1024), maxSizeInKB)).show();
                         } else if (size > maxMsgSize) {
-                            new Popup(preferences).warning(Res.get("support.maxSize", maxSizeInKB)).show();
+                            new Popup<>().warning(Res.get("support.maxSize", maxSizeInKB)).show();
                         } else {
                             tempAttachments.add(new Attachment(result.getName(), filesAsBytes));
                             inputTextArea.setText(inputTextArea.getText() + "\n[" + Res.get("support.attachment") + " " + result.getName() + "]");
@@ -523,7 +526,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 }
             }
         } else {
-            new Popup(preferences).warning(Res.get("support.tooManyAttachments")).show();
+            new Popup<>().warning(Res.get("support.tooManyAttachments")).show();
         }
     }
 
@@ -633,7 +636,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     if (!text.isEmpty())
                         onSendMessage(text, selectedDispute);
                 } else {
-                    new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
+                    new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
                 }
             });
             inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));

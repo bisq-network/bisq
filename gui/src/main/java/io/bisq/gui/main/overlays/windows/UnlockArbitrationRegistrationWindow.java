@@ -19,7 +19,6 @@ package io.bisq.gui.main.overlays.windows;
 
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -52,8 +51,7 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public UnlockArbitrationRegistrationWindow(Preferences preferences) {
-        super(preferences);
+    public UnlockArbitrationRegistrationWindow() {
         if (keyInputTextField != null)
             keyInputTextField.textProperty().addListener(changeListener);
 
@@ -131,7 +129,7 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
             if (privKeyHandler.checkKey(keyInputTextField.getText()))
                 hide();
             else
-                new Popup(preferences).warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
         });
 
         Button closeButton = new Button(Res.get("shared.close"));

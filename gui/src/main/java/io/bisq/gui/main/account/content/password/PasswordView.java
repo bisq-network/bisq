@@ -108,7 +108,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                 if (walletsManager.areWalletsEncrypted()) {
                     if (walletsManager.checkAESKey(aesKey)) {
                         walletsManager.decryptWallets(aesKey);
-                        new Popup(preferences)
+                        new Popup<>()
                                 .feedback(Res.get("password.walletDecrypted"))
                                 .show();
                         passwordField.setText("");
@@ -116,13 +116,13 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
                         walletsManager.backupWallets();
                     } else {
                         pwButton.setDisable(false);
-                        new Popup(preferences)
+                        new Popup<>()
                                 .warning(Res.get("password.wrongPw"))
                                 .show();
                     }
                 } else {
                     walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
-                    new Popup(preferences)
+                    new Popup<>()
                             .feedback(Res.get("password.walletEncrypted"))
                             .show();
                     passwordField.setText("");

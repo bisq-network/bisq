@@ -20,7 +20,6 @@ package io.bisq.gui.main.dao.wallet.receive;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
-import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
@@ -97,7 +96,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
         GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         root.getChildren().add(qrCodeImageView);
 
-        addressTextField = addLabelAddressTextField(root, ++gridRow, Res.getWithCol("shared.address"), preferences).second;
+        addressTextField = addLabelAddressTextField(root, ++gridRow, Res.getWithCol("shared.address")).second;
         addressTextField.setPaymentLabel(paymentLabelString);
 
         amountTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.wallet.receive.amountOptional")).second;
@@ -115,9 +114,8 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
         });
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
-                        () -> new QRCodeWindow(getBitcoinURI(), preferences).show(),
-                        200, TimeUnit.MILLISECONDS), preferences
-        ));
+                        () -> new QRCodeWindow(getBitcoinURI()).show(),
+                        200, TimeUnit.MILLISECONDS)));
         addressTextField.setAddress(bsqFormatter.getBsqAddressStringFromAddress(bsqWalletService.freshReceiveAddress()));
         updateQRCode();
     }

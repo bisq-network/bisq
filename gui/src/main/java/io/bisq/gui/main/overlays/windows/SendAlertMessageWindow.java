@@ -21,7 +21,6 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.alert.Alert;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.overlays.Overlay;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -63,8 +62,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SendAlertMessageWindow(Preferences preferences) {
-        super(preferences);
+    public SendAlertMessageWindow() {
         type = Type.Attention;
     }
 
@@ -138,7 +136,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
                         keyInputTextField.getText()))
                     hide();
                 else
-                    new Popup(preferences).warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                    new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 
@@ -148,7 +146,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
                 if (removeAlertMessageHandler.handle(keyInputTextField.getText()))
                     hide();
                 else
-                    new Popup(preferences).warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                    new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 

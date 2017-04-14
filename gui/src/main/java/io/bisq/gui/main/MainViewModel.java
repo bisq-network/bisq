@@ -281,7 +281,7 @@ public class MainViewModel implements ViewModel {
             log.error("Startup timeout with unknown problem.");
             details = Res.get("popup.warning.unknownProblemAtStartup");
         }
-        startupTimeoutPopup = new Popup(preferences);
+        startupTimeoutPopup = new Popup<>();
         startupTimeoutPopup.warning(Res.get("popup.warning.startupFailed.timeout", details))
                 .useShutDownButton()
                 .show();
@@ -449,19 +449,19 @@ public class MainViewModel implements ViewModel {
                             log.error(exception.getMessage());
                             // Ugly, but no other way to cover that specific case
                             if (exception.getMessage().equals("org.bitcoinj.store.BlockStoreException: org.bitcoinj.store.BlockStoreException: Store file is already locked by another process")) {
-                                new Popup(preferences).warning(Res.get("popup.warning.startupFailed.twoInstances"))
+                                new Popup<>().warning(Res.get("popup.warning.startupFailed.twoInstances"))
                                         .useShutDownButton()
                                         .show();
                             } else {
-                                new Popup(preferences).warning(Res.get("error.spvFileCorrupted",
+                                new Popup<>().warning(Res.get("error.spvFileCorrupted",
                                         exception.getMessage()))
                                         .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
                                         .onAction(() -> {
                                             if (walletsSetup.reSyncSPVChain())
-                                                new Popup<>(preferences).feedback(Res.get("settings.net.reSyncSPVSuccess"))
+                                                new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
                                                         .useShutDownButton().show();
                                             else
-                                                new Popup<>(preferences).error(Res.get("settings.net.reSyncSPVFailed")).show();
+                                                new Popup<>().error(Res.get("settings.net.reSyncSPVFailed")).show();
                                         })
                                         .show();
                             }
@@ -552,7 +552,7 @@ public class MainViewModel implements ViewModel {
 
         feeService.onAllServicesInitialized();
 
-        daoManager.onAllServicesInitialized(errorMessage -> new Popup<>(preferences).error(errorMessage).show());
+        daoManager.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
 
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
@@ -571,7 +571,7 @@ public class MainViewModel implements ViewModel {
         String key = "remindPasswordAndBackup";
         user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
             if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(key) && change.wasAdded()) {
-                new Popup<>(preferences).headLine(Res.get("popup.securityRecommendation.headline"))
+                new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
                         .information(Res.get("popup.securityRecommendation.msg"))
                         .dontShowAgainId(key)
                         .show();
@@ -582,7 +582,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void showFirstPopupIfResyncSPVRequested() {
-        Popup firstPopup = new Popup<>(preferences);
+        Popup firstPopup = new Popup<>();
         firstPopup.information(Res.get("settings.net.reSyncSPVAfterRestart")).show();
         if (btcSyncProgress.get() == 1) {
             showSecondPopupIfResyncSPVRequested(firstPopup);
@@ -597,7 +597,7 @@ public class MainViewModel implements ViewModel {
     private void showSecondPopupIfResyncSPVRequested(Popup firstPopup) {
         firstPopup.hide();
         preferences.setResyncSpvRequested(false);
-        new Popup<>(preferences).information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
+        new Popup<>().information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
                 .hideCloseButton()
                 .useShutDownButton()
                 .show();
@@ -637,7 +637,7 @@ public class MainViewModel implements ViewModel {
                     e.printStackTrace();
                     String msg = Res.get("popup.warning.cryptoTestFailed", e.getMessage());
                     log.error(msg);
-                    UserThread.execute(() -> new Popup<>(preferences).warning(msg)
+                    UserThread.execute(() -> new Popup<>().warning(msg)
                             .useShutDownButton()
                             .useReportBugButton()
                             .show());
@@ -657,7 +657,7 @@ public class MainViewModel implements ViewModel {
                     .map(e -> e.getId() + "\n")
                     .collect(Collectors.toList()).toString()
                     .replace("[", "").replace("]", "");
-            new Popup<>(preferences)
+            new Popup<>()
                     .warning(Res.get("popup.warning.oldOffers.msg", offers))
                     .actionButtonText(Res.get("popup.warning.oldOffers.buttonText"))
                     .onAction(() -> openOfferManager.removeOpenOffers(outDatedOffers, null))
@@ -723,7 +723,7 @@ public class MainViewModel implements ViewModel {
                             key = "displayHalfTradePeriodOver" + trade.getId();
                             if (DontShowAgainLookup.showAgain(key)) {
                                 DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup(preferences).warning(Res.get("popup.warning.tradePeriod.halfReached",
+                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
                                         trade.getShortId(),
                                         formatter.formatDateTime(maxTradePeriodDate)))
                                         .show();
@@ -733,7 +733,7 @@ public class MainViewModel implements ViewModel {
                             key = "displayTradePeriodOver" + trade.getId();
                             if (DontShowAgainLookup.showAgain(key)) {
                                 DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup(preferences).warning(Res.get("popup.warning.tradePeriod.ended",
+                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
                                         trade.getShortId(),
                                         formatter.formatDateTime(maxTradePeriodDate)))
                                         .show();
@@ -912,11 +912,11 @@ public class MainViewModel implements ViewModel {
         if (alert != null &&
                 !alreadyDisplayed &&
                 (!alert.isUpdateInfo() || alert.isNewVersion()))
-            new DisplayAlertMessageWindow(preferences).alertMessage(alert).show();
+            new DisplayAlertMessageWindow().alertMessage(alert).show();
     }
 
     private void displayPrivateNotification(PrivateNotificationPayload privateNotification) {
-        new Popup<>(preferences).headLine(Res.get("popup.privateNotification.headline"))
+        new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
                 .attention(privateNotification.message)
                 .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
                 .onClose(privateNotificationManager::removePrivateNotification)

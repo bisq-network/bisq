@@ -297,7 +297,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 marketPriceMargin.set(btcFormatter.formatToPercent(percentage));
                             } catch (NumberFormatException t) {
                                 marketPriceMargin.set("");
-                                new Popup(preferences).warning(Res.get("validation.NaN")).show();
+                                new Popup<>().warning(Res.get("validation.NaN")).show();
                             }
                         } else {
                             log.debug("We don't have a market price. We use the static price instead.");
@@ -313,7 +313,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                     if (!newValue.isEmpty() && !newValue.equals("-")) {
                         double percentage = btcFormatter.parsePercentStringToDouble(newValue);
                         if (percentage >= 1 || percentage <= -1) {
-                            new Popup(preferences).warning(Res.get("popup.warning.tooLargePercentageValue") + "\n" +
+                            new Popup<>().warning(Res.get("popup.warning.tooLargePercentageValue") + "\n" +
                                     Res.get("popup.warning.examplePercentageValue"))
                                     .show();
                         } else {
@@ -343,7 +343,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 dataModel.calculateTotalToPay();
                                 updateButtonDisableState();
                             } else {
-                                new Popup(preferences).warning(Res.get("popup.warning.noPriceFeedAvailable")).show();
+                                new Popup<>().warning(Res.get("popup.warning.noPriceFeedAvailable")).show();
                                 marketPriceMargin.set("");
                             }
                         }
@@ -351,7 +351,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 } catch (Throwable t) {
                     log.error(t.toString());
                     t.printStackTrace();
-                    new Popup(preferences).warning(Res.get("validation.inputError", t.toString())).show();
+                    new Popup<>().warning(Res.get("validation.inputError", t.toString())).show();
                 }
             }
         };
@@ -593,7 +593,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             updateButtonDisableState();
             return true;
         } else {
-            new Popup(preferences).warning(Res.get("shared.notEnoughFunds",
+            new Popup<>().warning(Res.get("shared.notEnoughFunds",
                     btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoinProperty().get()),
                     btcFormatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
@@ -715,7 +715,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 String key = "buyerSecurityDepositLowerAsDefault";
                 if (preferences.showAgain(key) &&
                         btcFormatter.parseToCoin(buyerSecurityDeposit.get()).compareTo(defaultSecurityDeposit) < 0) {
-                    new Popup<>(preferences)
+                    new Popup<>()
                             .warning(Res.get("createOffer.tooLowSecDeposit.warning",
                                     btcFormatter.formatCoinWithCode(defaultSecurityDeposit)))
                             .width(800)
@@ -763,7 +763,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private void displayPriceOutOfRangePopup() {
-        Popup popup = new Popup(preferences);
+        Popup popup = new Popup<>();
         popup.warning(Res.get("createOffer.priceOutSideOfDeviation",
                 btcFormatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())))
                 .actionButtonText(Res.get("createOffer.changePrice"))

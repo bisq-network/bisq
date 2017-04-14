@@ -161,7 +161,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     }
 
     private void openBlockExplorer(ReservedListItem item) {
-        GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), preferences);
+        GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
     }
 
     private Optional<Tradable> getTradable(ReservedListItem item) {

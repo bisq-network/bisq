@@ -150,7 +150,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         useTorForBtcJCheckBox.setOnAction(event -> {
             boolean selected = useTorForBtcJCheckBox.isSelected();
             if (selected != preferences.getUseTorForBitcoinJ()) {
-                new Popup(preferences).information(Res.get("settings.net.needRestart"))
+                new Popup<>().information(Res.get("settings.net.needRestart"))
                         .actionButtonText(Res.get("shared.applyAndShutDown"))
                         .onAction(() -> {
                             preferences.setUseTorForBitcoinJ(selected);
@@ -164,7 +164,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
         reSyncSPVChainButton.setOnAction(event -> {
             if (walletsSetup.reSyncSPVChain()) {
-                new Popup<>(preferences).feedback(Res.get("settings.net.reSyncSPVSuccess"))
+                new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
                         .useShutDownButton()
                         .actionButtonText(Res.get("shared.shutDown"))
                         .onAction(() -> {
@@ -174,7 +174,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                         .hideCloseButton()
                         .show();
             } else {
-                new Popup<>(preferences).error(Res.get("settings.net.reSyncSPVFailed")).show();
+                new Popup<>().error(Res.get("settings.net.reSyncSPVFailed")).show();
             }
         });
 
@@ -202,7 +202,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 btcNodesPreFocusText = btcNodes.getText();
             }
             if (oldValue && !newValue && !btcNodesPreFocusText.equals(btcNodes.getText())) {
-                new Popup(preferences).information(Res.get("settings.net.needRestart"))
+                new Popup<>().information(Res.get("settings.net.needRestart"))
                         .actionButtonText(Res.get("shared.applyAndShutDown"))
                         .onAction(() -> {
                             if (btcNodes.getText().isEmpty()) {

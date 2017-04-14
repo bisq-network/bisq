@@ -21,7 +21,6 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.exceptions.BisqException;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.util.GUIUtil;
 import io.bisq.gui.util.ImageUtil;
 import javafx.application.Platform;
@@ -53,17 +52,15 @@ public class SystemTray {
     private final Stage stage;
     private final Runnable onExit;
     private final MenuItem toggleShowHideItem = new MenuItem(HIDE_WINDOW_LABEL);
-    private final Preferences preferences;
 
-    public static SystemTray create(Stage stage, Runnable onExit, Preferences preferences) {
-        systemTray = new SystemTray(stage, onExit, preferences);
+    public static SystemTray create(Stage stage, Runnable onExit) {
+        systemTray = new SystemTray(stage, onExit);
         return systemTray;
     }
 
-    private SystemTray(Stage stage, Runnable onExit, Preferences preferences) {
+    private SystemTray(Stage stage, Runnable onExit) {
         this.stage = stage;
         this.onExit = onExit;
-        this.preferences = preferences;
         init();
     }
 
@@ -128,7 +125,7 @@ public class SystemTray {
 
         aboutItem.addActionListener(e -> {
             try {
-                UserThread.execute(() -> GUIUtil.openWebPage("https://bisq.io", preferences));
+                UserThread.execute(() -> GUIUtil.openWebPage("https://bisq.io"));
             } catch (Exception e1) {
                 e1.printStackTrace();
             }

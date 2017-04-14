@@ -228,7 +228,7 @@ public class SellerStep3View extends TradeStepView {
                     }
                 }
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
-                new Popup(preferences)
+                new Popup<>()
                         .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
                         .confirmation(message)
                         .width(700)
@@ -240,7 +240,7 @@ public class SellerStep3View extends TradeStepView {
                 confirmPaymentReceived();
             }
         } else {
-            new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -273,7 +273,7 @@ public class SellerStep3View extends TradeStepView {
         }
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
-            new Popup(preferences).headLine(Res.get("popup.attention.forTradeWithId", id))
+            new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
                     .attention(message)
                     .show();
         }
@@ -291,7 +291,7 @@ public class SellerStep3View extends TradeStepView {
         }, errorMessage -> {
             confirmButton.setDisable(false);
             busyAnimation.stop();
-            new Popup(preferences).warning(Res.get("popup.warning.sendMsgFailed")).show();
+            new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 

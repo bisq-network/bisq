@@ -161,7 +161,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
     }
 
     private void openBlockExplorer(LockedListItem item) {
-        GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), preferences);
+        GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
     }
 
     private Optional<Tradable> getTradable(LockedListItem item) {

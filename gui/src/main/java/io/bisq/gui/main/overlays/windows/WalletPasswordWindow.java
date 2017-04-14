@@ -23,7 +23,6 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.crypto.ScryptUtil;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.PasswordTextField;
 import io.bisq.gui.main.overlays.Overlay;
@@ -94,8 +93,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
     }
 
     @Inject
-    private WalletPasswordWindow(WalletsManager walletsManager, Preferences preferences) {
-        super(preferences);
+    private WalletPasswordWindow(WalletsManager walletsManager) {
         this.walletsManager = walletsManager;
         type = Type.Attention;
         width = 800;
@@ -206,7 +204,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
                         busyAnimation.stop();
                         deriveStatusLabel.setText("");
 
-                        UserThread.runAfter(() -> new Popup(preferences)
+                        UserThread.runAfter(() -> new Popup<>()
                                 .warning(Res.get("password.wrongPw"))
                                 .onClose(this::blurAgain).show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS);
                     }
@@ -334,7 +332,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     private void onRestore() {
         if (walletsManager.hasPositiveBalance()) {
-            new Popup(preferences).warning(Res.get("seed.warn.walletNotEmpty.msg"))
+            new Popup<>().warning(Res.get("seed.warn.walletNotEmpty.msg"))
                     .actionButtonText(Res.get("seed.warn.walletNotEmpty.restore"))
                     .onAction(this::checkIfEncrypted)
                     .closeButtonText(Res.get("seed.warn.walletNotEmpty.emptyWallet"))
@@ -346,7 +344,7 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
 
     private void checkIfEncrypted() {
         if (walletsManager.areWalletsEncrypted()) {
-            new Popup(preferences).information(Res.get("seed.warn.notEncryptedAnymore"))
+            new Popup<>().information(Res.get("seed.warn.notEncryptedAnymore"))
                     .closeButtonText(Res.get("shared.no"))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(this::doRestore)
@@ -363,12 +361,12 @@ public class WalletPasswordWindow extends Overlay<WalletPasswordWindow> {
                 seed,
                 () -> UserThread.execute(() -> {
                     log.debug("Wallet restored with seed words");
-                    new Popup(preferences).feedback(Res.get("seed.restore.success"))
+                    new Popup<>().feedback(Res.get("seed.restore.success"))
                             .useShutDownButton();
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.getMessage());
-                    new Popup(preferences).error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline",
+                    new Popup<>().error(Res.get("seed.restore.error", Res.get("shared.errorMessageInline",
                             throwable.getMessage())))
                             .show();
                 }));

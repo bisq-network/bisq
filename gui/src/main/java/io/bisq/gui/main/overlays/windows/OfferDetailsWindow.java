@@ -27,7 +27,6 @@ import io.bisq.common.util.Tuple3;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
-import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.components.BusyAnimation;
@@ -59,7 +58,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     protected static final Logger log = LoggerFactory.getLogger(OfferDetailsWindow.class);
 
     private final BSFormatter formatter;
-    protected final Preferences preferences;
     private final User user;
     private final KeyRing keyRing;
     private final Navigation navigation;
@@ -76,11 +74,9 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferDetailsWindow(BSFormatter formatter, Preferences preferences, User user, KeyRing keyRing,
+    public OfferDetailsWindow(BSFormatter formatter, User user, KeyRing keyRing,
                               Navigation navigation) {
-        super(preferences);
         this.formatter = formatter;
-        this.preferences = preferences;
         this.user = user;
         this.keyRing = keyRing;
         this.navigation = navigation;
@@ -378,7 +374,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                     takeOfferHandlerOptional.get().run();
                 }
             } else {
-                new Popup(preferences).warning(Res.get("offerDetailsWindow.warn.noArbitrator")).show();
+                new Popup<>().warning(Res.get("offerDetailsWindow.warn.noArbitrator")).show();
 
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class,
                         ArbitratorSelectionView.class);

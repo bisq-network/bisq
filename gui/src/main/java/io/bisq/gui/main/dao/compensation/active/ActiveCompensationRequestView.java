@@ -202,12 +202,12 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                                         new FutureCallback<Transaction>() {
                                             @Override
                                             public void onSuccess(Transaction transaction) {
-                                                UserThread.runAfter(() -> new Popup<>(preferences).feedback(Res.get("dao.compensation.active.successfullyFunded")).show(), 1);
+                                                UserThread.runAfter(() -> new Popup<>().feedback(Res.get("dao.compensation.active.successfullyFunded")).show(), 1);
                                             }
 
                                             @Override
                                             public void onFailure(@NotNull Throwable t) {
-                                                UserThread.runAfter(() -> new Popup<>(preferences).error(t.toString()).show(), 1);
+                                                UserThread.runAfter(() -> new Popup<>().error(t.toString()).show(), 1);
 
                                             }
                                         });

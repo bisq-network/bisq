@@ -151,7 +151,7 @@ public class BuyerStep4View extends TradeStepView {
             String key = "tradeCompleted" + trade.getId();
             if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                 DontShowAgainLookup.dontShowAgain(key, true);
-                new Notification(preferences).headLine(Res.get("notification.tradeCompleted.headline"))
+                new Notification().headLine(Res.get("notification.tradeCompleted.headline"))
                         .notification(Res.get("notification.tradeCompleted.msg"))
                         .autoClose()
                         .show();
@@ -175,7 +175,7 @@ public class BuyerStep4View extends TradeStepView {
             Coin fee = feeEstimationTransaction.getFee();
             Coin receiverAmount = amount.subtract(fee);
             if (balance.isZero()) {
-                new Popup(preferences).warning(Res.get("portfolio.pending.step5_buyer.alreadyWithdrawn")).show();
+                new Popup<>().warning(Res.get("portfolio.pending.step5_buyer.alreadyWithdrawn")).show();
                 model.dataModel.tradeManager.addTradeToClosedTrades(trade);
             } else {
                 if (toAddresses.isEmpty()) {
@@ -191,7 +191,7 @@ public class BuyerStep4View extends TradeStepView {
                             double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
                             double kb = txSize / 1000d;
                             String recAmount = formatter.formatCoinWithCode(receiverAmount);
-                            new Popup(preferences).headLine(Res.get("portfolio.pending.step5_buyer.confirmWithdrawal"))
+                            new Popup<>().headLine(Res.get("portfolio.pending.step5_buyer.confirmWithdrawal"))
                                     .confirmation(Res.get("shared.sendFundsDetailsWithFee",
                                             formatter.formatCoinWithCode(amount),
                                             fromAddresses,
@@ -215,7 +215,7 @@ public class BuyerStep4View extends TradeStepView {
                     }
 
                 } else {
-                    new Popup(preferences).warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
+                    new Popup<>().warning(Res.get("portfolio.pending.step5_buyer.amountTooLow")).show();
                 }
             }
         } catch (AddressFormatException e) {
@@ -225,7 +225,7 @@ public class BuyerStep4View extends TradeStepView {
         } catch (InsufficientFundsException e) {
             log.error(e.getMessage());
             e.printStackTrace();
-            new Popup(preferences).warning(e.getMessage()).show();
+            new Popup<>().warning(e.getMessage()).show();
         }
     }
 
@@ -236,9 +236,9 @@ public class BuyerStep4View extends TradeStepView {
             useSavingsWalletButton.setDisable(false);
             withdrawToExternalWalletButton.setDisable(false);
             if (throwable != null && throwable.getMessage() != null)
-                new Popup(preferences).error(errorMessage + "\n\n" + throwable.getMessage()).show();
+                new Popup<>().error(errorMessage + "\n\n" + throwable.getMessage()).show();
             else
-                new Popup(preferences).error(errorMessage).show();
+                new Popup<>().error(errorMessage).show();
         };
         if (model.dataModel.btcWalletService.isEncrypted()) {
             UserThread.runAfter(() -> model.dataModel.walletPasswordWindow.onAesKey(aesKey ->
@@ -262,7 +262,7 @@ public class BuyerStep4View extends TradeStepView {
     private void handleTradeCompleted() {
         if (!DevEnv.DEV_MODE) {
             String key = "tradeCompleteWithdrawCompletedInfo";
-            new Popup(preferences).headLine(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.headline"))
+            new Popup<>().headLine(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.headline"))
                     .feedback(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.msg"))
                     .actionButtonTextWithGoTo("navigation.funds.transactions")
                     .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class))

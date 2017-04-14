@@ -136,7 +136,7 @@ public class TxIdTextField extends AnchorPane {
 
     private void openBlockExplorer(String txID) {
         if (preferences != null)
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + txID, preferences);
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + txID);
     }
 
     private void updateConfidence(TransactionConfidence confidence) {

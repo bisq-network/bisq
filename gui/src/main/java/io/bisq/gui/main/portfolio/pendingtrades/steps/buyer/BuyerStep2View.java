@@ -221,7 +221,7 @@ public class BuyerStep2View extends TradeStepView {
             if (model.dataModel.getSellersPaymentAccountPayload() instanceof CashDepositAccountPayload) {
                 String key = "confirmPaperReceiptSent";
                 if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
-                    Popup popup = new Popup(preferences);
+                    Popup popup = new Popup<>();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.paperReceipt.headline"))
                             .feedback(Res.get("portfolio.pending.step2_buyer.paperReceipt.msg"))
                             .onAction(this::showConfirmPaymentStartedPopup)
@@ -236,14 +236,14 @@ public class BuyerStep2View extends TradeStepView {
                 showConfirmPaymentStartedPopup();
             }
         } else {
-            new Popup(preferences).information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
     private void showConfirmPaymentStartedPopup() {
         String key = "confirmPaymentStarted";
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
-            Popup popup = new Popup(preferences);
+            Popup popup = new Popup<>();
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
                     .confirmation(Res.get("portfolio.pending.step2_buyer.confirmStart.msg",
                             CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode())))
@@ -270,7 +270,7 @@ public class BuyerStep2View extends TradeStepView {
         }, errorMessage -> {
             confirmButton.setDisable(false);
             busyAnimation.stop();
-            new Popup(preferences).warning(Res.get("popup.warning.sendMsgFailed")).show();
+            new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 
@@ -326,7 +326,7 @@ public class BuyerStep2View extends TradeStepView {
 
             if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                 DontShowAgainLookup.dontShowAgain(key, true);
-                new Popup(preferences).headLine(Res.get("popup.attention.forTradeWithId", id))
+                new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
                         .attention(message)
                         .show();
             }
