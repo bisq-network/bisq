@@ -1,8 +1,8 @@
 package io.bisq.network.p2p.storage.messages;
 
 import io.bisq.common.app.Version;
-import io.bisq.generated.protobuffer.PB;
 import io.bisq.common.persistance.Msg;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 public final class RemoveDataMsg extends BroadcastMsg {
@@ -40,7 +40,7 @@ public final class RemoveDataMsg extends BroadcastMsg {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setRemoveDataMessage(PB.RemoveDataMessage.newBuilder()
                 .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProto())).build();
 

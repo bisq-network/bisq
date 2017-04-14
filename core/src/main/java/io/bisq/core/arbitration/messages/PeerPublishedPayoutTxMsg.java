@@ -19,8 +19,8 @@ package io.bisq.core.arbitration.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
-import io.bisq.generated.protobuffer.PB;
 import io.bisq.common.persistance.Msg;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 
@@ -47,7 +47,7 @@ public final class PeerPublishedPayoutTxMsg extends DisputeMsg {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage.newBuilder()
                 .setTransaction(ByteString.copyFrom(transaction))
                 .setTradeId(tradeId)

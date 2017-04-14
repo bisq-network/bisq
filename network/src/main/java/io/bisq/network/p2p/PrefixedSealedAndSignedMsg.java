@@ -47,7 +47,7 @@ public final class PrefixedSealedAndSignedMsg implements MailboxMsg, SendersNode
 
     @Override
     public PB.Envelope toProto() {
-        return Msg.getBaseEnvelope().setPrefixedSealedAndSignedMessage(
+        return Msg.getEnv().setPrefixedSealedAndSignedMessage(
                 PB.PrefixedSealedAndSignedMessage.newBuilder()
                         .setMessageVersion(messageVersion).setNodeAddress(senderNodeAddress.toProto())
                         .setSealedAndSigned(sealedAndSigned.toProto())

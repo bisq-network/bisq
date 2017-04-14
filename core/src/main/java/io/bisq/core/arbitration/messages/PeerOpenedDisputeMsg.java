@@ -18,9 +18,9 @@
 package io.bisq.core.arbitration.messages;
 
 import io.bisq.common.app.Version;
+import io.bisq.common.persistance.Msg;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.common.persistance.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -47,7 +47,7 @@ public final class PeerOpenedDisputeMsg extends DisputeMsg {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage.newBuilder()
                 .setDispute(dispute.toProto())
                 .setMyNodeAddress(myNodeAddress.toProto())

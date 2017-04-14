@@ -57,7 +57,7 @@ public final class GetPeersRequest extends PeerExchangeMsg implements SendersNod
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder envelopeBuilder = Msg.getBaseEnvelope();
+        PB.Envelope.Builder envelopeBuilder = Msg.getEnv();
         PB.GetPeersRequest.Builder msgBuilder = envelopeBuilder.getGetPeersRequestBuilder();
         msgBuilder
                 .setNonce(nonce)

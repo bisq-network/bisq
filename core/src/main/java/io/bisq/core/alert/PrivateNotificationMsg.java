@@ -1,9 +1,9 @@
 package io.bisq.core.alert;
 
 import io.bisq.common.app.Version;
+import io.bisq.common.persistance.Msg;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMsg;
-import io.bisq.common.persistance.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -46,7 +46,7 @@ public class PrivateNotificationMsg implements MailboxMsg {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder baseEnvelope = Msg.getBaseEnvelope();
+        PB.Envelope.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setPrivateNotificationMessage(baseEnvelope.getPrivateNotificationMessageBuilder()
                 .setMessageVersion(messageVersion)
                 .setUid(uid)

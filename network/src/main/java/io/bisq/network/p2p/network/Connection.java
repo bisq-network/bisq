@@ -861,10 +861,10 @@ public class Connection implements MessageListener {
                             log.warn("Version.getP2PMessageVersion()=" + Version.getP2PMessageVersion());
                             log.warn("message=" + envelope.toString());
                             reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID);
-                            // We return anyway here independent of the return value of reportInvalidRequest
                             if (DevEnv.DEV_MODE)
                                 throw new RuntimeException("messageVersion is not set " + messageVersion +
                                         " / message=" + envelope.toString());
+                            // We return anyway here independent of the return value of reportInvalidRequest
                             return;
                         }
 

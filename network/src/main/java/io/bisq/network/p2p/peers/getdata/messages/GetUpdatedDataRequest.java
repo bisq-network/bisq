@@ -50,7 +50,7 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMsg, GetDa
 
     @Override
     public PB.Envelope toProto() {
-        return Msg.getBaseEnvelope().setGetUpdatedDataRequest(
+        return Msg.getEnv().setGetUpdatedDataRequest(
                 PB.GetUpdatedDataRequest.newBuilder()
                         .setMessageVersion(messageVersion)
                         .setSenderNodeAddress(senderNodeAddress.toProto())

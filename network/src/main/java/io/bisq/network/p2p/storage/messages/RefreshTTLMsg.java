@@ -41,7 +41,7 @@ public final class RefreshTTLMsg extends BroadcastMsg implements Marshaller {
 
     @Override
     public PB.Envelope toProto() {
-        PB.Envelope.Builder builder = Msg.getBaseEnvelope();
+        PB.Envelope.Builder builder = Msg.getEnv();
         return builder.setRefreshTtlMessage(builder.getRefreshTtlMessageBuilder()
                 .setHashOfDataAndSeqNr(ByteString.copyFrom(hashOfDataAndSeqNr))
                 .setHashOfPayload(ByteString.copyFrom(hashOfPayload))

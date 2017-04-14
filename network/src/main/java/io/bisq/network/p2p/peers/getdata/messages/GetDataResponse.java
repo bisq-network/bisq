@@ -60,7 +60,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMsg {
                         .collect(Collectors.toList()))
                 .setRequestNonce(requestNonce)
                 .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
-        return Msg.getBaseEnvelope().setGetDataResponse(builder).build();
+        return Msg.getEnv().setGetDataResponse(builder).build();
     }
 
 
