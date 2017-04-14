@@ -19,6 +19,7 @@ package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.Res;
+import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PerfectMoneyAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -93,7 +94,9 @@ public class PerfectMoneyForm extends PaymentMethodForm {
         TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), perfectMoneyAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
 
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), perfectMoneyAccount.getSingleTradeCurrency().getNameAndCode());
+        final TradeCurrency singleTradeCurrency = perfectMoneyAccount.getSingleTradeCurrency();
+        final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
 
         addAllowedPeriod();
     }

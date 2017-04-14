@@ -53,7 +53,6 @@ public class Candle extends Group {
     private final Region bar = new Region();
 
     private boolean openAboveClose = true;
-    private final Tooltip tooltip = new Tooltip();
     private double closeOffset;
 
     Candle(String seriesStyleClass, String dataStyleClass, StringConverter<Number> priceStringConverter) {
@@ -66,6 +65,7 @@ public class Candle extends Group {
         updateStyleClasses();
 
         candleTooltip = new CandleTooltip(priceStringConverter);
+        Tooltip tooltip = new Tooltip();
         tooltip.setGraphic(candleTooltip);
         Tooltip.install(this, tooltip);
     }

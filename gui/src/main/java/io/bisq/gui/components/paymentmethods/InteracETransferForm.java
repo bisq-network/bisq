@@ -40,8 +40,6 @@ public class InteracETransferForm extends PaymentMethodForm {
     private final InteracETransferAccount interacETransferAccount;
     private final InteracETransferValidator interacETransferValidator;
     private InputTextField mobileNrInputTextField;
-    private InputTextField questionInputTextField;
-    private InputTextField answerInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -82,14 +80,14 @@ public class InteracETransferForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        questionInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.secret")).second;
+        InputTextField questionInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.secret")).second;
         questionInputTextField.setValidator(inputValidator);
         questionInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setQuestion(newValue);
             updateFromInputs();
         });
 
-        answerInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.answer")).second;
+        InputTextField answerInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, Res.get("payment.answer")).second;
         answerInputTextField.setValidator(inputValidator);
         answerInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setAnswer(newValue);

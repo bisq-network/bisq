@@ -180,7 +180,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             };
 
             GUIUtil.exportCSV("tradeHistory.csv", headerConverter, contentConverter,
-                    new ClosedTradableListItem(null), sortedList, stage, preferences);
+                    new ClosedTradableListItem(null), sortedList, stage);
         });
     }
 
@@ -291,6 +291,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 });
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private TableColumn<ClosedTradableListItem, ClosedTradableListItem> setAvatarColumnCellFactory() {
         avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         avatarColumn.setCellFactory(

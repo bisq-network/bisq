@@ -48,13 +48,10 @@ import static io.bisq.gui.util.FormBuilder.*;
 @FxmlView
 public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, ArbitratorRegistrationViewModel> {
 
-    private TextField pubKeyTextField;
     private ListView<String> languagesListView;
     private ComboBox<String> languageComboBox;
 
     private int gridRow = 0;
-    private Button registerButton;
-    private Button revokeButton;
 
     private ChangeListener<Arbitrator> arbitratorChangeListener;
     private UnlockArbitrationRegistrationWindow unlockArbitrationRegistrationWindow;
@@ -97,7 +94,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
             if (model.registrationPubKeyAsHex.get() == null && unlockArbitrationRegistrationWindow == null) {
                 unlockArbitrationRegistrationWindow = new UnlockArbitrationRegistrationWindow();
                 unlockArbitrationRegistrationWindow.onClose(() -> unlockArbitrationRegistrationWindow = null)
-                        .onKey(privKey -> model.setPrivKeyAndCheckPubKey(privKey))
+                        .onKey(model::setPrivKeyAndCheckPubKey)
                         .width(700)
                         .show();
             }
@@ -128,7 +125,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         root.getChildren().add(gridPane);
 
         addTitledGroupBg(gridPane, gridRow, 3, Res.get("account.tab.arbitratorRegistration"));
-        pubKeyTextField = FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
+        TextField pubKeyTextField = FormBuilder.addLabelTextField(gridPane, gridRow, Res.get("account.arbitratorRegistration.pubKey"),
                 model.registrationPubKeyAsHex.get(), Layout.FIRST_ROW_DISTANCE).second;
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);
@@ -185,11 +182,11 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         });
         languageComboBox.setOnAction(e -> onAddLanguage());
 
-        registerButton = addButtonAfterGroup(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.register"));
+        Button registerButton = addButtonAfterGroup(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.register"));
         registerButton.disableProperty().bind(model.registrationEditDisabled);
         registerButton.setOnAction(e -> onRegister());
 
-        revokeButton = addButton(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.revoke"));
+        Button revokeButton = addButton(gridPane, ++gridRow, Res.get("account.arbitratorRegistration.revoke"));
         revokeButton.setDefaultButton(false);
         revokeButton.disableProperty().bind(model.revokeButtonDisabled);
         revokeButton.setOnAction(e -> onRevoke());

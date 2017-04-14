@@ -122,8 +122,10 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
         addressLabel = tuple2.first;
         TextField field = tuple2.second;
         field.setMouseTransparent(false);
+        final TradeCurrency singleTradeCurrency = cryptoCurrencyAccount.getSingleTradeCurrency();
+        final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addLabelTextField(gridPane, ++gridRow, Res.get("payment.altcoin"),
-                cryptoCurrencyAccount.getSingleTradeCurrency().getNameAndCode());
+                nameAndCode);
         addAllowedPeriod();
     }
 

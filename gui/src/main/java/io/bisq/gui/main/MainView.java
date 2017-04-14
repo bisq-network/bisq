@@ -66,21 +66,25 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         return MainView.rootContainer;
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     public static void blur() {
         if (!DevEnv.STRESS_TEST_MODE)
             transitions.blur(MainView.rootContainer);
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     public static void blurLight() {
         if (!DevEnv.STRESS_TEST_MODE)
             transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 5);
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     public static void blurUltraLight() {
         if (!DevEnv.STRESS_TEST_MODE)
             transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 2);
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     public static void darken() {
         if (!DevEnv.STRESS_TEST_MODE)
             transitions.darken(MainView.rootContainer, Transitions.DEFAULT_DURATION, false);

@@ -33,8 +33,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,9 +41,6 @@ import java.util.stream.Collectors;
 import static io.bisq.gui.util.FormBuilder.addLabelInputTextField;
 
 public class FilterWindow extends Overlay<FilterWindow> {
-    private static final Logger log = LoggerFactory.getLogger(FilterWindow.class);
-
-    private Button sendButton;
     private SendFilterMessageHandler sendFilterMessageHandler;
     private RemoveFilterMessageHandler removeFilterMessageHandler;
     private final FilterManager filterManager;
@@ -141,7 +136,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 paymentAccountFilterInputTextField.setText(sb.toString());
             }
         }
-        sendButton = new Button(Res.get("filterWindow.add"));
+        Button sendButton = new Button(Res.get("filterWindow.add"));
         sendButton.setOnAction(e -> {
             ArrayList<String> offerIds = new ArrayList<>();
             ArrayList<String> nodes = new ArrayList<>();

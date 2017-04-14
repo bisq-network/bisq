@@ -102,12 +102,12 @@ public class BisqApp extends Application {
 
     public static Runnable shutDownHandler;
     private boolean shutDownRequested;
-    private Preferences preferences;
 
     public static void setEnvironment(Environment env) {
         BisqApp.env = env;
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     @Override
     public void start(Stage stage) throws IOException {
         BisqApp.primaryStage = stage;
@@ -167,7 +167,7 @@ public class BisqApp extends Application {
             grapher.setRankdir("TB");
             grapher.graph(injector);
 */
-            this.preferences = injector.getInstance(Preferences.class);
+            Preferences preferences = injector.getInstance(Preferences.class);
             preferences.init();
 
             Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
@@ -217,7 +217,8 @@ public class BisqApp extends Application {
                     stop();
                 } else if (new KeyCodeCombination(KeyCode.E, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     showEmptyWalletPopup(injector.getInstance(BtcWalletService.class));
-                } else if (DevEnv.DEV_MODE && new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
+                } else //noinspection ConstantConditions,ConstantConditions
+                    if (DevEnv.DEV_MODE && new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
                     // BSQ empty wallet not public yet
                     showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
                 } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN).match(keyEvent)) {
@@ -239,7 +240,8 @@ public class BisqApp extends Application {
                         new SpendFromDepositTxWindow(tradeWalletService).show();
                     else
                         new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
-                } else if (DevEnv.DEV_MODE && new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
+                    } else //noinspection ConstantConditions,ConstantConditions
+                        if (DevEnv.DEV_MODE && new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
                     showDebugWindow();
                 }
             });

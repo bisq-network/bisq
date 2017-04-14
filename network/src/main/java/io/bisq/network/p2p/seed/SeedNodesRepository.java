@@ -68,7 +68,8 @@ public class SeedNodesRepository {
                 .filter(e -> String.valueOf(e.port).endsWith(networkIdAsString))
                 .filter(e -> !e.equals(nodeAddressToExclude))
                 .collect(Collectors.toSet());
-        log.debug("SeedNodeAddresses (useLocalhostForP2P={}) for networkId {}:\nnetworkId={}", useLocalhostForP2P, networkId, filtered);
+        log.debug("SeedNodeAddresses (useLocalhostForP2P={}) for networkId {}:\nnetworkId={}",
+                useLocalhostForP2P, networkId, filtered);
         return filtered;
     }
 

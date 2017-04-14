@@ -599,7 +599,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         log.debug("missingCoin " + missingCoin.get().toFriendlyString());
 
         isWalletFunded.set(isBalanceSufficient(balance.get()));
-        //noinspection PointlessBooleanExpression
+        //noinspection PointlessBooleanExpression,ConstantConditions
         if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
             walletFundedNotification = new Notification()
                     .headLine(Res.get("notification.walletUpdate.headline"))

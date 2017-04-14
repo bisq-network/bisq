@@ -24,7 +24,6 @@ import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.user.Preferences;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -50,15 +49,13 @@ import static io.bisq.gui.util.FormBuilder.*;
 
 @FxmlView
 public class BsqSendView extends ActivatableView<GridPane, Void> {
-    private final Preferences preferences;
-
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
     private final BsqBalanceUtil bsqBalanceUtil;
-    private BsqValidator bsqValidator;
-    private BsqAddressValidator bsqAddressValidator;
+    private final BsqValidator bsqValidator;
+    private final BsqAddressValidator bsqAddressValidator;
 
     private int gridRow = 0;
     private InputTextField amountInputTextField;
@@ -74,8 +71,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     @Inject
     private BsqSendView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService,
                         BsqFormatter bsqFormatter, BSFormatter btcFormatter,
-                        BsqBalanceUtil bsqBalanceUtil, BsqValidator bsqValidator, BsqAddressValidator bsqAddressValidator,
-                        Preferences preferences) {
+                        BsqBalanceUtil bsqBalanceUtil, BsqValidator bsqValidator, BsqAddressValidator bsqAddressValidator) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.bsqFormatter = bsqFormatter;
@@ -83,7 +79,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         this.bsqBalanceUtil = bsqBalanceUtil;
         this.bsqValidator = bsqValidator;
         this.bsqAddressValidator = bsqAddressValidator;
-        this.preferences = preferences;
     }
 
     @Override

@@ -18,19 +18,16 @@
 package io.bisq.gui.util.validation;
 
 import io.bisq.common.locale.Res;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.util.BsqFormatter;
 
 import javax.inject.Inject;
 
 public final class BsqAddressValidator extends InputValidator {
 
-    private final Preferences preferences;
-    private BsqFormatter bsqFormatter;
+    private final BsqFormatter bsqFormatter;
 
     @Inject
-    public BsqAddressValidator(Preferences preferences, BsqFormatter bsqFormatter) {
-        this.preferences = preferences;
+    public BsqAddressValidator(BsqFormatter bsqFormatter) {
         this.bsqFormatter = bsqFormatter;
     }
 

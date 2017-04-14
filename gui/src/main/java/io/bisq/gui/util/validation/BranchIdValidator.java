@@ -30,7 +30,6 @@ public final class BranchIdValidator extends BankValidator {
     @Override
     public ValidationResult validate(String input) {
         int length;
-        String label = BankUtil.getBankIdLabel(countryCode);
         switch (countryCode) {
             case "GB":
                 length = 6;

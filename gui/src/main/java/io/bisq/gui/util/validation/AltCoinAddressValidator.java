@@ -69,6 +69,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                 case "BTC":
                     // taken form: https://stackoverflow.com/questions/21683680/regex-to-match-bitcoin-addresses
                     if (input.matches("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                        //noinspection ConstantConditions
                         if (verifyChecksum(input))
                             try {
                                 new Address(MainNetParams.get(), input);
@@ -83,6 +84,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                     }
                 case "PIVX":
                     if (input.matches("^[D][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                        //noinspection ConstantConditions
                         if (verifyChecksum(input)) {
                             try {
                                 new Address(PivxParams.get(), input);
@@ -98,6 +100,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                     }
                 case "IOP":
                     if (input.matches("^[p][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                        //noinspection ConstantConditions
                         if (verifyChecksum(input)) {
                             try {
                                 new Address(IOPParams.get(), input);
@@ -147,6 +150,7 @@ public final class AltCoinAddressValidator extends InputValidator {
         return Res.get("validation.altcoin.invalidAddress", currencyCode, e.getMessage());
     }
 
+    @SuppressWarnings({"UnusedParameters", "SameReturnValue"})
     private boolean verifyChecksum(String input) {
         // TODO
         return true;

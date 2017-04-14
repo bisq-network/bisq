@@ -18,8 +18,6 @@
 package io.bisq.gui.main.dao;
 
 import io.bisq.common.locale.Res;
-import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.*;
@@ -46,18 +44,14 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final Preferences preferences;
-    private final BsqWalletService bsqWalletService;
     private Tab selectedTab;
     private BsqWalletView bsqWalletView;
 
 
     @Inject
-    private DaoView(CachingViewLoader viewLoader, Navigation navigation, Preferences preferences, BsqWalletService bsqWalletService) {
+    private DaoView(CachingViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.preferences = preferences;
-        this.bsqWalletService = bsqWalletService;
     }
 
     @Override

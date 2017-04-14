@@ -81,6 +81,7 @@ public class GUIUtil {
         return 0;
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
         String key = "miningFeeInfo";
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
@@ -145,7 +146,7 @@ public class GUIUtil {
 
     public static <T> void exportCSV(String fileName, CSVEntryConverter<T> headerConverter,
                                      CSVEntryConverter<T> contentConverter, T emptyItem,
-                                     List<T> list, Stage stage, Preferences preferences) {
+                                     List<T> list, Stage stage) {
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialFileName(fileName);
@@ -335,8 +336,9 @@ public class GUIUtil {
                 " " + Res.get("guiUtil.ofTradeAmount") + ")";
     }
 
+    @SuppressWarnings({"UnusedParameters", "SameReturnValue"})
     public static String getPercentageOfTradeAmountForBsq(Coin fee, Coin tradeAmount, BSFormatter formatter) {
-        // TODo convert to BTC with market price
+        // TODO convert to BTC with market price
         return "";
        /* return " (" + formatter.formatToPercentWithSymbol((double) fee.value / (double) tradeAmount.value) +
                 " " + Res.get("guiUtil.ofTradeAmount") + ")";*/

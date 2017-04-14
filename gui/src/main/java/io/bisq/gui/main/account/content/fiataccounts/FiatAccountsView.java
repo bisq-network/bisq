@@ -25,7 +25,6 @@ import io.bisq.core.payment.ClearXchangeAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.core.payment.payload.PaymentMethod;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.TitledGroupBg;
@@ -57,7 +56,6 @@ import static io.bisq.gui.util.FormBuilder.*;
 @FxmlView
 public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAccountsViewModel> {
 
-    private final Preferences preferences;
     private ListView<PaymentAccount> paymentAccountsListView;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
 
@@ -94,7 +92,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                             ChaseQuickPayValidator chaseQuickPayValidator,
                             InteracETransferValidator interacETransferValidator,
                             USPostalMoneyOrderValidator usPostalMoneyOrderValidator,
-                            BSFormatter formatter, Preferences preferences) {
+                            BSFormatter formatter) {
         super(model);
 
         this.ibanValidator = ibanValidator;
@@ -109,7 +107,6 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         this.interacETransferValidator = interacETransferValidator;
         this.usPostalMoneyOrderValidator = usPostalMoneyOrderValidator;
         this.formatter = formatter;
-        this.preferences = preferences;
     }
 
     @Override
@@ -160,12 +157,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     }
 
     private void doSaveNewAccount(PaymentAccount paymentAccount) {
-        if (!model.getPaymentAccounts().stream().filter(e -> {
-            if (e.getAccountName() != null)
-                return e.getAccountName().equals(paymentAccount.getAccountName());
-            else
-                return false;
-        }).findAny().isPresent()) {
+        if (!model.getPaymentAccounts().stream().filter(e -> e.getAccountName() != null &&
+                e.getAccountName().equals(paymentAccount.getAccountName())).findAny().isPresent()) {
             model.onSaveNewAccount(paymentAccount);
             removeNewAccountForm();
         } else {

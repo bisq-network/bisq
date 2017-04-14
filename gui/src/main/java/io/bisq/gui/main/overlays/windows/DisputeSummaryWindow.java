@@ -189,10 +189,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult.setReason(peersDisputeResult.getReason());
             disputeResult.setSummaryNotes(peersDisputeResult.summaryNotesProperty().get());
 
-            if (disputeResult.getBuyerPayoutAmount() != null) {
+           /* if (disputeResult.getBuyerPayoutAmount() != null) {
                 log.debug("buyerPayoutAmount " + disputeResult.getBuyerPayoutAmount().toFriendlyString());
                 log.debug("sellerPayoutAmount " + disputeResult.getSellerPayoutAmount().toFriendlyString());
-            }
+            }*/
 
             buyerGetsTradeAmountRadioButton.setDisable(true);
             buyerGetsAllRadioButton.setDisable(true);

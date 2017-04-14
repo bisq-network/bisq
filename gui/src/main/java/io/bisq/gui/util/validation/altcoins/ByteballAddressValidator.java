@@ -35,7 +35,8 @@ public class ByteballAddressValidator {
     private static final Base64 base64 = new Base64();
     private static final String PI = "14159265358979323846264338327950288419716939937510";
     private static final String[] arrRelativeOffsets = PI.split("");
-    private static Integer[] arrOffsets160, arrOffsets288;
+    private static Integer[] arrOffsets160;
+    private static Integer[] arrOffsets288;
 
     static {
         try {
@@ -94,6 +95,7 @@ public class ByteballAddressValidator {
         if (index != 32)
             throw new Exception("wrong number of checksum bits");
 
+        //noinspection ToArrayCallWithZeroLengthArrayArgument
         return arrOffsets.toArray(new Integer[0]);
     }
 
@@ -109,6 +111,7 @@ public class ByteballAddressValidator {
         StringBuilder arrFrags = new StringBuilder();
         StringBuilder arrChecksumBits = new StringBuilder();
         int start = 0;
+        //noinspection ForLoopReplaceableByForEach
         for (int i = 0; i < arrOffsets.length; i++) {
             arrFrags.append(bin.substring(start, arrOffsets[i]));
             arrChecksumBits.append(bin.substring(arrOffsets[i], arrOffsets[i] + 1));
@@ -124,6 +127,7 @@ public class ByteballAddressValidator {
 
     private static String buffer2bin(byte[] buf) {
         StringBuffer bytes = new StringBuffer();
+        //noinspection ForLoopReplaceableByForEach
         for (int i = 0; i < buf.length; i++) {
             String bin = String.format("%8s", Integer.toBinaryString(buf[i] & 0xFF)).replace(' ', '0');
             bytes.append(bin);
@@ -145,7 +149,7 @@ public class ByteballAddressValidator {
             return false;
         byte[] chash = (encoded_len == 32) ? base32.decode(encoded) : base64.decode(encoded);
         String binChash = buffer2bin(chash);
-        SeparatedData separated = null;
+        SeparatedData separated;
         try {
             separated = separateIntoCleanDataAndChecksum(binChash);
         } catch (Exception e) {
@@ -160,15 +164,15 @@ public class ByteballAddressValidator {
 
         try {
             byte[] full_checksum = MessageDigest.getInstance("SHA-256").digest(clean_data);
-            byte[] checksum = {full_checksum[5], full_checksum[13], full_checksum[21], full_checksum[29]};
-            return checksum;
+            return new byte[]{full_checksum[5], full_checksum[13], full_checksum[21], full_checksum[29]};
         } catch (NoSuchAlgorithmException e) {
             return null;
         }
     }
 
     private static class SeparatedData {
-        String clean_data, checksum;
+        final String clean_data;
+        final String checksum;
 
         public SeparatedData(String clean_data, String checksum) {
             this.clean_data = clean_data;

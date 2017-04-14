@@ -36,6 +36,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
@@ -50,9 +51,12 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
+
     private MenuItem paymentAccount, altCoinsAccountView, arbitratorSelection, password, seedWords, backup;
     private Navigation.Listener listener;
 
+    @FXML
+    private ScrollPane scrollPane;
     @FXML
     private VBox leftVBox;
     @FXML

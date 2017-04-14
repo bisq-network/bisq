@@ -23,19 +23,12 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.trade.Tradable;
 import io.bisq.gui.util.BSFormatter;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.scene.control.Label;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class ReservedListItem {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
-    private final StringProperty date = new SimpleStringProperty();
     private final BalanceListener balanceListener;
     private final Label balanceLabel;
     private final OpenOffer openOffer;
@@ -51,8 +44,6 @@ class ReservedListItem {
         this.walletService = walletService;
         this.formatter = formatter;
         addressString = addressEntry.getAddressString();
-
-        date.set(formatter.formatDateTime(openOffer.getDate()));
 
         // balance
         balanceLabel = new Label();

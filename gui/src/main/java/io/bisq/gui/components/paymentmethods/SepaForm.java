@@ -54,7 +54,6 @@ public class SepaForm extends PaymentMethodForm {
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
     private InputTextField ibanInputTextField;
-    private InputTextField bicInputTextField;
     private TextField currencyTextField;
     private final List<CheckBox> euroCountryCheckBoxes = new ArrayList<>();
     private final List<CheckBox> nonEuroCountryCheckBoxes = new ArrayList<>();
@@ -103,7 +102,7 @@ public class SepaForm extends PaymentMethodForm {
             updateFromInputs();
 
         });
-        bicInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, "BIC:").second;
+        InputTextField bicInputTextField = FormBuilder.addLabelInputTextField(gridPane, ++gridRow, "BIC:").second;
         bicInputTextField.setValidator(bicValidator);
         bicInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaAccount.setBic(newValue);

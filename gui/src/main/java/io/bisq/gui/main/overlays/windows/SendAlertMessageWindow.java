@@ -33,15 +33,10 @@ import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static io.bisq.gui.util.FormBuilder.*;
 
 public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
-    private static final Logger log = LoggerFactory.getLogger(SendAlertMessageWindow.class);
-
-    private Button sendButton;
     private SendAlertMessageHandler sendAlertMessageHandler;
     private RemoveAlertMessageHandler removeAlertMessageHandler;
 
@@ -126,7 +121,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
                 Res.get("sendAlertMessageWindow.version")).second;
         versionInputTextField.disableProperty().bind(isUpdateCheckBox.selectedProperty().not());
 
-        sendButton = new Button(Res.get("sendAlertMessageWindow.send"));
+        Button sendButton = new Button(Res.get("sendAlertMessageWindow.send"));
         sendButton.setOnAction(e -> {
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                 if (sendAlertMessageHandler.handle(

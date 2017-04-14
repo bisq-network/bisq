@@ -401,6 +401,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         }
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     private void updateBalance() {
         Coin tradeWalletBalance = walletService.getBalanceForAddress(addressEntry.getAddress());
         if (useSavingsWallet) {

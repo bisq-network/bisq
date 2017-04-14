@@ -17,11 +17,9 @@
 
 package io.bisq.gui.main.dao.wallet.dashboard;
 
-import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
-import io.bisq.gui.util.BsqFormatter;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
@@ -32,8 +30,6 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> {
 
     private TextField balanceTextField;
 
-    private final BsqWalletService bsqWalletService;
-    private final BsqFormatter formatter;
     private final BsqBalanceUtil bsqBalanceUtil;
 
     private int gridRow = 0;
@@ -43,10 +39,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqDashboardView(BsqWalletService bsqWalletService, BsqFormatter formatter, BsqBalanceUtil bsqBalanceUtil) {
-        this.bsqWalletService = bsqWalletService;
-        this.formatter = formatter;
-
+    private BsqDashboardView(BsqBalanceUtil bsqBalanceUtil) {
         this.bsqBalanceUtil = bsqBalanceUtil;
     }
 

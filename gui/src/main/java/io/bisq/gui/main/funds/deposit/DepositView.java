@@ -85,7 +85,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private final BtcWalletService walletService;
     private final FeeService feeService;
-    private Preferences preferences;
+    private final Preferences preferences;
     private final BSFormatter formatter;
     private String paymentLabelString;
     private final ObservableList<DepositListItem> observableList = FXCollections.observableArrayList();

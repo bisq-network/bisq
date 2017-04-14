@@ -23,7 +23,6 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
@@ -56,7 +55,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private final P2PService p2PService;
     private final Navigation navigation;
     private final BSFormatter btcFormatter;
-    private BsqFormatter bsqFormatter;
+    private final BsqFormatter bsqFormatter;
 
     private String amountRange;
     private String paymentLabel;
@@ -100,7 +99,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     //  private Subscription isFeeSufficientSubscription;
     private Runnable takeOfferSucceededHandler;
     String marketPriceMargin;
-    private Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -113,8 +111,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                               P2PService p2PService,
                               Navigation navigation,
                               BSFormatter btcFormatter,
-                              BsqFormatter bsqFormatter,
-                Preferences preferences) {
+                              BsqFormatter bsqFormatter) {
         super(dataModel);
         this.dataModel = dataModel;
 
@@ -123,7 +120,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         this.navigation = navigation;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
-        this.preferences = preferences;
         createListeners();
     }
 

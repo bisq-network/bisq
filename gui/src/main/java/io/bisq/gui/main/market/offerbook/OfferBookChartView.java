@@ -64,7 +64,7 @@ import java.util.Collections;
 public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookChartViewModel> {
     private static final Logger log = LoggerFactory.getLogger(OfferBookChartView.class);
 
-    private NumberAxis xAxis, yAxis;
+    private NumberAxis xAxis;
     private XYChart.Series seriesBuy, seriesSell;
     private final Navigation navigation;
     private final BSFormatter formatter;
@@ -260,7 +260,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         xAxis.setForceZeroInRange(false);
         xAxis.setAutoRanging(true);
 
-        yAxis = new NumberAxis();
+        NumberAxis yAxis = new NumberAxis();
         yAxis.setForceZeroInRange(false);
         yAxis.setAutoRanging(true);
         yAxis.setLabel(Res.get("shared.amountWithCur", "BTC"));

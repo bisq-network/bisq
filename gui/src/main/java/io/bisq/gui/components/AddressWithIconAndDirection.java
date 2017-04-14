@@ -18,11 +18,9 @@ public class AddressWithIconAndDirection extends AnchorPane {
     private static final Logger log = LoggerFactory.getLogger(AddressWithIconAndDirection.class);
     private final Hyperlink hyperlink;
     private final Label openLinkIcon;
-    private final Label directionIcon;
-    private final Label label;
 
     public AddressWithIconAndDirection(String text, String address, AwesomeIcon awesomeIcon, boolean received) {
-        directionIcon = new Label();
+        Label directionIcon = new Label();
         directionIcon.setLayoutY(3);
         directionIcon.getStyleClass().add(received ? "received-funds-icon" : "sent-funds-icon");
         AwesomeDude.setIcon(directionIcon, received ? AwesomeIcon.SIGNIN : AwesomeIcon.SIGNOUT);
@@ -30,7 +28,7 @@ public class AddressWithIconAndDirection extends AnchorPane {
 
         HBox hBox = new HBox();
         hBox.setSpacing(-1);
-        label = new Label(text);
+        Label label = new Label(text);
         label.setMouseTransparent(true);
         HBox.setMargin(label, new Insets(4, 0, 0, 0));
         HBox.setHgrow(label, Priority.ALWAYS);

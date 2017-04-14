@@ -25,6 +25,7 @@ public abstract class MonetaryValidator extends NumberValidator {
 
     protected abstract double getMinValue();
 
+    @SuppressWarnings("SameReturnValue")
     protected abstract double getMaxValue();
 
     @Inject

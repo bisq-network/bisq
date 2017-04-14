@@ -19,7 +19,6 @@ package io.bisq.gui.main.account;
 
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.*;
 import io.bisq.gui.main.MainView;
@@ -51,7 +50,6 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final Preferences preferences;
     private Tab selectedTab;
     Tab arbitratorRegistrationTab;
     private ArbitratorRegistrationView arbitratorRegistrationView;
@@ -60,11 +58,10 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
     private EventHandler<KeyEvent> keyEventEventHandler;
 
     @Inject
-    private AccountView(AccountViewModel model, CachingViewLoader viewLoader, Navigation navigation, Preferences preferences) {
+    private AccountView(AccountViewModel model, CachingViewLoader viewLoader, Navigation navigation) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.preferences = preferences;
     }
 
     @Override
@@ -102,6 +99,7 @@ public class AccountView extends ActivatableView<TabPane, AccountViewModel> {
         };
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     @Override
     protected void activate() {
         navigation.addListener(navigationListener);

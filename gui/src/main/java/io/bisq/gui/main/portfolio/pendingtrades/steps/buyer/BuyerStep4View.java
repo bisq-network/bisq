@@ -40,7 +40,6 @@ import io.bisq.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bisq.gui.main.portfolio.pendingtrades.steps.TradeStepView;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.Layout;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -56,7 +55,7 @@ import java.util.concurrent.TimeUnit;
 import static io.bisq.gui.util.FormBuilder.*;
 
 public class BuyerStep4View extends TradeStepView {
-    private final ChangeListener<Boolean> focusedPropertyListener;
+    // private final ChangeListener<Boolean> focusedPropertyListener;
 
     private InputTextField withdrawAddressTextField;
     private Button withdrawToExternalWalletButton, useSavingsWalletButton;
@@ -69,10 +68,10 @@ public class BuyerStep4View extends TradeStepView {
     public BuyerStep4View(PendingTradesViewModel model) {
         super(model);
 
-        focusedPropertyListener = (ov, oldValue, newValue) -> {
+       /* focusedPropertyListener = (ov, oldValue, newValue) -> {
             if (oldValue && !newValue)
                 model.withdrawAddressFocusOut(withdrawAddressTextField.getText());
-        };
+        };*/
     }
 
     @Override
@@ -111,6 +110,7 @@ public class BuyerStep4View extends TradeStepView {
     // Content
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("PointlessBooleanExpression")
     @Override
     protected void addContent() {
         addTitledGroupBg(gridPane, gridRow, 4, Res.get("portfolio.pending.step5_buyer.groupTitle"), 0);
@@ -149,6 +149,7 @@ public class BuyerStep4View extends TradeStepView {
             withdrawAddressTextField.setText("mpaZiEh8gSr4LcH11FrLdRY57aArt88qtg");
         } else {
             String key = "tradeCompleted" + trade.getId();
+            //noinspection ConstantConditions
             if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                 DontShowAgainLookup.dontShowAgain(key, true);
                 new Notification().headLine(Res.get("notification.tradeCompleted.headline"))
@@ -159,6 +160,7 @@ public class BuyerStep4View extends TradeStepView {
         }
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     private void reviewWithdrawal() {
         Coin amount = trade.getPayoutAmount();
         BtcWalletService walletService = model.dataModel.btcWalletService;
@@ -186,6 +188,7 @@ public class BuyerStep4View extends TradeStepView {
                     } else {
                         BSFormatter formatter = model.btcFormatter;
                         String key = "reviewWithdrawalAtTradeComplete";
+                        //noinspection ConstantConditions
                         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                             int txSize = feeEstimationTransaction.bitcoinSerialize().length;
                             double feePerByte = CoinUtil.getFeePerByte(fee, txSize);
@@ -259,6 +262,7 @@ public class BuyerStep4View extends TradeStepView {
                 faultHandler);
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     private void handleTradeCompleted() {
         if (!DevEnv.DEV_MODE) {
             String key = "tradeCompleteWithdrawCompletedInfo";

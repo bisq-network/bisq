@@ -24,7 +24,6 @@ import io.bisq.common.util.Tuple3;
 import io.bisq.core.payment.payload.*;
 import io.bisq.core.trade.Contract;
 import io.bisq.core.user.DontShowAgainLookup;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.components.TextFieldWithCopyIcon;
 import io.bisq.gui.components.TitledGroupBg;
@@ -211,11 +210,12 @@ public class SellerStep3View extends TradeStepView {
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("PointlessBooleanExpression")
     private void onPaymentReceived() {
         log.debug("onPaymentReceived");
         if (model.p2PService.isBootstrapped()) {
-            Preferences preferences = model.dataModel.preferences;
             String key = "confirmPaymentReceived";
+            //noinspection ConstantConditions
             if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                 String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
@@ -245,6 +245,7 @@ public class SellerStep3View extends TradeStepView {
     }
 
 
+    @SuppressWarnings("PointlessBooleanExpression")
     private void showPopup() {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         String key = "confirmPayment" + trade.getId();
@@ -271,6 +272,7 @@ public class SellerStep3View extends TradeStepView {
                 message = message + Res.get("portfolio.pending.step3_seller.bankCheck" + optionalHolderName.get(), part);
             }
         }
+        //noinspection ConstantConditions
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
             new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))

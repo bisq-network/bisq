@@ -22,7 +22,9 @@ public class TacWindow extends Overlay<TacWindow> {
         width = 900;
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     public void showIfNeeded() {
+        //noinspection ConstantConditions
         if (!preferences.isTacAccepted() && !DevEnv.DEV_MODE) {
             headLine(Res.get("tacWindow.headline"));
 

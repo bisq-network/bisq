@@ -5,16 +5,12 @@ import io.bisq.common.UserThread;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.image.ImageView;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
 public class BusyAnimation extends ImageView {
-    private static final Logger log = LoggerFactory.getLogger(BusyAnimation.class);
 
     private Timer timer;
-    private final int increment = 36;
     private int rotation;
     private final BooleanProperty isRunningProperty = new SimpleBooleanProperty();
 
@@ -76,6 +72,7 @@ public class BusyAnimation extends ImageView {
     }
 
     private void updateAnimation() {
+        int increment = 36;
         rotation += increment;
         setRotate(rotation);
     }

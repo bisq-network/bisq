@@ -239,8 +239,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private void updateChartData() {
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
-                .filter(e -> e.getOfferPayload().getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getOfferPayload().getDirection().equals(Offer.Direction.BUY))
+                .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
+                        && e.getDirection().equals(Offer.Direction.BUY))
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
                     long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
@@ -255,8 +255,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
         List<Offer> allSellOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
-                .filter(e -> e.getOfferPayload().getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getOfferPayload().getDirection().equals(Offer.Direction.SELL))
+                .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
+                        && e.getDirection().equals(Offer.Direction.SELL))
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
                     long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;

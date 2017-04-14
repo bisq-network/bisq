@@ -25,23 +25,17 @@ public class PeerInfoIcon extends Group {
     private final String hostName;
     private final String tooltipText;
     private final int numTrades;
-    private final PrivateNotificationManager privateNotificationManager;
-    private final Offer offer;
     private final Map<String, String> peerTagMap;
     private final Label numTradesLabel;
-    private final double SIZE = 26;
-    private final ImageView numTradesCircle;
-    private final ImageView tagCircle;
     private final Label tagLabel;
     private final Pane tagPane;
     private final Pane numTradesPane;
 
-    public PeerInfoIcon(String hostName, String tooltipText, int numTrades, PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences) {
+    public PeerInfoIcon(String hostName, String tooltipText, int numTrades,
+                        PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences) {
         this.hostName = hostName;
         this.tooltipText = tooltipText;
         this.numTrades = numTrades;
-        this.privateNotificationManager = privateNotificationManager;
-        this.offer = offer;
 
         peerTagMap = preferences.getPeerTagMap();
 
@@ -67,6 +61,7 @@ public class PeerInfoIcon extends Group {
         Color color = Color.rgb(red, green, blue);
         color = color.deriveColor(1, saturation, 0.8, 1); // reduce saturation and brightness
 
+        double SIZE = 26;
         Canvas background = new Canvas(SIZE, SIZE);
         GraphicsContext gc = background.getGraphicsContext2D();
         gc.setFill(color);
@@ -81,7 +76,7 @@ public class PeerInfoIcon extends Group {
         numTradesPane = new Pane();
         numTradesPane.relocate(18, 14);
         numTradesPane.setMouseTransparent(true);
-        numTradesCircle = new ImageView();
+        ImageView numTradesCircle = new ImageView();
         numTradesCircle.setId("image-green_circle");
         numTradesLabel = new Label();
         numTradesLabel.relocate(5, 1);
@@ -91,7 +86,7 @@ public class PeerInfoIcon extends Group {
         tagPane = new Pane();
         tagPane.relocate(18, -2);
         tagPane.setMouseTransparent(true);
-        tagCircle = new ImageView();
+        ImageView tagCircle = new ImageView();
         tagCircle.setId("image-blue_circle");
         tagLabel = new Label();
         tagLabel.relocate(5, 1);
@@ -102,7 +97,7 @@ public class PeerInfoIcon extends Group {
 
         getChildren().addAll(background, avatarImageView, tagPane, numTradesPane);
 
-        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer)
+        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences)
                 .hostName(hostName)
                 .numTrades(numTrades)
                 .position(localToScene(new Point2D(0, 0)))

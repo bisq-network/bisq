@@ -21,7 +21,6 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.AddressTextField;
@@ -65,7 +64,6 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     private final String paymentLabelString;
     private Subscription amountTextFieldSubscription;
-    private final Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,13 +71,11 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter bsqFormatter, BsqBalanceUtil bsqBalanceUtil,
-                           Preferences preferences) {
+    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter bsqFormatter, BsqBalanceUtil bsqBalanceUtil) {
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
         this.bsqBalanceUtil = bsqBalanceUtil;
         paymentLabelString = Res.get("dao.wallet.receive.fundBSQWallet");
-        this.preferences = preferences;
     }
 
     @Override

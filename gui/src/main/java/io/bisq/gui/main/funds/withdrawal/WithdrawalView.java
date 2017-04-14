@@ -27,7 +27,6 @@ import io.bisq.core.btc.AddressEntryException;
 import io.bisq.core.btc.InsufficientFundsException;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
@@ -84,7 +83,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final FailedTradesManager failedTradesManager;
     private final BSFormatter formatter;
     private final Preferences preferences;
-    private final FeeService feeService;
     private final BtcAddressValidator btcAddressValidator;
     private final WalletPasswordWindow walletPasswordWindow;
     private final ObservableList<WithdrawalListItem> observableList = FXCollections.observableArrayList();
@@ -107,7 +105,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                            ClosedTradableManager closedTradableManager,
                            FailedTradesManager failedTradesManager,
                            BSFormatter formatter, Preferences preferences,
-                           FeeService feeService,
                            BtcAddressValidator btcAddressValidator, WalletPasswordWindow walletPasswordWindow) {
         this.walletService = walletService;
         this.tradeManager = tradeManager;
@@ -115,7 +112,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         this.failedTradesManager = failedTradesManager;
         this.formatter = formatter;
         this.preferences = preferences;
-        this.feeService = feeService;
         this.btcAddressValidator = btcAddressValidator;
         this.walletPasswordWindow = walletPasswordWindow;
     }

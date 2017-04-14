@@ -24,8 +24,6 @@ import io.bisq.gui.main.overlays.Overlay;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
@@ -33,10 +31,8 @@ import static io.bisq.gui.util.FormBuilder.addLabelInputTextField;
 import static io.bisq.gui.util.FormBuilder.addLabelTextField;
 
 public class FundCompensationRequestWindow extends Overlay<FundCompensationRequestWindow> {
-    private static final Logger log = LoggerFactory.getLogger(FundCompensationRequestWindow.class);
     private CompensationRequestPayload compensationRequest;
     private InputTextField amount;
-    private TextField info;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -87,7 +83,7 @@ public class FundCompensationRequestWindow extends Overlay<FundCompensationReque
     }
 
     private void addContent() {
-        info = addLabelTextField(gridPane, ++rowIndex, "Request ID:").second;
+        TextField info = addLabelTextField(gridPane, ++rowIndex, "Request ID:").second;
         amount = addLabelInputTextField(gridPane, ++rowIndex, "Amount in BTC:").second;
 
         info.setText(compensationRequest.getShortId());
@@ -97,9 +93,7 @@ public class FundCompensationRequestWindow extends Overlay<FundCompensationReque
     protected void addCloseButton() {
         super.addCloseButton();
         if (actionButton != null) {
-            actionButton.setOnAction(event -> {
-                actionHandlerOptional.ifPresent(Runnable::run);
-            });
+            actionButton.setOnAction(event -> actionHandlerOptional.ifPresent(Runnable::run));
         }
     }
 }

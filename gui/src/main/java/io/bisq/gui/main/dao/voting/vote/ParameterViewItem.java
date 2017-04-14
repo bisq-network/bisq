@@ -144,9 +144,7 @@ public class ParameterViewItem {
         slider.valueProperty().addListener(sliderListener);
 
         resetButton = new Button(Res.get("shared.reset"));
-        resetButton.setOnAction(event -> {
-            inputTextField.setText(String.valueOf(originalValue));
-        });
+        resetButton.setOnAction(event -> inputTextField.setText(String.valueOf(originalValue)));
 
         removeButton = new Button(Res.get("shared.remove"));
         removeButton.setOnAction(event -> {

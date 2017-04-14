@@ -19,7 +19,6 @@ package io.bisq.gui.util.validation;
 
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.WalletUtils;
-import io.bisq.core.user.Preferences;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 
@@ -27,11 +26,8 @@ import javax.inject.Inject;
 
 public final class BtcAddressValidator extends InputValidator {
 
-    private final Preferences preferences;
-
     @Inject
-    public BtcAddressValidator(Preferences preferences) {
-        this.preferences = preferences;
+    public BtcAddressValidator() {
     }
 
     @Override

@@ -216,10 +216,12 @@ public class BuyerStep2View extends TradeStepView {
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("PointlessBooleanExpression")
     private void onPaymentStarted() {
         if (model.p2PService.isBootstrapped()) {
             if (model.dataModel.getSellersPaymentAccountPayload() instanceof CashDepositAccountPayload) {
                 String key = "confirmPaperReceiptSent";
+                //noinspection ConstantConditions
                 if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                     Popup popup = new Popup<>();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.paperReceipt.headline"))
@@ -240,8 +242,10 @@ public class BuyerStep2View extends TradeStepView {
         }
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     private void showConfirmPaymentStartedPopup() {
         String key = "confirmPaymentStarted";
+        //noinspection ConstantConditions
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
             Popup popup = new Popup<>();
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
@@ -274,6 +278,7 @@ public class BuyerStep2View extends TradeStepView {
         });
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     private void showPopup() {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         if (paymentAccountPayload != null) {
@@ -324,6 +329,7 @@ public class BuyerStep2View extends TradeStepView {
                         refTextWarn + "\n\n" +
                         fees;
 
+            //noinspection ConstantConditions
             if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
                 DontShowAgainLookup.dontShowAgain(key, true);
                 new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))

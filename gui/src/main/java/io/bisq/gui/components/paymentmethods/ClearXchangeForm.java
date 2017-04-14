@@ -18,6 +18,7 @@
 package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.common.locale.Res;
+import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.payment.ClearXchangeAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.ClearXchangeAccountPayload;
@@ -74,9 +75,10 @@ public class ClearXchangeForm extends PaymentMethodForm {
             clearXchangeAccount.setEmailOrMobileNr(newValue);
             updateFromInputs();
         });
-
+        final TradeCurrency singleTradeCurrency = clearXchangeAccount.getSingleTradeCurrency();
+        final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
-                clearXchangeAccount.getSingleTradeCurrency().getNameAndCode());
+                nameAndCode);
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -103,8 +105,10 @@ public class ClearXchangeForm extends PaymentMethodForm {
         TextField field = FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.get("payment.email.mobile"),
                 clearXchangeAccount.getEmailOrMobileNr()).second;
         field.setMouseTransparent(false);
+        final TradeCurrency singleTradeCurrency = clearXchangeAccount.getSingleTradeCurrency();
+        final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         FormBuilder.addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"),
-                clearXchangeAccount.getSingleTradeCurrency().getNameAndCode());
+                nameAndCode);
         addAllowedPeriod();
     }
 

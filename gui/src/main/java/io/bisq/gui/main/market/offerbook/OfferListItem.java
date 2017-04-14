@@ -38,6 +38,7 @@ public class OfferListItem {
 
         OfferListItem that = (OfferListItem) o;
 
+        //noinspection SimplifiableIfStatement
         if (Double.compare(that.accumulated, accumulated) != 0) return false;
         return !(offer != null ? !offer.equals(that.offer) : that.offer != null);
 

@@ -53,8 +53,9 @@ public class CompensationViewItem {
     public final CompensationRequestVoteItem compensationRequestVoteItem;
     private Pane owner;
 
+    @SuppressWarnings("UnusedParameters")
     public static void attach(CompensationRequestVoteItem compensationRequestVoteItem, VBox vBox, DoubleProperty labelWidth, Runnable removeHandler) {
-        instances.add(new CompensationViewItem(compensationRequestVoteItem, vBox, labelWidth, removeHandler));
+        instances.add(new CompensationViewItem(compensationRequestVoteItem, vBox, removeHandler));
     }
 
     public static void cleanupAllInstances() {
@@ -73,7 +74,7 @@ public class CompensationViewItem {
         return instances.isEmpty();
     }
 
-    private CompensationViewItem(CompensationRequestVoteItem compensationRequestVoteItem, VBox vBox, DoubleProperty labelWidth, Runnable removeHandler) {
+    private CompensationViewItem(CompensationRequestVoteItem compensationRequestVoteItem, VBox vBox, Runnable removeHandler) {
         this.compensationRequestVoteItem = compensationRequestVoteItem;
         CompensationRequest compensationRequest = compensationRequestVoteItem.compensationRequest;
         CompensationRequestPayload compensationRequestPayload = compensationRequest.getCompensationRequestPayload();

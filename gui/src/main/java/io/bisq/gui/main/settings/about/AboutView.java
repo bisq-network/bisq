@@ -19,7 +19,6 @@ package io.bisq.gui.main.settings.about;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Res;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -38,12 +37,10 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
 
     private int gridRow = 0;
-    private Preferences preferences;
 
     @Inject
-    public AboutView(Preferences preferences) {
+    public AboutView() {
         super();
-        this.preferences = preferences;
     }
 
     public void initialize() {

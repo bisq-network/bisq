@@ -31,8 +31,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
@@ -40,9 +38,7 @@ import static io.bisq.gui.util.FormBuilder.*;
 
 //TODO not used yet but keep it for later
 public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
-    private static final Logger log = LoggerFactory.getLogger(AddBitcoinNodesWindow.class);
-    private Button saveButton;
-    private Preferences preferences;
+    private final Preferences preferences;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -111,7 +107,7 @@ public class AddBitcoinNodesWindow extends Overlay<AddBitcoinNodesWindow> {
 
         Tuple2<Button, Button> tuple = add2Buttons(gridPane, ++rowIndex, "Save",
                 "Ignore and use public Bitcoin network nodes");
-        saveButton = tuple.first;
+        Button saveButton = tuple.first;
         saveButton.setOnAction(e -> {
             preferences.setBitcoinNodes(input.getText());
             hide();

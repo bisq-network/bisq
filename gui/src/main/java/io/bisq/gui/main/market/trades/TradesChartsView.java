@@ -89,6 +89,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private ChangeListener<Number> selectedTabIndexListener;
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
     private TableColumn<TradeStatistics, TradeStatistics> priceColumn, volumeColumn, marketColumn;
+    @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Void> currencySelectionBinding;
     private Subscription currencySelectionSubscriber;
     private HBox toolBox;

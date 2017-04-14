@@ -47,9 +47,7 @@ public class BindingTest extends Application {
         label.textProperty().bind(txt);
 
         Button button = new Button("count up");
-        button.setOnAction(e -> {
-            txt.set("counter " + counter++);
-        });
+        button.setOnAction(e -> txt.set("counter " + counter++));
         root.getChildren().addAll(label, button);
 
 

@@ -93,7 +93,6 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     PaymentMethod selectedPaymentMethod = new PaymentMethod(GUIUtil.SHOW_ALL_FLAG);
 
-    private final ObservableList<OfferBookListItem> offerBookListItems;
     private boolean isTabSelected;
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(true);
     boolean showAllPaymentMethods = true;
@@ -121,14 +120,14 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.navigation = navigation;
         this.formatter = formatter;
 
-        offerBookListItems = offerBook.getOfferBookListItems();
+        ObservableList<OfferBookListItem> offerBookListItems = offerBook.getOfferBookListItems();
 
         this.filteredItems = new FilteredList<>(offerBookListItems);
         this.sortedItems = new SortedList<>(filteredItems);
 
         tradeCurrencyListChangeListener = c -> {
             tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream()
-                    .map(e -> e.getCode()).collect(Collectors.toSet());
+                    .map(TradeCurrency::getCode).collect(Collectors.toSet());
             fillAllTradeCurrencies();
         };
     }
@@ -136,7 +135,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     @Override
     protected void activate() {
         tradeCurrencyCodes = preferences.getTradeCurrenciesAsObservable().stream()
-                .map(e -> e.getCode()).collect(Collectors.toSet());
+                .map(TradeCurrency::getCode).collect(Collectors.toSet());
 
         String code = direction == Offer.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
         if (code != null && !code.equals(GUIUtil.SHOW_ALL_FLAG) && !code.isEmpty() &&

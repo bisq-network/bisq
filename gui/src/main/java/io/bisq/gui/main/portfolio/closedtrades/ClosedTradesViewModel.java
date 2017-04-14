@@ -129,6 +129,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     }
 
     int getNumPastTrades(Tradable tradable) {
+        //noinspection ConstantConditions
         return dataModel.closedTradableManager.getClosedTrades().stream()
                 .filter(e -> e instanceof Trade &&
                         tradable instanceof Trade &&

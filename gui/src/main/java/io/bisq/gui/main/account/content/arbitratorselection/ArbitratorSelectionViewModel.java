@@ -122,10 +122,10 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     }
 
     public boolean isAcceptedArbitrator(Arbitrator arbitrator) {
-        if (arbitrator != null && user.getAcceptedArbitrators() != null)
-            return user.getAcceptedArbitrators().contains(arbitrator) && !isMyOwnRegisteredArbitrator(arbitrator);
-        else
-            return false;
+        return arbitrator != null &&
+                user.getAcceptedArbitrators() != null &&
+                user.getAcceptedArbitrators().contains(arbitrator) &&
+                !isMyOwnRegisteredArbitrator(arbitrator);
     }
 
     public boolean arbitratorIsTrader(Arbitrator arbitrator) {

@@ -18,6 +18,7 @@
 package io.bisq.gui.components.paymentmethods;
 
 import io.bisq.common.locale.Res;
+import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.payment.AliPayAccount;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.AliPayAccountPayload;
@@ -64,7 +65,9 @@ public class AliPayForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), aliPayAccount.getSingleTradeCurrency().getNameAndCode());
+        final TradeCurrency singleTradeCurrency = aliPayAccount.getSingleTradeCurrency();
+        final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
         addAllowedPeriod();
         addAccountNameTextFieldWithAutoFillCheckBox();
     }
@@ -86,7 +89,9 @@ public class AliPayForm extends PaymentMethodForm {
         addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.paymentMethod"), Res.get(aliPayAccount.getPaymentMethod().getId()));
         TextField field = addLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), aliPayAccount.getAccountNr()).second;
         field.setMouseTransparent(false);
-        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), aliPayAccount.getSingleTradeCurrency().getNameAndCode());
+        final TradeCurrency singleTradeCurrency = aliPayAccount.getSingleTradeCurrency();
+        final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
+        addLabelTextField(gridPane, ++gridRow, Res.getWithCol("shared.currency"), nameAndCode);
         addAllowedPeriod();
     }
 

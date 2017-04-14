@@ -51,7 +51,6 @@ public class NotificationCenter {
 
     private final TradeManager tradeManager;
     private final DisputeManager disputeManager;
-    private final Preferences preferences;
     private final Navigation navigation;
 
     private final Map<String, Subscription> disputeStateSubscriptionsMap = new HashMap<>();
@@ -68,7 +67,6 @@ public class NotificationCenter {
     public NotificationCenter(TradeManager tradeManager, DisputeManager disputeManager, Preferences preferences, Navigation navigation) {
         this.tradeManager = tradeManager;
         this.disputeManager = disputeManager;
-        this.preferences = preferences;
         this.navigation = navigation;
 
         EasyBind.subscribe(preferences.getUseAnimationsProperty(), useAnimations -> NotificationCenter.useAnimations = useAnimations);

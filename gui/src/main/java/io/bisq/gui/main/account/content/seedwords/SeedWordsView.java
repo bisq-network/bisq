@@ -24,7 +24,6 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsManager;
 import io.bisq.core.user.DontShowAgainLookup;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.main.overlays.popups.Popup;
@@ -57,7 +56,6 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     private final WalletsManager walletsManager;
     private final BtcWalletService btcWalletService;
     private final WalletPasswordWindow walletPasswordWindow;
-    private final Preferences preferences;
 
     private Button restoreButton;
     private TextArea displaySeedWordsTextArea, seedWordsTextArea;
@@ -80,11 +78,10 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private SeedWordsView(WalletsManager walletsManager, BtcWalletService btcWalletService, WalletPasswordWindow walletPasswordWindow, Preferences preferences) {
+    private SeedWordsView(WalletsManager walletsManager, BtcWalletService btcWalletService, WalletPasswordWindow walletPasswordWindow) {
         this.walletsManager = walletsManager;
         this.btcWalletService = btcWalletService;
         this.walletPasswordWindow = walletPasswordWindow;
-        this.preferences = preferences;
     }
 
     @Override

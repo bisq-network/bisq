@@ -163,7 +163,7 @@ public class BSFormatter {
     public Coin parseToCoinWith4Decimals(String input) {
         try {
             return Coin.valueOf(new BigDecimal(parseToCoin(cleanDoubleInput(input)).value).setScale(-scale - 1,
-                    BigDecimal.ROUND_HALF_UP).setScale(scale + 1).toBigInteger().longValue());
+                    BigDecimal.ROUND_HALF_UP).setScale(scale + 1, BigDecimal.ROUND_HALF_UP).toBigInteger().longValue());
         } catch (Throwable t) {
             if (input != null && input.length() > 0)
                 log.warn("Exception at parseToCoinWith4Decimals: " + t.toString());
@@ -502,6 +502,7 @@ public class BSFormatter {
         // notation (1.0E-6) which screw up coinFormat.parse
         //noinspection ResultOfMethodCallIgnored
         // Just called to check if we have a valid double, throws exception otherwise
+        //noinspection ResultOfMethodCallIgnored
         Double.parseDouble(input);
         return input;
     }
@@ -584,10 +585,9 @@ public class BSFormatter {
                     Res.get("formatter.makerTaker", currencyCode, Res.get("shared.buyer"), currencyCode, Res.get("shared.seller")) :
                     Res.get("formatter.makerTaker", currencyCode, Res.get("shared.seller"), currencyCode, Res.get("shared.buyer"));
         } else {
-            String code = currencyCode;
             return direction == Offer.Direction.SELL ?
-                    Res.get("formatter.makerTaker", code, Res.get("shared.buyer"), code, Res.get("shared.seller")) :
-                    Res.get("formatter.makerTaker", code, Res.get("shared.seller"), code, Res.get("shared.buyer"));
+                    Res.get("formatter.makerTaker", currencyCode, Res.get("shared.buyer"), currencyCode, Res.get("shared.seller")) :
+                    Res.get("formatter.makerTaker", currencyCode, Res.get("shared.seller"), currencyCode, Res.get("shared.buyer"));
         }
     }
 
@@ -598,10 +598,9 @@ public class BSFormatter {
                     Res.get("formatter.youAreAsMaker", Res.get("shared.buying"), code, Res.get("shared.selling"), code) :
                     Res.get("formatter.youAreAsTaker", Res.get("shared.buying"), code, Res.get("shared.selling"), code);
         } else {
-            String code = currencyCode;
             return isMyOffer ?
-                    Res.get("formatter.youAreAsMaker", Res.get("shared.selling"), code, Res.get("shared.buying"), code) :
-                    Res.get("formatter.youAreAsTaker", Res.get("shared.selling"), code, Res.get("shared.buying"), code);
+                    Res.get("formatter.youAreAsMaker", Res.get("shared.selling"), currencyCode, Res.get("shared.buying"), currencyCode) :
+                    Res.get("formatter.youAreAsTaker", Res.get("shared.selling"), currencyCode, Res.get("shared.buying"), currencyCode);
         }
     }
 
@@ -612,10 +611,9 @@ public class BSFormatter {
                     Res.get("formatter.youAreAsMaker", Res.get("shared.selling"), code, Res.get("shared.buying"), code) :
                     Res.get("formatter.youAreAsTaker", Res.get("shared.selling"), code, Res.get("shared.buying"), code);
         } else {
-            String code = currencyCode;
             return isMyOffer ?
-                    Res.get("formatter.youAreAsMaker", Res.get("shared.buying"), code, Res.get("shared.selling"), code) :
-                    Res.get("formatter.youAreAsTaker", Res.get("shared.buying"), code, Res.get("shared.selling"), code);
+                    Res.get("formatter.youAreAsMaker", Res.get("shared.buying"), currencyCode, Res.get("shared.selling"), currencyCode) :
+                    Res.get("formatter.youAreAsTaker", Res.get("shared.buying"), currencyCode, Res.get("shared.selling"), currencyCode);
         }
     }
 
@@ -659,7 +657,6 @@ public class BSFormatter {
                         Res.get("formatter.asMaker", btc, Res.get("shared.seller")) :
                         Res.get("formatter.asTaker", btc, Res.get("shared.buyer"));
         } else {
-            String btc = "BTC";
             if (isBuyerMakerAndSellerTaker)
                 return isMaker ?
                         Res.get("formatter.asMaker", currencyCode, Res.get("shared.seller")) :

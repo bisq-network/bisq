@@ -24,17 +24,17 @@ public class OfferBookViewModelTest {
 
     @Test
     public void testIsAnyPaymentAccountValidForOffer() {
-        Offer offer;
         Collection<PaymentAccount> paymentAccounts;
-
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSepaAccount("EUR", "DE", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
+        paymentAccounts = new ArrayList<>(Collections.singletonList(getSepaAccount("EUR", "DE", "1212324",
+                new ArrayList<>(Arrays.asList("AT", "DE")))));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
 
         // empty paymentAccounts
         paymentAccounts = new ArrayList<>();
-        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
+        assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(getSEPAPaymentMethod("EUR", "AT",
+                new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 
         // simple cases: same payment methods
 
@@ -49,7 +49,8 @@ public class OfferBookViewModelTest {
                 getBlockChainsPaymentMethod("ETH"), paymentAccounts));
 
         // offer: sepa paymentAccount: sepa - same country, same currency
-        paymentAccounts = new ArrayList<>(Collections.singletonList(getSepaAccount("EUR", "AT", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
+        paymentAccounts = new ArrayList<>(Collections.singletonList(getSepaAccount("EUR", "AT", "1212324",
+                new ArrayList<>(Arrays.asList("AT", "DE")))));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
                 getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
 

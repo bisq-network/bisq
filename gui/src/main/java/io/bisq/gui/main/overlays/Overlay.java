@@ -125,7 +125,6 @@ public abstract class Overlay<T extends Overlay> {
     protected boolean showReportErrorButtons;
     protected Label messageLabel;
     protected String truncatedMessage;
-    private BusyAnimation busyAnimation;
     private boolean showBusyAnimation;
     protected Button actionButton;
     protected Label headLineLabel;
@@ -302,6 +301,7 @@ public abstract class Overlay<T extends Overlay> {
         return (T) this;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public T showReportErrorButtons() {
         this.showReportErrorButtons = true;
         return (T) this;
@@ -723,7 +723,7 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected void addBusyAnimation() {
-        busyAnimation = new BusyAnimation();
+        BusyAnimation busyAnimation = new BusyAnimation();
         GridPane.setHalignment(busyAnimation, HPos.CENTER);
         GridPane.setRowIndex(busyAnimation, ++rowIndex);
         GridPane.setColumnSpan(busyAnimation, 2);

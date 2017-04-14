@@ -47,11 +47,11 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private ChangeListener<Boolean> focusListener;
     private final PrivateNotificationManager privateNotificationManager;
     private final Offer offer;
-    private Preferences preferences;
+    private final Preferences preferences;
     private EventHandler<KeyEvent> keyEventEventHandler;
 
 
-    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer) {
+    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences) {
         this.privateNotificationManager = privateNotificationManager;
         this.offer = offer;
         this.preferences = preferences;
@@ -214,7 +214,6 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
             double startY = -160;
             double duration = getDuration(400);
             Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
-            double height = gridPane.getPrefHeight();
             Timeline timeline = new Timeline();
             ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
             keyFrames.add(new KeyFrame(Duration.millis(0),

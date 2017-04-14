@@ -114,9 +114,7 @@ public class UnlockArbitrationRegistrationWindow extends Overlay<UnlockArbitrati
         GridPane.setMargin(keyInputTextField, new Insets(3, 0, 0, 0));
         GridPane.setRowIndex(keyInputTextField, rowIndex);
         GridPane.setColumnIndex(keyInputTextField, 1);
-        changeListener = (observable, oldValue, newValue) -> {
-            unlockButton.setDisable(newValue.length() == 0);
-        };
+        changeListener = (observable, oldValue, newValue) -> unlockButton.setDisable(newValue.length() == 0);
         keyInputTextField.textProperty().addListener(changeListener);
         gridPane.getChildren().addAll(label, keyInputTextField);
     }

@@ -67,7 +67,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private Subscription selectedTableItemSubscription;
     private Subscription selectedItemSubscription;
     private Subscription appFocusSubscription;
-    private Preferences preferences;
+    private final Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -450,6 +450,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 });
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private TableColumn<PendingTradesListItem, PendingTradesListItem> setAvatarColumnCellFactory() {
         avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         avatarColumn.setCellFactory(

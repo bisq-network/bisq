@@ -46,7 +46,6 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
 
     private final PubKeyRing pubKeyRing;
     private final NodeAddress nodeAddress;
-    private Button sendButton;
     private SendPrivateNotificationHandler sendPrivateNotificationHandler;
 
 
@@ -119,7 +118,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         Label first = labelTextAreaTuple2.first;
         first.setMinWidth(200);
 
-        sendButton = new Button(Res.get("sendPrivateNotificationWindow.send"));
+        Button sendButton = new Button(Res.get("sendPrivateNotificationWindow.send"));
         sendButton.setOnAction(e -> {
             if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
                 if (!sendPrivateNotificationHandler.handle(

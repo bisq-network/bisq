@@ -54,8 +54,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private Subscription tradeStateSubscription;
     @Nullable
     private Trade trade;
-    private boolean isBuyerTrade;
-    private boolean isMakerTrade;
 
     interface State {
     }
@@ -132,8 +130,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         }
         if (selectedItem != null) {
             this.trade = selectedItem.getTrade();
-            isBuyerTrade = trade instanceof BuyerTrade;
-            isMakerTrade = trade instanceof MakerTrade;
+            boolean isBuyerTrade = trade instanceof BuyerTrade;
+            boolean isMakerTrade = trade instanceof MakerTrade;
             tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), this::onTradeStateChanged);
         }
     }
@@ -207,8 +205,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         long maxPeriod = getMaxTradePeriod();
         long remaining = getRemainingTradeDuration();
         if (maxPeriod != 0) {
-            double v = 1 - (double) remaining / (double) maxPeriod;
-            return v;
+            return 1 - (double) remaining / (double) maxPeriod;
         } else
             return 0;
     }

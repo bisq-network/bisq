@@ -82,7 +82,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final SortedList<TransactionsListItem> sortedList = new SortedList<>(observableList);
 
     private final BtcWalletService btcWalletService;
-    private BsqWalletService bsqWalletService;
+    private final BsqWalletService bsqWalletService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
@@ -237,7 +237,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             };
 
             GUIUtil.exportCSV("transactions.csv", headerConverter, contentConverter,
-                    new TransactionsListItem(), sortedList, stage, preferences);
+                    new TransactionsListItem(), sortedList, stage);
         });
     }
 

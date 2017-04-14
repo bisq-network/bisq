@@ -29,10 +29,8 @@ import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.arbitration.DisputeAlreadyOpenException;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
-import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.trade.BuyerTrade;
 import io.bisq.core.trade.SellerTrade;
 import io.bisq.core.trade.Trade;
@@ -71,8 +69,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class PendingTradesDataModel extends ActivatableDataModel {
     public final TradeManager tradeManager;
     public final BtcWalletService btcWalletService;
-    private final TradeWalletService tradeWalletService;
-    private final FeeService feeService;
     private final User user;
     private final KeyRing keyRing;
     public final DisputeManager disputeManager;
@@ -98,13 +94,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PendingTradesDataModel(TradeManager tradeManager, BtcWalletService btcWalletService, TradeWalletService tradeWalletService, FeeService feeService,
-                                  User user, KeyRing keyRing, DisputeManager disputeManager, Preferences preferences, P2PService p2PService,
-                                  Navigation navigation, WalletPasswordWindow walletPasswordWindow, NotificationCenter notificationCenter) {
+    public PendingTradesDataModel(TradeManager tradeManager, BtcWalletService btcWalletService,
+                                  User user, KeyRing keyRing, DisputeManager disputeManager,
+                                  Preferences preferences, P2PService p2PService,
+                                  Navigation navigation, WalletPasswordWindow walletPasswordWindow,
+                                  NotificationCenter notificationCenter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
-        this.tradeWalletService = tradeWalletService;
-        this.feeService = feeService;
         this.user = user;
         this.keyRing = keyRing;
         this.disputeManager = disputeManager;

@@ -23,7 +23,6 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.arbitration.DisputeManager;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.Activatable;
 import io.bisq.gui.common.view.*;
@@ -55,7 +54,6 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     private final ArbitratorManager arbitratorManager;
     private final DisputeManager disputeManager;
     private final KeyRing keyRing;
-    private final Preferences preferences;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -66,13 +64,12 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     @Inject
     public DisputesView(CachingViewLoader viewLoader, Navigation navigation,
                         ArbitratorManager arbitratorManager, DisputeManager disputeManager,
-                        KeyRing keyRing, Preferences preferences) {
+                        KeyRing keyRing) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.arbitratorManager = arbitratorManager;
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
-        this.preferences = preferences;
     }
 
     @Override
@@ -111,6 +108,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         }
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     @Override
     protected void activate() {
         arbitratorManager.updateArbitratorMap();

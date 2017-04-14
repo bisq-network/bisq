@@ -251,6 +251,7 @@ public class FormBuilder {
     // Label  + TxIdTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("UnusedReturnValue")
     public static Tuple2<Label, TxIdTextField> addLabelTxIdTextField(GridPane gridPane, int rowIndex, String title, String value) {
         return addLabelTxIdTextField(gridPane, rowIndex, title, value, 0);
     }

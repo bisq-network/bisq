@@ -108,6 +108,7 @@ public class Base58Bsq {
             char c = input.charAt(i);
 
             int digit58 = -1;
+            //noinspection ConstantConditions
             if (c >= 0 && c < 128) {
                 digit58 = INDEXES[c];
             }

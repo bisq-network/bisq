@@ -47,15 +47,13 @@ public class SystemTray {
 
     private static final String SHOW_WINDOW_LABEL = Res.get("systemTray.show");
     private static final String HIDE_WINDOW_LABEL = Res.get("systemTray.hide");
-    private static SystemTray systemTray;
 
     private final Stage stage;
     private final Runnable onExit;
     private final MenuItem toggleShowHideItem = new MenuItem(HIDE_WINDOW_LABEL);
 
-    public static SystemTray create(Stage stage, Runnable onExit) {
-        systemTray = new SystemTray(stage, onExit);
-        return systemTray;
+    public static void create(Stage stage, Runnable onExit) {
+        new SystemTray(stage, onExit);
     }
 
     private SystemTray(Stage stage, Runnable onExit) {

@@ -22,7 +22,6 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -61,7 +60,6 @@ import static io.bisq.gui.util.FormBuilder.addLabel;
 @FxmlView
 public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Void> {
 
-    private final Preferences preferences;
     TableView<CompensationRequest> tableView;
     private InputTextField nameTextField, titleTextField, categoryTextField, descriptionTextField, linkTextField,
             startDateTextField, endDateTextField, requestedBTCTextField, btcAddressTextField;
@@ -75,8 +73,6 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     private Subscription selectedCompensationRequestSubscription;
     private CompensationRequestDisplay compensationRequestDisplay;
     private GridPane gridPane;
-    private Button fundButton;
-    private Button voteButton;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -84,15 +80,16 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ActiveCompensationRequestView(CompensationRequestManager compensationRequestManger, BSFormatter formatter, Navigation navigation,
-                                          FundCompensationRequestWindow fundCompensationRequestWindow, BSFormatter btcFormatter,
-                                          Preferences preferences) {
+    private ActiveCompensationRequestView(CompensationRequestManager compensationRequestManger,
+                                          BSFormatter formatter,
+                                          Navigation navigation,
+                                          FundCompensationRequestWindow fundCompensationRequestWindow,
+                                          BSFormatter btcFormatter) {
         this.compensationRequestManger = compensationRequestManger;
         this.formatter = formatter;
         this.navigation = navigation;
         this.fundCompensationRequestWindow = fundCompensationRequestWindow;
         this.btcFormatter = btcFormatter;
-        this.preferences = preferences;
     }
 
     @Override
@@ -186,33 +183,31 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
             if (compensationRequest.isWaitingForVotingPeriod()) {
                 addLabel(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.notOpenAnymore"));
             } else if (compensationRequest.isInVotePeriod()) {
-                voteButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.vote"));
+                Button voteButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.vote"));
                 voteButton.setOnAction(event -> {
                     compensationRequestManger.setSelectedCompensationRequest(compensationRequest);
                     navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VoteView.class);
                 });
             } else if (compensationRequest.isInFundingPeriod()) {
                 checkArgument(compensationRequest.isAccepted(), "A compensation request with state OPEN_FOR_FUNDING must be accepted.");
-                fundButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.fund"));
-                fundButton.setOnAction(event -> {
-                    fundCompensationRequestWindow.applyCompensationRequest(compensationRequest.getCompensationRequestPayload()).
-                            onAction(() -> {
-                                Coin amount = btcFormatter.parseToCoin(fundCompensationRequestWindow.getAmount().getText());
-                                compensationRequestManger.fundCompensationRequest(compensationRequest, amount,
-                                        new FutureCallback<Transaction>() {
-                                            @Override
-                                            public void onSuccess(Transaction transaction) {
-                                                UserThread.runAfter(() -> new Popup<>().feedback(Res.get("dao.compensation.active.successfullyFunded")).show(), 1);
-                                            }
+                Button fundButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.fund"));
+                fundButton.setOnAction(event -> fundCompensationRequestWindow.applyCompensationRequest(compensationRequest.getCompensationRequestPayload()).
+                        onAction(() -> {
+                            Coin amount = btcFormatter.parseToCoin(fundCompensationRequestWindow.getAmount().getText());
+                            compensationRequestManger.fundCompensationRequest(compensationRequest, amount,
+                                    new FutureCallback<Transaction>() {
+                                        @Override
+                                        public void onSuccess(Transaction transaction) {
+                                            UserThread.runAfter(() -> new Popup<>().feedback(Res.get("dao.compensation.active.successfullyFunded")).show(), 1);
+                                        }
 
-                                            @Override
-                                            public void onFailure(@NotNull Throwable t) {
-                                                UserThread.runAfter(() -> new Popup<>().error(t.toString()).show(), 1);
+                                        @Override
+                                        public void onFailure(@NotNull Throwable t) {
+                                            UserThread.runAfter(() -> new Popup<>().error(t.toString()).show(), 1);
 
-                                            }
-                                        });
-                            }).show();
-                });
+                                        }
+                                    });
+                        }).show());
             } else if (compensationRequest.isClosed()) {
                 addLabel(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.notOpenAnymore"));
             }

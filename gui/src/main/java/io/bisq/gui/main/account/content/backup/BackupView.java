@@ -130,7 +130,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         });
         backupNow.setOnAction(event -> {
             String backupDirectory = preferences.getBackupDirectory();
-            if (backupDirectory.length() > 0) {
+            if (backupDirectory != null && backupDirectory.length() > 0) {
                 try {
                     String dateString = new SimpleDateFormat("YYYY-MM-dd-HHmmss").format(new Date());
                     String destination = Paths.get(backupDirectory, "bisq_backup_" + dateString).toString();

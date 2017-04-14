@@ -24,7 +24,6 @@ import io.bisq.common.monetary.Price;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.gui.main.offer.offerbook.OfferBook;
 import io.bisq.gui.main.offer.offerbook.OfferBookListItem;
@@ -52,7 +51,6 @@ class SpreadViewModel extends ActivatableViewModel {
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
     final ObservableList<SpreadItem> spreadItems = FXCollections.observableArrayList();
-    private final Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -60,12 +58,10 @@ class SpreadViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SpreadViewModel(OfferBook offerBook, PriceFeedService priceFeedService, BSFormatter formatter,
-                           Preferences preferences) {
+    public SpreadViewModel(OfferBook offerBook, PriceFeedService priceFeedService, BSFormatter formatter) {
         this.offerBook = offerBook;
         this.priceFeedService = priceFeedService;
         this.formatter = formatter;
-        this.preferences = preferences;
 
         offerBookListItems = offerBook.getOfferBookListItems();
         listChangeListener = c -> update(offerBookListItems);

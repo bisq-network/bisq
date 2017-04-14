@@ -21,7 +21,6 @@ import io.bisq.common.UserThread;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Tuple2;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.TableGroupHeadline;
@@ -50,7 +49,6 @@ import static io.bisq.gui.util.FormBuilder.*;
 public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, ArbitratorSelectionViewModel> {
 
     private final ArbitratorSelectionViewModel model;
-    private final Preferences preferences;
 
     private ListView<String> languagesListView;
     private ComboBox<String> languageComboBox;
@@ -67,10 +65,9 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ArbitratorSelectionView(ArbitratorSelectionViewModel model, Preferences preferences) {
+    private ArbitratorSelectionView(ArbitratorSelectionViewModel model) {
         super(model);
         this.model = model;
-        this.preferences = preferences;
     }
 
     @Override

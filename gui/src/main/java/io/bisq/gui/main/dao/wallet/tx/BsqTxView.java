@@ -58,19 +58,19 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     TableView<BsqTxListItem> tableView;
     private int gridRow = 0;
-    private BsqFormatter bsqFormatter;
-    private BsqWalletService bsqWalletService;
-    private BsqBlockchainManager bsqBlockchainManager;
-    private BtcWalletService btcWalletService;
-    private BsqBalanceUtil bsqBalanceUtil;
-    private Preferences preferences;
+    private final BsqFormatter bsqFormatter;
+    private final BsqWalletService bsqWalletService;
+    private final BsqBlockchainManager bsqBlockchainManager;
+    private final BtcWalletService btcWalletService;
+    private final BsqBalanceUtil bsqBalanceUtil;
+    private final Preferences preferences;
     private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private final ObservableList<BsqTxListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<BsqTxListItem> sortedList = new SortedList<>(observableList);
     private ChangeListener<Number> parentHeightListener;
     private Pane rootParent;
     // Need to be DoubleProperty as we pass it as reference
-    private DoubleProperty initialOccupiedHeight = new SimpleDoubleProperty(-1);
+    private final DoubleProperty initialOccupiedHeight = new SimpleDoubleProperty(-1);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,11 +80,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     @Inject
     private BsqTxView(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
                       BsqBlockchainManager bsqBlockchainManager,
-
+                      Preferences preferences,
                       BtcWalletService btcWalletService, BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bsqBlockchainManager = bsqBlockchainManager;
+        this.preferences = preferences;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
     }

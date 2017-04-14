@@ -35,6 +35,7 @@ public class CurrencyListItem {
 
         CurrencyListItem that = (CurrencyListItem) o;
 
+        //noinspection SimplifiableIfStatement
         if (numTrades != that.numTrades) return false;
         return !(tradeCurrency != null ? !tradeCurrency.equals(that.tradeCurrency) : that.tradeCurrency != null);
 

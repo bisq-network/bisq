@@ -173,9 +173,7 @@ class TransactionsListItem {
                 } else {
                     Offer offer = trade.getOffer();
                     String offerFeePaymentTxID = offer.getOfferFeePaymentTxId();
-                    if (offer != null &&
-                            offerFeePaymentTxID != null &&
-                            offerFeePaymentTxID.equals(txId)) {
+                    if (offerFeePaymentTxID != null && offerFeePaymentTxID.equals(txId)) {
                         details = Res.get("funds.tx.createOfferFee", id);
                     } else if (trade.getDepositTx() != null &&
                             trade.getDepositTx().getHashAsString().equals(txId)) {

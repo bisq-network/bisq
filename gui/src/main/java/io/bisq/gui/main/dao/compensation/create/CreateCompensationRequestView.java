@@ -31,7 +31,6 @@ import io.bisq.core.btc.wallet.ChangeBelowDustException;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.core.user.Preferences;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -62,7 +61,6 @@ import static io.bisq.gui.util.FormBuilder.addButtonAfterGroup;
 @FxmlView
 public class CreateCompensationRequestView extends ActivatableView<GridPane, Void> {
 
-    private final Preferences preferences;
     private CompensationRequestDisplay compensationRequestDisplay;
     private Button createButton;
 
@@ -84,14 +82,13 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
     @Inject
     private CreateCompensationRequestView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService, FeeService feeService,
                                           CompensationRequestManager compensationRequestManager, P2PService p2PService,
-                                          KeyRing keyRing, BSFormatter btcFormatter, Preferences preferences) {
+                                          KeyRing keyRing, BSFormatter btcFormatter) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
         this.compensationRequestManager = compensationRequestManager;
         this.p2PService = p2PService;
         this.btcFormatter = btcFormatter;
-        this.preferences = preferences;
 
         p2pStorageSignaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
     }

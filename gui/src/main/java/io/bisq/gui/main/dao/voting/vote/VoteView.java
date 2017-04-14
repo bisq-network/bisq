@@ -30,7 +30,6 @@ import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.*;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.core.user.Preferences;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
@@ -68,7 +67,6 @@ import static javafx.beans.binding.Bindings.createBooleanBinding;
 @FxmlView
 public class VoteView extends ActivatableView<GridPane, Void> {
 
-    private final Preferences preferences;
     private ComboBox<VoteItem> parametersComboBox;
     private ComboBox<CompensationRequestVoteItem> compensationRequestsComboBox;
 
@@ -77,14 +75,12 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
     private final FeeService feeService;
-    private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
     private final VotingManager voteManager;
     private Button voteButton;
     private List<CompensationRequest> compensationRequests;
     private TitledGroupBg compensationRequestsTitledGroupBg, parametersTitledGroupBg;
     private VoteItemsList voteItemsList;
-    private CompensationRequestVoteItemCollection compensationRequestVoteItemCollection;
     private VBox parametersVBox, compensationRequestsVBox;
     private final DoubleProperty parametersLabelWidth = new SimpleDoubleProperty();
     private final DoubleProperty compensationRequestsLabelWidth = new SimpleDoubleProperty();
@@ -97,15 +93,14 @@ public class VoteView extends ActivatableView<GridPane, Void> {
     @Inject
     private VoteView(CompensationRequestManager compensationRequestManager, BsqWalletService bsqWalletService,
                      BtcWalletService btcWalletService, FeeService feeService, BsqFormatter bsqFormatter,
-                     BSFormatter btcFormatter, VotingManager voteManager, Preferences preferences) {
+                     BSFormatter btcFormatter, VotingManager voteManager) {
         this.compensationRequestManager = compensationRequestManager;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.feeService = feeService;
-        this.bsqFormatter = bsqFormatter;
+        BsqFormatter bsqFormatter1 = bsqFormatter;
         this.btcFormatter = btcFormatter;
         this.voteManager = voteManager;
-        this.preferences = preferences;
     }
 
     @Override
@@ -277,7 +272,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         //TODO rename
         voteItemsList = voteManager.getActiveVoteItemsList();
         if (voteItemsList != null) {
-            compensationRequestVoteItemCollection = voteItemsList.getCompensationRequestVoteItemCollection();
+            CompensationRequestVoteItemCollection compensationRequestVoteItemCollection = voteItemsList.getCompensationRequestVoteItemCollection();
             ObservableList<CompensationRequestVoteItem> compensationRequestVoteItems = FXCollections.observableArrayList(compensationRequestVoteItemCollection.getCompensationRequestVoteItems());
             compensationRequestsComboBox.setItems(compensationRequestVoteItems);
 

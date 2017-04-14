@@ -22,7 +22,6 @@ import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.user.DontShowAgainLookup;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -52,15 +51,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             marketColumn, directionColumn, dateColumn, offerIdColumn, removeItemColumn;
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
-    private final Preferences preferences;
     private SortedList<OpenOfferListItem> sortedList;
 
     @Inject
-    public OpenOffersView(OpenOffersViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, Preferences preferences) {
+    public OpenOffersView(OpenOffersViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow) {
         super(model);
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
-        this.preferences = preferences;
     }
 
     @Override

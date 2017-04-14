@@ -208,7 +208,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (model.getPaymentMethod().getId().equals(PaymentMethod.CLEAR_X_CHANGE_ID) &&
                 !clearXchangeWarningDisplayed) {
             clearXchangeWarningDisplayed = true;
-            UserThread.runAfter(() -> GUIUtil.showClearXchangeWarning(),
+            UserThread.runAfter(GUIUtil::showClearXchangeWarning,
                     500, TimeUnit.MILLISECONDS);
         }
     }
@@ -285,6 +285,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     // called form parent as the view does not get notified when the tab is closed
+    @SuppressWarnings("PointlessBooleanExpression")
     public void onClose() {
         Coin balance = model.dataModel.balance.get();
         //noinspection ConstantConditions,ConstantConditions
@@ -311,6 +312,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("PointlessBooleanExpression")
     private void onTakeOffer() {
         if (model.hasAcceptedArbitrators()) {
             if (!DevEnv.DEV_MODE) {
@@ -337,6 +339,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         }
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     private void onShowPayFundsScreen() {
         model.onShowPayFundsScreen();
 
@@ -479,6 +482,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         takeOfferButton.disableProperty().unbind();
     }
 
+    @SuppressWarnings("PointlessBooleanExpression")
     private void addSubscriptions() {
         errorPopupDisplayed = new SimpleBooleanProperty();
         offerWarningSubscription = EasyBind.subscribe(model.offerWarning, newValue -> {

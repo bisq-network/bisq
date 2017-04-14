@@ -253,9 +253,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     list.add(dispute);
                 });
                 List<List<Dispute>> disputeGroups = new ArrayList<>();
-                map.entrySet().stream().forEach(entry -> {
-                    disputeGroups.add(entry.getValue());
-                });
+                map.entrySet().stream().forEach(entry -> disputeGroups.add(entry.getValue()));
                 disputeGroups.sort((o1, o2) -> !o1.isEmpty() && !o2.isEmpty() ? o1.get(0).getOpeningDate().compareTo(o2.get(0).getOpeningDate()) : 0);
                 StringBuilder stringBuilder = new StringBuilder();
 
@@ -360,6 +358,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         // Last check 10.02.2017 found 8 trades and we contacted all traders as far as possible (email if available
         // otherwise in-app private notification)
         boolean doPrint = false;
+        //noinspection ConstantConditions
         if (doPrint) {
             try {
                 DateFormat formatter = new SimpleDateFormat("dd/MM/yy");
@@ -367,9 +366,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 startDate = new Date(0); // print all from start
 
                 HashMap<String, Dispute> map = new HashMap<>();
-                disputeManager.getDisputesAsObservableList().stream().forEach(dispute -> {
-                    map.put(dispute.getDepositTxId(), dispute);
-                });
+                disputeManager.getDisputesAsObservableList().stream().forEach(dispute -> map.put(dispute.getDepositTxId(), dispute));
 
                 final Date finalStartDate = startDate;
                 List<Dispute> disputes = new ArrayList<>(map.values());
@@ -823,30 +820,31 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 headerLabel.setText(formatter.formatDateTime(new Date(item.getDate())));
                                 messageLabel.setText(item.getMessage());
                                 attachmentsBox.getChildren().clear();
-                                if (item.getAttachments().size() > 0) {
-                                    AnchorPane.setBottomAnchor(messageLabel, bottomBorder + attachmentsBoxHeight + 10);
-                                    attachmentsBox.getChildren().add(new Label(Res.get("support.attachments") + " ") {{
-                                        setPadding(new Insets(0, 0, 3, 0));
-                                        if (isMyMsg)
-                                            setStyle("-fx-text-fill: white;");
-                                        else
-                                            setStyle("-fx-text-fill: black;");
-                                    }});
+                                if (item.getAttachments() != null) {
+                                    if (item.getAttachments().size() > 0) {
+                                        AnchorPane.setBottomAnchor(messageLabel, bottomBorder + attachmentsBoxHeight + 10);
+                                        attachmentsBox.getChildren().add(new Label(Res.get("support.attachments") + " ") {{
+                                            setPadding(new Insets(0, 0, 3, 0));
+                                            if (isMyMsg)
+                                                setStyle("-fx-text-fill: white;");
+                                            else
+                                                setStyle("-fx-text-fill: black;");
+                                        }});
+                                        item.getAttachments().stream().forEach(attachment -> {
+                                            final Label icon = new Label();
+                                            setPadding(new Insets(0, 0, 3, 0));
+                                            if (isMyMsg)
+                                                icon.getStyleClass().add("attachment-icon");
+                                            else
+                                                icon.getStyleClass().add("attachment-icon-black");
 
-                                    item.getAttachments().stream().forEach(attachment -> {
-                                        final Label icon = new Label();
-                                        setPadding(new Insets(0, 0, 3, 0));
-                                        if (isMyMsg)
-                                            icon.getStyleClass().add("attachment-icon");
-                                        else
-                                            icon.getStyleClass().add("attachment-icon-black");
-
-                                        AwesomeDude.setIcon(icon, AwesomeIcon.FILE_TEXT);
-                                        icon.setPadding(new Insets(-2, 0, 0, 0));
-                                        icon.setTooltip(new Tooltip(attachment.getFileName()));
-                                        icon.setOnMouseClicked(event -> onOpenAttachment(attachment));
-                                        attachmentsBox.getChildren().add(icon);
-                                    });
+                                            AwesomeDude.setIcon(icon, AwesomeIcon.FILE_TEXT);
+                                            icon.setPadding(new Insets(-2, 0, 0, 0));
+                                            icon.setTooltip(new Tooltip(attachment.getFileName()));
+                                            icon.setOnMouseClicked(event -> onOpenAttachment(attachment));
+                                            attachmentsBox.getChildren().add(icon);
+                                        });
+                                    }
                                 } else {
                                     AnchorPane.setBottomAnchor(messageLabel, bottomBorder + 10);
                                 }

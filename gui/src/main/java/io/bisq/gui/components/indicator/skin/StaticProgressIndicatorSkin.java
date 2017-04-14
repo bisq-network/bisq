@@ -243,6 +243,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<TxConfidenceIn
      * @return The CssMetaData associated with this class, which may include the
      * CssMetaData of its super classes.
      */
+    @SuppressWarnings("SameReturnValue")
     public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData() {
         return StyleableProperties.STYLEABLES;
     }
@@ -532,7 +533,7 @@ public class StaticProgressIndicatorSkin extends BehaviorSkinBase<TxConfidenceIn
      * ************************************************************************
      */
 
-    @SuppressWarnings("ConstantConditions")
+    @SuppressWarnings({"ConstantConditions", "MismatchedQueryAndUpdateOfCollection"})
     static class IndeterminateSpinner extends Region {
         private final TxConfidenceIndicator control;
         private final StaticProgressIndicatorSkin skin;

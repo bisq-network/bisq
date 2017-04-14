@@ -26,7 +26,6 @@ import io.bisq.common.util.Tuple3;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.core.payment.payload.PaymentMethod;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.TitledGroupBg;
@@ -58,7 +57,6 @@ import static io.bisq.gui.util.FormBuilder.*;
 @FxmlView
 public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCoinAccountsViewModel> {
 
-    private final Preferences preferences;
     private ListView<PaymentAccount> paymentAccountsListView;
 
     private final InputValidator inputValidator;
@@ -75,13 +73,12 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     public AltCoinAccountsView(AltCoinAccountsViewModel model,
                                InputValidator inputValidator,
                                AltCoinAddressValidator altCoinAddressValidator,
-                               BSFormatter formatter, Preferences preferences) {
+                               BSFormatter formatter) {
         super(model);
 
         this.inputValidator = inputValidator;
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.formatter = formatter;
-        this.preferences = preferences;
     }
 
     @Override
@@ -239,17 +236,15 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         }
         gridRow = 2;
         paymentMethodForm = getPaymentMethodForm(PaymentMethod.BLOCK_CHAINS);
-        if (paymentMethodForm != null) {
-            paymentMethodForm.addFormForAddAccount();
-            gridRow = paymentMethodForm.getGridRow();
-            Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.saveNewAccount"), Res.get("shared.cancel"));
-            saveNewAccountButton = tuple2.first;
-            saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccount()));
-            saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
-            Button cancelButton = tuple2.second;
-            cancelButton.setOnAction(event -> onCancelNewAccount());
-            GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
-        }
+        paymentMethodForm.addFormForAddAccount();
+        gridRow = paymentMethodForm.getGridRow();
+        Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.saveNewAccount"), Res.get("shared.cancel"));
+        saveNewAccountButton = tuple2.first;
+        saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccount()));
+        saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
+        Button cancelButton = tuple2.second;
+        cancelButton.setOnAction(event -> onCancelNewAccount());
+        GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
     }
 
     // Select account form
@@ -258,17 +253,15 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         addAccountButton.setDisable(false);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
         paymentMethodForm = getPaymentMethodForm(paymentAccount);
-        if (paymentMethodForm != null) {
-            paymentMethodForm.addFormForDisplayAccount();
-            gridRow = paymentMethodForm.getGridRow();
-            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.deleteAccount"), Res.get("shared.cancel"));
-            Button deleteAccountButton = tuple.first;
-            deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentMethodForm.getPaymentAccount()));
-            Button cancelButton = tuple.second;
-            cancelButton.setOnAction(event -> removeSelectAccountForm());
-            GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
-            model.onSelectAccount(paymentAccount);
-        }
+        paymentMethodForm.addFormForDisplayAccount();
+        gridRow = paymentMethodForm.getGridRow();
+        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.deleteAccount"), Res.get("shared.cancel"));
+        Button deleteAccountButton = tuple.first;
+        deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentMethodForm.getPaymentAccount()));
+        Button cancelButton = tuple.second;
+        cancelButton.setOnAction(event -> removeSelectAccountForm());
+        GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
+        model.onSelectAccount(paymentAccount);
     }
 
 

@@ -302,6 +302,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
             accumulatedAmount += item.tradeAmount;
         }
 
+        // TODO close, open not set
         long averagePrice;
         boolean isBullish;
         if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {

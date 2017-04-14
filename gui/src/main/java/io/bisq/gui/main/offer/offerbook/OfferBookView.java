@@ -27,7 +27,6 @@ import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.DontShowAgainLookup;
-import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -76,19 +75,20 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final OfferDetailsWindow offerDetailsWindow;
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
-    private final Preferences preferences;
 
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private Button createOfferButton;
-    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn, paymentMethodColumn, avatarColumn;
+    private TableColumn<OfferBookListItem, OfferBookListItem> amountColumn;
+    private TableColumn<OfferBookListItem, OfferBookListItem> volumeColumn;
+    private TableColumn<OfferBookListItem, OfferBookListItem> marketColumn;
+    private TableColumn<OfferBookListItem, OfferBookListItem> priceColumn;
     private TableView<OfferBookListItem> tableView;
 
     private OfferView.OfferActionHandler offerActionHandler;
     private int gridRow = 0;
     private Label nrOfOffersLabel;
     private ListChangeListener<OfferBookListItem> offerListListener;
-    private MonadicBinding<Void> currencySelectionBinding;
     private Subscription currencySelectionSubscriber;
 
 
@@ -98,14 +98,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     @Inject
     OfferBookView(OfferBookViewModel model, Navigation navigation, OfferDetailsWindow offerDetailsWindow, BSFormatter formatter,
-                  PrivateNotificationManager privateNotificationManager, Preferences preferences) {
+                  PrivateNotificationManager privateNotificationManager) {
         super(model);
 
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
-        this.preferences = preferences;
     }
 
     @Override
@@ -156,10 +155,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.getColumns().add(amountColumn);
         volumeColumn = getVolumeColumn();
         tableView.getColumns().add(volumeColumn);
-        paymentMethodColumn = getPaymentMethodColumn();
+        TableColumn<OfferBookListItem, OfferBookListItem> paymentMethodColumn = getPaymentMethodColumn();
         tableView.getColumns().add(paymentMethodColumn);
         tableView.getColumns().add(getActionColumn());
-        avatarColumn = getAvatarColumn();
+        TableColumn<OfferBookListItem, OfferBookListItem> avatarColumn = getAvatarColumn();
         tableView.getColumns().add(avatarColumn);
 
         tableView.getSortOrder().add(priceColumn);
@@ -229,7 +228,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         createOfferButton.setOnAction(e -> onCreateOffer());
 
-        currencySelectionBinding = EasyBind.combine(
+        MonadicBinding<Void> currencySelectionBinding = EasyBind.combine(
                 model.showAllTradeCurrenciesProperty, model.tradeCurrencyCode,
                 (showAll, code) -> {
                     setDirectionTitles();

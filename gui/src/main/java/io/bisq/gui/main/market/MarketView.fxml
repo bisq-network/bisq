@@ -25,18 +25,14 @@
          xmlns:fx="http://javafx.com/fxml">
 
     <Tab fx:id="offerBookTab" closable="false">
-        <content>
-            <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
-                        AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                        AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
-        </content>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                    AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     </Tab>
     <Tab fx:id="spreadTab" closable="false"/>
     <Tab fx:id="tradesTab" closable="false">
-        <content>
-            <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
-                        AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                        AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
-        </content>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                    AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     </Tab>
 </TabPane>
