@@ -115,7 +115,6 @@ public class BisqApp extends Application {
         String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
-        Version.printVersion();
         Utilities.printSysInfo();
         Log.setLevel(Level.toLevel(env.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
 
@@ -171,7 +170,8 @@ public class BisqApp extends Application {
             preferences.init();
 
             Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
-
+            Version.printVersion();
+            
             if (Utilities.isLinux())
                 System.setProperty("prism.lcdtext", "false");
 

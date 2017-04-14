@@ -38,6 +38,7 @@ import java.util.ResourceBundle;
 public class Res {
     private static final Logger log = LoggerFactory.getLogger(Res.class);
 
+    @SuppressWarnings("CanBeFinal")
     private static ResourceBundle resourceBundle = ResourceBundle.getBundle("i18n.displayStrings", GlobalSettings.getLocale(), new UTF8Control());
 
     static {

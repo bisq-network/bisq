@@ -351,6 +351,7 @@ public class PeerManager implements ConnectionListener {
         return contained;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     @Nullable
     private Peer removeReportedPeer(NodeAddress nodeAddress) {
         List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
@@ -421,6 +422,7 @@ public class PeerManager implements ConnectionListener {
 
     private void printReportedPeers() {
         if (!reportedPeers.isEmpty()) {
+            //noinspection ConstantConditions
             if (printReportedPeersDetails) {
                 StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                         "Collected reported peers:");
@@ -434,6 +436,7 @@ public class PeerManager implements ConnectionListener {
     }
 
     private void printNewReportedPeers(HashSet<Peer> reportedPeers) {
+        //noinspection ConstantConditions
         if (printReportedPeersDetails) {
             StringBuilder result = new StringBuilder("We received new reportedPeers:");
             List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
@@ -463,6 +466,7 @@ public class PeerManager implements ConnectionListener {
         }
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private boolean removePersistedPeer(NodeAddress nodeAddress) {
         Optional<Peer> persistedPeerOptional = getPersistedPeerOptional(nodeAddress);
         return persistedPeerOptional.isPresent() && removePersistedPeer(persistedPeerOptional.get());

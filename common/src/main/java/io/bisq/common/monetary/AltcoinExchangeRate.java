@@ -23,6 +23,7 @@ public class AltcoinExchangeRate implements Serializable {
     /**
      * Construct exchange rate. This amount of coin is worth that amount of altcoin.
      */
+    @SuppressWarnings("SameParameterValue")
     public AltcoinExchangeRate(Coin coin, Altcoin altcoin) {
         checkArgument(coin.isPositive());
         checkArgument(altcoin.isPositive());

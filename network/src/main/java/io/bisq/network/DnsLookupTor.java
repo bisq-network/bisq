@@ -67,6 +67,7 @@ public class DnsLookupTor {
 
             proxySocket.getOutputStream().write(new byte[]{b('\u0005'), b('\u0001'), b('\u0000')});
             byte[] buf = new byte[2];
+            //noinspection ResultOfMethodCallIgnored
             proxySocket.getInputStream().read(buf);
 
             if (buf[0] != b('\u0005')) {

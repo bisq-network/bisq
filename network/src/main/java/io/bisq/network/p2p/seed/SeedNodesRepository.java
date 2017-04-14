@@ -17,6 +17,7 @@ public class SeedNodesRepository {
     // - mainnet uses port 8000
     // - testnet uses port 8001
     // - regtest uses port 8002
+    @SuppressWarnings("ConstantConditions")
     private Set<NodeAddress> torSeedNodeAddresses = Sets.newHashSet(
             // v0.5.0
             DevEnv.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("ren4cuzpex24rdwo.onion:8000"),

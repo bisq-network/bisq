@@ -48,7 +48,6 @@ public class SeedNode {
         String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
         Log.setup(logPath);
         log.info("Log files under: " + logPath);
-        Version.printVersion();
         Utilities.printSysInfo();
         Log.setLevel(Level.toLevel(env.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
 
@@ -81,6 +80,7 @@ public class SeedNode {
         seedNodeModule = new SeedNodeModule(env);
         injector = Guice.createInjector(seedNodeModule);
         Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
+        Version.printVersion();
         p2pService = injector.getInstance(P2PService.class);
         p2pService.start(new BootstrapListener() {
             @Override

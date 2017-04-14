@@ -721,9 +721,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         // at the P2PService layer.
         // Though we have to check in the client classes to not apply the same message again as there is no guarantee
         // when we would get a message again from the network.
-        UserThread.runAfter(() -> {
-            delayedRemoveEntryFromMailbox(decryptedMsgWithPubKey);
-        }, 2);
+        UserThread.runAfter(() -> delayedRemoveEntryFromMailbox(decryptedMsgWithPubKey), 2);
     }
 
     private void delayedRemoveEntryFromMailbox(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {

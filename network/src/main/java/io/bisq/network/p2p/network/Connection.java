@@ -285,6 +285,7 @@ public class Connection implements MessageListener {
         }
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isCapabilityRequired(Msg msg) {
         return msg instanceof AddDataMsg && (((AddDataMsg) msg).protectedStorageEntry).getStoragePayload() instanceof CapabilityRequiringPayload;
     }
@@ -306,7 +307,7 @@ public class Connection implements MessageListener {
                     "That might happen because of async behaviour of CopyOnWriteArraySet");
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "UnusedReturnValue"})
     public boolean reportIllegalRequest(RuleViolation ruleViolation) {
         return sharedModel.reportInvalidRequest(ruleViolation);
     }
@@ -517,13 +518,13 @@ public class Connection implements MessageListener {
 
         Connection that = (Connection) o;
 
-        return !(uid != null ? !uid.equals(that.uid) : that.uid != null);
+        return uid.equals(that.uid);
 
     }
 
     @Override
     public int hashCode() {
-        return uid != null ? uid.hashCode() : 0;
+        return uid.hashCode();
     }
 
     @Override
@@ -579,7 +580,7 @@ public class Connection implements MessageListener {
         public boolean reportInvalidRequest(RuleViolation ruleViolation) {
             log.warn("We got reported an corrupt request " + ruleViolation + "\n\tconnection=" + this);
             int numRuleViolations;
-            if (ruleViolations.contains(ruleViolation))
+            if (ruleViolations.containsKey(ruleViolation))
                 numRuleViolations = ruleViolations.get(ruleViolation);
             else
                 numRuleViolations = 0;
@@ -614,6 +615,7 @@ public class Connection implements MessageListener {
             return supportedCapabilities;
         }
 
+        @SuppressWarnings("NullableProblems")
         public void setSupportedCapabilities(List<Integer> supportedCapabilities) {
             this.supportedCapabilities = supportedCapabilities;
         }
@@ -690,7 +692,7 @@ public class Connection implements MessageListener {
         private final InputStream protoInputStream;
         private final String portInfo;
         private final MessageListener messageListener;
-        private ProtobufferResolver protobufferResolver;
+        private final ProtobufferResolver protobufferResolver;
 
         private volatile boolean stopped;
         private long lastReadTimeStamp;
@@ -726,12 +728,13 @@ public class Connection implements MessageListener {
             try {
                 Thread.currentThread().setName("InputHandler");
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
-                    if (!threadNameSet && sharedModel.connection.getPeersNodeAddressOptional().isPresent()) {
+                    if (!threadNameSet && sharedModel.connection != null &&
+                            sharedModel.connection.getPeersNodeAddressOptional().isPresent()) {
                         Thread.currentThread().setName("InputHandler-" + sharedModel.connection.getPeersNodeAddressOptional().get().getFullAddress());
                         threadNameSet = true;
                     }
                     try {
-                        if (sharedModel.getSocket().isClosed() || protoInputStream.available() < 0) {
+                        if (sharedModel.getSocket() != null && sharedModel.getSocket().isClosed() || protoInputStream.available() < 0) {
                             log.warn("Shutdown because protoInputStream.available() < 0. protoInputStream.available()=" + protoInputStream.available());
                             sharedModel.shutDown(CloseConnectionReason.TERMINATED);
                             return;
@@ -810,7 +813,7 @@ public class Connection implements MessageListener {
                                     connection,
                                     Utilities.toTruncatedString(envelope.toString()),
                                     size);
-                        } else if (msg instanceof Msg) {
+                        } else {
                             // We want to log all incoming network_messages (except Pong and RefreshTTLMessage)
                             // so we log before the data type checks
                             //log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
@@ -821,22 +824,13 @@ public class Connection implements MessageListener {
                                     connection,
                                     Utilities.toTruncatedString(envelope.toString()),
                                     size);
-                        } else {
-                            log.error("Invalid data arrived at inputHandler of connection {} Size={}", connection, size);
-                            try {
-                                // Don't call toString on rawInputObject
-                                log.error("rawInputObject.className=" + msg.getClass().getName());
-                            } catch (Throwable ignore) {
-                            }
                         }
 
                         // We want to track the size of each object even if it is invalid data
                         connection.statistic.addReceivedBytes(size);
 
                         // We want to track the network_messages also before the checks, so do it early...
-                        if (msg instanceof Msg) {
-                            connection.statistic.addReceivedMessage(msg);
-                        }
+                        connection.statistic.addReceivedMessage(msg);
 
                         // First we check thel size
                         boolean exceeds;
@@ -860,12 +854,9 @@ public class Connection implements MessageListener {
 
                         // Check P2P network ID
                         int messageVersion = (int) envelope.getP2PNetworkVersion();
-                        // TODO this was Version.getP2PMessageVersion();
-                        int p2PMessageVersion = Version.P2P_NETWORK_VERSION;
-                        // TODO this does nothing anymore
-                        if (messageVersion != messageVersion) {
+                        if (messageVersion != Version.getP2PMessageVersion()) {
                             log.warn("message.getMessageVersion()=" + messageVersion);
-                            log.warn("Version.getP2PMessageVersion()=" + p2PMessageVersion);
+                            log.warn("Version.getP2PMessageVersion()=" + Version.getP2PMessageVersion());
                             log.warn("message=" + envelope.toString());
                             reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID);
                             // We return anyway here independent of the return value of reportInvalidRequest
@@ -953,6 +944,7 @@ public class Connection implements MessageListener {
                     }
                 }
             } catch (Throwable t) {
+                //noinspection ConstantConditions
                 if (!(t instanceof OptionalDataException))
                     t.printStackTrace();
                 stop();

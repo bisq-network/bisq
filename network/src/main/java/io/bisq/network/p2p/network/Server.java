@@ -23,7 +23,7 @@ class Server implements Runnable {
     private final ServerSocket serverSocket;
     private final Set<Connection> connections = new CopyOnWriteArraySet<>();
     private volatile boolean stopped;
-    private ProtobufferResolver protobufferResolver;
+    private final ProtobufferResolver protobufferResolver;
 
 
     public Server(ServerSocket serverSocket,

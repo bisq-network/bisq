@@ -86,6 +86,7 @@ public class Utilities {
     }
 
 
+    @SuppressWarnings("SameParameterValue")
     public static ScheduledThreadPoolExecutor getScheduledThreadPoolExecutor(String name,
                                                                              int corePoolSize,
                                                                              int maximumPoolSize,
@@ -341,6 +342,7 @@ public class Utilities {
         return result;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static void printElapsedTime(String msg) {
         if (!msg.isEmpty()) {
             msg += " / ";
@@ -471,6 +473,7 @@ public class Utilities {
         return getShortId(id, "-");
     }
 
+    @SuppressWarnings("SameParameterValue")
     public static String getShortId(String id, String sep) {
         String[] chunks = id.split(sep);
         if (chunks.length > 0)

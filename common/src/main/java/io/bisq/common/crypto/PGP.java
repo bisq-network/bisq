@@ -106,6 +106,7 @@ public class PGP {
 
     // TODO not impl, remove Nullable once impl.
     // PEM encoding
+    @SuppressWarnings({"SameReturnValue", "UnusedParameters"})
     @NotNull
     public static String getPEMFromPubKey(@Nullable PGPPublicKey pgpPubKey) {
         // We use empty string as we must not have null in proto file
@@ -113,6 +114,7 @@ public class PGP {
     }
 
     // TODO not impl, remove Nullable once impl.
+    @SuppressWarnings("SameReturnValue")
     @Nullable
     public static PGPKeyPair generateKeyPair() {
         return null;

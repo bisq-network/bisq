@@ -20,10 +20,10 @@ package io.bisq.network.crypto;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.bisq.common.Marshaller;
 import io.bisq.common.crypto.*;
-import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.common.persistance.Msg;
 import io.bisq.common.persistance.ProtobufferResolver;
+import io.bisq.generated.protobuffer.PB;
+import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.crypto.SecretKey;
@@ -37,7 +37,7 @@ import static io.bisq.common.crypto.Encryption.decryptSecretKey;
 @Slf4j
 public class EncryptionService {
     private final KeyRing keyRing;
-    private ProtobufferResolver protobufferResolver;
+    private final ProtobufferResolver protobufferResolver;
 
     @Inject
     public EncryptionService(KeyRing keyRing, ProtobufferResolver protobufferResolver) {
@@ -77,12 +77,8 @@ public class EncryptionService {
     public DecryptedMsgWithPubKey decryptAndVerify(SealedAndSigned sealedAndSigned) throws CryptoException {
         DecryptedDataTuple decryptedDataTuple = decryptHybridWithSignature(sealedAndSigned,
                 keyRing.getEncryptionKeyPair().getPrivate());
-        if (decryptedDataTuple.payload instanceof Msg) {
-            return new DecryptedMsgWithPubKey((Msg) decryptedDataTuple.payload,
-                    decryptedDataTuple.sigPublicKey);
-        } else {
-            throw new CryptoException("decryptedPayloadWithPubKey.payload is not instance of Message");
-        }
+        return new DecryptedMsgWithPubKey(decryptedDataTuple.payload,
+                decryptedDataTuple.sigPublicKey);
     }
 
     private static byte[] encryptPayloadWithHmac(Msg msg, SecretKey secretKey) throws CryptoException {

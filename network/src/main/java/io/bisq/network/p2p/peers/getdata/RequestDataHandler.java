@@ -47,7 +47,8 @@ public class RequestDataHandler implements MessageListener {
     public interface Listener {
         void onComplete();
 
-        void onFault(String errorMessage, @Nullable Connection connection);
+        @SuppressWarnings("UnusedParameters")
+        void onFault(String errorMessage, @SuppressWarnings("SameParameterValue") @Nullable Connection connection);
     }
 
 
@@ -229,9 +230,7 @@ public class RequestDataHandler implements MessageListener {
                             long delay = (i + 1) * 200;
                             int endIndex = Math.min(size, startIndex + chunkSize);
                             List<ProtectedStorageEntry> subList = processDelayedItems.subList(startIndex, endIndex);
-                            UserThread.runAfter(() -> {
-                                subList.stream().forEach(protectedStorageEntry -> dataStorage.add(protectedStorageEntry, sender, null, false, false));
-                            }, delay, TimeUnit.MILLISECONDS);
+                            UserThread.runAfter(() -> subList.stream().forEach(protectedStorageEntry -> dataStorage.add(protectedStorageEntry, sender, null, false, false)), delay, TimeUnit.MILLISECONDS);
                         }
 
                         cleanup();
@@ -261,6 +260,7 @@ public class RequestDataHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
+    @SuppressWarnings("UnusedParameters")
     private void handleFault(String errorMessage, NodeAddress nodeAddress, CloseConnectionReason closeConnectionReason) {
         cleanup();
         //peerManager.shutDownConnection(nodeAddress, closeConnectionReason);

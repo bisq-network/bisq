@@ -40,12 +40,14 @@ public class BroadcastHandler implements PeerManager.Listener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface Listener {
+        @SuppressWarnings({"EmptyMethod", "UnusedParameters"})
         void onBroadcasted(BroadcastMsg message, int numOfCompletedBroadcasts);
 
         void onBroadcastedToFirstPeer(BroadcastMsg message);
 
         void onBroadcastCompleted(BroadcastMsg message, int numOfCompletedBroadcasts, int numOfFailedBroadcasts);
 
+        @SuppressWarnings({"EmptyMethod", "UnusedParameters"})
         void onBroadcastFailed(String errorMessage);
     }
 

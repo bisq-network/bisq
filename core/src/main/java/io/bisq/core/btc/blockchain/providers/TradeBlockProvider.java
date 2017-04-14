@@ -32,7 +32,7 @@ public class TradeBlockProvider extends BlockchainTxProvider {
                     .getAsJsonObject()
                     .get("fee")
                     .getAsLong());
-        } catch (IOException | HttpException e) {
+        } catch (IOException e) {
             log.debug("Error at requesting transaction data from block explorer " + httpClient + "\n" +
                     "Error =" + e.getMessage());
             throw e;

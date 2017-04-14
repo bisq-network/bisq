@@ -37,6 +37,7 @@ class PeerExchangeHandler implements MessageListener {
     public interface Listener {
         void onComplete();
 
+        @SuppressWarnings("UnusedParameters")
         void onFault(String errorMessage, @Nullable Connection connection);
     }
 
@@ -174,6 +175,7 @@ class PeerExchangeHandler implements MessageListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("UnusedParameters")
     private void handleFault(String errorMessage, CloseConnectionReason sendMsgFailure, NodeAddress nodeAddress) {
         Log.traceCall();
         cleanup();

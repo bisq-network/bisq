@@ -34,6 +34,7 @@ class KeepAliveHandler implements MessageListener {
     public interface Listener {
         void onComplete();
 
+        @SuppressWarnings("UnusedParameters")
         void onFault(String errorMessage);
     }
 

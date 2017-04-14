@@ -60,7 +60,7 @@ public abstract class AppModule extends AbstractModule {
      *
      * @param injector the Injector originally initialized with this module
      */
-    @SuppressWarnings({"WeakerAccess", "EmptyMethod"})
-    protected void doClose(@SuppressWarnings("UnusedParameters") Injector injector) {
+    @SuppressWarnings({"WeakerAccess", "EmptyMethod", "UnusedParameters"})
+    protected void doClose(Injector injector) {
     }
 }

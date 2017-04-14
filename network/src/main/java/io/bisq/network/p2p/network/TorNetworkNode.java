@@ -46,6 +46,7 @@ public class TorNetworkNode extends NetworkNode {
     private HiddenServiceDescriptor hiddenServiceDescriptor;
     private Timer shutDownTimeoutTimer;
     private int restartCounter;
+    @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> allShutDown;
 
 

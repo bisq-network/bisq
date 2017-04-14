@@ -60,7 +60,7 @@ public class HttpClient {
         this.ignoreSocks5Proxy = ignoreSocks5Proxy;
     }
 
-    public String requestWithGET(String param, @Nullable String headerKey, @Nullable String headerValue) throws IOException, HttpException {
+    public String requestWithGET(String param, @Nullable String headerKey, @Nullable String headerValue) throws IOException {
         checkNotNull(baseUrl, "baseUrl must be set before calling requestWithGET");
 
         Socks5Proxy socks5Proxy = null;
@@ -84,7 +84,7 @@ public class HttpClient {
     /**
      * Make an HTTP Get request directly (not routed over socks5 proxy).
      */
-    public String requestWithGETNoProxy(String param, @Nullable String headerKey, @Nullable String headerValue) throws IOException, HttpException {
+    public String requestWithGETNoProxy(String param, @Nullable String headerKey, @Nullable String headerValue) throws IOException {
         HttpURLConnection connection = null;
         log.debug("Executing HTTP request " + baseUrl + param + " proxy: none.");
         URL url = new URL(baseUrl + param);
@@ -120,7 +120,7 @@ public class HttpClient {
     /**
      * Make an HTTP Get request routed over socks5 proxy.
      */
-    private String requestWithGETProxy(String param, Socks5Proxy socks5Proxy, @Nullable String headerKey, @Nullable String headerValue) throws IOException, HttpException {
+    private String requestWithGETProxy(String param, Socks5Proxy socks5Proxy, @Nullable String headerKey, @Nullable String headerValue) throws IOException {
         log.debug("requestWithGETProxy param=" + param);
         // This code is adapted from:
         //  http://stackoverflow.com/a/25203021/5616248

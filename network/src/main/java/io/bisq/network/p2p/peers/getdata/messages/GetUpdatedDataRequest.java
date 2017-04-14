@@ -56,7 +56,7 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMsg, GetDa
                                 .setSenderNodeAddress(senderNodeAddress.toProto())
                                 .setNonce(nonce)
                                 .addAllExcludedKeys(excludedKeys.stream()
-                                        .map(bytes -> ByteString.copyFrom(bytes)).collect(Collectors.toList()))).build();
+                                        .map(ByteString::copyFrom).collect(Collectors.toList()))).build();
     }
 
     @Override

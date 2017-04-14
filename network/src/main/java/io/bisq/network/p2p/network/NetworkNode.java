@@ -4,9 +4,9 @@ import com.google.common.util.concurrent.*;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.common.persistance.Msg;
 import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.util.Utilities;
-import io.bisq.common.persistance.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -35,7 +35,7 @@ public abstract class NetworkNode implements MessageListener {
     private static final int CREATE_SOCKET_TIMEOUT_MILLIS = 10000;
 
     final int servicePort;
-    private ProtobufferResolver protobufferResolver;
+    private final ProtobufferResolver protobufferResolver;
 
     private final CopyOnWriteArraySet<InboundConnection> inBoundConnections = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();

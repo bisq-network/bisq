@@ -19,9 +19,11 @@ package io.bisq.network.crypto;
 
 
 import io.bisq.common.persistance.Msg;
+import lombok.EqualsAndHashCode;
 
 import java.security.PublicKey;
 
+@EqualsAndHashCode
 public final class DecryptedDataTuple {
     public final Msg payload;
     public final PublicKey sigPublicKey;
@@ -29,25 +31,6 @@ public final class DecryptedDataTuple {
     public DecryptedDataTuple(Msg payload, PublicKey sigPublicKey) {
         this.payload = payload;
         this.sigPublicKey = sigPublicKey;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof DecryptedDataTuple)) return false;
-
-        DecryptedDataTuple that = (DecryptedDataTuple) o;
-
-        if (payload != null ? !payload.equals(that.payload) : that.payload != null) return false;
-        return !(sigPublicKey != null ? !sigPublicKey.equals(that.sigPublicKey) : that.sigPublicKey != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = payload != null ? payload.hashCode() : 0;
-        result = 31 * result + (sigPublicKey != null ? sigPublicKey.hashCode() : 0);
-        return result;
     }
 
     @Override

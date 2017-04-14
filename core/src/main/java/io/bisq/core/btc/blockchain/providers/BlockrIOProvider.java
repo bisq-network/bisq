@@ -32,7 +32,7 @@ public class BlockrIOProvider extends BlockchainTxProvider {
             return Coin.parseCoin(data
                     .get("fee")
                     .getAsString());
-        } catch (IOException | HttpException e) {
+        } catch (IOException e) {
             log.debug("Error at requesting transaction data from block explorer " + httpClient + "\n" +
                     "Error =" + e.getMessage());
             throw e;

@@ -121,6 +121,7 @@ class GetPeersRequestHandler {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("UnusedParameters")
     private void handleFault(String errorMessage, CloseConnectionReason closeConnectionReason, Connection connection) {
         cleanup();
         //peerManager.shutDownConnection(connection, closeConnectionReason);

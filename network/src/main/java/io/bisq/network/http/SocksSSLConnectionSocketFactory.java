@@ -18,6 +18,7 @@ class SocksSSLConnectionSocketFactory extends SSLConnectionSocketFactory {
 
     public SocksSSLConnectionSocketFactory(final SSLContext sslContext) {
 
+        // TODO check alternative to deprecated call
         // Only allow connection's to site's with valid certs.
         super(sslContext, STRICT_HOSTNAME_VERIFIER);
 

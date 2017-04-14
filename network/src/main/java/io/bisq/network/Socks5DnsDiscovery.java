@@ -50,8 +50,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class Socks5DnsDiscovery extends MultiplexingDiscovery {
 
-    private final Socks5Proxy proxy;
-
     /**
      * Supports finding peers through DNS A records. Community run DNS entry points will be used.
      *
@@ -69,7 +67,6 @@ public class Socks5DnsDiscovery extends MultiplexingDiscovery {
      */
     public Socks5DnsDiscovery(Socks5Proxy proxy, String[] dnsSeeds, NetworkParameters params) {
         super(params, buildDiscoveries(proxy, params, dnsSeeds));
-        this.proxy = proxy;
     }
 
     private static List<PeerDiscovery> buildDiscoveries(Socks5Proxy proxy, NetworkParameters params, String[] seeds) {

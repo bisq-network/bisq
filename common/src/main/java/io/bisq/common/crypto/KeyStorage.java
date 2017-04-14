@@ -92,6 +92,7 @@ public class KeyStorage {
     }
 
     // TODO not impl
+    @SuppressWarnings({"SameParameterValue", "SameReturnValue", "UnusedParameters"})
     @Nullable
     public PGPKeyPair loadPgpKeyPair(KeyEntry keyEntry) {
         return null;

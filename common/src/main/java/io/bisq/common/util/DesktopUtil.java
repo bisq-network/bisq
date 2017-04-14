@@ -121,6 +121,7 @@ class DesktopUtil {
     }
 
 
+    @SuppressWarnings("SameParameterValue")
     private static boolean runCommand(String command, String args, String file) {
 
         logOut("Trying to exec:\n   cmd = " + command + "\n   args = " + args + "\n   %s = " + file);

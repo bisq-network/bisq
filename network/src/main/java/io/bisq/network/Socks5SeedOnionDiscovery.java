@@ -33,8 +33,6 @@ import java.util.concurrent.TimeUnit;
  * These are nodes running as hidden services on the Tor network.
  */
 public class Socks5SeedOnionDiscovery implements PeerDiscovery {
-    private final Socks5Proxy proxy;
-    private final NetworkParameters params;
     private InetSocketAddress[] seedAddrs;
 
     /**
@@ -44,10 +42,6 @@ public class Socks5SeedOnionDiscovery implements PeerDiscovery {
      * @param params param to be used for seed and port information.
      */
     public Socks5SeedOnionDiscovery(Socks5Proxy proxy, NetworkParameters params) {
-
-        this.proxy = proxy;
-        this.params = params;
-
         // We do this because NetworkParameters does not contain any .onion
         // seeds.  Perhaps someday...
         if (params == MainNetParams.get()) {

@@ -14,6 +14,7 @@ public class MathUtils {
         return roundDouble(value, precision, RoundingMode.HALF_UP);
     }
 
+    @SuppressWarnings("SameParameterValue")
     public static double roundDouble(double value, int precision, RoundingMode roundingMode) {
         if (precision < 0)
             throw new IllegalArgumentException();
@@ -32,6 +33,7 @@ public class MathUtils {
         return roundDoubleToLong(value, RoundingMode.HALF_UP);
     }
 
+    @SuppressWarnings("SameParameterValue")
     public static long roundDoubleToLong(double value, RoundingMode roundingMode) {
         return DoubleMath.roundToLong(value, roundingMode);
     }
@@ -40,6 +42,7 @@ public class MathUtils {
         return roundDoubleToInt(value, RoundingMode.HALF_UP);
     }
 
+    @SuppressWarnings("SameParameterValue")
     public static int roundDoubleToInt(double value, RoundingMode roundingMode) {
         return DoubleMath.roundToInt(value, roundingMode);
     }

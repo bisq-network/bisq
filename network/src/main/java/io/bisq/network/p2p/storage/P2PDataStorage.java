@@ -9,6 +9,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.persistance.HashMapPersistable;
+import io.bisq.common.persistance.Msg;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.persistance.ProtobufferResolver;
 import io.bisq.common.storage.FileUtil;
@@ -18,7 +19,6 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.crypto.EncryptionService;
-import io.bisq.common.persistance.Msg;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.BroadcastHandler;
@@ -207,6 +207,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                     log.debug("We remove the data as the data owner got disconnected with " +
                                             "closeConnectionReason=" + closeConnectionReason);
 
+                                    //noinspection ConstantConditions
                                     Log.logIfStressTests("We remove the data as the data owner got disconnected with " +
                                             "closeConnectionReason=" + closeConnectionReason +
                                             " / isIntended=" + closeConnectionReason.isIntended +
@@ -369,6 +370,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         return result;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public boolean removeMailboxData(ProtectedMailboxStorageEntry protectedMailboxStorageEntry, @Nullable NodeAddress sender, boolean isDataOwner) {
         Log.traceCall();
         ByteArray hashOfData = getHashAsByteArray(protectedMailboxStorageEntry.getStoragePayload());
