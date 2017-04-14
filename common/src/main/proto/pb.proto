@@ -780,8 +780,7 @@ message AddressEntry {
     Context context = 8;
     bytes pub_key = 9;
     bytes pub_key_hash = 10;
-    string param_id = 11;
-    Coin coin_locked_in_multi_sig = 12;
+    Coin coin_locked_in_multi_sig = 11;
 }
 
 message DeterministicKey {

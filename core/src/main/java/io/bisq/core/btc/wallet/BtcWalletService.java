@@ -80,7 +80,7 @@ public class BtcWalletService extends WalletService {
     void decryptWallet(@NotNull KeyParameter key) {
         super.decryptWallet(key);
 
-        addressEntryList.getAddressEntryList().stream().forEach(e -> {
+        addressEntryList.stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
             if (keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.decrypt(key));
@@ -92,7 +92,7 @@ public class BtcWalletService extends WalletService {
     void encryptWallet(KeyCrypterScrypt keyCrypterScrypt, KeyParameter key) {
         super.encryptWallet(keyCrypterScrypt, key);
 
-        addressEntryList.getAddressEntryList().stream().forEach(e -> {
+        addressEntryList.stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
             if (keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
@@ -291,7 +291,7 @@ public class BtcWalletService extends WalletService {
             return addressEntry.get();
         } else {
             AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(),
-                    wallet.getParams(), context, offerId));
+                    context, offerId));
             saveAddressEntryList();
             return entry;
         }
@@ -316,8 +316,7 @@ public class BtcWalletService extends WalletService {
         if (addressEntry.isPresent()) {
             return addressEntry.get();
         } else {
-            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(),
-                    wallet.getParams(), context));
+            AddressEntry entry = addressEntryList.addAddressEntry(new AddressEntry(wallet.freshReceiveKey(), context));
             saveAddressEntryList();
             return entry;
         }
@@ -349,7 +348,7 @@ public class BtcWalletService extends WalletService {
     }
 
     private List<AddressEntry> getAddressEntryListAsImmutableList() {
-        return ImmutableList.copyOf(addressEntryList.getAddressEntryList());
+        return ImmutableList.copyOf(addressEntryList.getList());
     }
 
     public void swapTradeEntryToAvailableEntry(String offerId, AddressEntry.Context context) {

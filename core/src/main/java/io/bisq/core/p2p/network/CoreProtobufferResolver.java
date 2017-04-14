@@ -990,7 +990,6 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         envelope.getAddressEntryList().getAddressEntryList().stream().forEach(addressEntry -> {
             final AddressEntry entry = new AddressEntry(addressEntry.getPubKey().toByteArray(),
                     addressEntry.getPubKeyHash().toByteArray(),
-                    addressEntry.getParamId(),
                     AddressEntry.Context.valueOf(addressEntry.getContext().name()),
                     addressEntry.getOfferId(),
                     Coin.valueOf(addressEntry.getCoinLockedInMultiSig().getValue()));

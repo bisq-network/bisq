@@ -22,17 +22,14 @@ import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.TestNet3Params;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -73,8 +70,6 @@ public final class AddressEntry implements Persistable {
     private final byte[] pubKey;
     @Getter
     private final byte[] pubKeyHash;
-    @Getter
-    private final String paramId;
     @Nullable
     @Getter
     private Coin coinLockedInMultiSig;
@@ -82,27 +77,26 @@ public final class AddressEntry implements Persistable {
     @Nullable
     @Getter
     transient private DeterministicKey keyPair;
-    @Getter
-    transient private NetworkParameters params;
+    @Nullable
+    transient private Address address;
+    @Nullable
+    transient private String addressString;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressEntry(DeterministicKey keyPair, NetworkParameters params, Context context) {
-        this(keyPair, params, context, null);
+    public AddressEntry(DeterministicKey keyPair, Context context) {
+        this(keyPair, context, null);
     }
 
     public AddressEntry(@NotNull DeterministicKey keyPair,
-                        NetworkParameters params,
                         Context context,
                         @Nullable String offerId) {
         this.keyPair = keyPair;
-        this.params = params;
         this.context = context;
         this.offerId = offerId;
-        paramId = params.getId();
         pubKey = keyPair.getPubKey();
         pubKeyHash = keyPair.getPubKeyHash();
     }
@@ -110,23 +104,14 @@ public final class AddressEntry implements Persistable {
     // called from Resolver
     public AddressEntry(byte[] pubKey,
                         byte[] pubKeyHash,
-                        String paramId,
                         Context context,
                         @Nullable String offerId,
                         @Nullable Coin coinLockedInMultiSig) {
         this.pubKey = pubKey;
         this.pubKeyHash = pubKeyHash;
-        this.paramId = paramId;
         this.context = context;
         this.offerId = offerId;
         this.coinLockedInMultiSig = coinLockedInMultiSig;
-
-        if (MainNetParams.ID_MAINNET.equals(paramId))
-            params = MainNetParams.get();
-        else if (MainNetParams.ID_TESTNET.equals(paramId))
-            params = TestNet3Params.get();
-        else if (MainNetParams.ID_REGTEST.equals(paramId))
-            params = RegTestParams.get();
     }
 
     // Set after wallet is ready
@@ -160,12 +145,16 @@ public final class AddressEntry implements Persistable {
 
     @Nullable
     public String getAddressString() {
-        return getAddress() != null ? getAddress().toString() : null;
+        if (addressString == null && getAddress() != null)
+            addressString = getAddress().toString();
+        return addressString;
     }
 
     @Nullable
     public Address getAddress() {
-        return keyPair != null ? keyPair.toAddress(params) : null;
+        if (address == null && keyPair != null)
+            address = keyPair.toAddress(WalletUtils.getParameters());
+        return address;
     }
 
     public boolean isOpenOffer() {
@@ -199,8 +188,7 @@ public final class AddressEntry implements Persistable {
         PB.AddressEntry.Builder builder = PB.AddressEntry.newBuilder()
                 .setContext(PB.AddressEntry.Context.valueOf(context.name()))
                 .setPubKey(ByteString.copyFrom(pubKey))
-                .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
-                .setParamId(paramId);
+                .setPubKeyHash(ByteString.copyFrom(pubKeyHash));
         Optional.ofNullable(offerId).ifPresent(builder::setOfferId);
         Optional.ofNullable(coinLockedInMultiSig).ifPresent(coinLockedInMultiSig -> {
             builder.setCoinLockedInMultiSig(PB.Coin.newBuilder().setValue(coinLockedInMultiSig.getValue()));

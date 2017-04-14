@@ -32,8 +32,8 @@ import org.bitcoinj.crypto.DeterministicKey;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The List supporting our persistence solution.
@@ -47,7 +47,7 @@ public final class AddressEntryList implements Persistable {
     final transient private Storage<AddressEntryList> storage;
     transient private Wallet wallet;
     @Getter
-    private List<AddressEntry> addressEntryList = new ArrayList<>();
+    private List<AddressEntry> list = new ArrayList<>();
     @Setter
     private boolean doPersist;
 
@@ -61,7 +61,7 @@ public final class AddressEntryList implements Persistable {
 
         AddressEntryList persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
-            for (AddressEntry addressEntry : persisted.getAddressEntryList()) {
+            for (AddressEntry addressEntry : persisted.getList()) {
                 DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash());
                 if (keyFromPubHash != null) {
                     addressEntry.setDeterministicKey(keyFromPubHash);
@@ -71,17 +71,17 @@ public final class AddressEntryList implements Persistable {
             }
         } else {
             doPersist = true;
-            add(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), AddressEntry.Context.ARBITRATOR));
+            add(new AddressEntry(wallet.freshReceiveKey(), AddressEntry.Context.ARBITRATOR));
             persist();
         }
     }
 
     private boolean add(AddressEntry addressEntry) {
-        return addressEntryList.add(addressEntry);
+        return list.add(addressEntry);
     }
 
     private boolean remove(AddressEntry addressEntry) {
-        return addressEntryList.remove(addressEntry);
+        return list.remove(addressEntry);
     }
 
     public AddressEntry addAddressEntry(AddressEntry addressEntry) {
@@ -91,25 +91,26 @@ public final class AddressEntryList implements Persistable {
         return addressEntry;
     }
 
-
     public void swapTradeToSavings(String offerId) {
-        Optional<AddressEntry> addressEntryOptional = addressEntryList.stream().filter(addressEntry -> offerId.equals(addressEntry.getOfferId())).findAny();
-        if (addressEntryOptional.isPresent()) {
-            AddressEntry addressEntry = addressEntryOptional.get();
-            boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.AVAILABLE));
+        list.stream().filter(addressEntry -> offerId.equals(addressEntry.getOfferId()))
+                .findAny().ifPresent(addressEntry -> {
+            boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), AddressEntry.Context.AVAILABLE));
             boolean changed2 = remove(addressEntry);
             if (changed1 || changed2)
                 persist();
-        }
+        });
     }
-
 
     public void swapToAvailable(AddressEntry addressEntry) {
         remove(addressEntry);
-        boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.AVAILABLE));
+        boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), AddressEntry.Context.AVAILABLE));
         boolean changed2 = remove(addressEntry);
         if (changed1 || changed2)
             persist();
+    }
+
+    public Stream<AddressEntry> stream() {
+        return list.stream();
     }
 
     public void persist() {
@@ -120,7 +121,7 @@ public final class AddressEntryList implements Persistable {
     @Override
     public Message toProtobuf() {
         final PB.DiskEnvelope build = PB.DiskEnvelope.newBuilder().setAddressEntryList(PB.AddressEntryList.newBuilder()
-                .addAllAddressEntry(getAddressEntryList().stream()
+                .addAllAddressEntry(stream()
                         .map(addressEntry -> ((PB.AddressEntry) addressEntry.toProtobuf()))
                         .collect(Collectors.toList())))
                 .build();

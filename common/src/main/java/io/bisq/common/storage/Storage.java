@@ -67,7 +67,6 @@ public class Storage<T extends Persistable> {
     private T serializable;
     private String fileName;
     private int numMaxBackupFiles = 10;
-    @com.google.inject.Inject
     private ProtobufferResolver protobufferResolver;
 
 

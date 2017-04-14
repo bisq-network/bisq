@@ -1,11 +1,12 @@
 package io.bisq.common.storage;
 
-import java.io.Serializable;
+import io.bisq.common.persistance.Persistable;
 
 /**
  * Used to wrap a plaintext string to distinguish at file storage and safe it as plain text instead of a serialized java object.
  */
-public class PlainTextWrapper implements Serializable {
+// We would not need Persistable but as it is used in Storage and Storage expects a Persistable as type we keep it...
+public class PlainTextWrapper implements Persistable {
     // That object is not saved to disc it is only of type Serializable to support the persistent framework.
     // SerialVersionUID has no relevance here.
     private static final long serialVersionUID = 0;
