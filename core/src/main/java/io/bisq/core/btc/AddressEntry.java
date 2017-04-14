@@ -22,7 +22,6 @@ import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.btc.wallet.KeyBagSupplier;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,11 +36,8 @@ import org.bitcoinj.params.TestNet3Params;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -51,7 +47,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @EqualsAndHashCode
 @Slf4j
-@Getter
 public final class AddressEntry implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -68,18 +63,26 @@ public final class AddressEntry implements Persistable {
     // keyPair can be null in case the object is created from deserialization as it is transient.
     // It will be restored when the wallet is ready at setDeterministicKey
     // So after startup it never must be null
+
     @Nullable
-    transient private DeterministicKey keyPair;
-    @Nullable
+    @Getter
     private final String offerId;
-    @Nullable
-    private KeyBagSupplier keyBagSupplier;
+    @Getter
     private final Context context;
+    @Getter
     private final byte[] pubKey;
+    @Getter
     private final byte[] pubKeyHash;
+    @Getter
     private final String paramId;
     @Nullable
+    @Getter
     private Coin coinLockedInMultiSig;
+
+    @Nullable
+    @Getter
+    transient private DeterministicKey keyPair;
+    @Getter
     transient private NetworkParameters params;
 
 
@@ -110,35 +113,23 @@ public final class AddressEntry implements Persistable {
                         String paramId,
                         Context context,
                         @Nullable String offerId,
-                        @Nullable Coin coinLockedInMultiSig,
-                        @NotNull KeyBagSupplier keyBagSupplier) {
+                        @Nullable Coin coinLockedInMultiSig) {
         this.pubKey = pubKey;
         this.pubKeyHash = pubKeyHash;
         this.paramId = paramId;
         this.context = context;
         this.offerId = offerId;
         this.coinLockedInMultiSig = coinLockedInMultiSig;
-        this.keyBagSupplier = keyBagSupplier;
-    }
 
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-
-            if (MainNetParams.ID_MAINNET.equals(paramId))
-                params = MainNetParams.get();
-            else if (MainNetParams.ID_TESTNET.equals(paramId))
-                params = TestNet3Params.get();
-            else if (MainNetParams.ID_REGTEST.equals(paramId))
-                params = RegTestParams.get();
-
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
+        if (MainNetParams.ID_MAINNET.equals(paramId))
+            params = MainNetParams.get();
+        else if (MainNetParams.ID_TESTNET.equals(paramId))
+            params = TestNet3Params.get();
+        else if (MainNetParams.ID_REGTEST.equals(paramId))
+            params = RegTestParams.get();
     }
 
     // Set after wallet is ready
-    //todo can be removed once keyBagSupplier is used
     public void setDeterministicKey(DeterministicKey deterministicKey) {
         this.keyPair = deterministicKey;
     }
@@ -147,13 +138,8 @@ public final class AddressEntry implements Persistable {
     // If the object is created at runtime it must be always constructed after wallet is ready.
     @NotNull
     public DeterministicKey getKeyPair() {
-        if (keyPair == null) {
-            checkNotNull(keyBagSupplier, "keyBagConsumer must not be null if keyPair is null (protobuffer case)");
-            checkNotNull(pubKeyHash, "pubKeyHash must not be null");
-            checkArgument(keyBagSupplier.isKeyBagReady(), "getKeyPair must nto be called before keybag is ready");
-            keyPair = (DeterministicKey) keyBagSupplier.getKeyBag().findKeyFromPubHash(pubKeyHash);
-            checkNotNull(keyPair, "keyPair must not be null");
-        }
+        checkNotNull(keyPair, "keyPair must not be null. If we got the addressEntry created from PB we need to have " +
+                "setDeterministicKey got called before any access with getKeyPair().");
         return keyPair;
     }
 

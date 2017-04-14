@@ -224,27 +224,22 @@ public final class Preferences implements Persistable {
 
         TradeCurrency defaultTradeCurrency;
         Preferences persisted = storage.initAndGetPersisted(this);
-        doPersist = true;
         if (persisted != null) {
-            userLanguage = persisted.getUserLanguage();
-            userCountry = persisted.getUserCountry();
+            userLanguage = persisted.userLanguage;
+            userCountry = persisted.userCountry;
             GlobalSettings.setLocale(new Locale(userLanguage, userCountry.code));
-            GlobalSettings.setUseAnimations(persisted.getUseAnimations());
-            preferredTradeCurrency = persisted.getPreferredTradeCurrency();
+            GlobalSettings.setUseAnimations(persisted.useAnimations);
+            preferredTradeCurrency = persisted.preferredTradeCurrency;
             defaultTradeCurrency = preferredTradeCurrency;
-
-            setBtcDenomination(persisted.getBtcDenomination());
-            setUseAnimations(persisted.getUseAnimations());
-
-            setFiatCurrencies(persisted.getFiatCurrencies());
-            setCryptoCurrencies(persisted.getCryptoCurrencies());
-
-            setBlockChainExplorerTestNet(persisted.getBlockChainExplorerTestNet());
-            setBlockChainExplorerMainNet(persisted.getBlockChainExplorerMainNet());
-            setBsqBlockChainExplorer(persisted.getBsqBlockChainExplorer());
-
-            setUseCustomWithdrawalTxFee(persisted.getUseCustomWithdrawalTxFee());
-            setWithdrawalTxFeeInBytes(persisted.getWithdrawalTxFeeInBytes());
+            setBtcDenomination(persisted.btcDenomination);
+            setUseAnimations(persisted.useAnimations);
+            setFiatCurrencies(persisted.fiatCurrencies);
+            setCryptoCurrencies(persisted.cryptoCurrencies);
+            setBlockChainExplorerTestNet(persisted.blockChainExplorerTestNet);
+            setBlockChainExplorerMainNet(persisted.blockChainExplorerMainNet);
+            setBsqBlockChainExplorer(persisted.bsqBlockChainExplorer);
+            setUseCustomWithdrawalTxFee(persisted.useCustomWithdrawalTxFee);
+            setWithdrawalTxFeeInBytes(persisted.withdrawalTxFeeInBytes);
 
             backupDirectory = persisted.getBackupDirectory();
             autoSelectArbitrators = persisted.isAutoSelectArbitrators();
@@ -282,6 +277,7 @@ public final class Preferences implements Persistable {
             directoryChooserPath = Utilities.getSystemHomeDirectory();
             dontShowAgainMap = new HashMap<>();
 
+            doPersist = true;
             persist();
         }
         GlobalSettings.setDefaultTradeCurrency(defaultTradeCurrency);
@@ -680,6 +676,7 @@ public final class Preferences implements Persistable {
                 .setAutoSelectArbitrators(autoSelectArbitrators)
                 .putAllDontShowAgainMap(dontShowAgainMap)
                 .setTacAccepted(tacAccepted)
+                .setUseAnimations(useAnimations)
                 .setUseTorForBitcoinJ(useTorForBitcoinJ)
                 .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
                 .setPreferredTradeCurrency((PB.TradeCurrency) preferredTradeCurrency.toProtobuf())

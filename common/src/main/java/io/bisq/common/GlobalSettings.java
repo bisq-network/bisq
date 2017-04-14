@@ -50,11 +50,9 @@ public class GlobalSettings {
         GlobalSettings.btcDenomination = btcDenomination;
     }
 
-
     public static TradeCurrency getDefaultTradeCurrency() {
         return defaultTradeCurrency;
     }
-
 
     public static String getBtcDenomination() {
         return btcDenomination;

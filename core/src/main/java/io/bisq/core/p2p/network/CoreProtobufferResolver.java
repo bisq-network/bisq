@@ -79,14 +79,14 @@ import static io.bisq.generated.protobuffer.PB.Envelope.MessageCase.*;
 @Slf4j
 public class CoreProtobufferResolver implements ProtobufferResolver {
 
-    private Provider<AddressEntryList> addressEntryList;
+    private Provider<AddressEntryList> addressEntryListProvider;
     private Provider<Preferences> preferencesProvider;
 
     @Inject
     public CoreProtobufferResolver(Provider<Preferences> preferencesProvider,
-                                   Provider<AddressEntryList> addressEntryList) {
+                                   Provider<AddressEntryList> addressEntryListProvider) {
         this.preferencesProvider = preferencesProvider;
-        this.addressEntryList = addressEntryList;
+        this.addressEntryListProvider = addressEntryListProvider;
     }
 
     @Override
@@ -882,8 +882,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         Persistable result = null;
         switch (envelope.getMessageCase()) {
             case ADDRESS_ENTRY_LIST:
-                addToAddressEntryList(envelope);
-                result = addressEntryList.get();
+                result = fillAddressEntryList(envelope, addressEntryListProvider.get());
                 break;
                 /*
             case NAVIGATION:
@@ -894,8 +893,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
                 break;
                 */
             case PREFERENCES:
-                setPreferences(envelope);
-                result = preferencesProvider.get();
+                result = fillPreferences(envelope, preferencesProvider.get());
                 break;
                 /*
             case USER:
@@ -914,9 +912,8 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         return Optional.ofNullable(result);
     }
 
-    private void setPreferences(PB.DiskEnvelope envelope) {
+    private Preferences fillPreferences(PB.DiskEnvelope envelope, Preferences preferences) {
         final PB.Preferences env = envelope.getPreferences();
-        Preferences preferences = this.preferencesProvider.get();
         preferences.setUserLanguage(env.getUserLanguage());
         PB.Country userCountry = env.getUserCountry();
         preferences.setUserCountry(new Country(userCountry.getCode(), userCountry.getName(), new Region(userCountry.getRegion().getCode(), userCountry.getRegion().getName())));
@@ -930,7 +927,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         preferences.setBlockChainExplorerTestNet(new BlockChainExplorer(bceTest.getName(), bceTest.getTxUrl(), bceTest.getAddressUrl()));
 
         preferences.setAutoSelectArbitrators(env.getAutoSelectArbitrators());
-        preferences.setDontShowAgainMap(env.getDontShowAgainMapMap());
+        preferences.setDontShowAgainMap(new HashMap<>(env.getDontShowAgainMapMap()));
         preferences.setTacAccepted(env.getTacAccepted());
         preferences.setUseTorForBitcoinJ(env.getUseTorForBitcoinJ());
         preferences.setShowOwnOffersInOfferBook(env.getShowOwnOffersInOfferBook());
@@ -964,6 +961,7 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         preferences.setSelectedPaymentAccountForCreateOffer(env.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod() ? getPaymentAccount(env.getSelectedPaymentAccountForCreateOffer()) : null);
 
         preferences.setDoPersist(true);
+        return preferences;
     }
 
     private PaymentAccount getPaymentAccount(PB.PaymentAccount account) {
@@ -988,10 +986,18 @@ public class CoreProtobufferResolver implements ProtobufferResolver {
         return new Locale(locale.getLanguage(), locale.getCountry(), locale.getVariant());
     }
 
-    private void addToAddressEntryList(PB.DiskEnvelope envelope) {
-        envelope.getAddressEntryList().getAddressEntryList().stream().map(addressEntry -> addressEntryList.get().addAddressEntry(
-                new AddressEntry(addressEntry.getPubKey().toByteArray(), addressEntry.getPubKeyHash().toByteArray(), addressEntry.getParamId(), AddressEntry.Context.valueOf(addressEntry.getContext().name()),
-                        addressEntry.getOfferId(), Coin.valueOf(addressEntry.getCoinLockedInMultiSig().getValue()), addressEntryList.get().getKeyBagSupplier())));
+    private AddressEntryList fillAddressEntryList(PB.DiskEnvelope envelope, AddressEntryList addressEntryList) {
+        envelope.getAddressEntryList().getAddressEntryList().stream().forEach(addressEntry -> {
+            final AddressEntry entry = new AddressEntry(addressEntry.getPubKey().toByteArray(),
+                    addressEntry.getPubKeyHash().toByteArray(),
+                    addressEntry.getParamId(),
+                    AddressEntry.Context.valueOf(addressEntry.getContext().name()),
+                    addressEntry.getOfferId(),
+                    Coin.valueOf(addressEntry.getCoinLockedInMultiSig().getValue()));
+            addressEntryList.addAddressEntry(entry);
+        });
+        addressEntryList.setDoPersist(true);
+        return addressEntryList;
     }
 
 

@@ -31,7 +31,6 @@ import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.script.ScriptBuilder;
-import org.bitcoinj.wallet.KeyBag;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +44,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class BtcWalletService extends WalletService implements KeyBagSupplier {
+public class BtcWalletService extends WalletService {
     private static final Logger log = LoggerFactory.getLogger(BtcWalletService.class);
 
     private final AddressEntryList addressEntryList;
@@ -83,10 +82,10 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
 
         addressEntryList.getAddressEntryList().stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
-            if (keyPair != null && keyPair.isEncrypted())
+            if (keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.decrypt(key));
         });
-        addressEntryList.queueUpForSave();
+        addressEntryList.persist();
     }
 
     @Override
@@ -95,10 +94,10 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
 
         addressEntryList.getAddressEntryList().stream().forEach(e -> {
             final DeterministicKey keyPair = e.getKeyPair();
-            if (keyPair != null && keyPair.isEncrypted())
+            if (keyPair.isEncrypted())
                 e.setDeterministicKey(keyPair.encrypt(keyCrypterScrypt, key));
         });
-        addressEntryList.queueUpForSave();
+        addressEntryList.persist();
     }
 
     @Override
@@ -111,21 +110,6 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
                 sb.toString() +
                 "All pubkeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // KeyBagSupplier
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public KeyBag getKeyBag() {
-        return wallet;
-    }
-
-    @Override
-    public boolean isKeyBagReady() {
-        return wallet != null;
     }
 
 
@@ -387,7 +371,7 @@ public class BtcWalletService extends WalletService implements KeyBagSupplier {
     }
 
     public void saveAddressEntryList() {
-        addressEntryList.queueUpForSave();
+        addressEntryList.persist();
     }
 
 

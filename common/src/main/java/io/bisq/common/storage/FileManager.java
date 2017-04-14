@@ -18,7 +18,6 @@
 package io.bisq.common.storage;
 
 import com.google.inject.Inject;
-import com.google.protobuf.Message;
 import io.bisq.common.UserThread;
 import io.bisq.common.io.LookAheadObjectInputStream;
 import io.bisq.common.persistance.Persistable;
@@ -118,7 +117,7 @@ public class FileManager<T extends Persistable> {
             log.error("Exception at proto read: " + t.getMessage() + " " + file.getName());
         }
 
-        if(persistable.isPresent()) {
+        if (persistable.isPresent()) {
             log.error("Persistable found");
             return (T) persistable.get();
         }
@@ -184,7 +183,7 @@ public class FileManager<T extends Persistable> {
     private void saveNowInternal(T serializable) {
         long now = System.currentTimeMillis();
         saveToFile(serializable, dir, storageFile);
-        UserThread.execute(() -> log.trace("Save {} completed in {}msec", storageFile, System.currentTimeMillis() - now));
+        log.trace("Save {} completed in {} msec", storageFile, System.currentTimeMillis() - now);
     }
 
     // TODO Sometimes we get a ConcurrentModificationException here

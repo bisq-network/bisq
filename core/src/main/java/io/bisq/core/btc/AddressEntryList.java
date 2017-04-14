@@ -22,13 +22,13 @@ import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistance.Persistable;
 import io.bisq.common.storage.Storage;
-import io.bisq.core.btc.wallet.KeyBagSupplier;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.DeterministicKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,22 +38,22 @@ import java.util.stream.Collectors;
 /**
  * The List supporting our persistence solution.
  */
+@ToString
+@Slf4j
 public final class AddressEntryList implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(AddressEntryList.class);
 
     final transient private Storage<AddressEntryList> storage;
-    @Getter
-    final transient private KeyBagSupplier keyBagSupplier;
     transient private Wallet wallet;
     @Getter
     private List<AddressEntry> addressEntryList = new ArrayList<>();
+    @Setter
+    private boolean doPersist;
 
     @Inject
-    public AddressEntryList(Storage<AddressEntryList> storage, KeyBagSupplier keyBagSupplier) {
+    public AddressEntryList(Storage<AddressEntryList> storage) {
         this.storage = storage;
-        this.keyBagSupplier = keyBagSupplier;
     }
 
     public void onWalletReady(Wallet wallet) {
@@ -65,14 +65,14 @@ public final class AddressEntryList implements Persistable {
                 DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash());
                 if (keyFromPubHash != null) {
                     addressEntry.setDeterministicKey(keyFromPubHash);
-                    add(addressEntry);
                 } else {
                     log.warn("Key from addressEntry not found in that wallet " + addressEntry.toString());
                 }
             }
         } else {
+            doPersist = true;
             add(new AddressEntry(wallet.freshReceiveKey(), wallet.getParams(), AddressEntry.Context.ARBITRATOR));
-            storage.queueUpForSave();
+            persist();
         }
     }
 
@@ -87,7 +87,7 @@ public final class AddressEntryList implements Persistable {
     public AddressEntry addAddressEntry(AddressEntry addressEntry) {
         boolean changed = add(addressEntry);
         if (changed)
-            storage.queueUpForSave();
+            persist();
         return addressEntry;
     }
 
@@ -99,7 +99,7 @@ public final class AddressEntryList implements Persistable {
             boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.AVAILABLE));
             boolean changed2 = remove(addressEntry);
             if (changed1 || changed2)
-                storage.queueUpForSave();
+                persist();
         }
     }
 
@@ -109,11 +109,12 @@ public final class AddressEntryList implements Persistable {
         boolean changed1 = add(new AddressEntry(addressEntry.getKeyPair(), wallet.getParams(), AddressEntry.Context.AVAILABLE));
         boolean changed2 = remove(addressEntry);
         if (changed1 || changed2)
-            storage.queueUpForSave();
+            persist();
     }
 
-    public void queueUpForSave() {
-        storage.queueUpForSave(50);
+    public void persist() {
+        if (doPersist)
+            storage.queueUpForSave(50);
     }
 
     @Override
