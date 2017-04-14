@@ -11,7 +11,7 @@ import io.bisq.common.crypto.Sig;
 import io.bisq.common.network.Msg;
 import io.bisq.common.persistence.HashMapPersistable;
 import io.bisq.common.persistence.Persistable;
-import io.bisq.common.persistence.PersistenceProtoResolver;
+import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.ResourceNotFoundException;
 import io.bisq.common.storage.Storage;

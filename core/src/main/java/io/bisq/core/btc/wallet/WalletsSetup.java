@@ -28,7 +28,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.persistence.LongPersistable;
-import io.bisq.common.persistence.PersistenceProtoResolver;
+import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.app.BisqEnvironment;

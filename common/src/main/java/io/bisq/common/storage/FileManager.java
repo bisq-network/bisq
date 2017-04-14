@@ -20,7 +20,7 @@ package io.bisq.common.storage;
 import io.bisq.common.UserThread;
 import io.bisq.common.io.LookAheadObjectInputStream;
 import io.bisq.common.persistence.Persistable;
-import io.bisq.common.persistence.PersistenceProtoResolver;
+import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import org.slf4j.Logger;

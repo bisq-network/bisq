@@ -15,12 +15,13 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.network;
+package io.bisq.common.proto;
 
+import io.bisq.common.persistence.Persistable;
 import io.bisq.generated.protobuffer.PB;
 
 import java.util.Optional;
 
-public interface NetworkProtoResolver {
-    Optional<Msg> fromProto(PB.Envelope envelope);
+public interface PersistenceProtoResolver {
+    Optional<Persistable> fromProto(PB.DiskEnvelope envelope);
 }

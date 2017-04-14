@@ -26,7 +26,7 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.network.Msg;
-import io.bisq.common.persistence.PersistenceProtoResolver;
+import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BsqWalletService;

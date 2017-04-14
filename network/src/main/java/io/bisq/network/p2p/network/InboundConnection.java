@@ -1,6 +1,6 @@
 package io.bisq.network.p2p.network;
 
-import io.bisq.common.network.NetworkProtoResolver;
+import io.bisq.common.proto.NetworkProtoResolver;
 
 import java.net.Socket;
 

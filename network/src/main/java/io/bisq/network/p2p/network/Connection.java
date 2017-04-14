@@ -8,7 +8,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.network.Msg;
-import io.bisq.common.network.NetworkProtoResolver;
+import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;

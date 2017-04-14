@@ -21,7 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.bisq.common.Marshaller;
 import io.bisq.common.crypto.*;
 import io.bisq.common.network.Msg;
-import io.bisq.common.network.NetworkProtoResolver;
+import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import lombok.extern.slf4j.Slf4j;

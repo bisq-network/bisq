@@ -19,7 +19,7 @@ package io.bisq.core.trade.failed;
 
 import com.google.inject.Inject;
 import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.persistence.PersistenceProtoResolver;
+import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.PriceFeedService;

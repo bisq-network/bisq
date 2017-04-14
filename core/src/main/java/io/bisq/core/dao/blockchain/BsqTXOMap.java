@@ -18,7 +18,7 @@
 package io.bisq.core.dao.blockchain;
 
 import io.bisq.common.persistence.Persistable;
-import io.bisq.common.persistence.PersistenceProtoResolver;
+import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;

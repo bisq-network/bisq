@@ -19,7 +19,7 @@ package io.bisq.common.storage;
 
 import com.google.inject.Inject;
 import io.bisq.common.persistence.Persistable;
-import io.bisq.common.persistence.PersistenceProtoResolver;
+import io.bisq.common.proto.PersistenceProtoResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

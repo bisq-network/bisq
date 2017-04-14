@@ -19,7 +19,7 @@ package io.bisq.core.dao.blockchain;
 
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.persistence.PersistenceProtoResolver;
+import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.dao.RpcOptionKeys;

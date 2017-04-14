@@ -5,7 +5,7 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.persistence.HashSetPersistable;
-import io.bisq.common.persistence.PersistenceProtoResolver;
+import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;

@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.network;
 
 import io.bisq.common.app.Log;
-import io.bisq.common.network.NetworkProtoResolver;
+import io.bisq.common.proto.NetworkProtoResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

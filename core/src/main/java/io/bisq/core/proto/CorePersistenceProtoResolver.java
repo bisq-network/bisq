@@ -1,9 +1,9 @@
-package io.bisq.core.persistence;
+package io.bisq.core.proto;
 
 import com.google.inject.Provider;
 import io.bisq.common.locale.*;
 import io.bisq.common.persistence.Persistable;
-import io.bisq.common.persistence.PersistenceProtoResolver;
+import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.payment.PaymentAccount;

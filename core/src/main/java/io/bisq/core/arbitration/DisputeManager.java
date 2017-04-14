@@ -28,7 +28,7 @@ import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.Res;
 import io.bisq.common.network.Msg;
-import io.bisq.common.persistence.PersistenceProtoResolver;
+import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.arbitration.messages.*;
 import io.bisq.core.btc.AddressEntry;
