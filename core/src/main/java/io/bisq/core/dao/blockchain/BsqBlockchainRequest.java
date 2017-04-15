@@ -17,23 +17,19 @@
 
 package io.bisq.core.dao.blockchain;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.neemre.btcdcli4j.core.domain.Block;
 import io.bisq.common.UserThread;
-import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
-import io.bisq.core.dao.blockchain.vo.Tx;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
-import java.util.List;
 import java.util.function.Consumer;
 
 // Used for non blocking access to blockchain data and parsing. Encapsulate thread context, so caller 
@@ -60,7 +56,7 @@ public class BsqBlockchainRequest {
         this.bsqParser = bsqParser;
     }
 
-    void setup(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
         ListenableFuture<Void> future = setupExecutor.submit(() -> {
             bsqBlockchainService.setup();
             return null;
@@ -72,9 +68,9 @@ public class BsqBlockchainRequest {
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> {
-                    errorMessageHandler.handleErrorMessage(throwable.toString());
-                });
+                log.error(throwable.toString());
+                throwable.printStackTrace();
+                UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });
     }
@@ -88,6 +84,8 @@ public class BsqBlockchainRequest {
             }
 
             public void onFailure(@NotNull Throwable throwable) {
+                log.error(throwable.toString());
+                throwable.printStackTrace();
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });
@@ -102,6 +100,8 @@ public class BsqBlockchainRequest {
             }
 
             public void onFailure(@NotNull Throwable throwable) {
+                log.error(throwable.toString());
+                throwable.printStackTrace();
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });
@@ -137,6 +137,8 @@ public class BsqBlockchainRequest {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
+                log.error(throwable.toString());
+                throwable.printStackTrace();
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });
@@ -148,13 +150,9 @@ public class BsqBlockchainRequest {
                     Consumer<BsqBlock> resultHandler,
                     Consumer<Throwable> errorHandler) {
         ListenableFuture<BsqBlock> future = parseBlocksExecutor.submit(() -> {
-            List<Tx> bsqTxsInBlock = bsqParser.findBsqTxsInBlock(btcdBlock,
+            return bsqParser.parseBlock(btcdBlock,
                     genesisBlockHeight,
                     genesisTxId);
-            return new BsqBlock(ImmutableList.copyOf(bsqTxsInBlock),
-                    btcdBlock.getHeight(),
-                    btcdBlock.getHash(),
-                    btcdBlock.getPreviousBlockHash());
         });
 
         Futures.addCallback(future, new FutureCallback<BsqBlock>() {
@@ -167,6 +165,8 @@ public class BsqBlockchainRequest {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
+                log.error(throwable.toString());
+                throwable.printStackTrace();
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });

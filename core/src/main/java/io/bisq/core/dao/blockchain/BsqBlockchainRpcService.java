@@ -28,7 +28,6 @@ import com.neemre.btcdcli4j.core.domain.RawTransaction;
 import com.neemre.btcdcli4j.daemon.BtcdDaemon;
 import com.neemre.btcdcli4j.daemon.BtcdDaemonImpl;
 import com.neemre.btcdcli4j.daemon.event.BlockListener;
-import io.bisq.common.UserThread;
 import io.bisq.core.dao.RpcOptionKeys;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
@@ -120,10 +119,8 @@ public class BsqBlockchainRpcService implements BsqBlockchainService {
             @Override
             public void blockDetected(Block block) {
                 if (block != null) {
-                    UserThread.execute(() -> {
-                        log.info("New block received: height={}, id={}", block.getHeight(), block.getHash());
-                        blockHandler.accept(block);
-                    });
+                    log.info("New block received: height={}, id={}", block.getHeight(), block.getHash());
+                    blockHandler.accept(block);
                 } else {
                     log.error("We received a block with value null. That should not happen.");
                 }

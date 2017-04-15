@@ -38,7 +38,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Immutable
 public class BsqParser {
     private BsqChainState bsqChainState;
-    private Map<String, Integer> blockHeightByHashMap = new HashMap<>();
     private BsqBlockchainService bsqBlockchainService;
 
     @Inject
@@ -72,7 +71,6 @@ public class BsqParser {
             throws BsqBlockchainException, OrphanDetectedException {
         int blockHeight = bsqBlock.getHeight();
         log.debug("Parse block at height={} ", blockHeight);
-        blockHeightByHashMap.put(bsqBlock.getHash(), blockHeight);
         List<Tx> txList = new ArrayList<>(bsqBlock.getTxs());
         List<Tx> bsqTxsInBlock = new ArrayList<>();
         bsqBlock.getTxs().stream()
@@ -121,20 +119,8 @@ public class BsqParser {
         int blockHeight = btcdBlock.getHeight();
         log.debug("Parse block at height={} ", blockHeight);
 
-        //TODO check if > or >= ?
-        if (bsqChainState.getChainHeadHeight() > blockHeight) {
-            log.warn("blockHeight from txOutputMap must not be larger than blockHeight in parser iteration");
-            throw new OrphanDetectedException(blockHeight);
-        }
-
-        final String previousBlockHash = btcdBlock.getPreviousBlockHash();
         // check if the new block is the same chain we have built on.
-        if (blockHeightByHashMap.isEmpty() ||
-                (blockHeightByHashMap.containsKey(previousBlockHash) &&
-                        blockHeightByHashMap.containsKey(previousBlockHash) &&
-                        blockHeight == blockHeightByHashMap.get(previousBlockHash) + 1)) {
-            blockHeightByHashMap.put(btcdBlock.getHash(), blockHeight);
-
+        if (bsqChainState.isBlockConnecting(btcdBlock.getPreviousBlockHash())) {
             List<Tx> txList = new ArrayList<>();
             // We use a list as we want to maintain sorting of tx intra-block dependency
             List<Tx> bsqTxsInBlock = new ArrayList<>();
@@ -161,6 +147,24 @@ public class BsqParser {
     }
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Parse when requested from new block arrived handler (rpc) 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    BsqBlock parseBlock(Block btcdBlock, int genesisBlockHeight, String genesisTxId)
+            throws BsqBlockchainException, OrphanDetectedException {
+        List<Tx> bsqTxsInBlock = findBsqTxsInBlock(btcdBlock,
+                genesisBlockHeight,
+                genesisTxId);
+        BsqBlock bsqBlock = new BsqBlock(ImmutableList.copyOf(bsqTxsInBlock),
+                btcdBlock.getHeight(),
+                btcdBlock.getHash(),
+                btcdBlock.getPreviousBlockHash());
+        bsqChainState.addBlock(bsqBlock);
+        return bsqBlock;
+    }
+    
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Generic 
     ///////////////////////////////////////////////////////////////////////////////////////////

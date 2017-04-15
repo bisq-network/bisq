@@ -50,13 +50,17 @@ public class LookAheadObjectInputStream extends ObjectInputStream {
             Pattern.compile("java\\.util\\.Date$"),
             Pattern.compile("java\\.util\\.HashSet$"),
             Pattern.compile("java\\.util\\.HashMap$"),
+            Pattern.compile("java\\.util\\.concurrent\\..*$"),
+            
             Pattern.compile("org\\.bouncycastle\\.jcajce\\.provider\\.asymmetric\\.dsa\\.BCDSAPublicKey$"),
             Pattern.compile("java\\.math\\.BigInteger$"),
-            
+
+            Pattern.compile("com\\.google\\.common\\.collect\\..*$"),
             
             // Type Signatures
             // https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/types.html
-            Pattern.compile("\\[B$") // byte array
+            Pattern.compile("\\[B$"), // byte array
+            Pattern.compile("\\[Ljava.lang.Object;") //long ?
     };
 
     private final static Pattern[] blackList = {

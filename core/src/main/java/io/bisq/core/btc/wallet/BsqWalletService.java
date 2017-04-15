@@ -121,7 +121,7 @@ public class BsqWalletService extends WalletService {
             });
         });
 
-        bsqBlockchainManager.addTxOutputMapListener(s -> {
+        bsqBlockchainManager.addTxOutputMapListener(() -> {
             updateBsqWalletTransactions();
             updateBsqBalance();
         });
@@ -159,7 +159,7 @@ public class BsqWalletService extends WalletService {
                 })
                 .mapToLong(out -> out.getValue().value).sum());
 
-        bsqBalanceListeners.stream().forEach(e -> e.updateAvailableBalance(availableBsqBalance));
+        bsqBalanceListeners.stream().forEach(e -> e.updateAvailableBalance(availableBsqBalance, unverifiedBalance));
     }
 
     @Override
