@@ -74,7 +74,9 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
                     break;
             }
 
-            if (isTxSpendable(output.getParentTransaction()) && isTxOutputSpendable(output)) {
+            if (output.getParentTransaction() != null &&
+                    isTxSpendable(output.getParentTransaction()) &&
+                    isTxOutputSpendable(output)) {
                 selected.add(output);
                 total += output.getValue().value;
             }
@@ -100,16 +102,12 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
 
     // We allow spending own pending txs and if permitForeignPendingTx is set as well foreign unconfirmed txs.
     protected boolean isTxSpendable(Transaction tx) {
-        if (tx != null) {
-            TransactionConfidence confidence = tx.getConfidence();
-            TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
-            boolean isConfirmed = type.equals(TransactionConfidence.ConfidenceType.BUILDING);
-            boolean isPending = type.equals(TransactionConfidence.ConfidenceType.PENDING);
-            boolean isOwnTx = confidence.getSource().equals(TransactionConfidence.Source.SELF);
-            return isConfirmed || (isPending && (permitForeignPendingTx || isOwnTx));
-        } else {
-            return false;
-        }
+        TransactionConfidence confidence = tx.getConfidence();
+        TransactionConfidence.ConfidenceType type = confidence.getConfidenceType();
+        boolean isConfirmed = type.equals(TransactionConfidence.ConfidenceType.BUILDING);
+        boolean isPending = type.equals(TransactionConfidence.ConfidenceType.PENDING);
+        boolean isOwnTx = confidence.getSource().equals(TransactionConfidence.Source.SELF);
+        return isConfirmed || (isPending && (permitForeignPendingTx || isOwnTx));
     }
 
     abstract boolean isTxOutputSpendable(TransactionOutput output);

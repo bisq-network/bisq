@@ -17,7 +17,6 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
-import io.bisq.common.app.Version;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +34,6 @@ public class TxOutput implements Serializable {
     private final PubKeyScript pubKeyScript;
     private final int blockHeight;
     private final long time;
-    private final String txVersion = Version.BSQ_TX_VERSION;
 
     public TxOutput(int index,
                     long value,
@@ -91,7 +89,6 @@ public class TxOutput implements Serializable {
                 ",\n     pubKeyScript=" + pubKeyScript +
                 ",\n     blockHeight=" + blockHeight +
                 ",\n     time=" + time +
-                ",\n     txVersion='" + txVersion + '\'' +
                 "\n}";
     }
 }

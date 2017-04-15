@@ -18,13 +18,10 @@
 package io.bisq.core.btc.wallet;
 
 import io.bisq.core.dao.blockchain.BsqChainState;
-import io.bisq.core.dao.blockchain.vo.TxOutput;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
 import javax.inject.Inject;
-import java.util.Optional;
 
 /**
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
@@ -42,15 +39,7 @@ public class BsqCoinSelector extends BisqDefaultCoinSelector {
 
     @Override
     protected boolean isTxOutputSpendable(TransactionOutput output) {
-        final Transaction parentTransaction = output.getParentTransaction();
-        if (parentTransaction == null)
-            return false;
-
-        final String txId = parentTransaction.getHashAsString();
-        final int index = output.getIndex();
-        final Optional<TxOutput> txOutputOptional = bsqChainState.getTxOutput(txId, index);
-        return bsqChainState.isTxOutputUnSpent(txId, index) &&
-                txOutputOptional.isPresent() &&
-                bsqChainState.isVerifiedTxOutput(txOutputOptional.get());
+        // output.getParentTransaction() cannot be null as it is checked in calling method
+        return bsqChainState.isTxOutputSpendable(output.getParentTransaction().getHashAsString(), output.getIndex());
     }
 }

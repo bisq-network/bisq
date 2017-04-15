@@ -110,7 +110,7 @@ public class JsonExporter {
                     spendInfo.getTxId());
 
         final long time = txOutput.getTime();
-        final String txVersion = txOutput.getTxVersion();
+        final String txVersion = "";//txOutput.getTxVersion();
         return new TxOutputForJson(txId,
                 outputIndex,
                 bsqAmount,

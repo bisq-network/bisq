@@ -17,11 +17,12 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
-import com.google.common.collect.ImmutableList;
+import io.bisq.common.app.Version;
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Optional;
 
 @Value
@@ -29,9 +30,10 @@ import java.util.Optional;
 public class Tx implements Serializable {
     private final String id;
     private final String blockHash;
-    private final ImmutableList<TxInput> inputs;
-    private final ImmutableList<TxOutput> outputs;
+    private final List<TxInput> inputs;
+    private final List<TxOutput> outputs;
     private final boolean isIssuanceTx;
+    private final String txVersion = Version.BSQ_TX_VERSION;
 
     public Optional<TxOutput> getTxOutput(int index) {
         return outputs.size() > index ? Optional.of(outputs.get(index)) : Optional.<TxOutput>empty();
@@ -45,6 +47,7 @@ public class Tx implements Serializable {
                 ",\ninputs=" + inputs +
                 ",\noutputs=" + outputs +
                 ",\nisIssuanceTx=" + isIssuanceTx +
+                ",\ntxVersion=" + txVersion +
                 "}\n";
     }
 }

@@ -191,7 +191,7 @@ public class BsqBlockchainManager {
     private void onSetupComplete() {
         final int genesisBlockHeight = getGenesisBlockHeight();
         final String genesisTxId = getGenesisTxId();
-        int startBlockHeight = Math.max(genesisBlockHeight, bsqChainState.getChainTip() + 1);
+        int startBlockHeight = Math.max(genesisBlockHeight, bsqChainState.getChainHeadHeight() + 1);
         log.info("parseBlocks with:\n" +
                         "genesisTxId={}\n" +
                         "genesisBlockHeight={}\n" +
@@ -200,7 +200,7 @@ public class BsqBlockchainManager {
                 genesisTxId,
                 genesisBlockHeight,
                 startBlockHeight,
-                bsqChainState.getChainTip());
+                bsqChainState.getChainHeadHeight());
 
         parseBlocks(startBlockHeight,
                 genesisBlockHeight,
@@ -284,7 +284,7 @@ public class BsqBlockchainManager {
     //TODO
     private void startReOrgFromLastSnapshot(int blockHeight) {
         log.warn("We have to do a re-org because a new block did not connect to our chain.");
-        int startBlockHeight = snapshotBsqChainState != null ? snapshotBsqChainState.getChainTip() : getGenesisBlockHeight();
+        int startBlockHeight = snapshotBsqChainState != null ? snapshotBsqChainState.getChainHeadHeight() : getGenesisBlockHeight();
         checkArgument(snapshotBsqChainState == null || startBlockHeight >= blockHeight - SNAPSHOT_TRIGGER);
         bsqBlockchainRequest.requestBlock(startBlockHeight,
                 block -> {

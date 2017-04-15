@@ -148,7 +148,7 @@ public class BsqBlockchainRequest {
                     Consumer<BsqBlock> resultHandler,
                     Consumer<Throwable> errorHandler) {
         ListenableFuture<BsqBlock> future = parseBlocksExecutor.submit(() -> {
-            Set<Tx> bsqTxsInBlock = bsqParser.parseBlock(btcdBlock,
+            Set<Tx> bsqTxsInBlock = bsqParser.findBsqTxsInBlock(btcdBlock,
                     genesisBlockHeight,
                     genesisTxId);
             return new BsqBlock(ImmutableSet.copyOf(bsqTxsInBlock),

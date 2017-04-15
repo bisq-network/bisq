@@ -60,10 +60,12 @@ public class BsqChainState implements Persistable {
     private final Map<String, Long> burnedFeeMap = new HashMap<>();
     private Tx genesisTx;
 
+    //TODO remove chainHeadHeight
     @Getter
     @Setter
-    private int chainTip;
-   
+    private int chainHeadHeight;
+    private BsqBlock chainHeadBlock;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -80,21 +82,14 @@ public class BsqChainState implements Persistable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addBlock(BsqBlock block) {
-        checkArgument(chainTip <= block.getHeight(), "chainTip must not be lager than block.getHeight(). chainTip=" +
-                chainTip + ": block.getHeight()=" + chainTip);
+        checkArgument(chainHeadHeight <= block.getHeight(), "chainTip must not be lager than block.getHeight(). chainTip=" +
+                chainHeadHeight + ": block.getHeight()=" + chainHeadHeight);
         checkArgument(!blocks.contains(block), "blocks must not contain block");
         blocks.add(block);
-        printSize();
-    }
-
-    public void addTxToBlock(BsqBlock block, Tx tx) {
-        checkArgument(blocks.contains(block), "blocks must contain block");
-        checkArgument(!block.getTxs().contains(tx), "block must not contain tx");
-        checkArgument(!txMap.containsValue(tx), "txMap must not contain tx");
-
-        block.getTxs().add(tx);
-        txMap.put(tx.getId(), tx);
-        chainTip = block.getHeight();
+        chainHeadHeight = block.getHeight();
+        chainHeadBlock = block;
+        block.getTxs().stream().forEach(this::addTx);
+        print();
     }
 
     public void addTx(Tx tx) {
@@ -102,20 +97,16 @@ public class BsqChainState implements Persistable {
     }
 
     // SpendInfo
-    public void setSpendInfo(TxOutput txOutput, SpendInfo spendInfo) {
+    public void addSpendInfo(TxOutput txOutput, SpendInfo spendInfo) {
         spendInfoMap.put(txOutput.getTxIdIndexTuple(), spendInfo);
     }
 
-    public boolean isTxOutputUnSpend(TxIdIndexTuple txIdIndexTuple) {
-        return !spendInfoMap.containsKey(txIdIndexTuple);
+    public boolean isTxOutputSpent(TxIdIndexTuple txIdIndexTuple) {
+        return spendInfoMap.containsKey(txIdIndexTuple);
     }
 
-    public boolean isTxOutputUnSpend(TxOutput txOutput) {
-        return isTxOutputUnSpend(txOutput.getTxIdIndexTuple());
-    }
-
-    public boolean isTxOutputUnSpent(String txId, int index) {
-        return isTxOutputUnSpend(new TxIdIndexTuple(txId, index));
+    public boolean isTxOutputSpent(TxOutput txOutput) {
+        return isTxOutputSpent(txOutput.getTxIdIndexTuple());
     }
 
     // Genesis
@@ -149,6 +140,12 @@ public class BsqChainState implements Persistable {
         return getTx(txId).isPresent();
     }
 
+    public boolean isTxOutputSpendable(String txId, int index) {
+        final Optional<TxOutput> txOutputOptional = getTxOutput(txId, index);
+        return txOutputOptional.isPresent() &&
+                isVerifiedTxOutput(txOutputOptional.get()) &&
+                !isTxOutputSpent(new TxIdIndexTuple(txId, index));
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
@@ -163,17 +160,23 @@ public class BsqChainState implements Persistable {
         return getTxOutputMap().values();
     }
 
-    public int size() {
-        return txMap.size();
-    }
 
     @Override
     public String toString() {
         return "txMap " + txMap.toString();
     }
 
-    private void printSize() {
-        log.info("Nr of entries={}; Size in kb={}, chainTip={}", size(), Utilities.serialize(this).length / 1000d, chainTip);
+    private void print() {
+        log.info("\nchainTip={}\nblocks.size={}\ntxMap.size={}\ntxOutputMap.size={}\nverifiedTxOutputMap.size={}\n" +
+                        "spendInfoMap.size={}\nburnedFeeMap.size={}\nSize in kb={}\n",
+                chainHeadHeight,
+                blocks.size(),
+                txMap.size(),
+                getTxOutputMap().values().size(),
+                verifiedTxOutputMap.size(),
+                spendInfoMap.size(),
+                burnedFeeMap.size(),
+                Utilities.serialize(blocks.toArray()).length / 1000d);
     }
 
 

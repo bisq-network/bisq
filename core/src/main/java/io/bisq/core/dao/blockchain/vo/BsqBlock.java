@@ -17,16 +17,16 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
-import com.google.common.collect.ImmutableSet;
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
 import java.io.Serializable;
+import java.util.Set;
 
 @Value
 @Immutable
 public class BsqBlock implements Serializable {
-    private final ImmutableSet<Tx> txs;
+    private final Set<Tx> txs;
     private final int height;
     private final String hash;
 }
