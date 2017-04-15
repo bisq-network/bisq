@@ -15,33 +15,20 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain;
+package io.bisq.core.dao.blockchain.vo;
 
-import com.google.protobuf.Message;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
-import io.bisq.common.util.JsonExclude;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
-import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
-import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
-import lombok.Data;
-import lombok.Setter;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-import java.security.PublicKey;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import javax.annotation.concurrent.Immutable;
+import java.io.Serializable;
 
 @Slf4j
-@Data
-public class TxOutput implements LazyProcessedStoragePayload, PersistedStoragePayload {
-    @JsonExclude
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-    @JsonExclude
-    public static final long TTL = TimeUnit.DAYS.toMillis(30);
-
+@Value
+@Immutable
+public class TxOutput implements Serializable {
     private final int index;
     private final long value;
     private final String txId;
@@ -49,61 +36,23 @@ public class TxOutput implements LazyProcessedStoragePayload, PersistedStoragePa
     private final int blockHeight;
     private final long time;
     private final String txVersion = Version.BSQ_TX_VERSION;
-    @JsonExclude
-    private final PublicKey signaturePubKey;
-
-    // mutable
-    @Setter
-    private boolean isBsqCoinBase;
-    @Setter
-    private boolean isVerified;
-    @Setter
-    private long burnedFee;
-    @Nullable
-    @Setter
-    private long btcTxFee;
-    @Nullable
-    @Setter
-    private SpendInfo spendInfo;
-
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
-    // field in a class would break that hash and therefore break the storage mechanism.
-    @Nullable
-    @Setter
-    private HashMap<String, String> extraDataMap;
 
     public TxOutput(int index,
                     long value,
                     String txId,
                     PubKeyScript pubKeyScript,
                     int blockHeight,
-                    long time,
-                    PublicKey signaturePubKey) {
+                    long time) {
         this.index = index;
         this.value = value;
         this.txId = txId;
         this.pubKeyScript = pubKeyScript;
         this.blockHeight = blockHeight;
         this.time = time;
-        this.signaturePubKey = signaturePubKey;
     }
 
-    @Override
-    public long getTTL() {
-        return TTL;
-    }
 
-    @Override
-    public PublicKey getOwnerPubKey() {
-        return signaturePubKey;
-    }
-
-    public List<String> getAddresses() {
-        return pubKeyScript.getAddresses();
-    }
-
-    public String getAddress() {
+/*    public String getAddress() {
         String address = "";
         // Only at raw MS outputs addresses have more then 1 entry 
         // We do not support raw MS for BSQ but lets see if is needed anyway, might be removed 
@@ -123,31 +72,14 @@ public class TxOutput implements LazyProcessedStoragePayload, PersistedStoragePa
                 throw new RuntimeException(msg);
         }
         return address;
-    }
+    }*/
 
-    public boolean isUnSpend() {
-        return spendInfo == null;
-    }
-
-    public boolean hasBurnedFee() {
-        return burnedFee > 0;
-    }
-
-    public String getTxoId() {
+    public String getId() {
         return txId + ":" + index;
-    }
-
-    public String getBlockHeightWithTxoId() {
-        return blockHeight + "/" + getTxoId();
     }
 
     public TxIdIndexTuple getTxIdIndexTuple() {
         return new TxIdIndexTuple(txId, index);
-    }
-
-    @Override
-    public Message toProto() {
-        return null;
     }
 
     @Override
@@ -160,12 +92,6 @@ public class TxOutput implements LazyProcessedStoragePayload, PersistedStoragePa
                 ",\n     blockHeight=" + blockHeight +
                 ",\n     time=" + time +
                 ",\n     txVersion='" + txVersion + '\'' +
-                ",\n     isBsqCoinBase=" + isBsqCoinBase +
-                ",\n     isVerified=" + isVerified +
-                ",\n     burnedFee=" + burnedFee +
-                ",\n     btcTxFee=" + btcTxFee +
-                ",\n     spendInfo=" + spendInfo +
-                ",\n     address='" + getAddress() + '\'' +
                 "\n}";
     }
 }

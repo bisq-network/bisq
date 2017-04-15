@@ -23,7 +23,9 @@ import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.dao.RpcOptionKeys;
+import io.bisq.core.dao.blockchain.exceptions.OrphanDetectedException;
 import io.bisq.core.dao.blockchain.json.JsonExporter;
+import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -46,9 +48,9 @@ public class BsqBlockchainManager {
     // Interface
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
+    //TODO
     public interface TxOutputMapListener {
-        void onTxOutputMapChanged(TxOutputMap txOutputMap);
+        void onTxOutputMapChanged(BsqChainState bsqChainState);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +64,7 @@ public class BsqBlockchainManager {
     // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after
     // a restart.
     // As we only store snapshots when Txos are added it might be that there are bigger gaps than SNAPSHOT_TRIGGER.
-    private static final int SNAPSHOT_TRIGGER = 50;  // set high to deactivate
+    private static final int SNAPSHOT_TRIGGER = 50000;  // set high to deactivate
 
     public static int getSnapshotTrigger() {
         return SNAPSHOT_TRIGGER;
@@ -99,21 +101,22 @@ public class BsqBlockchainManager {
     // Class fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private final BsqBlockchainService blockchainService;
     private final P2PService p2PService;
+    private final BsqBlockchainRequest bsqBlockchainRequest;
+    private final BsqChainState bsqChainState;
     private final JsonExporter jsonExporter;
     private final List<TxOutputMapListener> txOutputMapListeners = new ArrayList<>();
 
-    @Getter
-    private TxOutputMap txOutputMap;
-    private TxOutputMap snapshotTxOutputMap;
+    //TODO
+    private BsqChainState snapshotBsqChainState;
 
     @Getter
     private int chainHeadHeight;
     @Getter
     private boolean parseBlockchainComplete;
     private final boolean connectToBtcCore;
-    private transient final Storage<TxOutputMap> snapshotTxOutputMapStorage;
+    //TODO
+    private transient final Storage<BsqChainState> snapshotTxOutputMapStorage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -121,17 +124,21 @@ public class BsqBlockchainManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public BsqBlockchainManager(BsqBlockchainService blockchainService,
-                                P2PService p2PService,
+    public BsqBlockchainManager(P2PService p2PService,
+                                BsqChainState bsqChainState,
+                                BsqBlockchainRequest bsqBlockchainRequest,
                                 JsonExporter jsonExporter,
                                 PersistenceProtoResolver persistenceProtoResolver,
                                 @Named(Storage.DIR_KEY) File storageDir,
                                 @Named(RpcOptionKeys.RPC_USER) String rpcUser) {
-        this.blockchainService = blockchainService;
-        this.p2PService = p2PService;
-        this.jsonExporter = jsonExporter;
-        snapshotTxOutputMapStorage = new Storage<>(storageDir, persistenceProtoResolver);
 
+        this.p2PService = p2PService;
+        this.bsqChainState = bsqChainState;
+        this.bsqBlockchainRequest = bsqBlockchainRequest;
+        this.jsonExporter = jsonExporter;
+
+        //TODO
+        snapshotTxOutputMapStorage = new Storage<>(storageDir, persistenceProtoResolver);
         connectToBtcCore = rpcUser != null && !rpcUser.isEmpty();
     }
 
@@ -141,24 +148,28 @@ public class BsqBlockchainManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
-        TxOutputMap persisted = snapshotTxOutputMapStorage.initAndGetPersistedWithFileName("TxOutputMap");
-        if (persisted != null) {
-            txOutputMap = persisted;
+        //TODO
+        BsqChainState persisted = snapshotTxOutputMapStorage.initAndGetPersistedWithFileName("BsqBlockChain");
+       /* if (persisted != null) {
+            bsqChainState = persisted;
             // If we have persisted data we notify our listeners
             onBsqTxoChanged();
-        } else {
-            txOutputMap = new TxOutputMap();
-        }
+        }*/ /*else {
+            bsqChainState = new BsqChainStateImpl();
+        }*/
 
         if (connectToBtcCore)
-            blockchainService.setup(this::onSetupComplete, errorMessageHandler);
+            bsqBlockchainRequest.setup(this::onSetupComplete, errorMessageHandler);
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
                 final StoragePayload storagePayload = data.getStoragePayload();
-                if (storagePayload instanceof TxOutput)
-                    add((TxOutput) storagePayload);
+                //TODO
+               /* if (storagePayload instanceof TxOutput) {
+                   *//* if (txOutputMap.putTxOutput((TxOutput) storagePayload) == null)
+                        onBsqTxoChanged();*//*
+                }*/
             }
 
             @Override
@@ -166,11 +177,6 @@ public class BsqBlockchainManager {
                 // We don't remove items
             }
         });
-    }
-
-    public void add(TxOutput txOutput) {
-        if (txOutputMap.put(txOutput) == null)
-            onBsqTxoChanged();
     }
 
     public void addTxOutputMapListener(BsqBlockchainManager.TxOutputMapListener txOutputMapListener) {
@@ -185,7 +191,7 @@ public class BsqBlockchainManager {
     private void onSetupComplete() {
         final int genesisBlockHeight = getGenesisBlockHeight();
         final String genesisTxId = getGenesisTxId();
-        int startBlockHeight = Math.max(genesisBlockHeight, txOutputMap.getBlockHeight() + 1);
+        int startBlockHeight = Math.max(genesisBlockHeight, bsqChainState.getChainTip() + 1);
         log.info("parseBlocks with:\n" +
                         "genesisTxId={}\n" +
                         "genesisBlockHeight={}\n" +
@@ -194,7 +200,7 @@ public class BsqBlockchainManager {
                 genesisTxId,
                 genesisBlockHeight,
                 startBlockHeight,
-                txOutputMap.getBlockHeight());
+                bsqChainState.getChainTip());
 
         parseBlocks(startBlockHeight,
                 genesisBlockHeight,
@@ -202,23 +208,21 @@ public class BsqBlockchainManager {
     }
 
     private void parseBlocks(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
-        blockchainService.requestChainHeadHeight(chainHeadHeight -> {
+        bsqBlockchainRequest.requestChainHeadHeight(chainHeadHeight -> {
             if (chainHeadHeight != startBlockHeight) {
-                blockchainService.parseBlocks(startBlockHeight,
+                bsqBlockchainRequest.parseBlocks(startBlockHeight,
                         chainHeadHeight,
                         genesisBlockHeight,
                         genesisTxId,
-                        txOutputMap,
-                        newBlockMap -> {
-                            applyNewTxOutputMap(newBlockMap);
-                            updateSnapshotIfTrigger(newBlockMap.getBlockHeight());
-                        }, chainTipTxOutputMap -> {
+                        bsqBlock -> {
+                            applyNewTxOutputMap(bsqBlock);
+                        }, () -> {
                             // we are done but it might be that new blocks have arrived in the meantime,
                             // so we try again with startBlockHeight set to current chainHeadHeight
-                            applyNewTxOutputMap(chainTipTxOutputMap);
-                            parseBlocks(chainHeadHeight,
-                                    genesisBlockHeight,
-                                    genesisTxId);
+                            if (newBlocksReceived())
+                                parseBlocks(chainHeadHeight,
+                                        genesisBlockHeight,
+                                        genesisTxId);
                         }, throwable -> {
                             if (throwable instanceof OrphanDetectedException) {
                                 startReOrgFromLastSnapshot(((OrphanDetectedException) throwable).getBlockHeight());
@@ -233,29 +237,29 @@ public class BsqBlockchainManager {
                 parseBlockchainComplete = true;
 
                 // We register our handler for new blocks
-                blockchainService.addBlockHandler(bsqBlock -> {
-                    blockchainService.parseBlock(bsqBlock,
+                bsqBlockchainRequest.addBlockHandler(btcdBlock -> {
+                    bsqBlockchainRequest.parseBlock(btcdBlock,
                             genesisBlockHeight,
                             genesisTxId,
-                            txOutputMap,
-                            newBlockMap -> {
-                                if (txOutputMap.getBlockHeight() < newBlockMap.getBlockHeight()) {
-                                    applyNewTxOutputMap(newBlockMap);
-                                    updateSnapshotIfTrigger(newBlockMap.getBlockHeight());
-                                    log.debug("new block parsed. bsqBlock={}", bsqBlock);
-                                } else {
-                                    log.warn("We got a newBlockMap with a lower block height than the one from the " +
+                            bsqBlock -> {
+                                // TODO
+                                // if (bsqBlockChain.getChainTip() < bsqBlock.getChainTip()) {
+                                applyNewTxOutputMap(bsqBlock);
+                                checkForSnapshotUpdate(bsqBlock.getHeight());
+                                log.debug("new block parsed. bsqBlock={}", bsqBlock);
+                               /* } else {
+                                    log.warn("We got a bsqBlock with a lower block height than the one from the " +
                                                     "map we requested. That should not happen, but theoretically could be " +
                                                     "if 2 blocks arrive at nearly the same time and the second is faster in " +
                                                     "parsing than the first, so the callback of the first will have a lower " +
                                                     "height. " +
                                                     "txOutputMap.getBlockHeight()={}; " +
-                                                    "newBlockMap.getBlockHeight()={}\n" +
+                                                    "bsqBlock.getBlockHeight()={}\n" +
                                                     "To avoid conflicts we start a reorg from the last snapshot.",
-                                            txOutputMap.getBlockHeight(),
-                                            newBlockMap.getBlockHeight());
-                                    startReOrgFromLastSnapshot(newBlockMap.getBlockHeight());
-                                }
+                                            bsqBlockChain.getChainTip(),
+                                            bsqBlock.getChainTip());
+                                    startReOrgFromLastSnapshot(bsqBlock.getChainTip());
+                                }*/
                             }, throwable -> {
                                 if (throwable instanceof OrphanDetectedException) {
                                     startReOrgFromLastSnapshot(((OrphanDetectedException) throwable).getBlockHeight());
@@ -272,18 +276,25 @@ public class BsqBlockchainManager {
         });
     }
 
+    //TODO
+    private boolean newBlocksReceived() {
+        return false;
+    }
+
+    //TODO
     private void startReOrgFromLastSnapshot(int blockHeight) {
         log.warn("We have to do a re-org because a new block did not connect to our chain.");
-        int startBlockHeight = snapshotTxOutputMap != null ? snapshotTxOutputMap.getBlockHeight() : getGenesisBlockHeight();
-        checkArgument(snapshotTxOutputMap == null || startBlockHeight >= blockHeight - SNAPSHOT_TRIGGER);
-        blockchainService.requestBlock(startBlockHeight,
+        int startBlockHeight = snapshotBsqChainState != null ? snapshotBsqChainState.getChainTip() : getGenesisBlockHeight();
+        checkArgument(snapshotBsqChainState == null || startBlockHeight >= blockHeight - SNAPSHOT_TRIGGER);
+        bsqBlockchainRequest.requestBlock(startBlockHeight,
                 block -> {
-                    if (snapshotTxOutputMap != null) {
+                    // TODO
+                    if (snapshotBsqChainState != null) {
                         checkArgument(startBlockHeight <= block.getHeight());
-                        checkArgument(block.getHash().equals(snapshotTxOutputMap.getBlockHash()));
-                        applyNewTxOutputMap(snapshotTxOutputMap);
+                        // checkArgument(block.getHash().equals(snapshotBsqBlockChain.getBlockHash()));
+                        // applyNewTxOutputMap(snapshotBsqBlockChain);
                     } else {
-                        applyNewTxOutputMap(new TxOutputMap());
+                        // applyNewTxOutputMap(new BsqBlockChain());
                     }
                     parseBlocks(startBlockHeight,
                             getGenesisBlockHeight(),
@@ -294,27 +305,31 @@ public class BsqBlockchainManager {
                 });
     }
 
-    private void applyNewTxOutputMap(TxOutputMap newTxOutputMap) {
-        txOutputMap = newTxOutputMap;
-        txOutputMapListeners.stream().forEach(l -> l.onTxOutputMapChanged(txOutputMap));
+    //TODO
+    private void applyNewTxOutputMap(BsqBlock newBsqBlock) {
+        // bsqBlockChain = newBsqBlockChain;
+        txOutputMapListeners.stream().forEach(l -> l.onTxOutputMapChanged(bsqChainState));
+        // updateSnapshotIfTrigger(newBlockMap.getChainTip());
     }
 
-    private void updateSnapshotIfTrigger(int blockHeight) {
+    //TODO
+    private void checkForSnapshotUpdate(int blockHeight) {
         if (triggersSnapshot(blockHeight)) {
             // At trigger time we store the last memory stored map to disc
-            if (snapshotTxOutputMap != null) {
+            if (snapshotBsqChainState != null) {
                 // We clone because storage is in a threaded context
-                TxOutputMap clonedSnapshotTxOutputMap = TxOutputMap.getClonedMap(snapshotTxOutputMap);
-                snapshotTxOutputMapStorage.queueUpForSave(clonedSnapshotTxOutputMap);
+                // BsqChainStateImpl clonedSnapshotBsqChainStateImpl = BsqChainStateImpl.getClonedMap(snapshotBsqChainState);
+                //  snapshotTxOutputMapStorage.queueUpForSave(clonedSnapshotBsqChainStateImpl);
             }
 
             // Now we save the map in memory for the next trigger
-            snapshotTxOutputMap = TxOutputMap.getClonedMap(txOutputMap);
+            // snapshotBsqChainStateImpl = BsqChainStateImpl.getClonedMap(bsqChainState);
         }
     }
 
+    //TODO
     private void onBsqTxoChanged() {
-        txOutputMapListeners.stream().forEach(e -> e.onTxOutputMapChanged(txOutputMap));
-        jsonExporter.export(txOutputMap);
+        txOutputMapListeners.stream().forEach(e -> e.onTxOutputMapChanged(bsqChainState));
+        jsonExporter.export(bsqChainState);
     }
 }

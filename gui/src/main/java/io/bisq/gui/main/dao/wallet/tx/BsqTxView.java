@@ -22,6 +22,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
+import io.bisq.core.dao.blockchain.BsqChainState;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.common.view.ActivatableView;
@@ -57,21 +58,23 @@ import java.util.stream.Collectors;
 public class BsqTxView extends ActivatableView<GridPane, Void> {
 
     TableView<BsqTxListItem> tableView;
-    private int gridRow = 0;
+    private Pane rootParent;
+    
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
     private final BsqBlockchainManager bsqBlockchainManager;
+    private final BsqChainState bsqChainState;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final Preferences preferences;
-    private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private final ObservableList<BsqTxListItem> observableList = FXCollections.observableArrayList();
-    private final SortedList<BsqTxListItem> sortedList = new SortedList<>(observableList);
-    private ChangeListener<Number> parentHeightListener;
-    private Pane rootParent;
     // Need to be DoubleProperty as we pass it as reference
     private final DoubleProperty initialOccupiedHeight = new SimpleDoubleProperty(-1);
-
+    private final SortedList<BsqTxListItem> sortedList = new SortedList<>(observableList);
+    private ChangeListener<Number> parentHeightListener;
+    private ListChangeListener<Transaction> walletBsqTransactionsListener;
+    private int gridRow = 0;
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -81,11 +84,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private BsqTxView(BsqFormatter bsqFormatter, BsqWalletService bsqWalletService,
                       BsqBlockchainManager bsqBlockchainManager,
                       Preferences preferences,
+                      BsqChainState bsqChainState,
                       BtcWalletService btcWalletService, BsqBalanceUtil bsqBalanceUtil) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bsqBlockchainManager = bsqBlockchainManager;
         this.preferences = preferences;
+        this.bsqChainState = bsqChainState;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
     }
@@ -149,7 +154,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                             return new BsqTxListItem(transaction,
                                     bsqWalletService,
                                     btcWalletService,
-                                    bsqBlockchainManager.getTxOutputMap().hasTxBurnedFee(transaction),
+                                    bsqChainState.hasTxBurnedFee(transaction.getHashAsString()),
                                     bsqFormatter);
                         }
                 )

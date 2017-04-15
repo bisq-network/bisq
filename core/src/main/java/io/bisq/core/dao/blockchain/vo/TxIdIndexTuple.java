@@ -15,13 +15,15 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain;
+package io.bisq.core.dao.blockchain.vo;
 
 import lombok.Value;
 
+import javax.annotation.concurrent.Immutable;
 import java.io.Serializable;
 
 @Value
+@Immutable
 public class TxIdIndexTuple implements Serializable {
     private final String txId;
     private final int index;

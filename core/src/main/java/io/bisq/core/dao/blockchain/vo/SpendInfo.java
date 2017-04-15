@@ -15,19 +15,16 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain;
+package io.bisq.core.dao.blockchain.vo;
 
-import io.bisq.common.app.Version;
-import io.bisq.common.util.JsonExclude;
 import lombok.Value;
 
+import javax.annotation.concurrent.Immutable;
 import java.io.Serializable;
 
 @Value
+@Immutable
 public class SpendInfo implements Serializable {
-    @JsonExclude
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-  
     private final long blockHeight;
     private final String txId;
     private final int inputIndex;

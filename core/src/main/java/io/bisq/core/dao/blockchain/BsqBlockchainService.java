@@ -17,76 +17,27 @@
 
 package io.bisq.core.dao.blockchain;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
 import com.neemre.btcdcli4j.core.BitcoindException;
 import com.neemre.btcdcli4j.core.CommunicationException;
 import com.neemre.btcdcli4j.core.domain.Block;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.handlers.ResultHandler;
-import lombok.extern.slf4j.Slf4j;
+import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
+import io.bisq.core.dao.blockchain.vo.Tx;
 
-import java.security.PublicKey;
 import java.util.function.Consumer;
 
-@Slf4j
-abstract public class BsqBlockchainService {
-    protected final PublicKey signaturePubKey;
+// Access calls to blockchain data provider
+public interface BsqBlockchainService {
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    void setup() throws BsqBlockchainException;
 
-    @Inject
-    public BsqBlockchainService(KeyRing keyRing) {
-        signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
-    }
+    void registerBlockHandler(Consumer<Block> blockHandler);
 
+    int requestChainHeadHeight() throws BitcoindException, CommunicationException;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Non blocking methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    Block requestBlock(int i) throws BitcoindException, CommunicationException;
 
-    abstract void setup(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
+    Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException;
 
-    abstract void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler);
-
-    abstract void requestBlock(int blockHeight, Consumer<Block> resultHandler, Consumer<Throwable> errorHandler);
-
-    abstract void parseBlocks(int startBlockHeight,
-                              int chainHeadHeight,
-                              int genesisBlockHeight,
-                              String genesisTxId,
-                              TxOutputMap txOutputMap,
-                              Consumer<TxOutputMap> newBlockHandler,
-                              Consumer<TxOutputMap> resultHandler,
-                              Consumer<Throwable> errorHandler);
-
-    abstract void parseBlock(Block block,
-                             int genesisBlockHeight,
-                             String genesisTxId,
-                             TxOutputMap txOutputMap,
-                             Consumer<TxOutputMap> resultHandler,
-                             Consumer<Throwable> errorHandler);
-
-    abstract void addBlockHandler(Consumer<Block> onNewBlockHandler);
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Blocking methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @VisibleForTesting
-    abstract int requestChainHeadHeight() throws BitcoindException, CommunicationException;
-
-    @VisibleForTesting
-    abstract Block requestBlock(int i) throws BitcoindException, CommunicationException;
-
-    @VisibleForTesting
-    abstract Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException;
-
-    @VisibleForTesting
-    abstract RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException;
+    RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException;
 }

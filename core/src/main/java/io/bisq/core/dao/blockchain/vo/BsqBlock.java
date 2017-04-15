@@ -15,16 +15,18 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain;
+package io.bisq.core.dao.blockchain.vo;
 
-import lombok.Getter;
+import com.google.common.collect.ImmutableSet;
+import lombok.Value;
 
-@Getter
-public class OrphanDetectedException extends Exception {
+import javax.annotation.concurrent.Immutable;
+import java.io.Serializable;
 
-    private int blockHeight;
-
-    public OrphanDetectedException(int blockHeight) {
-        this.blockHeight = blockHeight;
-    }
+@Value
+@Immutable
+public class BsqBlock implements Serializable {
+    private final ImmutableSet<Tx> txs;
+    private final int height;
+    private final String hash;
 }

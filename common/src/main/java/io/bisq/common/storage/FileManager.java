@@ -112,11 +112,11 @@ public class FileManager<T extends Persistable> {
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
             persistable = persistenceProtoResolver.fromProto(PB.DiskEnvelope.parseDelimitedFrom(fileInputStream));
         } catch (Throwable t) {
-            log.error("Exception at proto read: " + t.getMessage() + " " + file.getName());
+            log.debug("Exception at proto read: " + t.getMessage() + " " + file.getName());
         }
 
         if (persistable.isPresent()) {
-            log.error("Persistable found");
+            log.debug("Persistable found");
             //noinspection unchecked
             return (T) persistable.get();
         }
@@ -199,7 +199,7 @@ public class FileManager<T extends Persistable> {
         try {
             protoDiskEnvelope = (PB.DiskEnvelope) serializable.toProto();
         } catch (Throwable e) {
-            log.info("Not protobufferable: {}, {}, {}", serializable.getClass().getSimpleName(), storageFile, e.getStackTrace());
+            log.debug("Not protobufferable: {}, {}, {}", serializable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }
 
         try {

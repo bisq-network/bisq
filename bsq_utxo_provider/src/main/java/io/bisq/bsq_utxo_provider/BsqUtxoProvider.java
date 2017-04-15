@@ -17,7 +17,6 @@ import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
-import io.bisq.core.dao.blockchain.BsqBlockchainRpcService;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.P2PService;
@@ -40,7 +39,6 @@ public class BsqUtxoProvider {
 
     private final P2PService p2pService;
     private final BsqBlockchainManager bsqBlockchainManager;
-    private final BsqBlockchainRpcService blockchainRpcService;
 
     public static void setEnvironment(Environment env) {
         BsqUtxoProvider.env = env;
@@ -90,7 +88,8 @@ public class BsqUtxoProvider {
             }
         });
 
-        blockchainRpcService = injector.getInstance(BsqBlockchainRpcService.class);
+        //TODO
+        // blockchainRpcService = injector.getInstance(BsqBlockchainRpcService.class);
         bsqBlockchainManager = injector.getInstance(BsqBlockchainManager.class);
         bsqBlockchainManager.onAllServicesInitialized(log::error);
     }

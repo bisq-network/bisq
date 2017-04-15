@@ -15,18 +15,24 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain;
+package io.bisq.core.dao.blockchain.vo;
 
-public class BsqBlockchainException extends Exception {
-    public BsqBlockchainException(String message) {
-        super(message);
-    }
+import lombok.Value;
 
-    public BsqBlockchainException(String message, Throwable cause) {
-        super(message, cause);
-    }
+import javax.annotation.concurrent.Immutable;
+import java.io.Serializable;
 
-    public BsqBlockchainException(Throwable cause) {
-        super(cause);
+@Value
+@Immutable
+public class TxInput implements Serializable {
+    private final int spendingTxOutputIndex;
+    private final String spendingTxId;
+
+    @Override
+    public String toString() {
+        return "TxInput{" +
+                "\nspendingTxOutputIndex=" + spendingTxOutputIndex +
+                ",\nspendingTxId='" + spendingTxId + '\'' +
+                "}\n";
     }
 }

@@ -22,10 +22,10 @@ import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.RpcOptionKeys;
-import io.bisq.core.dao.blockchain.SpendInfo;
-import io.bisq.core.dao.blockchain.TxOutput;
-import io.bisq.core.dao.blockchain.TxOutputMap;
+import io.bisq.core.dao.blockchain.BsqChainState;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
+import io.bisq.core.dao.blockchain.vo.SpendInfo;
+import io.bisq.core.dao.blockchain.vo.TxOutput;
 
 import javax.inject.Named;
 import java.io.File;
@@ -52,9 +52,9 @@ public class JsonExporter {
         }
     }
 
-    public void export(TxOutputMap txOutputMap) {
+    public void export(BsqChainState bsqChainState) {
         if (dumpBlockchainData) {
-            List<TxOutputForJson> list = txOutputMap.getMap().values().stream()
+            List<TxOutputForJson> list = bsqChainState.getTxOutputMap().values().stream()
                     .map(this::getTxOutputForJson)
                     .collect(Collectors.toList());
 
@@ -83,10 +83,17 @@ public class JsonExporter {
         int outputIndex = txOutput.getIndex();
         final long bsqAmount = txOutput.getValue();
         final int height = txOutput.getBlockHeight();
-        final boolean isBsqCoinBase = txOutput.isBsqCoinBase();
+        
+       /* final boolean isBsqCoinBase = txOutput.isIssuanceOutput();
         final boolean verified = txOutput.isVerified();
         final long burnedFee = txOutput.getBurnedFee();
-        final long btcTxFee = txOutput.getBtcTxFee();
+        final long btcTxFee = txOutput.getBtcTxFee();*/
+
+        // TODO
+        final boolean isBsqCoinBase = false;
+        final boolean verified = true;
+        final long burnedFee = 0;
+        final long btcTxFee = 0;
 
         PubKeyScript pubKeyScript = txOutput.getPubKeyScript();
         final ScriptPubKeyForJson scriptPubKey = new ScriptPubKeyForJson(pubKeyScript.getAddresses(),
@@ -95,7 +102,8 @@ public class JsonExporter {
                 pubKeyScript.getReqSigs(),
                 pubKeyScript.getType().toString());
         SpentInfoForJson spentInfoJson = null;
-        SpendInfo spendInfo = txOutput.getSpendInfo();
+        // SpendInfo spendInfo = txOutput.getSpendInfo();
+        SpendInfo spendInfo = null;
         if (spendInfo != null)
             spentInfoJson = new SpentInfoForJson(spendInfo.getBlockHeight(),
                     spendInfo.getInputIndex(),
