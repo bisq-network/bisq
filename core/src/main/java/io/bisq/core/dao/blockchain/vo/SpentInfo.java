@@ -17,14 +17,14 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import io.bisq.common.persistence.Persistable;
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
-import java.io.Serializable;
 
 @Value
 @Immutable
-public class SpendInfo implements Serializable {
+public class SpentInfo implements Persistable {
     private final long blockHeight;
     private final String txId;
     private final int inputIndex;

@@ -24,7 +24,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.RpcOptionKeys;
 import io.bisq.core.dao.blockchain.BsqChainState;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
-import io.bisq.core.dao.blockchain.vo.SpendInfo;
+import io.bisq.core.dao.blockchain.vo.SpentInfo;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 
 import javax.inject.Named;
@@ -54,7 +54,7 @@ public class JsonExporter {
 
     public void export(BsqChainState bsqChainState) {
         if (dumpBlockchainData) {
-            List<TxOutputForJson> list = bsqChainState.getTxOutputMap().values().stream()
+            List<TxOutputForJson> list = bsqChainState.getVerifiedTxOutputSet().stream()
                     .map(this::getTxOutputForJson)
                     .collect(Collectors.toList());
 
@@ -102,12 +102,12 @@ public class JsonExporter {
                 pubKeyScript.getReqSigs(),
                 pubKeyScript.getType().toString());
         SpentInfoForJson spentInfoJson = null;
-        // SpendInfo spendInfo = txOutput.getSpendInfo();
-        SpendInfo spendInfo = null;
-        if (spendInfo != null)
-            spentInfoJson = new SpentInfoForJson(spendInfo.getBlockHeight(),
-                    spendInfo.getInputIndex(),
-                    spendInfo.getTxId());
+        // SpentInfo spentInfo = txOutput.getSpentInfo();
+        SpentInfo spentInfo = null;
+        if (spentInfo != null)
+            spentInfoJson = new SpentInfoForJson(spentInfo.getBlockHeight(),
+                    spentInfo.getInputIndex(),
+                    spentInfo.getTxId());
 
         final long time = txOutput.getTime();
         final String txVersion = "";//txOutput.getTxVersion();

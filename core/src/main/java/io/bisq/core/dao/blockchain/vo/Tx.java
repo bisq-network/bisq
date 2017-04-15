@@ -18,16 +18,16 @@
 package io.bisq.core.dao.blockchain.vo;
 
 import io.bisq.common.app.Version;
+import io.bisq.common.persistence.Persistable;
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
 @Value
 @Immutable
-public class Tx implements Serializable {
+public class Tx implements Persistable {
     private final String id;
     private final String blockHash;
     private final List<TxInput> inputs;

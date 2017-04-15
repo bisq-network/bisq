@@ -21,50 +21,36 @@ import io.bisq.common.persistence.Persistable;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.vo.*;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 // Represents mutable state of BSQ chain data
-// We get accesses the data from non-UserThread context, so we need to handle threading here.
+// We get accessed the data from non-UserThread context, so we need to handle threading here.
 @Slf4j
+@ToString
 public class BsqChainState implements Persistable {
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Statics
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static BsqChainState getClonedMap(BsqChainState bsqChainState) {
-        return Utilities.<BsqChainState>deserialize(Utilities.serialize(bsqChainState));
-    }
-
-    // Outside only used in Json exporter atm
-    public HashMap<TxIdIndexTuple, TxOutput> getTxOutputMap() {
-        HashMap<TxIdIndexTuple, TxOutput> txOutputMap = new HashMap<>();
-        txMap.values().stream()
-                .flatMap(tx -> tx.getOutputs().stream())
-                .forEach(txOutput -> txOutputMap.put(txOutput.getTxIdIndexTuple(), txOutput));
-        return txOutputMap;
-    }
-
-    private final Map<String, Tx> txMap;
-    private final List<BsqBlock> blocks;
-    private final Map<TxIdIndexTuple, SpendInfo> spendInfoMap = new HashMap<>();
-    private final Map<TxIdIndexTuple, TxOutput> verifiedTxOutputMap = new HashMap<>();
-    private final Map<String, Long> burnedFeeMap = new HashMap<>();
-    private Tx genesisTx;
-
-    //TODO remove chainHeadHeight
     @Getter
-    @Setter
-    private int chainHeadHeight;
-    private BsqBlock chainHeadBlock;
+    private final List<BsqBlock> blocks = new CopyOnWriteArrayList<>();
+    private final Map<String, Tx> txMap = new ConcurrentHashMap<>();
+    private final Map<TxIdIndexTuple, SpentInfo> spentInfoByTxOutputMap = new ConcurrentHashMap<>();
+    @Getter
+    private final Set<TxOutput> verifiedTxOutputSet = new CopyOnWriteArraySet<>();
+    private final Map<String, Long> burnedFeeByTxIdMap = new ConcurrentHashMap<>();
+    private final AtomicReference<Tx> genesisTx = new AtomicReference<>();
+    private final AtomicReference<BsqBlock> chainHeadBlock = new AtomicReference<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,142 +59,110 @@ public class BsqChainState implements Persistable {
 
     @Inject
     public BsqChainState() {
-        txMap = new ConcurrentHashMap<>();
-        blocks = new CopyOnWriteArrayList<>();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public methods
+    // Write access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addBlock(BsqBlock block) {
-        checkArgument(chainHeadHeight <= block.getHeight(), "chainTip must not be lager than block.getHeight(). chainTip=" +
-                chainHeadHeight + ": block.getHeight()=" + chainHeadHeight);
+        checkArgument(getChainHeadHeight() <= block.getHeight(), "chainTip must not be lager than block.getHeight(). chainTip=" +
+                getChainHeadHeight() + ": block.getHeight()=" + getChainHeadHeight());
         checkArgument(!blocks.contains(block), "blocks must not contain block");
         blocks.add(block);
-        chainHeadHeight = block.getHeight();
-        chainHeadBlock = block;
+        chainHeadBlock.set(block);
         block.getTxs().stream().forEach(this::addTx);
-        print();
+        printDetails();
     }
 
     public void addTx(Tx tx) {
         txMap.put(tx.getId(), tx);
     }
 
-    // SpendInfo
-    public void addSpendInfo(TxOutput txOutput, SpendInfo spendInfo) {
-        spendInfoMap.put(txOutput.getTxIdIndexTuple(), spendInfo);
+    public void addSpentTxWithSpentInfo(TxOutput spentTxOutput, SpentInfo spentInfo) {
+        spentInfoByTxOutputMap.put(spentTxOutput.getTxIdIndexTuple(), spentInfo);
     }
 
-    public boolean isTxOutputSpent(TxIdIndexTuple txIdIndexTuple) {
-        return spendInfoMap.containsKey(txIdIndexTuple);
-    }
-
-    public boolean isTxOutputSpent(TxOutput txOutput) {
-        return isTxOutputSpent(txOutput.getTxIdIndexTuple());
-    }
-
-    // Genesis
     public void setGenesisTx(Tx tx) {
-        genesisTx = tx;
+        genesisTx.set(tx);
     }
 
-    // Verified
     public void addVerifiedTxOutput(TxOutput txOutput) {
-        verifiedTxOutputMap.put(txOutput.getTxIdIndexTuple(), txOutput);
+        verifiedTxOutputSet.add(txOutput);
     }
 
-    public boolean isVerifiedTxOutput(TxOutput txOutput) {
-        return verifiedTxOutputMap.containsKey(txOutput.getTxIdIndexTuple());
+    public void addBurnedFee(String txId, long burnedFee) {
+        burnedFeeByTxIdMap.put(txId, burnedFee);
     }
 
-    // BurnedFee
-    public void addTxIdBurnedFeeMap(String txId, long burnedFee) {
-        burnedFeeMap.put(txId, burnedFee);
-    }
 
-    public boolean hasTxBurnedFee(String txId) {
-        return burnedFeeMap.containsKey(txId) ? burnedFeeMap.get(txId) > 0 : false;
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Read access
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Optional<Tx> getTx(String txId) {
         return txMap.get(txId) != null ? Optional.of(txMap.get(txId)) : Optional.<Tx>empty();
+    }
+
+    public boolean isVerifiedTxOutput(TxOutput txOutput) {
+        return verifiedTxOutputSet.contains(txOutput);
+    }
+
+    public boolean isTxOutputSpendable(String txId, int index) {
+        return getSpendableTxOutput(txId, index).isPresent();
+    }
+
+    public boolean hasTxBurnedFee(String txId) {
+        return burnedFeeByTxIdMap.containsKey(txId) ? burnedFeeByTxIdMap.get(txId) > 0 : false;
     }
 
     public boolean containsTx(String txId) {
         return getTx(txId).isPresent();
     }
 
-    public boolean isTxOutputSpendable(String txId, int index) {
-        final Optional<TxOutput> txOutputOptional = getTxOutput(txId, index);
-        return txOutputOptional.isPresent() &&
+    public Optional<TxOutput> getSpendableTxOutput(String txId, int index) {
+        final Optional<TxOutput> txOutputOptional = findTxOutput(txId, index);
+        if (txOutputOptional.isPresent() &&
                 isVerifiedTxOutput(txOutputOptional.get()) &&
-                !isTxOutputSpent(new TxIdIndexTuple(txId, index));
+                !spentInfoByTxOutputMap.containsKey(new TxIdIndexTuple(txId, index))) {
+            return txOutputOptional;
+        } else {
+            return Optional.<TxOutput>empty();
+        }
     }
+
+    public int getChainHeadHeight() {
+        final BsqBlock block = chainHeadBlock.get();
+        return block != null ? block.getHeight() : 0;
+    }
+
+    public Optional<TxOutput> findTxOutput(String txId, int index) {
+
+        return getTx(txId).flatMap(e -> e.getTxOutput(index));
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<TxOutput> getTxOutput(String txId, int index) {
-        return getTx(txId).flatMap(e -> e.getTxOutput(index));
-    }
-
-    // only used in test...
-    public Collection<TxOutput> values() {
-        return getTxOutputMap().values();
-    }
-
-
-    @Override
-    public String toString() {
-        return "txMap " + txMap.toString();
-    }
-
-    private void print() {
-        log.info("\nchainTip={}\nblocks.size={}\ntxMap.size={}\ntxOutputMap.size={}\nverifiedTxOutputMap.size={}\n" +
-                        "spendInfoMap.size={}\nburnedFeeMap.size={}\nSize in kb={}\n",
-                chainHeadHeight,
+    private void printDetails() {
+        log.info("\nchainHeadHeight={}\nblocks.size={}\ntxMap.size={}\nverifiedTxOutputSet.size={}\n" +
+                        "spentInfoByTxOutputMap.size={}\nburnedFeeByTxIdMap.size={}\nblocks data size in kb={}\n",
+                getChainHeadHeight(),
                 blocks.size(),
                 txMap.size(),
-                getTxOutputMap().values().size(),
-                verifiedTxOutputMap.size(),
-                spendInfoMap.size(),
-                burnedFeeMap.size(),
+                verifiedTxOutputSet.size(),
+                spentInfoByTxOutputMap.size(),
+                burnedFeeByTxIdMap.size(),
                 Utilities.serialize(blocks.toArray()).length / 1000d);
     }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Statics
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-  /*  private Set<TxOutput> getUnspentTxOutputs() {
-        return getTxOutputMap().values().stream().filter(TxOutput::isUnSpend).collect(Collectors.toSet());
+  /*  public static BsqChainState getClonedMap(BsqChainState bsqChainState) {
+        return Utilities.<BsqChainState>deserialize(Utilities.serialize(bsqChainState));
     }*/
-
-    /*private List<TxOutput> getSortedUnspentTxOutputs() {
-        List<TxOutput> list = getUnspentTxOutputs().stream().collect(Collectors.toList());
-        Collections.sort(list, (o1, o2) -> o1.getBlockHeightWithTxoId().compareTo(o2.getBlockHeightWithTxoId()));
-        return list;
-    }*/
-
-   /* private void printUnspentTxOutputs(String prefix) {
-        final String txoIds = getBlocHeightSortedTxoIds();
-        log.info(prefix + " utxo: size={}, blockHeight={}, hashCode={}, txoids={}",
-                getSortedUnspentTxOutputs().size(),
-                chainTip,
-                getBlockHeightSortedTxoIdsHashCode(),
-                txoIds);
-    }*/
-
-  /*  private int getBlockHeightSortedTxoIdsHashCode() {
-        return getBlocHeightSortedTxoIds().hashCode();
-    }*/
-
-    /*private String getBlocHeightSortedTxoIds() {
-        return getSortedUnspentTxOutputs().stream()
-                .map(e -> e.getBlockHeight() + "/" + e.getTxoId())
-                .collect(Collectors.joining("\n"));
-    }*/
-
-
 }
 

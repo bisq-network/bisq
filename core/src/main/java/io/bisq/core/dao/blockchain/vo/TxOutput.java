@@ -17,17 +17,17 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import io.bisq.common.persistence.Persistable;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
-import java.io.Serializable;
 
 @Slf4j
 @Value
 @Immutable
-public class TxOutput implements Serializable {
+public class TxOutput implements Persistable {
     private final int index;
     private final long value;
     private final String txId;

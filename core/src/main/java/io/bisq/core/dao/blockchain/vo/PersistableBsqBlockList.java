@@ -18,16 +18,15 @@
 package io.bisq.core.dao.blockchain.vo;
 
 import io.bisq.common.persistence.Persistable;
-import lombok.Value;
+import lombok.Getter;
 
-import javax.annotation.concurrent.Immutable;
 import java.util.List;
 
-@Value
-@Immutable
-public class BsqBlock implements Persistable {
-    private final List<Tx> txs;
-    private final int height;
-    private final String hash;
-    private String previousBlockHash;
+public class PersistableBsqBlockList implements Persistable {
+    @Getter
+    private List<BsqBlock> list;
+
+    public PersistableBsqBlockList(List<BsqBlock> list) {
+        this.list = list;
+    }
 }

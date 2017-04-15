@@ -23,9 +23,11 @@ import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.dao.RpcOptionKeys;
+import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
 import io.bisq.core.dao.blockchain.exceptions.OrphanDetectedException;
 import io.bisq.core.dao.blockchain.json.JsonExporter;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.dao.blockchain.vo.PersistableBsqBlockList;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -104,6 +106,7 @@ public class BsqBlockchainManager {
     private final P2PService p2PService;
     private final BsqBlockchainRequest bsqBlockchainRequest;
     private final BsqChainState bsqChainState;
+    private final BsqParser bsqParser;
     private final JsonExporter jsonExporter;
     private final List<TxOutputMapListener> txOutputMapListeners = new ArrayList<>();
 
@@ -117,6 +120,9 @@ public class BsqBlockchainManager {
     private final boolean connectToBtcCore;
     //TODO
     private transient final Storage<BsqChainState> snapshotTxOutputMapStorage;
+    private transient final Storage<PersistableBsqBlockList> persistableBsqBlockListStorage;
+
+    private boolean usePersisted;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +133,7 @@ public class BsqBlockchainManager {
     public BsqBlockchainManager(P2PService p2PService,
                                 BsqChainState bsqChainState,
                                 BsqBlockchainRequest bsqBlockchainRequest,
+                                BsqParser bsqParser,
                                 JsonExporter jsonExporter,
                                 PersistenceProtoResolver persistenceProtoResolver,
                                 @Named(Storage.DIR_KEY) File storageDir,
@@ -135,11 +142,14 @@ public class BsqBlockchainManager {
         this.p2PService = p2PService;
         this.bsqChainState = bsqChainState;
         this.bsqBlockchainRequest = bsqBlockchainRequest;
+        this.bsqParser = bsqParser;
         this.jsonExporter = jsonExporter;
 
         //TODO
         snapshotTxOutputMapStorage = new Storage<>(storageDir, persistenceProtoResolver);
         connectToBtcCore = rpcUser != null && !rpcUser.isEmpty();
+
+        persistableBsqBlockListStorage = new Storage<>(storageDir, persistenceProtoResolver);
     }
 
 
@@ -150,6 +160,16 @@ public class BsqBlockchainManager {
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
         //TODO
         BsqChainState persisted = snapshotTxOutputMapStorage.initAndGetPersistedWithFileName("BsqBlockChain");
+        PersistableBsqBlockList bsqBlockList = persistableBsqBlockListStorage.initAndGetPersistedWithFileName("BsqBlockList");
+        if (bsqBlockList != null) {
+            usePersisted = true;
+            log.error("start");
+            parseBlockFromPersisted(bsqBlockList.getList());
+            log.error("stop");
+        } else {
+            if (connectToBtcCore)
+                bsqBlockchainRequest.setup(this::onSetupComplete, errorMessageHandler);
+        }
        /* if (persisted != null) {
             bsqChainState = persisted;
             // If we have persisted data we notify our listeners
@@ -158,8 +178,6 @@ public class BsqBlockchainManager {
             bsqChainState = new BsqChainStateImpl();
         }*/
 
-        if (connectToBtcCore)
-            bsqBlockchainRequest.setup(this::onSetupComplete, errorMessageHandler);
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
@@ -207,6 +225,21 @@ public class BsqBlockchainManager {
                 genesisTxId);
     }
 
+    private void parseBlockFromPersisted(List<BsqBlock> bsqBlocks) {
+        try {
+            bsqParser.parseBsqBlocks(bsqBlocks, getGenesisBlockHeight(), getGenesisTxId(),
+                    newBlock -> {
+                        applyNewTxOutputMap(newBlock);
+                    });
+        } catch (BsqBlockchainException e) {
+            e.printStackTrace();
+        } catch (OrphanDetectedException e) {
+            // TODO should not be possible
+            e.printStackTrace();
+            log.error(e.toString());
+        }
+    }
+
     private void parseBlocks(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
         bsqBlockchainRequest.requestChainHeadHeight(chainHeadHeight -> {
             if (chainHeadHeight != startBlockHeight) {
@@ -223,6 +256,9 @@ public class BsqBlockchainManager {
                                 parseBlocks(chainHeadHeight,
                                         genesisBlockHeight,
                                         genesisTxId);
+                            //TODO temp
+                            if (!usePersisted)
+                                persistableBsqBlockListStorage.queueUpForSave(new PersistableBsqBlockList(bsqChainState.getBlocks()));
                         }, throwable -> {
                             if (throwable instanceof OrphanDetectedException) {
                                 startReOrgFromLastSnapshot(((OrphanDetectedException) throwable).getBlockHeight());

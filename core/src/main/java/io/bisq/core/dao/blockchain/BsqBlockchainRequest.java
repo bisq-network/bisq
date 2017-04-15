@@ -17,7 +17,7 @@
 
 package io.bisq.core.dao.blockchain;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
-import java.util.Set;
+import java.util.List;
 import java.util.function.Consumer;
 
 // Used for non blocking access to blockchain data and parsing. Encapsulate thread context, so caller 
@@ -148,12 +148,13 @@ public class BsqBlockchainRequest {
                     Consumer<BsqBlock> resultHandler,
                     Consumer<Throwable> errorHandler) {
         ListenableFuture<BsqBlock> future = parseBlocksExecutor.submit(() -> {
-            Set<Tx> bsqTxsInBlock = bsqParser.findBsqTxsInBlock(btcdBlock,
+            List<Tx> bsqTxsInBlock = bsqParser.findBsqTxsInBlock(btcdBlock,
                     genesisBlockHeight,
                     genesisTxId);
-            return new BsqBlock(ImmutableSet.copyOf(bsqTxsInBlock),
+            return new BsqBlock(ImmutableList.copyOf(bsqTxsInBlock),
                     btcdBlock.getHeight(),
-                    btcdBlock.getHash());
+                    btcdBlock.getHash(),
+                    btcdBlock.getPreviousBlockHash());
         });
 
         Futures.addCallback(future, new FutureCallback<BsqBlock>() {
