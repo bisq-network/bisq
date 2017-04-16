@@ -7,6 +7,8 @@ public enum CloseConnectionReason {
     SOCKET_TIMEOUT(false, false),
     TERMINATED(false, false), // EOFException
     CORRUPTED_DATA(false, false),
+    NO_PROTO_BUFFER_DATA(false, false),
+    NO_PROTO_BUFFER_ENV(false, false),
     UNKNOWN_EXCEPTION(false, false),
 
     // Planned
