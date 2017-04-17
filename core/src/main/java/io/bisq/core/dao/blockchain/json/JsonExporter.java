@@ -17,23 +17,32 @@
 
 package io.bisq.core.dao.blockchain.json;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.inject.Inject;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.RpcOptionKeys;
 import io.bisq.core.dao.blockchain.BsqChainState;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import io.bisq.core.dao.blockchain.vo.SpentInfo;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Named;
 import java.io.File;
 
+@Slf4j
 public class JsonExporter {
     private final Storage<PlainTextWrapper> jsonStorage;
     private final boolean dumpBlockchainData;
     private final BsqChainState bsqChainState;
     private final File storageDir;
+    private final ListeningExecutorService executor = Utilities.getListeningExecutorService("JsonExporter", 1, 1, 1200);
 
     @Inject
     public JsonExporter(Storage<PlainTextWrapper> jsonStorage,
@@ -60,10 +69,23 @@ public class JsonExporter {
             list.toArray(array);*/
             //jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(array)), 5000);
 
+            ListenableFuture<Void> future = executor.submit(() -> {
+                final BsqChainState clone = BsqChainState.getClone(bsqChainState);
+                jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(clone)), 5000);
+                return null;
+            });
 
-            final BsqChainState clone = BsqChainState.getClone(bsqChainState);
-            // TODO use thread
-            // jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(clone)), 5000);
+            Futures.addCallback(future, new FutureCallback<Void>() {
+                public void onSuccess(Void ignore) {
+                    log.trace("onSuccess");
+                }
+
+                public void onFailure(@NotNull Throwable throwable) {
+                    log.error(throwable.toString());
+                    throwable.printStackTrace();
+                }
+            });
+
 
             // keep the individual file storage option as code as we dont know yet what we will use.
       /*  log.error("txOutputForJson " + txOutputForJson);
