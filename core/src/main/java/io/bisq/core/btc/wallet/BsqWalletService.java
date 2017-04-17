@@ -121,7 +121,7 @@ public class BsqWalletService extends WalletService {
             });
         });
 
-        bsqBlockchainManager.addTxOutputMapListener(() -> {
+        bsqBlockchainManager.addBsqChainStateListener(() -> {
             updateBsqWalletTransactions();
             updateBsqBalance();
         });

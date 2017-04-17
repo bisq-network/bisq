@@ -20,8 +20,8 @@ package io.bisq.core.dao.blockchain;
 import com.google.common.collect.ImmutableList;
 import com.neemre.btcdcli4j.core.domain.Block;
 import io.bisq.common.app.DevEnv;
+import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
-import io.bisq.core.dao.blockchain.exceptions.OrphanDetectedException;
 import io.bisq.core.dao.blockchain.vo.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,9 +37,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Immutable
 public class BsqParser {
-    private BsqChainState bsqChainState;
-    private BsqBlockchainService bsqBlockchainService;
+    private final BsqChainState bsqChainState;
+    private final BsqBlockchainService bsqBlockchainService;
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public BsqParser(BsqBlockchainService bsqBlockchainService, BsqChainState bsqChainState) {
         this.bsqBlockchainService = bsqBlockchainService;
@@ -55,7 +56,9 @@ public class BsqParser {
                         int genesisBlockHeight,
                         String genesisTxId,
                         Consumer<BsqBlock> newBlockHandler)
-            throws BsqBlockchainException, OrphanDetectedException {
+            throws BsqBlockchainException, BlockNotConnectingException {
+        long startTs = System.currentTimeMillis();
+        // TODO thread
         for (BsqBlock bsqBlock : bsqBlocks) {
             parseBsqBlock(bsqBlock,
                     genesisBlockHeight,
@@ -63,12 +66,13 @@ public class BsqParser {
             bsqChainState.addBlock(bsqBlock);
             newBlockHandler.accept(bsqBlock);
         }
+        log.info("parseBlocks took {} ms for {} blocks", System.currentTimeMillis() - startTs, bsqBlocks.size());
+
     }
 
     void parseBsqBlock(BsqBlock bsqBlock,
                        int genesisBlockHeight,
-                       String genesisTxId)
-            throws BsqBlockchainException, OrphanDetectedException {
+                       String genesisTxId) {
         int blockHeight = bsqBlock.getHeight();
         log.debug("Parse block at height={} ", blockHeight);
         List<Tx> txList = new ArrayList<>(bsqBlock.getTxs());
@@ -88,7 +92,7 @@ public class BsqParser {
                      int genesisBlockHeight,
                      String genesisTxId,
                      Consumer<BsqBlock> newBlockHandler)
-            throws BsqBlockchainException, OrphanDetectedException {
+            throws BsqBlockchainException, BlockNotConnectingException {
         try {
             for (int blockHeight = startBlockHeight; blockHeight <= chainHeadHeight; blockHeight++) {
                 Block btcdBlock = bsqBlockchainService.requestBlock(blockHeight);
@@ -103,7 +107,7 @@ public class BsqParser {
                 bsqChainState.addBlock(bsqBlock);
                 newBlockHandler.accept(bsqBlock);
             }
-        } catch (OrphanDetectedException e) {
+        } catch (BlockNotConnectingException e) {
             throw e;
         } catch (Throwable t) {
             log.error(t.toString());
@@ -112,38 +116,33 @@ public class BsqParser {
         }
     }
 
-    List<Tx> findBsqTxsInBlock(Block btcdBlock,
-                               int genesisBlockHeight,
-                               String genesisTxId)
-            throws BsqBlockchainException, OrphanDetectedException {
+    private List<Tx> findBsqTxsInBlock(Block btcdBlock,
+                                       int genesisBlockHeight,
+                                       String genesisTxId)
+            throws BsqBlockchainException {
         int blockHeight = btcdBlock.getHeight();
         log.debug("Parse block at height={} ", blockHeight);
 
         // check if the new block is the same chain we have built on.
-        if (bsqChainState.isBlockConnecting(btcdBlock.getPreviousBlockHash())) {
-            List<Tx> txList = new ArrayList<>();
-            // We use a list as we want to maintain sorting of tx intra-block dependency
-            List<Tx> bsqTxsInBlock = new ArrayList<>();
-            // We add all transactions to the block
-            for (String txId : btcdBlock.getTx()) {
-                final Tx tx = bsqBlockchainService.requestTransaction(txId, blockHeight);
-                txList.add(tx);
-                checkForGenesisTx(genesisBlockHeight, genesisTxId, blockHeight, bsqTxsInBlock, tx);
-            }
-
-            // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
-            // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
-            // Realistically we don't expect more then a few recursive calls.
-            // There are some blocks with testing such dependency chains like block 130768 where at each iteration only 
-            // one get resolved.
-            // Lately there is a patter with 24 iterations observed 
-            recursiveFindBsqTxs(bsqTxsInBlock, txList, blockHeight, 0, 5300);
-
-            return bsqTxsInBlock;
-        } else {
-            log.warn("We need to do a re-org. We got a new block which does not connect to our current chain.");
-            throw new OrphanDetectedException(blockHeight);
+        List<Tx> txList = new ArrayList<>();
+        // We use a list as we want to maintain sorting of tx intra-block dependency
+        List<Tx> bsqTxsInBlock = new ArrayList<>();
+        // We add all transactions to the block
+        for (String txId : btcdBlock.getTx()) {
+            final Tx tx = bsqBlockchainService.requestTransaction(txId, blockHeight);
+            txList.add(tx);
+            checkForGenesisTx(genesisBlockHeight, genesisTxId, blockHeight, bsqTxsInBlock, tx);
         }
+
+        // Worst case is that all txs in a block are depending on another, so only one get resolved at each iteration.
+        // Min tx size is 189 bytes (normally about 240 bytes), 1 MB can contain max. about 5300 txs (usually 2000).
+        // Realistically we don't expect more then a few recursive calls.
+        // There are some blocks with testing such dependency chains like block 130768 where at each iteration only 
+        // one get resolved.
+        // Lately there is a patter with 24 iterations observed 
+        recursiveFindBsqTxs(bsqTxsInBlock, txList, blockHeight, 0, 5300);
+
+        return bsqTxsInBlock;
     }
 
 
@@ -152,7 +151,7 @@ public class BsqParser {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     BsqBlock parseBlock(Block btcdBlock, int genesisBlockHeight, String genesisTxId)
-            throws BsqBlockchainException, OrphanDetectedException {
+            throws BsqBlockchainException, BlockNotConnectingException {
         List<Tx> bsqTxsInBlock = findBsqTxsInBlock(btcdBlock,
                 genesisBlockHeight,
                 genesisTxId);
@@ -163,8 +162,8 @@ public class BsqParser {
         bsqChainState.addBlock(bsqBlock);
         return bsqBlock;
     }
-    
-    
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Generic 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -184,11 +183,11 @@ public class BsqParser {
 
     // Performance-wise the recursion does not hurt (e.g. 5-20 ms). 
     // The RPC requestTransaction is the bottleneck.  
-    void recursiveFindBsqTxs(List<Tx> bsqTxsInBlock,
-                             List<Tx> transactions,
-                             int blockHeight,
-                             int recursionCounter,
-                             int maxRecursions) {
+    private void recursiveFindBsqTxs(List<Tx> bsqTxsInBlock,
+                                     List<Tx> transactions,
+                                     int blockHeight,
+                                     int recursionCounter,
+                                     int maxRecursions) {
         // The set of txIds of txs which are used for inputs of another tx in same block
         Set<String> intraBlockSpendingTxIdSet = getIntraBlockSpendingTxIdSet(transactions);
 

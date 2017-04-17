@@ -43,6 +43,8 @@ public class DaoModule extends AppModule {
         bind(DaoManager.class).in(Singleton.class);
 
         bind(BsqBlockchainManager.class).in(Singleton.class);
+        bind(BsqLiteNode.class).in(Singleton.class);
+        bind(BsqFullNode.class).in(Singleton.class);
         bind(BsqChainState.class).in(Singleton.class);
         bind(BsqBlockchainRequest.class).in(Singleton.class);
         bind(BsqParser.class).in(Singleton.class);
@@ -64,6 +66,8 @@ public class DaoModule extends AppModule {
                 .to(env.getRequiredProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT));
         bindConstant().annotatedWith(named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA))
                 .to(env.getRequiredProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA));
+        bindConstant().annotatedWith(named(RpcOptionKeys.FULL_DAO_NODE))
+                .to(env.getRequiredProperty(RpcOptionKeys.FULL_DAO_NODE));
     }
 }
 

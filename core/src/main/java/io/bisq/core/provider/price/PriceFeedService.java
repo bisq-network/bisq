@@ -7,8 +7,10 @@ import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.handlers.FaultHandler;
+import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.util.Tuple2;
 import io.bisq.core.provider.ProvidersRepository;
+import io.bisq.core.user.Preferences;
 import io.bisq.network.http.HttpClient;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -33,6 +35,7 @@ public class PriceFeedService {
 
     private final HttpClient httpClient;
     private final ProvidersRepository providersRepository;
+    private final Preferences preferences;
 
     private static final long PERIOD_SEC = 60;
 
@@ -54,9 +57,10 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PriceFeedService(HttpClient httpClient, ProvidersRepository providersRepository) {
+    public PriceFeedService(HttpClient httpClient, ProvidersRepository providersRepository, Preferences preferences) {
         this.httpClient = httpClient;
         this.providersRepository = providersRepository;
+        this.preferences = preferences;
         this.priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
     }
 
@@ -65,7 +69,15 @@ public class PriceFeedService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init(Consumer<Double> resultHandler, FaultHandler faultHandler) {
+    public void onAllServicesInitialized() {
+        if (getCurrencyCode() == null) {
+            final TradeCurrency preferredTradeCurrency = preferences.getPreferredTradeCurrency();
+            final String code = preferredTradeCurrency != null ? preferredTradeCurrency.getCode() : "USD";
+            setCurrencyCode(code);
+        }
+    }
+
+    public void requestPriceFeed(Consumer<Double> resultHandler, FaultHandler faultHandler) {
         this.priceConsumer = resultHandler;
         this.faultHandler = faultHandler;
 

@@ -55,8 +55,4 @@ public class WalletUtils {
     public static BitcoinNetwork getBitcoinNetwork() {
         return bitcoinNetwork;
     }
-
-    public static boolean isRegTest() {
-        return WalletUtils.getBitcoinNetwork() == BitcoinNetwork.REGTEST;
-    }
 }

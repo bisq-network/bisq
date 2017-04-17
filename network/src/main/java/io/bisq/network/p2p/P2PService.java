@@ -41,6 +41,7 @@ import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
 import javafx.beans.property.*;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -76,6 +77,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
     // set in init
     private NetworkNode networkNode;
+    @Getter
     private Broadcaster broadcaster;
     private P2PDataStorage p2PDataStorage;
     private PeerManager peerManager;
@@ -99,6 +101,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     private boolean isBootstrapped;
     private KeepAliveManager keepAliveManager;
     private final Socks5ProxyProvider socks5ProxyProvider;
+    @Getter
+    private Set<NodeAddress> seedNodeAddresses;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +117,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                       @Named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P,
                       @Named(NetworkOptionKeys.NETWORK_ID) int networkId,
                       @Named(NetworkOptionKeys.MAX_CONNECTIONS) int maxConnections,
-                      @Named(Storage.DIR_KEY) File storageDir,
+                      @Named(Storage.STORAGE_DIR) File storageDir,
                       @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes,
                       @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress,
                       @Named(NetworkOptionKeys.BAN_LIST) String banList,
@@ -201,7 +205,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         networkNode.addConnectionListener(this);
         networkNode.addMessageListener(this);
 
-        Set<NodeAddress> seedNodeAddresses;
         if (seedNodes != null && !seedNodes.isEmpty())
             seedNodeAddresses = Arrays.asList(StringUtils.deleteWhitespace(seedNodes).split(",")).stream().map(NodeAddress::new).collect(Collectors.toSet());
         else

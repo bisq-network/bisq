@@ -92,7 +92,7 @@ public class DisputeManager {
                           OpenOfferManager openOfferManager,
                           KeyRing keyRing,
                           PersistenceProtoResolver persistenceProtoResolver,
-                          @Named(Storage.DIR_KEY) File storageDir) {
+                          @Named(Storage.STORAGE_DIR) File storageDir) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;

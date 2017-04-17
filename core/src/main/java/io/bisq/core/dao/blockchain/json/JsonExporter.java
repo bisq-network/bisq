@@ -34,28 +34,25 @@ import java.util.stream.Collectors;
 
 public class JsonExporter {
     private final Storage<PlainTextWrapper> jsonStorage;
-    private boolean dumpBlockchainData;
-    private BsqChainState bsqChainState;
+    private final boolean dumpBlockchainData;
+    private final BsqChainState bsqChainState;
     private final File storageDir;
 
     @Inject
     public JsonExporter(Storage<PlainTextWrapper> jsonStorage,
                         BsqChainState bsqChainState,
-                        @Named(Storage.DIR_KEY) File storageDir,
+                        @Named(Storage.STORAGE_DIR) File storageDir,
                         @Named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.bsqChainState = bsqChainState;
         this.storageDir = storageDir;
         this.jsonStorage = jsonStorage;
         this.dumpBlockchainData = dumpBlockchainData;
-    }
 
-    public void init(@Named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
-        if (dumpBlockchainData) {
+        if (dumpBlockchainData) 
             this.jsonStorage.initWithFileName("txo.json");
-        }
     }
 
-    public void requestExport() {
+    public void maybeExport() {
         if (dumpBlockchainData) {
             List<TxOutputForJson> list = bsqChainState.getVerifiedTxOutputSet().stream()
                     .map(this::getTxOutputForJson)

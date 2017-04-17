@@ -49,7 +49,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class Storage<T extends Persistable> {
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
-    public static final String DIR_KEY = "storageDir";
+    public static final String STORAGE_DIR = "storageDir";
 
     private static DataBaseCorruptionHandler databaseCorruptionHandler;
 
@@ -75,7 +75,7 @@ public class Storage<T extends Persistable> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Storage(@Named(DIR_KEY) File dir, PersistenceProtoResolver persistenceProtoResolver) {
+    public Storage(@Named(STORAGE_DIR) File dir, PersistenceProtoResolver persistenceProtoResolver) {
         this.dir = dir;
         this.persistenceProtoResolver = persistenceProtoResolver;
     }

@@ -15,18 +15,17 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.vo;
+package io.bisq.core.dao.blockchain.exceptions;
 
-import io.bisq.common.persistence.Persistable;
+import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import lombok.Getter;
 
-import java.util.List;
+@Getter
+public class BlockNotConnectingException extends Exception {
 
-public class PersistableBsqBlockList implements Persistable {
-    @Getter
-    private List<BsqBlock> list;
+    private BsqBlock block;
 
-    public PersistableBsqBlockList(List<BsqBlock> list) {
-        this.list = list;
+    public BlockNotConnectingException(BsqBlock block) {
+        this.block = block;
     }
 }

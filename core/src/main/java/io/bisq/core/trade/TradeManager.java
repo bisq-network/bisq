@@ -114,7 +114,7 @@ public class TradeManager {
                         FilterManager filterManager,
                         TradeStatisticsManager tradeStatisticsManager,
                         PersistenceProtoResolver persistenceProtoResolver,
-                        @Named(Storage.DIR_KEY) File storageDir) {
+                        @Named(Storage.STORAGE_DIR) File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
         this.btcWalletService = btcWalletService;

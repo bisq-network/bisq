@@ -38,6 +38,9 @@ message Envelope {
         FiatTransferStartedMessage fiat_transfer_started_message = 28;
         PayoutTxPublishedMessage payout_tx_published_message = 29;
         PrivateNotificationMessage private_notification_message = 30;
+        GetBsqBlocksRequest get_bsq_blocks_request = 31;
+        GetBsqBlocksResponse get_bsq_blocks_response = 32;
+        NewBsqBlockBroadcastMsg new_bsq_block_broadcast_msg = 33;
     }
 }
 
@@ -177,7 +180,7 @@ message Payload {
         PubKeyRing pub_key_ring = 13;
         RawTransactionInput raw_transaction_input = 14;
         OfferPayload offer_payload = 15;
-        SealedAndSigned Sealed_and_signed = 16;
+        SealedAndSigned sealed_and_signed = 16;
     }
 }
 
@@ -287,6 +290,19 @@ message TradeStatistics {
     PubKeyRing pub_key_ring = 15;
     map<string, string> extra_data_map = 16;
 }
+
+message GetBsqBlocksRequest {
+    int32 from_block_height = 1;
+}
+
+message GetBsqBlocksResponse {
+    bytes bsq_blocks_bytes = 1;
+}
+
+message NewBsqBlockBroadcastMsg {
+    bytes bsq_block_bytes = 1;
+}
+
 message MailboxStoragePayload {
     PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 1;
     bytes sender_pub_key_for_add_operation_bytes = 2;

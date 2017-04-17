@@ -20,7 +20,6 @@ package io.bisq.core.dao;
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.core.btc.provider.squ.BsqUtxoFeedService;
-import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.vote.VotingManager;
@@ -31,7 +30,6 @@ public class DaoManager {
     private static final Logger log = LoggerFactory.getLogger(DaoManager.class);
 
     private final BsqBlockchainManager bsqBlockchainManager;
-    private final BsqWalletService bsqWalletService;
     private final DaoPeriodService daoPeriodService;
     private final BsqUtxoFeedService bsqUtxoFeedService;
     private final VotingManager voteManager;
@@ -44,13 +42,11 @@ public class DaoManager {
 
     @Inject
     public DaoManager(BsqBlockchainManager bsqBlockchainManager,
-                      BsqWalletService bsqWalletService,
                       DaoPeriodService daoPeriodService,
                       BsqUtxoFeedService bsqUtxoFeedService,
                       VotingManager voteManager,
                       CompensationRequestManager compensationRequestManager) {
         this.bsqBlockchainManager = bsqBlockchainManager;
-        this.bsqWalletService = bsqWalletService;
         this.daoPeriodService = daoPeriodService;
         this.bsqUtxoFeedService = bsqUtxoFeedService;
         this.voteManager = voteManager;

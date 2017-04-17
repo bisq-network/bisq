@@ -19,21 +19,16 @@ package io.bisq.core.dao.blockchain;
 
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
+import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static com.google.common.base.Preconditions.checkArgument;
+import java.util.stream.Collectors;
 
 // Represents mutable state of BSQ chain data
 // We get accessed the data from non-UserThread context, so we need to handle threading here.
@@ -49,33 +44,34 @@ public class BsqChainState implements Persistable {
         return Utilities.<BsqChainState>deserialize(Utilities.serialize(bsqChainState));
     }
 
-
-    private final List<BsqBlock> blockchain = new CopyOnWriteArrayList<>();
-    transient private final Map<String, Tx> txMap = new ConcurrentHashMap<>();
-    private final Map<TxIdIndexTuple, SpentInfo> spentInfoByTxOutputMap = new ConcurrentHashMap<>();
-    private final Set<TxOutput> verifiedTxOutputSet = new CopyOnWriteArraySet<>();
-    private final Map<String, Long> burnedFeeByTxIdMap = new ConcurrentHashMap<>();
+    @Getter
+    private final LinkedList<BsqBlock> blocks = new LinkedList<>();
+    private final Map<TxIdIndexTuple, SpentInfo> spentInfoByTxOutputMap = new HashMap<>();
+    private final Set<TxOutput> verifiedTxOutputSet = new HashSet<>();
+    private final Map<String, Long> burnedFeeByTxIdMap = new HashMap<>();
     private final AtomicReference<Tx> genesisTx = new AtomicReference<>();
-    private final AtomicReference<BsqBlock> chainHeadBlock = new AtomicReference<>();
 
+    transient private final Map<String, Tx> txMap = new HashMap<>();
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public BsqChainState() {
     }
 
     public void applyPersisted(BsqChainState persistedBsqChainState) {
         synchronized (BsqChainState.this) {
-            blockchain.addAll(persistedBsqChainState.blockchain);
-            blockchain.stream().flatMap(bsqBlock -> bsqBlock.getTxs().stream()).forEach(this::addTx);
+            blocks.addAll(persistedBsqChainState.blocks);
+            blocks.stream().flatMap(bsqBlock -> bsqBlock.getTxs().stream()).forEach(this::addTx);
             spentInfoByTxOutputMap.putAll(persistedBsqChainState.spentInfoByTxOutputMap);
             verifiedTxOutputSet.addAll(persistedBsqChainState.verifiedTxOutputSet);
             burnedFeeByTxIdMap.putAll(persistedBsqChainState.burnedFeeByTxIdMap);
             genesisTx.set(persistedBsqChainState.genesisTx.get());
-            chainHeadBlock.set(persistedBsqChainState.chainHeadBlock.get());
+
             // printDetails();
         }
     }
@@ -84,15 +80,17 @@ public class BsqChainState implements Persistable {
     // Write access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addBlock(BsqBlock block) {
-        checkArgument(getChainHeadHeight() <= block.getHeight(), "chainTip must not be lager than block.getHeight(). chainTip=" +
-                getChainHeadHeight() + ": block.getHeight()=" + getChainHeadHeight());
-        checkArgument(!blockchain.contains(block), "blockchain must not contain the new block");
-        synchronized (this) {
-            blockchain.add(block);
-            chainHeadBlock.set(block);
+    public synchronized void addBlock(BsqBlock block) throws BlockNotConnectingException {
+        if (blocks.isEmpty() || (blocks.getLast().getHash().equals(block.getPreviousBlockHash()) &&
+                blocks.getLast().getHeight() == block.getHeight() - 1)) {
+            blocks.add(block);
             block.getTxs().stream().forEach(this::addTx);
             // printDetails();
+        } else {
+            log.warn("addBlock called with a not connecting block:\n" +
+                            "height()={}, hash()={}, head.height()={}, head.hash()={}",
+                    block.getHeight(), block.getHash(), blocks.getLast().getHeight(), blocks.getLast().getHash());
+            throw new BlockNotConnectingException(block);
         }
     }
 
@@ -121,11 +119,11 @@ public class BsqChainState implements Persistable {
     // Read access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<Tx> getTx(String txId) {
+    private Optional<Tx> getTx(String txId) {
         return txMap.get(txId) != null ? Optional.of(txMap.get(txId)) : Optional.<Tx>empty();
     }
 
-    public boolean isVerifiedTxOutput(TxOutput txOutput) {
+    private boolean isVerifiedTxOutput(TxOutput txOutput) {
         return verifiedTxOutputSet.contains(txOutput);
     }
 
@@ -134,7 +132,7 @@ public class BsqChainState implements Persistable {
     }
 
     public boolean hasTxBurnedFee(String txId) {
-        return burnedFeeByTxIdMap.containsKey(txId) ? burnedFeeByTxIdMap.get(txId) > 0 : false;
+        return burnedFeeByTxIdMap.containsKey(txId) && burnedFeeByTxIdMap.get(txId) > 0;
     }
 
     public boolean containsTx(String txId) {
@@ -154,20 +152,23 @@ public class BsqChainState implements Persistable {
     }
 
     public int getChainHeadHeight() {
-        final BsqBlock block = chainHeadBlock.get();
-        return block != null ? block.getHeight() : 0;
+        return !blocks.isEmpty() ? blocks.get(blocks.size() - 1).getHeight() : 0;
     }
 
-    public Optional<TxOutput> findTxOutput(String txId, int index) {
+    public Optional<BsqBlock> getChainHead() {
+        return !blocks.isEmpty() ? Optional.of(blocks.get(blocks.size() - 1)) : Optional.<BsqBlock>empty();
+    }
+
+    private Optional<TxOutput> findTxOutput(String txId, int index) {
         return getTx(txId).flatMap(e -> e.getTxOutput(index));
     }
 
     public boolean isBlockConnecting(String previousBlockHash) {
-        if (blockchain.isEmpty()) {
+        if (blocks.isEmpty()) {
             return true;
         } else {
-            synchronized (blockchain) {
-                final String tipHash = blockchain.get(blockchain.size() - 1).getHash();
+            synchronized (blocks) {
+                final String tipHash = blocks.get(blocks.size() - 1).getHash();
                 boolean isBlockConnecting = tipHash.equals(previousBlockHash);
                 if (!isBlockConnecting)
                     log.error("new block is not connecting: tipHash={}, previousBlockHash={}", tipHash, previousBlockHash);
@@ -176,9 +177,21 @@ public class BsqChainState implements Persistable {
         }
     }
 
+    public boolean containsBlock(BsqBlock bsqBlock) {
+        return blocks.contains(bsqBlock);
+    }
+
     public Set<TxOutput> getVerifiedTxOutputSet() {
         return verifiedTxOutputSet;
     }
+
+    public List<BsqBlock> getBlocksFrom(int fromBlockHeight) {
+        return blocks.stream()
+                .filter(block -> block.getHeight() >= fromBlockHeight)
+                .sorted((o1, o2) -> new Integer(o1.getHeight()).compareTo(o2.getHeight()))
+                .collect(Collectors.toList());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
@@ -188,12 +201,12 @@ public class BsqChainState implements Persistable {
         log.info("\nchainHeadHeight={}\nblocks.size={}\ntxMap.size={}\nverifiedTxOutputSet.size={}\n" +
                         "spentInfoByTxOutputMap.size={}\nburnedFeeByTxIdMap.size={}\nblocks data size in kb={}\n",
                 getChainHeadHeight(),
-                blockchain.size(),
+                blocks.size(),
                 txMap.size(),
                 verifiedTxOutputSet.size(),
                 spentInfoByTxOutputMap.size(),
                 burnedFeeByTxIdMap.size(),
-                Utilities.serialize(blockchain.toArray()).length / 1000d);
+                Utilities.serialize(blocks.toArray()).length / 1000d);
     }
 }
 

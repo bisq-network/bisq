@@ -37,8 +37,8 @@ import java.util.function.Consumer;
 @Slf4j
 public class BsqBlockchainRequest {
 
-    private BsqParser bsqParser;
-    private BsqBlockchainService bsqBlockchainService;
+    private final BsqParser bsqParser;
+    private final BsqBlockchainService bsqBlockchainService;
 
     private final ListeningExecutorService parseBlocksExecutor = Utilities.getListeningExecutorService("ParseBlocks", 1, 1, 60);
     private final ListeningExecutorService getChainHeightExecutor = Utilities.getListeningExecutorService("GetChainHeight", 1, 1, 60);
@@ -50,6 +50,7 @@ public class BsqBlockchainRequest {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
     public BsqBlockchainRequest(BsqBlockchainService bsqBlockchainService, BsqParser bsqParser) {
         this.bsqBlockchainService = bsqBlockchainService;
@@ -123,7 +124,7 @@ public class BsqBlockchainRequest {
                     newBsqBlock -> {
                         UserThread.execute(() -> newBlockHandler.accept(newBsqBlock));
                     });
-            log.info("parseBlocks took {} ms", System.currentTimeMillis() - startTs);
+            log.info("parseBlocks took {} ms for {} blocks", System.currentTimeMillis() - startTs, chainHeadHeight - startBlockHeight);
             return null;
         });
 

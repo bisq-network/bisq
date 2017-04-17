@@ -15,16 +15,8 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.exceptions;
+package io.bisq.core.dao.blockchain;
 
-import lombok.Getter;
-
-@Getter
-public class OrphanDetectedException extends Exception {
-
-    private int blockHeight;
-
-    public OrphanDetectedException(int blockHeight) {
-        this.blockHeight = blockHeight;
-    }
+public interface BsqChainStateListener {
+    void onBsqChainStateChanged();
 }

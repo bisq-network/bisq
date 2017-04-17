@@ -14,6 +14,9 @@ import io.bisq.core.arbitration.DisputeResult;
 import io.bisq.core.arbitration.Mediator;
 import io.bisq.core.arbitration.messages.*;
 import io.bisq.core.btc.data.RawTransactionInput;
+import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
+import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksResponse;
+import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMsg;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.filter.Filter;
 import io.bisq.core.filter.PaymentAccountFilter;
@@ -131,6 +134,15 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
             case OFFER_AVAILABILITY_REQUEST:
                 result = getOfferAvailabilityRequest(envelope);
                 break;
+            case GET_BSQ_BLOCKS_REQUEST:
+                result = GetBsqBlocksRequest.fromProto(envelope);
+                break;
+            case GET_BSQ_BLOCKS_RESPONSE:
+                result = GetBsqBlocksResponse.fromProto(envelope);
+                break;
+            case NEW_BSQ_BLOCK_BROADCAST_MSG:
+                result = NewBsqBlockBroadcastMsg.fromProto(envelope);
+                break;
             case REMOVE_DATA_MESSAGE:
                 result = getRemoveDataMessage(envelope);
                 break;
@@ -189,7 +201,6 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     private static Msg getOfferAvailabilityRequest(PB.Envelope envelope) {
         PB.OfferAvailabilityRequest msg = envelope.getOfferAvailabilityRequest();
         return new OfferAvailabilityRequest(msg.getOfferId(), ProtoUtil.getPubKeyRing(msg.getPubKeyRing()), msg.getTakersTradePrice());
-
     }
 
     private static Msg getPrivateNotificationMessage(PB.PrivateNotificationMessage privateNotificationMessage) {

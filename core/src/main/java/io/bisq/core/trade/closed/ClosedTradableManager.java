@@ -41,7 +41,7 @@ public class ClosedTradableManager {
     @Inject
     public ClosedTradableManager(KeyRing keyRing, PriceFeedService priceFeedService,
                                  PersistenceProtoResolver persistenceProtoResolver,
-                                 @Named(Storage.DIR_KEY) File storageDir) {
+                                 @Named(Storage.STORAGE_DIR) File storageDir) {
         this.keyRing = keyRing;
         final Storage<TradableList<Tradable>> tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
         // The ClosedTrades object can become a few MB so we don't keep so many backups

@@ -30,4 +30,14 @@ public class BsqBlock implements Persistable {
     private final int height;
     private final String hash;
     private String previousBlockHash;
+
+    @Override
+    public String toString() {
+        return "BsqBlock{" +
+                "\n     height=" + height +
+                ",\n     hash='" + hash + '\'' +
+                ",\n     txs.size='" + txs.size() + '\'' +
+                ",\n     previousBlockHash='" + previousBlockHash + '\'' +
+                "\n}";
+    }
 }

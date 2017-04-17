@@ -49,7 +49,6 @@
         <module>seednode</module>
         <module>statistics</module>
         <module>provider</module>
-        <module>bsq_utxo_provider</module>
     </modules>
 
     <build>

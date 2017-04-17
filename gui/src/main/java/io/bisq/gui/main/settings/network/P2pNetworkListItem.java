@@ -102,7 +102,8 @@ public class P2pNetworkListItem {
     }
 
     public void updateConnectionType() {
-        connectionType.set(connection instanceof OutboundConnection ? Res.get("settings.net.outbound") : Res.get("settings.net.inbound"));
+        connectionType.set(connection instanceof OutboundConnection ?
+                Res.get("settings.net.outbound") : Res.get("settings.net.inbound"));
     }
 
     public void updatePeerType() {

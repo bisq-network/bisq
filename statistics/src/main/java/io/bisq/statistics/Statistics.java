@@ -100,7 +100,7 @@ public class Statistics {
 
         // We need the price feed for market based offers
         priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());
-        priceFeedService.init(price -> log.debug("price " + price),
+        priceFeedService.requestPriceFeed(price -> log.debug("price " + price),
                 (errorMessage, throwable) -> log.warn(throwable.getMessage()));
     }
 

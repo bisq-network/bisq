@@ -47,6 +47,7 @@ public class LookAheadObjectInputStream extends ObjectInputStream {
             Pattern.compile("java\\.lang\\.Number$"),
 
             Pattern.compile("java\\.util\\.ArrayList$"),
+            Pattern.compile("java\\.util\\.LinkedList$"),
             Pattern.compile("java\\.util\\.Date$"),
             Pattern.compile("java\\.util\\.HashSet$"),
             Pattern.compile("java\\.util\\.HashMap$"),
