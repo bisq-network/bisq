@@ -49,7 +49,6 @@ import java.util.List;
 @Slf4j
 public class BsqFullNode extends BsqNode {
 
-    private final BsqBlockchainRequest bsqBlockchainRequest;
     private final JsonExporter jsonExporter;
     @Getter
     private boolean parseBlockchainComplete;
@@ -73,9 +72,9 @@ public class BsqFullNode extends BsqNode {
                 p2PService,
                 bsqChainState,
                 bsqParser,
+                bsqBlockchainRequest,
                 persistenceProtoResolver,
                 storageDir);
-        this.bsqBlockchainRequest = bsqBlockchainRequest;
         this.jsonExporter = jsonExporter;
     }
 

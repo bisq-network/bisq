@@ -29,7 +29,6 @@ import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
-import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMsg;
@@ -60,12 +59,14 @@ public class BsqLiteNode extends BsqNode {
                        P2PService p2PService,
                        BsqChainState bsqChainState,
                        BsqParser bsqParser,
+                       BsqBlockchainRequest bsqBlockchainRequest,
                        PersistenceProtoResolver persistenceProtoResolver,
                        @Named(Storage.STORAGE_DIR) File storageDir) {
         super(bisqEnvironment,
                 p2PService,
                 bsqChainState,
                 bsqParser,
+                bsqBlockchainRequest,
                 persistenceProtoResolver,
                 storageDir);
     }
@@ -134,16 +135,20 @@ public class BsqLiteNode extends BsqNode {
             byte[] bsqBlocksBytes = getBsqBlocksResponse.getBsqBlocksBytes();
             List<BsqBlock> bsqBlockList = Utilities.<ArrayList<BsqBlock>>deserialize(bsqBlocksBytes);
             log.debug("received msg with {} items", bsqBlockList.size());
-            try {
-                bsqParser.parseBsqBlocks(bsqBlockList, getGenesisBlockHeight(), getGenesisTxId(),
-                        this::onNewBsqBlock);
-
-                onParseBlockchainComplete(getGenesisBlockHeight(), getGenesisTxId());
-            } catch (BsqBlockchainException e) {
-                e.printStackTrace();
-            } catch (BlockNotConnectingException e) {
-                e.printStackTrace();
-            }
+            bsqBlockchainRequest.parseBsqBlocks(bsqBlockList,
+                    getGenesisBlockHeight(),
+                    getGenesisTxId(),
+                    this::onNewBsqBlock,
+                    () -> {
+                        onParseBlockchainComplete(getGenesisBlockHeight(), getGenesisTxId());
+                    }, throwable -> {
+                        if (throwable instanceof BlockNotConnectingException) {
+                            startReOrgFromLastSnapshot(((BlockNotConnectingException) throwable).getBlock());
+                        } else {
+                            log.error(throwable.toString());
+                            throwable.printStackTrace();
+                        }
+                    });
         } else if (parseBlockchainComplete && msg instanceof NewBsqBlockBroadcastMsg) {
             NewBsqBlockBroadcastMsg newBsqBlockBroadcastMsg = (NewBsqBlockBroadcastMsg) msg;
             byte[] bsqBlockBytes = newBsqBlockBroadcastMsg.getBsqBlockBytes();

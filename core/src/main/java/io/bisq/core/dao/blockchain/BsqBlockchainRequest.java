@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.function.Consumer;
 
 // Used for non blocking access to blockchain data and parsing. Encapsulate thread context, so caller 
@@ -175,5 +176,41 @@ public class BsqBlockchainRequest {
 
     public void addBlockHandler(Consumer<Block> blockHandler) {
         bsqBlockchainService.registerBlockHandler(blockHandler);
+    }
+
+    // BsqLiteNode parse with delivered BsqBlocks. Much faster than requesting via RPC....
+    void parseBsqBlocks(List<BsqBlock> bsqBlockList,
+                        int genesisBlockHeight,
+                        String genesisTxId,
+                        Consumer<BsqBlock> newBlockHandler,
+                        ResultHandler resultHandler,
+                        Consumer<Throwable> errorHandler) {
+        ListenableFuture<Void> future = parseBlocksExecutor.submit(() -> {
+            long startTs = System.currentTimeMillis();
+            bsqParser.parseBsqBlocks(bsqBlockList,
+                    genesisBlockHeight,
+                    genesisTxId,
+                    newBsqBlock -> {
+                        UserThread.execute(() -> newBlockHandler.accept(newBsqBlock));
+                    });
+            log.info("parseBlocks took {} ms for {} blocks", System.currentTimeMillis() - startTs, bsqBlockList.size());
+            return null;
+        });
+
+        Futures.addCallback(future, new FutureCallback<Void>() {
+            @Override
+            public void onSuccess(Void ignore) {
+                UserThread.execute(() -> {
+                    UserThread.execute(resultHandler::handleResult);
+                });
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                log.error(throwable.toString());
+                throwable.printStackTrace();
+                UserThread.execute(() -> errorHandler.accept(throwable));
+            }
+        });
     }
 }

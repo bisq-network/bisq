@@ -103,6 +103,8 @@ public abstract class BsqNode {
     @SuppressWarnings("WeakerAccess")
     protected final BsqParser bsqParser;
     @SuppressWarnings("WeakerAccess")
+    protected final BsqBlockchainRequest bsqBlockchainRequest;
+    @SuppressWarnings("WeakerAccess")
     protected final List<BsqChainStateListener> bsqChainStateListeners = new ArrayList<>();
     private final Storage<BsqChainState> snapshotBsqChainStateStorage;
 
@@ -123,12 +125,14 @@ public abstract class BsqNode {
                    P2PService p2PService,
                    BsqChainState bsqChainState,
                    BsqParser bsqParser,
+                   BsqBlockchainRequest bsqBlockchainRequest,
                    PersistenceProtoResolver persistenceProtoResolver,
                    @Named(Storage.STORAGE_DIR) File storageDir) {
 
         this.p2PService = p2PService;
         this.bsqChainState = bsqChainState;
         this.bsqParser = bsqParser;
+        this.bsqBlockchainRequest = bsqBlockchainRequest;
 
         isRegTest = bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.REGTEST;
         snapshotBsqChainStateStorage = new Storage<>(storageDir, persistenceProtoResolver);

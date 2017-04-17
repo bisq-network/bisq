@@ -57,8 +57,6 @@ public class BsqParser {
                         String genesisTxId,
                         Consumer<BsqBlock> newBlockHandler)
             throws BsqBlockchainException, BlockNotConnectingException {
-        long startTs = System.currentTimeMillis();
-        // TODO thread
         for (BsqBlock bsqBlock : bsqBlocks) {
             parseBsqBlock(bsqBlock,
                     genesisBlockHeight,
@@ -66,8 +64,6 @@ public class BsqParser {
             bsqChainState.addBlock(bsqBlock);
             newBlockHandler.accept(bsqBlock);
         }
-        log.info("parseBlocks took {} ms for {} blocks", System.currentTimeMillis() - startTs, bsqBlocks.size());
-
     }
 
     void parseBsqBlock(BsqBlock bsqBlock,

@@ -321,7 +321,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     private void onTradeStateChanged(Trade.State tradeState) {
         Log.traceCall(tradeState.toString());
-        log.info("UI tradeState={}, id={}",
+        log.debug("UI tradeState={}, id={}",
                 tradeState,
                 trade != null ? trade.getShortId() : "trade is null");
         // TODO what is first valid state for trade?
