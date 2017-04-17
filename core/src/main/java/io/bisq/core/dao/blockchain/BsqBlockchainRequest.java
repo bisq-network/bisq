@@ -70,8 +70,6 @@ public class BsqBlockchainRequest {
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                log.error(throwable.toString());
-                throwable.printStackTrace();
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });
@@ -86,8 +84,6 @@ public class BsqBlockchainRequest {
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                log.error(throwable.toString());
-                throwable.printStackTrace();
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });
@@ -102,8 +98,6 @@ public class BsqBlockchainRequest {
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                log.error(throwable.toString());
-                throwable.printStackTrace();
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });
@@ -139,8 +133,6 @@ public class BsqBlockchainRequest {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.error(throwable.toString());
-                throwable.printStackTrace();
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });
@@ -167,8 +159,6 @@ public class BsqBlockchainRequest {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.error(throwable.toString());
-                throwable.printStackTrace();
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });
@@ -207,8 +197,6 @@ public class BsqBlockchainRequest {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.error(throwable.toString());
-                throwable.printStackTrace();
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
         });

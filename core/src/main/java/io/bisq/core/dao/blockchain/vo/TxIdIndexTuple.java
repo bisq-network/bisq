@@ -30,6 +30,6 @@ public class TxIdIndexTuple implements Persistable {
 
     @Override
     public String toString() {
-        return "\n" + txId + ":" + index;
+        return txId + ":" + index;
     }
 }

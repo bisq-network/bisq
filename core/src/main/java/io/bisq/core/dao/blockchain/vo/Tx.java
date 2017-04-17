@@ -32,7 +32,7 @@ public class Tx implements Persistable {
     private final String blockHash;
     private final List<TxInput> inputs;
     private final List<TxOutput> outputs;
-    private final boolean isIssuanceTx;
+    private final boolean isGenesisTx;
     private final String txVersion = Version.BSQ_TX_VERSION;
 
     public Optional<TxOutput> getTxOutput(int index) {
@@ -46,7 +46,7 @@ public class Tx implements Persistable {
                 ",\nblockHash=" + blockHash +
                 ",\ninputs=" + inputs +
                 ",\noutputs=" + outputs +
-                ",\nisIssuanceTx=" + isIssuanceTx +
+                ",\nisGenesisTx=" + isGenesisTx +
                 ",\ntxVersion=" + txVersion +
                 "}\n";
     }

@@ -17,7 +17,6 @@
 
 package io.bisq.core.dao.blockchain;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.proto.PersistenceProtoResolver;
@@ -43,53 +42,25 @@ public abstract class BsqNode {
     // Static fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Modulo of blocks for making snapshots of UTXO.
-    // We stay also the value behind for safety against reorgs.
-    // E.g. for SNAPSHOT_TRIGGER = 30:
-    // If we are block 119 and last snapshot was 60 then we get a new trigger for a snapshot at block 120 and
-    // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after
-    // a restart.
-    // As we only store snapshots when Txos are added it might be that there are bigger gaps than SNAPSHOT_TRIGGER.
-    private static final int SNAPSHOT_GRID = 10;  // set high to deactivate
-
     //mainnet
-    private static final String GENESIS_TX_ID = "cabbf6073aea8f22ec678e973ac30c6d8fc89321011da6a017f63e67b9f66667";
+    // this tx has a lot of outputs
+    // https://blockchain.info/de/tx/ee921650ab3f978881b8fe291e0c025e0da2b7dc684003d7a03d9649dfee2e15
+    // BLOCK_HEIGHT 411779 
+    // 411812 has 693 recursions
+    // MAIN NET
+    private static final String GENESIS_TX_ID = "b26371e2145f52c94b3d30713a9e38305bfc665fc27cd554e794b5e369d99ef5";
+    private static final int GENESIS_BLOCK_HEIGHT = 461718; // 2017-04-13
     // block 300000 2014-05-10
     // block 350000 2015-03-30
     // block 400000 2016-02-25
     // block 450000 2017-01-25
-    private static final int GENESIS_BLOCK_HEIGHT = 400000;
+
+    // REG TEST
     private static final String REG_TEST_GENESIS_TX_ID = "3bc7bc9484e112ec8ddd1a1c984379819245ac463b9ce40fa8b5bf771c0f9236";
     private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 102;
-    private boolean isRegTest;
-
-    @SuppressWarnings("WeakerAccess")
-    protected String getGenesisTxId() {
-        return isRegTest ? REG_TEST_GENESIS_TX_ID : GENESIS_TX_ID;
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    protected int getGenesisBlockHeight() {
-        return isRegTest ? REG_TEST_GENESIS_BLOCK_HEIGHT : GENESIS_BLOCK_HEIGHT;
-    }
-
-    @VisibleForTesting
-    static int getSnapshotHeight(int genesisHeight, int height, int grid) {
-        return Math.round(Math.max(genesisHeight + 3 * grid, height) / grid) * grid - grid;
-    }
-
-    protected int getSnapshotHeight(int height) {
-        return getSnapshotHeight(getGenesisBlockHeight(), height, SNAPSHOT_GRID);
-    }
-
-    @VisibleForTesting
-    static boolean isSnapshotHeight(int genesisHeight, int height, int grid) {
-        return height % grid == 0 && height >= getSnapshotHeight(genesisHeight, height, grid);
-    }
-
-    private boolean isSnapshotHeight(int height) {
-        return isSnapshotHeight(getGenesisBlockHeight(), height, SNAPSHOT_GRID);
-    }
+    // TEST NET
+    private static final String TEST_NET_GENESIS_TX_ID = "";
+    private static final int TEST_NET_GENESIS_BLOCK_HEIGHT = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -106,13 +77,13 @@ public abstract class BsqNode {
     protected final BsqBlockchainRequest bsqBlockchainRequest;
     @SuppressWarnings("WeakerAccess")
     protected final List<BsqChainStateListener> bsqChainStateListeners = new ArrayList<>();
-    private final Storage<BsqChainState> snapshotBsqChainStateStorage;
 
     @Getter
     protected boolean parseBlockchainComplete;
-    private BsqChainState snapshotBsqChainState;
     @SuppressWarnings("WeakerAccess")
     protected boolean p2pNetworkReady;
+
+    transient private Storage<BsqChainState> snapshotBsqChainStateStorage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -134,8 +105,20 @@ public abstract class BsqNode {
         this.bsqParser = bsqParser;
         this.bsqBlockchainRequest = bsqBlockchainRequest;
 
-        isRegTest = bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.REGTEST;
         snapshotBsqChainStateStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        if (bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.MAINNET) {
+            bsqChainState.init(snapshotBsqChainStateStorage,
+                    GENESIS_TX_ID,
+                    GENESIS_BLOCK_HEIGHT);
+        } else if (bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.REGTEST) {
+            bsqChainState.init(snapshotBsqChainStateStorage,
+                    REG_TEST_GENESIS_TX_ID,
+                    REG_TEST_GENESIS_BLOCK_HEIGHT);
+        } else if (bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.TESTNET) {
+            bsqChainState.init(snapshotBsqChainStateStorage,
+                    TEST_NET_GENESIS_TX_ID,
+                    TEST_NET_GENESIS_BLOCK_HEIGHT);
+        }
     }
 
 
@@ -144,11 +127,7 @@ public abstract class BsqNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
-        BsqChainState persistedBsqChainState = snapshotBsqChainStateStorage.initAndGetPersistedWithFileName("BsqChainState");
-        if (persistedBsqChainState != null) {
-            bsqChainState.applyPersisted(persistedBsqChainState);
-            bsqChainStateListeners.stream().forEach(BsqChainStateListener::onBsqChainStateChanged);
-        }
+        applySnapshot();
 
         if (p2PService.isBootstrapped()) {
             onP2PNetworkReady();
@@ -162,6 +141,12 @@ public abstract class BsqNode {
         }
     }
 
+    private void applySnapshot() {
+        BsqChainState persistedBsqChainState = snapshotBsqChainStateStorage.initAndGetPersistedWithFileName("BsqChainState");
+        bsqChainState.applySnapshot(persistedBsqChainState);
+        bsqChainStateListeners.stream().forEach(BsqChainStateListener::onBsqChainStateChanged);
+    }
+
     @SuppressWarnings("WeakerAccess")
     protected void onP2PNetworkReady() {
         p2pNetworkReady = true;
@@ -169,8 +154,8 @@ public abstract class BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     protected void startParseBlocks() {
-        final int genesisBlockHeight = getGenesisBlockHeight();
-        final String genesisTxId = getGenesisTxId();
+        final int genesisBlockHeight = bsqChainState.getGenesisBlockHeight();
+        final String genesisTxId = bsqChainState.getGenesisTxId();
         int startBlockHeight = Math.max(genesisBlockHeight, bsqChainState.getChainHeadHeight() + 1);
         log.info("Parse blocks:\n" +
                         "   Start block height={}\n" +
@@ -195,56 +180,14 @@ public abstract class BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     protected void onNewBsqBlock(BsqBlock bsqBlock) {
-        //log.error("onNewBsqBlock " + bsqBlock.getHeight());
         bsqChainStateListeners.stream().forEach(BsqChainStateListener::onBsqChainStateChanged);
-        maybeMakeSnapshot();
     }
 
     //TODO
     @SuppressWarnings("WeakerAccess")
-    protected void startReOrgFromLastSnapshot(BsqBlock bsqBlock) {
-        log.error("not connection block: bsqBlock.getHeight()={}, bsqBlock.getHash()={}", bsqBlock.getHeight(), bsqBlock.getHash());
-       /* log.warn("We have to do a re-org because a new block did not connected to our chain.");
-        int startBlockHeight = snapshotBsqChainState != null ? snapshotBsqChainState.getChainHeadHeight() : getGenesisBlockHeight();
-        checkArgument(snapshotBsqChainState == null || startBlockHeight >= blockHeight - SNAPSHOT_GRID);
-        bsqBlockchainRequest.requestBlock(startBlockHeight,
-                block -> {
-                    // TODO
-                    if (snapshotBsqChainState != null) {
-                        checkArgument(startBlockHeight <= block.getHeight());
-                        // checkArgument(block.getHash().equals(snapshotBsqBlockChain.getBlockHash()));
-                        // applyNewTxOutputMap(snapshotBsqBlockChain);
-                    } else {
-                        // applyNewTxOutputMap(new BsqBlockChain());
-                    }
-                    parseBlocks(startBlockHeight,
-                            getGenesisBlockHeight(),
-                            getGenesisTxId());
-                }, throwable -> {
-                    log.error(throwable.toString());
-                    throwable.printStackTrace();
-                });*/
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    protected void maybeMakeSnapshot() {
-        // We might have got updates in the bsqChainState by another thread.
-        // We get called on UserThread.execute so we are slower...
-        final int chainHeadHeight = bsqChainState.getChainHeadHeight();
-        if (isSnapshotHeight(chainHeadHeight) &&
-                (snapshotBsqChainState == null ||
-                        snapshotBsqChainState.getChainHeadHeight() != chainHeadHeight)) {
-            // At trigger time we store the last memory stored map to disc
-            if (snapshotBsqChainState != null) {
-                // We clone because storage is in a threaded context
-                BsqChainState cloned = BsqChainState.getClone(snapshotBsqChainState);
-                snapshotBsqChainStateStorage.queueUpForSave(cloned);
-                log.debug("Saved snapshotBsqChainState to Disc at height " + cloned.getChainHeadHeight());
-            }
-
-            // Now we save the map in memory for the next trigger
-            snapshotBsqChainState = BsqChainState.getClone(bsqChainState);
-        }
+    protected void startReOrgFromLastSnapshot() {
+        applySnapshot();
+        startParseBlocks();
     }
 
     public void addBsqChainStateListener(BsqChainStateListener bsqChainStateListener) {

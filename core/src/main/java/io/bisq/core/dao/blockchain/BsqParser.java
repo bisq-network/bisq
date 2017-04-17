@@ -91,6 +91,7 @@ public class BsqParser {
             throws BsqBlockchainException, BlockNotConnectingException {
         try {
             for (int blockHeight = startBlockHeight; blockHeight <= chainHeadHeight; blockHeight++) {
+                long startTs = System.currentTimeMillis();
                 Block btcdBlock = bsqBlockchainService.requestBlock(blockHeight);
                 List<Tx> bsqTxsInBlock = findBsqTxsInBlock(btcdBlock,
                         genesisBlockHeight,
@@ -102,6 +103,8 @@ public class BsqParser {
 
                 bsqChainState.addBlock(bsqBlock);
                 newBlockHandler.accept(bsqBlock);
+                log.debug("parseBlock took {} ms at blockHeight {}; bsqTxsInBlock.size={}",
+                        System.currentTimeMillis() - startTs, blockHeight, bsqTxsInBlock.size());
             }
         } catch (BlockNotConnectingException e) {
             throw e;
@@ -213,7 +216,7 @@ public class BsqParser {
         // those dont exceed 200 recursions and are mostly old blocks from 2012 when fees have been low ;-).
         // TODO check strategy btc core uses (sorting the dependency graph would be an optimisation)
         // Seems btc core delivers tx list sorted by dependency graph. -> TODO verify and test
-        if (recursionCounter > 100) {
+        if (recursionCounter > 1000) {
             log.warn("Unusual high recursive calls at resolveConnectedTxs. recursionCounter=" + recursionCounter);
             log.warn("blockHeight=" + blockHeight);
             log.warn("txsWithoutInputsFromSameBlock.size " + txsWithoutInputsFromSameBlock.size());

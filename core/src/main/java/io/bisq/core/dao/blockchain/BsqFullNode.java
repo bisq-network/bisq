@@ -122,7 +122,7 @@ public class BsqFullNode extends BsqNode {
                                 genesisTxId);
                     }, throwable -> {
                         if (throwable instanceof BlockNotConnectingException) {
-                            startReOrgFromLastSnapshot(((BlockNotConnectingException) throwable).getBlock());
+                            startReOrgFromLastSnapshot();
                         } else {
                             log.error(throwable.toString());
                             throwable.printStackTrace();
@@ -145,7 +145,7 @@ public class BsqFullNode extends BsqNode {
                     this::onNewBsqBlock,
                     throwable -> {
                         if (throwable instanceof BlockNotConnectingException) {
-                            startReOrgFromLastSnapshot(((BlockNotConnectingException) throwable).getBlock());
+                            startReOrgFromLastSnapshot();
                         } else {
                             log.error(throwable.toString());
                             throwable.printStackTrace();
@@ -156,6 +156,7 @@ public class BsqFullNode extends BsqNode {
         p2PService.getNetworkNode().addMessageListener(this::onMessage);
     }
 
+    // TODO use handler class
     private void onMessage(Msg msg, Connection connection) {
         if (msg instanceof GetBsqBlocksRequest && connection.getPeersNodeAddressOptional().isPresent()) {
             GetBsqBlocksRequest getBsqBlocksRequest = (GetBsqBlocksRequest) msg;

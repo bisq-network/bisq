@@ -97,6 +97,7 @@ public class BsqLiteNode extends BsqNode {
 
     @Override
     protected void parseBlocks(int startBlockHeight, int genesisBlockHeight, String genesisTxId, Integer chainHeadHeight) {
+        // TODO use handler class
         //RequestBsqBlocksHandler requestBsqBlocksHandler = new RequestBsqBlocksHandler(p2PService.getNetworkNode());
         NodeAddress peersNodeAddress = p2PService.getSeedNodeAddresses().stream().findFirst().get();
 
@@ -129,6 +130,7 @@ public class BsqLiteNode extends BsqNode {
         });*/
     }
 
+    // TODO use handler class
     private void onMessage(Msg msg, Connection connection) {
         if (msg instanceof GetBsqBlocksResponse && connection.getPeersNodeAddressOptional().isPresent()) {
             GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) msg;
@@ -136,14 +138,14 @@ public class BsqLiteNode extends BsqNode {
             List<BsqBlock> bsqBlockList = Utilities.<ArrayList<BsqBlock>>deserialize(bsqBlocksBytes);
             log.debug("received msg with {} items", bsqBlockList.size());
             bsqBlockchainRequest.parseBsqBlocks(bsqBlockList,
-                    getGenesisBlockHeight(),
-                    getGenesisTxId(),
+                    bsqChainState.getGenesisBlockHeight(),
+                    bsqChainState.getGenesisTxId(),
                     this::onNewBsqBlock,
                     () -> {
-                        onParseBlockchainComplete(getGenesisBlockHeight(), getGenesisTxId());
+                        onParseBlockchainComplete(bsqChainState.getGenesisBlockHeight(), bsqChainState.getGenesisTxId());
                     }, throwable -> {
                         if (throwable instanceof BlockNotConnectingException) {
-                            startReOrgFromLastSnapshot(((BlockNotConnectingException) throwable).getBlock());
+                            startReOrgFromLastSnapshot();
                         } else {
                             log.error(throwable.toString());
                             throwable.printStackTrace();
@@ -154,12 +156,14 @@ public class BsqLiteNode extends BsqNode {
             byte[] bsqBlockBytes = newBsqBlockBroadcastMsg.getBsqBlockBytes();
             BsqBlock bsqBlock = Utilities.<BsqBlock>deserialize(bsqBlockBytes);
             log.debug("received broadcastNewBsqBlock bsqBlock {}", bsqBlock);
-            try {
-                bsqParser.parseBsqBlock(bsqBlock, getGenesisBlockHeight(), getGenesisTxId());
-                bsqChainState.addBlock(bsqBlock);
-                onNewBsqBlock(bsqBlock);
-            } catch (BlockNotConnectingException e) {
-                e.printStackTrace();
+            if (!bsqChainState.containsBlock(bsqBlock)) {
+                try {
+                    bsqParser.parseBsqBlock(bsqBlock, bsqChainState.getGenesisBlockHeight(), bsqChainState.getGenesisTxId());
+                    bsqChainState.addBlock(bsqBlock);
+                    onNewBsqBlock(bsqBlock);
+                } catch (BlockNotConnectingException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -167,10 +171,7 @@ public class BsqLiteNode extends BsqNode {
     @Override
     protected void onParseBlockchainComplete(int genesisBlockHeight, String genesisTxId) {
         parseBlockchainComplete = true;
-
         bsqChainStateListeners.stream().forEach(BsqChainStateListener::onBsqChainStateChanged);
-        if (bsqChainState.getChainHead().isPresent())
-            maybeMakeSnapshot();
     }
 
     @Override

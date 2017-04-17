@@ -29,8 +29,6 @@ import io.bisq.core.dao.blockchain.vo.TxOutput;
 
 import javax.inject.Named;
 import java.io.File;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class JsonExporter {
     private final Storage<PlainTextWrapper> jsonStorage;
@@ -48,20 +46,23 @@ public class JsonExporter {
         this.jsonStorage = jsonStorage;
         this.dumpBlockchainData = dumpBlockchainData;
 
-        if (dumpBlockchainData) 
-            this.jsonStorage.initWithFileName("txo.json");
+        if (dumpBlockchainData)
+            this.jsonStorage.initWithFileName("bsqChainState.json");
     }
 
     public void maybeExport() {
         if (dumpBlockchainData) {
-            List<TxOutputForJson> list = bsqChainState.getVerifiedTxOutputSet().stream()
+          /*  List<TxOutputForJson> list = bsqChainState.getVerifiedTxOutputSet().stream()
                     .map(this::getTxOutputForJson)
                     .collect(Collectors.toList());
 
             list.sort((o1, o2) -> (o1.getSortData().compareTo(o2.getSortData())));
             TxOutputForJson[] array = new TxOutputForJson[list.size()];
-            list.toArray(array);
-            jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(array)), 5000);
+            list.toArray(array);*/
+            //jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(array)), 5000);
+
+
+            jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(BsqChainState.getClone(bsqChainState))), 5000);
 
             // keep the individual file storage option as code as we dont know yet what we will use.
       /*  log.error("txOutputForJson " + txOutputForJson);

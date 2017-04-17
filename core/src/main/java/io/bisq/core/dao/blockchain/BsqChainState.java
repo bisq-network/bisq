@@ -17,7 +17,9 @@
 
 package io.bisq.core.dao.blockchain;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.bisq.common.persistence.Persistable;
+import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
@@ -25,6 +27,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -44,15 +47,37 @@ public class BsqChainState implements Persistable {
         return Utilities.<BsqChainState>deserialize(Utilities.serialize(bsqChainState));
     }
 
+    // Modulo of blocks for making snapshots of UTXO.
+    // We stay also the value behind for safety against reorgs.
+    // E.g. for SNAPSHOT_TRIGGER = 30:
+    // If we are block 119 and last snapshot was 60 then we get a new trigger for a snapshot at block 120 and
+    // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after
+    // a restart.
+    // As we only store snapshots when Txos are added it might be that there are bigger gaps than SNAPSHOT_TRIGGER.
+    private static final int SNAPSHOT_GRID = 10;  // set high to deactivate
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Persisted data
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Getter
     private final LinkedList<BsqBlock> blocks = new LinkedList<>();
-    private final Map<TxIdIndexTuple, SpentInfo> spentInfoByTxOutputMap = new HashMap<>();
+    private final Map<String, Tx> txMap = new HashMap<>();
     private final Set<TxOutput> verifiedTxOutputSet = new HashSet<>();
+    private final Map<TxIdIndexTuple, SpentInfo> spentInfoByTxOutputMap = new HashMap<>();
     private final Map<String, Long> burnedFeeByTxIdMap = new HashMap<>();
+
+    private final AtomicReference<String> genesisTxId = new AtomicReference<>();
+    private final AtomicReference<Integer> chainHeadHeight = new AtomicReference<>(0);
+
+    private final AtomicReference<Integer> genesisBlockHeight = new AtomicReference<>(-1);
     private final AtomicReference<Tx> genesisTx = new AtomicReference<>();
 
-    transient private final Map<String, Tx> txMap = new HashMap<>();
-    
+    // transient 
+    transient private BsqChainState snapshotCandidate;
+    transient private Storage<BsqChainState> snapshotBsqChainStateStorage;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -63,54 +88,87 @@ public class BsqChainState implements Persistable {
     public BsqChainState() {
     }
 
-    public void applyPersisted(BsqChainState persistedBsqChainState) {
-        synchronized (BsqChainState.this) {
-            blocks.addAll(persistedBsqChainState.blocks);
-            blocks.stream().flatMap(bsqBlock -> bsqBlock.getTxs().stream()).forEach(this::addTx);
-            spentInfoByTxOutputMap.putAll(persistedBsqChainState.spentInfoByTxOutputMap);
-            verifiedTxOutputSet.addAll(persistedBsqChainState.verifiedTxOutputSet);
-            burnedFeeByTxIdMap.putAll(persistedBsqChainState.burnedFeeByTxIdMap);
-            genesisTx.set(persistedBsqChainState.genesisTx.get());
-
-            // printDetails();
-        }
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Write access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public synchronized void addBlock(BsqBlock block) throws BlockNotConnectingException {
-        if (blocks.isEmpty() || (blocks.getLast().getHash().equals(block.getPreviousBlockHash()) &&
-                blocks.getLast().getHeight() == block.getHeight() - 1)) {
-            blocks.add(block);
-            block.getTxs().stream().forEach(this::addTx);
+
+    synchronized void init(Storage<BsqChainState> snapshotBsqChainStateStorage, String genesisTxId, int genesisBlockHeight) {
+        this.snapshotBsqChainStateStorage = snapshotBsqChainStateStorage;
+        this.genesisTxId.set(genesisTxId);
+        this.genesisBlockHeight.set(genesisBlockHeight);
+    }
+
+    void applySnapshot(@Nullable BsqChainState snapshot) {
+        synchronized (BsqChainState.this) {
+            blocks.clear();
+            txMap.clear();
+            verifiedTxOutputSet.clear();
+            spentInfoByTxOutputMap.clear();
+            burnedFeeByTxIdMap.clear();
+
+            chainHeadHeight.set(0);
+            genesisTx.set(null);
+
+            if (snapshot != null) {
+                blocks.addAll(snapshot.blocks);
+                txMap.putAll(snapshot.txMap);
+                verifiedTxOutputSet.addAll(snapshot.verifiedTxOutputSet);
+                spentInfoByTxOutputMap.putAll(snapshot.spentInfoByTxOutputMap);
+                burnedFeeByTxIdMap.putAll(snapshot.burnedFeeByTxIdMap);
+
+                chainHeadHeight.set(snapshot.chainHeadHeight.get());
+                genesisTx.set(snapshot.genesisTx.get());
+
+                genesisTxId.set(snapshot.genesisTxId.get());
+                genesisBlockHeight.set(snapshot.genesisBlockHeight.get());
+            }
+
+
             // printDetails();
-        } else {
-            log.warn("addBlock called with a not connecting block:\n" +
-                            "height()={}, hash()={}, head.height()={}, head.hash()={}",
-                    block.getHeight(), block.getHash(), blocks.getLast().getHeight(), blocks.getLast().getHash());
-            throw new BlockNotConnectingException(block);
         }
     }
 
-    public void addTx(Tx tx) {
+    synchronized void addBlock(BsqBlock block) throws BlockNotConnectingException {
+        if (!blocks.contains(block)) {
+            // TODO
+            // final int i = new Random().nextInt(1000);
+            if (blocks.isEmpty() || (/*i != 1 &&*/ blocks.getLast().getHash().equals(block.getPreviousBlockHash()) &&
+                    block.getHeight() == blocks.getLast().getHeight() + 1)) {
+                blocks.add(block);
+                block.getTxs().stream().forEach(this::addTx);
+                chainHeadHeight.set(block.getHeight());
+                //printDetails();
+                maybeMakeSnapshot();
+            } else if (!blocks.isEmpty()) {
+                log.warn("addBlock called with a not connecting block:\n" +
+                                "height()={}, hash()={}, head.height()={}, head.hash()={}",
+                        block.getHeight(), block.getHash(), blocks.getLast().getHeight(), blocks.getLast().getHash());
+                throw new BlockNotConnectingException(block);
+            }
+        } else {
+            log.trace("We got that block already");
+        }
+    }
+
+    void addTx(Tx tx) {
         txMap.put(tx.getId(), tx);
     }
 
-    public void addSpentTxWithSpentInfo(TxOutput spentTxOutput, SpentInfo spentInfo) {
+    void addSpentTxWithSpentInfo(TxOutput spentTxOutput, SpentInfo spentInfo) {
         spentInfoByTxOutputMap.put(spentTxOutput.getTxIdIndexTuple(), spentInfo);
     }
 
-    public void setGenesisTx(Tx tx) {
+    void setGenesisTx(Tx tx) {
         genesisTx.set(tx);
     }
 
-    public void addVerifiedTxOutput(TxOutput txOutput) {
+    void addVerifiedTxOutput(TxOutput txOutput) {
         verifiedTxOutputSet.add(txOutput);
     }
 
-    public void addBurnedFee(String txId, long burnedFee) {
+    void addBurnedFee(String txId, long burnedFee) {
         burnedFeeByTxIdMap.put(txId, burnedFee);
     }
 
@@ -119,13 +177,9 @@ public class BsqChainState implements Persistable {
     // Read access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Optional<Tx> getTx(String txId) {
-        return txMap.get(txId) != null ? Optional.of(txMap.get(txId)) : Optional.<Tx>empty();
-    }
-
-    private boolean isVerifiedTxOutput(TxOutput txOutput) {
-        return verifiedTxOutputSet.contains(txOutput);
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isTxOutputSpendable(String txId, int index) {
         return getSpendableTxOutput(txId, index).isPresent();
@@ -139,8 +193,12 @@ public class BsqChainState implements Persistable {
         return getTx(txId).isPresent();
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     // TODO use a map for keeping spendable in cache
-    public Optional<TxOutput> getSpendableTxOutput(String txId, int index) {
+    Optional<TxOutput> getSpendableTxOutput(String txId, int index) {
         final Optional<TxOutput> txOutputOptional = findTxOutput(txId, index);
         if (txOutputOptional.isPresent() &&
                 isVerifiedTxOutput(txOutputOptional.get()) &&
@@ -151,51 +209,63 @@ public class BsqChainState implements Persistable {
         }
     }
 
-    public int getChainHeadHeight() {
-        return !blocks.isEmpty() ? blocks.get(blocks.size() - 1).getHeight() : 0;
+    int getChainHeadHeight() {
+        return chainHeadHeight.get();
     }
 
-    public Optional<BsqBlock> getChainHead() {
-        return !blocks.isEmpty() ? Optional.of(blocks.get(blocks.size() - 1)) : Optional.<BsqBlock>empty();
-    }
-
-    private Optional<TxOutput> findTxOutput(String txId, int index) {
-        return getTx(txId).flatMap(e -> e.getTxOutput(index));
-    }
-
-    public boolean isBlockConnecting(String previousBlockHash) {
-        if (blocks.isEmpty()) {
-            return true;
-        } else {
-            synchronized (blocks) {
-                final String tipHash = blocks.get(blocks.size() - 1).getHash();
-                boolean isBlockConnecting = tipHash.equals(previousBlockHash);
-                if (!isBlockConnecting)
-                    log.error("new block is not connecting: tipHash={}, previousBlockHash={}", tipHash, previousBlockHash);
-                return isBlockConnecting;
-            }
-        }
-    }
-
-    public boolean containsBlock(BsqBlock bsqBlock) {
+    boolean containsBlock(BsqBlock bsqBlock) {
         return blocks.contains(bsqBlock);
     }
 
-    public Set<TxOutput> getVerifiedTxOutputSet() {
-        return verifiedTxOutputSet;
-    }
-
-    public List<BsqBlock> getBlocksFrom(int fromBlockHeight) {
+    List<BsqBlock> getBlocksFrom(int fromBlockHeight) {
         return blocks.stream()
                 .filter(block -> block.getHeight() >= fromBlockHeight)
                 .sorted((o1, o2) -> new Integer(o1.getHeight()).compareTo(o2.getHeight()))
                 .collect(Collectors.toList());
     }
 
+    int getGenesisBlockHeight() {
+        return genesisBlockHeight.get();
+    }
+
+    String getGenesisTxId() {
+        return genesisTxId.get();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
+    // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void maybeMakeSnapshot() {
+        if (isSnapshotHeight(chainHeadHeight.get()) &&
+                (snapshotCandidate == null ||
+                        snapshotCandidate.getChainHeadHeight() != chainHeadHeight.get())) {
+            // At trigger event we store the latest snapshotCandidate to disc
+            if (snapshotCandidate != null) {
+                // We clone because storage is in a threaded context
+                final BsqChainState cloned = BsqChainState.getClone(snapshotCandidate);
+                snapshotBsqChainStateStorage.queueUpForSave(cloned);
+                log.info("Saved snapshotCandidate to Disc at height " + cloned.getChainHeadHeight());
+            }
+
+            // Now we clone and keep it in memory for the next trigger
+            snapshotCandidate = BsqChainState.getClone(this);
+            log.debug("Cloned new snapshotCandidate at height " + snapshotCandidate.getChainHeadHeight());
+        }
+    }
+
+    private Optional<Tx> getTx(String txId) {
+        return txMap.get(txId) != null ? Optional.of(txMap.get(txId)) : Optional.<Tx>empty();
+    }
+
+    private boolean isVerifiedTxOutput(TxOutput txOutput) {
+        return verifiedTxOutputSet.contains(txOutput);
+    }
+
+    private Optional<TxOutput> findTxOutput(String txId, int index) {
+        return getTx(txId).flatMap(e -> e.getTxOutput(index));
+    }
 
     private void printDetails() {
         log.info("\nchainHeadHeight={}\nblocks.size={}\ntxMap.size={}\nverifiedTxOutputSet.size={}\n" +
@@ -208,5 +278,25 @@ public class BsqChainState implements Persistable {
                 burnedFeeByTxIdMap.size(),
                 Utilities.serialize(blocks.toArray()).length / 1000d);
     }
+
+    @VisibleForTesting
+    static int getSnapshotHeight(int genesisHeight, int height, int grid) {
+        return Math.round(Math.max(genesisHeight + 3 * grid, height) / grid) * grid - grid;
+    }
+
+    protected int getSnapshotHeight(int height) {
+        return getSnapshotHeight(getGenesisBlockHeight(), height, SNAPSHOT_GRID);
+    }
+
+    @VisibleForTesting
+    static boolean isSnapshotHeight(int genesisHeight, int height, int grid) {
+        return height % grid == 0 && height >= getSnapshotHeight(genesisHeight, height, grid);
+    }
+
+    private boolean isSnapshotHeight(int height) {
+        return isSnapshotHeight(getGenesisBlockHeight(), height, SNAPSHOT_GRID);
+    }
+
+
 }
 
