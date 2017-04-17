@@ -48,4 +48,8 @@ public class BsqBlockchainManager {
     public boolean isParseBlockchainComplete() {
         return bsqNode.isParseBlockchainComplete();
     }
+
+    public void removeBsqChainStateListener(BsqChainStateListener bsqChainStateListener) {
+        bsqNode.removeBsqChainStateListener(bsqChainStateListener);
+    }
 }

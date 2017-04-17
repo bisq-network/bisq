@@ -193,4 +193,8 @@ public abstract class BsqNode {
     public void addBsqChainStateListener(BsqChainStateListener bsqChainStateListener) {
         bsqChainStateListeners.add(bsqChainStateListener);
     }
+
+    public void removeBsqChainStateListener(BsqChainStateListener bsqChainStateListener) {
+        bsqChainStateListeners.remove(bsqChainStateListener);
+    }
 }

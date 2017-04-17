@@ -24,19 +24,18 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 // Represents mutable state of BSQ chain data
 // We get accessed the data from non-UserThread context, so we need to handle threading here.
 @Slf4j
-@ToString
 public class BsqChainState implements Persistable {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +53,7 @@ public class BsqChainState implements Persistable {
     // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after
     // a restart.
     // As we only store snapshots when Txos are added it might be that there are bigger gaps than SNAPSHOT_TRIGGER.
-    private static final int SNAPSHOT_GRID = 10;  // set high to deactivate
+    private static final int SNAPSHOT_GRID = 100;  // set high to deactivate
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -68,12 +67,14 @@ public class BsqChainState implements Persistable {
     private final Map<TxIdIndexTuple, SpentInfo> spentInfoByTxOutputMap = new HashMap<>();
     private final Map<String, Long> burnedFeeByTxIdMap = new HashMap<>();
 
-    private final AtomicReference<String> genesisTxId = new AtomicReference<>();
-    private final AtomicReference<Integer> chainHeadHeight = new AtomicReference<>(0);
+    private final AtomicInteger chainHeadHeight = new AtomicInteger(0);
+    private final AtomicReference<Tx> genesisTx = new AtomicReference<>(null);
 
-    private final AtomicReference<Integer> genesisBlockHeight = new AtomicReference<>(-1);
-    private final AtomicReference<Tx> genesisTx = new AtomicReference<>();
-
+    @Getter
+    private String genesisTxId = "";
+    @Getter
+    private int genesisBlockHeight = -1;
+    
     // transient 
     transient private BsqChainState snapshotCandidate;
     transient private Storage<BsqChainState> snapshotBsqChainStateStorage;
@@ -94,10 +95,10 @@ public class BsqChainState implements Persistable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    synchronized void init(Storage<BsqChainState> snapshotBsqChainStateStorage, String genesisTxId, int genesisBlockHeight) {
+    void init(Storage<BsqChainState> snapshotBsqChainStateStorage, String genesisTxId, int genesisBlockHeight) {
         this.snapshotBsqChainStateStorage = snapshotBsqChainStateStorage;
-        this.genesisTxId.set(genesisTxId);
-        this.genesisBlockHeight.set(genesisBlockHeight);
+        this.genesisTxId = genesisTxId;
+        this.genesisBlockHeight = genesisBlockHeight;
     }
 
     void applySnapshot(@Nullable BsqChainState snapshot) {
@@ -117,14 +118,9 @@ public class BsqChainState implements Persistable {
                 verifiedTxOutputSet.addAll(snapshot.verifiedTxOutputSet);
                 spentInfoByTxOutputMap.putAll(snapshot.spentInfoByTxOutputMap);
                 burnedFeeByTxIdMap.putAll(snapshot.burnedFeeByTxIdMap);
-
                 chainHeadHeight.set(snapshot.chainHeadHeight.get());
                 genesisTx.set(snapshot.genesisTx.get());
-
-                genesisTxId.set(snapshot.genesisTxId.get());
-                genesisBlockHeight.set(snapshot.genesisBlockHeight.get());
             }
-
 
             // printDetails();
         }
@@ -132,15 +128,13 @@ public class BsqChainState implements Persistable {
 
     synchronized void addBlock(BsqBlock block) throws BlockNotConnectingException {
         if (!blocks.contains(block)) {
-            // TODO
-            // final int i = new Random().nextInt(1000);
-            if (blocks.isEmpty() || (/*i != 1 &&*/ blocks.getLast().getHash().equals(block.getPreviousBlockHash()) &&
+            if (blocks.isEmpty() || (blocks.getLast().getHash().equals(block.getPreviousBlockHash()) &&
                     block.getHeight() == blocks.getLast().getHeight() + 1)) {
                 blocks.add(block);
                 block.getTxs().stream().forEach(this::addTx);
                 chainHeadHeight.set(block.getHeight());
-                //printDetails();
                 maybeMakeSnapshot();
+                //printDetails();
             } else if (!blocks.isEmpty()) {
                 log.warn("addBlock called with a not connecting block:\n" +
                                 "height()={}, hash()={}, head.height()={}, head.hash()={}",
@@ -193,6 +187,10 @@ public class BsqChainState implements Persistable {
         return getTx(txId).isPresent();
     }
 
+    public int getChainHeadHeight() {
+        return chainHeadHeight.get();
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -209,10 +207,6 @@ public class BsqChainState implements Persistable {
         }
     }
 
-    int getChainHeadHeight() {
-        return chainHeadHeight.get();
-    }
-
     boolean containsBlock(BsqBlock bsqBlock) {
         return blocks.contains(bsqBlock);
     }
@@ -222,14 +216,6 @@ public class BsqChainState implements Persistable {
                 .filter(block -> block.getHeight() >= fromBlockHeight)
                 .sorted((o1, o2) -> new Integer(o1.getHeight()).compareTo(o2.getHeight()))
                 .collect(Collectors.toList());
-    }
-
-    int getGenesisBlockHeight() {
-        return genesisBlockHeight.get();
-    }
-
-    String getGenesisTxId() {
-        return genesisTxId.get();
     }
 
 
@@ -296,7 +282,5 @@ public class BsqChainState implements Persistable {
     private boolean isSnapshotHeight(int height) {
         return isSnapshotHeight(getGenesisBlockHeight(), height, SNAPSHOT_GRID);
     }
-
-
 }
 

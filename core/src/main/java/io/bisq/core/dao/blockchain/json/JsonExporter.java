@@ -20,7 +20,6 @@ package io.bisq.core.dao.blockchain.json;
 import com.google.inject.Inject;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
-import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.RpcOptionKeys;
 import io.bisq.core.dao.blockchain.BsqChainState;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
@@ -62,7 +61,9 @@ public class JsonExporter {
             //jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(array)), 5000);
 
 
-            jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(BsqChainState.getClone(bsqChainState))), 5000);
+            final BsqChainState clone = BsqChainState.getClone(bsqChainState);
+            // TODO use thread
+            // jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(clone)), 5000);
 
             // keep the individual file storage option as code as we dont know yet what we will use.
       /*  log.error("txOutputForJson " + txOutputForJson);
