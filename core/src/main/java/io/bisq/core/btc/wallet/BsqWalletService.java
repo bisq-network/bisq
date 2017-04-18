@@ -23,6 +23,7 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
+import io.bisq.core.dao.blockchain.BsqChainState;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import javafx.collections.FXCollections;
@@ -48,8 +49,8 @@ import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 @Slf4j
 public class BsqWalletService extends WalletService {
 
-    private final BsqBlockchainManager bsqBlockchainManager;
     private final BsqCoinSelector bsqCoinSelector;
+    private BsqChainState bsqChainState;
     @Getter
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
@@ -63,6 +64,8 @@ public class BsqWalletService extends WalletService {
 
     @Inject
     public BsqWalletService(WalletsSetup walletsSetup,
+                            BsqCoinSelector bsqCoinSelector,
+                            BsqChainState bsqChainState,
                             BsqBlockchainManager bsqBlockchainManager,
                             Preferences preferences,
                             FeeService feeService) {
@@ -70,8 +73,8 @@ public class BsqWalletService extends WalletService {
                 preferences,
                 feeService);
 
-        this.bsqBlockchainManager = bsqBlockchainManager;
-        this.bsqCoinSelector = new BsqCoinSelector(true);
+        this.bsqCoinSelector = bsqCoinSelector;
+        this.bsqChainState = bsqChainState;
 
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getBsqWallet();
@@ -118,8 +121,7 @@ public class BsqWalletService extends WalletService {
             });
         });
 
-        bsqBlockchainManager.addTxOutputMapListener(bsqTxoMap -> {
-            bsqCoinSelector.setTxoMap(bsqTxoMap);
+        bsqBlockchainManager.addBsqChainStateListener(() -> {
             updateBsqWalletTransactions();
             updateBsqBalance();
         });
@@ -157,7 +159,7 @@ public class BsqWalletService extends WalletService {
                 })
                 .mapToLong(out -> out.getValue().value).sum());
 
-        bsqBalanceListeners.stream().forEach(e -> e.updateAvailableBalance(availableBsqBalance));
+        bsqBalanceListeners.stream().forEach(e -> e.updateAvailableBalance(availableBsqBalance, unverifiedBalance));
     }
 
     @Override
@@ -189,17 +191,8 @@ public class BsqWalletService extends WalletService {
 
     private Set<Transaction> getBsqWalletTransactions() {
         return getTransactions(false).stream()
-                .flatMap(tx -> tx.getOutputs().stream())
-                .filter(out -> {
-                    final Transaction parentTx = out.getParentTransaction();
-                    if (parentTx == null)
-                        return false;
-                    final boolean isPending = parentTx.getConfidence().getConfidenceType() == PENDING;
-                    final boolean isMine = out.isMine(wallet);
-                    return (isPending && isMine) ||
-                            bsqBlockchainManager.getTxOutputMap() != null && bsqBlockchainManager.getTxOutputMap().contains(parentTx.getHashAsString(), out.getIndex());
-                })
-                .map(TransactionOutput::getParentTransaction)
+                .filter(transaction -> transaction.getConfidence().getConfidenceType() == PENDING ||
+                        bsqChainState.containsTx(transaction.getHashAsString()))
                 .collect(Collectors.toSet());
     }
 

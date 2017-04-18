@@ -17,51 +17,75 @@
 
 package io.bisq.core.dao.blockchain.json;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.inject.Inject;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.RpcOptionKeys;
-import io.bisq.core.dao.blockchain.SpendInfo;
-import io.bisq.core.dao.blockchain.TxOutput;
-import io.bisq.core.dao.blockchain.TxOutputMap;
+import io.bisq.core.dao.blockchain.BsqChainState;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
+import io.bisq.core.dao.blockchain.vo.SpentInfo;
+import io.bisq.core.dao.blockchain.vo.TxOutput;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Named;
 import java.io.File;
-import java.util.List;
-import java.util.stream.Collectors;
 
+@Slf4j
 public class JsonExporter {
     private final Storage<PlainTextWrapper> jsonStorage;
-    private boolean dumpBlockchainData;
+    private final boolean dumpBlockchainData;
+    private final BsqChainState bsqChainState;
     private final File storageDir;
+    private final ListeningExecutorService executor = Utilities.getListeningExecutorService("JsonExporter", 1, 1, 1200);
 
     @Inject
     public JsonExporter(Storage<PlainTextWrapper> jsonStorage,
-                        @Named(Storage.DIR_KEY) File storageDir,
+                        BsqChainState bsqChainState,
+                        @Named(Storage.STORAGE_DIR) File storageDir,
                         @Named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
+        this.bsqChainState = bsqChainState;
         this.storageDir = storageDir;
         this.jsonStorage = jsonStorage;
         this.dumpBlockchainData = dumpBlockchainData;
+
+        if (dumpBlockchainData)
+            this.jsonStorage.initWithFileName("bsqChainState.json");
     }
 
-    public void init(@Named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
+    public void maybeExport() {
         if (dumpBlockchainData) {
-            this.jsonStorage.initWithFileName("txo.json");
-        }
-    }
-
-    public void export(TxOutputMap txOutputMap) {
-        if (dumpBlockchainData) {
-            List<TxOutputForJson> list = txOutputMap.getMap().values().stream()
+          /*  List<TxOutputForJson> list = bsqChainState.getVerifiedTxOutputSet().stream()
                     .map(this::getTxOutputForJson)
                     .collect(Collectors.toList());
 
             list.sort((o1, o2) -> (o1.getSortData().compareTo(o2.getSortData())));
             TxOutputForJson[] array = new TxOutputForJson[list.size()];
-            list.toArray(array);
-            jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(array)), 5000);
+            list.toArray(array);*/
+            //jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(array)), 5000);
+
+            ListenableFuture<Void> future = executor.submit(() -> {
+                final BsqChainState clone = BsqChainState.getClone(bsqChainState);
+                jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(clone)), 5000);
+                return null;
+            });
+
+            Futures.addCallback(future, new FutureCallback<Void>() {
+                public void onSuccess(Void ignore) {
+                    log.trace("onSuccess");
+                }
+
+                public void onFailure(@NotNull Throwable throwable) {
+                    log.error(throwable.toString());
+                    throwable.printStackTrace();
+                }
+            });
+
 
             // keep the individual file storage option as code as we dont know yet what we will use.
       /*  log.error("txOutputForJson " + txOutputForJson);
@@ -83,10 +107,17 @@ public class JsonExporter {
         int outputIndex = txOutput.getIndex();
         final long bsqAmount = txOutput.getValue();
         final int height = txOutput.getBlockHeight();
-        final boolean isBsqCoinBase = txOutput.isBsqCoinBase();
+        
+       /* final boolean isBsqCoinBase = txOutput.isIssuanceOutput();
         final boolean verified = txOutput.isVerified();
         final long burnedFee = txOutput.getBurnedFee();
-        final long btcTxFee = txOutput.getBtcTxFee();
+        final long btcTxFee = txOutput.getBtcTxFee();*/
+
+        // TODO
+        final boolean isBsqCoinBase = false;
+        final boolean verified = true;
+        final long burnedFee = 0;
+        final long btcTxFee = 0;
 
         PubKeyScript pubKeyScript = txOutput.getPubKeyScript();
         final ScriptPubKeyForJson scriptPubKey = new ScriptPubKeyForJson(pubKeyScript.getAddresses(),
@@ -95,14 +126,15 @@ public class JsonExporter {
                 pubKeyScript.getReqSigs(),
                 pubKeyScript.getType().toString());
         SpentInfoForJson spentInfoJson = null;
-        SpendInfo spendInfo = txOutput.getSpendInfo();
-        if (spendInfo != null)
-            spentInfoJson = new SpentInfoForJson(spendInfo.getBlockHeight(),
-                    spendInfo.getInputIndex(),
-                    spendInfo.getTxId());
+        // SpentInfo spentInfo = txOutput.getSpentInfo();
+        SpentInfo spentInfo = null;
+        if (spentInfo != null)
+            spentInfoJson = new SpentInfoForJson(spentInfo.getBlockHeight(),
+                    spentInfo.getInputIndex(),
+                    spentInfo.getTxId());
 
         final long time = txOutput.getTime();
-        final String txVersion = txOutput.getTxVersion();
+        final String txVersion = "";//txOutput.getTxVersion();
         return new TxOutputForJson(txId,
                 outputIndex,
                 bsqAmount,

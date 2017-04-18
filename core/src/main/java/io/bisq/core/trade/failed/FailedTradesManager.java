@@ -41,7 +41,7 @@ public class FailedTradesManager {
     @Inject
     public FailedTradesManager(KeyRing keyRing, PriceFeedService priceFeedService,
                                PersistenceProtoResolver persistenceProtoResolver,
-                               @Named(Storage.DIR_KEY) File storageDir) {
+                               @Named(Storage.STORAGE_DIR) File storageDir) {
         this.keyRing = keyRing;
         this.failedTrades = new TradableList<>(new Storage<>(storageDir, persistenceProtoResolver), "FailedTrades");
         failedTrades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));

@@ -77,7 +77,7 @@ public class BisqEnvironment extends StandardEnvironment {
     private final String logLevel, providers;
     private BitcoinNetwork bitcoinNetwork;
     private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
-            rpcPort, rpcBlockNotificationPort, dumpBlockchainData,
+            rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             socks5ProxyHttpAddress;
 
@@ -184,6 +184,10 @@ public class BisqEnvironment extends StandardEnvironment {
         dumpBlockchainData = commandLineProperties.containsProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) ?
                 (String) commandLineProperties.getProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) :
                 "";
+        fullDaoNode = commandLineProperties.containsProperty(RpcOptionKeys.FULL_DAO_NODE) ?
+                (String) commandLineProperties.getProperty(RpcOptionKeys.FULL_DAO_NODE) :
+                "";
+        
         btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_NODES) :
                 "";
@@ -259,6 +263,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(RpcOptionKeys.RPC_PORT, rpcPort);
                 setProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
                 setProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);
+                setProperty(RpcOptionKeys.FULL_DAO_NODE, fullDaoNode);
                 
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
@@ -267,8 +272,8 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);
 
-                setProperty(Storage.DIR_KEY, Paths.get(btcNetworkDir, "db").toString());
-                setProperty(KeyStorage.DIR_KEY, Paths.get(btcNetworkDir, "keys").toString());
+                setProperty(Storage.STORAGE_DIR, Paths.get(btcNetworkDir, "db").toString());
+                setProperty(KeyStorage.KEY_STORAGE_DIR, Paths.get(btcNetworkDir, "keys").toString());
             }
         });
     }

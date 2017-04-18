@@ -70,15 +70,15 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Leaving some constants package-private for tests to know limits.
-    static final int MAX_MSG_SIZE = 200 * 1024;                       // 200 kb
-    static final int MAX_MSG_SIZE_GET_DATA = 10 * 1024 * 1024;         // 10 MB (425 offers resulted in about 660 kb, mailbox msg will add more to it) offer has usually 2 kb, mailbox 3kb.
+    static final int PERMITTED_MSG_SIZE = 200 * 1024;                       // 200 kb
+    static final int MAX_PERMITTED_MSG_SIZE = 10 * 1024 * 1024;         // 10 MB (425 offers resulted in about 660 kb, mailbox msg will add more to it) offer has usually 2 kb, mailbox 3kb.
     //TODO decrease limits again after testing
     static final int MSG_THROTTLE_PER_SEC = 200;              // With MAX_MSG_SIZE of 200kb results in bandwidth of 40MB/sec or 5 mbit/sec
     static final int MSG_THROTTLE_PER_10_SEC = 1000;          // With MAX_MSG_SIZE of 200kb results in bandwidth of 20MB/sec or 2.5 mbit/sec
     private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(60);
 
-    public static int getMaxMsgSize() {
-        return MAX_MSG_SIZE;
+    public static int getPermittedMsgSize() {
+        return PERMITTED_MSG_SIZE;
     }
 
     private static final CycleDetectingLockFactory cycleDetectingLockFactory = CycleDetectingLockFactory.newInstance(CycleDetectingLockFactory.Policies.THROW);
@@ -161,8 +161,13 @@ public class Connection implements MessageListener {
             UserThread.execute(() -> connectionListener.onConnection(this));
 
         } catch (Throwable e) {
-            sharedModel.handleConnectionException(e);
+            handleException(e);
         }
+    }
+
+    private void handleException(Throwable e) {
+        if (sharedModel != null)
+            sharedModel.handleConnectionException(e);
     }
 
 
@@ -232,19 +237,12 @@ public class Connection implements MessageListener {
                         if (!(msg instanceof KeepAliveMsg))
                             statistic.updateLastActivityTimestamp();
                     }
-                } catch (IOException e) {
-                    // an exception lead to a shutdown
-                    sharedModel.handleConnectionException(e);
-
                 } catch (Throwable t) {
-                    log.error(t.getMessage());
-                    t.printStackTrace();
-                    sharedModel.handleConnectionException(t);
+                    handleException(t);
                 } finally {
                     if (protoOutputStreamLock.isLocked())
                         protoOutputStreamLock.unlock();
                 }
-
             }
         } else {
             log.debug("called sendMessage but was already stopped");
@@ -503,6 +501,13 @@ public class Connection implements MessageListener {
             log.error("Exception at shutdown. " + e.getMessage());
             e.printStackTrace();
         } finally {
+            if (protoOutputStreamLock.isLocked())
+                protoOutputStreamLock.unlock();
+            try {
+                protoOutputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
 
             log.debug("Connection shutdown complete " + this.toString());
@@ -735,9 +740,11 @@ public class Connection implements MessageListener {
                         threadNameSet = true;
                     }
                     try {
-                        if (sharedModel.getSocket() != null && sharedModel.getSocket().isClosed() || protoInputStream.available() < 0) {
+                        if (sharedModel.getSocket() != null &&
+                                sharedModel.getSocket().isClosed() ||
+                                protoInputStream.available() < 0) {
                             log.warn("Shutdown because protoInputStream.available() < 0. protoInputStream.available()=" + protoInputStream.available());
-                            sharedModel.shutDown(CloseConnectionReason.TERMINATED);
+                            stopAndShutDown(CloseConnectionReason.NO_PROTO_BUFFER_DATA);
                             return;
                         }
 
@@ -767,19 +774,11 @@ public class Connection implements MessageListener {
                                 return;
                             }*/
                         } catch (Throwable t) {
-                            if (!sharedModel.stopped) {
-                                if (t instanceof SocketTimeoutException) {
-                                    stop();
-                                } else {
-                                    log.warn("sharedModel.stopped " + t.toString());
-                                    //reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
-                                }
-                            }
+                            handleException(t);
                             return;
                         }
                         if (envelope == null) {
-                            log.warn("envelope = null");
-                            //reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                            stopAndShutDown(CloseConnectionReason.NO_PROTO_BUFFER_ENV);
                             return;
                         }
 
@@ -789,19 +788,11 @@ public class Connection implements MessageListener {
                             msg = optMessage.get();
                         } else {
                             log.warn("Unknown message type received:{}", Utilities.toTruncatedString(envelope));
-                            // TODO shouldn't we report an RuleViolation and return here?
                             reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                             return;
                         }
 
                         lastReadTimeStamp = now;
-
-                        // TODO we get nullpointers here, should be covered by the check above...
-                        if (envelope == null) {
-                            log.error("Envelope is null, available={}", protoInputStream.available());
-                            reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
-                            return;
-                        }
 
                         int size = envelope.getSerializedSize();
 
@@ -835,12 +826,13 @@ public class Connection implements MessageListener {
 
                         // First we check thel size
                         boolean exceeds;
-                        if (msg instanceof GetDataResponse || msg instanceof GetDataRequest) {
-                            exceeds = size > MAX_MSG_SIZE_GET_DATA;
+                        if (msg instanceof ExtendedDataSizePermission) {
+                            exceeds = size > MAX_PERMITTED_MSG_SIZE;
                             log.debug("size={}; object={}", size, Utilities.toTruncatedString(envelope, 100));
                         } else {
-                            exceeds = size > MAX_MSG_SIZE;
+                            exceeds = size > PERMITTED_MSG_SIZE;
                         }
+
                         if (exceeds)
                             log.warn("size > MAX_MSG_SIZE. size={}; object={}", size, Utilities.toTruncatedString(envelope));
 
@@ -856,15 +848,10 @@ public class Connection implements MessageListener {
                         // Check P2P network ID
                         int messageVersion = envelope.getP2PMessageVersion();
                         if (messageVersion != Version.getP2PMessageVersion()) {
-
-                            log.warn("message.getMessageVersion()=" + messageVersion);
-                            log.warn("Version.getP2PMessageVersion()=" + Version.getP2PMessageVersion());
-                            log.warn("message=" + envelope.toString());
                             reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID);
                             if (DevEnv.DEV_MODE)
                                 throw new RuntimeException("messageVersion is not set " + messageVersion +
                                         " / message=" + envelope.toString());
-                            // We return anyway here independent of the return value of reportInvalidRequest
                             return;
                         }
 
@@ -876,12 +863,11 @@ public class Connection implements MessageListener {
                             // If we get a CloseConnectionMessage we shut down
                             log.debug("CloseConnectionMessage received. Reason={}\n\t" +
                                     "connection={}", envelope.getCloseConnectionMessage().getReason(), connection);
-                            stop();
                             if (CloseConnectionReason.PEER_BANNED.name().equals(envelope.getCloseConnectionMessage().getReason())) {
                                 log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
-                                sharedModel.shutDown(CloseConnectionReason.PEER_BANNED);
+                                stopAndShutDown(CloseConnectionReason.PEER_BANNED);
                             } else {
-                                sharedModel.shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
+                                stopAndShutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
                             }
                         } else if (!stopped) {
                             // We don't want to get the activity ts updated by ping/pong msg
@@ -938,23 +924,24 @@ public class Connection implements MessageListener {
                         e.printStackTrace();
                         reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                         return;
-                    } catch (IOException e) {
-                        stop();
-                        sharedModel.handleConnectionException(e);
                     } catch (Throwable t) {
-                        t.printStackTrace();
-                        stop();
-                        if (sharedModel != null)
-                            sharedModel.handleConnectionException(new Exception(t));
+                        handleException(t);
                     }
                 }
             } catch (Throwable t) {
-                //noinspection ConstantConditions
-                if (!(t instanceof OptionalDataException))
-                    t.printStackTrace();
-                stop();
-                sharedModel.handleConnectionException(new Exception(t));
+                handleException(t);
             }
+        }
+
+        private void stopAndShutDown(CloseConnectionReason reason) {
+            stop();
+            sharedModel.shutDown(reason);
+        }
+
+        private void handleException(Throwable e) {
+            stop();
+            if (sharedModel != null)
+                sharedModel.handleConnectionException(e);
         }
 
 

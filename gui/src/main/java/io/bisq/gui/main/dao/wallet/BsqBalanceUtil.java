@@ -67,7 +67,7 @@ public class BsqBalanceUtil implements BsqBalanceListener {
     }
 
     public void activate() {
-        updateAvailableBalance(bsqWalletService.getAvailableBalance());
+        updateAvailableBalance(bsqWalletService.getAvailableBalance(), bsqWalletService.getUnverifiedBalance());
         bsqWalletService.addBsqBalanceListener(this);
     }
 
@@ -76,9 +76,9 @@ public class BsqBalanceUtil implements BsqBalanceListener {
     }
 
     @Override
-    public void updateAvailableBalance(Coin availableBalance) {
+    public void updateAvailableBalance(Coin availableBalance, Coin unverifiedBalance) {
         availableBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance));
-        unverifiedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(bsqWalletService.getUnverifiedBalance()));
-        totalBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance.add(bsqWalletService.getUnverifiedBalance())));
+        unverifiedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(unverifiedBalance));
+        totalBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance.add(unverifiedBalance)));
     }
 }

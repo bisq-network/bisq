@@ -3,46 +3,46 @@ package io.bisq.seednode;
 import ch.qos.logback.classic.Level;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import io.bisq.common.CommonOptionKeys;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
-import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.app.AppSetup;
+import io.bisq.core.app.AppSetupWithP2P;
+import io.bisq.core.app.AppSetupWithP2PAndDAO;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
+import io.bisq.core.dao.RpcOptionKeys;
 import io.bisq.core.offer.OpenOfferManager;
-import io.bisq.core.trade.statistics.TradeStatisticsManager;
-import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.P2PService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 
+@Slf4j
 public class SeedNode {
-    private static final Logger log = LoggerFactory.getLogger(SeedNode.class);
     private static Environment env;
-    private final Injector injector;
-    private final SeedNodeModule seedNodeModule;
-    private final TradeStatisticsManager tradeStatisticsManager;
-
-    private final P2PService p2pService;
 
     public static void setEnvironment(Environment env) {
         SeedNode.env = env;
     }
+
+    private final Injector injector;
+    private final SeedNodeModule seedNodeModule;
+    private final AppSetup appSetup;
 
     public SeedNode() {
         String logPath = Paths.get(env.getProperty(AppOptionKeys.APP_DATA_DIR_KEY), "bisq").toString();
@@ -79,17 +79,10 @@ public class SeedNode {
 
         seedNodeModule = new SeedNodeModule(env);
         injector = Guice.createInjector(seedNodeModule);
-        Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
-        Version.printVersion();
-        p2pService = injector.getInstance(P2PService.class);
-        p2pService.start(new BootstrapListener() {
-            @Override
-            public void onBootstrapComplete() {
-            }
-        });
 
-        // We want to persist trade statistics so we need to instantiate the tradeStatisticsManager
-        tradeStatisticsManager = injector.getInstance(TradeStatisticsManager.class);
+        Boolean fullDaoNode = injector.getInstance(Key.get(Boolean.class, Names.named(RpcOptionKeys.FULL_DAO_NODE)));
+        appSetup = fullDaoNode ? injector.getInstance(AppSetupWithP2PAndDAO.class) : injector.getInstance(AppSetupWithP2P.class);
+        appSetup.start();
     }
 
     private void shutDown() {

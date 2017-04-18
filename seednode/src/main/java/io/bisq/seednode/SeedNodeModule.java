@@ -57,19 +57,23 @@ class SeedNodeModule extends AppModule {
     @Override
     protected void configure() {
         bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
+
+        //bind(CachingViewLoader.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
-        bind(Preferences.class).in(Singleton.class);
+        // bind(NotificationCenter.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
         bind(PersistenceProtoResolver.class).to(CoreDiskProtoResolver.class).in(Singleton.class);
+        bind(Preferences.class).in(Singleton.class);
 
-        File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
-        bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);
+        File storageDir = new File(env.getRequiredProperty(Storage.STORAGE_DIR));
+        bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
 
-        File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.DIR_KEY));
-        bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
+        File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
+        bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
+
 
         // ordering is used for shut down sequence
         install(tradeModule());
@@ -79,6 +83,7 @@ class SeedNodeModule extends AppModule {
         install(torModule());
         install(bitcoinModule());
         install(daoModule());
+        //install(guiModule());
         install(alertModule());
         install(filterModule());
     }

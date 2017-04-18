@@ -174,6 +174,12 @@ public abstract class BisqExecutable {
                         "as json file in the data dir.", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
+        parser.accepts(RpcOptionKeys.FULL_DAO_NODE,
+                description("If set to true the node requests the blockchain data via RPC requests from Bitcoin Core and " +
+                        "provide the validated BSQ txs to the network. It requires that the other RPC properties are " +
+                        "set as well.", false))
+                .withRequiredArg()
+                .ofType(boolean.class);
 
     }
 

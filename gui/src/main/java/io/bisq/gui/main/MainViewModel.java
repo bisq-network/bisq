@@ -121,7 +121,7 @@ public class MainViewModel implements ViewModel {
     private final Clock clock;
     private final FeeService feeService;
     private final DaoManager daoManager;
-    private EncryptionService encryptionService;
+    private final EncryptionService encryptionService;
     private final KeyRing keyRing;
     private final BSFormatter formatter;
 
@@ -554,6 +554,8 @@ public class MainViewModel implements ViewModel {
 
         daoManager.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
 
+        priceFeedService.onAllServicesInitialized();
+        
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
         updateBalance();
@@ -562,6 +564,7 @@ public class MainViewModel implements ViewModel {
             if (user.getPaymentAccounts().isEmpty())
                 setupDevDummyPaymentAccounts();
         }
+
         setupMarketPriceFeed();
         swapPendingOfferFundingEntries();
         fillPriceFeedComboBoxItems();
@@ -802,9 +805,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void setupMarketPriceFeed() {
-        if (priceFeedService.getCurrencyCode() == null)
-            priceFeedService.setCurrencyCode(preferences.getPreferredTradeCurrency().getCode());
-        priceFeedService.init(price -> marketPrice.set(formatter.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
+        priceFeedService.requestPriceFeed(price -> marketPrice.set(formatter.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
                 (errorMessage, throwable) -> marketPrice.set(Res.get("shared.na")));
         marketPriceCurrencyCode.bind(priceFeedService.currencyCodeProperty());
 

@@ -7,4 +7,5 @@ public class RpcOptionKeys {
     public static final String RPC_BLOCK_NOTIFICATION_PORT = "rpcBlockNotificationPort";
 
     public static final String DUMP_BLOCKCHAIN_DATA = "dumpBlockchainData";
+    public static final String FULL_DAO_NODE = "fullDaoNode";
 }

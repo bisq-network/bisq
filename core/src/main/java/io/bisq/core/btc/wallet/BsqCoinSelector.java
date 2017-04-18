@@ -17,30 +17,29 @@
 
 package io.bisq.core.btc.wallet;
 
-import io.bisq.core.dao.blockchain.TxOutputMap;
+import io.bisq.core.dao.blockchain.BsqChainState;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.TransactionOutput;
+
+import javax.inject.Inject;
 
 /**
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches our address of our address.
  */
 @Slf4j
-class BsqCoinSelector extends BisqDefaultCoinSelector {
-    private TxOutputMap txOutputMap;
+public class BsqCoinSelector extends BisqDefaultCoinSelector {
+    private BsqChainState bsqChainState;
 
-    public BsqCoinSelector(boolean permitForeignPendingTx) {
-        super(permitForeignPendingTx);
-    }
-
-    public void setTxoMap(TxOutputMap txOutputMap) {
-        this.txOutputMap = txOutputMap;
+    @Inject
+    public BsqCoinSelector(BsqChainState bsqChainState) {
+        super(true);
+        this.bsqChainState = bsqChainState;
     }
 
     @Override
     protected boolean isTxOutputSpendable(TransactionOutput output) {
-        return txOutputMap != null &&
-                output.getParentTransaction() != null &&
-                txOutputMap.isTxOutputUnSpent(output.getParentTransaction().getHashAsString(), output.getIndex());
+        // output.getParentTransaction() cannot be null as it is checked in calling method
+        return bsqChainState.isTxOutputSpendable(output.getParentTransaction().getHashAsString(), output.getIndex());
     }
 }

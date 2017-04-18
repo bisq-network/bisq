@@ -102,7 +102,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             PriceFeedService priceFeedService,
                             Preferences preferences,
                             PersistenceProtoResolver persistenceProtoResolver,
-                            @Named(Storage.DIR_KEY) File storageDir) {
+                            @Named(Storage.STORAGE_DIR) File storageDir) {
         this.keyRing = keyRing;
         this.user = user;
         this.p2PService = p2PService;

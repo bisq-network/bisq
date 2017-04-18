@@ -17,30 +17,26 @@
 
 package io.bisq.core.dao.blockchain;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.neemre.btcdcli4j.core.BitcoindException;
 import com.neemre.btcdcli4j.core.CommunicationException;
+import com.neemre.btcdcli4j.core.client.BtcdClient;
 import com.neemre.btcdcli4j.core.client.BtcdClientImpl;
 import com.neemre.btcdcli4j.core.domain.Block;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
+import com.neemre.btcdcli4j.daemon.BtcdDaemon;
 import com.neemre.btcdcli4j.daemon.BtcdDaemonImpl;
 import com.neemre.btcdcli4j.daemon.event.BlockListener;
-import io.bisq.common.UserThread;
-import io.bisq.common.crypto.KeyRing;
-import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.RpcOptionKeys;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
+import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
+import io.bisq.core.dao.blockchain.vo.Tx;
+import io.bisq.core.dao.blockchain.vo.TxInput;
+import io.bisq.core.dao.blockchain.vo.TxOutput;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,241 +50,98 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+// Blocking access to Bitcoin Core via RPC requests
 // We are in threaded context. We map our results to the client into the UserThread to not extend thread contexts.
-public class BsqBlockchainRpcService extends BsqBlockchainService {
+// See the rpc.md file in the doc directory for more info about the setup.
+public class BsqBlockchainRpcService implements BsqBlockchainService {
     private static final Logger log = LoggerFactory.getLogger(BsqBlockchainRpcService.class);
 
     private final String rpcUser;
     private final String rpcPassword;
     private final String rpcPort;
     private final String rpcBlockPort;
-    private final ListeningExecutorService setupExecutor = Utilities.getListeningExecutorService("RpcServiceSetup", 1, 1, 5);
-    private final ListeningExecutorService parseBlocksExecutor = Utilities.getListeningExecutorService("ParseBlocks", 1, 1, 60);
-    private final ListeningExecutorService getChainHeightExecutor = Utilities.getListeningExecutorService("GetChainHeight", 1, 1, 60);
-    private final ListeningExecutorService getBlockExecutor = Utilities.getListeningExecutorService("GetBlock", 1, 1, 60);
-    private BtcdClientImpl client;
-    private BtcdDaemonImpl daemon;
 
+    private BtcdClient client;
+    private BtcdDaemon daemon;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqBlockchainRpcService(KeyRing keyRing,
-                                   @Named(RpcOptionKeys.RPC_USER) String rpcUser,
+    public BsqBlockchainRpcService(@Named(RpcOptionKeys.RPC_USER) String rpcUser,
                                    @Named(RpcOptionKeys.RPC_PASSWORD) String rpcPassword,
                                    @Named(RpcOptionKeys.RPC_PORT) String rpcPort,
                                    @Named(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort) {
-        super(keyRing);
         this.rpcUser = rpcUser;
         this.rpcPassword = rpcPassword;
         this.rpcPort = rpcPort;
         this.rpcBlockPort = rpcBlockPort;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Non blocking methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
-    void setup(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        ListenableFuture<BtcdClientImpl> future = setupExecutor.submit(() -> {
-            long startTs = System.currentTimeMillis();
-            PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-            CloseableHttpClient httpProvider = HttpClients.custom().setConnectionManager(cm).build();
-            Properties nodeConfig = new Properties();
-            URL resource = getClass().getClassLoader().getResource("btcRpcConfig.properties");
-            checkNotNull(resource, "btcRpcConfig.properties not found");
-            try (FileInputStream fileInputStream = new FileInputStream(new File(resource.toURI()))) {
-                try (InputStream inputStream = new BufferedInputStream(fileInputStream)) {
-                    nodeConfig.load(inputStream);
-                    nodeConfig.setProperty("node.bitcoind.rpc.user", rpcUser);
-                    nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
-                    nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
-                    nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
-                    BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);
-                    daemon = new BtcdDaemonImpl(client);
-                    log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
-                    return client;
-                } catch (IOException | BitcoindException | CommunicationException e) {
-                    if (e instanceof CommunicationException)
-                        log.error("Maybe the rpc port is not set correctly? rpcPort=" + rpcPort);
-                    log.error(e.toString());
-                    e.printStackTrace();
-                    log.error(e.getCause() != null ? e.getCause().toString() : "e.getCause()=null");
-                    throw new BsqBlockchainException(e.getMessage(), e);
-                }
-            } catch (Throwable e) {
+    public void setup() throws BsqBlockchainException {
+        long startTs = System.currentTimeMillis();
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+        CloseableHttpClient httpProvider = HttpClients.custom().setConnectionManager(cm).build();
+        Properties nodeConfig = new Properties();
+        URL resource = getClass().getClassLoader().getResource("btcRpcConfig.properties");
+        checkNotNull(resource, "btcRpcConfig.properties not found");
+        try (FileInputStream fileInputStream = new FileInputStream(new File(resource.toURI()))) {
+            try (InputStream inputStream = new BufferedInputStream(fileInputStream)) {
+                nodeConfig.load(inputStream);
+                nodeConfig.setProperty("node.bitcoind.rpc.user", rpcUser);
+                nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
+                nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
+                nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
+                BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);
+                daemon = new BtcdDaemonImpl(client);
+                log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
+                this.client = client;
+            } catch (IOException | BitcoindException | CommunicationException e) {
+                if (e instanceof CommunicationException)
+                    log.error("Maybe the rpc port is not set correctly? rpcPort=" + rpcPort);
                 log.error(e.toString());
                 e.printStackTrace();
-                throw new BsqBlockchainException(e.toString(), e);
+                log.error(e.getCause() != null ? e.getCause().toString() : "e.getCause()=null");
+                throw new BsqBlockchainException(e.getMessage(), e);
             }
-        });
-
-        Futures.addCallback(future, new FutureCallback<BtcdClientImpl>() {
-            public void onSuccess(BtcdClientImpl client) {
-                UserThread.execute(() -> {
-                    BsqBlockchainRpcService.this.client = client;
-                    resultHandler.handleResult();
-                });
-            }
-
-            public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> {
-                    log.error(throwable.toString());
-                    errorMessageHandler.handleErrorMessage(throwable.toString());
-                });
-            }
-        });
+        } catch (Throwable e) {
+            log.error(e.toString());
+            e.printStackTrace();
+            throw new BsqBlockchainException(e.toString(), e);
+        }
     }
 
     @Override
-    void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler) {
-        ListenableFuture<Integer> future = getChainHeightExecutor.submit(client::getBlockCount);
-
-        Futures.addCallback(future, new FutureCallback<Integer>() {
-            public void onSuccess(Integer chainHeadHeight) {
-                UserThread.execute(() -> resultHandler.accept(chainHeadHeight));
-            }
-
-            public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> errorHandler.accept(throwable));
-            }
-        });
-    }
-
-    @Override
-    void requestBlock(int blockHeight, Consumer<Block> resultHandler, Consumer<Throwable> errorHandler) {
-        ListenableFuture<Block> future = getBlockExecutor.submit(() -> requestBlock(blockHeight));
-
-        Futures.addCallback(future, new FutureCallback<Block>() {
-            public void onSuccess(Block block) {
-                UserThread.execute(() -> resultHandler.accept(block));
-            }
-
-            public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> errorHandler.accept(throwable));
-            }
-        });
-    }
-
-    @Override
-    void parseBlocks(int startBlockHeight,
-                     int chainHeadHeight,
-                     int genesisBlockHeight,
-                     String genesisTxId,
-                     TxOutputMap txOutputMap,
-                     Consumer<TxOutputMap> newBlockHandler,
-                     Consumer<TxOutputMap> resultHandler,
-                     Consumer<Throwable> errorHandler) {
-        ListenableFuture<TxOutputMap> future = parseBlocksExecutor.submit(() -> {
-            long startTs = System.currentTimeMillis();
-            BsqParser bsqParser = new BsqParser(this);
-            // txOutputMap us used in UserThread context, so we clone
-            final TxOutputMap clonedMap = TxOutputMap.getClonedMap(txOutputMap);
-            bsqParser.parseBlocks(startBlockHeight,
-                    chainHeadHeight,
-                    genesisBlockHeight,
-                    genesisTxId,
-                    clonedMap,
-                    newBlockMap -> {
-                        // We map to UserThread. We don't need to clone as it was created already newly in the parser.
-                        UserThread.execute(() -> newBlockHandler.accept(newBlockMap));
-                    });
-            log.info("parseBlockchain took {} ms", System.currentTimeMillis() - startTs);
-            return clonedMap;
-        });
-
-        Futures.addCallback(future, new FutureCallback<TxOutputMap>() {
-            @Override
-            public void onSuccess(TxOutputMap clonedMap) {
-                UserThread.execute(() -> {
-                    // We map to UserThread. Map was already cloned initially.
-                    UserThread.execute(() -> resultHandler.accept(clonedMap));
-                });
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable throwable) {
-                // We map to UserThread.
-                UserThread.execute(() -> errorHandler.accept(throwable));
-            }
-        });
-    }
-
-    @Override
-    void parseBlock(Block block,
-                    int genesisBlockHeight,
-                    String genesisTxId,
-                    TxOutputMap txOutputMap,
-                    Consumer<TxOutputMap> resultHandler,
-                    Consumer<Throwable> errorHandler) {
-        ListenableFuture<TxOutputMap> future = parseBlocksExecutor.submit(() -> {
-            BsqParser bsqParser = new BsqParser(this);
-            // txOutputMap us used in UserThread context, so we clone);
-            final TxOutputMap clonedMap = TxOutputMap.getClonedMap(txOutputMap);
-            bsqParser.parseBlock(block,
-                    genesisBlockHeight,
-                    genesisTxId,
-                    clonedMap);
-            return clonedMap;
-        });
-
-        Futures.addCallback(future, new FutureCallback<TxOutputMap>() {
-            @Override
-            public void onSuccess(TxOutputMap clonedMap) {
-                UserThread.execute(() -> {
-                    // We map to UserThread. Map was already cloned
-                    resultHandler.accept(clonedMap);
-                });
-            }
-
-            @Override
-            public void onFailure(@NotNull Throwable throwable) {
-                // We map to UserThread.
-                UserThread.execute(() -> errorHandler.accept(throwable));
-            }
-        });
-    }
-
-    @Override
-    void addBlockHandler(Consumer<Block> blockHandler) {
+    public void registerBlockHandler(Consumer<Block> blockHandler) {
         daemon.addBlockListener(new BlockListener() {
             @Override
             public void blockDetected(Block block) {
                 if (block != null) {
-                    UserThread.execute(() -> {
-                        log.info("New block received: height={}, id={}", block.getHeight(), block.getHash());
-                        blockHandler.accept(block);
-                    });
+                    log.info("New block received: height={}, id={}", block.getHeight(), block.getHash());
+                    blockHandler.accept(block);
+                } else {
+                    log.error("We received a block with value null. That should not happen.");
                 }
             }
         });
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Blocking methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @VisibleForTesting
     @Override
-    int requestChainHeadHeight() throws BitcoindException, CommunicationException {
+    public int requestChainHeadHeight() throws BitcoindException, CommunicationException {
         return client.getBlockCount();
     }
 
-    @VisibleForTesting
     @Override
-    Block requestBlock(int blockHeight) throws BitcoindException, CommunicationException {
+    public Block requestBlock(int blockHeight) throws BitcoindException, CommunicationException {
         final String blockHash = client.getBlockHash(blockHeight);
         return client.getBlock(blockHash);
     }
 
-    @VisibleForTesting
     @Override
-    Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException {
+    public Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException {
         try {
             RawTransaction rawTransaction = requestRawTransaction(txId);
             // rawTransaction.getTime() is in seconds but we keep it in ms internally
@@ -296,7 +149,7 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
             final List<TxInput> txInputs = rawTransaction.getVIn()
                     .stream()
                     .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
-                    .map(rawInput -> new TxInput(rawInput.getVOut(), rawInput.getTxId(), rawTransaction.getHex()))
+                    .map(rawInput -> new TxInput(rawInput.getVOut(), rawInput.getTxId()))
                     .collect(Collectors.toList());
 
             final List<TxOutput> txOutputs = rawTransaction.getVOut()
@@ -307,23 +160,22 @@ public class BsqBlockchainRpcService extends BsqBlockchainService {
                                     rawTransaction.getTxId(),
                                     new PubKeyScript(rawOutput.getScriptPubKey()),
                                     blockHeight,
-                                    time,
-                                    signaturePubKey)
+                                    time)
                     )
                     .collect(Collectors.toList());
+
             return new Tx(txId,
-                    txInputs,
-                    txOutputs,
-                    time);
+                    rawTransaction.getBlockHash(),
+                    ImmutableList.copyOf(txInputs),
+                    ImmutableList.copyOf(txOutputs),
+                    false);
         } catch (BitcoindException | CommunicationException e) {
             throw new BsqBlockchainException(e.getMessage(), e);
         }
     }
 
-    @VisibleForTesting
     @Override
-    RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException {
+    public RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException {
         return (RawTransaction) client.getRawTransaction(txId, 1);
     }
-
 }

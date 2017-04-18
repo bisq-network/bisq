@@ -313,7 +313,7 @@ public class WalletsSetup {
         // filter for most users. With lookaheadSize of 500 we get 1333 keys (500*1.3=666 666 external and 666 internal keys) which should be enough for most users to
         // never need to update a bloom filter, which would weaken privacy.
         // As we use 2 wallets (BTC, BSQ) we generate 1333 + 266 keys in total.
-        walletConfig.setBtcWalletLookaheadSize(500);
+        walletConfig.setBtcWalletLookaheadSize(100);
         walletConfig.setBsqWalletLookaheadSize(100);
 
         // Calculation is derived from: https://www.reddit.com/r/Bitcoin/comments/2vrx6n/privacy_in_bitcoinj_android_wallet_multibit_hive/coknjuz

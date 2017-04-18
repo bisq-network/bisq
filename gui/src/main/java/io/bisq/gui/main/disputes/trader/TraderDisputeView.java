@@ -492,7 +492,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         int totalSize = tempAttachments.stream().mapToInt(a -> a.getBytes().length).sum();
         if (tempAttachments.size() < 3) {
             FileChooser fileChooser = new FileChooser();
-            int maxMsgSize = Connection.getMaxMsgSize();
+            int maxMsgSize = Connection.getPermittedMsgSize();
             int maxSizeInKB = maxMsgSize / 1024;
             fileChooser.setTitle(Res.get("support.openFile", maxSizeInKB));
            /* if (Utilities.isUnix())

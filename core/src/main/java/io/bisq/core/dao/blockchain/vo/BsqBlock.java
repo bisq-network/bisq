@@ -15,26 +15,29 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain;
+package io.bisq.core.dao.blockchain.vo;
 
+import io.bisq.common.persistence.Persistable;
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
-import java.io.Serializable;
+import java.util.List;
 
 @Value
 @Immutable
-public class TxInput implements Serializable {
-    private final int spendingTxOutputIndex;
-    private final String spendingTxId;
-    private final String txId;
+public class BsqBlock implements Persistable {
+    private final List<Tx> txs;
+    private final int height;
+    private final String hash;
+    private String previousBlockHash;
 
     @Override
     public String toString() {
-        return "TxInput{" +
-                "\nspendingTxOutputIndex=" + spendingTxOutputIndex +
-                ",\nspendingTxId='" + spendingTxId + '\'' +
-                ",\ntxId='" + txId + '\'' +
-                "}\n";
+        return "BsqBlock{" +
+                "\n     height=" + height +
+                ",\n     hash='" + hash + '\'' +
+                ",\n     txs.size='" + txs.size() + '\'' +
+                ",\n     previousBlockHash='" + previousBlockHash + '\'' +
+                "\n}";
     }
 }

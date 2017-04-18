@@ -64,11 +64,11 @@ class StatisticsModule extends AppModule {
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
         bind(PersistenceProtoResolver.class).to(CoreDiskProtoResolver.class).in(Singleton.class);
 
-        File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
-        bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);
+        File storageDir = new File(env.getRequiredProperty(Storage.STORAGE_DIR));
+        bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
 
-        File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.DIR_KEY));
-        bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
+        File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
+        bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
 
         bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
 

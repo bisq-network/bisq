@@ -17,14 +17,14 @@
 
 package io.bisq.common.storage;
 
+import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import io.bisq.common.UserThread;
 import io.bisq.common.io.LookAheadObjectInputStream;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -34,10 +34,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
+@Slf4j
 public class FileManager<T extends Persistable> {
-    private static final Logger log = LoggerFactory.getLogger(FileManager.class);
-
     private final File dir;
     private final File storageFile;
     private final ScheduledThreadPoolExecutor executor;
@@ -46,6 +46,7 @@ public class FileManager<T extends Persistable> {
     private final Callable<Void> saveFileTask;
     private T serializable;
     private final PersistenceProtoResolver persistenceProtoResolver;
+    private final ReentrantLock writeLock = CycleDetectingLockFactory.newInstance(CycleDetectingLockFactory.Policies.THROW).newReentrantLock("writeLock");
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -112,11 +113,15 @@ public class FileManager<T extends Persistable> {
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
             persistable = persistenceProtoResolver.fromProto(PB.DiskEnvelope.parseDelimitedFrom(fileInputStream));
         } catch (Throwable t) {
-            log.error("Exception at proto read: " + t.getMessage() + " " + file.getName());
+            log.debug("Exception at proto read: " + t.getMessage() + " " + file.getName());
         }
 
         if (persistable.isPresent()) {
+<<<<<<< HEAD
             log.info("Reading Persistable: {}", persistable.get().getClass());
+=======
+            log.debug("Persistable found");
+>>>>>>> DAO
             //noinspection unchecked
             return (T) persistable.get();
         }
@@ -199,7 +204,7 @@ public class FileManager<T extends Persistable> {
         try {
             protoDiskEnvelope = (PB.DiskEnvelope) serializable.toProto();
         } catch (Throwable e) {
-            log.info("Not protobufferable: {}, {}, {}", serializable.getClass().getSimpleName(), storageFile, e.getStackTrace());
+            log.debug("Not protobufferable: {}, {}, {}", serializable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }
 
         try {
@@ -217,12 +222,14 @@ public class FileManager<T extends Persistable> {
                 fileOutputStream = new FileOutputStream(tempFile);
 
                 log.info("Writing protobuffer to disc:{}", serializable.getClass());
+                writeLock.lock();
                 protoDiskEnvelope.writeDelimitedTo(fileOutputStream);
 
                 // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
                 // to not write through to physical media for at least a few seconds, but this is the best we can do.
                 fileOutputStream.flush();
                 fileOutputStream.getFD().sync();
+                writeLock.unlock();
 
                 // Close resources before replacing file with temp file because otherwise it causes problems on windows
                 // when rename temp file
@@ -234,11 +241,13 @@ public class FileManager<T extends Persistable> {
                 fileOutputStream = new FileOutputStream(tempFile);
                 objectOutputStream = new ObjectOutputStream(fileOutputStream);
 
+                writeLock.lock();
                 objectOutputStream.writeObject(serializable);
                 // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
                 // to not write through to physical media for at least a few seconds, but this is the best we can do.
                 fileOutputStream.flush();
                 fileOutputStream.getFD().sync();
+                writeLock.unlock();
 
                 // Close resources before replacing file with temp file because otherwise it causes problems on windows
                 // when rename temp file
@@ -251,6 +260,8 @@ public class FileManager<T extends Persistable> {
             t.printStackTrace();
             log.error("Error at saveToFile: " + t.getMessage());
         } finally {
+            if (writeLock.isLocked())
+                writeLock.unlock();
             if (tempFile != null && tempFile.exists()) {
                 log.warn("Temp file still exists after failed save. We will delete it now. storageFile=" + storageFile);
                 if (!tempFile.delete())

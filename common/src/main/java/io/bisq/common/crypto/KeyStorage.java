@@ -42,7 +42,7 @@ import java.util.Date;
 public class KeyStorage {
     private static final Logger log = LoggerFactory.getLogger(KeyStorage.class);
 
-    public static final String DIR_KEY = "keyStorageDir";
+    public static final String KEY_STORAGE_DIR = "keyStorageDir";
 
     public enum KeyEntry {
         MSG_SIGNATURE("sig", Sig.KEY_ALGO),
@@ -79,7 +79,7 @@ public class KeyStorage {
     private final File storageDir;
 
     @Inject
-    public KeyStorage(@Named(DIR_KEY) File storageDir) {
+    public KeyStorage(@Named(KEY_STORAGE_DIR) File storageDir) {
         this.storageDir = storageDir;
     }
 

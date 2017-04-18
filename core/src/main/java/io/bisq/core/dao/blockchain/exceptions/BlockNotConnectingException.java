@@ -15,18 +15,17 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain;
+package io.bisq.core.dao.blockchain.exceptions;
 
-public class BsqBlockchainException extends Exception {
-    public BsqBlockchainException(String message) {
-        super(message);
-    }
+import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import lombok.Getter;
 
-    public BsqBlockchainException(String message, Throwable cause) {
-        super(message, cause);
-    }
+@Getter
+public class BlockNotConnectingException extends Exception {
 
-    public BsqBlockchainException(Throwable cause) {
-        super(cause);
+    private BsqBlock block;
+
+    public BlockNotConnectingException(BsqBlock block) {
+        this.block = block;
     }
 }

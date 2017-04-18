@@ -71,7 +71,6 @@ public class TradeStatisticsManager {
 
         PersistedList<TradeStatistics> persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
         if (persisted != null)
-
             persisted.getList().stream().forEach(e -> add(e, false));
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {

@@ -17,9 +17,7 @@
 
 package io.bisq.core.dao.blockchain.btcd;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.google.common.collect.ImmutableList;
 import io.bisq.common.app.Version;
 import io.bisq.common.util.JsonExclude;
 import lombok.AllArgsConstructor;
@@ -27,12 +25,9 @@ import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
 import java.io.Serializable;
-import java.util.List;
 
 @Value
 @AllArgsConstructor
-@JsonInclude(Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @Immutable
 public class PubKeyScript implements Serializable {
     @JsonExclude
@@ -40,14 +35,14 @@ public class PubKeyScript implements Serializable {
 
     private final Integer reqSigs;
     private final ScriptTypes type;
-    private final List<String> addresses;
+    private final ImmutableList<String> addresses;
     private final String asm;
     private final String hex;
 
     public PubKeyScript(com.neemre.btcdcli4j.core.domain.PubKeyScript scriptPubKey) {
         this(scriptPubKey.getReqSigs(),
                 ScriptTypes.forName(scriptPubKey.getType().getName()),
-                scriptPubKey.getAddresses(),
+                scriptPubKey.getAddresses() != null ? ImmutableList.copyOf(scriptPubKey.getAddresses()) : null,
                 scriptPubKey.getAsm(),
                 scriptPubKey.getHex());
     }

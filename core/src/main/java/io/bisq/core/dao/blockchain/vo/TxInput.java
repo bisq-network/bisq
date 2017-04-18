@@ -15,16 +15,24 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain;
+package io.bisq.core.dao.blockchain.vo;
 
-import lombok.Getter;
+import io.bisq.common.persistence.Persistable;
+import lombok.Value;
 
-@Getter
-public class OrphanDetectedException extends Exception {
+import javax.annotation.concurrent.Immutable;
 
-    private int blockHeight;
+@Value
+@Immutable
+public class TxInput implements Persistable {
+    private final int spendingTxOutputIndex;
+    private final String spendingTxId;
 
-    public OrphanDetectedException(int blockHeight) {
-        this.blockHeight = blockHeight;
+    @Override
+    public String toString() {
+        return "TxInput{" +
+                "\nspendingTxOutputIndex=" + spendingTxOutputIndex +
+                ",\nspendingTxId='" + spendingTxId + '\'' +
+                "}\n";
     }
 }
