@@ -70,15 +70,15 @@ public class DaoModule extends AppModule {
         bind(DaoService.class).in(Singleton.class);
         bind(VotingDefaultValues.class).in(Singleton.class);
 
-        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_USER)).to(env.getRequiredProperty(RpcOptionKeys.RPC_USER));
-        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_PASSWORD)).to(env.getRequiredProperty(RpcOptionKeys.RPC_PASSWORD));
-        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_PORT)).to(env.getRequiredProperty(RpcOptionKeys.RPC_PORT));
-        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT))
-                .to(env.getRequiredProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT));
-        bindConstant().annotatedWith(named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA))
-                .to(env.getRequiredProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA));
-        bindConstant().annotatedWith(named(RpcOptionKeys.FULL_DAO_NODE))
-                .to(env.getRequiredProperty(RpcOptionKeys.FULL_DAO_NODE));
+        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_USER)).to(env.getRequiredProperty(DaoOptionKeys.RPC_USER));
+        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PASSWORD)).to(env.getRequiredProperty(DaoOptionKeys.RPC_PASSWORD));
+        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PORT)).to(env.getRequiredProperty(DaoOptionKeys.RPC_PORT));
+        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT))
+                .to(env.getRequiredProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT));
+        bindConstant().annotatedWith(named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA))
+                .to(env.getRequiredProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA));
+        bindConstant().annotatedWith(named(DaoOptionKeys.FULL_DAO_NODE))
+                .to(env.getRequiredProperty(DaoOptionKeys.FULL_DAO_NODE));
     }
 }
 

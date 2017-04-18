@@ -26,7 +26,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.UserAgent;
-import io.bisq.core.dao.RpcOptionKeys;
+import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.network.NetworkOptionKeys;
 import joptsimple.OptionSet;
@@ -169,23 +169,23 @@ public class BisqEnvironment extends StandardEnvironment {
                 "";
 
         //RpcOptionKeys
-        rpcUser = commandLineProperties.containsProperty(RpcOptionKeys.RPC_USER) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_USER) :
+        rpcUser = commandLineProperties.containsProperty(DaoOptionKeys.RPC_USER) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_USER) :
                 "";
-        rpcPassword = commandLineProperties.containsProperty(RpcOptionKeys.RPC_PASSWORD) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_PASSWORD) :
+        rpcPassword = commandLineProperties.containsProperty(DaoOptionKeys.RPC_PASSWORD) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_PASSWORD) :
                 "";
-        rpcPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_PORT) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_PORT) :
+        rpcPort = commandLineProperties.containsProperty(DaoOptionKeys.RPC_PORT) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_PORT) :
                 "";
-        rpcBlockNotificationPort = commandLineProperties.containsProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) :
+        rpcBlockNotificationPort = commandLineProperties.containsProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) :
                 "";
-        dumpBlockchainData = commandLineProperties.containsProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) :
+        dumpBlockchainData = commandLineProperties.containsProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) :
                 "";
-        fullDaoNode = commandLineProperties.containsProperty(RpcOptionKeys.FULL_DAO_NODE) ?
-                (String) commandLineProperties.getProperty(RpcOptionKeys.FULL_DAO_NODE) :
+        fullDaoNode = commandLineProperties.containsProperty(DaoOptionKeys.FULL_DAO_NODE) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.FULL_DAO_NODE) :
                 "";
         
         btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
@@ -258,12 +258,12 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(AppOptionKeys.USER_DATA_DIR_KEY, userDataDir);
                 setProperty(AppOptionKeys.PROVIDERS, providers);
 
-                setProperty(RpcOptionKeys.RPC_USER, rpcUser);
-                setProperty(RpcOptionKeys.RPC_PASSWORD, rpcPassword);
-                setProperty(RpcOptionKeys.RPC_PORT, rpcPort);
-                setProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
-                setProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);
-                setProperty(RpcOptionKeys.FULL_DAO_NODE, fullDaoNode);
+                setProperty(DaoOptionKeys.RPC_USER, rpcUser);
+                setProperty(DaoOptionKeys.RPC_PASSWORD, rpcPassword);
+                setProperty(DaoOptionKeys.RPC_PORT, rpcPort);
+                setProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
+                setProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);
+                setProperty(DaoOptionKeys.FULL_DAO_NODE, fullDaoNode);
                 
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);

@@ -24,10 +24,7 @@ import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.network.Msg;
-import io.bisq.common.proto.PersistenceProtoResolver;
-import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksResponse;
@@ -43,8 +40,6 @@ import io.bisq.network.p2p.network.Connection;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
-import javax.inject.Named;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,21 +55,15 @@ public class BsqLiteNode extends BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqLiteNode(BisqEnvironment bisqEnvironment,
-                       P2PService p2PService,
+    public BsqLiteNode(P2PService p2PService,
                        BsqParser bsqParser,
                        BsqLiteNodeExecutor bsqLiteNodeExecutor,
                        BsqChainState bsqChainState,
-                       FeeService feeService,
-                       PersistenceProtoResolver persistenceProtoResolver,
-                       @Named(Storage.STORAGE_DIR) File storageDir) {
-        super(bisqEnvironment,
-                p2PService,
+                       FeeService feeService) {
+        super(p2PService,
                 bsqParser,
                 bsqChainState,
-                feeService,
-                persistenceProtoResolver,
-                storageDir);
+                feeService);
         this.bsqLiteNodeExecutor = bsqLiteNodeExecutor;
     }
 

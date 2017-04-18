@@ -19,6 +19,7 @@ package io.bisq.core.dao.blockchain.vo;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
+import io.bisq.common.util.JsonExclude;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -38,8 +39,10 @@ public class TxOutput implements Persistable {
     private final String txId;
     private final PubKeyScript pubKeyScript;
     @Nullable
+    @JsonExclude
     private final String address;
     @Nullable
+    @JsonExclude
     private final byte[] opReturnData;
     private final int blockHeight;
     private final long time;

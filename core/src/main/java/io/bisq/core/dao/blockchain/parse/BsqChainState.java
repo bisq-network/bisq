@@ -20,15 +20,20 @@ package io.bisq.core.dao.blockchain.parse;
 import com.google.common.annotations.VisibleForTesting;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
+import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.BitcoinNetwork;
+import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
@@ -36,10 +41,11 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkArgument;
 
 // Represents mutable state of BSQ chain data
-// We get accessed the data from non-UserThread context, so we need to handle threading here.
+// We get accessed the data from different threads so we need to make sure it is thread safe.
 @Slf4j
 public class BsqChainState implements Persistable {
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -55,46 +61,56 @@ public class BsqChainState implements Persistable {
         return height % grid == 0 && height >= getSnapshotHeight(genesisHeight, height, grid);
     }
 
-
-    // Modulo of blocks for making snapshots of UTXO.
-    // We stay also the value behind for safety against reorgs.
-    // E.g. for SNAPSHOT_TRIGGER = 30:
-    // If we are block 119 and last snapshot was 60 then we get a new trigger for a snapshot at block 120 and
-    // new snapshot is block 90. We only persist at the new snapshot, so we always re-parse from latest snapshot after
-    // a restart.
-    // As we only store snapshots when Txos are added it might be that there are bigger gaps than SNAPSHOT_TRIGGER.
     private static final int SNAPSHOT_GRID = 100;  // set high to deactivate
     private static final int ISSUANCE_MATURITY = 144 * 30; // 30 days
 
+    //mainnet
+    // this tx has a lot of outputs
+    // https://blockchain.info/de/tx/ee921650ab3f978881b8fe291e0c025e0da2b7dc684003d7a03d9649dfee2e15
+    // BLOCK_HEIGHT 411779 
+    // 411812 has 693 recursions
+    // MAIN NET
+    private static final String GENESIS_TX_ID = "b26371e2145f52c94b3d30713a9e38305bfc665fc27cd554e794b5e369d99ef5";
+    private static final int GENESIS_BLOCK_HEIGHT = 461718; // 2017-04-13
+    // block 300000 2014-05-10
+    // block 350000 2015-03-30
+    // block 400000 2016-02-25
+    // block 450000 2017-01-25
+
+    // REG TEST
+    private static final String REG_TEST_GENESIS_TX_ID = "3bc7bc9484e112ec8ddd1a1c984379819245ac463b9ce40fa8b5bf771c0f9236";
+    private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 102;
+    // TEST NET
+    private static final String TEST_NET_GENESIS_TX_ID = "";
+    private static final int TEST_NET_GENESIS_BLOCK_HEIGHT = 0;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Instance fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     // Persisted data
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     private final LinkedList<BsqBlock> blocks = new LinkedList<>();
     private final Map<String, Tx> txMap = new HashMap<>();
     private final Set<TxOutput> unspentTxOutputSet = new HashSet<>();
-
-    // only used for json
     private final Map<TxIdIndexTuple, SpentInfo> spentInfoByTxOutputMap = new HashMap<>();
-
     private final Map<String, Long> burnedFeeByTxIdMap = new HashMap<>();
-    private final List<Tuple2<Long, Integer>> compensationRequestFees = new ArrayList<>();
-    private final List<Tuple2<Long, Integer>> votingFees = new ArrayList<>();
-    private final List<TxOutput> compensationRequestOpReturnTxOutputs = new ArrayList<>();
-    private final List<String> compensationRequestBtcAddresses = new ArrayList<>();
-    private final List<TxOutput> votingTxOutputs = new ArrayList<>();
+    private final Set<Tuple2<Long, Integer>> compensationRequestFees = new HashSet<>();
+    private final Set<Tuple2<Long, Integer>> votingFees = new HashSet<>();
+    private final Set<TxOutput> compensationRequestOpReturnTxOutputs = new HashSet<>();
+    private final Set<String> compensationRequestBtcAddresses = new HashSet<>();
+    private final Set<TxOutput> votingTxOutputs = new HashSet<>();
     private final Map<String, Set<TxOutput>> issuanceBtcTxOutputsByBtcAddressMap = new HashMap<>();
 
+    private final String genesisTxId;
+    private final int genesisBlockHeight;
     private int chainHeadHeight = 0;
     private Tx genesisTx;
-    private String genesisTxId = "";
-    private int genesisBlockHeight = -1;
 
     // transient 
+    transient private final boolean dumpBlockchainData;
+    transient private final Storage<BsqChainState> snapshotBsqChainStateStorage;
     transient private BsqChainState snapshotCandidate;
-    transient private Storage<BsqChainState> snapshotBsqChainStateStorage;
-    transient private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     transient private final ReentrantReadWriteLock.WriteLock writeLock;
     transient private final ReentrantReadWriteLock.ReadLock readLock;
 
@@ -105,7 +121,26 @@ public class BsqChainState implements Persistable {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqChainState() {
+    public BsqChainState(BisqEnvironment bisqEnvironment,
+                         PersistenceProtoResolver persistenceProtoResolver,
+                         @Named(Storage.STORAGE_DIR) File storageDir,
+                         @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
+        this.dumpBlockchainData = dumpBlockchainData;
+
+        snapshotBsqChainStateStorage = new Storage<>(storageDir, persistenceProtoResolver);
+
+        if (bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.MAINNET) {
+            genesisTxId = GENESIS_TX_ID;
+            genesisBlockHeight = GENESIS_BLOCK_HEIGHT;
+        } else if (bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.REGTEST) {
+            genesisTxId = REG_TEST_GENESIS_TX_ID;
+            genesisBlockHeight = REG_TEST_GENESIS_BLOCK_HEIGHT;
+        } else {
+            genesisTxId = TEST_NET_GENESIS_TX_ID;
+            genesisBlockHeight = TEST_NET_GENESIS_BLOCK_HEIGHT;
+        }
+
+        ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         readLock = lock.readLock();
         writeLock = lock.writeLock();
     }
@@ -115,21 +150,11 @@ public class BsqChainState implements Persistable {
     // Public write access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init(Storage<BsqChainState> snapshotBsqChainStateStorage, String genesisTxId, int genesisBlockHeight) {
+    public void applySnapshot() {
         try {
             writeLock.lock();
 
-            this.snapshotBsqChainStateStorage = snapshotBsqChainStateStorage;
-            this.genesisTxId = genesisTxId;
-            this.genesisBlockHeight = genesisBlockHeight;
-        } finally {
-            writeLock.unlock();
-        }
-    }
-
-    public void applySnapshot(@Nullable BsqChainState snapshot) {
-        try {
-            writeLock.lock();
+            BsqChainState snapshot = snapshotBsqChainStateStorage.initAndGetPersistedWithFileName("BsqChainState");
 
             blocks.clear();
             txMap.clear();
@@ -150,7 +175,7 @@ public class BsqChainState implements Persistable {
                 genesisTx = snapshot.genesisTx;
             }
 
-            // printDetails();
+            printDetails();
         } finally {
             writeLock.unlock();
         }
@@ -185,7 +210,7 @@ public class BsqChainState implements Persistable {
 
             if (!blocks.contains(block)) {
                 if (blocks.isEmpty() || (blocks.getLast().getHash().equals(block.getPreviousBlockHash()) &&
-                        block.getHeight() == blocks.getLast().getHeight() + 1)) {
+                        blocks.getLast().getHeight() + 1 == block.getHeight())) {
                     blocks.add(block);
                     block.getTxs().stream().forEach(this::addTx);
                     chainHeadHeight = block.getHeight();
@@ -215,11 +240,14 @@ public class BsqChainState implements Persistable {
     }
 
     void addSpentTxWithSpentInfo(TxOutput spentTxOutput, SpentInfo spentInfo) {
-        try {
-            writeLock.lock();
-            spentInfoByTxOutputMap.put(spentTxOutput.getTxIdIndexTuple(), spentInfo);
-        } finally {
-            writeLock.unlock();
+        // we only use spentInfoByTxOutputMap for json export 
+        if (dumpBlockchainData) {
+            try {
+                writeLock.lock();
+                spentInfoByTxOutputMap.put(spentTxOutput.getTxIdIndexTuple(), spentInfo);
+            } finally {
+                writeLock.unlock();
+            }
         }
     }
 
@@ -305,6 +333,24 @@ public class BsqChainState implements Persistable {
     // Public read access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public String getGenesisTxId() {
+        try {
+            readLock.lock();
+            return genesisTxId;
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    public int getGenesisBlockHeight() {
+        try {
+            readLock.lock();
+            return genesisBlockHeight;
+        } finally {
+            readLock.unlock();
+        }
+    }
+
     public BsqChainState getClone() {
         final byte[] serialize;
         try {
@@ -334,13 +380,13 @@ public class BsqChainState implements Persistable {
         }
     }
 
-    public List<BsqBlock> getBlocksFrom(int fromBlockHeight) {
+    public byte[] getSerializedBlocksFrom(int fromBlockHeight) {
         try {
             readLock.lock();
-            return blocks.stream()
+            List<BsqBlock> filtered = blocks.stream()
                     .filter(block -> block.getHeight() >= fromBlockHeight)
-                    .sorted((o1, o2) -> new Integer(o1.getHeight()).compareTo(o2.getHeight()))
                     .collect(Collectors.toList());
+            return Utilities.<ArrayList<BsqBlock>>serialize(new ArrayList<>(filtered));
         } finally {
             readLock.unlock();
         }
@@ -454,7 +500,7 @@ public class BsqChainState implements Persistable {
         }
     }
 
-    Set<TxOutput> containsIssuanceTxOutputsByBtcAddress(String btcAddress) {
+    Set<TxOutput> issuanceTxOutputsByBtcAddress(String btcAddress) {
         try {
             readLock.lock();
             return issuanceBtcTxOutputsByBtcAddressMap.get(btcAddress);
@@ -528,14 +574,31 @@ public class BsqChainState implements Persistable {
     }
 
     private void printDetails() {
-        log.info("\nchainHeadHeight={}\nblocks.size={}\ntxMap.size={}\nunspentTxOutputSet.size={}\n" +
-                        "spentInfoByTxOutputMap.size={}\nburnedFeeByTxIdMap.size={}\nblocks data size in kb={}\n",
+        log.info("\nchainHeadHeight={}\n" +
+                        "    blocks.size={}\n" +
+                        "    txMap.size={}\n" +
+                        "    unspentTxOutputSet.size={}\n" +
+                        "    spentInfoByTxOutputMap.size={}\n" +
+                        "    burnedFeeByTxIdMap.size={}\n" +
+                        "    compensationRequestFees.size={}\n" +
+                        "    votingFees.size={}\n" +
+                        "    compensationRequestOpReturnTxOutputs.size={}\n" +
+                        "    compensationRequestBtcAddresses.size={}\n" +
+                        "    votingTxOutputs.size={}\n" +
+                        "    issuanceBtcTxOutputsByBtcAddressMap.size={}\n" +
+                        "    blocks data size in kb={}\n",
                 getChainHeadHeight(),
                 blocks.size(),
                 txMap.size(),
                 unspentTxOutputSet.size(),
                 spentInfoByTxOutputMap.size(),
                 burnedFeeByTxIdMap.size(),
+                compensationRequestFees.size(),
+                votingFees.size(),
+                compensationRequestOpReturnTxOutputs.size(),
+                compensationRequestBtcAddresses.size(),
+                votingTxOutputs.size(),
+                issuanceBtcTxOutputsByBtcAddressMap.size(),
                 Utilities.serialize(blocks.toArray()).length / 1000d);
     }
 }

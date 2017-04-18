@@ -29,7 +29,7 @@ import com.neemre.btcdcli4j.core.domain.enums.ScriptTypes;
 import com.neemre.btcdcli4j.daemon.BtcdDaemon;
 import com.neemre.btcdcli4j.daemon.BtcdDaemonImpl;
 import com.neemre.btcdcli4j.daemon.event.BlockListener;
-import io.bisq.core.dao.RpcOptionKeys;
+import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
 import io.bisq.core.dao.blockchain.vo.Tx;
@@ -61,6 +61,7 @@ public class RpcService {
     private final String rpcPassword;
     private final String rpcPort;
     private final String rpcBlockPort;
+    private boolean dumpBlockchainData;
 
     private BtcdClient client;
     private BtcdDaemon daemon;
@@ -72,14 +73,16 @@ public class RpcService {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public RpcService(@Named(RpcOptionKeys.RPC_USER) String rpcUser,
-                      @Named(RpcOptionKeys.RPC_PASSWORD) String rpcPassword,
-                      @Named(RpcOptionKeys.RPC_PORT) String rpcPort,
-                      @Named(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort) {
+    public RpcService(@Named(DaoOptionKeys.RPC_USER) String rpcUser,
+                      @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,
+                      @Named(DaoOptionKeys.RPC_PORT) String rpcPort,
+                      @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort,
+                      @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.rpcUser = rpcUser;
         this.rpcPassword = rpcPassword;
         this.rpcPort = rpcPort;
         this.rpcBlockPort = rpcBlockPort;
+        this.dumpBlockchainData = dumpBlockchainData;
     }
 
     void setup() throws BsqBlockchainException {
@@ -164,10 +167,11 @@ public class RpcService {
                                 // We dont support raw MS which are the only case where scriptPubKey.getAddresses()>1
                                 String address = scriptPubKey.getAddresses() != null &&
                                         scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
+                                final PubKeyScript pubKeyScript = dumpBlockchainData ? new PubKeyScript(scriptPubKey) : null;
                                 return new TxOutput(rawOutput.getN(),
                                         rawOutput.getValue().movePointRight(8).longValue(),
                                         rawTransaction.getTxId(),
-                                        new PubKeyScript(scriptPubKey),
+                                        pubKeyScript,
                                         address,
                                         opReturnData,
                                         blockHeight,

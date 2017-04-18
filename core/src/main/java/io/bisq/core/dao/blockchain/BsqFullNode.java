@@ -23,10 +23,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.network.Msg;
-import io.bisq.common.proto.PersistenceProtoResolver;
-import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.json.JsonExporter;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
@@ -44,11 +41,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
-import javax.inject.Named;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 // We are in UserThread context. We get callbacks from threaded classes which are already mapped to the UserThread.
 @Slf4j
 public class BsqFullNode extends BsqNode {
@@ -65,22 +57,16 @@ public class BsqFullNode extends BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqFullNode(BisqEnvironment bisqEnvironment,
-                       P2PService p2PService,
+    public BsqFullNode(P2PService p2PService,
                        BsqParser bsqParser,
                        BsqFullNodeExecutor bsqFullNodeExecutor,
                        BsqChainState bsqChainState,
                        JsonExporter jsonExporter,
-                       FeeService feeService,
-                       PersistenceProtoResolver persistenceProtoResolver,
-                       @Named(Storage.STORAGE_DIR) File storageDir) {
-        super(bisqEnvironment,
-                p2PService,
+                       FeeService feeService) {
+        super(p2PService,
                 bsqParser,
                 bsqChainState,
-                feeService,
-                persistenceProtoResolver,
-                storageDir);
+                feeService);
         this.bsqFullNodeExecutor = bsqFullNodeExecutor;
         this.jsonExporter = jsonExporter;
     }
@@ -171,8 +157,7 @@ public class BsqFullNode extends BsqNode {
             log.debug("Received getBsqBlocksRequest with data: {} from {}",
                     getBsqBlocksRequest.getFromBlockHeight(), peersNodeAddress);
 
-            final List<BsqBlock> bsqBlockList = bsqChainState.getBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
-            byte[] bsqBlockListBytes = Utilities.<ArrayList<BsqBlock>>serialize(new ArrayList<>(bsqBlockList));
+            byte[] bsqBlockListBytes = bsqChainState.getSerializedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
             final GetBsqBlocksResponse bsqBlocksResponse = new GetBsqBlocksResponse(bsqBlockListBytes);
             SettableFuture<Connection> future = p2PService.getNetworkNode().sendMessage(peersNodeAddress,
                     bsqBlocksResponse);

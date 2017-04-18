@@ -19,7 +19,7 @@ package io.bisq.core.dao.blockchain;
 
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.core.dao.RpcOptionKeys;
+import io.bisq.core.dao.DaoOptionKeys;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Named;
@@ -32,7 +32,7 @@ public class BsqBlockchainManager {
     @Inject
     public BsqBlockchainManager(BsqLiteNode bsqLiteNode,
                                 BsqFullNode bsqFullNode,
-                                @Named(RpcOptionKeys.RPC_USER) String rpcUser) {
+                                @Named(DaoOptionKeys.RPC_USER) String rpcUser) {
 
         bsqNode = rpcUser != null && !rpcUser.isEmpty() ? bsqFullNode : bsqLiteNode;
     }

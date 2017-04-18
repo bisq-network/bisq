@@ -25,7 +25,7 @@ import com.google.inject.Inject;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.dao.RpcOptionKeys;
+import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.vo.SpentInfo;
@@ -48,7 +48,7 @@ public class JsonExporter {
     public JsonExporter(Storage<PlainTextWrapper> jsonStorage,
                         BsqChainState bsqChainState,
                         @Named(Storage.STORAGE_DIR) File storageDir,
-                        @Named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
+                        @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.bsqChainState = bsqChainState;
         this.storageDir = storageDir;
         this.jsonStorage = jsonStorage;

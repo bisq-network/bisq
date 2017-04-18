@@ -60,7 +60,7 @@ public class IssuanceVerification {
                 final long requestedBtc = compensationRequest1.getCompensationRequestPayload().getRequestedBtc().value;
                 long alreadyFundedBtc = 0;
                 final int height = btcTxOutput.getBlockHeight();
-                Set<TxOutput> issuanceTxs = bsqChainState.containsIssuanceTxOutputsByBtcAddress(btcAddress);
+                Set<TxOutput> issuanceTxs = bsqChainState.issuanceTxOutputsByBtcAddress(btcAddress);
                 for (TxOutput txOutput : issuanceTxs) {
                     if (txOutput.getBlockHeight() < height ||
                             (txOutput.getBlockHeight() == height &&

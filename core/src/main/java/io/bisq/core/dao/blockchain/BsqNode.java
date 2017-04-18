@@ -19,10 +19,6 @@ package io.bisq.core.dao.blockchain;
 
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.proto.PersistenceProtoResolver;
-import io.bisq.common.storage.Storage;
-import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.parse.BsqParser;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
@@ -32,39 +28,12 @@ import io.bisq.network.p2p.P2PService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.inject.Named;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 // We are in UserThread context. We get callbacks from threaded classes which are already mapped to the UserThread.
 @Slf4j
 public abstract class BsqNode {
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Static fields
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    //mainnet
-    // this tx has a lot of outputs
-    // https://blockchain.info/de/tx/ee921650ab3f978881b8fe291e0c025e0da2b7dc684003d7a03d9649dfee2e15
-    // BLOCK_HEIGHT 411779 
-    // 411812 has 693 recursions
-    // MAIN NET
-    private static final String GENESIS_TX_ID = "b26371e2145f52c94b3d30713a9e38305bfc665fc27cd554e794b5e369d99ef5";
-    private static final int GENESIS_BLOCK_HEIGHT = 461718; // 2017-04-13
-    // block 300000 2014-05-10
-    // block 350000 2015-03-30
-    // block 400000 2016-02-25
-    // block 450000 2017-01-25
-
-    // REG TEST
-    private static final String REG_TEST_GENESIS_TX_ID = "3bc7bc9484e112ec8ddd1a1c984379819245ac463b9ce40fa8b5bf771c0f9236";
-    private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 102;
-    // TEST NET
-    private static final String TEST_NET_GENESIS_TX_ID = "";
-    private static final int TEST_NET_GENESIS_BLOCK_HEIGHT = 0;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Class fields
@@ -86,8 +55,6 @@ public abstract class BsqNode {
     @SuppressWarnings("WeakerAccess")
     protected boolean p2pNetworkReady;
 
-    transient private Storage<BsqChainState> snapshotBsqChainStateStorage;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -95,34 +62,17 @@ public abstract class BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqNode(BisqEnvironment bisqEnvironment,
-                   P2PService p2PService,
+    public BsqNode(P2PService p2PService,
                    BsqParser bsqParser,
                    BsqChainState bsqChainState,
-                   FeeService feeService,
-                   PersistenceProtoResolver persistenceProtoResolver,
-                   @Named(Storage.STORAGE_DIR) File storageDir) {
+                   FeeService feeService) {
 
         this.p2PService = p2PService;
         this.bsqParser = bsqParser;
         this.bsqChainState = bsqChainState;
 
-        snapshotBsqChainStateStorage = new Storage<>(storageDir, persistenceProtoResolver);
-
-        if (bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.MAINNET) {
-            genesisTxId = GENESIS_TX_ID;
-            genesisBlockHeight = GENESIS_BLOCK_HEIGHT;
-        } else if (bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.REGTEST) {
-            genesisTxId = REG_TEST_GENESIS_TX_ID;
-            genesisBlockHeight = REG_TEST_GENESIS_BLOCK_HEIGHT;
-        } else {
-            genesisTxId = TEST_NET_GENESIS_TX_ID;
-            genesisBlockHeight = TEST_NET_GENESIS_BLOCK_HEIGHT;
-        }
-
-        bsqChainState.init(snapshotBsqChainStateStorage,
-                genesisTxId,
-                genesisBlockHeight);
+        genesisTxId = bsqChainState.getGenesisTxId();
+        genesisBlockHeight = bsqChainState.getGenesisBlockHeight();
 
         bsqChainState.setCreateCompensationRequestFee(feeService.getCreateCompensationRequestFee().value,
                 genesisBlockHeight);
@@ -151,8 +101,7 @@ public abstract class BsqNode {
     }
 
     private void applySnapshot() {
-        BsqChainState persistedBsqChainState = snapshotBsqChainStateStorage.initAndGetPersistedWithFileName("BsqChainState");
-        bsqChainState.applySnapshot(persistedBsqChainState);
+        bsqChainState.applySnapshot();
         bsqChainStateListeners.stream().forEach(BsqChainStateListener::onBsqChainStateChanged);
     }
 
