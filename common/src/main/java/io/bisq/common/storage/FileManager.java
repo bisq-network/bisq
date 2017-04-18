@@ -117,11 +117,7 @@ public class FileManager<T extends Persistable> {
         }
 
         if (persistable.isPresent()) {
-<<<<<<< HEAD
             log.info("Reading Persistable: {}", persistable.get().getClass());
-=======
-            log.debug("Persistable found");
->>>>>>> DAO
             //noinspection unchecked
             return (T) persistable.get();
         }
