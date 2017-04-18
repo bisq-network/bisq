@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import lombok.Value;
 
@@ -25,6 +26,8 @@ import javax.annotation.concurrent.Immutable;
 @Value
 @Immutable
 public class SpentInfo implements Persistable {
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
+
     private final long blockHeight;
     private final String txId;
     private final int inputIndex;

@@ -64,8 +64,8 @@ public class CompensationViewItem {
 
     public static boolean contains(CompensationRequestVoteItem selectedItem) {
         return instances.stream()
-                .filter(e -> e.compensationRequestVoteItem.compensationRequest.getCompensationRequestPayload().uid.equals(
-                        selectedItem.compensationRequest.getCompensationRequestPayload().uid))
+                .filter(e -> e.compensationRequestVoteItem.compensationRequest.getCompensationRequestPayload().getUid().equals(
+                        selectedItem.compensationRequest.getCompensationRequestPayload().getUid()))
                 .findAny()
                 .isPresent();
     }
@@ -83,7 +83,7 @@ public class CompensationViewItem {
         hBox.setSpacing(5);
         vBox.getChildren().add(hBox);
 
-        String title = compensationRequestPayload.title + " (" + compensationRequestPayload.getShortId() + ")";
+        String title = compensationRequestPayload.getTitle() + " (" + compensationRequestPayload.getShortId() + ")";
 
         HyperlinkWithIcon infoLabelWithLink = new HyperlinkWithIcon(title, AwesomeIcon.EXTERNAL_LINK);
         infoLabelWithLink.setPrefWidth(220);

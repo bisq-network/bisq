@@ -32,7 +32,11 @@ import io.bisq.core.dao.blockchain.json.JsonExporter;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMsg;
+import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqFullNodeExecutor;
+import io.bisq.core.dao.blockchain.parse.BsqParser;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Connection;
@@ -49,6 +53,7 @@ import java.util.List;
 @Slf4j
 public class BsqFullNode extends BsqNode {
 
+    private BsqFullNodeExecutor bsqFullNodeExecutor;
     private final JsonExporter jsonExporter;
     @Getter
     private boolean parseBlockchainComplete;
@@ -62,19 +67,21 @@ public class BsqFullNode extends BsqNode {
     @Inject
     public BsqFullNode(BisqEnvironment bisqEnvironment,
                        P2PService p2PService,
-                       BsqChainState bsqChainState,
-                       BsqBlockchainRequest bsqBlockchainRequest,
                        BsqParser bsqParser,
+                       BsqFullNodeExecutor bsqFullNodeExecutor,
+                       BsqChainState bsqChainState,
                        JsonExporter jsonExporter,
+                       FeeService feeService,
                        PersistenceProtoResolver persistenceProtoResolver,
                        @Named(Storage.STORAGE_DIR) File storageDir) {
         super(bisqEnvironment,
                 p2PService,
-                bsqChainState,
                 bsqParser,
-                bsqBlockchainRequest,
+                bsqChainState,
+                feeService,
                 persistenceProtoResolver,
                 storageDir);
+        this.bsqFullNodeExecutor = bsqFullNodeExecutor;
         this.jsonExporter = jsonExporter;
     }
 
@@ -86,7 +93,7 @@ public class BsqFullNode extends BsqNode {
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
         super.onAllServicesInitialized(errorMessageHandler);
 
-        bsqBlockchainRequest.setup(this::startParseBlocks,
+        bsqFullNodeExecutor.setup(this::startParseBlocks,
                 throwable -> {
                     log.error(throwable.toString());
                     throwable.printStackTrace();
@@ -95,7 +102,7 @@ public class BsqFullNode extends BsqNode {
 
     @Override
     protected void parseBlocksWithChainHeadHeight(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
-        bsqBlockchainRequest.requestChainHeadHeight(chainHeadHeight -> {
+        bsqFullNodeExecutor.requestChainHeadHeight(chainHeadHeight -> {
             parseBlocks(startBlockHeight, genesisBlockHeight, genesisTxId, chainHeadHeight);
         }, throwable -> {
             log.error(throwable.toString());
@@ -106,7 +113,7 @@ public class BsqFullNode extends BsqNode {
     @Override
     protected void parseBlocks(int startBlockHeight, int genesisBlockHeight, String genesisTxId, Integer chainHeadHeight) {
         if (chainHeadHeight != startBlockHeight) {
-            bsqBlockchainRequest.parseBlocks(startBlockHeight,
+            bsqFullNodeExecutor.parseBlocks(startBlockHeight,
                     chainHeadHeight,
                     genesisBlockHeight,
                     genesisTxId,
@@ -138,8 +145,8 @@ public class BsqFullNode extends BsqNode {
     protected void onParseBlockchainComplete(int genesisBlockHeight, String genesisTxId) {
         parseBlockchainComplete = true;
         // We register our handler for new blocks
-        bsqBlockchainRequest.addBlockHandler(btcdBlock -> {
-            bsqBlockchainRequest.parseBlock(btcdBlock,
+        bsqFullNodeExecutor.addBlockHandler(btcdBlock -> {
+            bsqFullNodeExecutor.parseBtcdBlock(btcdBlock,
                     genesisBlockHeight,
                     genesisTxId,
                     this::onNewBsqBlock,

@@ -112,7 +112,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         compensationRequestsComboBox.setConverter(new StringConverter<CompensationRequestVoteItem>() {
             @Override
             public String toString(CompensationRequestVoteItem item) {
-                return item.compensationRequest.getCompensationRequestPayload().uid;
+                return item.compensationRequest.getCompensationRequestPayload().getUid();
             }
 
             @Override
@@ -277,7 +277,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             compensationRequestsComboBox.setItems(compensationRequestVoteItems);
 
             //TODO move to voteManager.getCurrentVoteItemsList()?
-            compensationRequestManager.getObservableCompensationRequestsList().stream().forEach(e -> compensationRequestVoteItems.add(new CompensationRequestVoteItem(e)));
+            compensationRequestManager.getObservableList().stream().forEach(e -> compensationRequestVoteItems.add(new CompensationRequestVoteItem(e)));
 
             parametersComboBox.setItems(FXCollections.observableArrayList(voteItemsList.getVoteItemList()));
         } else {

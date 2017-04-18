@@ -125,7 +125,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
         // tableView.setMinHeight(100);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label(Res.get("table.placeholder.noData")));
-        sortedList = new SortedList<>(compensationRequestManger.getObservableCompensationRequestsList());
+        sortedList = new SortedList<>(compensationRequestManger.getObservableList());
         tableView.setItems(sortedList);
         setColumns();
     }
@@ -262,14 +262,14 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                             public void updateItem(final CompensationRequest item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getCompensationRequestPayload().name);
+                                    setText(item.getCompensationRequestPayload().getName());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        nameColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().name.compareTo(o2.getCompensationRequestPayload().name));
+        nameColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().getName().compareTo(o2.getCompensationRequestPayload().getName()));
         tableView.getColumns().add(nameColumn);
 
 
@@ -286,14 +286,14 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                             public void updateItem(final CompensationRequest item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getCompensationRequestPayload().uid);
+                                    setText(item.getCompensationRequestPayload().getUid());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        uidColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().uid.compareTo(o2.getCompensationRequestPayload().uid));
+        uidColumn.setComparator((o1, o2) -> o1.getCompensationRequestPayload().getUid().compareTo(o2.getCompensationRequestPayload().getUid()));
         tableView.getColumns().add(uidColumn);
     }
 }

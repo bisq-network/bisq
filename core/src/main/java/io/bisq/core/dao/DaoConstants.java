@@ -15,27 +15,11 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.vo;
+package io.bisq.core.dao;
 
-import io.bisq.common.app.Version;
-import io.bisq.common.persistence.Persistable;
-import lombok.Value;
+public class DaoConstants {
 
-import javax.annotation.concurrent.Immutable;
 
-@Value
-@Immutable
-public class TxInput implements Persistable {
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
-    private final int spendingTxOutputIndex;
-    private final String spendingTxId;
-
-    @Override
-    public String toString() {
-        return "TxInput{" +
-                "\nspendingTxOutputIndex=" + spendingTxOutputIndex +
-                ",\nspendingTxId='" + spendingTxId + '\'' +
-                "}\n";
-    }
+    public static final byte OP_RETURN_TYPE_COMPENSATION_REQUEST = (byte) 0x01;
+    public static final byte OP_RETURN_TYPE_VOTE = (byte) 0x02;
 }

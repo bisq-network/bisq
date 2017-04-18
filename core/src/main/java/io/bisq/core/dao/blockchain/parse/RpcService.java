@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain;
+package io.bisq.core.dao.blockchain.parse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -25,6 +25,7 @@ import com.neemre.btcdcli4j.core.client.BtcdClient;
 import com.neemre.btcdcli4j.core.client.BtcdClientImpl;
 import com.neemre.btcdcli4j.core.domain.Block;
 import com.neemre.btcdcli4j.core.domain.RawTransaction;
+import com.neemre.btcdcli4j.core.domain.enums.ScriptTypes;
 import com.neemre.btcdcli4j.daemon.BtcdDaemon;
 import com.neemre.btcdcli4j.daemon.BtcdDaemonImpl;
 import com.neemre.btcdcli4j.daemon.event.BlockListener;
@@ -37,6 +38,7 @@ import io.bisq.core.dao.blockchain.vo.TxOutput;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,10 +53,9 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // Blocking access to Bitcoin Core via RPC requests
-// We are in threaded context. We map our results to the client into the UserThread to not extend thread contexts.
 // See the rpc.md file in the doc directory for more info about the setup.
-public class BsqBlockchainRpcService implements BsqBlockchainService {
-    private static final Logger log = LoggerFactory.getLogger(BsqBlockchainRpcService.class);
+public class RpcService {
+    private static final Logger log = LoggerFactory.getLogger(RpcService.class);
 
     private final String rpcUser;
     private final String rpcPassword;
@@ -64,24 +65,24 @@ public class BsqBlockchainRpcService implements BsqBlockchainService {
     private BtcdClient client;
     private BtcdDaemon daemon;
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqBlockchainRpcService(@Named(RpcOptionKeys.RPC_USER) String rpcUser,
-                                   @Named(RpcOptionKeys.RPC_PASSWORD) String rpcPassword,
-                                   @Named(RpcOptionKeys.RPC_PORT) String rpcPort,
-                                   @Named(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort) {
+    public RpcService(@Named(RpcOptionKeys.RPC_USER) String rpcUser,
+                      @Named(RpcOptionKeys.RPC_PASSWORD) String rpcPassword,
+                      @Named(RpcOptionKeys.RPC_PORT) String rpcPort,
+                      @Named(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort) {
         this.rpcUser = rpcUser;
         this.rpcPassword = rpcPassword;
         this.rpcPort = rpcPort;
         this.rpcBlockPort = rpcBlockPort;
     }
 
-    @Override
-    public void setup() throws BsqBlockchainException {
+    void setup() throws BsqBlockchainException {
         long startTs = System.currentTimeMillis();
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         CloseableHttpClient httpProvider = HttpClients.custom().setConnectionManager(cm).build();
@@ -114,8 +115,7 @@ public class BsqBlockchainRpcService implements BsqBlockchainService {
         }
     }
 
-    @Override
-    public void registerBlockHandler(Consumer<Block> blockHandler) {
+    void registerBlockHandler(Consumer<Block> blockHandler) {
         daemon.addBlockListener(new BlockListener() {
             @Override
             public void blockDetected(Block block) {
@@ -129,19 +129,16 @@ public class BsqBlockchainRpcService implements BsqBlockchainService {
         });
     }
 
-    @Override
-    public int requestChainHeadHeight() throws BitcoindException, CommunicationException {
+    int requestChainHeadHeight() throws BitcoindException, CommunicationException {
         return client.getBlockCount();
     }
 
-    @Override
-    public Block requestBlock(int blockHeight) throws BitcoindException, CommunicationException {
+    Block requestBlock(int blockHeight) throws BitcoindException, CommunicationException {
         final String blockHash = client.getBlockHash(blockHeight);
         return client.getBlock(blockHash);
     }
 
-    @Override
-    public Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException {
+    Tx requestTransaction(String txId, int blockHeight) throws BsqBlockchainException {
         try {
             RawTransaction rawTransaction = requestRawTransaction(txId);
             // rawTransaction.getTime() is in seconds but we keep it in ms internally
@@ -155,16 +152,32 @@ public class BsqBlockchainRpcService implements BsqBlockchainService {
             final List<TxOutput> txOutputs = rawTransaction.getVOut()
                     .stream()
                     .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
-                    .map(rawOutput -> new TxOutput(rawOutput.getN(),
-                                    rawOutput.getValue().movePointRight(8).longValue(),
-                                    rawTransaction.getTxId(),
-                                    new PubKeyScript(rawOutput.getScriptPubKey()),
-                                    blockHeight,
-                                    time)
+                    .map(rawOutput -> {
+                                byte[] opReturnData = null;
+                                final com.neemre.btcdcli4j.core.domain.PubKeyScript scriptPubKey = rawOutput.getScriptPubKey();
+                                if (scriptPubKey.getType().equals(ScriptTypes.NULL_DATA)) {
+                                    String[] chunks = scriptPubKey.getAsm().split(" ");
+                                    if (chunks.length == 2 && chunks[0].equals("OP_RETURN")) {
+                                        opReturnData = Utils.HEX.decode(chunks[1]);
+                                    }
+                                }
+                                // We dont support raw MS which are the only case where scriptPubKey.getAddresses()>1
+                                String address = scriptPubKey.getAddresses() != null &&
+                                        scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
+                                return new TxOutput(rawOutput.getN(),
+                                        rawOutput.getValue().movePointRight(8).longValue(),
+                                        rawTransaction.getTxId(),
+                                        new PubKeyScript(scriptPubKey),
+                                        address,
+                                        opReturnData,
+                                        blockHeight,
+                                        time);
+                            }
                     )
                     .collect(Collectors.toList());
 
             return new Tx(txId,
+                    blockHeight,
                     rawTransaction.getBlockHash(),
                     ImmutableList.copyOf(txInputs),
                     ImmutableList.copyOf(txOutputs),
@@ -174,8 +187,7 @@ public class BsqBlockchainRpcService implements BsqBlockchainService {
         }
     }
 
-    @Override
-    public RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException {
+    RawTransaction requestRawTransaction(String txId) throws BitcoindException, CommunicationException {
         return (RawTransaction) client.getRawTransaction(txId, 1);
     }
 }

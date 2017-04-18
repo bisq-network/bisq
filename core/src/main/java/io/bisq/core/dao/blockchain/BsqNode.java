@@ -23,7 +23,10 @@ import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BitcoinNetwork;
+import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqParser;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.P2PService;
 import lombok.Getter;
@@ -70,13 +73,13 @@ public abstract class BsqNode {
     @SuppressWarnings("WeakerAccess")
     protected final P2PService p2PService;
     @SuppressWarnings("WeakerAccess")
-    protected final BsqChainState bsqChainState;
-    @SuppressWarnings("WeakerAccess")
     protected final BsqParser bsqParser;
     @SuppressWarnings("WeakerAccess")
-    protected final BsqBlockchainRequest bsqBlockchainRequest;
+    protected final BsqChainState bsqChainState;
     @SuppressWarnings("WeakerAccess")
     protected final List<BsqChainStateListener> bsqChainStateListeners = new ArrayList<>();
+    protected final String genesisTxId;
+    protected final int genesisBlockHeight;
 
     @Getter
     protected boolean parseBlockchainComplete;
@@ -94,31 +97,37 @@ public abstract class BsqNode {
     @Inject
     public BsqNode(BisqEnvironment bisqEnvironment,
                    P2PService p2PService,
-                   BsqChainState bsqChainState,
                    BsqParser bsqParser,
-                   BsqBlockchainRequest bsqBlockchainRequest,
+                   BsqChainState bsqChainState,
+                   FeeService feeService,
                    PersistenceProtoResolver persistenceProtoResolver,
                    @Named(Storage.STORAGE_DIR) File storageDir) {
 
         this.p2PService = p2PService;
-        this.bsqChainState = bsqChainState;
         this.bsqParser = bsqParser;
-        this.bsqBlockchainRequest = bsqBlockchainRequest;
+        this.bsqChainState = bsqChainState;
 
         snapshotBsqChainStateStorage = new Storage<>(storageDir, persistenceProtoResolver);
+
         if (bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.MAINNET) {
-            bsqChainState.init(snapshotBsqChainStateStorage,
-                    GENESIS_TX_ID,
-                    GENESIS_BLOCK_HEIGHT);
+            genesisTxId = GENESIS_TX_ID;
+            genesisBlockHeight = GENESIS_BLOCK_HEIGHT;
         } else if (bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.REGTEST) {
-            bsqChainState.init(snapshotBsqChainStateStorage,
-                    REG_TEST_GENESIS_TX_ID,
-                    REG_TEST_GENESIS_BLOCK_HEIGHT);
-        } else if (bisqEnvironment.getBitcoinNetwork() == BitcoinNetwork.TESTNET) {
-            bsqChainState.init(snapshotBsqChainStateStorage,
-                    TEST_NET_GENESIS_TX_ID,
-                    TEST_NET_GENESIS_BLOCK_HEIGHT);
+            genesisTxId = REG_TEST_GENESIS_TX_ID;
+            genesisBlockHeight = REG_TEST_GENESIS_BLOCK_HEIGHT;
+        } else {
+            genesisTxId = TEST_NET_GENESIS_TX_ID;
+            genesisBlockHeight = TEST_NET_GENESIS_BLOCK_HEIGHT;
         }
+
+        bsqChainState.init(snapshotBsqChainStateStorage,
+                genesisTxId,
+                genesisBlockHeight);
+
+        bsqChainState.setCreateCompensationRequestFee(feeService.getCreateCompensationRequestFee().value,
+                genesisBlockHeight);
+        bsqChainState.setVotingFee(feeService.getVotingTxFee().value,
+                genesisBlockHeight);
     }
 
 
@@ -154,8 +163,6 @@ public abstract class BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     protected void startParseBlocks() {
-        final int genesisBlockHeight = bsqChainState.getGenesisBlockHeight();
-        final String genesisTxId = bsqChainState.getGenesisTxId();
         int startBlockHeight = Math.max(genesisBlockHeight, bsqChainState.getChainHeadHeight() + 1);
         log.info("Parse blocks:\n" +
                         "   Start block height={}\n" +

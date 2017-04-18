@@ -28,7 +28,10 @@ import java.util.Optional;
 @Value
 @Immutable
 public class Tx implements Persistable {
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
+
     private final String id;
+    private final int blockHeight;
     private final String blockHash;
     private final List<TxInput> inputs;
     private final List<TxOutput> outputs;

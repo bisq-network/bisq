@@ -32,7 +32,11 @@ import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMsg;
+import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqLiteNodeExecutor;
+import io.bisq.core.dao.blockchain.parse.BsqParser;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Connection;
@@ -47,6 +51,7 @@ import java.util.List;
 // We are in UserThread context. We get callbacks from threaded classes which are already mapped to the UserThread.
 @Slf4j
 public class BsqLiteNode extends BsqNode {
+    private BsqLiteNodeExecutor bsqLiteNodeExecutor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -57,18 +62,20 @@ public class BsqLiteNode extends BsqNode {
     @Inject
     public BsqLiteNode(BisqEnvironment bisqEnvironment,
                        P2PService p2PService,
-                       BsqChainState bsqChainState,
                        BsqParser bsqParser,
-                       BsqBlockchainRequest bsqBlockchainRequest,
+                       BsqLiteNodeExecutor bsqLiteNodeExecutor,
+                       BsqChainState bsqChainState,
+                       FeeService feeService,
                        PersistenceProtoResolver persistenceProtoResolver,
                        @Named(Storage.STORAGE_DIR) File storageDir) {
         super(bisqEnvironment,
                 p2PService,
-                bsqChainState,
                 bsqParser,
-                bsqBlockchainRequest,
+                bsqChainState,
+                feeService,
                 persistenceProtoResolver,
                 storageDir);
+        this.bsqLiteNodeExecutor = bsqLiteNodeExecutor;
     }
 
 
@@ -137,12 +144,12 @@ public class BsqLiteNode extends BsqNode {
             byte[] bsqBlocksBytes = getBsqBlocksResponse.getBsqBlocksBytes();
             List<BsqBlock> bsqBlockList = Utilities.<ArrayList<BsqBlock>>deserialize(bsqBlocksBytes);
             log.debug("received msg with {} items", bsqBlockList.size());
-            bsqBlockchainRequest.parseBsqBlocks(bsqBlockList,
-                    bsqChainState.getGenesisBlockHeight(),
-                    bsqChainState.getGenesisTxId(),
+            bsqLiteNodeExecutor.parseBsqBlocksForLiteNode(bsqBlockList,
+                    genesisBlockHeight,
+                    genesisTxId,
                     this::onNewBsqBlock,
                     () -> {
-                        onParseBlockchainComplete(bsqChainState.getGenesisBlockHeight(), bsqChainState.getGenesisTxId());
+                        onParseBlockchainComplete(genesisBlockHeight, genesisTxId);
                     }, throwable -> {
                         if (throwable instanceof BlockNotConnectingException) {
                             startReOrgFromLastSnapshot();
@@ -157,13 +164,19 @@ public class BsqLiteNode extends BsqNode {
             BsqBlock bsqBlock = Utilities.<BsqBlock>deserialize(bsqBlockBytes);
             log.debug("received broadcastNewBsqBlock bsqBlock {}", bsqBlock);
             if (!bsqChainState.containsBlock(bsqBlock)) {
-                try {
-                    bsqParser.parseBsqBlock(bsqBlock, bsqChainState.getGenesisBlockHeight(), bsqChainState.getGenesisTxId());
-                    bsqChainState.addBlock(bsqBlock);
-                    onNewBsqBlock(bsqBlock);
-                } catch (BlockNotConnectingException e) {
-                    e.printStackTrace();
-                }
+                bsqLiteNodeExecutor.parseBsqBlockForLiteNode(bsqBlock,
+                        genesisBlockHeight,
+                        genesisTxId,
+                        () -> {
+                            onNewBsqBlock(bsqBlock);
+                        }, throwable -> {
+                            if (throwable instanceof BlockNotConnectingException) {
+                                startReOrgFromLastSnapshot();
+                            } else {
+                                log.error(throwable.toString());
+                                throwable.printStackTrace();
+                            }
+                        });
             }
         }
     }
@@ -172,10 +185,5 @@ public class BsqLiteNode extends BsqNode {
     protected void onParseBlockchainComplete(int genesisBlockHeight, String genesisTxId) {
         parseBlockchainComplete = true;
         bsqChainStateListeners.stream().forEach(BsqChainStateListener::onBsqChainStateChanged);
-    }
-
-    @Override
-    protected void onNewBsqBlock(BsqBlock bsqBlock) {
-        super.onNewBsqBlock(bsqBlock);
     }
 }

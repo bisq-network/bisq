@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import lombok.Value;
 
@@ -26,6 +27,8 @@ import java.util.List;
 @Value
 @Immutable
 public class BsqBlock implements Persistable {
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
+
     private final List<Tx> txs;
     private final int height;
     private final String hash;

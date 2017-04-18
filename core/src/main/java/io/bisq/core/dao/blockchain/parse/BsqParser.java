@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain;
+package io.bisq.core.dao.blockchain.parse;
 
 import com.google.common.collect.ImmutableList;
 import com.neemre.btcdcli4j.core.domain.Block;
@@ -38,13 +38,20 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Immutable
 public class BsqParser {
     private final BsqChainState bsqChainState;
-    private final BsqBlockchainService bsqBlockchainService;
+    private final OpReturnVerification opReturnVerification;
+    private final IssuanceVerification issuanceVerification;
+    private final RpcService rpcService;
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqParser(BsqBlockchainService bsqBlockchainService, BsqChainState bsqChainState) {
-        this.bsqBlockchainService = bsqBlockchainService;
+    public BsqParser(RpcService rpcService,
+                     BsqChainState bsqChainState,
+                     OpReturnVerification opReturnVerification,
+                     IssuanceVerification issuanceVerification) {
+        this.rpcService = rpcService;
         this.bsqChainState = bsqChainState;
+        this.opReturnVerification = opReturnVerification;
+        this.issuanceVerification = issuanceVerification;
     }
 
 
@@ -92,7 +99,7 @@ public class BsqParser {
         try {
             for (int blockHeight = startBlockHeight; blockHeight <= chainHeadHeight; blockHeight++) {
                 long startTs = System.currentTimeMillis();
-                Block btcdBlock = bsqBlockchainService.requestBlock(blockHeight);
+                Block btcdBlock = rpcService.requestBlock(blockHeight);
                 List<Tx> bsqTxsInBlock = findBsqTxsInBlock(btcdBlock,
                         genesisBlockHeight,
                         genesisTxId);
@@ -128,7 +135,7 @@ public class BsqParser {
         List<Tx> bsqTxsInBlock = new ArrayList<>();
         // We add all transactions to the block
         for (String txId : btcdBlock.getTx()) {
-            final Tx tx = bsqBlockchainService.requestTransaction(txId, blockHeight);
+            final Tx tx = rpcService.requestTransaction(txId, blockHeight);
             txList.add(tx);
             checkForGenesisTx(genesisBlockHeight, genesisTxId, blockHeight, bsqTxsInBlock, tx);
         }
@@ -173,7 +180,7 @@ public class BsqParser {
                                    List<Tx> bsqTxsInBlock,
                                    Tx tx) {
         if (tx.getId().equals(genesisTxId) && blockHeight == genesisBlockHeight) {
-            tx.getOutputs().stream().forEach(bsqChainState::addVerifiedTxOutput);
+            tx.getOutputs().stream().forEach(bsqChainState::addUnspentTxOutput);
             bsqChainState.setGenesisTx(tx);
             bsqChainState.addTx(tx);
             bsqTxsInBlock.add(tx);
@@ -259,8 +266,10 @@ public class BsqParser {
             Optional<TxOutput> spendableTxOutput = bsqChainState.getSpendableTxOutput(input.getSpendingTxId(),
                     input.getSpendingTxOutputIndex());
             if (spendableTxOutput.isPresent()) {
-                bsqChainState.addSpentTxWithSpentInfo(spendableTxOutput.get(), new SpentInfo(blockHeight, tx.getId(), inputIndex));
-                availableValue = availableValue + spendableTxOutput.get().getValue();
+                final TxOutput spentTxOutput = spendableTxOutput.get();
+                bsqChainState.removeUnspentTxOutput(spentTxOutput);
+                bsqChainState.addSpentTxWithSpentInfo(spentTxOutput, new SpentInfo(blockHeight, tx.getId(), inputIndex));
+                availableValue = availableValue + spentTxOutput.getValue();
             }
         }
 
@@ -270,18 +279,34 @@ public class BsqParser {
             isBsqTx = true;
 
             // We use order of output index. An output is a BSQ utxo as long there is enough input value
-            for (TxOutput txOutput : tx.getOutputs()) {
+            final List<TxOutput> outputs = tx.getOutputs();
+            TxOutput btcOutput = null;
+            for (int index = 0; index < outputs.size(); index++) {
+                TxOutput txOutput = outputs.get(index);
+
                 final long txOutputValue = txOutput.getValue();
-                if (availableValue >= txOutputValue) {
+                // We ignore OP_RETURN outputs with txOutputValue 0
+                if (availableValue >= txOutputValue && txOutputValue != 0) {
                     // We are spending available tokens
-                    bsqChainState.addVerifiedTxOutput(txOutput);
+                    bsqChainState.addUnspentTxOutput(txOutput);
+                    
                     availableValue -= txOutputValue;
                     if (availableValue == 0) {
                         log.debug("We don't have anymore BSQ to spend");
                         break;
                     }
-                } else {
+                } else if (issuanceVerification.maybeProcessData(outputs, index)) {
+                    // it is not a BSQ or OP_RETURN output
+                    // check is we have a sponsor tx
+                    log.debug("We got a issuance tx and process the data");
                     break;
+                } else if (opReturnVerification.maybeProcessOpReturnData(outputs, index, availableValue, blockHeight, btcOutput)) {
+                    log.debug("We processed valid DAO OP_RETURN data");
+                } else {
+                    btcOutput = txOutput;
+                    // The other outputs are not BSQ outputs so we skip them but we
+                    // jump to the last output as that might be an OP_RETURN with DAO data
+                    index = Math.max(index, outputs.size() - 2);
                 }
             }
 
