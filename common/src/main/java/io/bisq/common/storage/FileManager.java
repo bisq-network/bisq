@@ -116,7 +116,7 @@ public class FileManager<T extends Persistable> {
         }
 
         if (persistable.isPresent()) {
-            log.error("Persistable found");
+            log.info("Reading Persistable: {}", persistable.get().getClass());
             //noinspection unchecked
             return (T) persistable.get();
         }
@@ -216,7 +216,7 @@ public class FileManager<T extends Persistable> {
             } else if (protoDiskEnvelope != null) {
                 fileOutputStream = new FileOutputStream(tempFile);
 
-                log.info("Writing protobuffer to disc");
+                log.info("Writing protobuffer to disc:{}", serializable.getClass());
                 protoDiskEnvelope.writeDelimitedTo(fileOutputStream);
 
                 // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide

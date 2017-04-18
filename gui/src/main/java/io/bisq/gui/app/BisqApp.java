@@ -41,6 +41,7 @@ import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.User;
 import io.bisq.gui.SystemTray;
 import io.bisq.gui.common.UITimer;
 import io.bisq.gui.common.view.CachingViewLoader;
@@ -168,10 +169,12 @@ public class BisqApp extends Application {
 */
             Preferences preferences = injector.getInstance(Preferences.class);
             preferences.init();
+            User user = injector.getInstance(User.class);
+            user.init();
 
             Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
             Version.printVersion();
-            
+
             if (Utilities.isLinux())
                 System.setProperty("prism.lcdtext", "false");
 

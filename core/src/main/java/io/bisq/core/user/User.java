@@ -17,30 +17,31 @@
 
 package io.bisq.core.user;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.persistence.Persistable;
+import io.bisq.common.proto.ProtoHelper;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.Mediator;
 import io.bisq.core.filter.Filter;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.proto.ProtoUtil;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -50,11 +51,10 @@ import java.util.stream.Collectors;
  * The User is persisted locally.
  * It must never be transmitted over the wire (messageKeyPair contains private key!).
  */
+@Slf4j
 public final class User implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
-    private static final Logger log = LoggerFactory.getLogger(User.class);
 
     // Transient immutable fields
     transient final private Storage<User> storage;
@@ -71,14 +71,13 @@ public final class User implements Persistable {
     private Alert displayedAlert;
     @Nullable
     private Filter developersFilter;
-
-    private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
-    private List<Mediator> acceptedMediators = new ArrayList<>();
-
     @Nullable
     private Arbitrator registeredArbitrator;
     @Nullable
     private Mediator registeredMediator;
+
+    private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
+    private List<Mediator> acceptedMediators = new ArrayList<>();
 
     // Observable wrappers
     transient final private ObservableSet<PaymentAccount> paymentAccountsAsObservable = FXCollections.observableSet(paymentAccounts);
@@ -88,7 +87,24 @@ public final class User implements Persistable {
     @Inject
     public User(Storage<User> storage, KeyRing keyRing) throws NoSuchAlgorithmException {
         this.storage = storage;
+        accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
 
+        acceptedLanguageLocaleCodes.add(LanguageUtil.getDefaultLanguageLocaleAsCode());
+        String english = LanguageUtil.getEnglishLanguageLocaleCode();
+        if (!acceptedLanguageLocaleCodes.contains(english))
+            acceptedLanguageLocaleCodes.add(english);
+
+        acceptedArbitrators = new ArrayList<>();
+        acceptedMediators = new ArrayList<>();
+    }
+
+    // for unit tests
+    public User() {
+        this.storage = null;
+    }
+
+
+    public void init() {
         User persisted = storage.initAndGetPersisted(this);
         if (persisted != null) {
             accountID = persisted.getAccountId();
@@ -114,16 +130,6 @@ public final class User implements Persistable {
             developersAlert = persisted.getDevelopersAlert();
             displayedAlert = persisted.getDisplayedAlert();
             developersFilter = persisted.getDevelopersFilter();
-        } else {
-            accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
-
-            acceptedLanguageLocaleCodes.add(LanguageUtil.getDefaultLanguageLocaleAsCode());
-            String english = LanguageUtil.getEnglishLanguageLocaleCode();
-            if (!acceptedLanguageLocaleCodes.contains(english))
-                acceptedLanguageLocaleCodes.add(english);
-
-            acceptedArbitrators = new ArrayList<>();
-            acceptedMediators = new ArrayList<>();
         }
         storage.queueUpForSave();
 
@@ -140,21 +146,6 @@ public final class User implements Persistable {
 
         tradeCurrenciesInPaymentAccounts = paymentAccounts.stream().flatMap(e -> e.getTradeCurrencies().stream()).collect(Collectors.toSet());
     }
-
-    // for unit tests
-    public User() {
-        this.storage = null;
-    }
-
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-        } catch (Throwable t) {
-            log.trace("Cannot be deserialized." + t.getMessage());
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -402,5 +393,26 @@ public final class User implements Persistable {
     @Nullable
     public Alert getDisplayedAlert() {
         return displayedAlert;
+    }
+
+    @Override
+    public Message toProto() {
+        PB.User.Builder builder = PB.User.newBuilder()
+                .setAccountId(accountID)
+                .addAllPaymentAccounts(ProtoHelper.collectionToProto(paymentAccounts))
+                .setCurrentPaymentAccount(currentPaymentAccount.toProto())
+                .addAllAcceptedLanguageLocaleCodes(acceptedLanguageLocaleCodes)
+                .addAllAcceptedArbitrators(ProtoHelper.collectionToProto(acceptedArbitrators));
+        Optional.ofNullable(developersAlert)
+                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProto().getAlert()));
+        Optional.ofNullable(displayedAlert)
+                .ifPresent(displayedAlert -> builder.setDisplayedAlert(displayedAlert.toProto().getAlert()));
+        Optional.ofNullable(developersFilter)
+                .ifPresent(developersFilter -> builder.setDevelopersFilter(developersFilter.toProto().getFilter()));
+        Optional.ofNullable(registeredArbitrator)
+                .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProto().getArbitrator()));
+        Optional.ofNullable(registeredMediator)
+                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProto().getAlert()));
+        return PB.DiskEnvelope.newBuilder().setUser(builder).build();
     }
 }

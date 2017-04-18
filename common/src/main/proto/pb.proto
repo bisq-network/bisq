@@ -750,12 +750,24 @@ message DiskEnvelope {
         User user = 6;
         PersistedP2PStorageData persisted_p2p_storage_data = 7;
         SequenceNumberMap sequence_number_map = 8;
+        LongPersistable bloom_filter_nonce = 9;
     }
 }
 
 message PersistedP2PStorageData {
     // TODO ???
 }
+
+message LongPersistable {
+    int64 long = 1;
+}
+
+message PersistedPeers {
+    repeated Peer peers = 1;
+}
+
+
+
 
 message SequenceNumberMap {
     map<string, MapValue> sequence_number_map = 1;
@@ -1054,15 +1066,16 @@ message TradingPeer {
 }
 
 message User {
-    string account_i_d = 1;
-    //repeated PaymentAccount payment_accounts = 2;
-    //PaymentAccount current_payment_account = 3;
+    string account_id = 1;
+    repeated PaymentAccount payment_accounts = 2;
+    PaymentAccount current_payment_account = 3;
     repeated string accepted_language_locale_codes = 4;
     Alert developers_alert = 5;
     Alert displayed_alert = 6;
     Filter developers_filter = 7;
     repeated Arbitrator accepted_arbitrators = 8;
     Arbitrator registered_arbitrator = 9;
+    Mediator registered_mediator = 10;
 }
 
 message ViewPath {
@@ -1118,10 +1131,6 @@ message Locale {
 // java.util.Currency
 message Currency {
     string currency_code = 1;
-}
-
-message PersistedPeers {
-    repeated Peer peers = 1; // not sure about this
 }
 
 // stores bitcoin transaction id (which is a hash)

@@ -337,7 +337,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                         stopRetryTimer();
 
                         // We create a new list of candidates
-                        // 1. shuffled seedNodes 
+                        // 1. shuffled seedNodes
                         // 2. reported peers sorted by last activity date
                         // 3. Add as last persisted peers sorted by last activity date
                         List<NodeAddress> list = getFilteredList(new ArrayList<>(seedNodeAddresses), new ArrayList<>());

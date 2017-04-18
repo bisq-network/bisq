@@ -93,7 +93,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     @Inject
     public DisputeSummaryWindow(BSFormatter formatter, DisputeManager disputeManager, BtcWalletService walletService,
                                 TradeWalletService tradeWalletService) {
-        
+
         this.formatter = formatter;
         this.disputeManager = disputeManager;
         this.walletService = walletService;

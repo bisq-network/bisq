@@ -4,12 +4,12 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bisq.common.locale.CurrencyTuple;
 import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.persistence.HashSetPersistable;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.network.p2p.P2PService;
+import io.bisq.network.p2p.peers.PersistedList;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class TradeStatisticsManager {
     private static final Logger log = LoggerFactory.getLogger(TradeStatisticsManager.class);
 
-    private final Storage<HashSetPersistable<TradeStatistics>> statisticsStorage;
+    private final Storage<PersistedList<TradeStatistics>> statisticsStorage;
     private final Storage<PlainTextWrapper> fiatCurrencyListJsonStorage;
     private final Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage;
     private final Storage<PlainTextWrapper> statisticsJsonStorage;
@@ -35,7 +35,7 @@ public class TradeStatisticsManager {
     private final HashSet<TradeStatistics> tradeStatisticsSet = new HashSet<>();
 
     @Inject
-    public TradeStatisticsManager(Storage<HashSetPersistable<TradeStatistics>> statisticsStorage,
+    public TradeStatisticsManager(Storage<PersistedList<TradeStatistics>> statisticsStorage,
                                   Storage<PlainTextWrapper> fiatCurrencyListJsonStorage,
                                   Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage,
                                   Storage<PlainTextWrapper> statisticsJsonStorage,
@@ -69,10 +69,10 @@ public class TradeStatisticsManager {
             cryptoCurrencyListJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(cryptoCurrencyList)), 2000);
         }
 
-        HashSetPersistable<TradeStatistics> persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
+        PersistedList<TradeStatistics> persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
         if (persisted != null)
 
-            persisted.getHashSet().stream().forEach(e -> add(e, false));
+            persisted.getList().stream().forEach(e -> add(e, false));
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
@@ -104,7 +104,7 @@ public class TradeStatisticsManager {
                 observableTradeStatisticsSet.add(tradeStatistics);
 
                 if (storeLocally)
-                    statisticsStorage.queueUpForSave(new HashSetPersistable<>(tradeStatisticsSet), 2000);
+                    statisticsStorage.queueUpForSave(new PersistedList<TradeStatistics>(tradeStatisticsSet), 2000);
 
                 dump();
             } else {

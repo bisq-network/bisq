@@ -4,7 +4,6 @@ import io.bisq.common.Clock;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.persistence.HashSetPersistable;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.network.p2p.NodeAddress;
@@ -74,7 +73,7 @@ public class PeerManager implements ConnectionListener {
     private final NetworkNode networkNode;
     private final Clock clock;
     private final Set<NodeAddress> seedNodeAddresses;
-    private final Storage<HashSetPersistable<Peer>> dbStorage;
+    private final Storage<PersistedList<Peer>> dbStorage;
 
     private final HashSet<Peer> persistedPeers = new HashSet<>();
     private final Set<Peer> reportedPeers = new HashSet<>();
@@ -97,10 +96,10 @@ public class PeerManager implements ConnectionListener {
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
         dbStorage = new Storage<>(storageDir, persistenceProtoResolver);
-        HashSetPersistable<Peer> persistedPeers = dbStorage.initAndGetPersistedWithFileName("PersistedPeers");
-        if (persistedPeers != null) {
-            log.debug("We have persisted reported peers. persistedPeers.size()=" + persistedPeers.size());
-            this.persistedPeers.addAll(persistedPeers.getHashSet());
+        PersistedList persistedList = dbStorage.initAndGetPersistedWithFileName("PersistedList");
+        if (persistedList != null) {
+            log.debug("We have persisted reported list. persistedList.size()=" + persistedList.getList().size());
+            this.persistedPeers.addAll(persistedList.getList());
         }
 
         // we check if app was idle for more then 5 sec.
@@ -390,12 +389,12 @@ public class PeerManager implements ConnectionListener {
             persistedPeers.addAll(reportedPeersToAdd);
             purgePersistedPeersIfExceeds();
             if (dbStorage != null)
-                dbStorage.queueUpForSave(new HashSetPersistable<>(persistedPeers), 2000); // We clone it to avoid ConcurrentModificationExceptions at save
+                dbStorage.queueUpForSave(new PersistedList(persistedPeers), 2000); // We clone it to avoid ConcurrentModificationExceptions at save
 
             printReportedPeers();
         } else {
-            // If a node is trying to send too many peers we treat it as rule violation.
-            // Reported peers include the connected peers. We use the max value and give some extra headroom.
+            // If a node is trying to send too many list we treat it as rule violation.
+            // Reported list include the connected list. We use the max value and give some extra headroom.
             // Will trigger a shutdown after 2nd time sending too much
             connection.reportIllegalRequest(RuleViolation.TOO_MANY_REPORTED_PEERS_SENT);
         }
@@ -448,7 +447,7 @@ public class PeerManager implements ConnectionListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    //  Persisted peers
+    //  Persisted list
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean removePersistedPeer(Peer persistedPeer) {
@@ -456,7 +455,7 @@ public class PeerManager implements ConnectionListener {
             persistedPeers.remove(persistedPeer);
 
             if (dbStorage != null) {
-                HashSetPersistable<Peer> serializable = new HashSetPersistable<>(persistedPeers);
+                PersistedList serializable = new PersistedList(persistedPeers);
                 dbStorage.queueUpForSave(serializable, 2000);
             }
 

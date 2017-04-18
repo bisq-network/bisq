@@ -15,26 +15,35 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.persistence;
+package io.bisq.network.p2p.peers;
 
 import com.google.protobuf.Message;
+import io.bisq.common.Marshaller;
+import io.bisq.common.persistence.Persistable;
+import io.bisq.common.proto.ProtoHelper;
 import io.bisq.generated.protobuffer.PB;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.experimental.Delegate;
+import lombok.Setter;
 
-public class LongPersistable implements Persistable {
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
-    @Delegate
+@AllArgsConstructor
+public class PersistedList<T extends Marshaller> implements Persistable {
     @Getter
-    Long longPayload;
+    @Setter
+    private List<T> list;
 
-    public LongPersistable(Long longPayload) {
-        this.longPayload = longPayload;
+    /** convenience ctor */
+    public PersistedList(HashSet<T> set) {
+        this.list = set.stream().collect(Collectors.toList());
     }
 
     @Override
     public Message toProto() {
-        return PB.DiskEnvelope.newBuilder().setBloomFilterNonce(
-                PB.LongPersistable.newBuilder().setLong(longPayload)).build();
+        return PB.DiskEnvelope.newBuilder().setPersistedPeers(
+                PB.PersistedPeers.newBuilder().addAllPeers(ProtoHelper.collectionToProto(list))).build();
     }
 }

@@ -20,6 +20,7 @@ package io.bisq.common.locale;
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
+import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
@@ -42,6 +43,6 @@ public final class Region implements Persistable {
 
     @Override
     public Message toProto() {
-        return null;
+        return PB.Region.newBuilder().setCode(code).setName(name).build();
     }
 }

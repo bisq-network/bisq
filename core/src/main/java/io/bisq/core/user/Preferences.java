@@ -72,9 +72,9 @@ public final class Preferences implements Persistable {
     private String userLanguage;
     @Getter
     private Country userCountry;
-    @Getter
+    // getter is for the property
     private String btcDenomination = BTC_DENOMINATIONS.get(0);
-    @Getter
+    // getter is for the property
     private boolean useAnimations = DevEnv.STRESS_TEST_MODE ? false : true;
     @Getter
     private final ArrayList<FiatCurrency> fiatCurrencies = new ArrayList<>();
@@ -96,16 +96,13 @@ public final class Preferences implements Persistable {
     private Map<String, Boolean> dontShowAgainMap = new HashMap<>();
     @Getter
     private boolean tacAccepted;
-    @Getter
     private boolean useTorForBitcoinJ = true;
     @Getter
     private boolean showOwnOffersInOfferBook = true;
     @Getter
     @Nullable
     private TradeCurrency preferredTradeCurrency;
-    @Getter
     private long withdrawalTxFeeInBytes = 100;
-    @Getter
     private boolean useCustomWithdrawalTxFee = false;
     @Getter
     private double maxPriceDistanceInPercent = 0.1;
@@ -137,12 +134,9 @@ public final class Preferences implements Persistable {
     private List<String> ignoreTradersList = new ArrayList<>();
     @Getter
     private String directoryChooserPath;
-    @Getter
     private long buyerSecurityDepositAsLong = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT.value;
-    @Getter
     @Nullable
     private PaymentAccount selectedPaymentAccountForCreateOffer;
-    @Getter
     private boolean payFeeInBtc = true;
     @Getter
     private boolean resyncSpvRequested;

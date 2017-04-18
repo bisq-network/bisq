@@ -63,7 +63,7 @@ public abstract class TradeProtocol {
                     if (tradeMessage.tradeId.equals(processModel.getOfferId()))
                         doHandleDecryptedMessage(tradeMessage, peersNodeAddress);
                 }
-            } 
+            }
         };
         processModel.getP2PService().addDecryptedDirectMessageListener(decryptedDirectMessageListener);
 

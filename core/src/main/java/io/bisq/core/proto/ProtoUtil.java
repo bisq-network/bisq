@@ -18,9 +18,11 @@
 package io.bisq.core.proto;
 
 import com.google.protobuf.ByteString;
+import io.bisq.common.Marshaller;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Price;
+import io.bisq.common.persistence.Persistable;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.filter.PaymentAccountFilter;
 import io.bisq.core.payment.payload.BankAccountPayload;
@@ -31,10 +33,7 @@ import io.bisq.network.p2p.NodeAddress;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ProtoUtil {

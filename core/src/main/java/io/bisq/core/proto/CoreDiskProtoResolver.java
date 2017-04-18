@@ -2,6 +2,7 @@ package io.bisq.core.proto;
 
 import com.google.inject.Provider;
 import io.bisq.common.locale.*;
+import io.bisq.common.persistence.LongPersistable;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.core.btc.AddressEntry;
@@ -11,6 +12,7 @@ import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
@@ -34,14 +36,15 @@ import java.util.Optional;
  * idea.max.intellisense.filesize=2500
  */
 @Slf4j
-public class CorePersistenceProtoResolver implements PersistenceProtoResolver {
+public class CoreDiskProtoResolver implements PersistenceProtoResolver {
 
     private Provider<AddressEntryList> addressEntryListProvider;
     private Provider<Preferences> preferencesProvider;
+    private Provider<User> user;
 
     @Inject
-    public CorePersistenceProtoResolver(Provider<Preferences> preferencesProvider,
-                                        Provider<AddressEntryList> addressEntryListProvider) {
+    public CoreDiskProtoResolver(Provider<Preferences> preferencesProvider,
+                                 Provider<AddressEntryList> addressEntryListProvider) {
         this.preferencesProvider = preferencesProvider;
         this.addressEntryListProvider = addressEntryListProvider;
     }
@@ -71,10 +74,10 @@ public class CorePersistenceProtoResolver implements PersistenceProtoResolver {
             case PREFERENCES:
                 result = fillPreferences(envelope, preferencesProvider.get());
                 break;
-                /*
             case USER:
-                result = getPing(envelope);
+                result = getUser(envelope, user.get());
                 break;
+                /*
             case PERSISTED_P2P_STORAGE_DATA:
                 result = getPing(envelope);
                 break;
@@ -82,10 +85,18 @@ public class CorePersistenceProtoResolver implements PersistenceProtoResolver {
                 result = getPing(envelope);
                 break;
                 */
+            case BLOOM_FILTER_NONCE:
+                result = getLongPersistable(envelope.getBloomFilterNonce());
+                break;
             default:
                 log.warn("Unknown message case:{}:{}", envelope.getMessageCase());
         }
         return Optional.ofNullable(result);
+    }
+
+    private Persistable getUser(PB.DiskEnvelope envelope, User user) {
+        final PB.User userpb = envelope.getUser();
+        return null; // TODO
     }
 
     private Preferences fillPreferences(PB.DiskEnvelope envelope, Preferences preferences) {
@@ -176,4 +187,7 @@ public class CorePersistenceProtoResolver implements PersistenceProtoResolver {
     }
 
 
+    public LongPersistable getLongPersistable(PB.LongPersistable bloomFilterNonce) {
+        return new LongPersistable(bloomFilterNonce.getLong());
+    }
 }

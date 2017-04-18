@@ -15,19 +15,20 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.persistence;
+package io.bisq.common.proto;
 
-import lombok.Getter;
-import lombok.experimental.Delegate;
+import io.bisq.common.Marshaller;
 
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
-public class HashSetPersistable<E> implements Persistable {
-    @Delegate
-    @Getter
-    private HashSet<E> hashSet = new HashSet<>();
+public class ProtoHelper {
 
-    public HashSetPersistable(HashSet<E> hashSet) {
-        this.hashSet = hashSet;
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Convenience
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Iterable collectionToProto(Collection<? extends Marshaller> collection) {
+        return collection.stream().map(o -> o.toProto()).collect(Collectors.toList());
     }
 }

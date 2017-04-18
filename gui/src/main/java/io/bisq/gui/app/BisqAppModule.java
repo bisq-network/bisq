@@ -33,7 +33,7 @@ import io.bisq.core.dao.DaoModule;
 import io.bisq.core.filter.FilterModule;
 import io.bisq.core.offer.OfferModule;
 import io.bisq.core.proto.CoreNetworkProtoResolver;
-import io.bisq.core.proto.CorePersistenceProtoResolver;
+import io.bisq.core.proto.CoreDiskProtoResolver;
 import io.bisq.core.trade.TradeModule;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
@@ -79,7 +79,7 @@ class BisqAppModule extends AppModule {
         File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.DIR_KEY));
         bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
-        bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class).in(Singleton.class);
+        bind(PersistenceProtoResolver.class).to(CoreDiskProtoResolver.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
 
 

@@ -75,7 +75,6 @@ public final class AddressEntry implements Persistable {
     private Coin coinLockedInMultiSig;
 
     @Nullable
-    @Getter
     transient private DeterministicKey keyPair;
     @Nullable
     transient private Address address;
@@ -167,11 +166,6 @@ public final class AddressEntry implements Persistable {
 
     public boolean isTradable() {
         return isOpenOffer() || isTrade();
-    }
-
-    @Nullable
-    public Coin getCoinLockedInMultiSig() {
-        return coinLockedInMultiSig;
     }
 
     @Override
