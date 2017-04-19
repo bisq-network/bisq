@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
+import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.network.Msg;
 import io.bisq.common.util.Utilities;
@@ -98,29 +99,37 @@ public class BsqFullNode extends BsqNode {
 
     @Override
     protected void parseBlocks(int startBlockHeight, int genesisBlockHeight, String genesisTxId, Integer chainHeadHeight) {
+        log.info("parseBlocks with from={} with chainHeadHeight={}", startBlockHeight, chainHeadHeight);
         if (chainHeadHeight != startBlockHeight) {
-            bsqFullNodeExecutor.parseBlocks(startBlockHeight,
-                    chainHeadHeight,
-                    genesisBlockHeight,
-                    genesisTxId,
-                    this::onNewBsqBlock,
-                    () -> {
-                        // we are done but it might be that new blocks have arrived in the meantime,
-                        // so we try again with startBlockHeight set to current chainHeadHeight
-                        // We also set up the listener in the else main branch where we check  
-                        // if we at chainTip, so do nto include here another check as it would
-                        // not trigger the listener registration.
-                        parseBlocksWithChainHeadHeight(chainHeadHeight,
-                                genesisBlockHeight,
-                                genesisTxId);
-                    }, throwable -> {
-                        if (throwable instanceof BlockNotConnectingException) {
-                            startReOrgFromLastSnapshot();
-                        } else {
-                            log.error(throwable.toString());
-                            throwable.printStackTrace();
-                        }
-                    });
+            if (startBlockHeight <= chainHeadHeight) {
+                bsqFullNodeExecutor.parseBlocks(startBlockHeight,
+                        chainHeadHeight,
+                        genesisBlockHeight,
+                        genesisTxId,
+                        this::onNewBsqBlock,
+                        () -> {
+                            // we are done but it might be that new blocks have arrived in the meantime,
+                            // so we try again with startBlockHeight set to current chainHeadHeight
+                            // We also set up the listener in the else main branch where we check  
+                            // if we at chainTip, so do nto include here another check as it would
+                            // not trigger the listener registration.
+                            parseBlocksWithChainHeadHeight(chainHeadHeight,
+                                    genesisBlockHeight,
+                                    genesisTxId);
+                        }, throwable -> {
+                            if (throwable instanceof BlockNotConnectingException) {
+                                startReOrgFromLastSnapshot();
+                            } else {
+                                log.error(throwable.toString());
+                                throwable.printStackTrace();
+                            }
+                        });
+            } else {
+                log.warn("We are trying to start with a block which is above the chain height of bitcoin core. We need probably wait longer until bitcoin core has fully synced. We try again after a delay of 1 min.");
+                UserThread.runAfter(() -> {
+                    parseBlocksWithChainHeadHeight(startBlockHeight, genesisBlockHeight, genesisTxId);
+                }, 60);
+            }
         } else {
             // We dont have received new blocks in the meantime so we are completed and we register our handler
             onParseBlockchainComplete(genesisBlockHeight, genesisTxId);

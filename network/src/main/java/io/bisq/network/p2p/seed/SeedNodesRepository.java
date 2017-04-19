@@ -25,8 +25,8 @@ public class SeedNodesRepository {
             // local dev test
             // DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("23bnormzh2mvkz3z.onion:8000"),
 
-            // testnet (not operated by bisq devs)
-            new NodeAddress("znmy44wcstn2rkva.onion:8001"),
+            // testnet
+            new NodeAddress("nbphlanpgbei4okt.onion:8001"),
 
             // regtest
             // For development you need to change that to your local onion addresses
