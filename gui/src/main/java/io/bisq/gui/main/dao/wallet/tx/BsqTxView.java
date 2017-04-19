@@ -178,7 +178,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                             return new BsqTxListItem(transaction,
                                     bsqWalletService,
                                     btcWalletService,
-                                    bsqChainState.hasTxBurnedFee(transaction.getHashAsString()),
+                                    bsqChainState.hasTxBurntFee(transaction.getHashAsString()),
                                     bsqFormatter);
                         }
                 )

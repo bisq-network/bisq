@@ -96,7 +96,7 @@ public class BsqChainState implements Persistable {
     private final Map<String, Tx> txMap = new HashMap<>();
     private final Set<TxOutput> unspentTxOutputSet = new HashSet<>();
     private final Map<TxIdIndexTuple, SpentInfo> spentInfoByTxOutputMap = new HashMap<>();
-    private final Map<String, Long> burnedFeeByTxIdMap = new HashMap<>();
+    private final Map<String, Long> burntFeeByTxIdMap = new HashMap<>();
     private final Set<Tuple2<Long, Integer>> compensationRequestFees = new HashSet<>();
     private final Set<Tuple2<Long, Integer>> votingFees = new HashSet<>();
     private final Set<TxOutput> compensationRequestOpReturnTxOutputs = new HashSet<>();
@@ -157,7 +157,7 @@ public class BsqChainState implements Persistable {
             txMap.clear();
             unspentTxOutputSet.clear();
             spentInfoByTxOutputMap.clear();
-            burnedFeeByTxIdMap.clear();
+            burntFeeByTxIdMap.clear();
 
             chainHeadHeight = 0;
             genesisTx = null;
@@ -167,7 +167,7 @@ public class BsqChainState implements Persistable {
                 txMap.putAll(snapshot.txMap);
                 unspentTxOutputSet.addAll(snapshot.unspentTxOutputSet);
                 spentInfoByTxOutputMap.putAll(snapshot.spentInfoByTxOutputMap);
-                burnedFeeByTxIdMap.putAll(snapshot.burnedFeeByTxIdMap);
+                burntFeeByTxIdMap.putAll(snapshot.burntFeeByTxIdMap);
                 chainHeadHeight = snapshot.chainHeadHeight;
                 genesisTx = snapshot.genesisTx;
             }
@@ -257,9 +257,9 @@ public class BsqChainState implements Persistable {
         });
     }
 
-    void addBurnedFee(String txId, long burnedFee) {
+    void addBurntFee(String txId, long burntFee) {
         lock.write(() -> {
-            burnedFeeByTxIdMap.put(txId, burnedFee);
+            burntFeeByTxIdMap.put(txId, burntFee);
         });
     }
 
@@ -333,9 +333,9 @@ public class BsqChainState implements Persistable {
         });
     }
 
-    public boolean hasTxBurnedFee(String txId) {
+    public boolean hasTxBurntFee(String txId) {
         return lock.read(() -> {
-            return burnedFeeByTxIdMap.containsKey(txId) && burnedFeeByTxIdMap.get(txId) > 0;
+            return burntFeeByTxIdMap.containsKey(txId) && burntFeeByTxIdMap.get(txId) > 0;
         });
     }
 
@@ -473,7 +473,7 @@ public class BsqChainState implements Persistable {
                         "    txMap.size={}\n" +
                         "    unspentTxOutputSet.size={}\n" +
                         "    spentInfoByTxOutputMap.size={}\n" +
-                        "    burnedFeeByTxIdMap.size={}\n" +
+                        "    burntFeeByTxIdMap.size={}\n" +
                         "    compensationRequestFees.size={}\n" +
                         "    votingFees.size={}\n" +
                         "    compensationRequestOpReturnTxOutputs.size={}\n" +
@@ -486,7 +486,7 @@ public class BsqChainState implements Persistable {
                 txMap.size(),
                 unspentTxOutputSet.size(),
                 spentInfoByTxOutputMap.size(),
-                burnedFeeByTxIdMap.size(),
+                burntFeeByTxIdMap.size(),
                 compensationRequestFees.size(),
                 votingFees.size(),
                 compensationRequestOpReturnTxOutputs.size(),

@@ -27,7 +27,7 @@ public class TxOutputForJson {
     private final int height;
     private final boolean isBsqCoinBase;
     private final boolean isVerified;
-    private final long burnedFee;
+    private final long burntFee;
     private final long btcTxFee;
     private final ScriptPubKeyForJson scriptPubKey;
     private final SpentInfoForJson spentInfo;

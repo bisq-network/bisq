@@ -109,13 +109,13 @@ public class JsonExporter {
         
        /* final boolean isBsqCoinBase = txOutput.isIssuanceOutput();
         final boolean verified = txOutput.isVerified();
-        final long burnedFee = txOutput.getBurnedFee();
+        final long burntFee = txOutput.getBurntFee();
         final long btcTxFee = txOutput.getBtcTxFee();*/
 
         // TODO
         final boolean isBsqCoinBase = false;
         final boolean verified = true;
-        final long burnedFee = 0;
+        final long burntFee = 0;
         final long btcTxFee = 0;
 
         PubKeyScript pubKeyScript = txOutput.getPubKeyScript();
@@ -140,7 +140,7 @@ public class JsonExporter {
                 height,
                 isBsqCoinBase,
                 verified,
-                burnedFee,
+                burntFee,
                 btcTxFee,
                 scriptPubKey,
                 spentInfoJson,

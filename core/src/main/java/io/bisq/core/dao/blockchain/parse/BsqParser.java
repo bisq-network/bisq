@@ -314,7 +314,7 @@ public class BsqParser {
                 log.debug("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
                         availableValue,
                         tx.toString());
-                bsqChainState.addBurnedFee(tx.getId(), availableValue);
+                bsqChainState.addBurntFee(tx.getId(), availableValue);
             }
         }
 
