@@ -47,29 +47,10 @@ public class TxOutput implements Persistable {
     private final int blockHeight;
     private final long time;
 
-    public TxOutput(int index,
-                    long value,
-                    String txId,
-                    PubKeyScript pubKeyScript,
-                    @Nullable String address,
-                    @Nullable byte[] opReturnData,
-                    int blockHeight,
-                    long time) {
-        this.index = index;
-        this.value = value;
-        this.txId = txId;
-        this.pubKeyScript = pubKeyScript;
-        this.address = address;
-        this.opReturnData = opReturnData;
-        this.blockHeight = blockHeight;
-        this.time = time;
-    }
-
-
 /*    public String getAddress() {
         String address = "";
-        // Only at raw MS outputs addresses have more then 1 entry 
-        // We do not support raw MS for BSQ but lets see if is needed anyway, might be removed 
+        // Only at raw MS outputs addresses have more then 1 entry
+        // We do not support raw MS for BSQ but lets see if is needed anyway, might be removed
         final List<String> addresses = pubKeyScript.getAddresses();
         if (addresses.size() == 1) {
             address = addresses.get(0);
