@@ -17,21 +17,33 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
+import io.bisq.common.util.JsonExclude;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Utils;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 @Slf4j
 @Value
 @Immutable
 public class TxOutput implements Persistable {
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
+
     private final int index;
     private final long value;
     private final String txId;
     private final PubKeyScript pubKeyScript;
+    @Nullable
+    @JsonExclude
+    private final String address;
+    @Nullable
+    @JsonExclude
+    private final byte[] opReturnData;
     private final int blockHeight;
     private final long time;
 
@@ -39,12 +51,16 @@ public class TxOutput implements Persistable {
                     long value,
                     String txId,
                     PubKeyScript pubKeyScript,
+                    @Nullable String address,
+                    @Nullable byte[] opReturnData,
                     int blockHeight,
                     long time) {
         this.index = index;
         this.value = value;
         this.txId = txId;
         this.pubKeyScript = pubKeyScript;
+        this.address = address;
+        this.opReturnData = opReturnData;
         this.blockHeight = blockHeight;
         this.time = time;
     }
@@ -76,6 +92,10 @@ public class TxOutput implements Persistable {
         return txId + ":" + index;
     }
 
+    public String getSortString() {
+        return blockHeight + ":" + txId;
+    }
+
     public TxIdIndexTuple getTxIdIndexTuple() {
         return new TxIdIndexTuple(txId, index);
     }
@@ -88,6 +108,7 @@ public class TxOutput implements Persistable {
                 ",\n     txId='" + txId + '\'' +
                 ",\n     pubKeyScript=" + pubKeyScript +
                 ",\n     blockHeight=" + blockHeight +
+                ",\n     opReturnData=" + (opReturnData != null ? Utils.HEX.encode(opReturnData) : "null") +
                 ",\n     time=" + time +
                 "\n}";
     }

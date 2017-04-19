@@ -59,16 +59,16 @@ public class CompensationRequestDisplay {
     }
 
     public void fillWithData(CompensationRequestPayload data) {
-        uidTextField.setText(data.uid);
-        nameTextField.setText(data.name);
-        titleTextField.setText(data.title);
-        categoryTextField.setText(data.category);
-        descriptionTextField.setText(data.description);
-        linkTextField.setText(data.link);
+        uidTextField.setText(data.getUid());
+        nameTextField.setText(data.getName());
+        titleTextField.setText(data.getTitle());
+        categoryTextField.setText(data.getCategory());
+        descriptionTextField.setText(data.getDescription());
+        linkTextField.setText(data.getLink());
         startDateTextField.setText(data.getStartDate().toString());
         endDateTextField.setText(data.getEndDate().toString());
         requestedBTCTextField.setText(data.getRequestedBtc().toPlainString());
-        btcAddressTextField.setText(data.btcAddress);
+        btcAddressTextField.setText(data.getBtcAddress());
     }
 
     public void clearForm() {

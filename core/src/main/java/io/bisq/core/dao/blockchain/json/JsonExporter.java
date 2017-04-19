@@ -25,9 +25,9 @@ import com.google.inject.Inject;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.dao.RpcOptionKeys;
-import io.bisq.core.dao.blockchain.BsqChainState;
+import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
+import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.vo.SpentInfo;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
 import lombok.extern.slf4j.Slf4j;
@@ -40,15 +40,15 @@ import java.io.File;
 public class JsonExporter {
     private final Storage<PlainTextWrapper> jsonStorage;
     private final boolean dumpBlockchainData;
-    private final BsqChainState bsqChainState;
     private final File storageDir;
     private final ListeningExecutorService executor = Utilities.getListeningExecutorService("JsonExporter", 1, 1, 1200);
+    private BsqChainState bsqChainState;
 
     @Inject
     public JsonExporter(Storage<PlainTextWrapper> jsonStorage,
                         BsqChainState bsqChainState,
                         @Named(Storage.STORAGE_DIR) File storageDir,
-                        @Named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
+                        @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         this.bsqChainState = bsqChainState;
         this.storageDir = storageDir;
         this.jsonStorage = jsonStorage;
@@ -70,8 +70,7 @@ public class JsonExporter {
             //jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(array)), 5000);
 
             ListenableFuture<Void> future = executor.submit(() -> {
-                final BsqChainState clone = BsqChainState.getClone(bsqChainState);
-                jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(clone)), 5000);
+                jsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(bsqChainState.getClone())), 5000);
                 return null;
             });
 

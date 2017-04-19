@@ -104,7 +104,7 @@ public class VotingManager {
     }
 
     public byte[] getCompensationRequestsCollection() {
-        List<CompensationRequestPayload> list = compensationRequestManager.getObservableCompensationRequestsList().stream()
+        List<CompensationRequestPayload> list = compensationRequestManager.getCompensationRequestsList().stream()
                 .filter(CompensationRequest::isInVotePeriod)
                 .map(CompensationRequest::getCompensationRequestPayload)
                 .collect(Collectors.toList());
@@ -323,4 +323,8 @@ public class VotingManager {
     }
 
 
+    //TODO
+    public boolean isCompensationRequestAccepted(CompensationRequest compensationRequest) {
+        return true;
+    }
 }

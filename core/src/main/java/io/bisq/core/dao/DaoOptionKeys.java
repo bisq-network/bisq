@@ -1,6 +1,6 @@
 package io.bisq.core.dao;
 
-public class RpcOptionKeys {
+public class DaoOptionKeys {
     public static final String RPC_USER = "rpcUser";
     public static final String RPC_PASSWORD = "rpcPassword";
     public static final String RPC_PORT = "rpcPort";

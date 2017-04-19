@@ -19,11 +19,15 @@ package io.bisq.core.dao.compensation;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
+import lombok.Getter;
+import lombok.Setter;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // Represents the state of the CompensationRequest data
+@Getter
+
 public final class CompensationRequest implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -32,67 +36,21 @@ public final class CompensationRequest implements Persistable {
 
     private final CompensationRequestPayload compensationRequestPayload;
 
+    @Setter
     private boolean accepted;
+    @Setter
     private Coin fundsReceived;
     //TODO
+    @Setter
     private boolean inVotePeriod = true;
+    @Setter
     private boolean inFundingPeriod;
+    @Setter
     private boolean closed;
+    @Setter
     private boolean waitingForVotingPeriod;
 
     public CompensationRequest(CompensationRequestPayload compensationRequestPayload) {
         this.compensationRequestPayload = compensationRequestPayload;
-    }
-
-    public CompensationRequestPayload getCompensationRequestPayload() {
-        return compensationRequestPayload;
-    }
-
-    public boolean isAccepted() {
-        return accepted;
-    }
-
-    public void setAccepted(boolean accepted) {
-        this.accepted = accepted;
-    }
-
-    public Coin getFundsReceived() {
-        return fundsReceived;
-    }
-
-    public void setFundsReceived(Coin fundsReceived) {
-        this.fundsReceived = fundsReceived;
-    }
-
-    public boolean isInVotePeriod() {
-        return inVotePeriod;
-    }
-
-    public void setInVotePeriod(boolean inVotePeriod) {
-        this.inVotePeriod = inVotePeriod;
-    }
-
-    public boolean isInFundingPeriod() {
-        return inFundingPeriod;
-    }
-
-    public void setInFundingPeriod(boolean inFundingPeriod) {
-        this.inFundingPeriod = inFundingPeriod;
-    }
-
-    public boolean isClosed() {
-        return closed;
-    }
-
-    public void setClosed(boolean closed) {
-        this.closed = closed;
-    }
-
-    public boolean isWaitingForVotingPeriod() {
-        return waitingForVotingPeriod;
-    }
-
-    public void setWaitingForVotingPeriod(boolean waitingForVotingPeriod) {
-        this.waitingForVotingPeriod = waitingForVotingPeriod;
     }
 }

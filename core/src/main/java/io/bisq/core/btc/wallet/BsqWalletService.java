@@ -23,7 +23,7 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
-import io.bisq.core.dao.blockchain.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import javafx.collections.FXCollections;

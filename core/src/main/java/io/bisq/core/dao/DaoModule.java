@@ -19,9 +19,13 @@ package io.bisq.core.dao;
 
 import com.google.inject.Singleton;
 import io.bisq.common.app.AppModule;
-import io.bisq.core.dao.blockchain.*;
+import io.bisq.core.dao.blockchain.BsqBlockchainManager;
+import io.bisq.core.dao.blockchain.BsqFullNode;
+import io.bisq.core.dao.blockchain.BsqLiteNode;
 import io.bisq.core.dao.blockchain.json.JsonExporter;
+import io.bisq.core.dao.blockchain.parse.*;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
+import io.bisq.core.dao.compensation.CompensationRequestModel;
 import io.bisq.core.dao.vote.VotingDefaultValues;
 import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.dao.vote.VotingService;
@@ -46,28 +50,35 @@ public class DaoModule extends AppModule {
         bind(BsqLiteNode.class).in(Singleton.class);
         bind(BsqFullNode.class).in(Singleton.class);
         bind(BsqChainState.class).in(Singleton.class);
-        bind(BsqBlockchainRequest.class).in(Singleton.class);
+        bind(BsqFullNodeExecutor.class).in(Singleton.class);
+        bind(BsqLiteNodeExecutor.class).in(Singleton.class);
         bind(BsqParser.class).in(Singleton.class);
-        bind(BsqBlockchainService.class).to(BsqBlockchainRpcService.class).in(Singleton.class);
+        bind(RpcService.class).in(Singleton.class);
+
+        bind(OpReturnVerification.class).in(Singleton.class);
+        bind(CompensationRequestVerification.class).in(Singleton.class);
+        bind(VotingVerification.class).in(Singleton.class);
+        bind(IssuanceVerification.class).in(Singleton.class);
 
         bind(JsonExporter.class).in(Singleton.class);
         bind(DaoPeriodService.class).in(Singleton.class);
         bind(VotingService.class).in(Singleton.class);
 
         bind(CompensationRequestManager.class).in(Singleton.class);
+        bind(CompensationRequestModel.class).in(Singleton.class);
         bind(VotingManager.class).in(Singleton.class);
         bind(DaoService.class).in(Singleton.class);
         bind(VotingDefaultValues.class).in(Singleton.class);
 
-        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_USER)).to(env.getRequiredProperty(RpcOptionKeys.RPC_USER));
-        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_PASSWORD)).to(env.getRequiredProperty(RpcOptionKeys.RPC_PASSWORD));
-        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_PORT)).to(env.getRequiredProperty(RpcOptionKeys.RPC_PORT));
-        bindConstant().annotatedWith(named(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT))
-                .to(env.getRequiredProperty(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT));
-        bindConstant().annotatedWith(named(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA))
-                .to(env.getRequiredProperty(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA));
-        bindConstant().annotatedWith(named(RpcOptionKeys.FULL_DAO_NODE))
-                .to(env.getRequiredProperty(RpcOptionKeys.FULL_DAO_NODE));
+        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_USER)).to(env.getRequiredProperty(DaoOptionKeys.RPC_USER));
+        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PASSWORD)).to(env.getRequiredProperty(DaoOptionKeys.RPC_PASSWORD));
+        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_PORT)).to(env.getRequiredProperty(DaoOptionKeys.RPC_PORT));
+        bindConstant().annotatedWith(named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT))
+                .to(env.getRequiredProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT));
+        bindConstant().annotatedWith(named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA))
+                .to(env.getRequiredProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA));
+        bindConstant().annotatedWith(named(DaoOptionKeys.FULL_DAO_NODE))
+                .to(env.getRequiredProperty(DaoOptionKeys.FULL_DAO_NODE));
     }
 }
 

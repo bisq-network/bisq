@@ -15,31 +15,20 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.btc.wallet;
-
-import io.bisq.core.dao.blockchain.parse.BsqChainState;
-import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.TransactionOutput;
+package io.bisq.core.dao.blockchain.parse;
 
 import javax.inject.Inject;
 
-/**
- * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
- * We lookup for spendable outputs which matches our address of our address.
- */
-@Slf4j
-public class BsqCoinSelector extends BisqDefaultCoinSelector {
+public class PeriodVerification {
     private BsqChainState bsqChainState;
 
     @Inject
-    public BsqCoinSelector(BsqChainState bsqChainState) {
-        super(true);
+    public PeriodVerification(BsqChainState bsqChainState) {
         this.bsqChainState = bsqChainState;
     }
 
-    @Override
-    protected boolean isTxOutputSpendable(TransactionOutput output) {
-        // output.getParentTransaction() cannot be null as it is checked in calling method
-        return bsqChainState.isTxOutputSpendable(output.getParentTransaction().getHashAsString(), output.getIndex());
+    // TODO
+    boolean isInSponsorPeriod(int blockHeight) {
+        return true;
     }
 }

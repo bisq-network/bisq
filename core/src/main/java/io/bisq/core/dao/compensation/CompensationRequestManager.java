@@ -31,10 +31,13 @@ import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import lombok.Getter;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public class CompensationRequestManager {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);
@@ -45,12 +48,14 @@ public class CompensationRequestManager {
     private final DaoPeriodService daoPeriodService;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
+    private final CompensationRequestModel model;
     private final VotingDefaultValues votingDefaultValues;
     private final Storage<ListPersistable<CompensationRequest>> compensationRequestsStorage;
 
-    private final ObservableList<CompensationRequest> observableCompensationRequestsList = FXCollections.observableArrayList();
     private CompensationRequest selectedCompensationRequest;
     private int bestChainHeight = -1;
+    @Getter
+    private final ObservableList<CompensationRequest> observableList;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,18 +67,23 @@ public class CompensationRequestManager {
                                       BtcWalletService btcWalletService,
                                       BsqWalletService bsqWalletService,
                                       DaoPeriodService daoPeriodService,
+                                      CompensationRequestModel model,
                                       VotingDefaultValues votingDefaultValues,
                                       Storage<ListPersistable<CompensationRequest>> compensationRequestsStorage) {
         this.p2PService = p2PService;
         this.daoPeriodService = daoPeriodService;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
+        this.model = model;
         this.votingDefaultValues = votingDefaultValues;
         this.compensationRequestsStorage = compensationRequestsStorage;
 
+        observableList = FXCollections.observableArrayList(model.getList());
+
         ListPersistable<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
         if (persisted != null)
-            observableCompensationRequestsList.addAll(persisted.getListPayload());
+            model.setPersistedCompensationRequest(persisted.getListPayload());
+
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
@@ -109,24 +119,24 @@ public class CompensationRequestManager {
 
     public void addToList(CompensationRequestPayload compensationRequestPayload, boolean storeLocally) {
         if (!contains(compensationRequestPayload)) {
-            observableCompensationRequestsList.add(new CompensationRequest(compensationRequestPayload));
+            model.addCompensationRequest(new CompensationRequest(compensationRequestPayload));
             if (storeLocally)
-                compensationRequestsStorage.queueUpForSave(new ListPersistable<>(observableCompensationRequestsList), 500);
+                compensationRequestsStorage.queueUpForSave(new ListPersistable<>(model.getList()), 500);
         } else {
             log.warn("We have already an item with the same CompensationRequest.");
         }
     }
 
     private boolean contains(CompensationRequestPayload compensationRequestPayload) {
-        return observableCompensationRequestsList.stream().filter(e -> e.getCompensationRequestPayload().equals(compensationRequestPayload)).findAny().isPresent();
+        return model.getList().stream().filter(e -> e.getCompensationRequestPayload().equals(compensationRequestPayload)).findAny().isPresent();
     }
 
-    public ObservableList<CompensationRequest> getObservableCompensationRequestsList() {
-        return observableCompensationRequestsList;
+    public List<CompensationRequest> getCompensationRequestsList() {
+        return model.getList();
     }
 
     public void fundCompensationRequest(CompensationRequest compensationRequest, Coin amount, FutureCallback<Transaction> callback) {
-        btcWalletService.fundCompensationRequest(amount, compensationRequest.getCompensationRequestPayload().btcAddress, bsqWalletService.getUnusedAddress(), callback);
+        btcWalletService.fundCompensationRequest(amount, compensationRequest.getCompensationRequestPayload().getBtcAddress(), bsqWalletService.getUnusedAddress(), callback);
     }
 
     public void setSelectedCompensationRequest(CompensationRequest selectedCompensationRequest) {
@@ -136,5 +146,4 @@ public class CompensationRequestManager {
     public CompensationRequest getSelectedCompensationRequest() {
         return selectedCompensationRequest;
     }
-
 }

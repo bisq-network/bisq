@@ -25,6 +25,8 @@ import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
 import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
@@ -46,24 +48,26 @@ import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode
 @Slf4j
+@Getter
+@Setter
 public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
     // Payload
-    public final byte version;
+    private final byte version;
     private final long creationDate;
-    public final String uid;
-    public final String name;
-    public final String title;
-    public final String category;
-    public final String description;
-    public final String link;
+    private final String uid;
+    private final String name;
+    private final String title;
+    private final String category;
+    private final String description;
+    private final String link;
     public final long startDate;
     public final long endDate;
     private final long requestedBtc;
-    public final String btcAddress;
+    private final String btcAddress;
     private final String nodeAddress;
     @JsonExclude
     private final byte[] p2pStorageSignaturePubKeyBytes;
@@ -72,10 +76,10 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     // Signature of the JSON data of this object excluding the signature and feeTxId fields using the standard Bitcoin
     // messaging signing format as a base64 encoded string.
     @JsonExclude
-    public String signature;
+    private String signature;
     // Set after we signed and set the hash. The hash is used in the OP_RETURN of the fee tx
     @JsonExclude
-    public String feeTxId;
+    private String feeTxId;
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
     // field in a class would break that hash and therefore break the storage mechanism.
@@ -113,8 +117,6 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                 nodeAddress,
                 new X509EncodedKeySpec(p2pStorageSignaturePubKey.getEncoded()).getEncoded(),
                 null);
-
-        init();
     }
 
     // Called from PB
@@ -171,15 +173,6 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
         }
     }
 
-    public void setSignature(String signature) {
-        this.signature = signature;
-    }
-
-    // Called after tx is published
-    public void setFeeTxId(String feeTxId) {
-        this.feeTxId = feeTxId;
-    }
-
     @Override
     public long getTTL() {
         return TTL;
@@ -189,13 +182,6 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     public PublicKey getOwnerPubKey() {
         return p2pStorageSignaturePubKey;
     }
-
-    @Nullable
-    @Override
-    public Map<String, String> getExtraDataMap() {
-        return extraDataMap;
-    }
-
 
     public Date getStartDate() {
         return new Date(startDate);

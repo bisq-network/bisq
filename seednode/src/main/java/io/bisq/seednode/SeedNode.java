@@ -19,7 +19,7 @@ import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletsSetup;
-import io.bisq.core.dao.RpcOptionKeys;
+import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.network.p2p.P2PService;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +80,7 @@ public class SeedNode {
         seedNodeModule = new SeedNodeModule(env);
         injector = Guice.createInjector(seedNodeModule);
 
-        Boolean fullDaoNode = injector.getInstance(Key.get(Boolean.class, Names.named(RpcOptionKeys.FULL_DAO_NODE)));
+        Boolean fullDaoNode = injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.FULL_DAO_NODE)));
         appSetup = fullDaoNode ? injector.getInstance(AppSetupWithP2PAndDAO.class) : injector.getInstance(AppSetupWithP2P.class);
         appSetup.start();
     }

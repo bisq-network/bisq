@@ -44,7 +44,7 @@ public final class CompensationRequestVoteItemCollection extends VoteItem implem
 
     public List<CompensationRequestVoteItem> getCompensationRequestVoteItemsSortedByTxId() {
         ArrayList<CompensationRequestVoteItem> list = new ArrayList<>(compensationRequestVoteItems);
-        list.sort((o1, o2) -> o2.compensationRequest.getCompensationRequestPayload().feeTxId.compareTo(o1.compensationRequest.getCompensationRequestPayload().feeTxId));
+        list.sort((o1, o2) -> o2.compensationRequest.getCompensationRequestPayload().getFeeTxId().compareTo(o1.compensationRequest.getCompensationRequestPayload().getFeeTxId()));
         return list;
     }
 

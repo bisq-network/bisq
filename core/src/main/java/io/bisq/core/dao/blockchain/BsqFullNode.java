@@ -23,16 +23,17 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.network.Msg;
-import io.bisq.common.proto.PersistenceProtoResolver;
-import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.json.JsonExporter;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMsg;
+import io.bisq.core.dao.blockchain.parse.BsqChainState;
+import io.bisq.core.dao.blockchain.parse.BsqFullNodeExecutor;
+import io.bisq.core.dao.blockchain.parse.BsqParser;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.network.Connection;
@@ -40,15 +41,11 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
-import javax.inject.Named;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 // We are in UserThread context. We get callbacks from threaded classes which are already mapped to the UserThread.
 @Slf4j
 public class BsqFullNode extends BsqNode {
 
+    private BsqFullNodeExecutor bsqFullNodeExecutor;
     private final JsonExporter jsonExporter;
     @Getter
     private boolean parseBlockchainComplete;
@@ -60,21 +57,17 @@ public class BsqFullNode extends BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public BsqFullNode(BisqEnvironment bisqEnvironment,
-                       P2PService p2PService,
-                       BsqChainState bsqChainState,
-                       BsqBlockchainRequest bsqBlockchainRequest,
+    public BsqFullNode(P2PService p2PService,
                        BsqParser bsqParser,
+                       BsqFullNodeExecutor bsqFullNodeExecutor,
+                       BsqChainState bsqChainState,
                        JsonExporter jsonExporter,
-                       PersistenceProtoResolver persistenceProtoResolver,
-                       @Named(Storage.STORAGE_DIR) File storageDir) {
-        super(bisqEnvironment,
-                p2PService,
-                bsqChainState,
+                       FeeService feeService) {
+        super(p2PService,
                 bsqParser,
-                bsqBlockchainRequest,
-                persistenceProtoResolver,
-                storageDir);
+                bsqChainState,
+                feeService);
+        this.bsqFullNodeExecutor = bsqFullNodeExecutor;
         this.jsonExporter = jsonExporter;
     }
 
@@ -86,7 +79,7 @@ public class BsqFullNode extends BsqNode {
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
         super.onAllServicesInitialized(errorMessageHandler);
 
-        bsqBlockchainRequest.setup(this::startParseBlocks,
+        bsqFullNodeExecutor.setup(this::startParseBlocks,
                 throwable -> {
                     log.error(throwable.toString());
                     throwable.printStackTrace();
@@ -95,7 +88,7 @@ public class BsqFullNode extends BsqNode {
 
     @Override
     protected void parseBlocksWithChainHeadHeight(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
-        bsqBlockchainRequest.requestChainHeadHeight(chainHeadHeight -> {
+        bsqFullNodeExecutor.requestChainHeadHeight(chainHeadHeight -> {
             parseBlocks(startBlockHeight, genesisBlockHeight, genesisTxId, chainHeadHeight);
         }, throwable -> {
             log.error(throwable.toString());
@@ -106,7 +99,7 @@ public class BsqFullNode extends BsqNode {
     @Override
     protected void parseBlocks(int startBlockHeight, int genesisBlockHeight, String genesisTxId, Integer chainHeadHeight) {
         if (chainHeadHeight != startBlockHeight) {
-            bsqBlockchainRequest.parseBlocks(startBlockHeight,
+            bsqFullNodeExecutor.parseBlocks(startBlockHeight,
                     chainHeadHeight,
                     genesisBlockHeight,
                     genesisTxId,
@@ -138,8 +131,8 @@ public class BsqFullNode extends BsqNode {
     protected void onParseBlockchainComplete(int genesisBlockHeight, String genesisTxId) {
         parseBlockchainComplete = true;
         // We register our handler for new blocks
-        bsqBlockchainRequest.addBlockHandler(btcdBlock -> {
-            bsqBlockchainRequest.parseBlock(btcdBlock,
+        bsqFullNodeExecutor.addBlockHandler(btcdBlock -> {
+            bsqFullNodeExecutor.parseBtcdBlock(btcdBlock,
                     genesisBlockHeight,
                     genesisTxId,
                     this::onNewBsqBlock,
@@ -164,8 +157,7 @@ public class BsqFullNode extends BsqNode {
             log.debug("Received getBsqBlocksRequest with data: {} from {}",
                     getBsqBlocksRequest.getFromBlockHeight(), peersNodeAddress);
 
-            final List<BsqBlock> bsqBlockList = bsqChainState.getBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
-            byte[] bsqBlockListBytes = Utilities.<ArrayList<BsqBlock>>serialize(new ArrayList<>(bsqBlockList));
+            byte[] bsqBlockListBytes = bsqChainState.getSerializedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
             final GetBsqBlocksResponse bsqBlocksResponse = new GetBsqBlocksResponse(bsqBlockListBytes);
             SettableFuture<Connection> future = p2PService.getNetworkNode().sendMessage(peersNodeAddress,
                     bsqBlocksResponse);

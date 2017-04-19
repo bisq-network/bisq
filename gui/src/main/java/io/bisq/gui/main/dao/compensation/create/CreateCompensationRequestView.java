@@ -28,6 +28,7 @@ import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.ChangeBelowDustException;
+import io.bisq.core.dao.DaoConstants;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.provider.fee.FeeService;
@@ -151,6 +152,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
 
                 String dataAndSig = payloadAsJson + signature;
                 byte[] dataAndSigAsBytes = dataAndSig.getBytes();
+                outputStream.write(DaoConstants.OP_RETURN_TYPE_COMPENSATION_REQUEST);
                 outputStream.write(Version.COMPENSATION_REQUEST_VERSION);
                 outputStream.write(Utils.sha256hash160(dataAndSigAsBytes));
                 byte hash[] = outputStream.toByteArray();
@@ -163,7 +165,7 @@ public class CreateCompensationRequestView extends ActivatableView<GridPane, Voi
                 Coin miningFee = signedTx.getFee();
                 int txSize = signedTx.bitcoinSerialize().length;
                 new Popup<>().headLine(Res.get("dao.compensation.create.confirm"))
-                        .confirmation(Res.get("dao.tx.summary",
+                        .confirmation(Res.get("dao.compensation.create.confirm.info",
                                 btcFormatter.formatCoinWithCode(createCompensationRequestFee),
                                 btcFormatter.formatCoinWithCode(miningFee),
                                 CoinUtil.getFeePerByte(miningFee, txSize),

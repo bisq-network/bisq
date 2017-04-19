@@ -21,7 +21,7 @@ import io.bisq.common.CommonOptionKeys;
 import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.RegTestHost;
-import io.bisq.core.dao.RpcOptionKeys;
+import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.exceptions.BisqException;
 import io.bisq.core.util.joptsimple.EnumValueConverter;
 import io.bisq.network.NetworkOptionKeys;
@@ -157,24 +157,24 @@ public abstract class BisqExecutable {
 
 
         //RpcOptionKeys
-        parser.accepts(RpcOptionKeys.RPC_USER,
+        parser.accepts(DaoOptionKeys.RPC_USER,
                 description("Bitcoind rpc username", ""))
                 .withRequiredArg();
-        parser.accepts(RpcOptionKeys.RPC_PASSWORD,
+        parser.accepts(DaoOptionKeys.RPC_PASSWORD,
                 description("Bitcoind rpc password", ""))
                 .withRequiredArg();
-        parser.accepts(RpcOptionKeys.RPC_PORT,
+        parser.accepts(DaoOptionKeys.RPC_PORT,
                 description("Bitcoind rpc port", ""))
                 .withRequiredArg();
-        parser.accepts(RpcOptionKeys.RPC_BLOCK_NOTIFICATION_PORT,
+        parser.accepts(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT,
                 description("Bitcoind rpc port for block notifications", ""))
                 .withRequiredArg();
-        parser.accepts(RpcOptionKeys.DUMP_BLOCKCHAIN_DATA,
+        parser.accepts(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA,
                 description("If set to true the blockchain data from RPC requests to Bitcoin Core are stored " +
                         "as json file in the data dir.", false))
                 .withRequiredArg()
                 .ofType(boolean.class);
-        parser.accepts(RpcOptionKeys.FULL_DAO_NODE,
+        parser.accepts(DaoOptionKeys.FULL_DAO_NODE,
                 description("If set to true the node requests the blockchain data via RPC requests from Bitcoin Core and " +
                         "provide the validated BSQ txs to the network. It requires that the other RPC properties are " +
                         "set as well.", false))
