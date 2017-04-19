@@ -22,6 +22,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
+import io.bisq.common.util.FunctionalReadWriteLock;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
@@ -67,7 +68,7 @@ public class BsqChainState implements Persistable {
     //mainnet
     // this tx has a lot of outputs
     // https://blockchain.info/de/tx/ee921650ab3f978881b8fe291e0c025e0da2b7dc684003d7a03d9649dfee2e15
-    // BLOCK_HEIGHT 411779 
+    // BLOCK_HEIGHT 411779
     // 411812 has 693 recursions
     // MAIN NET
     private static final String GENESIS_TX_ID = "b26371e2145f52c94b3d30713a9e38305bfc665fc27cd554e794b5e369d99ef5";
@@ -107,10 +108,11 @@ public class BsqChainState implements Persistable {
     private int chainHeadHeight = 0;
     private Tx genesisTx;
 
-    // transient 
+    // transient
     transient private final boolean dumpBlockchainData;
     transient private final Storage<BsqChainState> snapshotBsqChainStateStorage;
     transient private BsqChainState snapshotCandidate;
+    transient private final FunctionalReadWriteLock lock;
     transient private final ReentrantReadWriteLock.WriteLock writeLock;
     transient private final ReentrantReadWriteLock.ReadLock readLock;
 
@@ -140,9 +142,11 @@ public class BsqChainState implements Persistable {
             genesisBlockHeight = TEST_NET_GENESIS_BLOCK_HEIGHT;
         }
 
-        ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-        readLock = lock.readLock();
-        writeLock = lock.writeLock();
+        // TODO choose between two styles + consider using fair so that threads don't have to wait too long?
+        lock = new FunctionalReadWriteLock(true);
+        ReentrantReadWriteLock lock2 = new ReentrantReadWriteLock(true);
+        readLock = lock2.readLock();
+        writeLock = lock2.writeLock();
     }
 
 
@@ -151,9 +155,7 @@ public class BsqChainState implements Persistable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void applySnapshot() {
-        try {
-            writeLock.lock();
-
+        lock.write(() -> {
             BsqChainState snapshot = snapshotBsqChainStateStorage.initAndGetPersistedWithFileName("BsqChainState");
 
             blocks.clear();
@@ -176,18 +178,13 @@ public class BsqChainState implements Persistable {
             }
 
             printDetails();
-        } finally {
-            writeLock.unlock();
-        }
+        });
     }
 
     public void setCreateCompensationRequestFee(long fee, int blockHeight) {
-        try {
-            writeLock.lock();
+        lock.write(() -> {
             compensationRequestFees.add(new Tuple2<>(fee, blockHeight));
-        } finally {
-            writeLock.unlock();
-        }
+        });
     }
 
     public void setVotingFee(long fee, int blockHeight) {
@@ -240,7 +237,7 @@ public class BsqChainState implements Persistable {
     }
 
     void addSpentTxWithSpentInfo(TxOutput spentTxOutput, SpentInfo spentInfo) {
-        // we only use spentInfoByTxOutputMap for json export 
+        // we only use spentInfoByTxOutputMap for json export
         if (dumpBlockchainData) {
             try {
                 writeLock.lock();
@@ -333,6 +330,7 @@ public class BsqChainState implements Persistable {
     // Public read access
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // TODO doesn't need a lock, it's a final String variable so should be thread safe
     public String getGenesisTxId() {
         try {
             readLock.lock();
@@ -532,12 +530,10 @@ public class BsqChainState implements Persistable {
     }
 
     private Optional<Tx> getTx(String txId) {
-        try {
+        return lock.read(() -> {
             readLock.lock();
             return txMap.get(txId) != null ? Optional.of(txMap.get(txId)) : Optional.<Tx>empty();
-        } finally {
-            readLock.unlock();
-        }
+        });
     }
 
     private int getSnapshotHeight(int height) {
