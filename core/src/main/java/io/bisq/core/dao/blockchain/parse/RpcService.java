@@ -105,7 +105,7 @@ public class RpcService {
                 this.client = client;
             } catch (IOException | BitcoindException | CommunicationException e) {
                 if (e instanceof CommunicationException)
-                    log.error("Maybe the rpc port is not set correctly? rpcPort=" + rpcPort);
+                    log.error("Probably Bitcoin core is not running or the rpc port is not set correctly. rpcPort=" + rpcPort);
                 log.error(e.toString());
                 e.printStackTrace();
                 log.error(e.getCause() != null ? e.getCause().toString() : "e.getCause()=null");
@@ -160,8 +160,16 @@ public class RpcService {
                                 final com.neemre.btcdcli4j.core.domain.PubKeyScript scriptPubKey = rawOutput.getScriptPubKey();
                                 if (scriptPubKey.getType().equals(ScriptTypes.NULL_DATA)) {
                                     String[] chunks = scriptPubKey.getAsm().split(" ");
+                                    // TODO only store BSQ OP_RETURN date filtered by type byte
                                     if (chunks.length == 2 && chunks[0].equals("OP_RETURN")) {
-                                        opReturnData = Utils.HEX.decode(chunks[1]);
+                                        try {
+                                            opReturnData = Utils.HEX.decode(chunks[1]);
+                                        } catch (Throwable t) {
+                                            // We get sometimes exceptions, seems BitcoinJ 
+                                            // cannot handle all existing OP_RETURN data, but we ignore them
+                                            // anyway as our OP_RETURN data is valid in BitcoinJ
+                                            log.warn(t.toString());
+                                        }
                                     }
                                 }
                                 // We dont support raw MS which are the only case where scriptPubKey.getAddresses()>1
