@@ -19,6 +19,7 @@ package io.bisq.core.trade;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
 import io.bisq.core.trade.protocol.TakerProtocol;
@@ -47,8 +48,10 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                               boolean isCurrencyForTakerFeeBtc,
                               long tradePrice,
                               NodeAddress tradingPeerNodeAddress,
-                              Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice, tradingPeerNodeAddress, storage);
+                              Storage<? extends TradableList> storage,
+                              BtcWalletService btcWalletService) {
+        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice,
+                tradingPeerNodeAddress, storage, btcWalletService);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {

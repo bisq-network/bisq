@@ -21,10 +21,12 @@ import com.google.inject.Inject;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.TradableList;
+import io.bisq.core.trade.Trade;
 import javafx.collections.ObservableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,13 +43,20 @@ public class ClosedTradableManager {
     @Inject
     public ClosedTradableManager(KeyRing keyRing, PriceFeedService priceFeedService,
                                  PersistenceProtoResolver persistenceProtoResolver,
+                                 BtcWalletService btcWalletService,
                                  @Named(Storage.STORAGE_DIR) File storageDir) {
         this.keyRing = keyRing;
         final Storage<TradableList<Tradable>> tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
         // The ClosedTrades object can become a few MB so we don't keep so many backups
         tradableListStorage.setNumMaxBackupFiles(3);
         this.closedTrades = new TradableList<>(tradableListStorage, "ClosedTrades");
-        closedTrades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
+        closedTrades.forEach(tradable -> {
+            tradable.getOffer().setPriceFeedService(priceFeedService);
+            if (tradable instanceof Trade) {
+                Trade trade = (Trade) tradable;
+                trade.setTransientFields(tradableListStorage, btcWalletService);
+            }
+        });
     }
 
     public void add(Tradable tradable) {

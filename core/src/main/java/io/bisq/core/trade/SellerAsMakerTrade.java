@@ -19,6 +19,7 @@ package io.bisq.core.trade;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.trade.protocol.MakerProtocol;
@@ -44,8 +45,9 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                               Coin txFee,
                               Coin takeOfferFee,
                               boolean isCurrencyForTakerFeeBtc,
-                              Storage<? extends TradableList> storage) {
-        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, storage);
+                              Storage<? extends TradableList> storage,
+                              BtcWalletService btcWalletService) {
+        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {

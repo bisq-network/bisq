@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.TradableList;
@@ -41,10 +42,16 @@ public class FailedTradesManager {
     @Inject
     public FailedTradesManager(KeyRing keyRing, PriceFeedService priceFeedService,
                                PersistenceProtoResolver persistenceProtoResolver,
+                               BtcWalletService btcWalletService,
                                @Named(Storage.STORAGE_DIR) File storageDir) {
         this.keyRing = keyRing;
-        this.failedTrades = new TradableList<>(new Storage<>(storageDir, persistenceProtoResolver), "FailedTrades");
+        final Storage<TradableList<Trade>> tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        this.failedTrades = new TradableList<>(tradableListStorage, "FailedTrades");
         failedTrades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
+        failedTrades.forEach(trade -> {
+            trade.getOffer().setPriceFeedService(priceFeedService);
+            trade.setTransientFields(tradableListStorage, btcWalletService);
+        });
     }
 
     public void add(Trade trade) {

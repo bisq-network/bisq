@@ -45,6 +45,7 @@ import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.*;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.jetbrains.annotations.NotNull;
@@ -192,6 +193,7 @@ public abstract class Trade implements Tradable, Model {
     // Trades are saved in the TradeList
     @Nullable
     transient private Storage<? extends TradableList> storage;
+    transient private BtcWalletService btcWalletService;
     transient protected TradeProtocol tradeProtocol;
     transient private Date maxTradePeriodDate, halfTradePeriodDate;
 
@@ -213,13 +215,13 @@ public abstract class Trade implements Tradable, Model {
     protected State state;
     private DisputeState disputeState = DisputeState.NONE;
     private TradePeriodState tradePeriodState = TradePeriodState.NORMAL;
-    private Transaction depositTx;
+
     private Contract contract;
     private String contractAsJson;
     private byte[] contractHash;
     private String takerContractSignature;
     private String makerContractSignature;
-    private Transaction payoutTx;
+
     private NodeAddress arbitratorNodeAddress;
     private NodeAddress mediatorNodeAddress;
     private byte[] arbitratorBtcPubKey;
@@ -229,6 +231,12 @@ public abstract class Trade implements Tradable, Model {
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Volume> tradeVolumeProperty;
     transient private Set<DecryptedMsgWithPubKey> mailboxMessageSet = new HashSet<>();
+
+    private String depositTxId;
+    private String payoutTxId;
+    // We don't persist Transaction but fetch it from the wallet on demand (and cache it)
+    transient private Transaction payoutTx;
+    transient private Transaction depositTx;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -240,12 +248,14 @@ public abstract class Trade implements Tradable, Model {
                     Coin txFee,
                     Coin takerFee,
                     boolean isCurrencyForTakerFeeBtc,
-                    Storage<? extends TradableList> storage) {
+                    Storage<? extends TradableList> storage,
+                    BtcWalletService btcWalletService) {
         this.offer = offer;
         this.txFee = txFee;
         this.takerFee = takerFee;
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.storage = storage;
+        this.btcWalletService = btcWalletService;
         this.takeOfferDate = new Date();
 
         processModel = new ProcessModel();
@@ -264,15 +274,23 @@ public abstract class Trade implements Tradable, Model {
                     boolean isCurrencyForTakerFeeBtc,
                     long tradePrice,
                     NodeAddress tradingPeerNodeAddress,
-                    Storage<? extends TradableList> storage) {
+                    Storage<? extends TradableList> storage,
+                    BtcWalletService btcWalletService) {
 
-        this(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, storage);
+        this(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
         this.tradeAmount = tradeAmount;
         this.tradePrice = tradePrice;
         this.tradingPeerNodeAddress = tradingPeerNodeAddress;
         tradeAmountProperty.set(tradeAmount);
         tradeVolumeProperty.set(getTradeVolume());
         this.takeOfferDate = new Date();
+    }
+
+    public void setTransientFields(Storage<? extends TradableList> storage, BtcWalletService btcWalletService) {
+        this.storage = storage;
+        this.btcWalletService = btcWalletService;
+        errorMessageProperty = new SimpleStringProperty(errorMessage);
+        mailboxMessageSet = new HashSet<>();
     }
 
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -345,19 +363,22 @@ public abstract class Trade implements Tradable, Model {
 
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
     public void updateDepositTxFromWallet() {
-        if (depositTx != null)
-            setDepositTx(processModel.getTradeWalletService().getWalletTx(depositTx.getHash()));
+        if (getDepositTx() != null)
+            setDepositTx(processModel.getTradeWalletService().getWalletTx(getDepositTx().getHash()));
     }
 
     public void setDepositTx(Transaction tx) {
         log.debug("setDepositTx " + tx);
         this.depositTx = tx;
+        depositTxId = depositTx.getHashAsString();
         setupConfidenceListener();
         persist();
     }
 
     @Nullable
     public Transaction getDepositTx() {
+        if (depositTx == null)
+            depositTx = depositTxId != null ? btcWalletService.getTransaction(Sha256Hash.wrap(depositTxId)) : null;
         return depositTx;
     }
 
@@ -374,11 +395,6 @@ public abstract class Trade implements Tradable, Model {
     public DecryptedMsgWithPubKey getMailboxMessage() {
         return decryptedMsgWithPubKey;
     }
-
-    public void setStorage(Storage<? extends TradableList> storage) {
-        this.storage = storage;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // States
@@ -646,10 +662,13 @@ public abstract class Trade implements Tradable, Model {
 
     public void setPayoutTx(Transaction payoutTx) {
         this.payoutTx = payoutTx;
+        payoutTxId = payoutTx.getHashAsString();
     }
 
     @Nullable
     public Transaction getPayoutTx() {
+        if (payoutTx == null)
+            payoutTx = payoutTxId != null ? btcWalletService.getTransaction(Sha256Hash.wrap(payoutTxId)) : null;
         return payoutTx;
     }
 
@@ -728,7 +747,7 @@ public abstract class Trade implements Tradable, Model {
     public boolean isCurrencyForTakerFeeBtc() {
         return isCurrencyForTakerFeeBtc;
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -736,8 +755,8 @@ public abstract class Trade implements Tradable, Model {
 
     private void setupConfidenceListener() {
         log.debug("setupConfidenceListener");
-        if (depositTx != null) {
-            TransactionConfidence transactionConfidence = depositTx.getConfidence();
+        if (getDepositTx() != null) {
+            TransactionConfidence transactionConfidence = getDepositTx().getConfidence();
             log.debug("transactionConfidence " + transactionConfidence.getDepthInBlocks());
             if (transactionConfidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
                 setConfirmedState();
@@ -787,14 +806,14 @@ public abstract class Trade implements Tradable, Model {
                 "\n\tstate=" + state +
                 "\n\tdisputeState=" + disputeState +
                 "\n\ttradePeriodState=" + tradePeriodState +
-                "\n\tdepositTx=" + depositTx +
+                "\n\tdepositTx=" + getDepositTx() +
                 "\n\ttakeOfferFeeTxId=" + takerFeeTxId +
                 "\n\tcontract=" + contract +
                 "\n\ttakerContractSignature.hashCode()='" + (takerContractSignature != null ?
                 takerContractSignature.hashCode() : "") + '\'' +
                 "\n\tmakerContractSignature.hashCode()='" + (makerContractSignature != null ?
                 makerContractSignature.hashCode() : "") + '\'' +
-                "\n\tpayoutTx=" + payoutTx +
+                "\n\tpayoutTx=" + getPayoutTx() +
                 "\n\tarbitratorNodeAddress=" + arbitratorNodeAddress +
                 "\n\tmediatorNodeAddress=" + mediatorNodeAddress +
                 "\n\ttakerPaymentAccountId='" + takerPaymentAccountId + '\'' +
