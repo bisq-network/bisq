@@ -27,8 +27,6 @@ import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
-import java.io.IOException;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -52,16 +50,6 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                               BtcWalletService btcWalletService) {
         super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice,
                 tradingPeerNodeAddress, storage, btcWalletService);
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            initStateProperties();
-            initAmountProperty();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
     }
 
     @Override

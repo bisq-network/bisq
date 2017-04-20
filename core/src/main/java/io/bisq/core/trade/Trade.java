@@ -53,8 +53,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -184,37 +182,29 @@ public abstract class Trade implements Tradable, Model {
     // Fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Transient/Immutable
-    transient private ObjectProperty<State> stateProperty;
-    transient private ObjectProperty<Phase> statePhaseProperty;
-    transient private ObjectProperty<DisputeState> disputeStateProperty;
-    transient private ObjectProperty<TradePeriodState> tradePeriodStateProperty;
-
-    // Trades are saved in the TradeList
-    @Nullable
-    transient private Storage<? extends TradableList> storage;
-    transient private BtcWalletService btcWalletService;
-    transient protected TradeProtocol tradeProtocol;
-    transient private Date maxTradePeriodDate, halfTradePeriodDate;
-
-    // Immutable
     private final Offer offer;
     private final ProcessModel processModel;
 
-    // Mutable
+    @Nullable
+    private String takerFeeTxId;
+    @Nullable
+    private String depositTxId;
+    @Nullable
+    private String payoutTxId;
+    private long tradeAmountAsLong;
+    private long txFeeAsLong;
+    private long takerFeeAsLong;
+    @Nullable
     private DecryptedMsgWithPubKey decryptedMsgWithPubKey;
-    private Date takeOfferDate;
-    private Coin tradeAmount;
-    private final Coin txFee;
-    private final Coin takerFee;
+    private long takeOfferDate;
+
     private boolean isCurrencyForTakerFeeBtc;
     private long tradePrice;
     private NodeAddress tradingPeerNodeAddress;
-    @Nullable
-    private String takerFeeTxId;
-    protected State state;
-    private DisputeState disputeState = DisputeState.NONE;
-    private TradePeriodState tradePeriodState = TradePeriodState.NORMAL;
+
+    private State state;
+    private DisputeState disputeState;
+    private TradePeriodState tradePeriodState;
 
     private Contract contract;
     private String contractAsJson;
@@ -226,17 +216,28 @@ public abstract class Trade implements Tradable, Model {
     private NodeAddress mediatorNodeAddress;
     private byte[] arbitratorBtcPubKey;
     private String takerPaymentAccountId;
+    @Nullable
     private String errorMessage;
+
+    transient private Storage<? extends TradableList> storage;
+    transient private BtcWalletService btcWalletService;
+    transient protected TradeProtocol tradeProtocol;
+    transient private Date maxTradePeriodDate, halfTradePeriodDate;
+    @Nullable
+    transient private Transaction payoutTx;
+    @Nullable
+    transient private Transaction depositTx;
+    transient private Coin tradeAmount;
+    transient private Coin txFee;
+    transient private Coin takerFee;
+    transient private ObjectProperty<State> stateProperty;
+    transient private ObjectProperty<Phase> statePhaseProperty;
+    transient private ObjectProperty<DisputeState> disputeStateProperty;
+    transient private ObjectProperty<TradePeriodState> tradePeriodStateProperty;
     transient private StringProperty errorMessageProperty;
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Volume> tradeVolumeProperty;
     transient private Set<DecryptedMsgWithPubKey> mailboxMessageSet = new HashSet<>();
-
-    private String depositTxId;
-    private String payoutTxId;
-    // We don't persist Transaction but fetch it from the wallet on demand (and cache it)
-    transient private Transaction payoutTx;
-    transient private Transaction depositTx;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -256,15 +257,11 @@ public abstract class Trade implements Tradable, Model {
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.storage = storage;
         this.btcWalletService = btcWalletService;
-        this.takeOfferDate = new Date();
+        this.txFeeAsLong = txFee.value;
+        this.takerFeeAsLong = takerFee.value;
 
+        this.setTakeOfferDate(new Date());
         processModel = new ProcessModel();
-        tradeVolumeProperty = new SimpleObjectProperty<>();
-        tradeAmountProperty = new SimpleObjectProperty<>();
-        errorMessageProperty = new SimpleStringProperty();
-
-        initStates();
-        initStateProperties();
     }
 
     // taker
@@ -278,31 +275,17 @@ public abstract class Trade implements Tradable, Model {
                     BtcWalletService btcWalletService) {
 
         this(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
-        this.tradeAmount = tradeAmount;
         this.tradePrice = tradePrice;
         this.tradingPeerNodeAddress = tradingPeerNodeAddress;
-        tradeAmountProperty.set(tradeAmount);
-        tradeVolumeProperty.set(getTradeVolume());
-        this.takeOfferDate = new Date();
+        this.setTradeAmount(tradeAmount);
+        getTradeAmountProperty().set(tradeAmount);
+        getTradeVolumeProperty().set(getTradeVolume());
+        this.setTakeOfferDate(new Date());
     }
 
     public void setTransientFields(Storage<? extends TradableList> storage, BtcWalletService btcWalletService) {
         this.storage = storage;
         this.btcWalletService = btcWalletService;
-        errorMessageProperty = new SimpleStringProperty(errorMessage);
-        mailboxMessageSet = new HashSet<>();
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            initStateProperties();
-            initAmountProperty();
-            errorMessageProperty = new SimpleStringProperty(errorMessage);
-            mailboxMessageSet = new HashSet<>();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
     }
 
     public void init(P2PService p2PService,
@@ -333,26 +316,9 @@ public abstract class Trade implements Tradable, Model {
         createProtocol();
 
         log.trace("init: decryptedMsgWithPubKey = " + decryptedMsgWithPubKey);
-        if (decryptedMsgWithPubKey != null && !mailboxMessageSet.contains(decryptedMsgWithPubKey)) {
-            mailboxMessageSet.add(decryptedMsgWithPubKey);
+        if (decryptedMsgWithPubKey != null && !getMailboxMessageSet().contains(decryptedMsgWithPubKey)) {
+            getMailboxMessageSet().add(decryptedMsgWithPubKey);
             tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
-        }
-    }
-
-    protected void initStateProperties() {
-        stateProperty = new SimpleObjectProperty<>(state);
-        statePhaseProperty = new SimpleObjectProperty<>(state.phase);
-        disputeStateProperty = new SimpleObjectProperty<>(disputeState);
-        tradePeriodStateProperty = new SimpleObjectProperty<>(tradePeriodState);
-    }
-
-    protected void initAmountProperty() {
-        tradeAmountProperty = new SimpleObjectProperty<>();
-        tradeVolumeProperty = new SimpleObjectProperty<>();
-
-        if (tradeAmount != null) {
-            tradeAmountProperty.set(tradeAmount);
-            tradeVolumeProperty.set(getTradeVolume());
         }
     }
 
@@ -386,8 +352,8 @@ public abstract class Trade implements Tradable, Model {
         log.trace("setMailboxMessage decryptedMsgWithPubKey=" + decryptedMsgWithPubKey);
         this.decryptedMsgWithPubKey = decryptedMsgWithPubKey;
 
-        if (tradeProtocol != null && decryptedMsgWithPubKey != null && !mailboxMessageSet.contains(decryptedMsgWithPubKey)) {
-            mailboxMessageSet.add(decryptedMsgWithPubKey);
+        if (tradeProtocol != null && decryptedMsgWithPubKey != null && !getMailboxMessageSet().contains(decryptedMsgWithPubKey)) {
+            getMailboxMessageSet().add(decryptedMsgWithPubKey);
             tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
         }
     }
@@ -405,8 +371,8 @@ public abstract class Trade implements Tradable, Model {
         if (state.getPhase().ordinal() >= this.state.getPhase().ordinal()) {
             boolean changed = this.state != state;
             this.state = state;
-            stateProperty.set(state);
-            statePhaseProperty.set(state.getPhase());
+            getStateProperty().set(state);
+            getStatePhaseProperty().set(state.getPhase());
 
             if (state == State.WITHDRAW_COMPLETED && tradeProtocol != null)
                 tradeProtocol.completed();
@@ -426,63 +392,103 @@ public abstract class Trade implements Tradable, Model {
         Log.traceCall("disputeState=" + disputeState + "\n\ttrade=" + this);
         boolean changed = this.disputeState != disputeState;
         this.disputeState = disputeState;
-        disputeStateProperty.set(disputeState);
+        getDisputeStateProperty().set(disputeState);
         if (changed)
             persist();
     }
 
     public DisputeState getDisputeState() {
+        if (disputeState == null)
+            disputeState = DisputeState.NONE;
         return disputeState;
     }
 
     public void setTradePeriodState(TradePeriodState tradePeriodState) {
         boolean changed = this.tradePeriodState != tradePeriodState;
         this.tradePeriodState = tradePeriodState;
-        tradePeriodStateProperty.set(tradePeriodState);
+        getTradePeriodStateProperty().set(tradePeriodState);
         if (changed)
             persist();
     }
 
     public TradePeriodState getTradePeriodState() {
+        if (tradePeriodState == null)
+            tradePeriodState = TradePeriodState.NORMAL;
         return tradePeriodState;
     }
 
     public boolean isInPreparation() {
-        return state.getPhase().ordinal() == Phase.PREPARATION.ordinal();
+        return getState().getPhase().ordinal() == Phase.PREPARATION.ordinal();
     }
 
     public boolean isTakerFeePublished() {
-        return state.getPhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
+        return getState().getPhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
     }
 
     public boolean isDepositPublished() {
-        return state.getPhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
+        return getState().getPhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
     }
 
     public boolean isDepositConfirmed() {
-        return state.getPhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
+        return getState().getPhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
     }
 
     public boolean isFiatSent() {
-        return state.getPhase().ordinal() >= Phase.FIAT_SENT.ordinal();
+        return getState().getPhase().ordinal() >= Phase.FIAT_SENT.ordinal();
     }
 
     public boolean isFiatReceived() {
-        return state.getPhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
+        return getState().getPhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
     }
 
     public boolean isPayoutPublished() {
-        return state.getPhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
+        return getState().getPhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
     }
 
     public boolean isWithdrawn() {
-        return state.getPhase().ordinal() == Phase.WITHDRAWN.ordinal();
+        return getState().getPhase().ordinal() == Phase.WITHDRAWN.ordinal();
     }
 
     public State getState() {
+        if (state == null)
+            state = State.PREPARATION;
         return state;
     }
 
+    public StringProperty getErrorMessageProperty() {
+        if (errorMessageProperty == null)
+            errorMessageProperty = new SimpleStringProperty(errorMessage);
+        return errorMessageProperty;
+    }
+
+    public Set<DecryptedMsgWithPubKey> getMailboxMessageSet() {
+        if (mailboxMessageSet == null)
+            mailboxMessageSet = new HashSet<>();
+        return mailboxMessageSet;
+    }
+
+    public ObjectProperty<Coin> getTradeAmountProperty() {
+        if (tradeAmountProperty == null)
+            tradeAmountProperty = getTradeAmount() != null ? new SimpleObjectProperty<>(getTradeAmount()) : new SimpleObjectProperty<>();
+
+        return tradeAmountProperty;
+    }
+
+
+    public ObjectProperty<Volume> getTradeVolumeProperty() {
+        if (tradeVolumeProperty == null)
+            tradeVolumeProperty = getTradeVolume() != null ? new SimpleObjectProperty<>(getTradeVolume()) : new SimpleObjectProperty<>();
+        return tradeVolumeProperty;
+    }
+
+    public Date getTakeOfferDate() {
+        return new Date(takeOfferDate);
+    }
+
+    public void setTakeOfferDate(Date takeOfferDate) {
+        this.takeOfferDate = takeOfferDate.getTime();
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Model implementation
@@ -525,8 +531,8 @@ public abstract class Trade implements Tradable, Model {
 
     @Nullable
     public Volume getTradeVolume() {
-        if (tradeAmount != null && getTradePrice() != null)
-            return getTradePrice().getVolumeByAmount(tradeAmount);
+        if (getTradeAmount() != null && getTradePrice() != null)
+            return getTradePrice().getVolumeByAmount(getTradeAmount());
         else
             return null;
     }
@@ -534,16 +540,16 @@ public abstract class Trade implements Tradable, Model {
 
     @Nullable
     public Date getMaxTradePeriodDate() {
-        if (maxTradePeriodDate == null && takeOfferDate != null)
-            maxTradePeriodDate = new Date(takeOfferDate.getTime() + getOffer().getPaymentMethod().getMaxTradePeriod());
+        if (maxTradePeriodDate == null && getTakeOfferDate() != null)
+            maxTradePeriodDate = new Date(getTakeOfferDate().getTime() + getOffer().getPaymentMethod().getMaxTradePeriod());
 
         return maxTradePeriodDate;
     }
 
     @Nullable
     public Date getHalfTradePeriodDate() {
-        if (halfTradePeriodDate == null && takeOfferDate != null)
-            halfTradePeriodDate = new Date(takeOfferDate.getTime() + getOffer().getPaymentMethod().getMaxTradePeriod() / 2);
+        if (halfTradePeriodDate == null && getTakeOfferDate() != null)
+            halfTradePeriodDate = new Date(getTakeOfferDate().getTime() + getOffer().getPaymentMethod().getMaxTradePeriod() / 2);
 
         return halfTradePeriodDate;
     }
@@ -552,28 +558,52 @@ public abstract class Trade implements Tradable, Model {
         return errorMessageProperty().get() != null;
     }
 
-    public ReadOnlyObjectProperty<State> stateProperty() {
+    private ObjectProperty<State> getStateProperty() {
+        if (stateProperty == null)
+            stateProperty = new SimpleObjectProperty<>(getState());
         return stateProperty;
     }
 
-    public ReadOnlyObjectProperty<Phase> statePhaseProperty() {
+    private ObjectProperty<Phase> getStatePhaseProperty() {
+        if (statePhaseProperty == null)
+            statePhaseProperty = new SimpleObjectProperty<>(getState().phase);
         return statePhaseProperty;
     }
 
-    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
-        return tradeAmountProperty;
-    }
-
-    public ReadOnlyObjectProperty<Volume> tradeVolumeProperty() {
-        return tradeVolumeProperty;
-    }
-
-    public ReadOnlyObjectProperty<DisputeState> disputeStateProperty() {
+    private ObjectProperty<DisputeState> getDisputeStateProperty() {
+        if (disputeStateProperty == null)
+            disputeStateProperty = new SimpleObjectProperty<>(getDisputeState());
         return disputeStateProperty;
     }
 
-    public ReadOnlyObjectProperty<TradePeriodState> getTradePeriodStateProperty() {
+    private ObjectProperty<TradePeriodState> getTradePeriodStateProperty() {
+        if (tradePeriodStateProperty == null)
+            tradePeriodStateProperty = new SimpleObjectProperty<>(getTradePeriodState());
         return tradePeriodStateProperty;
+    }
+
+    public ReadOnlyObjectProperty<State> stateProperty() {
+        return getStateProperty();
+    }
+
+    public ReadOnlyObjectProperty<Phase> statePhaseProperty() {
+        return getStatePhaseProperty();
+    }
+
+    public ReadOnlyObjectProperty<DisputeState> disputeStateProperty() {
+        return getDisputeStateProperty();
+    }
+
+    public ReadOnlyObjectProperty<TradePeriodState> tradePeriodStateProperty() {
+        return getTradePeriodStateProperty();
+    }
+
+    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
+        return getTradeAmountProperty();
+    }
+
+    public ReadOnlyObjectProperty<Volume> tradeVolumeProperty() {
+        return getTradeVolumeProperty();
     }
 
 
@@ -582,7 +612,7 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Date getDate() {
-        return takeOfferDate;
+        return getTakeOfferDate();
     }
 
     public void setTradingPeerNodeAddress(NodeAddress tradingPeerNodeAddress) {
@@ -599,8 +629,9 @@ public abstract class Trade implements Tradable, Model {
 
     public void setTradeAmount(Coin tradeAmount) {
         this.tradeAmount = tradeAmount;
-        tradeAmountProperty.set(tradeAmount);
-        tradeVolumeProperty.set(getTradeVolume());
+        tradeAmountAsLong = tradeAmount.value;
+        getTradeAmountProperty().set(tradeAmount);
+        getTradeVolumeProperty().set(getTradeVolume());
     }
 
     public void setTradePrice(long tradePrice) {
@@ -613,14 +644,20 @@ public abstract class Trade implements Tradable, Model {
 
     @Nullable
     public Coin getTradeAmount() {
+        if (tradeAmount == null)
+            tradeAmount = Coin.valueOf(tradeAmountAsLong);
         return tradeAmount;
     }
 
     public Coin getTxFee() {
+        if (txFee == null)
+            txFee = Coin.valueOf(txFeeAsLong);
         return txFee;
     }
 
     public Coin getTakerFee() {
+        if (takerFee == null)
+            takerFee = Coin.valueOf(takerFeeAsLong);
         return takerFee;
     }
 
@@ -674,15 +711,15 @@ public abstract class Trade implements Tradable, Model {
 
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
-        errorMessageProperty.set(errorMessage);
+        getErrorMessageProperty().set(errorMessage);
     }
 
     public ReadOnlyStringProperty errorMessageProperty() {
-        return errorMessageProperty;
+        return getErrorMessageProperty();
     }
 
     public String getErrorMessage() {
-        return errorMessageProperty.get();
+        return getErrorMessageProperty().get();
     }
 
     public NodeAddress getArbitratorNodeAddress() {
@@ -766,7 +803,7 @@ public abstract class Trade implements Tradable, Model {
                     @Override
                     public void onSuccess(TransactionConfidence result) {
                         log.debug("transactionConfidence " + transactionConfidence.getDepthInBlocks());
-                        log.debug("state " + state);
+                        log.debug("state " + getState());
                         setConfirmedState();
                     }
 
@@ -791,21 +828,19 @@ public abstract class Trade implements Tradable, Model {
             setState(State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
     }
 
-    abstract protected void initStates();
-
     @Override
     public String toString() {
         return "Trade{" +
-                "\n\ttradeAmount=" + tradeAmount +
+                "\n\ttradeAmount=" + getTradeAmount() +
                 "\n\ttradingPeerNodeAddress=" + tradingPeerNodeAddress +
-                "\n\ttradeVolume=" + tradeVolumeProperty.get() +
+                "\n\ttradeVolume=" + getTradeVolumeProperty().get() +
                 "\n\toffer=" + offer +
                 "\n\tprocessModel=" + processModel +
                 "\n\tdecryptedMsgWithPubKey=" + decryptedMsgWithPubKey +
-                "\n\ttakeOfferDate=" + takeOfferDate +
-                "\n\tstate=" + state +
-                "\n\tdisputeState=" + disputeState +
-                "\n\ttradePeriodState=" + tradePeriodState +
+                "\n\ttakeOfferDate=" + getTakeOfferDate() +
+                "\n\tstate=" + getState() +
+                "\n\tdisputeState=" + getDisputeState() +
+                "\n\ttradePeriodState=" + getTradePeriodState() +
                 "\n\tdepositTx=" + getDepositTx() +
                 "\n\ttakeOfferFeeTxId=" + takerFeeTxId +
                 "\n\tcontract=" + contract +
@@ -817,8 +852,8 @@ public abstract class Trade implements Tradable, Model {
                 "\n\tarbitratorNodeAddress=" + arbitratorNodeAddress +
                 "\n\tmediatorNodeAddress=" + mediatorNodeAddress +
                 "\n\ttakerPaymentAccountId='" + takerPaymentAccountId + '\'' +
-                "\n\ttxFee='" + txFee.toFriendlyString() + '\'' +
-                "\n\ttakeOfferFee='" + takerFee.toFriendlyString() + '\'' +
+                "\n\ttxFee='" + getTxFee().toFriendlyString() + '\'' +
+                "\n\ttakeOfferFee='" + getTakerFee().toFriendlyString() + '\'' +
                 "\n\terrorMessage='" + errorMessage + '\'' +
                 '}';
     }

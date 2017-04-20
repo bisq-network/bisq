@@ -57,12 +57,6 @@ public abstract class SellerTrade extends Trade {
         super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
     }
 
-    @Override
-    protected void initStates() {
-        if (state == null)
-            state = State.PREPARATION;
-    }
-
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkArgument(tradeProtocol instanceof SellerProtocol, "tradeProtocol NOT instanceof SellerProtocol");
         ((SellerProtocol) tradeProtocol).onFiatPaymentReceived(resultHandler, errorMessageHandler);

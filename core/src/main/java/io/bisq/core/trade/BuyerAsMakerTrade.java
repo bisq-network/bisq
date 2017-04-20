@@ -28,9 +28,6 @@ import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-
 @Slf4j
 public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -49,16 +46,6 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                              BtcWalletService btcWalletService) {
         super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc,
                 storage, btcWalletService);
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            initStateProperties();
-            initAmountProperty();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
     }
 
     @Override

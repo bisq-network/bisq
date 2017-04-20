@@ -198,7 +198,7 @@ public class TradeManager {
             if (trade.isDepositPublished() ||
                     (trade.isTakerFeePublished() && !trade.hasFailed())) {
                 initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
-                        trade.getProcessModel().getFundsNeededForTrade());
+                        trade.getProcessModel().getFundsNeededForTradeAsLong());
                 trade.updateDepositTxFromWallet();
                 tradesForStatistics.add(trade);
             } else if (trade.isTakerFeePublished()) {
@@ -284,7 +284,7 @@ public class TradeManager {
                         tradableListStorage,
                         btcWalletService);
 
-            initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
+            initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTradeAsLong());
             trades.add(trade);
             ((MakerTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
         } else {

@@ -50,8 +50,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 @Getter
+@Slf4j
 public class ProcessModel implements Model, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -102,7 +102,7 @@ public class ProcessModel implements Model, Serializable {
     @Setter
     private boolean useSavingsWallet;
     @Setter
-    private Coin fundsNeededForTrade;
+    private long fundsNeededForTradeAsLong;
     @Setter
     private byte[] myMultiSigPubKey;
     // that is used to store temp. the peers address when we get an incoming message before the message is verified.
@@ -137,8 +137,7 @@ public class ProcessModel implements Model, Serializable {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;
-        this.fundsNeededForTrade = fundsNeededForTrade;
-
+        fundsNeededForTradeAsLong = fundsNeededForTrade.value;
         offerId = offer.getId();
         accountId = user.getAccountId();
         pubKeyRing = keyRing.getPubKeyRing();
@@ -191,5 +190,9 @@ public class ProcessModel implements Model, Serializable {
                         })
                         .findAny()
                         .isPresent();
+    }
+
+    public Coin getFundsNeededForTradeAsLong() {
+        return Coin.valueOf(fundsNeededForTradeAsLong);
     }
 }

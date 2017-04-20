@@ -58,12 +58,6 @@ public abstract class BuyerTrade extends Trade {
         super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
     }
 
-    @Override
-    protected void initStates() {
-        if (state == null)
-            state = State.PREPARATION;
-    }
-
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkArgument(tradeProtocol instanceof BuyerProtocol, "Check failed:  tradeProtocol instanceof BuyerProtocol");
         ((BuyerProtocol) tradeProtocol).onFiatPaymentStarted(resultHandler, errorMessageHandler);
