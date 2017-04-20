@@ -32,9 +32,7 @@ import com.neemre.btcdcli4j.daemon.event.BlockListener;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
-import io.bisq.core.dao.blockchain.vo.Tx;
-import io.bisq.core.dao.blockchain.vo.TxInput;
-import io.bisq.core.dao.blockchain.vo.TxOutput;
+import io.bisq.core.dao.blockchain.vo.*;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -105,7 +103,7 @@ public class RpcService {
                 this.client = client;
             } catch (IOException | BitcoindException | CommunicationException e) {
                 if (e instanceof CommunicationException)
-                    log.error("Maybe the rpc port is not set correctly? rpcPort=" + rpcPort);
+                    log.error("Probably Bitcoin core is not running or the rpc port is not set correctly. rpcPort=" + rpcPort);
                 log.error(e.toString());
                 e.printStackTrace();
                 log.error(e.getCause() != null ? e.getCause().toString() : "e.getCause()=null");
@@ -149,7 +147,7 @@ public class RpcService {
             final List<TxInput> txInputs = rawTransaction.getVIn()
                     .stream()
                     .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
-                    .map(rawInput -> new TxInput(rawInput.getVOut(), rawInput.getTxId()))
+                    .map(rawInput -> new TxInput(new TxInputVo(rawInput.getTxId(), rawInput.getVOut())))
                     .collect(Collectors.toList());
 
             final List<TxOutput> txOutputs = rawTransaction.getVOut()
@@ -160,32 +158,39 @@ public class RpcService {
                                 final com.neemre.btcdcli4j.core.domain.PubKeyScript scriptPubKey = rawOutput.getScriptPubKey();
                                 if (scriptPubKey.getType().equals(ScriptTypes.NULL_DATA)) {
                                     String[] chunks = scriptPubKey.getAsm().split(" ");
+                                    // TODO only store BSQ OP_RETURN date filtered by type byte
                                     if (chunks.length == 2 && chunks[0].equals("OP_RETURN")) {
-                                        opReturnData = Utils.HEX.decode(chunks[1]);
+                                        try {
+                                            opReturnData = Utils.HEX.decode(chunks[1]);
+                                        } catch (Throwable t) {
+                                            // We get sometimes exceptions, seems BitcoinJ 
+                                            // cannot handle all existing OP_RETURN data, but we ignore them
+                                            // anyway as our OP_RETURN data is valid in BitcoinJ
+                                            log.warn(t.toString());
+                                        }
                                     }
                                 }
                                 // We dont support raw MS which are the only case where scriptPubKey.getAddresses()>1
                                 String address = scriptPubKey.getAddresses() != null &&
                                         scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
                                 final PubKeyScript pubKeyScript = dumpBlockchainData ? new PubKeyScript(scriptPubKey) : null;
-                                return new TxOutput(rawOutput.getN(),
+                                return new TxOutput(new TxOutputVo(rawOutput.getN(),
                                         rawOutput.getValue().movePointRight(8).longValue(),
                                         rawTransaction.getTxId(),
                                         pubKeyScript,
                                         address,
                                         opReturnData,
                                         blockHeight,
-                                        time);
+                                        time));
                             }
                     )
                     .collect(Collectors.toList());
 
-            return new Tx(txId,
+            return new Tx(new TxVo(txId,
                     blockHeight,
-                    rawTransaction.getBlockHash(),
+                    rawTransaction.getBlockHash()),
                     ImmutableList.copyOf(txInputs),
-                    ImmutableList.copyOf(txOutputs),
-                    false);
+                    ImmutableList.copyOf(txOutputs));
         } catch (BitcoindException | CommunicationException e) {
             throw new BsqBlockchainException(e.getMessage(), e);
         }

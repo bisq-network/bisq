@@ -19,23 +19,36 @@ package io.bisq.core.dao.blockchain.vo;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
-import lombok.Value;
+import lombok.Data;
+import lombok.experimental.Delegate;
 
-import javax.annotation.concurrent.Immutable;
-
-@Value
-@Immutable
+@Data
 public class TxInput implements Persistable {
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private final int spendingTxOutputIndex;
-    private final String spendingTxId;
+    @Delegate
+    private final TxInputVo txInputVo;
+
+    private long bsqValue;
+    private boolean isVerified;
+
+    public TxInput(TxInputVo txInputVo) {
+        this.txInputVo = txInputVo;
+    }
+
+    public void reset() {
+        bsqValue = 0;
+        isVerified = false;
+    }
+
 
     @Override
     public String toString() {
         return "TxInput{" +
-                "\nspendingTxOutputIndex=" + spendingTxOutputIndex +
-                ",\nspendingTxId='" + spendingTxId + '\'' +
-                "}\n";
+                "\n     spendingTxId=" + getSpendingTxId() +
+                ",\n     spendingTxOutputIndex=" + getSpendingTxOutputIndex() +
+                ",\n     bsqValue='" + bsqValue + '\'' +
+                ",\n     isVerified='" + isVerified + '\'' +
+                "\n}";
     }
 }

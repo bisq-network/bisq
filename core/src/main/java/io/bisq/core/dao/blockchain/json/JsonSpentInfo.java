@@ -17,15 +17,18 @@
 
 package io.bisq.core.dao.blockchain.json;
 
+import io.bisq.core.dao.blockchain.vo.SpentInfo;
 import lombok.Value;
 
-import java.util.List;
-
 @Value
-public class ScriptPubKeyForJson {
-    private final List<String> addresses;
-    private final String asm;
-    private final String hex;
-    private final int reqSigs;
-    private final String type;
+public class JsonSpentInfo {
+    private final long height;
+    private final int inputIndex;
+    private final String txId;
+
+    public JsonSpentInfo(SpentInfo spentInfo) {
+        height = spentInfo.getBlockHeight();
+        inputIndex = spentInfo.getInputIndex();
+        txId = spentInfo.getTxId();
+    }
 }

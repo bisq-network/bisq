@@ -33,14 +33,14 @@ public class PubKeyScript implements Serializable {
     @JsonExclude
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    private final Integer reqSigs;
+    private final int reqSigs;
     private final ScriptTypes type;
     private final ImmutableList<String> addresses;
     private final String asm;
     private final String hex;
 
     public PubKeyScript(com.neemre.btcdcli4j.core.domain.PubKeyScript scriptPubKey) {
-        this(scriptPubKey.getReqSigs(),
+        this(scriptPubKey.getReqSigs() != null ? scriptPubKey.getReqSigs() : 0,
                 ScriptTypes.forName(scriptPubKey.getType().getName()),
                 scriptPubKey.getAddresses() != null ? ImmutableList.copyOf(scriptPubKey.getAddresses()) : null,
                 scriptPubKey.getAsm(),

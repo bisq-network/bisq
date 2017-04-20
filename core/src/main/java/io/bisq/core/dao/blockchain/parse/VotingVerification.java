@@ -18,7 +18,10 @@
 package io.bisq.core.dao.blockchain.parse;
 
 import io.bisq.common.app.Version;
+import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
+import io.bisq.core.dao.blockchain.vo.TxOutputType;
+import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,15 +47,16 @@ public class VotingVerification {
         return false;
     }
 
-    boolean maybeProcessData(byte[] opReturnData, TxOutput txOutput, long availableValue, int blockHeight) {
+    boolean maybeProcessData(Tx tx, byte[] opReturnData, TxOutput txOutput, long fee, int blockHeight) {
         final int sizeOfCompRequestsVotes = (int) opReturnData[22];
         if (Version.VOTING_VERSION == opReturnData[1] &&
                 sizeOfCompRequestsVotes % 2 == 0 &&
                 (opReturnData.length - 1) % 2 == 0 &&
                 opReturnData.length >= 23 + sizeOfCompRequestsVotes * 2 &&
-                availableValue == bsqChainState.getVotingFee(blockHeight) &&
+                fee == bsqChainState.getVotingFee(blockHeight) &&
                 bsqChainState.isVotingPeriodValid(blockHeight)) {
-            bsqChainState.addVotingOpReturnOutput(txOutput);
+            txOutput.setTxOutputType(TxOutputType.VOTING_OP_RETURN_OUTPUT);
+            tx.setTxType(TxType.VOTE);
             return true;
         }
         return false;

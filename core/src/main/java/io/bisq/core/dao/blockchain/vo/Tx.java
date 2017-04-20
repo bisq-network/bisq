@@ -19,38 +19,54 @@ package io.bisq.core.dao.blockchain.vo;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
-import lombok.Value;
+import lombok.Data;
+import lombok.experimental.Delegate;
 
-import javax.annotation.concurrent.Immutable;
 import java.util.List;
 import java.util.Optional;
 
-@Value
-@Immutable
+@Data
 public class Tx implements Persistable {
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private final String id;
-    private final int blockHeight;
-    private final String blockHash;
+    @Delegate
+    private final TxVo txVo;
+
     private final List<TxInput> inputs;
     private final List<TxOutput> outputs;
-    private final boolean isGenesisTx;
-    private final String txVersion = Version.BSQ_TX_VERSION;
+
+    private boolean isVerified;
+    private long burntFee;
+    private TxType txType;
+
+    public Tx(TxVo txVo, List<TxInput> inputs, List<TxOutput> outputs) {
+        this.txVo = txVo;
+        this.inputs = inputs;
+        this.outputs = outputs;
+    }
 
     public Optional<TxOutput> getTxOutput(int index) {
         return outputs.size() > index ? Optional.of(outputs.get(index)) : Optional.<TxOutput>empty();
     }
 
+    public void reset() {
+        isVerified = false;
+        burntFee = 0;
+        txType = null;
+        inputs.stream().forEach(TxInput::reset);
+        outputs.stream().forEach(TxOutput::reset);
+    }
+
     @Override
     public String toString() {
         return "Tx{" +
-                "\nid='" + id + '\'' +
-                ",\nblockHash=" + blockHash +
+                "\ntxVersion='" + getTxVersion() + '\'' +
+                ",\nid='" + getId() + '\'' +
+                ",\nblockHeight=" + getBlockHeight() +
+                ",\nblockHash=" + getBlockHash() +
                 ",\ninputs=" + inputs +
                 ",\noutputs=" + outputs +
-                ",\nisGenesisTx=" + isGenesisTx +
-                ",\ntxVersion=" + txVersion +
+                ",\ntxVersion=" + getTxVersion() +
                 "}\n";
     }
 }

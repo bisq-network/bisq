@@ -19,35 +19,37 @@ package io.bisq.core.dao.blockchain.vo;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
-import lombok.Data;
-import lombok.experimental.Delegate;
+import io.bisq.common.util.JsonExclude;
+import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
-@Data
-public class BsqBlock implements Persistable {
+@Slf4j
+@Value
+@Immutable
+public class TxOutputVo implements Persistable {
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-    @Delegate
-    private final BsqBlockVo bsqBlockVo;
-    
-    private final List<Tx> txs;
 
-    public BsqBlock(BsqBlockVo bsqBlockVo, List<Tx> txs) {
-        this.bsqBlockVo = bsqBlockVo;
-        this.txs = txs;
+    private final int index;
+    private final long value;
+    private final String txId;
+    private final PubKeyScript pubKeyScript;
+    @Nullable
+    private final String address;
+    @Nullable
+    @JsonExclude
+    private final byte[] opReturnData;
+    private final int blockHeight;
+    private final long time;
+
+    public String getId() {
+        return txId + ":" + index;
     }
 
-    @Override
-    public String toString() {
-        return "BsqBlock{" +
-                "\n     height=" + getHeight() +
-                ",\n     hash='" + getHash() + '\'' +
-                ",\n     previousBlockHash='" + getPreviousBlockHash() + '\'' +
-                ",\n     txs='" + txs + '\'' +
-                "\n}";
-    }
-
-    public void reset() {
-        txs.stream().forEach(Tx::reset);
+    public TxIdIndexTuple getTxIdIndexTuple() {
+        return new TxIdIndexTuple(txId, index);
     }
 }

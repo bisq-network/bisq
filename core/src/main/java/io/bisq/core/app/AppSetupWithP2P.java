@@ -110,19 +110,19 @@ public class AppSetupWithP2P extends AppSetup {
 
             @Override
             public void onRequestingDataCompleted() {
-                log.info("p2pNetworkInitialized");
+                log.info("onRequestingDataCompleted");
                 p2pNetworkInitialized.set(true);
             }
 
             @Override
             public void onNoSeedNodeAvailable() {
-                log.info("p2pNetworkInitialized");
+                log.info("onNoSeedNodeAvailable");
                 p2pNetworkInitialized.set(true);
             }
 
             @Override
             public void onNoPeersAvailable() {
-                log.info("p2pNetworkInitialized");
+                log.info("onNoPeersAvailable");
                 p2pNetworkInitialized.set(true);
             }
 

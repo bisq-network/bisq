@@ -15,27 +15,15 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.json;
+package io.bisq.core.dao.blockchain.vo;
 
-import lombok.Value;
-
-@Value
-public class TxOutputForJson {
-    private final String txId;
-    private final int outputIndex;
-    private final long bsqAmount;
-    private final int height;
-    private final boolean isBsqCoinBase;
-    private final boolean isVerified;
-    private final long burnedFee;
-    private final long btcTxFee;
-    private final ScriptPubKeyForJson scriptPubKey;
-    private final SpentInfoForJson spentInfo;
-    private final long time;
-    private final String txVersion;
-
-    public String getSortData() {
-        return height + txId + outputIndex;
-    }
-
+public enum TxOutputType {
+    UNDEFINED,
+    BSQ_OUTPUT,
+    BTC_OUTPUT,
+    OP_RETURN_OUTPUT,
+    COMPENSATION_REQUEST_OP_RETURN_OUTPUT,
+    COMPENSATION_REQUEST_BTC_OUTPUT,
+    SPONSORING_BTC_OUTPUT,
+    VOTING_OP_RETURN_OUTPUT
 }
