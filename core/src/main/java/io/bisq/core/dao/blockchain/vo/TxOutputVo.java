@@ -43,7 +43,6 @@ public class TxOutputVo implements Persistable {
     @JsonExclude
     private final byte[] opReturnData;
     private final int blockHeight;
-    private final long time;
 
     public String getId() {
         return txId + ":" + index;

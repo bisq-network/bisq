@@ -56,7 +56,6 @@ public class TxOutput implements Persistable {
                 ",\n     address='" + getAddress() + '\'' +
                 ",\n     opReturnData=" + (getOpReturnData() != null ? Utils.HEX.encode(getOpReturnData()) : "null") +
                 ",\n     blockHeight=" + getBlockHeight() +
-                ",\n     time=" + getTime() +
                 ",\n     isUnspent=" + isUnspent +
                 ",\n     isVerified=" + isVerified +
                 ",\n     txOutputType=" + txOutputType +

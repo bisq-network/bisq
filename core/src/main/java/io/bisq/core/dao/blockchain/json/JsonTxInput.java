@@ -28,4 +28,6 @@ public class JsonTxInput {
     private final String spendingTxId;
     private final long bsqAmount;
     private final boolean isVerified;
+    private final String address;
+    private final long time;
 }

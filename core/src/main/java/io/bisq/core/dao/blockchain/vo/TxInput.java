@@ -29,26 +29,23 @@ public class TxInput implements Persistable {
     @Delegate
     private final TxInputVo txInputVo;
 
-    private long bsqValue;
-    private boolean isVerified;
+    private TxOutput connectedTxOutput;
 
     public TxInput(TxInputVo txInputVo) {
         this.txInputVo = txInputVo;
     }
 
     public void reset() {
-        bsqValue = 0;
-        isVerified = false;
+        connectedTxOutput = null;
     }
 
 
     @Override
     public String toString() {
         return "TxInput{" +
-                "\n     spendingTxId=" + getSpendingTxId() +
-                ",\n     spendingTxOutputIndex=" + getSpendingTxOutputIndex() +
-                ",\n     bsqValue='" + bsqValue + '\'' +
-                ",\n     isVerified='" + isVerified + '\'' +
+                "\n     txId=" + getTxId() +
+                ",\n     txOutputIndex=" + getTxOutputIndex() +
+                ",\n     txOutput='" + connectedTxOutput + '\'' +
                 "\n}";
     }
 }

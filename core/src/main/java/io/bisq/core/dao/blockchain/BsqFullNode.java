@@ -166,7 +166,8 @@ public class BsqFullNode extends BsqNode {
             log.debug("Received getBsqBlocksRequest with data: {} from {}",
                     getBsqBlocksRequest.getFromBlockHeight(), peersNodeAddress);
 
-            byte[] bsqBlockListBytes = bsqChainState.getSerializedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
+            // reset it done in getSerializedResettedBlocksFrom
+            byte[] bsqBlockListBytes = bsqChainState.getSerializedResettedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
             final GetBsqBlocksResponse bsqBlocksResponse = new GetBsqBlocksResponse(bsqBlockListBytes);
             SettableFuture<Connection> future = p2PService.getNetworkNode().sendMessage(peersNodeAddress,
                     bsqBlocksResponse);

@@ -133,6 +133,8 @@ public class BsqLiteNode extends BsqNode {
             byte[] bsqBlocksBytes = getBsqBlocksResponse.getBsqBlocksBytes();
             List<BsqBlock> bsqBlockList = Utilities.<ArrayList<BsqBlock>>deserialize(bsqBlocksBytes);
             log.debug("received msg with {} items", bsqBlockList.size());
+            // Be safe and reset all mutable data in case the provider would not have done it
+            bsqBlockList.stream().forEach(BsqBlock::reset);
             bsqLiteNodeExecutor.parseBsqBlocksForLiteNode(bsqBlockList,
                     genesisBlockHeight,
                     genesisTxId,
@@ -151,6 +153,8 @@ public class BsqLiteNode extends BsqNode {
             NewBsqBlockBroadcastMsg newBsqBlockBroadcastMsg = (NewBsqBlockBroadcastMsg) msg;
             byte[] bsqBlockBytes = newBsqBlockBroadcastMsg.getBsqBlockBytes();
             BsqBlock bsqBlock = Utilities.<BsqBlock>deserialize(bsqBlockBytes);
+            // Be safe and reset all mutable data in case the provider would not have done it
+            bsqBlock.reset();
             log.debug("received broadcastNewBsqBlock bsqBlock {}", bsqBlock);
             if (!bsqChainState.containsBlock(bsqBlock)) {
                 bsqLiteNodeExecutor.parseBsqBlockForLiteNode(bsqBlock,

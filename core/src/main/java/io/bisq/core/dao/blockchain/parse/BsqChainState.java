@@ -289,7 +289,7 @@ public class BsqChainState implements Persistable {
         });
     }
 
-    public byte[] getSerializedBlocksFrom(int fromBlockHeight) {
+    public byte[] getSerializedResettedBlocksFrom(int fromBlockHeight) {
         return lock.read(() -> {
             List<BsqBlock> filtered = blocks.stream()
                     .filter(block -> block.getHeight() >= fromBlockHeight)

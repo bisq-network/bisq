@@ -174,21 +174,23 @@ public class RpcService {
                                 String address = scriptPubKey.getAddresses() != null &&
                                         scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
                                 final PubKeyScript pubKeyScript = dumpBlockchainData ? new PubKeyScript(scriptPubKey) : null;
-                                return new TxOutput(new TxOutputVo(rawOutput.getN(),
+                                final TxOutputVo txOutputVo = new TxOutputVo(rawOutput.getN(),
                                         rawOutput.getValue().movePointRight(8).longValue(),
                                         rawTransaction.getTxId(),
                                         pubKeyScript,
                                         address,
                                         opReturnData,
-                                        blockHeight,
-                                        time));
+                                        blockHeight);
+                                return new TxOutput(txOutputVo);
                             }
                     )
                     .collect(Collectors.toList());
 
-            return new Tx(new TxVo(txId,
+            final TxVo txVo = new TxVo(txId,
                     blockHeight,
-                    rawTransaction.getBlockHash()),
+                    rawTransaction.getBlockHash(),
+                    time);
+            return new Tx(txVo,
                     ImmutableList.copyOf(txInputs),
                     ImmutableList.copyOf(txOutputs));
         } catch (BitcoindException | CommunicationException e) {
