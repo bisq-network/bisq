@@ -289,7 +289,7 @@ public class BsqParser {
                 if (availableValue >= txOutputValue && txOutputValue != 0) {
                     // We are spending available tokens
                     bsqChainState.addUnspentTxOutput(txOutput);
-                    
+
                     availableValue -= txOutputValue;
                     if (availableValue == 0) {
                         log.debug("We don't have anymore BSQ to spend");

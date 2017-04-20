@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.blockchain.json;
 
+import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import lombok.Value;
 
 import java.util.List;
@@ -28,4 +29,12 @@ public class ScriptPubKeyForJson {
     private final String hex;
     private final int reqSigs;
     private final String type;
+
+    public ScriptPubKeyForJson(PubKeyScript pubKeyScript) {
+        addresses = pubKeyScript.getAddresses();
+        asm = pubKeyScript.getAsm();
+        hex = pubKeyScript.getHex();
+        reqSigs = pubKeyScript.getReqSigs();
+        type = pubKeyScript.getType().toString();
+    }
 }

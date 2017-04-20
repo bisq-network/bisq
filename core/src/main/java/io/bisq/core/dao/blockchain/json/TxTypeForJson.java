@@ -17,27 +17,21 @@
 
 package io.bisq.core.dao.blockchain.json;
 
-import io.bisq.common.app.Version;
-import lombok.Data;
-import lombok.Setter;
+import lombok.Getter;
 
-@Data
-public class TxOutputForJson {
-    private final String txVersion = Version.BSQ_TX_VERSION;
-    private final String txId;
-    private final int outputIndex;
-    private final long bsqAmount;
-    private final long btcAmount;
-    private final int height;
-    private final boolean isVerified;
-    private final long burntFee;
-    private final ScriptPubKeyForJson scriptPubKey;
-    private final SpentInfoForJson spentInfo;
-    private final long time;
-    @Setter
-    private String txType;
+public enum TxTypeForJson {
+    UNDEFINED("Undefined"),
+    GENESIS("Genesis"),
+    SEND_BSQ("Send BSQ"),
+    PAY_TRADE_FEE("Pay trade fee"),
+    COMPENSATION_REQUEST("Compensation request"),
+    VOTE("Vote"),
+    ISSUANCE("Issuance");
 
-    public String getId() {
-        return txId + ":" + outputIndex;
+    @Getter
+    private String displayString;
+
+    TxTypeForJson(String displayString) {
+        this.displayString = displayString;
     }
 }

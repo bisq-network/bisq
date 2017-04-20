@@ -18,26 +18,18 @@
 package io.bisq.core.dao.blockchain.json;
 
 import io.bisq.common.app.Version;
-import lombok.Data;
-import lombok.Setter;
+import lombok.Value;
 
-@Data
-public class TxOutputForJson {
+import java.util.List;
+
+@Value
+public class TxForJson {
     private final String txVersion = Version.BSQ_TX_VERSION;
-    private final String txId;
-    private final int outputIndex;
-    private final long bsqAmount;
-    private final long btcAmount;
-    private final int height;
-    private final boolean isVerified;
-    private final long burntFee;
-    private final ScriptPubKeyForJson scriptPubKey;
-    private final SpentInfoForJson spentInfo;
-    private final long time;
-    @Setter
-    private String txType;
-
-    public String getId() {
-        return txId + ":" + outputIndex;
-    }
+    private final String id;
+    private final int blockHeight;
+    private final String blockHash;
+    private final List<TxInputForJson> inputs;
+    private final List<TxOutputForJson> outputs;
+    private final boolean isGenesisTx;
+    private final String txType;
 }

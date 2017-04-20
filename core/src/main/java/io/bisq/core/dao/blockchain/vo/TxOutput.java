@@ -39,7 +39,6 @@ public class TxOutput implements Persistable {
     private final String txId;
     private final PubKeyScript pubKeyScript;
     @Nullable
-    @JsonExclude
     private final String address;
     @Nullable
     @JsonExclude
@@ -47,34 +46,8 @@ public class TxOutput implements Persistable {
     private final int blockHeight;
     private final long time;
 
-/*    public String getAddress() {
-        String address = "";
-        // Only at raw MS outputs addresses have more then 1 entry
-        // We do not support raw MS for BSQ but lets see if is needed anyway, might be removed
-        final List<String> addresses = pubKeyScript.getAddresses();
-        if (addresses.size() == 1) {
-            address = addresses.get(0);
-        } else if (addresses.size() > 1) {
-            final String msg = "We got a raw Multisig script. That is not supported for BSQ tokens.";
-            log.warn(msg);
-            address = addresses.toString();
-            if (DevEnv.DEV_MODE)
-                throw new RuntimeException(msg);
-        } else {
-            final String msg = "We got no address. Unsupported pubKeyScript";
-            log.warn(msg);
-            if (DevEnv.DEV_MODE)
-                throw new RuntimeException(msg);
-        }
-        return address;
-    }*/
-
     public String getId() {
         return txId + ":" + index;
-    }
-
-    public String getSortString() {
-        return blockHeight + ":" + txId;
     }
 
     public TxIdIndexTuple getTxIdIndexTuple() {
@@ -88,8 +61,9 @@ public class TxOutput implements Persistable {
                 ",\n     value=" + value +
                 ",\n     txId='" + txId + '\'' +
                 ",\n     pubKeyScript=" + pubKeyScript +
-                ",\n     blockHeight=" + blockHeight +
+                ",\n     address='" + address + '\'' +
                 ",\n     opReturnData=" + (opReturnData != null ? Utils.HEX.encode(opReturnData) : "null") +
+                ",\n     blockHeight=" + blockHeight +
                 ",\n     time=" + time +
                 "\n}";
     }

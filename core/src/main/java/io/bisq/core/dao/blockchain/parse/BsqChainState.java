@@ -35,6 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -100,8 +102,9 @@ public class BsqChainState implements Persistable {
     private final Set<Tuple2<Long, Integer>> compensationRequestFees = new HashSet<>();
     private final Set<Tuple2<Long, Integer>> votingFees = new HashSet<>();
     private final Set<TxOutput> compensationRequestOpReturnTxOutputs = new HashSet<>();
-    private final Set<String> compensationRequestBtcAddresses = new HashSet<>();
     private final Set<TxOutput> votingTxOutputs = new HashSet<>();
+    private final Set<TxOutput> invalidatedTxOutputs = new HashSet<>();
+    private final Set<String> compensationRequestBtcAddresses = new HashSet<>();
     private final Map<String, Set<TxOutput>> issuanceBtcTxOutputsByBtcAddressMap = new HashMap<>();
 
     private final String genesisTxId;
@@ -113,7 +116,7 @@ public class BsqChainState implements Persistable {
     transient private final boolean dumpBlockchainData;
     transient private final Storage<BsqChainState> snapshotBsqChainStateStorage;
     transient private BsqChainState snapshotCandidate;
-    transient private final FunctionalReadWriteLock lock;
+    transient private FunctionalReadWriteLock lock;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -144,6 +147,10 @@ public class BsqChainState implements Persistable {
         lock = new FunctionalReadWriteLock(true);
     }
 
+    private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
+        ois.defaultReadObject();
+        lock = new FunctionalReadWriteLock(true);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public write access
@@ -263,9 +270,9 @@ public class BsqChainState implements Persistable {
         });
     }
 
-    void addCompensationRequestOpReturnOutput(TxOutput opReturnTxOutput) {
+    void addCompensationRequestOpReturnOutput(TxOutput txOutput) {
         lock.write(() -> {
-            compensationRequestOpReturnTxOutputs.add(opReturnTxOutput);
+            compensationRequestOpReturnTxOutputs.add(txOutput);
         });
     }
 
@@ -275,9 +282,15 @@ public class BsqChainState implements Persistable {
         });
     }
 
-    void addVotingOpReturnOutput(TxOutput opReturnTxOutput) {
+    void addVotingOpReturnOutput(TxOutput txOutput) {
         lock.write(() -> {
-            votingTxOutputs.add(opReturnTxOutput);
+            votingTxOutputs.add(txOutput);
+        });
+    }
+
+    void addInvalidatedTxOutputs(TxOutput txOutput) {
+        lock.write(() -> {
+            invalidatedTxOutputs.add(txOutput);
         });
     }
 
@@ -348,6 +361,55 @@ public class BsqChainState implements Persistable {
     public int getChainHeadHeight() {
         return lock.read(() -> {
             return chainHeadHeight;
+        });
+    }
+
+    // Only used for Json Exporter
+    public Map<String, Tx> getTxMap() {
+        return lock.read(() -> {
+            return txMap;
+        });
+    }
+
+    public Set<TxOutput> getVotingTxOutputs() {
+        return lock.read(() -> {
+            return votingTxOutputs;
+        });
+    }
+
+    public Set<TxOutput> getInvalidatedTxOutputs() {
+        return lock.read(() -> {
+            return invalidatedTxOutputs;
+        });
+    }
+
+    public Map<String, Set<TxOutput>> getIssuanceBtcTxOutputsByBtcAddressMap() {
+        return lock.read(() -> {
+            return issuanceBtcTxOutputsByBtcAddressMap;
+        });
+    }
+
+    public Set<TxOutput> getCompensationRequestOpReturnTxOutputs() {
+        return lock.read(() -> {
+            return compensationRequestOpReturnTxOutputs;
+        });
+    }
+
+    public Map<TxIdIndexTuple, SpentInfo> getSpentInfoByTxOutputMap() {
+        return lock.read(() -> {
+            return spentInfoByTxOutputMap;
+        });
+    }
+
+    public Map<String, Long> getBurntFeeByTxIdMap() {
+        return lock.read(() -> {
+            return burntFeeByTxIdMap;
+        });
+    }
+
+    public Set<TxOutput> getUnspentTxOutputSet() {
+        return lock.read(() -> {
+            return unspentTxOutputSet;
         });
     }
 

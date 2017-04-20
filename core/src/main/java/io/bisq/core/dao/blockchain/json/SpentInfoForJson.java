@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.blockchain.json;
 
+import io.bisq.core.dao.blockchain.vo.SpentInfo;
 import lombok.Value;
 
 @Value
@@ -24,4 +25,10 @@ public class SpentInfoForJson {
     private final long height;
     private final int inputIndex;
     private final String txId;
+
+    public SpentInfoForJson(SpentInfo spentInfo) {
+        height = spentInfo.getBlockHeight();
+        inputIndex = spentInfo.getInputIndex();
+        txId = spentInfo.getTxId();
+    }
 }
