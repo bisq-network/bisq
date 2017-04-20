@@ -19,9 +19,11 @@ package io.bisq.core.dao.blockchain.json;
 
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+@Slf4j
 @Value
 public class ScriptPubKeyForJson {
     private final List<String> addresses;
