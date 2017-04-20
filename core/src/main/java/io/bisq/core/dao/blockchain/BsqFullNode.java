@@ -26,7 +26,7 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.network.Msg;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
-import io.bisq.core.dao.blockchain.json.DaoJsonExporter;
+import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMsg;
@@ -47,7 +47,7 @@ import org.jetbrains.annotations.NotNull;
 public class BsqFullNode extends BsqNode {
 
     private BsqFullNodeExecutor bsqFullNodeExecutor;
-    private final DaoJsonExporter daoJsonExporter;
+    private final JsonChainStateExporter jsonChainStateExporter;
     @Getter
     private boolean parseBlockchainComplete;
 
@@ -62,14 +62,14 @@ public class BsqFullNode extends BsqNode {
                        BsqParser bsqParser,
                        BsqFullNodeExecutor bsqFullNodeExecutor,
                        BsqChainState bsqChainState,
-                       DaoJsonExporter daoJsonExporter,
+                       JsonChainStateExporter jsonChainStateExporter,
                        FeeService feeService) {
         super(p2PService,
                 bsqParser,
                 bsqChainState,
                 feeService);
         this.bsqFullNodeExecutor = bsqFullNodeExecutor;
-        this.daoJsonExporter = daoJsonExporter;
+        this.jsonChainStateExporter = jsonChainStateExporter;
     }
 
 
@@ -187,7 +187,7 @@ public class BsqFullNode extends BsqNode {
     @Override
     protected void onNewBsqBlock(BsqBlock bsqBlock) {
         super.onNewBsqBlock(bsqBlock);
-        daoJsonExporter.maybeExport();
+        jsonChainStateExporter.maybeExport();
         if (parseBlockchainComplete && p2pNetworkReady)
             publishNewBlock(bsqBlock);
     }

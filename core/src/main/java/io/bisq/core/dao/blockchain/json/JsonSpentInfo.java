@@ -17,26 +17,18 @@
 
 package io.bisq.core.dao.blockchain.json;
 
-import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
+import io.bisq.core.dao.blockchain.vo.SpentInfo;
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
-@Slf4j
 @Value
-public class ScriptPubKeyForJson {
-    private final List<String> addresses;
-    private final String asm;
-    private final String hex;
-    private final int reqSigs;
-    private final String type;
+public class JsonSpentInfo {
+    private final long height;
+    private final int inputIndex;
+    private final String txId;
 
-    public ScriptPubKeyForJson(PubKeyScript pubKeyScript) {
-        addresses = pubKeyScript.getAddresses();
-        asm = pubKeyScript.getAsm();
-        hex = pubKeyScript.getHex();
-        reqSigs = pubKeyScript.getReqSigs();
-        type = pubKeyScript.getType().toString();
+    public JsonSpentInfo(SpentInfo spentInfo) {
+        height = spentInfo.getBlockHeight();
+        inputIndex = spentInfo.getInputIndex();
+        txId = spentInfo.getTxId();
     }
 }

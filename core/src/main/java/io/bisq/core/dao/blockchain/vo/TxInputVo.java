@@ -15,23 +15,23 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.json;
+package io.bisq.core.dao.blockchain.vo;
 
-import lombok.Getter;
+import io.bisq.common.app.Version;
+import io.bisq.common.persistence.Persistable;
+import lombok.Value;
 
-public enum TxTypeForJson {
-    UNDEFINED("Undefined"),
-    GENESIS("Genesis"),
-    SEND_BSQ("Send BSQ"),
-    PAY_TRADE_FEE("Pay trade fee"),
-    COMPENSATION_REQUEST("Compensation request"),
-    VOTE("Vote"),
-    ISSUANCE("Issuance");
+import javax.annotation.concurrent.Immutable;
 
-    @Getter
-    private String displayString;
+@Value
+@Immutable
+public class TxInputVo implements Persistable {
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    TxTypeForJson(String displayString) {
-        this.displayString = displayString;
+    private final String spendingTxId;
+    private final int spendingTxOutputIndex;
+
+    public TxIdIndexTuple getTxIdIndexTuple() {
+        return new TxIdIndexTuple(spendingTxId, spendingTxOutputIndex);
     }
 }

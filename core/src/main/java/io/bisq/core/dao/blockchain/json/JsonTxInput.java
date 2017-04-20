@@ -23,7 +23,7 @@ import javax.annotation.concurrent.Immutable;
 
 @Value
 @Immutable
-public class TxInputForJson {
+public class JsonTxInput {
     private final int spendingTxOutputIndex;
     private final String spendingTxId;
     private final long bsqAmount;

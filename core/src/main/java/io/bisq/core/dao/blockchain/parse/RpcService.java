@@ -32,9 +32,7 @@ import com.neemre.btcdcli4j.daemon.event.BlockListener;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import io.bisq.core.dao.blockchain.exceptions.BsqBlockchainException;
-import io.bisq.core.dao.blockchain.vo.Tx;
-import io.bisq.core.dao.blockchain.vo.TxInput;
-import io.bisq.core.dao.blockchain.vo.TxOutput;
+import io.bisq.core.dao.blockchain.vo.*;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -149,7 +147,7 @@ public class RpcService {
             final List<TxInput> txInputs = rawTransaction.getVIn()
                     .stream()
                     .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
-                    .map(rawInput -> new TxInput(rawInput.getVOut(), rawInput.getTxId()))
+                    .map(rawInput -> new TxInput(new TxInputVo(rawInput.getTxId(), rawInput.getVOut())))
                     .collect(Collectors.toList());
 
             final List<TxOutput> txOutputs = rawTransaction.getVOut()
@@ -176,24 +174,23 @@ public class RpcService {
                                 String address = scriptPubKey.getAddresses() != null &&
                                         scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
                                 final PubKeyScript pubKeyScript = dumpBlockchainData ? new PubKeyScript(scriptPubKey) : null;
-                                return new TxOutput(rawOutput.getN(),
+                                return new TxOutput(new TxOutputVo(rawOutput.getN(),
                                         rawOutput.getValue().movePointRight(8).longValue(),
                                         rawTransaction.getTxId(),
                                         pubKeyScript,
                                         address,
                                         opReturnData,
                                         blockHeight,
-                                        time);
+                                        time));
                             }
                     )
                     .collect(Collectors.toList());
 
-            return new Tx(txId,
+            return new Tx(new TxVo(txId,
                     blockHeight,
-                    rawTransaction.getBlockHash(),
+                    rawTransaction.getBlockHash()),
                     ImmutableList.copyOf(txInputs),
-                    ImmutableList.copyOf(txOutputs),
-                    false);
+                    ImmutableList.copyOf(txOutputs));
         } catch (BitcoindException | CommunicationException e) {
             throw new BsqBlockchainException(e.getMessage(), e);
         }

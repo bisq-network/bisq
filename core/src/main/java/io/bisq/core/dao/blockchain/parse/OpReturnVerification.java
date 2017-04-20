@@ -18,7 +18,9 @@
 package io.bisq.core.dao.blockchain.parse;
 
 import io.bisq.core.dao.DaoConstants;
+import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
+import io.bisq.core.dao.blockchain.vo.TxOutputType;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Utils;
 
@@ -37,7 +39,9 @@ public class OpReturnVerification {
         this.votingVerification = votingVerification;
     }
 
-    boolean maybeProcessOpReturnData(List<TxOutput> txOutputs, int index, long availableValue, int blockHeight, TxOutput btcOutput) {
+    boolean maybeProcessOpReturnData(Tx tx, int index, long availableValue,
+                                     int blockHeight, TxOutput btcOutput) {
+        List<TxOutput> txOutputs = tx.getOutputs();
         TxOutput txOutput = txOutputs.get(index);
         final long txOutputValue = txOutput.getValue();
         if (txOutputValue == 0 && index == txOutputs.size() - 1 && availableValue > 0) {
@@ -45,11 +49,13 @@ public class OpReturnVerification {
             // the txOutputValue is 0 as well we expect that availableValue>0
             byte[] opReturnData = txOutput.getOpReturnData();
             if (opReturnData != null && opReturnData.length > 1) {
+                txOutput.setTxOutputType(TxOutputType.OP_RETURN_OUTPUT);
                 switch (opReturnData[0]) {
                     case DaoConstants.OP_RETURN_TYPE_COMPENSATION_REQUEST:
-                        return compensationRequestVerification.maybeProcessData(opReturnData, txOutput, availableValue, blockHeight, btcOutput);
+                        return compensationRequestVerification.maybeProcessData(tx, opReturnData, txOutput,
+                                availableValue, blockHeight, btcOutput);
                     case DaoConstants.OP_RETURN_TYPE_VOTE:
-                        return votingVerification.maybeProcessData(opReturnData, txOutput, availableValue, blockHeight);
+                        return votingVerification.maybeProcessData(tx, opReturnData, txOutput, availableValue, blockHeight);
                     default:
                         log.warn("OP_RETURN data version does not match expected version bytes. opReturnData={}",
                                 Utils.HEX.encode(opReturnData));

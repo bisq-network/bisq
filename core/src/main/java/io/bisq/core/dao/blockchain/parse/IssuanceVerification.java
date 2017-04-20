@@ -17,7 +17,10 @@
 
 package io.bisq.core.dao.blockchain.parse;
 
+import io.bisq.core.dao.blockchain.vo.Tx;
 import io.bisq.core.dao.blockchain.vo.TxOutput;
+import io.bisq.core.dao.blockchain.vo.TxOutputType;
+import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestModel;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +51,8 @@ public class IssuanceVerification {
         this.compensationRequestModel = compensationRequestModel;
     }
 
-    boolean maybeProcessData(List<TxOutput> outputs, int outputIndex) {
+    boolean maybeProcessData(Tx tx, int outputIndex) {
+        List<TxOutput> outputs = tx.getOutputs();
         if (outputIndex == 0 && outputs.size() >= 2) {
             TxOutput btcTxOutput = outputs.get(0);
             TxOutput bsqTxOutput = outputs.get(1);
@@ -60,7 +64,10 @@ public class IssuanceVerification {
                 final long requestedBtc = compensationRequest1.getCompensationRequestPayload().getRequestedBtc().value;
                 long alreadyFundedBtc = 0;
                 final int height = btcTxOutput.getBlockHeight();
-                Set<TxOutput> issuanceTxs = bsqChainState.issuanceTxOutputsByBtcAddress(btcAddress);
+                Set<TxOutput> issuanceTxs = bsqChainState.findSponsoringBtcOutputsWithSameBtcAddress(btcAddress);
+                // Sorting rule: the txs are sorted by inter-block dependency and 
+                // at each recursive iteration we add another sorted list which can be parsed, so we have a reproducible
+                // sorting.
                 for (TxOutput txOutput : issuanceTxs) {
                     if (txOutput.getBlockHeight() < height ||
                             (txOutput.getBlockHeight() == height &&
@@ -70,12 +77,13 @@ public class IssuanceVerification {
                 }
                 final long btcAmount = btcTxOutput.getValue();
                 if (periodVerification.isInSponsorPeriod(height) &&
-                        bsqChainState.containsCompensationRequestBtcAddress(btcAddress) &&
+                        bsqChainState.existsCompensationRequestBtcAddress(btcAddress) &&
                         votingVerification.isCompensationRequestAccepted(compensationRequest1) &&
                         alreadyFundedBtc + btcAmount <= requestedBtc &&
                         bsqAmount >= MIN_BSQ_ISSUANCE_AMOUNT && bsqAmount <= MAX_BSQ_ISSUANCE_AMOUNT &&
                         votingVerification.isConversionRateValid(height, btcAmount, bsqAmount)) {
-                    bsqChainState.addIssuanceBtcTxOutput(btcTxOutput);
+                    btcTxOutput.setTxOutputType(TxOutputType.SPONSORING_BTC_OUTPUT);
+                    tx.setTxType(TxType.ISSUANCE);
                     return true;
                 }
             }

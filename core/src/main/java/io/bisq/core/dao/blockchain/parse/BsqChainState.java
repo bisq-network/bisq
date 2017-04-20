@@ -29,7 +29,10 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
-import io.bisq.core.dao.blockchain.vo.*;
+import io.bisq.core.dao.blockchain.vo.BsqBlock;
+import io.bisq.core.dao.blockchain.vo.Tx;
+import io.bisq.core.dao.blockchain.vo.TxIdIndexTuple;
+import io.bisq.core.dao.blockchain.vo.TxOutput;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
@@ -96,16 +99,9 @@ public class BsqChainState implements Persistable {
     // Persisted data
     private final LinkedList<BsqBlock> blocks = new LinkedList<>();
     private final Map<String, Tx> txMap = new HashMap<>();
-    private final Set<TxOutput> unspentTxOutputSet = new HashSet<>();
-    private final Map<TxIdIndexTuple, SpentInfo> spentInfoByTxOutputMap = new HashMap<>();
-    private final Map<String, Long> burntFeeByTxIdMap = new HashMap<>();
+    private final Map<TxIdIndexTuple, TxOutput> unspentTxOutputsMap = new HashMap<>();
     private final Set<Tuple2<Long, Integer>> compensationRequestFees = new HashSet<>();
     private final Set<Tuple2<Long, Integer>> votingFees = new HashSet<>();
-    private final Set<TxOutput> compensationRequestOpReturnTxOutputs = new HashSet<>();
-    private final Set<TxOutput> votingTxOutputs = new HashSet<>();
-    private final Set<TxOutput> invalidatedTxOutputs = new HashSet<>();
-    private final Set<String> compensationRequestBtcAddresses = new HashSet<>();
-    private final Map<String, Set<TxOutput>> issuanceBtcTxOutputsByBtcAddressMap = new HashMap<>();
 
     private final String genesisTxId;
     private final int genesisBlockHeight;
@@ -162,19 +158,14 @@ public class BsqChainState implements Persistable {
 
             blocks.clear();
             txMap.clear();
-            unspentTxOutputSet.clear();
-            spentInfoByTxOutputMap.clear();
-            burntFeeByTxIdMap.clear();
-
+            unspentTxOutputsMap.clear();
             chainHeadHeight = 0;
             genesisTx = null;
 
             if (snapshot != null) {
                 blocks.addAll(snapshot.blocks);
                 txMap.putAll(snapshot.txMap);
-                unspentTxOutputSet.addAll(snapshot.unspentTxOutputSet);
-                spentInfoByTxOutputMap.putAll(snapshot.spentInfoByTxOutputMap);
-                burntFeeByTxIdMap.putAll(snapshot.burntFeeByTxIdMap);
+                unspentTxOutputsMap.putAll(snapshot.unspentTxOutputsMap);
                 chainHeadHeight = snapshot.chainHeadHeight;
                 genesisTx = snapshot.genesisTx;
             }
@@ -207,7 +198,7 @@ public class BsqChainState implements Persistable {
                     if (blocks.isEmpty() || (blocks.getLast().getHash().equals(block.getPreviousBlockHash()) &&
                             blocks.getLast().getHeight() + 1 == block.getHeight())) {
                         blocks.add(block);
-                        block.getTxs().stream().forEach(BsqChainState.this::addTx);
+                        block.getTxs().stream().forEach(BsqChainState.this::addTxToMap);
                         chainHeadHeight = block.getHeight();
                         maybeMakeSnapshot();
                         //printDetails();
@@ -231,75 +222,28 @@ public class BsqChainState implements Persistable {
         }
     }
 
-    void addTx(Tx tx) {
+    void addTxToMap(Tx tx) {
         lock.write(() -> {
             txMap.put(tx.getId(), tx);
         });
     }
 
-    void addSpentTxWithSpentInfo(TxOutput spentTxOutput, SpentInfo spentInfo) {
-        // we only use spentInfoByTxOutputMap for json export
-        if (dumpBlockchainData) {
-            lock.write(() -> {
-                spentInfoByTxOutputMap.put(spentTxOutput.getTxIdIndexTuple(), spentInfo);
-            });
-        }
-    }
-
-    void setGenesisTx(Tx tx) {
-        lock.write(() -> {
-            genesisTx = tx;
-        });
-    }
-
     void addUnspentTxOutput(TxOutput txOutput) {
         lock.write(() -> {
-            unspentTxOutputSet.add(txOutput);
+            checkArgument(txOutput.isVerified(), "txOutput must be verified at addUnspentTxOutput");
+            unspentTxOutputsMap.put(txOutput.getTxIdIndexTuple(), txOutput);
         });
     }
 
     void removeUnspentTxOutput(TxOutput txOutput) {
         lock.write(() -> {
-            unspentTxOutputSet.remove(txOutput);
+            unspentTxOutputsMap.remove(txOutput.getTxIdIndexTuple());
         });
     }
 
-    void addBurntFee(String txId, long burntFee) {
+    void setGenesisTx(Tx tx) {
         lock.write(() -> {
-            burntFeeByTxIdMap.put(txId, burntFee);
-        });
-    }
-
-    void addCompensationRequestOpReturnOutput(TxOutput txOutput) {
-        lock.write(() -> {
-            compensationRequestOpReturnTxOutputs.add(txOutput);
-        });
-    }
-
-    void adCompensationRequestBtcTxOutputs(String btcAddress) {
-        lock.write(() -> {
-            compensationRequestBtcAddresses.add(btcAddress);
-        });
-    }
-
-    void addVotingOpReturnOutput(TxOutput txOutput) {
-        lock.write(() -> {
-            votingTxOutputs.add(txOutput);
-        });
-    }
-
-    void addInvalidatedTxOutputs(TxOutput txOutput) {
-        lock.write(() -> {
-            invalidatedTxOutputs.add(txOutput);
-        });
-    }
-
-    void addIssuanceBtcTxOutput(TxOutput btcTxOutput) {
-        lock.write(() -> {
-            if (!issuanceBtcTxOutputsByBtcAddressMap.containsKey(btcTxOutput.getAddress()))
-                issuanceBtcTxOutputsByBtcAddressMap.put(btcTxOutput.getAddress(), new HashSet<>());
-
-            issuanceBtcTxOutputsByBtcAddressMap.get(btcTxOutput.getAddress()).add(btcTxOutput);
+            genesisTx = tx;
         });
     }
 
@@ -331,6 +275,14 @@ public class BsqChainState implements Persistable {
         });
     }
 
+    Optional<TxOutput> getUnspentTxOutput(TxIdIndexTuple txIdIndexTuple) {
+        return lock.read(() -> {
+            return unspentTxOutputsMap.entrySet().stream()
+                    .filter(e -> e.getKey().equals(txIdIndexTuple))
+                    .map(Map.Entry::getValue).findAny();
+        });
+    }
+
     public boolean isTxOutputSpendable(String txId, int index) {
         return lock.read(() -> {
             return getSpendableTxOutput(txId, index).isPresent();
@@ -342,13 +294,14 @@ public class BsqChainState implements Persistable {
             List<BsqBlock> filtered = blocks.stream()
                     .filter(block -> block.getHeight() >= fromBlockHeight)
                     .collect(Collectors.toList());
+            filtered.stream().forEach(BsqBlock::reset);
             return Utilities.<ArrayList<BsqBlock>>serialize(new ArrayList<>(filtered));
         });
     }
 
     public boolean hasTxBurntFee(String txId) {
         return lock.read(() -> {
-            return burntFeeByTxIdMap.containsKey(txId) && burntFeeByTxIdMap.get(txId) > 0;
+            return getTx(txId).map(Tx::getBurntFee).filter(fee -> fee > 0).isPresent();
         });
     }
 
@@ -371,48 +324,6 @@ public class BsqChainState implements Persistable {
         });
     }
 
-    public Set<TxOutput> getVotingTxOutputs() {
-        return lock.read(() -> {
-            return votingTxOutputs;
-        });
-    }
-
-    public Set<TxOutput> getInvalidatedTxOutputs() {
-        return lock.read(() -> {
-            return invalidatedTxOutputs;
-        });
-    }
-
-    public Map<String, Set<TxOutput>> getIssuanceBtcTxOutputsByBtcAddressMap() {
-        return lock.read(() -> {
-            return issuanceBtcTxOutputsByBtcAddressMap;
-        });
-    }
-
-    public Set<TxOutput> getCompensationRequestOpReturnTxOutputs() {
-        return lock.read(() -> {
-            return compensationRequestOpReturnTxOutputs;
-        });
-    }
-
-    public Map<TxIdIndexTuple, SpentInfo> getSpentInfoByTxOutputMap() {
-        return lock.read(() -> {
-            return spentInfoByTxOutputMap;
-        });
-    }
-
-    public Map<String, Long> getBurntFeeByTxIdMap() {
-        return lock.read(() -> {
-            return burntFeeByTxIdMap;
-        });
-    }
-
-    public Set<TxOutput> getUnspentTxOutputSet() {
-        return lock.read(() -> {
-            return unspentTxOutputSet;
-        });
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Package scope read access
@@ -420,14 +331,14 @@ public class BsqChainState implements Persistable {
 
     Optional<TxOutput> getSpendableTxOutput(String txId, int index) {
         return lock.read(() -> {
-            final Optional<TxOutput> spendingTxOutputOptional = getTx(txId).flatMap(e -> e.getTxOutput(index));
-            if (spendingTxOutputOptional.isPresent() &&
-                    unspentTxOutputSet.contains(spendingTxOutputOptional.get()) &&
-                    isTxOutputMature(spendingTxOutputOptional.get())) {
-                return spendingTxOutputOptional;
-            } else {
-                return Optional.<TxOutput>empty();
-            }
+            return getSpendableTxOutput(new TxIdIndexTuple(txId, index));
+        });
+    }
+
+    Optional<TxOutput> getSpendableTxOutput(TxIdIndexTuple txIdIndexTuple) {
+        return lock.read(() -> {
+            return getUnspentTxOutput(txIdIndexTuple)
+                    .filter(this::isTxOutputMature);
         });
     }
 
@@ -470,15 +381,22 @@ public class BsqChainState implements Persistable {
         });
     }
 
-    boolean containsCompensationRequestBtcAddress(String btcAddress) {
+    boolean existsCompensationRequestBtcAddress(String btcAddress) {
         return lock.read(() -> {
-            return compensationRequestBtcAddresses.contains(btcAddress);
+            return getAllTxOutputs().stream()
+                    .filter(txOutput -> txOutput.isCompensationRequestBtcOutput() &&
+                            txOutput.getAddress().equals(btcAddress))
+                    .findAny()
+                    .isPresent();
         });
     }
 
-    Set<TxOutput> issuanceTxOutputsByBtcAddress(String btcAddress) {
+    Set<TxOutput> findSponsoringBtcOutputsWithSameBtcAddress(String btcAddress) {
         return lock.read(() -> {
-            return issuanceBtcTxOutputsByBtcAddressMap.get(btcAddress);
+            return getAllTxOutputs().stream()
+                    .filter(txOutput -> txOutput.isSponsoringBtcOutput() &&
+                            txOutput.getAddress().equals(btcAddress))
+                    .collect(Collectors.toSet());
         });
     }
 
@@ -529,32 +447,26 @@ public class BsqChainState implements Persistable {
         });
     }
 
+    private Set<TxOutput> getAllTxOutputs() {
+        return txMap.values().stream()
+                .flatMap(tx -> tx.getOutputs().stream())
+                .collect(Collectors.toSet());
+    }
+
     private void printDetails() {
         log.info("\nchainHeadHeight={}\n" +
                         "    blocks.size={}\n" +
                         "    txMap.size={}\n" +
-                        "    unspentTxOutputSet.size={}\n" +
-                        "    spentInfoByTxOutputMap.size={}\n" +
-                        "    burntFeeByTxIdMap.size={}\n" +
+                        "    unspentTxOutputsMap.size={}\n" +
                         "    compensationRequestFees.size={}\n" +
                         "    votingFees.size={}\n" +
-                        "    compensationRequestOpReturnTxOutputs.size={}\n" +
-                        "    compensationRequestBtcAddresses.size={}\n" +
-                        "    votingTxOutputs.size={}\n" +
-                        "    issuanceBtcTxOutputsByBtcAddressMap.size={}\n" +
                         "    blocks data size in kb={}\n",
                 getChainHeadHeight(),
                 blocks.size(),
                 txMap.size(),
-                unspentTxOutputSet.size(),
-                spentInfoByTxOutputMap.size(),
-                burntFeeByTxIdMap.size(),
+                unspentTxOutputsMap.size(),
                 compensationRequestFees.size(),
                 votingFees.size(),
-                compensationRequestOpReturnTxOutputs.size(),
-                compensationRequestBtcAddresses.size(),
-                votingTxOutputs.size(),
-                issuanceBtcTxOutputsByBtcAddressMap.size(),
                 Utilities.serialize(blocks.toArray()).length / 1000d);
     }
 }

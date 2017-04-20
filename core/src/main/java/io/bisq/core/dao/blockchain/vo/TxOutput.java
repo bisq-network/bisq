@@ -19,52 +19,56 @@ package io.bisq.core.dao.blockchain.vo;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
-import io.bisq.common.util.JsonExclude;
-import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Data;
+import lombok.experimental.Delegate;
 import org.bitcoinj.core.Utils;
 
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
-
-@Slf4j
-@Value
-@Immutable
+@Data
 public class TxOutput implements Persistable {
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private final int index;
-    private final long value;
-    private final String txId;
-    private final PubKeyScript pubKeyScript;
-    @Nullable
-    private final String address;
-    @Nullable
-    @JsonExclude
-    private final byte[] opReturnData;
-    private final int blockHeight;
-    private final long time;
+    @Delegate
+    private final TxOutputVo txOutputVo;
 
-    public String getId() {
-        return txId + ":" + index;
+    private boolean isUnspent;
+    private boolean isVerified;
+    private TxOutputType txOutputType;
+    private SpentInfo spentInfo;
+
+    public TxOutput(TxOutputVo txOutputVo) {
+        this.txOutputVo = txOutputVo;
     }
 
-    public TxIdIndexTuple getTxIdIndexTuple() {
-        return new TxIdIndexTuple(txId, index);
+    public void reset() {
+        isUnspent = false;
+        isVerified = false;
+        txOutputType = null;
+        spentInfo = null;
     }
 
     @Override
     public String toString() {
         return "TxOutput{" +
-                "\n     index=" + index +
-                ",\n     value=" + value +
-                ",\n     txId='" + txId + '\'' +
-                ",\n     pubKeyScript=" + pubKeyScript +
-                ",\n     address='" + address + '\'' +
-                ",\n     opReturnData=" + (opReturnData != null ? Utils.HEX.encode(opReturnData) : "null") +
-                ",\n     blockHeight=" + blockHeight +
-                ",\n     time=" + time +
+                "\n     index=" + getIndex() +
+                ",\n     value=" + getValue() +
+                ",\n     txId='" + getId() + '\'' +
+                ",\n     pubKeyScript=" + getPubKeyScript() +
+                ",\n     address='" + getAddress() + '\'' +
+                ",\n     opReturnData=" + (getOpReturnData() != null ? Utils.HEX.encode(getOpReturnData()) : "null") +
+                ",\n     blockHeight=" + getBlockHeight() +
+                ",\n     time=" + getTime() +
+                ",\n     isUnspent=" + isUnspent +
+                ",\n     isVerified=" + isVerified +
+                ",\n     txOutputType=" + txOutputType +
+                ",\n     spentInfo=" + (spentInfo != null ? spentInfo.toString() : "null") +
                 "\n}";
+    }
+
+    public boolean isCompensationRequestBtcOutput() {
+        return txOutputType == TxOutputType.COMPENSATION_REQUEST_BTC_OUTPUT;
+    }
+
+    public boolean isSponsoringBtcOutput() {
+        return txOutputType == TxOutputType.SPONSORING_BTC_OUTPUT;
     }
 }

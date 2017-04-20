@@ -103,10 +103,11 @@ public class BsqParser {
                 List<Tx> bsqTxsInBlock = findBsqTxsInBlock(btcdBlock,
                         genesisBlockHeight,
                         genesisTxId);
-                final BsqBlock bsqBlock = new BsqBlock(ImmutableList.copyOf(bsqTxsInBlock),
-                        btcdBlock.getHeight(),
+                final BsqBlockVo bsqBlockVo = new BsqBlockVo(btcdBlock.getHeight(),
                         btcdBlock.getHash(),
                         btcdBlock.getPreviousBlockHash());
+                final BsqBlock bsqBlock = new BsqBlock(bsqBlockVo,
+                        ImmutableList.copyOf(bsqTxsInBlock));
 
                 bsqChainState.addBlock(bsqBlock);
                 newBlockHandler.accept(bsqBlock);
@@ -161,10 +162,11 @@ public class BsqParser {
         List<Tx> bsqTxsInBlock = findBsqTxsInBlock(btcdBlock,
                 genesisBlockHeight,
                 genesisTxId);
-        BsqBlock bsqBlock = new BsqBlock(ImmutableList.copyOf(bsqTxsInBlock),
-                btcdBlock.getHeight(),
+        final BsqBlockVo bsqBlockVo = new BsqBlockVo(btcdBlock.getHeight(),
                 btcdBlock.getHash(),
                 btcdBlock.getPreviousBlockHash());
+        final BsqBlock bsqBlock = new BsqBlock(bsqBlockVo,
+                ImmutableList.copyOf(bsqTxsInBlock));
         bsqChainState.addBlock(bsqBlock);
         return bsqBlock;
     }
@@ -180,9 +182,16 @@ public class BsqParser {
                                    List<Tx> bsqTxsInBlock,
                                    Tx tx) {
         if (tx.getId().equals(genesisTxId) && blockHeight == genesisBlockHeight) {
-            tx.getOutputs().stream().forEach(bsqChainState::addUnspentTxOutput);
+            tx.getOutputs().stream().forEach(txOutput -> {
+                txOutput.setUnspent(true);
+                txOutput.setVerified(true);
+                bsqChainState.addUnspentTxOutput(txOutput);
+            });
+            tx.setTxType(TxType.GENESIS);
+            tx.setVerified(true);
+
             bsqChainState.setGenesisTx(tx);
-            bsqChainState.addTx(tx);
+            bsqChainState.addTxToMap(tx);
             bsqTxsInBlock.add(tx);
         }
     }
@@ -263,19 +272,20 @@ public class BsqParser {
         long availableValue = 0;
         for (int inputIndex = 0; inputIndex < tx.getInputs().size(); inputIndex++) {
             TxInput input = tx.getInputs().get(inputIndex);
-            Optional<TxOutput> spendableTxOutput = bsqChainState.getSpendableTxOutput(input.getSpendingTxId(),
-                    input.getSpendingTxOutputIndex());
+            Optional<TxOutput> spendableTxOutput = bsqChainState.getSpendableTxOutput(input.getTxIdIndexTuple());
             if (spendableTxOutput.isPresent()) {
                 final TxOutput spentTxOutput = spendableTxOutput.get();
+                spentTxOutput.setUnspent(false);
                 bsqChainState.removeUnspentTxOutput(spentTxOutput);
-                bsqChainState.addSpentTxWithSpentInfo(spentTxOutput, new SpentInfo(blockHeight, tx.getId(), inputIndex));
+                spentTxOutput.setSpentInfo(new SpentInfo(blockHeight, tx.getId(), inputIndex));
+                input.setBsqValue(spentTxOutput.getValue());
+                input.setVerified(true);
                 availableValue = availableValue + spentTxOutput.getValue();
             }
         }
-
         // If we have an input with BSQ we iterate the outputs
         if (availableValue > 0) {
-            bsqChainState.addTx(tx);
+            bsqChainState.addTxToMap(tx);
             isBsqTx = true;
 
             // We use order of output index. An output is a BSQ utxo as long there is enough input value
@@ -283,27 +293,30 @@ public class BsqParser {
             TxOutput btcOutput = null;
             for (int index = 0; index < outputs.size(); index++) {
                 TxOutput txOutput = outputs.get(index);
-
                 final long txOutputValue = txOutput.getValue();
                 // We ignore OP_RETURN outputs with txOutputValue 0
                 if (availableValue >= txOutputValue && txOutputValue != 0) {
                     // We are spending available tokens
+                    txOutput.setVerified(true);
+                    txOutput.setUnspent(true);
                     bsqChainState.addUnspentTxOutput(txOutput);
+                    tx.setTxType(TxType.SEND_BSQ);
+                    txOutput.setTxOutputType(TxOutputType.BSQ_OUTPUT);
 
                     availableValue -= txOutputValue;
                     if (availableValue == 0) {
                         log.debug("We don't have anymore BSQ to spend");
-                        break;
                     }
-                } else if (issuanceVerification.maybeProcessData(outputs, index)) {
+                } else if (issuanceVerification.maybeProcessData(tx, index)) {
                     // it is not a BSQ or OP_RETURN output
                     // check is we have a sponsor tx
                     log.debug("We got a issuance tx and process the data");
                     break;
-                } else if (opReturnVerification.maybeProcessOpReturnData(outputs, index, availableValue, blockHeight, btcOutput)) {
+                } else if (opReturnVerification.maybeProcessOpReturnData(tx, index, availableValue, blockHeight, btcOutput)) {
                     log.debug("We processed valid DAO OP_RETURN data");
                 } else {
                     btcOutput = txOutput;
+                    txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
                     // The other outputs are not BSQ outputs so we skip them but we
                     // jump to the last output as that might be an OP_RETURN with DAO data
                     index = Math.max(index, outputs.size() - 2);
@@ -314,7 +327,9 @@ public class BsqParser {
                 log.debug("BSQ have been left which was not spent. Burned BSQ amount={}, tx={}",
                         availableValue,
                         tx.toString());
-                bsqChainState.addBurntFee(tx.getId(), availableValue);
+                tx.setBurntFee(availableValue);
+                if (tx.getTxType() == null)
+                    tx.setTxType(TxType.PAY_TRADE_FEE);
             }
         }
 

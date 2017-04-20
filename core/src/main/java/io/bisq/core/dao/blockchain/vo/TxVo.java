@@ -15,29 +15,21 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.json;
+package io.bisq.core.dao.blockchain.vo;
 
 import io.bisq.common.app.Version;
-import lombok.Data;
-import lombok.Setter;
+import io.bisq.common.persistence.Persistable;
+import lombok.Value;
 
-@Data
-public class TxOutputForJson {
+import javax.annotation.concurrent.Immutable;
+
+@Value
+@Immutable
+public class TxVo implements Persistable {
+    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
+
     private final String txVersion = Version.BSQ_TX_VERSION;
-    private final String txId;
-    private final int outputIndex;
-    private final long bsqAmount;
-    private final long btcAmount;
-    private final int height;
-    private final boolean isVerified;
-    private final long burntFee;
-    private final ScriptPubKeyForJson scriptPubKey;
-    private final SpentInfoForJson spentInfo;
-    private final long time;
-    @Setter
-    private String txType;
-
-    public String getId() {
-        return txId + ":" + outputIndex;
-    }
+    private final String id;
+    private final int blockHeight;
+    private final String blockHash;
 }

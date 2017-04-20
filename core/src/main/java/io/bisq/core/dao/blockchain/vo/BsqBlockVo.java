@@ -19,35 +19,17 @@ package io.bisq.core.dao.blockchain.vo;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
-import lombok.Data;
-import lombok.experimental.Delegate;
+import lombok.Value;
 
-import java.util.List;
+import javax.annotation.concurrent.Immutable;
 
-@Data
-public class BsqBlock implements Persistable {
+@Value
+@Immutable
+public class BsqBlockVo implements Persistable {
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-    @Delegate
-    private final BsqBlockVo bsqBlockVo;
-    
-    private final List<Tx> txs;
 
-    public BsqBlock(BsqBlockVo bsqBlockVo, List<Tx> txs) {
-        this.bsqBlockVo = bsqBlockVo;
-        this.txs = txs;
-    }
+    private final int height;
+    private final String hash;
+    private String previousBlockHash;
 
-    @Override
-    public String toString() {
-        return "BsqBlock{" +
-                "\n     height=" + getHeight() +
-                ",\n     hash='" + getHash() + '\'' +
-                ",\n     previousBlockHash='" + getPreviousBlockHash() + '\'' +
-                ",\n     txs='" + txs + '\'' +
-                "\n}";
-    }
-
-    public void reset() {
-        txs.stream().forEach(Tx::reset);
-    }
 }

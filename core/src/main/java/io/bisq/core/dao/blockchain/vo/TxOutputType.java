@@ -15,21 +15,15 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.dao.blockchain.json;
+package io.bisq.core.dao.blockchain.vo;
 
-import io.bisq.common.app.Version;
-import lombok.Value;
-
-import java.util.List;
-
-@Value
-public class TxForJson {
-    private final String txVersion = Version.BSQ_TX_VERSION;
-    private final String id;
-    private final int blockHeight;
-    private final String blockHash;
-    private final List<TxInputForJson> inputs;
-    private final List<TxOutputForJson> outputs;
-    private final boolean isGenesisTx;
-    private final String txType;
+public enum TxOutputType {
+    UNDEFINED,
+    BSQ_OUTPUT,
+    BTC_OUTPUT,
+    OP_RETURN_OUTPUT,
+    COMPENSATION_REQUEST_OP_RETURN_OUTPUT,
+    COMPENSATION_REQUEST_BTC_OUTPUT,
+    SPONSORING_BTC_OUTPUT,
+    VOTING_OP_RETURN_OUTPUT
 }
