@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -184,6 +185,27 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, /*Cap
         return PB.StoragePayload.newBuilder().setTradeStatistics(builder).build();
     }
 
+    public static TradeStatistics fromProto(PB.TradeStatistics tradeStatistics) {
+        return new TradeStatistics(OfferPayload.Direction.fromProto(tradeStatistics.getDirection()),
+                tradeStatistics.getBaseCurrency(),
+                tradeStatistics.getCounterCurrency(),
+                tradeStatistics.getPaymentMethodId(),
+                tradeStatistics.getOfferDate(),
+                tradeStatistics.getUseMarketBasedPrice(),
+                tradeStatistics.getMarketPriceMargin(),
+                tradeStatistics.getOfferAmount(),
+                tradeStatistics.getOfferMinAmount(),
+                tradeStatistics.getOfferId(),
+                tradeStatistics.getTradePrice(),
+                tradeStatistics.getTradeAmount(),
+                tradeStatistics.getTradeDate(),
+                tradeStatistics.getDepositTxId(),
+                new PubKeyRing(tradeStatistics.getPubKeyRing().getSignaturePubKeyBytes().toByteArray(),
+                        tradeStatistics.getPubKeyRing().getEncryptionPubKeyBytes().toByteArray(),
+                        tradeStatistics.getPubKeyRing().getPgpPubKeyAsPem()),
+                CollectionUtils.isEmpty(tradeStatistics.getExtraDataMapMap()) ?
+                        null : tradeStatistics.getExtraDataMapMap());
+    }
 
     // We don't include the pubKeyRing as both traders might publish it if the maker uses an old
     // version and update later (taker publishes first, then later maker)

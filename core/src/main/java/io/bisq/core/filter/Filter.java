@@ -21,12 +21,14 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
+import io.bisq.core.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -137,6 +139,18 @@ public final class Filter implements StoragePayload {
                 .setPublicKeyBytes(ByteString.copyFrom(publicKeyBytes));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
         return PB.StoragePayload.newBuilder().setFilter(builder).build();
+    }
+
+    public static Filter fromProto(PB.Filter filter) {
+        List<PaymentAccountFilter> paymentAccountFilters = filter.getBannedPaymentAccountsList()
+                .stream().map(accountFilter -> ProtoUtil.getPaymentAccountFilter(accountFilter)).collect(Collectors.toList());
+        return new Filter(filter.getBannedOfferIdsList().stream().collect(Collectors.toList()),
+                filter.getBannedNodeAddressList().stream().collect(Collectors.toList()),
+                paymentAccountFilters,
+                filter.getSignatureAsBase64(),
+                filter.getPublicKeyBytes().toByteArray(),
+                CollectionUtils.isEmpty(filter.getExtraDataMapMap()) ?
+                        null : filter.getExtraDataMapMap());
     }
 
 

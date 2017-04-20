@@ -116,6 +116,6 @@ public abstract class PaymentAccount implements Persistable {
 
     @Override
     public PB.PaymentAccount toProto() {
-        return PB.PaymentAccount.newBuilder().setPaymentMethod(PB.PaymentMethod.newBuilder().setId(getId())).build();
+        return PB.PaymentAccount.newBuilder().setPaymentMethod(PB.PaymentMethod.newBuilder().setId(paymentMethod.getId())).build();
     }
 }

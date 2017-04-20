@@ -27,6 +27,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
@@ -149,5 +150,15 @@ public final class Alert implements StoragePayload {
                 .setStoragePublicKeyBytes(ByteString.copyFrom(getStoragePublicKeyBytes()));
         Optional.ofNullable(getExtraDataMap()).ifPresent(builder::putAllExtraDataMap);
         return PB.StoragePayload.newBuilder().setAlert(builder).build();
+    }
+
+    public static Alert fromProto(PB.Alert alert) {
+        return new Alert(alert.getMessage(),
+                alert.getIsUpdateInfo(),
+                alert.getVersion(),
+                alert.getStoragePublicKeyBytes().toByteArray(),
+                alert.getSignatureAsBase64(),
+                CollectionUtils.isEmpty(alert.getExtraDataMapMap()) ?
+                        null : alert.getExtraDataMapMap());
     }
 }

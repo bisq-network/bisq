@@ -205,14 +205,14 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
 
     private static Msg getPrivateNotificationMessage(PB.PrivateNotificationMessage privateNotificationMessage) {
         return new PrivateNotificationMsg(getPrivateNotification(privateNotificationMessage.getPrivateNotificationPayload()),
-                ProtoUtil.getNodeAddress(privateNotificationMessage.getMyNodeAddress()),
+                NodeAddress.fromProto(privateNotificationMessage.getMyNodeAddress()),
                 privateNotificationMessage.getUid());
     }
 
     private static Msg getPayoutTxPublishedMessage(PB.PayoutTxPublishedMessage payoutTxPublishedMessage) {
         return new PayoutTxPublishedMsg(payoutTxPublishedMessage.getTradeId(),
                 payoutTxPublishedMessage.getPayoutTx().toByteArray(),
-                ProtoUtil.getNodeAddress(payoutTxPublishedMessage.getSenderNodeAddress()),
+                NodeAddress.fromProto(payoutTxPublishedMessage.getSenderNodeAddress()),
                 payoutTxPublishedMessage.getUid());
     }
 
@@ -232,7 +232,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     private static Msg getFiatTransferStartedMessage(PB.FiatTransferStartedMessage fiatTransferStartedMessage) {
         return new FiatTransferStartedMsg(fiatTransferStartedMessage.getTradeId(),
                 fiatTransferStartedMessage.getBuyerPayoutAddress(),
-                ProtoUtil.getNodeAddress(fiatTransferStartedMessage.getSenderNodeAddress()),
+                NodeAddress.fromProto(fiatTransferStartedMessage.getSenderNodeAddress()),
                 fiatTransferStartedMessage.getBuyerSignature().toByteArray(),
                 fiatTransferStartedMessage.getUid()
         );
@@ -253,7 +253,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 publishDepositTxRequest.getMakerPayoutAddressString(),
                 publishDepositTxRequest.getPreparedDepositTx().toByteArray(),
                 rawTransactionInputs,
-                ProtoUtil.getNodeAddress(publishDepositTxRequest.getSenderNodeAddress()),
+                NodeAddress.fromProto(publishDepositTxRequest.getSenderNodeAddress()),
                 publishDepositTxRequest.getUid());
     }
 
@@ -263,10 +263,10 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                         rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
                 .collect(Collectors.toList());
         List<NodeAddress> arbitratorNodeAddresses = payDepositRequest.getAcceptedArbitratorNodeAddressesList().stream()
-                .map(ProtoUtil::getNodeAddress).collect(Collectors.toList());
+                .map(NodeAddress::fromProto).collect(Collectors.toList());
         List<NodeAddress> mediatorNodeAddresses = payDepositRequest.getAcceptedMediatorNodeAddressesList().stream()
-                .map(ProtoUtil::getNodeAddress).collect(Collectors.toList());
-        return new PayDepositRequest(ProtoUtil.getNodeAddress(payDepositRequest.getSenderNodeAddress()),
+                .map(NodeAddress::fromProto).collect(Collectors.toList());
+        return new PayDepositRequest(NodeAddress.fromProto(payDepositRequest.getSenderNodeAddress()),
                 payDepositRequest.getTradeId(),
                 payDepositRequest.getTradeAmount(),
                 payDepositRequest.getTradePrice(),
@@ -283,14 +283,14 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 payDepositRequest.getTakerFeeTxId(),
                 arbitratorNodeAddresses,
                 mediatorNodeAddresses,
-                ProtoUtil.getNodeAddress(payDepositRequest.getArbitratorNodeAddress()),
-                ProtoUtil.getNodeAddress(payDepositRequest.getMediatorNodeAddress()));
+                NodeAddress.fromProto(payDepositRequest.getArbitratorNodeAddress()),
+                NodeAddress.fromProto(payDepositRequest.getMediatorNodeAddress()));
     }
 
     private static Msg getPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
         return new PeerPublishedPayoutTxMsg(peerPublishedPayoutTxMessage.getTransaction().toByteArray(),
                 peerPublishedPayoutTxMessage.getTradeId(),
-                ProtoUtil.getNodeAddress(peerPublishedPayoutTxMessage.getMyNodeAddress()),
+                NodeAddress.fromProto(peerPublishedPayoutTxMessage.getMyNodeAddress()),
                 peerPublishedPayoutTxMessage.getUid());
     }
 
@@ -308,18 +308,18 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 disputeResultproto.getArbitratorPubKey().toByteArray(), disputeResultproto.getCloseDate(),
                 disputeResultproto.getIsLoserPublisher());
         return new DisputeResultMsg(disputeResult,
-                ProtoUtil.getNodeAddress(disputeResultMessage.getMyNodeAddress()),
+                NodeAddress.fromProto(disputeResultMessage.getMyNodeAddress()),
                 disputeResultMessage.getUid());
     }
 
     private static Msg getPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         return new PeerOpenedDisputeMsg(ProtoUtil.getDispute(peerOpenedDisputeMessage.getDispute()),
-                ProtoUtil.getNodeAddress(peerOpenedDisputeMessage.getMyNodeAddress()), peerOpenedDisputeMessage.getUid());
+                NodeAddress.fromProto(peerOpenedDisputeMessage.getMyNodeAddress()), peerOpenedDisputeMessage.getUid());
     }
 
     private static Msg getOpenNewDisputeMessage(PB.OpenNewDisputeMessage openNewDisputeMessage) {
         return new OpenNewDisputeMsg(ProtoUtil.getDispute(openNewDisputeMessage.getDispute()),
-                ProtoUtil.getNodeAddress(openNewDisputeMessage.getMyNodeAddress()), openNewDisputeMessage.getUid());
+                NodeAddress.fromProto(openNewDisputeMessage.getMyNodeAddress()), openNewDisputeMessage.getUid());
     }
 
     private static Msg getDisputeCommunicationMessage(PB.DisputeCommunicationMessage disputeCommunicationMessage) {
@@ -330,7 +330,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 disputeCommunicationMessage.getAttachmentsList().stream()
                         .map(attachment -> new Attachment(attachment.getFileName(), attachment.getBytes().toByteArray()))
                         .collect(Collectors.toList()),
-                ProtoUtil.getNodeAddress(disputeCommunicationMessage.getMyNodeAddress()),
+                NodeAddress.fromProto(disputeCommunicationMessage.getMyNodeAddress()),
                 disputeCommunicationMessage.getDate(),
                 disputeCommunicationMessage.getArrived(),
                 disputeCommunicationMessage.getStoredInMailbox(),
@@ -341,14 +341,14 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
         return new FinalizePayoutTxRequest(finalizePayoutTxRequest.getTradeId(),
                 finalizePayoutTxRequest.getSellerSignature().toByteArray(),
                 finalizePayoutTxRequest.getSellerPayoutAddress(),
-                ProtoUtil.getNodeAddress(finalizePayoutTxRequest.getSenderNodeAddress()),
+                NodeAddress.fromProto(finalizePayoutTxRequest.getSenderNodeAddress()),
                 finalizePayoutTxRequest.getUid());
     }
 
     private static Msg getDepositTxPublishedMessage(PB.DepositTxPublishedMessage depositTxPublishedMessage) {
         return new DepositTxPublishedMsg(depositTxPublishedMessage.getTradeId(),
                 depositTxPublishedMessage.getDepositTx().toByteArray(),
-                ProtoUtil.getNodeAddress(depositTxPublishedMessage.getSenderNodeAddress()), depositTxPublishedMessage.getUid());
+                NodeAddress.fromProto(depositTxPublishedMessage.getSenderNodeAddress()), depositTxPublishedMessage.getUid());
     }
 
     private static Msg getRemoveMailBoxDataMessage(PB.RemoveMailboxDataMessage msg) {
@@ -474,62 +474,16 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
         Map<String, String> extraDataMapMap;
         switch (protoEntry.getMessageCase()) {
             case ALERT:
-                PB.Alert protoAlert = protoEntry.getAlert();
-                extraDataMapMap = CollectionUtils.isEmpty(protoAlert.getExtraDataMapMap()) ?
-                        null : protoAlert.getExtraDataMapMap();
-                storagePayload = new Alert(protoAlert.getMessage(),
-                        protoAlert.getIsUpdateInfo(),
-                        protoAlert.getVersion(),
-                        protoAlert.getStoragePublicKeyBytes().toByteArray(),
-                        protoAlert.getSignatureAsBase64(),
-                        extraDataMapMap);
+                storagePayload = Alert.fromProto(protoEntry.getAlert());
                 break;
             case ARBITRATOR:
-                PB.Arbitrator arbitrator = protoEntry.getArbitrator();
-                extraDataMapMap = CollectionUtils.isEmpty(arbitrator.getExtraDataMapMap()) ?
-                        null : arbitrator.getExtraDataMapMap();
-                List<String> strings = arbitrator.getLanguageCodesList().stream().collect(Collectors.toList());
-                Date date = new Date(arbitrator.getRegistrationDate());
-                String emailAddress = arbitrator.getEmailAddress().isEmpty() ? null : arbitrator.getEmailAddress();
-                storagePayload = new Arbitrator(ProtoUtil.getNodeAddress(arbitrator.getNodeAddress()),
-                        arbitrator.getBtcPubKey().toByteArray(),
-                        arbitrator.getBtcAddress(),
-                        ProtoUtil.getPubKeyRing(arbitrator.getPubKeyRing()),
-                        strings,
-                        date,
-                        arbitrator.getRegistrationPubKey().toByteArray(),
-                        arbitrator.getRegistrationSignature(),
-                        emailAddress,
-                        extraDataMapMap);
+                storagePayload = Arbitrator.fromProto(protoEntry.getArbitrator());
                 break;
             case MEDIATOR:
-                PB.Mediator mediator = protoEntry.getMediator();
-                extraDataMapMap = CollectionUtils.isEmpty(mediator.getExtraDataMapMap()) ?
-                        null : mediator.getExtraDataMapMap();
-                strings = mediator.getLanguageCodesList().stream().collect(Collectors.toList());
-                date = new Date(mediator.getRegistrationDate());
-                emailAddress = mediator.getEmailAddress().isEmpty() ? null : mediator.getEmailAddress();
-                storagePayload = new Mediator(ProtoUtil.getNodeAddress(mediator.getNodeAddress()),
-                        ProtoUtil.getPubKeyRing(mediator.getPubKeyRing()),
-                        strings,
-                        date,
-                        mediator.getRegistrationPubKey().toByteArray(),
-                        mediator.getRegistrationSignature(),
-                        emailAddress,
-                        extraDataMapMap);
+                storagePayload = Mediator.fromProto(protoEntry.getMediator());
                 break;
             case FILTER:
-                PB.Filter filter = protoEntry.getFilter();
-                extraDataMapMap = CollectionUtils.isEmpty(filter.getExtraDataMapMap()) ?
-                        null : filter.getExtraDataMapMap();
-                List<PaymentAccountFilter> paymentAccountFilters = filter.getBannedPaymentAccountsList()
-                        .stream().map(accountFilter -> ProtoUtil.getPaymentAccountFilter(accountFilter)).collect(Collectors.toList());
-                storagePayload = new Filter(filter.getBannedOfferIdsList().stream().collect(Collectors.toList()),
-                        filter.getBannedNodeAddressList().stream().collect(Collectors.toList()),
-                        paymentAccountFilters,
-                        filter.getSignatureAsBase64(),
-                        filter.getPublicKeyBytes().toByteArray(),
-                        extraDataMapMap);
+                storagePayload = Filter.fromProto(protoEntry.getFilter());
                 break;
             case COMPENSATION_REQUEST_PAYLOAD:
                 PB.CompensationRequestPayload compensationRequestPayload = protoEntry.getCompensationRequestPayload();
@@ -550,27 +504,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                         extraDataMapMap);
                 break;
             case TRADE_STATISTICS:
-                PB.TradeStatistics protoTrade = protoEntry.getTradeStatistics();
-                extraDataMapMap = CollectionUtils.isEmpty(protoTrade.getExtraDataMapMap()) ?
-                        null : protoTrade.getExtraDataMapMap();
-                storagePayload = new TradeStatistics(getDirection(protoTrade.getDirection()),
-                        protoTrade.getBaseCurrency(),
-                        protoTrade.getCounterCurrency(),
-                        protoTrade.getPaymentMethodId(),
-                        protoTrade.getOfferDate(),
-                        protoTrade.getUseMarketBasedPrice(),
-                        protoTrade.getMarketPriceMargin(),
-                        protoTrade.getOfferAmount(),
-                        protoTrade.getOfferMinAmount(),
-                        protoTrade.getOfferId(),
-                        protoTrade.getTradePrice(),
-                        protoTrade.getTradeAmount(),
-                        protoTrade.getTradeDate(),
-                        protoTrade.getDepositTxId(),
-                        new PubKeyRing(protoTrade.getPubKeyRing().getSignaturePubKeyBytes().toByteArray(),
-                                protoTrade.getPubKeyRing().getEncryptionPubKeyBytes().toByteArray(),
-                                protoTrade.getPubKeyRing().getPgpPubKeyAsPem()),
-                        extraDataMapMap);
+                storagePayload = TradeStatistics.fromProto(protoEntry.getTradeStatistics());
                 break;
             case MAILBOX_STORAGE_PAYLOAD:
                 PB.MailboxStoragePayload mbox = protoEntry.getMailboxStoragePayload();
@@ -608,9 +542,9 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
 
     public static OfferPayload getOfferPayload(PB.OfferPayload pbOffer) {
         List<NodeAddress> arbitratorNodeAddresses = pbOffer.getArbitratorNodeAddressesList().stream()
-                .map(ProtoUtil::getNodeAddress).collect(Collectors.toList());
+                .map(NodeAddress::fromProto).collect(Collectors.toList());
         List<NodeAddress> mediatorNodeAddresses = pbOffer.getMediatorNodeAddressesList().stream()
-                .map(ProtoUtil::getNodeAddress).collect(Collectors.toList());
+                .map(NodeAddress::fromProto).collect(Collectors.toList());
 
         // Nullable object need to be checked against the default values in PB (not nice... ;-( )
 
@@ -630,9 +564,9 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
 
         return new OfferPayload(pbOffer.getId(),
                 pbOffer.getDate(),
-                ProtoUtil.getNodeAddress(pbOffer.getMakerNodeAddress()),
+                NodeAddress.fromProto(pbOffer.getMakerNodeAddress()),
                 ProtoUtil.getPubKeyRing(pbOffer.getPubKeyRing()),
-                getDirection(pbOffer.getDirection()),
+                OfferPayload.Direction.fromProto(pbOffer.getDirection()),
                 pbOffer.getPrice(),
                 pbOffer.getMarketPriceMargin(),
                 pbOffer.getUseMarketBasedPrice(),
@@ -667,10 +601,6 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 extraDataMapMap);
     }
 
-    @NotNull
-    public static OfferPayload.Direction getDirection(PB.OfferPayload.Direction direction) {
-        return OfferPayload.Direction.valueOf(direction.name());
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

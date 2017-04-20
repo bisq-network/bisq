@@ -10,10 +10,14 @@ import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
+import io.bisq.core.user.UserVO;
 import io.bisq.generated.protobuffer.PB;
+import io.bisq.network.p2p.peers.PersistedList;
+import io.bisq.network.p2p.peers.peerexchange.Peer;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
@@ -22,6 +26,9 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static io.bisq.core.proto.ProtoUtil.getPaymentAccount;
 
 /**
  * If the Messages class is giving errors in IntelliJ, you should change the IntelliJ IDEA Platform Properties file,
@@ -40,11 +47,11 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
 
     private Provider<AddressEntryList> addressEntryListProvider;
     private Provider<Preferences> preferencesProvider;
-    private Provider<User> user;
 
     @Inject
     public CoreDiskProtoResolver(Provider<Preferences> preferencesProvider,
-                                 Provider<AddressEntryList> addressEntryListProvider) {
+                                 Provider<AddressEntryList> addressEntryListProvider
+    ) {
         this.preferencesProvider = preferencesProvider;
         this.addressEntryListProvider = addressEntryListProvider;
     }
@@ -67,15 +74,16 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
             case NAVIGATION:
                 result = getPing(envelope);
                 break;
-            case PERSISTED_PEERS:
-                result = getPing(envelope);
-                break;
                 */
+            case PEERS_LIST:
+                result = getPeersList(envelope.getPeersList());
+                break;
+
             case PREFERENCES:
                 result = fillPreferences(envelope, preferencesProvider.get());
                 break;
             case USER:
-                result = getUser(envelope, user.get());
+                result = UserVO.fromProto(envelope.getUser());
                 break;
                 /*
             case PERSISTED_P2P_STORAGE_DATA:
@@ -85,6 +93,8 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
                 result = getPing(envelope);
                 break;
                 */
+            case TRADE_STATISTICS_LIST:
+                result = getTradeStatisticsList(envelope.getTradeStatisticsList());
             case BLOOM_FILTER_NONCE:
                 result = getLongPersistable(envelope.getBloomFilterNonce());
                 break;
@@ -94,9 +104,14 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         return Optional.ofNullable(result);
     }
 
-    private Persistable getUser(PB.DiskEnvelope envelope, User user) {
-        final PB.User userpb = envelope.getUser();
-        return null; // TODO
+    private Persistable getTradeStatisticsList(PB.TradeStatisticsList tradeStatisticsList) {
+        return new PersistedList<>(tradeStatisticsList.getTradeStatisticsList().stream()
+                .map(tradeStatistics -> TradeStatistics.fromProto(tradeStatistics)).collect(Collectors.toList()));
+    }
+
+    private Persistable getPeersList(PB.PeersList envelope) {
+        return new PersistedList<>(envelope.getPeersList().stream().map(peer -> Peer.fromProto(peer))
+                .collect(Collectors.toList()));
     }
 
     private Preferences fillPreferences(PB.DiskEnvelope envelope, Preferences preferences) {
@@ -151,9 +166,6 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         return preferences;
     }
 
-    private PaymentAccount getPaymentAccount(PB.PaymentAccount account) {
-        return PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(account.getPaymentMethod().getId()));
-    }
 
     private TradeCurrency getTradeCurrency(PB.TradeCurrency tradeCurrency) {
         switch (tradeCurrency.getMessageCase()) {

@@ -20,30 +20,38 @@ package io.bisq.network.p2p.peers;
 import com.google.protobuf.Message;
 import io.bisq.common.Marshaller;
 import io.bisq.common.persistence.Persistable;
-import io.bisq.common.proto.ProtoHelper;
 import io.bisq.generated.protobuffer.PB;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor
 public class PersistedList<T extends Marshaller> implements Persistable {
     @Getter
     @Setter
     private List<T> list;
+    @Setter
+    private Function<List<T>, Message> toProto;
+
+    public PersistedList(List<T> list) {
+        this.list = list;
+    }
 
     /** convenience ctor */
     public PersistedList(HashSet<T> set) {
-        this.list = set.stream().collect(Collectors.toList());
+        this(set.stream().collect(Collectors.toList()));
     }
 
     @Override
     public Message toProto() {
-        return PB.DiskEnvelope.newBuilder().setPersistedPeers(
-                PB.PersistedPeers.newBuilder().addAllPeers(ProtoHelper.collectionToProto(list))).build();
+        if(Objects.isNull(toProto())) {
+            throw new NotImplementedException();
+        }
+        return toProto.apply(list);
     }
 }

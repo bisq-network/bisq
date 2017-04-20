@@ -56,6 +56,10 @@ public final class NodeAddress implements Persistable, Payload {
         return PB.NodeAddress.newBuilder().setHostName(hostName).setPort(port).build();
     }
 
+    public static NodeAddress fromProto(PB.NodeAddress nodeAddress){
+        return new NodeAddress(nodeAddress.getHostName(), nodeAddress.getPort());
+    }
+
     @Override
     public String toString() {
         return getFullAddress();

@@ -18,22 +18,26 @@
 package io.bisq.core.proto;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.Marshaller;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Price;
-import io.bisq.common.persistence.Persistable;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.filter.PaymentAccountFilter;
+import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.core.payment.payload.BankAccountPayload;
 import io.bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
+import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.Contract;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ProtoUtil {
@@ -57,10 +61,10 @@ public class ProtoUtil {
                 Coin.valueOf(contract.getTradeAmount()),
                 Price.valueOf(getCurrencyCode(contract.getOfferPayload()), contract.getTradePrice()),
                 contract.getTakerFeeTxId(),
-                getNodeAddress(contract.getBuyerNodeAddress()),
-                getNodeAddress(contract.getSellerNodeAddress()),
-                getNodeAddress(contract.getArbitratorNodeAddress()),
-                getNodeAddress(contract.getMediatorNodeAddress()),
+                NodeAddress.fromProto(contract.getBuyerNodeAddress()),
+                NodeAddress.fromProto(contract.getSellerNodeAddress()),
+                NodeAddress.fromProto(contract.getArbitratorNodeAddress()),
+                NodeAddress.fromProto(contract.getMediatorNodeAddress()),
                 contract.getIsBuyerMakerAndSellerTaker(),
                 contract.getMakerAccountId(),
                 contract.getTakerAccountId(),
@@ -75,17 +79,13 @@ public class ProtoUtil {
     }
 
     @NotNull
-    static PubKeyRing getPubKeyRing(PB.PubKeyRing pubKeyRing) {
+    public static PubKeyRing getPubKeyRing(PB.PubKeyRing pubKeyRing) {
         return new PubKeyRing(pubKeyRing.getSignaturePubKeyBytes().toByteArray(),
                 pubKeyRing.getEncryptionPubKeyBytes().toByteArray(),
                 pubKeyRing.getPgpPubKeyAsPem());
     }
 
-    static NodeAddress getNodeAddress(PB.NodeAddress protoNode) {
-        return new NodeAddress(protoNode.getHostName(), protoNode.getPort());
-    }
-
-    static PaymentAccountFilter getPaymentAccountFilter(PB.PaymentAccountFilter accountFilter) {
+    public static PaymentAccountFilter getPaymentAccountFilter(PB.PaymentAccountFilter accountFilter) {
         return new PaymentAccountFilter(accountFilter.getPaymentMethodId(), accountFilter.getGetMethodName(),
                 accountFilter.getValue());
     }
@@ -124,5 +124,9 @@ public class ProtoUtil {
     static void fillInCountryBasedPaymentAccountPayload(PB.PaymentAccountPayload protoEntry,
                                                         CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload) {
         countryBasedPaymentAccountPayload.setCountryCode(protoEntry.getCountryBasedPaymentAccountPayload().getCountryCode());
+    }
+
+    public static PaymentAccount getPaymentAccount(PB.PaymentAccount account) {
+        return PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(account.getPaymentMethod().getId()));
     }
 }

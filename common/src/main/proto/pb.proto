@@ -761,12 +761,13 @@ message DiskEnvelope {
     oneof message {
         AddressEntryList address_entry_list = 2;
         Navigation navigation = 3;
-        PersistedPeers persisted_peers = 4;
+        PeersList peers_list = 4;
         Preferences preferences = 5;
         User user = 6;
         PersistedP2PStorageData persisted_p2p_storage_data = 7;
         SequenceNumberMap sequence_number_map = 8;
         LongPersistable bloom_filter_nonce = 9;
+        TradeStatisticsList trade_statistics_list = 10;
     }
 }
 
@@ -778,8 +779,12 @@ message LongPersistable {
     int64 long = 1;
 }
 
-message PersistedPeers {
+message PeersList {
     repeated Peer peers = 1;
+}
+
+message TradeStatisticsList {
+    repeated TradeStatistics trade_statistics = 1;
 }
 
 
@@ -1090,8 +1095,9 @@ message User {
     Alert displayed_alert = 6;
     Filter developers_filter = 7;
     repeated Arbitrator accepted_arbitrators = 8;
-    Arbitrator registered_arbitrator = 9;
-    Mediator registered_mediator = 10;
+    repeated Mediator accepted_mediators = 9;
+    Arbitrator registered_arbitrator = 10;
+    Mediator registered_mediator = 11;
 }
 
 message ViewPath {

@@ -38,6 +38,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
+import lombok.AllArgsConstructor;
+import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -52,50 +54,32 @@ import java.util.stream.Collectors;
  * It must never be transmitted over the wire (messageKeyPair contains private key!).
  */
 @Slf4j
+@AllArgsConstructor
 public final class User implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
+    // persisted fields
+    private UserVO userVO = new UserVO();
+
     // Transient immutable fields
-    transient final private Storage<User> storage;
+    transient final private Storage<UserVO> storage;
     transient private Set<TradeCurrency> tradeCurrenciesInPaymentAccounts;
 
-    // Persisted fields
-    private String accountID;
-    private Set<PaymentAccount> paymentAccounts = new HashSet<>();
-    private PaymentAccount currentPaymentAccount;
-    private List<String> acceptedLanguageLocaleCodes = new ArrayList<>();
-    @Nullable
-    private Alert developersAlert;
-    @Nullable
-    private Alert displayedAlert;
-    @Nullable
-    private Filter developersFilter;
-    @Nullable
-    private Arbitrator registeredArbitrator;
-    @Nullable
-    private Mediator registeredMediator;
-
-    private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
-    private List<Mediator> acceptedMediators = new ArrayList<>();
-
     // Observable wrappers
-    transient final private ObservableSet<PaymentAccount> paymentAccountsAsObservable = FXCollections.observableSet(paymentAccounts);
-    transient final private ObjectProperty<PaymentAccount> currentPaymentAccountProperty = new SimpleObjectProperty<>(currentPaymentAccount);
+    transient final private ObservableSet<PaymentAccount> paymentAccountsAsObservable = FXCollections.observableSet(userVO.getPaymentAccounts());
+    transient final private ObjectProperty<PaymentAccount> currentPaymentAccountProperty = new SimpleObjectProperty<>(userVO.getCurrentPaymentAccount());
 
 
     @Inject
-    public User(Storage<User> storage, KeyRing keyRing) throws NoSuchAlgorithmException {
+    public User(Storage<UserVO> storage, KeyRing keyRing) throws NoSuchAlgorithmException {
         this.storage = storage;
-        accountID = String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode()));
-
-        acceptedLanguageLocaleCodes.add(LanguageUtil.getDefaultLanguageLocaleAsCode());
+        userVO.setAccountID(String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode())));
+        // language setup
+        userVO.getAcceptedLanguageLocaleCodes().add(LanguageUtil.getDefaultLanguageLocaleAsCode());
         String english = LanguageUtil.getEnglishLanguageLocaleCode();
-        if (!acceptedLanguageLocaleCodes.contains(english))
-            acceptedLanguageLocaleCodes.add(english);
-
-        acceptedArbitrators = new ArrayList<>();
-        acceptedMediators = new ArrayList<>();
+        if (!userVO.getAcceptedLanguageLocaleCodes().contains(english))
+            userVO.getAcceptedLanguageLocaleCodes().add(english);
     }
 
     // for unit tests
@@ -103,48 +87,27 @@ public final class User implements Persistable {
         this.storage = null;
     }
 
-
     public void init() {
-        User persisted = storage.initAndGetPersisted(this);
+        UserVO persisted = storage.initAndGetPersisted(userVO);
         if (persisted != null) {
-            accountID = persisted.getAccountId();
-
-            // The check is only needed to not break old versions where paymentAccounts was not included and is null,
-            // Can be removed later
-            if (persisted.getPaymentAccounts() != null)
-                paymentAccounts = new HashSet<>(persisted.getPaymentAccounts());
-
-            paymentAccountsAsObservable.addAll(paymentAccounts);
-
-            currentPaymentAccount = persisted.getCurrentPaymentAccount();
-            currentPaymentAccountProperty.set(currentPaymentAccount);
-
-            acceptedLanguageLocaleCodes = persisted.getAcceptedLanguageLocaleCodes();
-            if (persisted.getAcceptedArbitrators() != null)
-                acceptedArbitrators = persisted.getAcceptedArbitrators();
-            if (persisted.getAcceptedMediators() != null)
-                acceptedMediators = persisted.getAcceptedMediators();
-
-            registeredArbitrator = persisted.getRegisteredArbitrator();
-            registeredMediator = persisted.getRegisteredMediator();
-            developersAlert = persisted.getDevelopersAlert();
-            displayedAlert = persisted.getDisplayedAlert();
-            developersFilter = persisted.getDevelopersFilter();
+            userVO = persisted;
+            paymentAccountsAsObservable.addAll(userVO.getPaymentAccounts());
+            currentPaymentAccountProperty.set(userVO.getCurrentPaymentAccount());
         }
         storage.queueUpForSave();
 
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
         paymentAccountsAsObservable.addListener((SetChangeListener<PaymentAccount>) change -> {
-            paymentAccounts = new HashSet<>(paymentAccountsAsObservable);
-            tradeCurrenciesInPaymentAccounts = paymentAccounts.stream().flatMap(e -> e.getTradeCurrencies().stream()).collect(Collectors.toSet());
+            userVO.setPaymentAccounts(new HashSet<>(paymentAccountsAsObservable));
+            tradeCurrenciesInPaymentAccounts = userVO.getPaymentAccounts().stream().flatMap(e -> e.getTradeCurrencies().stream()).collect(Collectors.toSet());
             storage.queueUpForSave();
         });
         currentPaymentAccountProperty.addListener((ov) -> {
-            currentPaymentAccount = currentPaymentAccountProperty.get();
+            userVO.setCurrentPaymentAccount(currentPaymentAccountProperty.get());
             storage.queueUpForSave();
         });
 
-        tradeCurrenciesInPaymentAccounts = paymentAccounts.stream().flatMap(e -> e.getTradeCurrencies().stream()).collect(Collectors.toSet());
+        tradeCurrenciesInPaymentAccounts = userVO.getPaymentAccounts().stream().flatMap(e -> e.getTradeCurrencies().stream()).collect(Collectors.toSet());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -165,8 +128,8 @@ public final class User implements Persistable {
     }
 
     public boolean addAcceptedLanguageLocale(String localeCode) {
-        if (!acceptedLanguageLocaleCodes.contains(localeCode)) {
-            boolean changed = acceptedLanguageLocaleCodes.add(localeCode);
+        if (!userVO.getAcceptedLanguageLocaleCodes().contains(localeCode)) {
+            boolean changed = userVO.getAcceptedLanguageLocaleCodes().add(localeCode);
             if (changed)
                 storage.queueUpForSave();
             return changed;
@@ -176,70 +139,70 @@ public final class User implements Persistable {
     }
 
     public boolean removeAcceptedLanguageLocale(String languageLocaleCode) {
-        boolean changed = acceptedLanguageLocaleCodes.remove(languageLocaleCode);
+        boolean changed = userVO.getAcceptedLanguageLocaleCodes().remove(languageLocaleCode);
         if (changed)
             storage.queueUpForSave();
         return changed;
     }
 
     public void addAcceptedArbitrator(Arbitrator arbitrator) {
-        if (!acceptedArbitrators.contains(arbitrator) && !isMyOwnRegisteredArbitrator(arbitrator)) {
-            boolean changed = acceptedArbitrators.add(arbitrator);
+        if (!userVO.getAcceptedArbitrators().contains(arbitrator) && !isMyOwnRegisteredArbitrator(arbitrator)) {
+            boolean changed = userVO.getAcceptedArbitrators().add(arbitrator);
             if (changed)
                 storage.queueUpForSave();
         }
     }
 
     public void addAcceptedMediator(Mediator mediator) {
-        if (!acceptedMediators.contains(mediator) && !isMyOwnRegisteredMediator(mediator)) {
-            boolean changed = acceptedMediators.add(mediator);
+        if (!userVO.getAcceptedMediators().contains(mediator) && !isMyOwnRegisteredMediator(mediator)) {
+            boolean changed = userVO.getAcceptedMediators().add(mediator);
             if (changed)
                 storage.queueUpForSave();
         }
     }
 
     public boolean isMyOwnRegisteredArbitrator(Arbitrator arbitrator) {
-        return arbitrator.equals(registeredArbitrator);
+        return arbitrator.equals(userVO.getRegisteredArbitrator());
     }
 
     public boolean isMyOwnRegisteredMediator(Mediator mediator) {
-        return mediator.equals(registeredMediator);
+        return mediator.equals(userVO.getRegisteredArbitrator());
     }
 
     public void removeAcceptedArbitrator(Arbitrator arbitrator) {
-        boolean changed = acceptedArbitrators.remove(arbitrator);
+        boolean changed = userVO.getAcceptedArbitrators().remove(arbitrator);
         if (changed)
             storage.queueUpForSave();
     }
 
     public void clearAcceptedArbitrators() {
-        acceptedArbitrators.clear();
+        userVO.getAcceptedArbitrators().clear();
         storage.queueUpForSave();
     }
 
     public void removeAcceptedMediator(Mediator mediator) {
-        boolean changed = acceptedMediators.remove(mediator);
+        boolean changed = userVO.getAcceptedMediators().remove(mediator);
         if (changed)
             storage.queueUpForSave();
     }
 
     public void clearAcceptedMediators() {
-        acceptedMediators.clear();
+        userVO.getAcceptedMediators().clear();
         storage.queueUpForSave();
     }
 
     public void setRegisteredArbitrator(@Nullable Arbitrator arbitrator) {
-        this.registeredArbitrator = arbitrator;
+        userVO.setRegisteredArbitrator(arbitrator);
         storage.queueUpForSave();
     }
 
     public void setRegisteredMediator(@Nullable Mediator mediator) {
-        this.registeredMediator = mediator;
+        userVO.setRegisteredMediator(mediator);
         storage.queueUpForSave();
     }
 
     public void setDevelopersFilter(@Nullable Filter developersFilter) {
-        this.developersFilter = developersFilter;
+        userVO.setDevelopersFilter(developersFilter);
         storage.queueUpForSave();
     }
 
@@ -250,7 +213,7 @@ public final class User implements Persistable {
 
     @Nullable
     public PaymentAccount getPaymentAccount(String paymentAccountId) {
-        Optional<PaymentAccount> optional = paymentAccounts.stream().filter(e -> e.getId().equals(paymentAccountId)).findAny();
+        Optional<PaymentAccount> optional = userVO.getPaymentAccounts().stream().filter(e -> e.getId().equals(paymentAccountId)).findAny();
         if (optional.isPresent())
             return optional.get();
         else
@@ -258,7 +221,7 @@ public final class User implements Persistable {
     }
 
     public String getAccountId() {
-        return accountID;
+        return userVO.getAccountID();
     }
 
    /* public boolean isRegistered() {
@@ -266,7 +229,7 @@ public final class User implements Persistable {
     }*/
 
     private PaymentAccount getCurrentPaymentAccount() {
-        return currentPaymentAccount;
+        return userVO.getCurrentPaymentAccount();
     }
 
     public ObjectProperty<PaymentAccount> currentPaymentAccountProperty() {
@@ -274,7 +237,7 @@ public final class User implements Persistable {
     }
 
     public Set<PaymentAccount> getPaymentAccounts() {
-        return paymentAccounts;
+        return userVO.getPaymentAccounts();
     }
 
     public ObservableSet<PaymentAccount> getPaymentAccountsAsObservable() {
@@ -283,36 +246,36 @@ public final class User implements Persistable {
 
     @Nullable
     public Arbitrator getRegisteredArbitrator() {
-        return registeredArbitrator;
+        return userVO.getRegisteredArbitrator();
     }
 
     @Nullable
     public Mediator getRegisteredMediator() {
-        return registeredMediator;
+        return userVO.getRegisteredMediator();
     }
 
     public List<Arbitrator> getAcceptedArbitrators() {
-        return acceptedArbitrators;
+        return userVO.getAcceptedArbitrators();
     }
 
     public List<NodeAddress> getAcceptedArbitratorAddresses() {
-        return acceptedArbitrators.stream().map(Arbitrator::getNodeAddress).collect(Collectors.toList());
+        return userVO.getAcceptedArbitrators().stream().map(Arbitrator::getNodeAddress).collect(Collectors.toList());
     }
 
     public List<Mediator> getAcceptedMediators() {
-        return acceptedMediators;
+        return userVO.getAcceptedMediators();
     }
 
     public List<NodeAddress> getAcceptedMediatorAddresses() {
-        return acceptedMediators.stream().map(Mediator::getNodeAddress).collect(Collectors.toList());
+        return userVO.getAcceptedMediators().stream().map(Mediator::getNodeAddress).collect(Collectors.toList());
     }
 
     public List<String> getAcceptedLanguageLocaleCodes() {
-        return acceptedLanguageLocaleCodes != null ? acceptedLanguageLocaleCodes : new ArrayList<>();
+        return userVO.getAcceptedLanguageLocaleCodes() != null ? userVO.getAcceptedLanguageLocaleCodes() : new ArrayList<>();
     }
 
     public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
-        Optional<Arbitrator> arbitratorOptional = acceptedArbitrators.stream()
+        Optional<Arbitrator> arbitratorOptional = userVO.getAcceptedArbitrators().stream()
                 .filter(e -> e.getNodeAddress().equals(nodeAddress))
                 .findFirst();
         if (arbitratorOptional.isPresent())
@@ -322,7 +285,7 @@ public final class User implements Persistable {
     }
 
     public Mediator getAcceptedMediatorByAddress(NodeAddress nodeAddress) {
-        Optional<Mediator> mediatorOptionalOptional = acceptedMediators.stream()
+        Optional<Mediator> mediatorOptionalOptional = userVO.getAcceptedMediators().stream()
                 .filter(e -> e.getNodeAddress().equals(nodeAddress))
                 .findFirst();
         if (mediatorOptionalOptional.isPresent())
@@ -333,7 +296,7 @@ public final class User implements Persistable {
 
     @Nullable
     public Filter getDevelopersFilter() {
-        return developersFilter;
+        return userVO.getDevelopersFilter();
     }
 
 
@@ -350,7 +313,7 @@ public final class User implements Persistable {
 
     @Nullable
     public PaymentAccount findFirstPaymentAccountWithCurrency(TradeCurrency tradeCurrency) {
-        for (PaymentAccount paymentAccount : paymentAccounts) {
+        for (PaymentAccount paymentAccount : userVO.getPaymentAccounts()) {
             for (TradeCurrency tradeCurrency1 : paymentAccount.getTradeCurrencies()) {
                 if (tradeCurrency1.equals(tradeCurrency))
                     return paymentAccount;
@@ -361,7 +324,7 @@ public final class User implements Persistable {
 
     public boolean hasMatchingLanguage(Arbitrator arbitrator) {
         if (arbitrator != null) {
-            for (String acceptedCode : acceptedLanguageLocaleCodes) {
+            for (String acceptedCode : userVO.getAcceptedLanguageLocaleCodes()) {
                 for (String itemCode : arbitrator.getLanguageCodes()) {
                     if (acceptedCode.equals(itemCode))
                         return true;
@@ -376,43 +339,27 @@ public final class User implements Persistable {
     }
 
     public void setDevelopersAlert(@Nullable Alert developersAlert) {
-        this.developersAlert = developersAlert;
+        userVO.setDevelopersAlert(developersAlert);
         storage.queueUpForSave();
     }
 
     @Nullable
     public Alert getDevelopersAlert() {
-        return developersAlert;
+        return userVO.getDevelopersAlert();
     }
 
     public void setDisplayedAlert(@Nullable Alert displayedAlert) {
-        this.displayedAlert = displayedAlert;
+        userVO.setDisplayedAlert(displayedAlert);
         storage.queueUpForSave();
     }
 
     @Nullable
     public Alert getDisplayedAlert() {
-        return displayedAlert;
+        return userVO.getDisplayedAlert();
     }
 
     @Override
     public Message toProto() {
-        PB.User.Builder builder = PB.User.newBuilder()
-                .setAccountId(accountID)
-                .addAllPaymentAccounts(ProtoHelper.collectionToProto(paymentAccounts))
-                .setCurrentPaymentAccount(currentPaymentAccount.toProto())
-                .addAllAcceptedLanguageLocaleCodes(acceptedLanguageLocaleCodes)
-                .addAllAcceptedArbitrators(ProtoHelper.collectionToProto(acceptedArbitrators));
-        Optional.ofNullable(developersAlert)
-                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProto().getAlert()));
-        Optional.ofNullable(displayedAlert)
-                .ifPresent(displayedAlert -> builder.setDisplayedAlert(displayedAlert.toProto().getAlert()));
-        Optional.ofNullable(developersFilter)
-                .ifPresent(developersFilter -> builder.setDevelopersFilter(developersFilter.toProto().getFilter()));
-        Optional.ofNullable(registeredArbitrator)
-                .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProto().getArbitrator()));
-        Optional.ofNullable(registeredMediator)
-                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProto().getAlert()));
-        return PB.DiskEnvelope.newBuilder().setUser(builder).build();
+        return userVO.toProto();
     }
 }

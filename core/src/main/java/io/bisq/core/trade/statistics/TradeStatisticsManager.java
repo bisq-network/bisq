@@ -4,10 +4,12 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bisq.common.locale.CurrencyTuple;
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.proto.ProtoHelper;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.peers.PersistedList;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
@@ -102,8 +104,13 @@ public class TradeStatisticsManager {
                 tradeStatisticsSet.add(tradeStatistics);
                 observableTradeStatisticsSet.add(tradeStatistics);
 
-                if (storeLocally)
-                    statisticsStorage.queueUpForSave(new PersistedList<TradeStatistics>(tradeStatisticsSet), 2000);
+                if (storeLocally) {
+                    PersistedList<TradeStatistics> serializable = new PersistedList<>(tradeStatisticsSet);
+                    serializable.setToProto((list) -> PB.DiskEnvelope.newBuilder()
+                            .setTradeStatisticsList(PB.TradeStatisticsList.newBuilder()
+                                    .addAllTradeStatistics(ProtoHelper.collectionToProto(list))).build());
+                    statisticsStorage.queueUpForSave(serializable, 2000);
+                }
 
                 dump();
             } else {

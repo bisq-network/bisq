@@ -8,6 +8,7 @@ import io.bisq.network.p2p.NodeAddress;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Instant;
 import java.util.Date;
 
 @ToString
@@ -25,8 +26,12 @@ public final class Peer implements Payload, Persistable {
     transient private int failedConnectionAttempts = 0;
 
     public Peer(NodeAddress nodeAddress) {
+        this(nodeAddress, new Date());
+    }
+
+    public Peer(NodeAddress nodeAddress, Date date) {
         this.nodeAddress = nodeAddress;
-        this.date = new Date();
+        this.date = date;
     }
 
     public void increaseFailedConnectionAttempts() {
@@ -58,5 +63,9 @@ public final class Peer implements Payload, Persistable {
     public PB.Peer toProto() {
         return PB.Peer.newBuilder().setNodeAddress(nodeAddress.toProto())
                 .setDate(date.getTime()).build();
+    }
+
+    public static Peer fromProto(PB.Peer peer) {
+        return new Peer(NodeAddress.fromProto(peer.getNodeAddress()), Date.from(Instant.ofEpochMilli(peer.getDate())));
     }
 }

@@ -1,11 +1,14 @@
 package io.bisq.network.p2p.peers;
 
 import io.bisq.common.Clock;
+import io.bisq.common.Marshaller;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.proto.PersistenceProtoResolver;
+import io.bisq.common.proto.ProtoHelper;
 import io.bisq.common.storage.Storage;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.peerexchange.Peer;
@@ -96,7 +99,7 @@ public class PeerManager implements ConnectionListener {
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
         dbStorage = new Storage<>(storageDir, persistenceProtoResolver);
-        PersistedList persistedList = dbStorage.initAndGetPersistedWithFileName("PersistedList");
+        PersistedList persistedList = dbStorage.initAndGetPersistedWithFileName("PersistedPeers");
         if (persistedList != null) {
             log.debug("We have persisted reported list. persistedList.size()=" + persistedList.getList().size());
             this.persistedPeers.addAll(persistedList.getList());
@@ -456,6 +459,9 @@ public class PeerManager implements ConnectionListener {
 
             if (dbStorage != null) {
                 PersistedList serializable = new PersistedList(persistedPeers);
+                serializable.setToProto((list) -> PB.DiskEnvelope.newBuilder()
+                        .setPeersList(PB.PeersList.newBuilder()
+                                .addAllPeers(ProtoHelper.collectionToProto((Collection<? extends Marshaller>) list))));
                 dbStorage.queueUpForSave(serializable, 2000);
             }
 

@@ -108,7 +108,7 @@ public final class PubKeyRing implements Payload {
             }
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
-            log.error(e.getMessage());
+            log.error(e.getMessage() + toString());
         }
     }
 

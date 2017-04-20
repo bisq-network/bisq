@@ -31,6 +31,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
@@ -63,7 +64,13 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     // Enums
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum Direction {BUY, SELL}
+    public enum Direction {
+        BUY, SELL;
+
+        public static OfferPayload.Direction fromProto(PB.OfferPayload.Direction direction) {
+            return OfferPayload.Direction.valueOf(direction.name());
+        }
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +131,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     // reserved for future use cases
     // Close offer when certain price is reached
     private final boolean useAutoClose;
-    // If useReOpenAfterAutoClose=true we re-open a new offer with the remaining funds if the trade amount 
+    // If useReOpenAfterAutoClose=true we re-open a new offer with the remaining funds if the trade amount
     // was less then the offer's max. trade amount.
     private final boolean useReOpenAfterAutoClose;
     // Used when useAutoClose is set for canceling the offer when lowerClosePrice is triggered
@@ -136,8 +143,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     @Nullable
     private final String hashOfChallenge;
 
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     private Map<String, String> extraDataMap;

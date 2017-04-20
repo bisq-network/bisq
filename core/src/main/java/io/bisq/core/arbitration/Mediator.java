@@ -20,6 +20,7 @@ package io.bisq.core.arbitration;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.core.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
@@ -27,6 +28,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
@@ -35,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @EqualsAndHashCode
 @Slf4j
@@ -103,6 +106,22 @@ public final class Mediator implements StoragePayload {
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
         Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
         return PB.StoragePayload.newBuilder().setMediator(builder).build();
+    }
+
+    public static Mediator fromProto(PB.Mediator mediator) {
+        List<String> strings = mediator.getLanguageCodesList().stream().collect(Collectors.toList());
+        Date date = new Date(mediator.getRegistrationDate());
+        String emailAddress = mediator.getEmailAddress().isEmpty() ? null : mediator.getEmailAddress();
+        return new Mediator(NodeAddress.fromProto(mediator.getNodeAddress()),
+                ProtoUtil.getPubKeyRing(mediator.getPubKeyRing()),
+                strings,
+                date,
+                mediator.getRegistrationPubKey().toByteArray(),
+                mediator.getRegistrationSignature(),
+                emailAddress,
+                CollectionUtils.isEmpty(mediator.getExtraDataMapMap()) ?
+                        null : mediator.getExtraDataMapMap());
+
     }
 
 }
