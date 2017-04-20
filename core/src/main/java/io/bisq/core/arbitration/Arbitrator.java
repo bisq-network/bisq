@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
+import java.nio.charset.Charset;
 import java.security.PublicKey;
 import java.util.Date;
 import java.util.List;
@@ -60,9 +61,9 @@ public final class Arbitrator implements StoragePayload {
     private final byte[] registrationPubKey;
     @Nullable
     private final String emailAddress;
-    
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     private Map<String, String> extraDataMap;
@@ -109,7 +110,7 @@ public final class Arbitrator implements StoragePayload {
                 .addAllLanguageCodes(languageCodes)
                 .setBtcAddress(btcAddress)
                 .setRegistrationDate(registrationDate)
-                .setRegistrationSignature(registrationSignature)
+                .setRegistrationSignature(ByteString.copyFrom(registrationSignature.getBytes())) // string does not conform to UTF-8 !
                 .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
         Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
@@ -127,7 +128,7 @@ public final class Arbitrator implements StoragePayload {
                 strings,
                 date,
                 arbitrator.getRegistrationPubKey().toByteArray(),
-                arbitrator.getRegistrationSignature(),
+                arbitrator.getRegistrationSignature().toString(Charset.forName("UTF-8")), // convert back to String
                 emailAddress,
                 CollectionUtils.isEmpty(arbitrator.getExtraDataMapMap()) ?
                         null : arbitrator.getExtraDataMapMap());

@@ -216,7 +216,7 @@ message Arbitrator {
     NodeAddress node_address = 1;
     repeated string language_codes = 2;
     int64 registration_date = 3;
-    string registration_signature = 4;
+    bytes registration_signature = 4;
     bytes registration_pub_key = 5;
     PubKeyRing pub_key_ring = 6;
     bytes btc_pub_key = 7;

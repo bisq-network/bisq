@@ -690,8 +690,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
         @Override
         public com.google.protobuf.Message toProto() {
-            //data.toProtoBuf().getOneofFieldDescriptor();
-            //PB.Payload payload = PB.Payload.newBuilder().setUnknownFields()
             return PB.DataAndSeqNrPair.newBuilder().setPayload((PB.StoragePayload) data.toProto()).setSequenceNumber(sequenceNumber).build();
         }
     }

@@ -113,7 +113,7 @@ public class FileManager<T extends Persistable> {
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
             persistable = persistenceProtoResolver.fromProto(PB.DiskEnvelope.parseDelimitedFrom(fileInputStream));
         } catch (Throwable t) {
-            log.debug("Exception at proto read: " + t.getMessage() + " " + file.getName());
+            log.warn("Exception at proto read: " + t.getMessage() + " " + file.getName());
         }
 
         if (persistable.isPresent()) {
@@ -125,6 +125,7 @@ public class FileManager<T extends Persistable> {
         try (final FileInputStream fileInputStream = new FileInputStream(file);
              final ObjectInputStream objectInputStream = new LookAheadObjectInputStream(fileInputStream, false)) {
             //noinspection unchecked
+            log.warn("Still using Serializable storing for file: {}", file);
             return (T) objectInputStream.readObject();
         } catch (Throwable t) {
             log.error("Exception at read: " + t.getMessage());
@@ -231,6 +232,9 @@ public class FileManager<T extends Persistable> {
                 // when rename temp file
                 fileOutputStream.close();
             } else {
+                log.warn("skipping serializable write: {}", serializable.getClass());
+                return;
+                /*
                 // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
                 // and we need to close it
                 // manually before replacing file with temp file
@@ -249,6 +253,7 @@ public class FileManager<T extends Persistable> {
                 // when rename temp file
                 fileOutputStream.close();
                 objectOutputStream.close();
+                */
             }
             renameTempFileToFile(tempFile, storageFile);
         } catch (Throwable t) {

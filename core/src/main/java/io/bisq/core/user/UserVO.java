@@ -32,8 +32,9 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import javax.print.attribute.standard.Media;
+import java.io.File;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,6 +44,7 @@ public class UserVO implements Persistable {
     // Persisted fields
     private String accountID;
     private Set<PaymentAccount> paymentAccounts = new HashSet<>();
+    @Nullable
     private PaymentAccount currentPaymentAccount;
     private List<String> acceptedLanguageLocaleCodes = new ArrayList<>();
     @Nullable
@@ -68,10 +70,12 @@ public class UserVO implements Persistable {
         PB.User.Builder builder = PB.User.newBuilder()
                 .setAccountId(accountID)
                 .addAllPaymentAccounts(ProtoHelper.collectionToProto(paymentAccounts))
-                .setCurrentPaymentAccount(currentPaymentAccount.toProto())
                 .addAllAcceptedLanguageLocaleCodes(acceptedLanguageLocaleCodes)
                 .addAllAcceptedArbitrators(ProtoHelper.collectionToProto(acceptedArbitrators))
                 .addAllAcceptedMediators(ProtoHelper.collectionToProto(acceptedMediators));
+
+        Optional.ofNullable(currentPaymentAccount)
+                .ifPresent(paymentAccount -> builder.setCurrentPaymentAccount(paymentAccount.toProto()));
         Optional.ofNullable(developersAlert)
                 .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProto().getAlert()));
         Optional.ofNullable(displayedAlert)
@@ -89,17 +93,16 @@ public class UserVO implements Persistable {
         Set<PaymentAccount> collect = user.getPaymentAccountsList().stream().map(paymentAccount -> ProtoUtil.getPaymentAccount(paymentAccount)).collect(Collectors.toSet());
         UserVO vo = new UserVO(user.getAccountId(),
                 collect,
-                ProtoUtil.getPaymentAccount(user.getCurrentPaymentAccount()),
+                user.hasCurrentPaymentAccount() ? ProtoUtil.getPaymentAccount(user.getCurrentPaymentAccount()) : null,
                 user.getAcceptedLanguageLocaleCodesList(),
-                Alert.fromProto(user.getDevelopersAlert()),
-                Alert.fromProto(user.getDisplayedAlert()),
-                Filter.fromProto(user.getDevelopersFilter()),
-                Arbitrator.fromProto(user.getRegisteredArbitrator()),
-                Mediator.fromProto(user.getRegisteredMediator()),
+                user.hasDevelopersAlert() ? Alert.fromProto(user.getDevelopersAlert()) : null,
+                user.hasDisplayedAlert() ? Alert.fromProto(user.getDisplayedAlert()) : null,
+                user.hasDevelopersFilter() ? Filter.fromProto(user.getDevelopersFilter()) : null,
+                user.hasRegisteredArbitrator() ? Arbitrator.fromProto(user.getRegisteredArbitrator()) : null,
+                user.hasRegisteredMediator() ? Mediator.fromProto(user.getRegisteredMediator()) : null,
                 user.getAcceptedArbitratorsList().stream().map(Arbitrator::fromProto).collect(Collectors.toList()),
                 user.getAcceptedMediatorsList().stream().map(Mediator::fromProto).collect(Collectors.toList())
-                );
+        );
         return vo;
     }
-
 }
