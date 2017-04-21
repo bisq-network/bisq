@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import org.bitcoinj.core.*;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.wallet.CoinSelection;
+import org.bitcoinj.wallet.Wallet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

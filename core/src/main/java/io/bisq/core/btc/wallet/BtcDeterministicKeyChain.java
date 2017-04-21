@@ -25,6 +25,7 @@ import org.bitcoinj.wallet.DeterministicKeyChain;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.crypto.params.KeyParameter;
 
 import java.security.SecureRandom;
 
@@ -54,6 +55,19 @@ class BtcDeterministicKeyChain extends DeterministicKeyChain {
 
     public BtcDeterministicKeyChain(DeterministicSeed seed) {
         super(seed);
+    }
+
+    @Override
+    public DeterministicKeyChain toEncrypted(KeyCrypter keyCrypter, KeyParameter aesKey) {
+        return new BtcDeterministicKeyChain(keyCrypter, aesKey, this);
+    }
+
+    protected DeterministicKeyChain makeKeyChainFromSeed(DeterministicSeed seed) {
+        return new BtcDeterministicKeyChain(seed);
+    }
+
+    protected BtcDeterministicKeyChain(KeyCrypter crypter, KeyParameter aesKey, DeterministicKeyChain chain) {
+        super(crypter, aesKey, chain);
     }
 
     @Override

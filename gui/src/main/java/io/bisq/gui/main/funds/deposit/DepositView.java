@@ -56,7 +56,6 @@ import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.uri.BitcoinURI;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.jetbrains.annotations.NotNull;
@@ -294,10 +293,9 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @NotNull
     private String getBitcoinURI() {
-        return BitcoinURI.convertToBitcoinURI(addressTextField.getAddress(),
+        return GUIUtil.getBitcoinURI(addressTextField.getAddress(),
                 getAmountAsCoin(),
-                paymentLabelString,
-                null);
+                paymentLabelString);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

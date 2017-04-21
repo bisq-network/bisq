@@ -110,7 +110,9 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
      * Returns an array containing all the Bitcoin nodes within the list.
      */
     @Override
-    public InetSocketAddress[] getPeers(long timeoutValue, TimeUnit timeoutUnit) throws PeerDiscoveryException {
+    public InetSocketAddress[] getPeers(long services, long timeoutValue, TimeUnit timeoutUnit) throws PeerDiscoveryException {
+        if (services != 0)
+            throw new PeerDiscoveryException("DNS seeds cannot filter by services: " + services);
         try {
             return allPeers();
         } catch (UnknownHostException e) {

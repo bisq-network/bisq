@@ -25,6 +25,7 @@ import org.bitcoinj.wallet.DeterministicKeyChain;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.crypto.params.KeyParameter;
 
 import java.security.SecureRandom;
 
@@ -33,8 +34,7 @@ class BsqDeterministicKeyChain extends DeterministicKeyChain {
 
     // See https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
     // https://github.com/satoshilabs/slips/blob/master/slip-0044.md
-    // We use 142 (0x8000008E) as coin_type for BSQ 
-    // TODO register
+    // We have registered 142 (0x8000008E) as coin_type for BSQ 
     public static final ImmutableList<ChildNumber> BIP44_BSQ_ACCOUNT_PATH = ImmutableList.of(
             new ChildNumber(44, true),
             new ChildNumber(142, true),
@@ -54,6 +54,20 @@ class BsqDeterministicKeyChain extends DeterministicKeyChain {
 
     public BsqDeterministicKeyChain(DeterministicSeed seed) {
         super(seed);
+    }
+
+
+    @Override
+    public DeterministicKeyChain toEncrypted(KeyCrypter keyCrypter, KeyParameter aesKey) {
+        return new BsqDeterministicKeyChain(keyCrypter, aesKey, this);
+    }
+
+    protected DeterministicKeyChain makeKeyChainFromSeed(DeterministicSeed seed) {
+        return new BsqDeterministicKeyChain(seed);
+    }
+
+    protected BsqDeterministicKeyChain(KeyCrypter crypter, KeyParameter aesKey, DeterministicKeyChain chain) {
+        super(crypter, aesKey, chain);
     }
 
     @Override

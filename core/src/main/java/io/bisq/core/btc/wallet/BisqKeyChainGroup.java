@@ -25,23 +25,20 @@ import java.security.SecureRandom;
 
 class BisqKeyChainGroup extends KeyChainGroup {
     private final boolean useBitcoinDeterministicKeyChain;
-    private final int lookaheadSize;
 
     public boolean isUseBitcoinDeterministicKeyChain() {
         return useBitcoinDeterministicKeyChain;
     }
 
-    public BisqKeyChainGroup(NetworkParameters params, boolean useBitcoinDeterministicKeyChain, int lookaheadSize) {
+    public BisqKeyChainGroup(NetworkParameters params, boolean useBitcoinDeterministicKeyChain) {
         super(params);
         this.useBitcoinDeterministicKeyChain = useBitcoinDeterministicKeyChain;
-        this.lookaheadSize = lookaheadSize;
     }
 
-    public BisqKeyChainGroup(NetworkParameters params, DeterministicKeyChain chain, boolean useBitcoinDeterministicKeyChain, int lookaheadSize) {
+    public BisqKeyChainGroup(NetworkParameters params, DeterministicKeyChain chain, boolean useBitcoinDeterministicKeyChain) {
         super(params, chain);
 
         this.useBitcoinDeterministicKeyChain = useBitcoinDeterministicKeyChain;
-        this.lookaheadSize = lookaheadSize;
     }
 
     @Override
@@ -52,7 +49,6 @@ class BisqKeyChainGroup extends KeyChainGroup {
     @Override
     public void createAndActivateNewHDChain() {
         DeterministicKeyChain chain = useBitcoinDeterministicKeyChain ? new BtcDeterministicKeyChain(new SecureRandom()) : new BsqDeterministicKeyChain(new SecureRandom());
-        chain.setLookaheadSize(lookaheadSize);
         addAndActivateHDChain(chain);
     }
 }

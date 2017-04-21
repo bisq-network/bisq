@@ -22,7 +22,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.bisq.common.app.Log;
-import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.InsufficientFundsException;
 import io.bisq.core.btc.data.InputsAndChangeOutput;
@@ -37,6 +36,8 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.wallet.SendRequest;
+import org.bitcoinj.wallet.Wallet;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,10 +126,6 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void setAesKey(@Nullable KeyParameter newAesKey) {
-        // Overwrite first with random bytes before setting to null
-        if (newAesKey == null && this.aesKey != null)
-            Utilities.overwriteWithRandomBytes(this.aesKey.getKey());
-
         this.aesKey = newAesKey;
     }
 
@@ -176,7 +173,7 @@ public class TradeWalletService {
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
         // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tradingFeeTx);
+        SendRequest sendRequest = SendRequest.forTx(tradingFeeTx);
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
         if (useSavingsWallet)
@@ -184,8 +181,10 @@ public class TradeWalletService {
         else
             sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
         // We use a fixed fee
-        sendRequest.feePerKb = Coin.ZERO;
+
         sendRequest.fee = txFee;
+        sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
 
         // Change is optional in case of overpay or use of funds from savings wallet
         sendRequest.changeAddress = changeAddress;
@@ -243,7 +242,7 @@ public class TradeWalletService {
         // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
 
         // WalletService.printTx("preparedBsqTx", preparedBsqTx);
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(preparedBsqTx);
+        SendRequest sendRequest = SendRequest.forTx(preparedBsqTx);
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
         if (useSavingsWallet)
@@ -251,8 +250,10 @@ public class TradeWalletService {
         else
             sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
         // We use a fixed fee
-        sendRequest.feePerKb = Coin.ZERO;
         sendRequest.fee = txFee;
+        sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
+
         sendRequest.signInputs = false;
 
         // Change is optional in case of overpay or use of funds from savings wallet
@@ -1166,12 +1167,13 @@ public class TradeWalletService {
     private void addAvailableInputsAndChangeOutputs(Transaction transaction, Address address, Address changeAddress, Coin txFee) throws WalletException {
         try {
             // Lets let the framework do the work to find the right inputs
-            Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
+            SendRequest sendRequest = SendRequest.forTx(transaction);
             sendRequest.shuffleOutputs = false;
             sendRequest.aesKey = aesKey;
             // We use a fixed fee
-            sendRequest.feePerKb = Coin.ZERO;
             sendRequest.fee = txFee;
+            sendRequest.feePerKb = Coin.ZERO;
+            sendRequest.ensureMinRequiredFee = false;
             // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
             sendRequest.coinSelector = new BtcCoinSelector(address);
             // We use always the same address in a trade for all transactions

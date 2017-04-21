@@ -42,6 +42,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
@@ -79,9 +80,13 @@ public class ProcessModel implements Model, Serializable {
     private String accountId;
     private PubKeyRing pubKeyRing;
 
-    // Mutable
+    // Transient/Mutable
+    transient private Transaction takeOfferFeeTx;
     @Setter
     transient private TradeMsg tradeMessage;
+
+    // Mutable
+    private String takeOfferFeeTxId;
     @Setter
     private byte[] payoutTxSignature;
     @Setter
@@ -97,8 +102,6 @@ public class ProcessModel implements Model, Serializable {
     @Nullable
     @Setter
     private String changeOutputAddress;
-    @Setter
-    private Transaction takeOfferFeeTx;
     @Setter
     private boolean useSavingsWallet;
     @Setter
@@ -166,7 +169,6 @@ public class ProcessModel implements Model, Serializable {
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
     }
 
-
     public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,
                                                       PaymentAccountFilter[] appliedPaymentAccountFilter) {
         return filterManager.getFilter() != null &&
@@ -194,5 +196,16 @@ public class ProcessModel implements Model, Serializable {
 
     public Coin getFundsNeededForTradeAsLong() {
         return Coin.valueOf(fundsNeededForTradeAsLong);
+    }
+
+    public Transaction getTakeOfferFeeTx() {
+        if (takeOfferFeeTx == null)
+            takeOfferFeeTx = bsqWalletService.getTransaction(Sha256Hash.wrap(takeOfferFeeTxId));
+        return takeOfferFeeTx;
+    }
+
+    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
+        this.takeOfferFeeTx = takeOfferFeeTx;
+        takeOfferFeeTxId = takeOfferFeeTx.getHashAsString();
     }
 }

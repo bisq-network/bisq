@@ -66,7 +66,6 @@ import javafx.stage.Window;
 import javafx.util.StringConverter;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
-import org.bitcoinj.uri.BitcoinURI;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -1067,8 +1066,8 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     @NotNull
     private String getBitcoinURI() {
-        return model.getAddressAsString() != null ? BitcoinURI.convertToBitcoinURI(model.getAddressAsString(), model.dataModel.getMissingCoin().get(),
-                model.getPaymentLabel(), null) : "";
+        return GUIUtil.getBitcoinURI(addressTextField.getAddress(), model.dataModel.getMissingCoin().get(),
+                model.getPaymentLabel());
     }
 
     private void addAmountPriceFields() {

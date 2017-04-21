@@ -33,6 +33,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.CoinSelection;
+import org.bitcoinj.wallet.SendRequest;
+import org.bitcoinj.wallet.Wallet;
+import org.bitcoinj.wallet.listeners.AbstractWalletEventListener;
 
 import javax.inject.Inject;
 import java.util.HashSet;
@@ -275,9 +278,10 @@ public class BsqWalletService extends WalletService {
                 "The amount is too low (dust limit).");
         tx.addOutput(receiverAmount, new Address(params, receiverAddress));
 
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+        SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = Coin.ZERO;
         sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
         sendRequest.aesKey = aesKey;
         sendRequest.shuffleOutputs = false;
         sendRequest.signInputs = false;

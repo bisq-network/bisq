@@ -24,6 +24,8 @@ import com.google.common.util.concurrent.Futures;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.core.btc.ProxySocketFactory;
 import org.bitcoinj.core.*;
+import org.bitcoinj.core.listeners.DownloadProgressTracker;
+import org.bitcoinj.core.listeners.PeerDataEventListener;
 import org.bitcoinj.net.BlockingClientManager;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.net.discovery.PeerDiscovery;
@@ -33,11 +35,7 @@ import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.SPVBlockStore;
-import org.bitcoinj.store.WalletProtobufSerializer;
-import org.bitcoinj.wallet.DeterministicKeyChain;
-import org.bitcoinj.wallet.DeterministicSeed;
-import org.bitcoinj.wallet.KeyChainGroup;
-import org.bitcoinj.wallet.Protos;
+import org.bitcoinj.wallet.*;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,15 +89,13 @@ public class WalletConfig extends AbstractIdleService {
     private volatile File vBsqWalletFile;
     @Nullable
     private DeterministicSeed seed;
-    private int btcWalletLookaheadSize = -1;
-    private int bsqWalletLookaheadSize = -1;
 
     private volatile BlockChain vChain;
     private volatile BlockStore vStore;
     private volatile PeerGroup vPeerGroup;
     private boolean useAutoSave = true;
     private PeerAddress[] peerAddresses;
-    private PeerEventListener downloadListener;
+    private PeerDataEventListener downloadListener;
     private boolean autoStop = true;
     private InputStream checkpoints;
     private boolean blockingStartup = true;
@@ -108,8 +104,6 @@ public class WalletConfig extends AbstractIdleService {
     private String version;
     @Nullable
     private PeerDiscovery discovery;
-    private long bloomFilterTweak = 0;
-    private double bloomFilterFPRate = -1;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -226,12 +220,7 @@ public class WalletConfig extends AbstractIdleService {
         return this;
     }
 
-    /**
-     * If you want to learn about the sync process, you can provide a listener here. For instance, a
-     * {@link org.bitcoinj.core.DownloadProgressTracker} is a good choice. This has no effect unless setBlockingStartup(false) has been called
-     * too, due to some missing implementation code.
-     */
-    public WalletConfig setDownloadListener(PeerEventListener listener) {
+    public WalletConfig setDownloadListener(PeerDataEventListener listener) {
         this.downloadListener = listener;
         return this;
     }
@@ -295,26 +284,6 @@ public class WalletConfig extends AbstractIdleService {
      */
     public WalletConfig setDiscovery(@Nullable PeerDiscovery discovery) {
         this.discovery = discovery;
-        return this;
-    }
-
-    public WalletConfig setBloomFilterFalsePositiveRate(double bloomFilterFPRate) {
-        this.bloomFilterFPRate = bloomFilterFPRate;
-        return this;
-    }
-
-    public WalletConfig setBloomFilterTweak(long bloomFilterTweak) {
-        this.bloomFilterTweak = bloomFilterTweak;
-        return this;
-    }
-
-    public WalletConfig setBtcWalletLookaheadSize(int lookaheadSize) {
-        this.btcWalletLookaheadSize = lookaheadSize;
-        return this;
-    }
-
-    public WalletConfig setBsqWalletLookaheadSize(int lookaheadSize) {
-        this.bsqWalletLookaheadSize = lookaheadSize;
         return this;
     }
 
@@ -388,18 +357,18 @@ public class WalletConfig extends AbstractIdleService {
             boolean shouldReplayWallet = (vBtcWalletFile.exists() && !chainFileExists) || seed != null;
             BisqKeyChainGroup keyChainGroup;
             if (seed != null)
-                keyChainGroup = new BisqKeyChainGroup(params, new BtcDeterministicKeyChain(seed), true, btcWalletLookaheadSize);
+                keyChainGroup = new BisqKeyChainGroup(params, new BtcDeterministicKeyChain(seed), true);
             else
-                keyChainGroup = new BisqKeyChainGroup(params, true, btcWalletLookaheadSize);
-            vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayWallet, keyChainGroup, false);
+                keyChainGroup = new BisqKeyChainGroup(params, true);
+            vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayWallet, keyChainGroup, false, seed);
 
             // BSQ walelt
             vBsqWalletFile = new File(directory, bsqWalletFileName);
             if (seed != null)
-                keyChainGroup = new BisqKeyChainGroup(params, new BsqDeterministicKeyChain(seed), false, bsqWalletLookaheadSize);
+                keyChainGroup = new BisqKeyChainGroup(params, new BsqDeterministicKeyChain(seed), false);
             else
-                keyChainGroup = new BisqKeyChainGroup(params, new BsqDeterministicKeyChain(vBtcWallet.getKeyChainSeed()), false, bsqWalletLookaheadSize);
-            vBsqWallet = createOrLoadWallet(vBsqWalletFile, shouldReplayWallet, keyChainGroup, true);
+                keyChainGroup = new BisqKeyChainGroup(params, new BsqDeterministicKeyChain(vBtcWallet.getKeyChainSeed()), false);
+            vBsqWallet = createOrLoadWallet(vBsqWalletFile, shouldReplayWallet, keyChainGroup, true, seed);
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
             vStore = provideBlockStore(chainFile);
@@ -438,12 +407,6 @@ public class WalletConfig extends AbstractIdleService {
             vChain = new BlockChain(params, vStore);
             vPeerGroup = createPeerGroup();
 
-            if (bloomFilterFPRate != -1)
-                vPeerGroup.setBloomFilterFalsePositiveRate(bloomFilterFPRate);
-
-            if (bloomFilterTweak != 0)
-                vPeerGroup.setBloomFilterTweak(bloomFilterTweak);
-
             if (this.userAgent != null)
                 vPeerGroup.setUserAgent(userAgent, version);
 
@@ -475,7 +438,7 @@ public class WalletConfig extends AbstractIdleService {
                 Futures.addCallback(vPeerGroup.startAsync(), new FutureCallback() {
                     @Override
                     public void onSuccess(@Nullable Object result) {
-                        final PeerEventListener listener = downloadListener == null ?
+                        final PeerDataEventListener listener = downloadListener == null ?
                                 new DownloadProgressTracker() : downloadListener;
                         vPeerGroup.startBlockChainDownload(listener);
                     }
@@ -493,8 +456,11 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     private Wallet createOrLoadWallet(File walletFile, boolean shouldReplayWallet,
-                                      BisqKeyChainGroup keyChainGroup, boolean isBsqWallet)
+                                      BisqKeyChainGroup keyChainGroup, boolean isBsqWallet, DeterministicSeed seed)
             throws Exception {
+
+        maybeMoveOldWalletOutOfTheWay(walletFile, seed);
+
         Wallet wallet;
         if (walletFile.exists()) {
             wallet = loadWallet(walletFile, shouldReplayWallet, keyChainGroup.isUseBitcoinDeterministicKeyChain());
@@ -507,6 +473,22 @@ public class WalletConfig extends AbstractIdleService {
         if (useAutoSave) wallet.autosaveToFile(walletFile, 5, TimeUnit.SECONDS, null);
 
         return wallet;
+    }
+
+    private void maybeMoveOldWalletOutOfTheWay(File vWalletFile, DeterministicSeed restoreFromSeed) {
+        if (restoreFromSeed == null) return;
+        if (!vWalletFile.exists()) return;
+        int counter = 1;
+        File newName;
+        do {
+            newName = new File(vWalletFile.getParent(), "Backup " + counter + " for " + vWalletFile.getName());
+            counter++;
+        } while (newName.exists());
+        log.info("Renaming old wallet file {} to {}", vWalletFile, newName);
+        if (!vWalletFile.renameTo(newName)) {
+            // This should not happen unless something is really messed up.
+            throw new RuntimeException("Failed to rename wallet for restore");
+        }
     }
 
     private Wallet loadWallet(File walletFile, boolean shouldReplayWallet, boolean useBitcoinDeterministicKeyChain) throws Exception {

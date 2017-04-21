@@ -32,7 +32,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.uri.BitcoinURI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,8 +155,7 @@ public class AddressTextField extends AnchorPane {
             log.warn("Amount must not be negative");
             setAmountAsCoin(Coin.ZERO);
         }
-
-        return address.get() != null ? BitcoinURI.convertToBitcoinURI(address.get(), amountAsCoin.get(),
-                paymentLabel.get(), null) : "";
+        return GUIUtil.getBitcoinURI(address.get(), amountAsCoin.get(),
+                paymentLabel.get());
     }
 }

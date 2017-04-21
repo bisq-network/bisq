@@ -31,6 +31,8 @@ import org.bitcoinj.core.*;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.wallet.SendRequest;
+import org.bitcoinj.wallet.Wallet;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -201,14 +203,16 @@ public class BtcWalletService extends WalletService {
                 tx.addOutput(forcedChangeValue, changeAddress);
             }
 
-            Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+            SendRequest sendRequest = SendRequest.forTx(tx);
             sendRequest.shuffleOutputs = false;
             sendRequest.aesKey = aesKey;
             // signInputs needs to be false as it would try to sign all inputs (BSQ inputs are not in this wallet)
             sendRequest.signInputs = false;
-            sendRequest.ensureMinRequiredFee = false;
-            sendRequest.feePerKb = Coin.ZERO;
+
             sendRequest.fee = txFeePerByte.multiply(txSizeWithUnsignedInputs + sigSizePerInput * numInputs);
+            sendRequest.feePerKb = Coin.ZERO;
+            sendRequest.ensureMinRequiredFee = false;
+
             sendRequest.coinSelector = coinSelector;
             sendRequest.changeAddress = changeAddress;
             wallet.completeTx(sendRequest);
@@ -461,7 +465,7 @@ public class BtcWalletService extends WalletService {
                         int counter = 0;
                         int txSize = 0;
                         Transaction tx;
-                        Wallet.SendRequest sendRequest;
+                        SendRequest sendRequest;
                         Coin txFeeForWithdrawalPerByte = getTxFeeForWithdrawalPerByte();
                         do {
                             counter++;
@@ -472,9 +476,10 @@ public class BtcWalletService extends WalletService {
                             newTransaction.clearOutputs();
                             newTransaction.addOutput(amount.subtract(fee), toAddress);
 
-                            sendRequest = Wallet.SendRequest.forTx(newTransaction);
+                            sendRequest = SendRequest.forTx(newTransaction);
                             sendRequest.fee = fee;
                             sendRequest.feePerKb = Coin.ZERO;
+                            sendRequest.ensureMinRequiredFee = false;
                             sendRequest.aesKey = aesKey;
                             sendRequest.coinSelector = new BtcCoinSelector(toAddress);
                             sendRequest.changeAddress = toAddress;
@@ -491,9 +496,10 @@ public class BtcWalletService extends WalletService {
 
                         Wallet.SendResult sendResult = null;
                         try {
-                            sendRequest = Wallet.SendRequest.forTx(newTransaction);
+                            sendRequest = SendRequest.forTx(newTransaction);
                             sendRequest.fee = fee;
                             sendRequest.feePerKb = Coin.ZERO;
+                            sendRequest.ensureMinRequiredFee = false;
                             sendRequest.aesKey = aesKey;
                             sendRequest.coinSelector = new BtcCoinSelector(toAddress);
                             sendRequest.changeAddress = toAddress;
@@ -506,9 +512,10 @@ public class BtcWalletService extends WalletService {
                             newTransaction.clearOutputs();
                             newTransaction.addOutput(amount, toAddress);
 
-                            sendRequest = Wallet.SendRequest.forTx(newTransaction);
+                            sendRequest = SendRequest.forTx(newTransaction);
                             sendRequest.fee = fee;
                             sendRequest.feePerKb = Coin.ZERO;
+                            sendRequest.ensureMinRequiredFee = false;
                             sendRequest.aesKey = aesKey;
                             sendRequest.coinSelector = new BtcCoinSelector(toAddress, false);
                             sendRequest.changeAddress = toAddress;
@@ -584,7 +591,7 @@ public class BtcWalletService extends WalletService {
                 if (fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
                     fee = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
 
-                Wallet.SendRequest sendRequest = getSendRequest(fromAddress, toAddress, amount, fee, aesKey, context);
+                SendRequest sendRequest = getSendRequest(fromAddress, toAddress, amount, fee, aesKey, context);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
                 txSize = tx.bitcoinSerialize().length;
@@ -634,7 +641,7 @@ public class BtcWalletService extends WalletService {
                 fee = txFeeForWithdrawalPerByte.multiply(txSize);
                 if (fee.compareTo(Transaction.REFERENCE_DEFAULT_MIN_TX_FEE) < 0)
                     fee = Transaction.REFERENCE_DEFAULT_MIN_TX_FEE;
-                Wallet.SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, fee, null, aesKey);
+                SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, fee, null, aesKey);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
                 txSize = tx.bitcoinSerialize().length;
@@ -664,7 +671,7 @@ public class BtcWalletService extends WalletService {
                             AddressEntry.Context context,
                             FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
-        Wallet.SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
+        SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
@@ -681,7 +688,7 @@ public class BtcWalletService extends WalletService {
                                                 FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
 
-        Wallet.SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, receiverAmount, fee, changeAddress, aesKey);
+        SendRequest request = getSendRequestForMultipleAddresses(fromAddresses, toAddress, receiverAmount, fee, changeAddress, aesKey);
         Wallet.SendResult sendResult = wallet.sendCoins(request);
         Futures.addCallback(sendResult.broadcastComplete, callback);
 
@@ -689,21 +696,22 @@ public class BtcWalletService extends WalletService {
         return sendResult.tx.getHashAsString();
     }
 
-    private Wallet.SendRequest getSendRequest(String fromAddress,
-                                              String toAddress,
-                                              Coin amount,
-                                              Coin fee,
-                                              @Nullable KeyParameter aesKey,
-                                              AddressEntry.Context context) throws AddressFormatException,
+    private SendRequest getSendRequest(String fromAddress,
+                                       String toAddress,
+                                       Coin amount,
+                                       Coin fee,
+                                       @Nullable KeyParameter aesKey,
+                                       AddressEntry.Context context) throws AddressFormatException,
             AddressEntryException {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(amount, fee),
                 "The amount is too low (dust limit).");
         tx.addOutput(amount.subtract(fee), new Address(params, toAddress));
 
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+        SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;
         sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
         sendRequest.aesKey = aesKey;
         sendRequest.shuffleOutputs = false;
         Optional<AddressEntry> addressEntry = findAddressEntry(fromAddress, context);
@@ -717,21 +725,22 @@ public class BtcWalletService extends WalletService {
         return sendRequest;
     }
 
-    private Wallet.SendRequest getSendRequestForMultipleAddresses(Set<String> fromAddresses,
-                                                                  String toAddress,
-                                                                  Coin amount,
-                                                                  Coin fee,
-                                                                  @Nullable String changeAddress,
-                                                                  @Nullable KeyParameter aesKey) throws
+    private SendRequest getSendRequestForMultipleAddresses(Set<String> fromAddresses,
+                                                           String toAddress,
+                                                           Coin amount,
+                                                           Coin fee,
+                                                           @Nullable String changeAddress,
+                                                           @Nullable KeyParameter aesKey) throws
             AddressFormatException, AddressEntryException {
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(amount),
                 "The amount is too low (dust limit).");
         tx.addOutput(amount.subtract(fee), new Address(params, toAddress));
 
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+        SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;
         sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
         sendRequest.aesKey = aesKey;
         sendRequest.shuffleOutputs = false;
         Set<AddressEntry> addressEntries = fromAddresses.stream()

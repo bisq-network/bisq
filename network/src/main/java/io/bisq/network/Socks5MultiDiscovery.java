@@ -69,11 +69,10 @@ public class Socks5MultiDiscovery implements PeerDiscovery {
      * Returns an array containing all the Bitcoin nodes that have been discovered.
      */
     @Override
-    public InetSocketAddress[] getPeers(long timeoutValue, TimeUnit timeoutUnit) throws PeerDiscoveryException {
+    public InetSocketAddress[] getPeers(long services, long timeoutValue, TimeUnit timeoutUnit) throws PeerDiscoveryException {
         ArrayList<InetSocketAddress> list = new ArrayList<>();
-
         for (PeerDiscovery discovery : discoveryList) {
-            list.addAll(Arrays.asList(discovery.getPeers(timeoutValue, timeoutUnit)));
+            list.addAll(Arrays.asList(discovery.getPeers(services, timeoutValue, timeoutUnit)));
         }
 
         return list.toArray(new InetSocketAddress[list.size()]);

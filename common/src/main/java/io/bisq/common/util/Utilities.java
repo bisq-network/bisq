@@ -395,13 +395,6 @@ public class Utilities {
         Thread.currentThread().setName(name + "-" + new Random().nextInt(10000));
     }
 
-    public static void overwriteWithRandomBytes(byte[] bytes) {
-        Random random = new Random();
-        for (int i = 0; i < bytes.length; i++) {
-            bytes[i] = (byte) random.nextInt(Integer.MAX_VALUE);
-        }
-    }
-
     public static boolean isDirectory(String path) {
         return new File(path).isDirectory();
     }
