@@ -35,7 +35,7 @@ rm -r UnlimitedJCEPolicyJDK8 jce_policy-8.zip
 
 echo "Install bitcoinj"
 cd ~
-git clone -b FixBloomFilters https://github.com/bisq/bitcoinj.git
+git clone -b bisq_0.14.4.1 https://github.com/bisq/bitcoinj.git
 cd bitcoinj
 mvn clean install -DskipTests -Dmaven.javadoc.skip=true
 

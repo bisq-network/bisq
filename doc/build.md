@@ -92,7 +92,7 @@ Build bitcoinj and btcd-cli4j fork
 > _**NOTE:**
 Bitcoinj versions later than 0.13.1 has removed support for Java serialisation.
 Version 0.13.1 is also missing support for Java serialisation in MainNetParams (HttpDiscovery.Details).
-We removed usage of Cartographer/HttpDiscovery in our [fork of version 0.13.1.7](https://github.com/bisq/bitcoinj/tree/FixBloomFilters).
+We removed usage of Cartographer/HttpDiscovery in our [fork of version 0.13.1.7](https://github.com/bisq/bitcoinj/tree/bisq_0.14.4.1).
 Beside the Java serialisation issues there are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer.
 Here is a Github issue with background and open tasks regarding [Bloom Filters](https://github.com/bisq/bisq/issues/414)._  Note: use a fresh directory, this should not be done inside the bisq folder.
 
@@ -100,7 +100,7 @@ Btcd-cli4j is used for RPC communication to a local Bitcoin Core node.
 TODO: remove if not used in production
 
     $ cd ..
-    $ git clone -b FixBloomFilters https://github.com/bisq/bitcoinj.git
+    $ git clone -b bisq_0.14.4.1 https://github.com/bisq/bitcoinj.git
     $ cd bitcoinj
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
     
