@@ -83,9 +83,8 @@ public class BsqChainState implements Persistable {
     private static final String REG_TEST_GENESIS_TX_ID = "389d631bb48bd2f74fcc88c3506e2b03114b18b4e396c3bd2b8bb7d7ff9ee0d6";
     private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 1441;
     // TEST NET
-    // https://testnet.blockexplorer.com/block/00000000f1cd94c6ccc458a922f2a42c975c3447180f0db1e56322a26ab3f0ec
-    private static final String TEST_NET_GENESIS_TX_ID = "8853756990acfc1784aac1ee1a50d331c915a46876bb4ad98f260ef2d35da845";
-    private static final int TEST_NET_GENESIS_BLOCK_HEIGHT = 327626; //Mar 16, 2015 
+    private static final String TEST_NET_GENESIS_TX_ID = "9ba05c1923b414c8be53adcb95d7a06b27d722373d17ae812bd325c22cd8d4bb";
+    private static final int TEST_NET_GENESIS_BLOCK_HEIGHT = 1119480; 
     // block 376078 has 2843 recursions and caused once a StackOverflowError, a second run worked. Took 1,2 sec.
 
 

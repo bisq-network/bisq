@@ -88,24 +88,17 @@ At IntelliJ 14 you need to edit the idea.properties in the app container:
 
 Build bitcoinj and btcd-cli4j fork
 -----------------
-### 3. Install bitcoinj fork
-> _**NOTE:**
-Bitcoinj versions later than 0.13.1 has removed support for Java serialisation.
-Version 0.13.1 is also missing support for Java serialisation in MainNetParams (HttpDiscovery.Details).
-We removed usage of Cartographer/HttpDiscovery in our [fork of version 0.13.1.7](https://github.com/bisq/bitcoinj/tree/bisq_0.14.4.1).
-Beside the Java serialisation issues there are [privacy concerns](http://bitcoin-development.narkive.com/hczWIAby/bitcoin-development-cartographer#post3) regarding Cartographer.
-Here is a Github issue with background and open tasks regarding [Bloom Filters](https://github.com/bisq/bisq/issues/414)._  Note: use a fresh directory, this should not be done inside the bisq folder.
-
-Btcd-cli4j is used for RPC communication to a local Bitcoin Core node.
-TODO: remove if not used in production
+### 3. Install BitcoinJ fork (bisq_0.14.4.1) and Btcd-cli4j
+Btcd-cli4j is used for RPC communication to a local Bitcoin Core node for verifying the BSQ transactions.
+It is not needed for a normal user to run such a "full node" but for the build it is required.
 
     $ cd ..
-    $ git clone -b bisq_0.14.4.1 https://github.com/bisq/bitcoinj.git
+    $ git clone -b bisq_0.14.4.1 https://github.com/bitsquare/bitcoinj.git
     $ cd bitcoinj
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
     
     $ cd ..
-    $ git clone https://github.com/bisq/btcd-cli4j.git
+    $ git clone https://github.com/bitsquare/btcd-cli4j.git
     $ cd btcd-cli4j
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
     
@@ -162,6 +155,14 @@ Build binaries
 -----------------
 
 If you want to build the binaries check out the build scripts under the package directory.
+
+
+DAO full node
+-----------------
+If you want to run your own BSQ transaction verification node you have to run Bitcoin Core with RPC enabled and 
+use dedicated program arguments for the bisq node.
+See the rpc.md doc in the same directory.
+
 
 Development mode
 -----------------
