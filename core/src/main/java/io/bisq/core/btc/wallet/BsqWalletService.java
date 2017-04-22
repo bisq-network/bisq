@@ -276,7 +276,7 @@ public class BsqWalletService extends WalletService {
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
-        tx.addOutput(receiverAmount, new Address(params, receiverAddress));
+        tx.addOutput(receiverAmount, Address.fromBase58(params, receiverAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = Coin.ZERO;
@@ -320,7 +320,7 @@ public class BsqWalletService extends WalletService {
 
     protected Set<Address> getAllAddressesFromActiveKeys() throws UTXOProviderException {
         return wallet.getActiveKeychain().getLeafKeys().stream().
-                map(key -> new Address(params, key.getPubKeyHash())).
+                map(key -> Address.fromP2SHHash(params, key.getPubKeyHash())).
                 collect(Collectors.toSet());
     }
 

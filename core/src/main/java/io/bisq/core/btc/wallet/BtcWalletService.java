@@ -706,7 +706,7 @@ public class BtcWalletService extends WalletService {
         Transaction tx = new Transaction(params);
         Preconditions.checkArgument(Restrictions.isAboveDust(amount, fee),
                 "The amount is too low (dust limit).");
-        tx.addOutput(amount.subtract(fee), new Address(params, toAddress));
+        tx.addOutput(amount.subtract(fee), Address.fromBase58(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;
@@ -735,7 +735,7 @@ public class BtcWalletService extends WalletService {
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(amount),
                 "The amount is too low (dust limit).");
-        tx.addOutput(amount.subtract(fee), new Address(params, toAddress));
+        tx.addOutput(amount.subtract(fee), Address.fromBase58(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;

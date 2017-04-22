@@ -166,7 +166,7 @@ public class TradeWalletService {
         log.debug("feeReceiverAddresses " + feeReceiverAddresses);
 
         Transaction tradingFeeTx = new Transaction(params);
-        tradingFeeTx.addOutput(tradingFee, new Address(params, feeReceiverAddresses));
+        tradingFeeTx.addOutput(tradingFee, Address.fromBase58(params, feeReceiverAddresses));
         // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
         tradingFeeTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
 
@@ -482,7 +482,7 @@ public class TradeWalletService {
         TransactionOutput takerTransactionOutput = null;
         if (takerChangeOutputValue > 0 && takerChangeAddressString != null)
             takerTransactionOutput = new TransactionOutput(params, preparedDepositTx, Coin.valueOf(takerChangeOutputValue),
-                    new Address(params, takerChangeAddressString));
+                    Address.fromBase58(params, takerChangeAddressString));
 
         if (makerIsBuyer) {
             // Add optional buyer outputs
@@ -810,9 +810,9 @@ public class TradeWalletService {
         Transaction preparedPayoutTx = new Transaction(params);
         preparedPayoutTx.addInput(p2SHMultiSigOutput);
         if (buyerPayoutAmount.isGreaterThan(Coin.ZERO))
-            preparedPayoutTx.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
+            preparedPayoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
         if (sellerPayoutAmount.isGreaterThan(Coin.ZERO))
-            preparedPayoutTx.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
+            preparedPayoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
 
         // take care of sorting!
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
@@ -879,9 +879,9 @@ public class TradeWalletService {
         Transaction payoutTx = new Transaction(params);
         payoutTx.addInput(p2SHMultiSigOutput);
         if (buyerPayoutAmount.isGreaterThan(Coin.ZERO))
-            payoutTx.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
+            payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
         if (sellerPayoutAmount.isGreaterThan(Coin.ZERO))
-            payoutTx.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
+            payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
 
         // take care of sorting!
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
@@ -964,11 +964,11 @@ public class TradeWalletService {
         payoutTx.addInput(new TransactionInput(params, depositTx, p2SHMultiSigOutputScript.getProgram(), new TransactionOutPoint(params, 0, spendTxHash), msOutput));
 
         if (buyerPayoutAmount.isGreaterThan(Coin.ZERO))
-            payoutTx.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
+            payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
         if (sellerPayoutAmount.isGreaterThan(Coin.ZERO))
-            payoutTx.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
+            payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
         if (arbitratorPayoutAmount.isGreaterThan(Coin.ZERO))
-            payoutTx.addOutput(arbitratorPayoutAmount, new Address(params, arbitratorAddressString));
+            payoutTx.addOutput(arbitratorPayoutAmount, Address.fromBase58(params, arbitratorAddressString));
 
         // take care of sorting!
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
@@ -1139,8 +1139,8 @@ public class TradeWalletService {
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction transaction = new Transaction(params);
         transaction.addInput(p2SHMultiSigOutput);
-        transaction.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
-        transaction.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
+        transaction.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
+        transaction.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
         return transaction;
     }
 

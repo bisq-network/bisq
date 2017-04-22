@@ -22,7 +22,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
-import io.bisq.gui.components.AddressTextField;
+import io.bisq.gui.components.BsqAddressTextField;
 import io.bisq.gui.components.InputTextField;
 import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
 import io.bisq.gui.util.BsqFormatter;
@@ -38,7 +38,7 @@ import static io.bisq.gui.util.FormBuilder.*;
 @FxmlView
 public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
-    private AddressTextField addressTextField;
+    private BsqAddressTextField addressTextField;
     private InputTextField amountTextField;
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
@@ -65,12 +65,13 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     public void initialize() {
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
-        addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.wallet.receive.fundYourWallet"), Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.wallet.receive.fundYourWallet"), Layout.GROUP_DISTANCE);
 
-        addressTextField = addLabelAddressTextField(root, ++gridRow, Res.getWithCol("shared.address")).second;
+        addressTextField = addLabelBsqAddressTextField(root, gridRow, Res.getWithCol("shared.address"),
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         addressTextField.setPaymentLabel(paymentLabelString);
 
-        amountTextField = addLabelInputTextField(root, ++gridRow, Res.get("dao.wallet.receive.amountOptional")).second;
+        amountTextField = addLabelInputTextField(root, ++gridRow, Res.getWithCol("dao.wallet.receive.amountOptional")).second;
         if (DevEnv.DEV_MODE)
             amountTextField.setText("10");
     }

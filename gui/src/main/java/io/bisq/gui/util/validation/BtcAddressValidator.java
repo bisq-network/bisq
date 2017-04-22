@@ -42,7 +42,7 @@ public final class BtcAddressValidator extends InputValidator {
 
     private ValidationResult validateBtcAddress(String input) {
         try {
-            new Address(WalletUtils.getParameters(), input);
+            Address.fromBase58(WalletUtils.getParameters(), input);
             return new ValidationResult(true);
         } catch (AddressFormatException e) {
             return new ValidationResult(false, Res.get("validation.btc.invalidFormat"));

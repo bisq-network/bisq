@@ -104,7 +104,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
 
         if (DevEnv.DEV_MODE) {
             amountInputTextField.setText("2.730"); // 2730 is dust limit
-            receiversAddressInputTextField.setText("mqLgu2GH1pZntcsuugNtZuczLfZx8P5sdK");
+            receiversAddressInputTextField.setText("BmqLgu2GH1pZntcsuugNtZuczLfZx8P5sdK");
         }
 
         sendButton.setOnAction((event) -> {
