@@ -392,22 +392,27 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                         txType = item.getTxType().get();
                                     else
                                         txType = item.getConfirmations() == 0 ? TxType.UNVERIFIED : TxType.INVALID;
+
+                                    String toolTipText = Res.get("dao.tx.type.enum." + txType.name());
                                     switch (txType) {
                                         case UNVERIFIED:
-                                            awesomeIcon = AwesomeIcon.QUESTION;
-                                            style = "dao-tx-type-invalid-icon";
+                                            awesomeIcon = AwesomeIcon.QUESTION_SIGN;
+                                            style = "dao-tx-type-unverified-icon";
                                             break;
                                         case INVALID:
-                                            awesomeIcon = AwesomeIcon.REMOVE;
+                                            awesomeIcon = AwesomeIcon.WARNING_SIGN;
                                             style = "dao-tx-type-invalid-icon";
                                             break;
                                         case GENESIS:
                                             awesomeIcon = AwesomeIcon.ROCKET;
-                                            style = "dao-tx-type-default-icon";
+                                            style = "dao-tx-type-genesis-icon";
                                             break;
-                                        case SEND_BSQ:
-                                            awesomeIcon = AwesomeIcon.RANDOM;//EXCHANGE
-                                            style = "dao-tx-type-default-icon";
+                                        case TRANSFER_BSQ:
+                                            awesomeIcon = item.isReceived() ? AwesomeIcon.SIGNIN : AwesomeIcon.SIGNOUT;
+                                            style = item.isReceived() ? "dao-tx-type-received-funds-icon" : "dao-tx-type-sent-funds-icon";
+                                            toolTipText = item.isReceived() ?
+                                                    Res.get("dao.tx.type.enum.received." + txType.name()) :
+                                                    Res.get("dao.tx.type.enum.sent." + txType.name());
                                             break;
                                         case PAY_TRADE_FEE:
                                             awesomeIcon = AwesomeIcon.TICKET;
@@ -423,16 +428,17 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                             break;
                                         case ISSUANCE:
                                             awesomeIcon = AwesomeIcon.TINT;
-                                            style = "dao-tx-type-default-icon";
+                                            style = "dao-tx-type-issuance-icon";
                                             break;
                                         default:
-                                            awesomeIcon = AwesomeIcon.REMOVE;
-                                            style = "dao-tx-type-invalid-icon";
+                                            awesomeIcon = AwesomeIcon.QUESTION_SIGN;
+                                            style = "dao-tx-type-unverified-icon";
                                             break;
                                     }
                                     Label label = AwesomeDude.createIconLabel(awesomeIcon);
                                     label.getStyleClass().add(style);
-                                    label.setTooltip(new Tooltip(Res.get("dao.tx.type.enum." + txType.name())));
+
+                                    label.setTooltip(new Tooltip(toolTipText));
                                     setGraphic(label);
                                 } else {
                                     setGraphic(null);

@@ -362,6 +362,8 @@ public class WalletConfig extends AbstractIdleService {
                 keyChainGroup = new BisqKeyChainGroup(params, true);
             vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayWallet, keyChainGroup, false, seed);
 
+            vBtcWallet.allowSpendingUnconfirmedTransactions();
+           
             // BSQ walelt
             vBsqWalletFile = new File(directory, bsqWalletFileName);
             if (seed != null)

@@ -23,7 +23,7 @@ public enum JsonTxType {
     UNVERIFIED("Unverified"),
     INVALID("Invalid"),
     GENESIS("Genesis"),
-    SEND_BSQ("Send BSQ"),
+    TRANSFER_BSQ("Transfer BSQ"),
     PAY_TRADE_FEE("Pay trade fee"),
     COMPENSATION_REQUEST("Compensation request"),
     VOTE("Vote"),

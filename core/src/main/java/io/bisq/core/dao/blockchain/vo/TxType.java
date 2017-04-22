@@ -21,7 +21,7 @@ public enum TxType {
     UNVERIFIED,
     INVALID,
     GENESIS,
-    SEND_BSQ,
+    TRANSFER_BSQ,
     PAY_TRADE_FEE,
     COMPENSATION_REQUEST,
     VOTE,

@@ -298,7 +298,7 @@ public class BsqParser {
                     txOutput.setVerified(true);
                     txOutput.setUnspent(true);
                     bsqChainState.addUnspentTxOutput(txOutput);
-                    tx.setTxType(TxType.SEND_BSQ);
+                    tx.setTxType(TxType.TRANSFER_BSQ);
                     txOutput.setTxOutputType(TxOutputType.BSQ_OUTPUT);
 
                     availableValue -= txOutputValue;

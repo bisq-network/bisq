@@ -218,13 +218,53 @@ bg color of non edit textFields: fafafa
     -fx-cursor: hand;
 }
 
-.dao-tx-type-invalid-icon {
+
+.dao-tx-type-unverified-icon, 
+.dao-tx-type-unverified-icon:hover {
+    -fx-text-fill: -bs-yellow;
+    -fx-cursor: hand;
+}
+
+.dao-tx-type-invalid-icon,
+.dao-tx-type-invalid-icon:hover {
     -fx-text-fill: -bs-error-red;
     -fx-cursor: hand;
 }
 
-.dao-tx-type-default-icon {
-    -fx-text-fill: #666;
+.dao-tx-type-default-icon,
+.dao-tx-type-default-icon:hover {
+    -fx-text-fill: -bs-grey;
+    -fx-cursor: hand;
+}
+
+.dao-tx-type-genesis-icon,
+.dao-tx-type-genesis-icon:hover {
+    -fx-text-fill: -fx-accent;
+    -fx-cursor: hand;
+}
+
+
+.dao-tx-type-received-funds-icon,
+.dao-tx-type-received-funds-icon:hover {
+    -fx-text-fill: -bs-green-soft;
+    -fx-cursor: hand;
+}
+
+.dao-tx-type-sent-funds-icon,
+.dao-tx-type-sent-funds-icon:hover {
+    -fx-text-fill: -bs-red-soft;
+    -fx-cursor: hand;
+}
+
+.dao-tx-type-default-icon,
+.dao-tx-type-default-icon:hover {
+    -fx-text-fill: -bs-grey;
+    -fx-cursor: hand;
+}
+
+.dao-tx-type-issuance-icon,
+.dao-tx-type-issuance-icon:hover {
+    -fx-text-fill: -bs-green;
     -fx-cursor: hand;
 }
 

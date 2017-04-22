@@ -366,6 +366,10 @@ public abstract class WalletService {
         return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
     }
 
+    public Coin getEstimatedBalance() {
+        return wallet != null ? wallet.getBalance(Wallet.BalanceType.ESTIMATED) : Coin.ZERO;
+    }
+
     public Coin getBalanceForAddress(Address address) {
         return wallet != null ? getBalance(wallet.calculateAllSpendCandidates(), address) : Coin.ZERO;
     }
