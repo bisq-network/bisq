@@ -55,6 +55,8 @@ public final class Mediator implements StoragePayload {
     private final byte[] registrationPubKey;
     @Nullable
     private final String emailAddress;
+    @Nullable
+    private final String info;
 
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
@@ -70,11 +72,13 @@ public final class Mediator implements StoragePayload {
                     byte[] registrationPubKey,
                     String registrationSignature,
                     @Nullable String emailAddress,
+                    @Nullable String info,
                     @Nullable Map<String, String> extraDataMap) {
         this.nodeAddress = nodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;
         this.emailAddress = emailAddress;
+        this.info = info;
         this.registrationDate = registrationDate.getTime();
         this.registrationPubKey = registrationPubKey;
         this.registrationSignature = registrationSignature;
@@ -102,6 +106,7 @@ public final class Mediator implements StoragePayload {
                 .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
         Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
+        Optional.ofNullable(info).ifPresent(builder::setInfo);
         return PB.StoragePayload.newBuilder().setMediator(builder).build();
     }
 

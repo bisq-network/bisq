@@ -509,6 +509,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 strings = mediator.getLanguageCodesList().stream().collect(Collectors.toList());
                 date = new Date(mediator.getRegistrationDate());
                 emailAddress = mediator.getEmailAddress().isEmpty() ? null : mediator.getEmailAddress();
+                String info = mediator.getInfo().isEmpty() ? null : mediator.getInfo();
                 storagePayload = new Mediator(ProtoUtil.getNodeAddress(mediator.getNodeAddress()),
                         ProtoUtil.getPubKeyRing(mediator.getPubKeyRing()),
                         strings,
@@ -516,6 +517,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                         mediator.getRegistrationPubKey().toByteArray(),
                         mediator.getRegistrationSignature(),
                         emailAddress,
+                        info,
                         extraDataMapMap);
                 break;
             case FILTER:

@@ -233,7 +233,8 @@ message Mediator {
     bytes registration_pub_key = 5;
     PubKeyRing pub_key_ring = 6;
     string email_address = 7;
-    map<string, string> extra_data_map = 8;
+    string info = 8;
+    map<string, string> extra_data_map = 9;
 }
 
 message Filter {
