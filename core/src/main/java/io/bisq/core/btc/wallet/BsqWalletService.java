@@ -28,7 +28,6 @@ import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
@@ -54,7 +53,6 @@ public class BsqWalletService extends WalletService {
 
     private final BsqCoinSelector bsqCoinSelector;
     private BsqChainState bsqChainState;
-    @Getter
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
     private Coin availableBsqBalance = Coin.ZERO;
@@ -187,8 +185,13 @@ public class BsqWalletService extends WalletService {
     // BSQ TransactionOutputs and Transactions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public ObservableList<Transaction> getWalletTransactions() {
+        return walletTransactions;
+    }
+    
     private void updateBsqWalletTransactions() {
-        walletTransactions.setAll(getBsqWalletTransactions());
+        walletTransactions.setAll(getTransactions(false));
+        // walletTransactions.setAll(getBsqWalletTransactions());
         updateBsqBalance();
     }
 
@@ -199,7 +202,7 @@ public class BsqWalletService extends WalletService {
                 .collect(Collectors.toSet());
     }
 
-    public Set<Transaction> getInvalidBsqTransactions() {
+    public Set<Transaction> getUnverifiedBsqTransactions() {
         Set<Transaction> bsqWalletTransactions = getBsqWalletTransactions();
         Set<Transaction> walletTxs = getTransactions(false).stream().collect(Collectors.toSet());
         checkArgument(walletTxs.size() >= bsqWalletTransactions.size(),
@@ -330,7 +333,6 @@ public class BsqWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Address getUnusedAddress() {
-        //TODO check if current address was used, otherwise get fresh
-        return wallet.freshReceiveAddress();
+        return wallet.currentReceiveAddress();
     }
 }

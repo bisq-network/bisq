@@ -29,10 +29,7 @@ import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
-import io.bisq.core.dao.blockchain.vo.BsqBlock;
-import io.bisq.core.dao.blockchain.vo.Tx;
-import io.bisq.core.dao.blockchain.vo.TxIdIndexTuple;
-import io.bisq.core.dao.blockchain.vo.TxOutput;
+import io.bisq.core.dao.blockchain.vo.*;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
@@ -83,8 +80,8 @@ public class BsqChainState implements Persistable {
     // block 450000 2017-01-25
 
     // REG TEST
-    private static final String REG_TEST_GENESIS_TX_ID = "3bc7bc9484e112ec8ddd1a1c984379819245ac463b9ce40fa8b5bf771c0f9236";
-    private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 102;
+    private static final String REG_TEST_GENESIS_TX_ID = "389d631bb48bd2f74fcc88c3506e2b03114b18b4e396c3bd2b8bb7d7ff9ee0d6";
+    private static final int REG_TEST_GENESIS_BLOCK_HEIGHT = 1441;
     // TEST NET
     // https://testnet.blockexplorer.com/block/00000000f1cd94c6ccc458a922f2a42c975c3447180f0db1e56322a26ab3f0ec
     private static final String TEST_NET_GENESIS_TX_ID = "8853756990acfc1784aac1ee1a50d331c915a46876bb4ad98f260ef2d35da845";
@@ -302,6 +299,12 @@ public class BsqChainState implements Persistable {
     public boolean hasTxBurntFee(String txId) {
         return lock.read(() -> {
             return getTx(txId).map(Tx::getBurntFee).filter(fee -> fee > 0).isPresent();
+        });
+    }
+
+    public Optional<TxType> getTxType(String txId) {
+        return lock.read(() -> {
+            return getTx(txId).map(Tx::getTxType);
         });
     }
 

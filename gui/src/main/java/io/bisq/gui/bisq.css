@@ -218,6 +218,17 @@ bg color of non edit textFields: fafafa
     -fx-cursor: hand;
 }
 
+.dao-tx-type-invalid-icon {
+    -fx-text-fill: -bs-error-red;
+    -fx-cursor: hand;
+}
+
+.dao-tx-type-default-icon {
+    -fx-text-fill: #666;
+    -fx-cursor: hand;
+}
+
+
 /*******************************************************************************
  *                                                                             *
  * Tooltip                                                                     *

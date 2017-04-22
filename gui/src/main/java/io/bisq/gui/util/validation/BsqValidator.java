@@ -103,7 +103,6 @@ public class BsqValidator extends NumberValidator {
     protected ValidationResult validateIfSufficientAvailableBalance(String input) {
         try {
             final Coin coin = bsqFormatter.parseToCoin(input);
-            log.error("coin.compareTo(availableBalance) " + coin.compareTo(availableBalance));
             if (availableBalance != null && coin.compareTo(availableBalance) > 0)
                 return new ValidationResult(false, Res.get("validation.bsq.insufficientBalance",
                         bsqFormatter.formatCoinWithCode(availableBalance)));

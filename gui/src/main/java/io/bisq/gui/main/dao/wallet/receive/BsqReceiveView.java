@@ -83,7 +83,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
         amountTextFieldSubscription = EasyBind.subscribe(amountTextField.textProperty(), t -> {
             addressTextField.setAmountAsCoin(bsqFormatter.parseToCoin(t));
         });
-        addressTextField.setAddress(bsqFormatter.getBsqAddressStringFromAddress(bsqWalletService.freshReceiveAddress()));
+        addressTextField.setAddress(bsqFormatter.getBsqAddressStringFromAddress(bsqWalletService.getUnusedAddress()));
     }
 
     @Override

@@ -52,11 +52,9 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public Address getAddressFromBsqAddress(String encoded) {
-        if (useBsqAddressFormat) {
-            log.error("encoded " + encoded);
+        if (useBsqAddressFormat) 
             encoded = encoded.substring(prefix.length(), encoded.length());
-            log.error("encoded " + encoded);
-        }
+
         try {
             return Address.fromBase58(WalletUtils.getParameters(), encoded);
         } catch (AddressFormatException e) {

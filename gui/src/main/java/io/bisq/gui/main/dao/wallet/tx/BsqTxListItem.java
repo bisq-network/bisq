@@ -22,10 +22,12 @@ import io.bisq.core.btc.listeners.TxConfidenceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.WalletUtils;
+import io.bisq.core.dao.blockchain.vo.TxType;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.util.BsqFormatter;
 import io.bisq.gui.util.GUIUtil;
 import javafx.scene.control.Tooltip;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -35,12 +37,14 @@ import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.util.Date;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
 @ToString
 @Slf4j
+@EqualsAndHashCode
 class BsqTxListItem {
     @Getter
     private final Transaction transaction;
@@ -61,6 +65,8 @@ class BsqTxListItem {
     @Getter
     private boolean received;
     @Getter
+    private Optional<TxType> txType;
+    @Getter
     private boolean isBurnedBsqTx;
     private BsqFormatter bsqFormatter;
     @Getter
@@ -71,11 +77,13 @@ class BsqTxListItem {
     public BsqTxListItem(Transaction transaction,
                          BsqWalletService bsqWalletService,
                          BtcWalletService btcWalletService,
+                         Optional<TxType> txType,
                          boolean isBurnedBsqTx,
                          BsqFormatter bsqFormatter) {
         this.transaction = transaction;
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
+        this.txType = txType;
         this.isBurnedBsqTx = isBurnedBsqTx;
         this.bsqFormatter = bsqFormatter;
 
