@@ -274,14 +274,17 @@ public class SepaForm extends PaymentMethodForm {
             }
 
             boolean selected;
-
             if (isEditable && selectedCurrency != null) {
-                selected = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode().equals(selectedCurrency.getCode());
 
-                if (selected)
-                    sepaAccount.addAcceptedCountry(countryCode);
-                else
-                    sepaAccount.removeAcceptedCountry(countryCode);
+                // We changed behaviour to auto select all be default
+                // Lets keep the old code in case we want to revert...
+                selected = true;
+                //selected = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode().equals(selectedCurrency.getCode());
+
+                //if (selected)
+                sepaAccount.addAcceptedCountry(countryCode);
+                //else
+                //    sepaAccount.removeAcceptedCountry(countryCode);
             } else {
                 selected = sepaAccount.getAcceptedCountryCodes().contains(countryCode);
             }
