@@ -103,7 +103,7 @@ public class BsqLiteNode extends BsqNode {
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(Connection connection) {
-                log.trace("onSuccess Send " + getBsqBlocksRequest + " to " + peersNodeAddress + " succeeded.");
+                log.info("onSuccess Send " + getBsqBlocksRequest + " to " + peersNodeAddress + " succeeded.");
             }
 
             @Override
@@ -132,7 +132,7 @@ public class BsqLiteNode extends BsqNode {
             GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) msg;
             byte[] bsqBlocksBytes = getBsqBlocksResponse.getBsqBlocksBytes();
             List<BsqBlock> bsqBlockList = Utilities.<ArrayList<BsqBlock>>deserialize(bsqBlocksBytes);
-            log.debug("received msg with {} items", bsqBlockList.size());
+            log.info("received msg with {} items", bsqBlockList.size());
             // Be safe and reset all mutable data in case the provider would not have done it
             bsqBlockList.stream().forEach(BsqBlock::reset);
             bsqLiteNodeExecutor.parseBsqBlocksForLiteNode(bsqBlockList,
@@ -155,7 +155,7 @@ public class BsqLiteNode extends BsqNode {
             BsqBlock bsqBlock = Utilities.<BsqBlock>deserialize(bsqBlockBytes);
             // Be safe and reset all mutable data in case the provider would not have done it
             bsqBlock.reset();
-            log.debug("received broadcastNewBsqBlock bsqBlock {}", bsqBlock);
+            log.info("received broadcastNewBsqBlock bsqBlock {}", bsqBlock);
             if (!bsqChainState.containsBlock(bsqBlock)) {
                 bsqLiteNodeExecutor.parseBsqBlockForLiteNode(bsqBlock,
                         genesisBlockHeight,

@@ -18,7 +18,8 @@
 package io.bisq.core.dao.blockchain.vo;
 
 public enum TxType {
-    UNDEFINED,
+    UNVERIFIED,
+    INVALID,
     GENESIS,
     SEND_BSQ,
     PAY_TRADE_FEE,

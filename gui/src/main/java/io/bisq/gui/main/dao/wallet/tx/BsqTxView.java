@@ -384,47 +384,51 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                             @Override
                             public void updateItem(final BsqTxListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-
                                 if (item != null && !empty) {
-                                    String style = "dao-tx-type-invalid-icon";
-                                    TxType txType = TxType.UNDEFINED;
-                                    AwesomeIcon awesomeIcon = AwesomeIcon.QUESTION;
-                                    if (item.getTxType().isPresent()) {
+                                    String style;
+                                    AwesomeIcon awesomeIcon;
+                                    TxType txType;
+                                    if (item.getTxType().isPresent())
                                         txType = item.getTxType().get();
-                                        switch (txType) {
-                                            case UNDEFINED:
-                                                awesomeIcon = AwesomeIcon.QUESTION;
-                                                style = "dao-tx-type-invalid-icon";
-                                                break;
-                                            case GENESIS:
-                                                awesomeIcon = AwesomeIcon.ROCKET;
-                                                style = "dao-tx-type-default-icon";
-                                                break;
-                                            case SEND_BSQ:
-                                                awesomeIcon = AwesomeIcon.RANDOM;//EXCHANGE
-                                                style = "dao-tx-type-default-icon";
-                                                break;
-                                            case PAY_TRADE_FEE:
-                                                awesomeIcon = AwesomeIcon.TICKET;
-                                                style = "dao-tx-type-default-icon";
-                                                break;
-                                            case COMPENSATION_REQUEST:
-                                                awesomeIcon = AwesomeIcon.UMBRELLA;
-                                                style = "dao-tx-type-default-icon";
-                                                break;
-                                            case VOTE:
-                                                awesomeIcon = AwesomeIcon.THUMBS_UP;
-                                                style = "dao-tx-type-default-icon";
-                                                break;
-                                            case ISSUANCE:
-                                                awesomeIcon = AwesomeIcon.TINT;
-                                                style = "dao-tx-type-default-icon";
-                                                break;
-                                            default:
-                                                awesomeIcon = AwesomeIcon.SIGNIN;
-                                                style = "dao-tx-type-default-icon";
-                                                break;
-                                        }
+                                    else
+                                        txType = item.getConfirmations() == 0 ? TxType.UNVERIFIED : TxType.INVALID;
+                                    switch (txType) {
+                                        case UNVERIFIED:
+                                            awesomeIcon = AwesomeIcon.QUESTION;
+                                            style = "dao-tx-type-invalid-icon";
+                                            break;
+                                        case INVALID:
+                                            awesomeIcon = AwesomeIcon.REMOVE;
+                                            style = "dao-tx-type-invalid-icon";
+                                            break;
+                                        case GENESIS:
+                                            awesomeIcon = AwesomeIcon.ROCKET;
+                                            style = "dao-tx-type-default-icon";
+                                            break;
+                                        case SEND_BSQ:
+                                            awesomeIcon = AwesomeIcon.RANDOM;//EXCHANGE
+                                            style = "dao-tx-type-default-icon";
+                                            break;
+                                        case PAY_TRADE_FEE:
+                                            awesomeIcon = AwesomeIcon.TICKET;
+                                            style = "dao-tx-type-default-icon";
+                                            break;
+                                        case COMPENSATION_REQUEST:
+                                            awesomeIcon = AwesomeIcon.UMBRELLA;
+                                            style = "dao-tx-type-default-icon";
+                                            break;
+                                        case VOTE:
+                                            awesomeIcon = AwesomeIcon.THUMBS_UP;
+                                            style = "dao-tx-type-default-icon";
+                                            break;
+                                        case ISSUANCE:
+                                            awesomeIcon = AwesomeIcon.TINT;
+                                            style = "dao-tx-type-default-icon";
+                                            break;
+                                        default:
+                                            awesomeIcon = AwesomeIcon.REMOVE;
+                                            style = "dao-tx-type-invalid-icon";
+                                            break;
                                     }
                                     Label label = AwesomeDude.createIconLabel(awesomeIcon);
                                     label.getStyleClass().add(style);

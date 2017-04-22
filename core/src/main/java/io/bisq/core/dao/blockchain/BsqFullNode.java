@@ -163,7 +163,7 @@ public class BsqFullNode extends BsqNode {
         if (msg instanceof GetBsqBlocksRequest && connection.getPeersNodeAddressOptional().isPresent()) {
             GetBsqBlocksRequest getBsqBlocksRequest = (GetBsqBlocksRequest) msg;
             final NodeAddress peersNodeAddress = connection.getPeersNodeAddressOptional().get();
-            log.debug("Received getBsqBlocksRequest with data: {} from {}",
+            log.info("Received getBsqBlocksRequest with data: {} from {}",
                     getBsqBlocksRequest.getFromBlockHeight(), peersNodeAddress);
 
             // reset it done in getSerializedResettedBlocksFrom
@@ -174,7 +174,7 @@ public class BsqFullNode extends BsqNode {
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(Connection connection) {
-                    log.trace("onSuccess Send " + bsqBlocksResponse + " to " + peersNodeAddress + " succeeded.");
+                    log.info("onSuccess Send " + bsqBlocksResponse + " to " + peersNodeAddress + " succeeded.");
                 }
 
                 @Override

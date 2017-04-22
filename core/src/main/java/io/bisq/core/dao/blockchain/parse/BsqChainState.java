@@ -198,7 +198,7 @@ public class BsqChainState implements Persistable {
                         block.getTxs().stream().forEach(BsqChainState.this::addTxToMap);
                         chainHeadHeight = block.getHeight();
                         maybeMakeSnapshot();
-                        //printDetails();
+                        printDetails();
                     } else if (!blocks.isEmpty()) {
                         log.warn("addBlock called with a not connecting block:\n" +
                                         "height()={}, hash()={}, head.height()={}, head.hash()={}",
