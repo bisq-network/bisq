@@ -41,14 +41,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import java.io.*;
-import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 // Blocking access to Bitcoin Core via RPC requests
 // See the rpc.md file in the doc directory for more info about the setup.
@@ -84,31 +80,29 @@ public class RpcService {
     }
 
     void setup() throws BsqBlockchainException {
-        long startTs = System.currentTimeMillis();
-        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-        CloseableHttpClient httpProvider = HttpClients.custom().setConnectionManager(cm).build();
-        Properties nodeConfig = new Properties();
-        URL resource = getClass().getClassLoader().getResource("btcRpcConfig.properties");
-        checkNotNull(resource, "btcRpcConfig.properties not found");
-        try (FileInputStream fileInputStream = new FileInputStream(new File(resource.toURI()))) {
-            try (InputStream inputStream = new BufferedInputStream(fileInputStream)) {
-                nodeConfig.load(inputStream);
-                nodeConfig.setProperty("node.bitcoind.rpc.user", rpcUser);
-                nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
-                nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
-                nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
-                BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);
-                daemon = new BtcdDaemonImpl(client);
-                log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
-                this.client = client;
-            } catch (IOException | BitcoindException | CommunicationException e) {
-                if (e instanceof CommunicationException)
-                    log.error("Probably Bitcoin core is not running or the rpc port is not set correctly. rpcPort=" + rpcPort);
-                log.error(e.toString());
-                e.printStackTrace();
-                log.error(e.getCause() != null ? e.getCause().toString() : "e.getCause()=null");
-                throw new BsqBlockchainException(e.getMessage(), e);
-            }
+        try {
+            long startTs = System.currentTimeMillis();
+            PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
+            CloseableHttpClient httpProvider = HttpClients.custom().setConnectionManager(cm).build();
+            Properties nodeConfig = new Properties();
+            nodeConfig.setProperty("node.bitcoind.rpc.protocol", "http");
+            nodeConfig.setProperty("node.bitcoind.rpc.host", "127.0.0.1");
+            nodeConfig.setProperty("node.bitcoind.rpc.auth_scheme", "Basic");
+            nodeConfig.setProperty("node.bitcoind.rpc.user", rpcUser);
+            nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
+            nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
+            nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
+            BtcdClientImpl client = new BtcdClientImpl(httpProvider, nodeConfig);
+            daemon = new BtcdDaemonImpl(client);
+            log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
+            this.client = client;
+        } catch (BitcoindException | CommunicationException e) {
+            if (e instanceof CommunicationException)
+                log.error("Probably Bitcoin core is not running or the rpc port is not set correctly. rpcPort=" + rpcPort);
+            log.error(e.toString());
+            e.printStackTrace();
+            log.error(e.getCause() != null ? e.getCause().toString() : "e.getCause()=null");
+            throw new BsqBlockchainException(e.getMessage(), e);
         } catch (Throwable e) {
             log.error(e.toString());
             e.printStackTrace();
