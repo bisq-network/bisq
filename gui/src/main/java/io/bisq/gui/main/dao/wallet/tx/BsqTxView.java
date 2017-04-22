@@ -20,6 +20,7 @@ package io.bisq.gui.main.dao.wallet.tx;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.locale.Res;
+import io.bisq.core.btc.wallet.BsqBalanceListener;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
@@ -79,6 +80,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private int gridRow = 0;
     private Label chainHeightLabel;
     private BsqChainStateListener bsqChainStateListener;
+    private BsqBalanceListener bsqBalanceListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +129,9 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         root.getChildren().add(vBox);
 
         walletBsqTransactionsListener = change -> updateList();
+        bsqBalanceListener = (availableBalance, unverifiedBalance) -> {
+            updateList();
+        };
         parentHeightListener = (observable, oldValue, newValue) -> layout();
         bsqChainStateListener = this::onChainHeightChanged;
     }
@@ -135,6 +140,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     protected void activate() {
         bsqBalanceUtil.activate();
         bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
+        bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
@@ -155,6 +161,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         bsqBalanceUtil.deactivate();
         sortedList.comparatorProperty().unbind();
         bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
+        bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
         observableList.forEach(BsqTxListItem::cleanup);
         bsqBlockchainManager.removeBsqChainStateListener(bsqChainStateListener);
 
@@ -392,7 +399,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                         txType = item.getTxType().get();
                                     else
                                         txType = item.getConfirmations() == 0 ? TxType.UNVERIFIED : TxType.INVALID;
-
                                     String toolTipText = Res.get("dao.tx.type.enum." + txType.name());
                                     switch (txType) {
                                         case UNVERIFIED:
@@ -437,7 +443,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
                                     }
                                     Label label = AwesomeDude.createIconLabel(awesomeIcon);
                                     label.getStyleClass().add(style);
-
                                     label.setTooltip(new Tooltip(toolTipText));
                                     setGraphic(label);
                                 } else {

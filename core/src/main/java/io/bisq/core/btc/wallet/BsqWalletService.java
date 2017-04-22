@@ -188,7 +188,7 @@ public class BsqWalletService extends WalletService {
     public ObservableList<Transaction> getWalletTransactions() {
         return walletTransactions;
     }
-    
+
     private void updateBsqWalletTransactions() {
         walletTransactions.setAll(getTransactions(false));
         // walletTransactions.setAll(getBsqWalletTransactions());

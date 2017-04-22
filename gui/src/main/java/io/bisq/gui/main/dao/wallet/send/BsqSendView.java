@@ -25,10 +25,14 @@ import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.util.CoinUtil;
+import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
 import io.bisq.gui.common.view.FxmlView;
 import io.bisq.gui.components.InputTextField;
+import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.dao.wallet.BsqBalanceUtil;
+import io.bisq.gui.main.funds.FundsView;
+import io.bisq.gui.main.funds.deposit.DepositView;
 import io.bisq.gui.main.overlays.popups.Popup;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.gui.util.BsqFormatter;
@@ -39,6 +43,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
 
@@ -53,6 +58,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     private final BtcWalletService btcWalletService;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
+    private Navigation navigation;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BsqValidator bsqValidator;
     private final BsqAddressValidator bsqAddressValidator;
@@ -70,12 +76,14 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
 
     @Inject
     private BsqSendView(BsqWalletService bsqWalletService, BtcWalletService btcWalletService,
-                        BsqFormatter bsqFormatter, BSFormatter btcFormatter,
-                        BsqBalanceUtil bsqBalanceUtil, BsqValidator bsqValidator, BsqAddressValidator bsqAddressValidator) {
+                        BsqFormatter bsqFormatter, BSFormatter btcFormatter, Navigation navigation,
+                        BsqBalanceUtil bsqBalanceUtil, BsqValidator bsqValidator,
+                        BsqAddressValidator bsqAddressValidator) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
+        this.navigation = navigation;
         this.bsqBalanceUtil = bsqBalanceUtil;
         this.bsqValidator = bsqValidator;
         this.bsqAddressValidator = bsqAddressValidator;
@@ -154,9 +162,18 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                         .closeButtonText(Res.get("shared.cancel"))
                         .show();
             } catch (Throwable t) {
-                log.error(t.toString());
-                t.printStackTrace();
-                new Popup<>().warning(t.getMessage()).show();
+                if (t instanceof InsufficientMoneyException) {
+                    final Coin missingCoin = ((InsufficientMoneyException) t).missing;
+                    final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
+                    new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
+                            .actionButtonTextWithGoTo("navigation.funds.depositFunds")
+                            .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
+                            .show();
+                } else {
+                    log.error(t.toString());
+                    t.printStackTrace();
+                    new Popup<>().warning(t.getMessage()).show();
+                }
             }
         });
     }
