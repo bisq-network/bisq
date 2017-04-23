@@ -20,10 +20,10 @@ package io.bitsquare.gui.util.validation;
 
 import io.bitsquare.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bitsquare.gui.util.validation.altcoins.OctocoinAddressValidator;
+import io.bitsquare.gui.util.validation.altcoins.NxtReedSolomon;
 import io.bitsquare.gui.util.validation.params.IOPParams;
 import io.bitsquare.gui.util.validation.params.OctocoinParams;
 import io.bitsquare.gui.util.validation.params.PivxParams;
-import io.bitsquare.gui.util.validation.params.OctocoinParams;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.params.MainNetParams;
@@ -150,6 +150,16 @@ public final class AltCoinAddressValidator extends InputValidator {
                     }*/
                 case "GBYTE":
                     return ByteballAddressValidator.validate(input);
+                case "NXT":
+                    if (!input.startsWith("NXT-") || !input.equals(input.toUpperCase())) {
+                        return regexTestFailed;
+                    }
+                    try {
+                        long accountId = NxtReedSolomon.decode(input.substring(4));
+                        return new ValidationResult(accountId != 0);
+                    } catch (NxtReedSolomon.DecodeException e) {
+                        return wrongChecksum;
+                    }
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode:" + currencyCode);
                     return validationResult;
