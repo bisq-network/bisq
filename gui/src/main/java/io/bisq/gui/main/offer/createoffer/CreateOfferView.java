@@ -39,6 +39,9 @@ import io.bisq.gui.main.account.AccountView;
 import io.bisq.gui.main.account.content.arbitratorselection.ArbitratorSelectionView;
 import io.bisq.gui.main.account.content.fiataccounts.FiatAccountsView;
 import io.bisq.gui.main.account.settings.AccountSettingsView;
+import io.bisq.gui.main.dao.DaoView;
+import io.bisq.gui.main.dao.wallet.BsqWalletView;
+import io.bisq.gui.main.dao.wallet.receive.BsqReceiveView;
 import io.bisq.gui.main.funds.FundsView;
 import io.bisq.gui.main.funds.withdrawal.WithdrawalView;
 import io.bisq.gui.main.offer.OfferView;
@@ -47,10 +50,7 @@ import io.bisq.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bisq.gui.main.overlays.windows.QRCodeWindow;
 import io.bisq.gui.main.portfolio.PortfolioView;
 import io.bisq.gui.main.portfolio.openoffer.OpenOffersView;
-import io.bisq.gui.util.BSFormatter;
-import io.bisq.gui.util.GUIUtil;
-import io.bisq.gui.util.Layout;
-import io.bisq.gui.util.Transitions;
+import io.bisq.gui.util.*;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -88,6 +88,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     private final Transitions transitions;
     private final OfferDetailsWindow offerDetailsWindow;
     private final BSFormatter btcFormatter;
+    private final BsqFormatter bsqFormatter;
 
     private ScrollPane scrollPane;
     private GridPane gridPane;
@@ -135,13 +136,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     @Inject
     private CreateOfferView(CreateOfferViewModel model, Navigation navigation, Transitions transitions,
-                            OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter) {
+                            OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
         super(model);
 
         this.navigation = navigation;
         this.transitions = transitions;
         this.offerDetailsWindow = offerDetailsWindow;
         this.btcFormatter = btcFormatter;
+        this.bsqFormatter = bsqFormatter;
     }
 
     @Override
@@ -205,12 +207,6 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             onPaymentAccountsComboBoxSelected();
 
             balanceTextField.setTargetAmount(model.dataModel.totalToPayAsCoinProperty().get());
-
-            // if (DevFlags.STRESS_TEST_MODE)
-            //     UserThread.runAfter(this::onShowPayFundsScreen, 200, TimeUnit.MILLISECONDS);
-
-            updateMarketPriceAvailable();
-            updateFeeToggleButtons(model.dataModel.getCurrencyForMakerFeeBtc());
         }
     }
 
@@ -270,6 +266,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             placeOfferButton.setText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
             nextButton.setId("sell-button");
         }
+
+        updateMarketPriceAvailable();
+        if (!model.dataModel.allowBsqFeePayment.get() && !model.dataModel.getCurrencyForMakerFeeBtc()) {
+            showInsufficientBsqFundsForBtcFeePaymentPopup();
+            updateFeeToggleButtons(true);
+        } else {
+            updateFeeToggleButtons(model.dataModel.getCurrencyForMakerFeeBtc() || !model.dataModel.allowBsqFeePayment.get());
+        }
     }
 
     // called form parent as the view does not get notified when the tab is closed
@@ -295,28 +299,41 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void onPlaceOffer() {
         if (model.isBootstrapped()) {
-            if (model.hasAcceptedArbitrators()) {
-                Offer offer = model.createAndGetOffer();
-                //noinspection PointlessBooleanExpression
-                if (!DevEnv.DEV_MODE)
-                    offerDetailsWindow.onPlaceOffer(() ->
-                            model.onPlaceOffer(offer, offerDetailsWindow::hide))
-                            .show(offer);
-                else
-                    model.onPlaceOffer(offer, () -> {
-                    });
+            model.dataModel.updateAllowBsqFeePayment();
+            if (model.dataModel.allowBsqFeePayment.get() || model.dataModel.getCurrencyForMakerFeeBtc()) {
+                if (model.hasAcceptedArbitrators()) {
+                    Offer offer = model.createAndGetOffer();
+                    //noinspection PointlessBooleanExpression
+                    if (!DevEnv.DEV_MODE)
+                        offerDetailsWindow.onPlaceOffer(() ->
+                                model.onPlaceOffer(offer, offerDetailsWindow::hide))
+                                .show(offer);
+                    else
+                        model.onPlaceOffer(offer, () -> {
+                        });
+                } else {
+                    new Popup<>().headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
+                            .instruction(Res.get("popup.warning.noArbitratorSelected.msg"))
+                            .actionButtonTextWithGoTo("navigation.arbitratorSelection")
+                            .onAction(() -> {
+                                navigation.setReturnPath(navigation.getCurrentPath());
+                                navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
+                            }).show();
+                }
             } else {
-                new Popup<>().headLine(Res.get("popup.warning.noArbitratorSelected.headline"))
-                        .instruction(Res.get("popup.warning.noArbitratorSelected.msg"))
-                        .actionButtonTextWithGoTo("navigation.arbitratorSelection")
-                        .onAction(() -> {
-                            navigation.setReturnPath(navigation.getCurrentPath());
-                            navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
-                        }).show();
+                showInsufficientBsqFundsForBtcFeePaymentPopup();
             }
         } else {
             new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
+    }
+
+    private void showInsufficientBsqFundsForBtcFeePaymentPopup() {
+        new Popup<>().warning(Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
+                bsqFormatter.formatCoinWithCode(model.dataModel.getMakerFee().subtract(model.dataModel.getBsqBalance()))))
+                .actionButtonTextWithGoTo("navigation.dao.wallet.receive")
+                .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqReceiveView.class))
+                .show();
     }
 
     private void onShowPayFundsScreen() {
@@ -473,11 +490,11 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         buyerSecurityDepositInputTextField.validationResultProperty().bind(model.buyerSecurityDepositValidationResult);
 
         // funding
-        fundingHBox.visibleProperty().bind(model.dataModel.getIsWalletFunded().not().and(model.showPayFundsScreenDisplayed));
-        fundingHBox.managedProperty().bind(model.dataModel.getIsWalletFunded().not().and(model.showPayFundsScreenDisplayed));
+        fundingHBox.visibleProperty().bind(model.dataModel.getIsBtcWalletFunded().not().and(model.showPayFundsScreenDisplayed));
+        fundingHBox.managedProperty().bind(model.dataModel.getIsBtcWalletFunded().not().and(model.showPayFundsScreenDisplayed));
         waitingForFundsLabel.textProperty().bind(model.waitingForFundsText);
-        placeOfferButton.visibleProperty().bind(model.dataModel.getIsWalletFunded().and(model.showPayFundsScreenDisplayed));
-        placeOfferButton.managedProperty().bind(model.dataModel.getIsWalletFunded().and(model.showPayFundsScreenDisplayed));
+        placeOfferButton.visibleProperty().bind(model.dataModel.getIsBtcWalletFunded().and(model.showPayFundsScreenDisplayed));
+        placeOfferButton.managedProperty().bind(model.dataModel.getIsBtcWalletFunded().and(model.showPayFundsScreenDisplayed));
         placeOfferButton.disableProperty().bind(model.isPlaceOfferButtonDisabled);
         cancelButton2.disableProperty().bind(model.cancelButtonDisabled);
 
@@ -880,7 +897,18 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         payFeeInBsqButton.setId("toggle-price-left");
         payFeeInBsqButton.setToggleGroup(feeToggleGroup);
         payFeeInBsqButton.selectedProperty().addListener((ov, oldValue, newValue) -> {
-            updateFeeToggleButtons(!newValue);
+            if (newValue && model.dataModel.allowBsqFeePayment.get())
+                updateFeeToggleButtons(false);
+            else
+                updateFeeToggleButtons(true);
+        });
+        payFeeInBsqButton.setOnAction(ev -> {
+            if (model.dataModel.allowBsqFeePayment.get()) {
+                updateFeeToggleButtons(false);
+            } else {
+                showInsufficientBsqFundsForBtcFeePaymentPopup();
+                updateFeeToggleButtons(true);
+            }
         });
 
         payFeeInBtcButton = new ToggleButton("BTC");
@@ -1037,7 +1065,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
         cancelButton2 = addButton(gridPane, ++gridRow, Res.get("shared.cancel"));
         cancelButton2.setOnAction(e -> {
-            if (model.dataModel.getIsWalletFunded().get()) {
+            if (model.dataModel.getIsBtcWalletFunded().get()) {
                 new Popup<>().warning(Res.get("createOffer.warnCancelOffer"))
                         .closeButtonText(Res.get("shared.no"))
                         .actionButtonText(Res.get("shared.yesCancel"))
@@ -1241,19 +1269,23 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void updateFeeToggleButtons(boolean btcSelected) {
         model.setCurrencyForMakerFeeBtc(btcSelected);
+        if (btcSelected || model.dataModel.allowBsqFeePayment.get()) {
+            if (!payFeeInBtcButton.isSelected() && btcSelected)
+                payFeeInBtcButton.setSelected(true);
+            if (payFeeInBsqButton.isSelected() && !btcSelected)
+                payFeeInBsqButton.setSelected(false);
 
-        if (!payFeeInBtcButton.isSelected() && btcSelected)
-            payFeeInBtcButton.setSelected(true);
-        if (payFeeInBsqButton.isSelected() && !btcSelected)
-            payFeeInBsqButton.setSelected(false);
+            payFeeInBtcButton.setMouseTransparent(btcSelected);
+            payFeeInBsqButton.setMouseTransparent(!btcSelected);
 
-        payFeeInBtcButton.setMouseTransparent(btcSelected);
-        payFeeInBsqButton.setMouseTransparent(!btcSelected);
-
-        payFeeInBtcButton.setStyle(btcSelected ?
-                "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
-        payFeeInBsqButton.setStyle(!btcSelected ?
-                "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+            payFeeInBtcButton.setStyle(btcSelected ?
+                    "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+            payFeeInBsqButton.setStyle(!btcSelected ?
+                    "-fx-background-color: -bs-blue-transparent" : "-fx-background-color: -bs-very-light-grey");
+        } else {
+            log.error("Must not happen that we get not allowBsqFeePayment and btcSelected called. allowBsqFeePayment={}, btcSelected={}",
+                    model.dataModel.allowBsqFeePayment.get(), btcSelected);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

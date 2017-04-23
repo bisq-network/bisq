@@ -465,7 +465,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.getBuyerSecurityDeposit().addListener(securityDepositAsCoinListener);
 
         // dataModel.feeFromFundingTxProperty.addListener(feeFromFundingTxListener);
-        dataModel.getIsWalletFunded().addListener(isWalletFundedListener);
+        dataModel.getIsBtcWalletFunded().addListener(isWalletFundedListener);
 
         priceFeedService.currenciesUpdateFlagProperty().addListener(currenciesUpdateListener);
     }
@@ -487,7 +487,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         dataModel.getBuyerSecurityDeposit().removeListener(securityDepositAsCoinListener);
 
         //dataModel.feeFromFundingTxProperty.removeListener(feeFromFundingTxListener);
-        dataModel.getIsWalletFunded().removeListener(isWalletFundedListener);
+        dataModel.getIsBtcWalletFunded().removeListener(isWalletFundedListener);
 
         if (offer != null && errorMessageListener != null)
             offer.getErrorMessageProperty().removeListener(errorMessageListener);
@@ -589,7 +589,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     boolean fundFromSavingsWallet() {
         dataModel.fundFromSavingsWallet();
-        if (dataModel.getIsWalletFunded().get()) {
+        if (dataModel.getIsBtcWalletFunded().get()) {
             updateButtonDisableState();
             return true;
         } else {
@@ -937,7 +937,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                 errorMessage.get() != null ||
                 showTransactionPublishedScreen.get()) {
             waitingForFundsText.set("");
-        } else if (dataModel.getIsWalletFunded().get()) {
+        } else if (dataModel.getIsBtcWalletFunded().get()) {
             waitingForFundsText.set("");
            /* if (dataModel.isFeeFromFundingTxSufficient.get()) {
                 spinnerInfoText.set("");
@@ -965,7 +965,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         isNextButtonDisabled.set(!inputDataValid);
         // boolean notSufficientFees = dataModel.isWalletFunded.get() && dataModel.isMainNet.get() && !dataModel.isFeeFromFundingTxSufficient.get();
         //isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || notSufficientFees);
-        isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || !dataModel.getIsWalletFunded().get());
+        isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || !dataModel.getIsBtcWalletFunded().get());
     }
 
     private void stopTimeoutTimer() {
