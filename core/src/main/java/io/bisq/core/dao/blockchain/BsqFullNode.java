@@ -89,6 +89,7 @@ public class BsqFullNode extends BsqNode {
 
     @Override
     protected void parseBlocksWithChainHeadHeight(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
+        log.info("parseBlocksWithChainHeadHeight startBlockHeight={}", startBlockHeight);
         bsqFullNodeExecutor.requestChainHeadHeight(chainHeadHeight -> {
             parseBlocks(startBlockHeight, genesisBlockHeight, genesisTxId, chainHeadHeight);
         }, throwable -> {
@@ -138,6 +139,7 @@ public class BsqFullNode extends BsqNode {
 
     @Override
     protected void onParseBlockchainComplete(int genesisBlockHeight, String genesisTxId) {
+        log.info("onParseBlockchainComplete");
         parseBlockchainComplete = true;
         // We register our handler for new blocks
         bsqFullNodeExecutor.addBlockHandler(btcdBlock -> {
@@ -155,6 +157,7 @@ public class BsqFullNode extends BsqNode {
                     });
         });
 
+        log.info("Register MessageListener");
         p2PService.getNetworkNode().addMessageListener(this::onMessage);
     }
 

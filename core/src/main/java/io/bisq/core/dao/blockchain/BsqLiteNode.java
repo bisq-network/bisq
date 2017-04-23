@@ -98,7 +98,7 @@ public class BsqLiteNode extends BsqNode {
         NodeAddress peersNodeAddress = p2PService.getSeedNodeAddresses().stream().findFirst().get();
 
         GetBsqBlocksRequest getBsqBlocksRequest = new GetBsqBlocksRequest(startBlockHeight);
-
+        log.info("sendMessage " + getBsqBlocksRequest + " to " + peersNodeAddress);
         SettableFuture<Connection> future = p2PService.getNetworkNode().sendMessage(peersNodeAddress, getBsqBlocksRequest);
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
