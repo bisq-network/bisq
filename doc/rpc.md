@@ -13,7 +13,8 @@ If you run 2 clients and want to receive the block notifications on both use dif
 5159 and 4159 are defined in the blocknotify file.
 
 For reg test setup with localhost those are typical program arguments:
---bitcoinNetwork=regtest --useLocalhostForP2P=true --nodePort=3332 --appName=bisq-LRTAli --rpcUser=bisq --rpcPassword=bisqPW --rpcPort=18332 --rpcBlockNotificationPort=4159
+--bitcoinNetwork=regtest --useLocalhostForP2P=true --nodePort=3332 --appName=bisq-LRTAli --fullDaoNode=true --rpcUser=bisq --rpcPassword=bisqPW --rpcPort=18332 --rpcBlockNotificationPort=4159
+
 
 For mainnet:
 --fullDaoNode=true --rpcUser=bisq --rpcPassword=bisqPW --rpcPort=8332 --rpcBlockNotificationPort=4159
@@ -24,3 +25,6 @@ enabling rpc or take sufficient precautions from your network setup.
 In the bitcoin.conf file you need to set txindex=1. 
 That causes a re-index of the whole data base which takes considerable time with a 
 mainnet node.
+
+If you want to dumpt the blockchain data to json add: --dumpBlockchainData=true (used for BSQ block explorer)
+

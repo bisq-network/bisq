@@ -3,6 +3,8 @@
 sudo -i
 
 JAVA_HOME=/usr/lib/jvm/java-8-oracle
+# or: /usr/lib/jvm/jdk1.8.0_112
+echo 'export JAVA_HOME=$(/usr/libexec/java_home)' >> ~/.bashrc
 
 echo "Install Oracle Java 8, git, maven, unzip"
 apt-get update
@@ -33,17 +35,36 @@ sudo chmod 777 $JAVA_HOME/jre/lib/security/local_policy.jar
 
 rm -r UnlimitedJCEPolicyJDK8 jce_policy-8.zip
 
+### 4. Install Protobuffer
+    $ wget https://github.com/google/protobuf/releases/download/v3.2.0/protobuf-java-3.2.0.tar.gz
+    $ tar xzf protobuf-3.2.0.tar.gz
+    $ cd protobuf-3.2.0
+    $ sudo apt-get update
+    $ sudo apt-get install build-essential
+    $ sudo ./configure
+    $ sudo make
+    $ sudo make check
+    $ sudo make install 
+    $ sudo ldconfig
+    $ protoc --version
+    
 echo "Install bitcoinj"
 cd ~
-git clone -b bisq_0.14.4.1 https://github.com/bisq/bitcoinj.git
+git clone -b bisq_0.14.4.1 https://github.com/bitsquare/bitcoinj.git
 cd bitcoinj
 mvn clean install -DskipTests -Dmaven.javadoc.skip=true
 
+cd ~
+git clone -b bisq_0.14.4.1 https://github.com/bitsquare/btcd-cli4j.git
+cd btcd-cli4j
+mvn clean install -DskipTests -Dmaven.javadoc.skip=true
+
+
 echo "Install and resolve dependencies for bisq"
 cd ~
-git clone https://github.com/bisq/bisq.git
+git clone -b DAO https://github.com/bitsquare/bitsquare.git
 cd bisq
-mvn clean package -DskipTests -Dmaven.javadoc.skip=true
+mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
 echo "Add BountyCastle.jar"
 cd ~

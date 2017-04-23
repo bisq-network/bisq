@@ -3,7 +3,7 @@
 
 This guide will walk you through the process of building bisq from source.
 
-> _**NOTE:** For most users, building from source is not necessary. See the [releases page](https://github.com/bisq/bisq/releases), where you'll find installers for Windows, Linux and Mac OS X._
+> _**NOTE:** For most users, building from source is not necessary. See the [releases page](https://github.com/bitsquare/bitsquare/releases), where you'll find installers for Windows, Linux and Mac OS X._
 
 There is an install script (2 parts) for setup (JDK, git, maven, Bitcoinj, bisq) on Linux in that directory (install_on_unix.sh, install_on_unix_fin.sh).
 
@@ -105,23 +105,36 @@ It is not needed for a normal user to run such a "full node" but for the build i
 
 Prepare bisq build
 -----------------
+### 4. Install Protobuffer
 
-### 4. Get bisq source code and build a preliminary bisq version
+    $ wget https://github.com/google/protobuf/releases/download/v3.2.0/protobuf-java-3.2.0.tar.gz
+    $ tar xzf protobuf-3.2.0.tar.gz
+    $ cd protobuf-3.2.0
+    $ sudo apt-get update
+    $ sudo apt-get install build-essential
+    $ sudo ./configure
+    $ sudo make
+    $ sudo make check
+    $ sudo make install 
+    $ sudo ldconfig
+    $ protoc --version
+
+### 5. Get bisq source code and build a preliminary bisq version (don't run the jar, it wont work)
 
 You need to get the bisq dependencies first as we need to copy the BouncyCastle jar to the JRE directory.
 
-    $ git clone https://github.com/bisq/bisq.git
+    $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bisq
     $ mvn clean package -DskipTests -Dmaven.javadoc.skip=true
 
-### 5. Copy the BouncyCastle provider jar file
+### 6. Copy the BouncyCastle provider jar file
 
 Copy the BountyCastle provider jar file from the local maven repository to the jre/lib/ext directory.
 This prevents a "JCE cannot authenticate the provider BC" exception when starting the bisq client.
 
     $ sudo cp ~/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar $JAVA_HOME/jre/lib/ext/
 
-### 6. Edit the java.security file and add BouncyCastleProvider
+### 7. Edit the java.security file and add BouncyCastleProvider
 
 Add org.bouncycastle.jce.provider.BouncyCastleProvider as last entry at: ﻿List of providers and their preference orders
 E.g.:
@@ -130,7 +143,7 @@ security.provider.10=org.bouncycastle.jce.provider.BouncyCastleProvider
     $ sudo gedit $JAVA_HOME/jre/lib/security/java.security
     ... edit and save
 
-### 7. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
+### 8. Enable unlimited Strength for cryptographic keys (only required for Oracle JDK)
 
 If you are using Oracle JDK 8 you must **[enable strong cryptographic cyphers](https://github.com/jonathancross/jc-docs/blob/master/java-strong-crypto-test/README.md)**. If you use OpenJDK + OpenJFX you can skip this step.
 
@@ -140,11 +153,11 @@ In Windows the new crypto files need to be copied to `Java/jdk1.8.0_xxx/jre/lib/
 Build bisq
 -----------------
 
-### 8. Build final bisq jar
+### 9. Build final bisq jar
 
 Now we have all prepared to build the correct bisq jar.
 
-    $ mvn clean package -DskipTests -Dmaven.javadoc.skip=true
+    $ mvn clean package verify -DskipTests -Dmaven.javadoc.skip=true
 
 When the build completes, you will find an executable jar: `gui/target/shaded.jar`.
 To run it use:
@@ -167,8 +180,8 @@ See the rpc.md doc in the same directory.
 Development mode
 -----------------
 
-Please check out our wiki for more information about [testing](https://github.com/bisq/bisq/wiki/Testing-bisq-with-Mainnet)
-and how to use [regtest](https://github.com/bisq/bisq/wiki/How-to-use-bisq-with-regtest-%28advanced%29)
+Please check out our wiki for more information about [testing](https://github.com/bitsquare/bitsquare/wiki/Testing-bisq-with-Mainnet)
+and how to use [regtest](https://github.com/bitsquare/bitsquare/wiki/How-to-use-bisq-with-regtest-%28advanced%29)
 
 Here are example program arguments for using regtest with localhost environment (not using Tor):
 
@@ -211,4 +224,4 @@ Here are example program arguments for using regtest and using the Tor network (
 Problems?
 ---------
 
-If the instructions above don't work for you, please [raise an issue](https://github.com/bisq/bisq/issues/new?labels=%5Bbuild%5D). Thanks!
+If the instructions above don't work for you, please [raise an issue](https://github.com/bitsquare/bitsquare/issues/new?labels=%5Bbuild%5D). Thanks!
