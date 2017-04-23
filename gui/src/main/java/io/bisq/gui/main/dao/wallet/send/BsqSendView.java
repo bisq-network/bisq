@@ -18,7 +18,6 @@
 package io.bisq.gui.main.dao.wallet.send;
 
 import com.google.common.util.concurrent.FutureCallback;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
@@ -109,11 +108,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
         };
 
         sendButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.send"));
-
-        if (DevEnv.DEV_MODE) {
-            amountInputTextField.setText("2.730"); // 2730 is dust limit
-            receiversAddressInputTextField.setText("BmqLgu2GH1pZntcsuugNtZuczLfZx8P5sdK");
-        }
 
         sendButton.setOnAction((event) -> {
             String receiversAddressString = bsqFormatter.getAddressFromBsqAddress(receiversAddressInputTextField.getText()).toString();
