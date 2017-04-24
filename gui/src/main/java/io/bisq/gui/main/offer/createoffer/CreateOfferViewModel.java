@@ -60,6 +60,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 
 class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel> implements ViewModel {
     private final BtcValidator btcValidator;
+    private final BsqValidator bsqValidator;
     private final SecurityDepositValidator securityDepositValidator;
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
@@ -153,6 +154,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 FiatValidator fiatValidator,
                                 AltcoinValidator altcoinValidator,
                                 BtcValidator btcValidator,
+                                BsqValidator bsqValidator,
                                 SecurityDepositValidator securityDepositValidator,
                                 P2PService p2PService,
                                 PriceFeedService priceFeedService,
@@ -165,6 +167,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         this.fiatValidator = fiatValidator;
         this.altcoinValidator = altcoinValidator;
         this.btcValidator = btcValidator;
+        this.bsqValidator = bsqValidator;
         this.securityDepositValidator = securityDepositValidator;
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
@@ -187,10 +190,10 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     protected void activate() {
         if (DevEnv.DEV_MODE) {
             UserThread.runAfter(() -> {
-                amount.set("0.01");
+                amount.set("0.001");
                 minAmount.set(amount.get());
                 UserThread.runAfter(() -> {
-                    price.set("1200");
+                    price.set("0.001");
                     onFocusOutPriceAsPercentageTextField(true, false);
                     applyMakerFee();
                 }, 200, TimeUnit.MILLISECONDS);
@@ -437,13 +440,14 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private void applyMakerFee() {
-        makerFee.set(getFormatter().formatCoin(dataModel.getMakerFee()));
+        makerFee.set(getFormatterForMakerFee().formatCoin(dataModel.getMakerFee()));
         makerFeeCurrencyCode.set(dataModel.getCurrencyForMakerFeeBtc() ? "BTC" : "BSQ");
     }
 
     private void updateMarketPriceAvailable() {
         marketPrice = priceFeedService.getMarketPrice(dataModel.getTradeCurrencyCode().get());
         marketPriceAvailableProperty.set(marketPrice == null ? 0 : 1);
+        dataModel.setMarketPriceAvailable(marketPrice != null);
     }
 
     private void addListeners() {
@@ -797,7 +801,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     public String getMakerFee() {
         //TODO use last bisq market price to estimate BSQ val
         final Coin makerFeeAsCoin = dataModel.getMakerFee();
-        final String makerFee = getFormatter().formatCoinWithCode(makerFeeAsCoin);
+        final String makerFee = getFormatterForMakerFee().formatCoinWithCode(makerFeeAsCoin);
         if (dataModel.getCurrencyForMakerFeeBtc())
             return makerFee + GUIUtil.getPercentageOfTradeAmount(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
         else
@@ -921,15 +925,24 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private InputValidator.ValidationResult isPriceInputValid(String input) {
-        return getValidator().validate(input);
+        return getPriceValidator().validate(input);
     }
 
     private InputValidator.ValidationResult isVolumeInputValid(String input) {
-        return getValidator().validate(input);
+        return getVolumeValidator().validate(input);
     }
 
-    private MonetaryValidator getValidator() {
+    private MonetaryValidator getPriceValidator() {
         return CurrencyUtil.isCryptoCurrency(getTradeCurrency().getCode()) ? altcoinValidator : fiatValidator;
+    }
+
+    private MonetaryValidator getVolumeValidator() {
+        final String code = getTradeCurrency().getCode();
+        if (CurrencyUtil.isCryptoCurrency(code)) {
+            return code.equals("BSQ") ? bsqValidator : altcoinValidator;
+        } else {
+            return fiatValidator;
+        }
     }
 
     private void updateSpinnerInfo() {
@@ -975,8 +988,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         }
     }
 
-    private BSFormatter getFormatter() {
+    private BSFormatter getFormatterForMakerFee() {
         return dataModel.getCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
-
 }

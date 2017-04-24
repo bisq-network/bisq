@@ -281,10 +281,14 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         // we use model.placeOfferCompleted to not react on close which was triggered by a successful placeOffer
         if (model.dataModel.getBalance().get().isPositive() && !model.placeOfferCompleted.get()) {
             model.dataModel.swapTradeToSavings();
-            new Popup<>().information(Res.get("createOffer.alreadyFunded"))
-                    .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
-                    .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
-                    .show();
+            String key = "CreateOfferCancelAndFunded";
+            if (model.dataModel.getPreferences().showAgain(key)) {
+                new Popup<>().information(Res.get("createOffer.alreadyFunded"))
+                        .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
+                        .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
+                        .dontShowAgainId(key)
+                        .show();
+            }
         }
     }
 

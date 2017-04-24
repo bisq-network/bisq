@@ -112,6 +112,7 @@ public class BsqLiteNode extends BsqNode {
             }
         });
         
+        
        /* 
         requestBsqBlocksHandler.request(peersNodeAddress, startBlockHeight, bsqBlockList -> {
             try {

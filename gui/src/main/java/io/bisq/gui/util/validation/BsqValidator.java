@@ -29,7 +29,7 @@ import javax.inject.Inject;
 import java.math.BigDecimal;
 
 @Slf4j
-public class BsqValidator extends NumberValidator {
+public class BsqValidator extends AltcoinValidator {
     protected final BsqFormatter bsqFormatter;
 
     @Nullable
@@ -37,6 +37,11 @@ public class BsqValidator extends NumberValidator {
     @Nullable
     private Coin availableBalance;
 
+    @Override
+    protected double getMinValue() {
+        return 2.730; // dust
+    }
+    
     @Inject
     public BsqValidator(BsqFormatter bsqFormatter) {
         this.bsqFormatter = bsqFormatter;

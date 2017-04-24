@@ -121,6 +121,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     Coin totalAvailableBalance;
     private double marketPriceMargin = 0;
     private Coin txFeeFromFeeService;
+    private boolean marketPriceAvailable;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -286,7 +287,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         calculateVolume();
         calculateTotalToPay();
         updateBalance();
-        
+
         return true;
     }
 
@@ -301,7 +302,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Offer createAndGetOffer() {
-        long priceAsLong = price.get() != null && !useMarketBasedPrice.get() ? price.get().getValue() : 0L;
+        final boolean useMarketBasedPriceValue = marketPriceAvailable && useMarketBasedPrice.get();
+        long priceAsLong = price.get() != null && !useMarketBasedPriceValue ? price.get().getValue() : 0L;
         // We use precision 8 in AltcoinPrice but in OfferPayload we use Fiat with precision 4. Will be refactored once in a bigger update....
         // TODO use same precision for both in next release
         String currencyCode = tradeCurrencyCode.get();
@@ -309,7 +311,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String baseCurrencyCode = isCryptoCurrency ? currencyCode : "BTC";
         String counterCurrencyCode = isCryptoCurrency ? "BTC" : currencyCode;
 
-        double marketPriceMarginParam = useMarketBasedPrice.get() ? marketPriceMargin : 0;
+        double marketPriceMarginParam = useMarketBasedPriceValue ? marketPriceMargin : 0;
         long amount = this.amount.get() != null ? this.amount.get().getValue() : 0L;
         long minAmount = this.minAmount.get() != null ? this.minAmount.get().getValue() : 0L;
 
@@ -366,7 +368,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 OfferPayload.Direction.valueOf(direction.name()),
                 priceAsLong,
                 marketPriceMarginParam,
-                useMarketBasedPrice.get(),
+                useMarketBasedPriceValue,
                 amount,
                 minAmount,
                 baseCurrencyCode,
@@ -779,5 +781,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     public Coin getBsqBalance() {
         return bsqWalletService.getAvailableBalance();
+    }
+
+    public void setMarketPriceAvailable(boolean marketPriceAvailable) {
+        this.marketPriceAvailable = marketPriceAvailable;
     }
 }
