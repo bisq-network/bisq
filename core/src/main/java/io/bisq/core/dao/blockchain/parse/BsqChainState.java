@@ -156,7 +156,6 @@ public class BsqChainState implements Persistable {
     public void applySnapshot() {
         lock.write(() -> {
             BsqChainState snapshot = snapshotBsqChainStateStorage.initAndGetPersistedWithFileName("BsqChainState");
-
             blocks.clear();
             txMap.clear();
             unspentTxOutputsMap.clear();
@@ -164,11 +163,14 @@ public class BsqChainState implements Persistable {
             genesisTx = null;
 
             if (snapshot != null) {
+                log.info("applySnapshot snapshot.chainHeadHeight=" + snapshot.chainHeadHeight);
                 blocks.addAll(snapshot.blocks);
                 txMap.putAll(snapshot.txMap);
                 unspentTxOutputsMap.putAll(snapshot.unspentTxOutputsMap);
                 chainHeadHeight = snapshot.chainHeadHeight;
                 genesisTx = snapshot.genesisTx;
+            } else {
+                log.info("Try to apply snapshot but no stored snapshot available");
             }
 
             printDetails();

@@ -22,6 +22,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.inject.Inject;
+import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.JsonFileManager;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -35,6 +36,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Named;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,24 +60,32 @@ public class JsonChainStateExporter {
 
         if (dumpBlockchainData) {
             txDir = new File(Paths.get(storageDir.getAbsolutePath(), "tx").toString());
-            if (!txDir.exists())
-                if (!txDir.mkdir())
-                    log.warn("make txDir failed.\ntxDir=" + txDir.getAbsolutePath());
-
             txOutputDir = new File(Paths.get(storageDir.getAbsolutePath(), "txo").toString());
-            if (!txOutputDir.exists())
-                if (!txOutputDir.mkdir())
-                    log.warn("make txOutputDir failed.\ntxOutputDir=" + txOutputDir.getAbsolutePath());
-
             bsqChainStateDir = new File(Paths.get(storageDir.getAbsolutePath(), "all").toString());
-            if (!bsqChainStateDir.exists())
-                if (!bsqChainStateDir.mkdir())
-                    log.warn("make bsqChainStateDir failed.\nbsqChainStateDir=" + bsqChainStateDir.getAbsolutePath());
-
-            txFileManager = new JsonFileManager(txDir);
-            txOutputFileManager = new JsonFileManager(txOutputDir);
-            bsqChainStateFileManager = new JsonFileManager(bsqChainStateDir);
+            try {
+                if (txDir.exists())
+                    FileUtil.deleteDirectory(txDir);
+                if (txOutputDir.exists())
+                    FileUtil.deleteDirectory(txOutputDir);
+                if (bsqChainStateDir.exists())
+                    FileUtil.deleteDirectory(bsqChainStateDir);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
+        if (!txDir.mkdir())
+            log.warn("make txDir failed.\ntxDir=" + txDir.getAbsolutePath());
+
+        if (!txOutputDir.mkdir())
+            log.warn("make txOutputDir failed.\ntxOutputDir=" + txOutputDir.getAbsolutePath());
+
+        if (!bsqChainStateDir.mkdir())
+            log.warn("make bsqChainStateDir failed.\nbsqChainStateDir=" + bsqChainStateDir.getAbsolutePath());
+
+        txFileManager = new JsonFileManager(txDir);
+        txOutputFileManager = new JsonFileManager(txOutputDir);
+        bsqChainStateFileManager = new JsonFileManager(bsqChainStateDir);
     }
 
     public void shutDown() {

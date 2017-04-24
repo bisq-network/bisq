@@ -58,7 +58,7 @@ public class JsonFileManager {
             Thread.currentThread().interrupt();
         }
     }
-
+   
     public void writeToDisc(String json, String fileName) {
         executor.execute(() -> {
             File jsonFile = new File(Paths.get(dir.getAbsolutePath(), fileName + ".json").toString());

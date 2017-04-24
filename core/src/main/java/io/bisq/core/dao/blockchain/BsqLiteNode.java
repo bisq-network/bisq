@@ -98,7 +98,7 @@ public class BsqLiteNode extends BsqNode {
         NodeAddress peersNodeAddress = p2PService.getSeedNodeAddresses().stream().findFirst().get();
 
         GetBsqBlocksRequest getBsqBlocksRequest = new GetBsqBlocksRequest(startBlockHeight);
-        log.info("sendMessage " + getBsqBlocksRequest + " to " + peersNodeAddress);
+        log.info("sendMessage " + getBsqBlocksRequest + " to " + peersNodeAddress + " with startBlockHeight=" + startBlockHeight);
         SettableFuture<Connection> future = p2PService.getNetworkNode().sendMessage(peersNodeAddress, getBsqBlocksRequest);
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
@@ -133,7 +133,9 @@ public class BsqLiteNode extends BsqNode {
             GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) msg;
             byte[] bsqBlocksBytes = getBsqBlocksResponse.getBsqBlocksBytes();
             List<BsqBlock> bsqBlockList = Utilities.<ArrayList<BsqBlock>>deserialize(bsqBlocksBytes);
-            log.info("received msg with {} items", bsqBlockList.size());
+            log.info("received msg with {} items", bsqBlockList.size(), bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
+            if (bsqBlockList.size() > 0)
+                log.info("block height of last item: ", bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
             // Be safe and reset all mutable data in case the provider would not have done it
             bsqBlockList.stream().forEach(BsqBlock::reset);
             bsqLiteNodeExecutor.parseBsqBlocksForLiteNode(bsqBlockList,
@@ -156,7 +158,7 @@ public class BsqLiteNode extends BsqNode {
             BsqBlock bsqBlock = Utilities.<BsqBlock>deserialize(bsqBlockBytes);
             // Be safe and reset all mutable data in case the provider would not have done it
             bsqBlock.reset();
-            log.info("received broadcastNewBsqBlock bsqBlock {}", bsqBlock);
+            log.info("received broadcastNewBsqBlock bsqBlock {}", bsqBlock.getHeight());
             if (!bsqChainState.containsBlock(bsqBlock)) {
                 bsqLiteNodeExecutor.parseBsqBlockForLiteNode(bsqBlock,
                         genesisBlockHeight,
