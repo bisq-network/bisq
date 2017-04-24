@@ -17,17 +17,40 @@
 
 package io.bisq.common.persistence;
 
+import com.google.protobuf.Message;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Delegate;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class HashMapPersistable<K, V> implements Persistable {
     @Delegate
     @Getter
     private HashMap<K, V> hashMap = new HashMap<>();
+    @Setter
+    private Function<HashMap<K, V>, Message> toProto;
 
     public HashMapPersistable(HashMap<K, V> hashMap) {
         this.hashMap = hashMap;
     }
+
+    public HashMapPersistable(HashMap<K, V> hashMap, Function<HashMap<K, V>, Message> toProto) {
+        this(hashMap);
+        setToProto(toProto);
+    }
+
+    @Override
+    public Message toProto() {
+        if(Objects.isNull(toProto)) {
+            throw new NotImplementedException();
+        }
+        return toProto.apply(hashMap);
+    }
+
 }

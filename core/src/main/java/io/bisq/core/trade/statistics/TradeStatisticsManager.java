@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bisq.common.locale.CurrencyTuple;
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.persistence.ListPersistable;
 import io.bisq.common.proto.ProtoHelper;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
@@ -11,7 +12,6 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.P2PService;
-import io.bisq.network.p2p.peers.PersistedList;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 public class TradeStatisticsManager {
     private static final Logger log = LoggerFactory.getLogger(TradeStatisticsManager.class);
 
-    private final Storage<PersistedList<TradeStatistics>> statisticsStorage;
+    private final Storage<ListPersistable<TradeStatistics>> statisticsStorage;
     private final Storage<PlainTextWrapper> fiatCurrencyListJsonStorage;
     private final Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage;
     private final Storage<PlainTextWrapper> statisticsJsonStorage;
@@ -37,7 +37,7 @@ public class TradeStatisticsManager {
     private final HashSet<TradeStatistics> tradeStatisticsSet = new HashSet<>();
 
     @Inject
-    public TradeStatisticsManager(Storage<PersistedList<TradeStatistics>> statisticsStorage,
+    public TradeStatisticsManager(Storage<ListPersistable<TradeStatistics>> statisticsStorage,
                                   Storage<PlainTextWrapper> fiatCurrencyListJsonStorage,
                                   Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage,
                                   Storage<PlainTextWrapper> statisticsJsonStorage,
@@ -71,7 +71,7 @@ public class TradeStatisticsManager {
             cryptoCurrencyListJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(cryptoCurrencyList)), 2000);
         }
 
-        PersistedList<TradeStatistics> persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
+        ListPersistable<TradeStatistics> persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
         if (persisted != null)
             persisted.getList().stream().forEach(e -> add(e, false));
 
@@ -105,7 +105,7 @@ public class TradeStatisticsManager {
                 observableTradeStatisticsSet.add(tradeStatistics);
 
                 if (storeLocally) {
-                    PersistedList<TradeStatistics> serializable = new PersistedList<>(tradeStatisticsSet);
+                    ListPersistable<TradeStatistics> serializable = new ListPersistable<>(tradeStatisticsSet);
                     serializable.setToProto((list) -> PB.DiskEnvelope.newBuilder()
                             .setTradeStatisticsList(PB.TradeStatisticsList.newBuilder()
                                     .addAllTradeStatistics(ProtoHelper.collectionToProto(list))).build());

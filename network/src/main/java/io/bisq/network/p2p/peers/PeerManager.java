@@ -1,10 +1,12 @@
 package io.bisq.network.p2p.peers;
 
+import com.google.protobuf.Message;
 import io.bisq.common.Clock;
 import io.bisq.common.Marshaller;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.common.persistence.ListPersistable;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.proto.ProtoHelper;
 import io.bisq.common.storage.Storage;
@@ -20,6 +22,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class PeerManager implements ConnectionListener {
@@ -44,6 +47,7 @@ public class PeerManager implements ConnectionListener {
     private int maxConnectionsPeer;
     private int maxConnectionsNonDirect;
     private int maxConnectionsAbsolute;
+    private Object listToProto;
 
     // Modify this to change the relationships between connection limits.
     private void setConnectionLimits(int maxConnections) {
@@ -53,7 +57,6 @@ public class PeerManager implements ConnectionListener {
         maxConnectionsNonDirect = maxConnections + 8;
         maxConnectionsAbsolute = maxConnections + 18;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -76,7 +79,7 @@ public class PeerManager implements ConnectionListener {
     private final NetworkNode networkNode;
     private final Clock clock;
     private final Set<NodeAddress> seedNodeAddresses;
-    private final Storage<PersistedList<Peer>> dbStorage;
+    private final Storage<ListPersistable<Peer>> dbStorage;
 
     private final HashSet<Peer> persistedPeers = new HashSet<>();
     private final Set<Peer> reportedPeers = new HashSet<>();
@@ -99,7 +102,7 @@ public class PeerManager implements ConnectionListener {
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
         dbStorage = new Storage<>(storageDir, persistenceProtoResolver);
-        PersistedList persistedList = dbStorage.initAndGetPersistedWithFileName("PersistedPeers");
+        ListPersistable persistedList = dbStorage.initAndGetPersistedWithFileName("PersistedPeers");
         if (persistedList != null) {
             log.debug("We have persisted reported list. persistedList.size()=" + persistedList.getList().size());
             this.persistedPeers.addAll(persistedList.getList());
@@ -392,7 +395,7 @@ public class PeerManager implements ConnectionListener {
             persistedPeers.addAll(reportedPeersToAdd);
             purgePersistedPeersIfExceeds();
             if (dbStorage != null)
-                dbStorage.queueUpForSave(new PersistedList(persistedPeers), 2000); // We clone it to avoid ConcurrentModificationExceptions at save
+                dbStorage.queueUpForSave(new ListPersistable(persistedPeers, getListToProto()), 2000); // We clone it to avoid ConcurrentModificationExceptions at save
 
             printReportedPeers();
         } else {
@@ -458,7 +461,7 @@ public class PeerManager implements ConnectionListener {
             persistedPeers.remove(persistedPeer);
 
             if (dbStorage != null) {
-                PersistedList serializable = new PersistedList(persistedPeers);
+                ListPersistable serializable = new ListPersistable(persistedPeers);
                 serializable.setToProto((list) -> PB.DiskEnvelope.newBuilder()
                         .setPeersList(PB.PeersList.newBuilder()
                                 .addAllPeers(ProtoHelper.collectionToProto((Collection<? extends Marshaller>) list))));
@@ -631,5 +634,11 @@ public class PeerManager implements ConnectionListener {
             result.append("\n------------------------------------------------------------\n");
             log.debug(result.toString());
         }
+    }
+
+    private Function<List<Peer>, Message> getListToProto() {
+        return (List<Peer> list) -> {
+            return PB.DiskEnvelope.newBuilder().setPeersList(PB.PeersList.newBuilder().addAllPeers(ProtoHelper.collectionToProto(list))).build();
+        };
     }
 }

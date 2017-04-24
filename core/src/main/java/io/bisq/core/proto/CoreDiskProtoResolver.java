@@ -1,31 +1,27 @@
 package io.bisq.core.proto;
 
 import com.google.inject.Provider;
+import io.bisq.common.crypto.Hash;
 import io.bisq.common.locale.*;
+import io.bisq.common.persistence.HashMapPersistable;
+import io.bisq.common.persistence.ListPersistable;
 import io.bisq.common.persistence.LongPersistable;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryList;
-import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.PaymentAccountFactory;
-import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.User;
 import io.bisq.core.user.UserVO;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.peers.PersistedList;
 import io.bisq.network.p2p.peers.peerexchange.Peer;
+import io.bisq.network.p2p.storage.P2PDataStorage;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.bisq.core.proto.ProtoUtil.getPaymentAccount;
@@ -89,10 +85,10 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
             case PERSISTED_P2P_STORAGE_DATA:
                 result = getPing(envelope);
                 break;
-            case SEQUENCE_NUMBER_MAP:
-                result = getPing(envelope);
-                break;
                 */
+            case SEQUENCE_NUMBER_MAP:
+                result = getSequenceNumberMap(envelope.getSequenceNumberMap());
+                break;
             case TRADE_STATISTICS_LIST:
                 result = getTradeStatisticsList(envelope.getTradeStatisticsList());
             case BLOOM_FILTER_NONCE:
@@ -104,13 +100,22 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         return Optional.ofNullable(result);
     }
 
+    private Persistable getSequenceNumberMap(PB.SequenceNumberMap sequenceNumberMap) {
+        Map<String, PB.MapValue> sequenceNumberMapMap = sequenceNumberMap.getSequenceNumberMapMap();
+        HashMap<String, P2PDataStorage.MapValue> result = new HashMap<>();
+        for(final Map.Entry<String, PB.MapValue> entry: sequenceNumberMapMap.entrySet()) {
+            result.put(entry.getKey(), new P2PDataStorage.MapValue(entry.getValue().getSequenceNr(), entry.getValue().getTimeStamp()));
+        }
+        return new HashMapPersistable<>(result);
+    }
+
     private Persistable getTradeStatisticsList(PB.TradeStatisticsList tradeStatisticsList) {
-        return new PersistedList<>(tradeStatisticsList.getTradeStatisticsList().stream()
+        return new ListPersistable<>(tradeStatisticsList.getTradeStatisticsList().stream()
                 .map(tradeStatistics -> TradeStatistics.fromProto(tradeStatistics)).collect(Collectors.toList()));
     }
 
     private Persistable getPeersList(PB.PeersList envelope) {
-        return new PersistedList<>(envelope.getPeersList().stream().map(peer -> Peer.fromProto(peer))
+        return new ListPersistable<>(envelope.getPeersList().stream().map(peer -> Peer.fromProto(peer))
                 .collect(Collectors.toList()));
     }
 

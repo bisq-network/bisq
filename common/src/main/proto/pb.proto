@@ -766,8 +766,9 @@ message DiskEnvelope {
         User user = 6;
         PersistedP2PStorageData persisted_p2p_storage_data = 7;
         SequenceNumberMap sequence_number_map = 8;
-        LongPersistable bloom_filter_nonce = 9;
-        TradeStatisticsList trade_statistics_list = 10;
+        PersistedEntryMap persisted_entry_map = 9;
+        LongPersistable bloom_filter_nonce = 10;
+        TradeStatisticsList trade_statistics_list = 12;
     }
 }
 
@@ -788,7 +789,9 @@ message TradeStatisticsList {
 }
 
 
-
+message PersistedEntryMap {
+    map<string, ProtectedStorageEntry> persisted_entry_map = 1;
+}
 
 message SequenceNumberMap {
     map<string, MapValue> sequence_number_map = 1;

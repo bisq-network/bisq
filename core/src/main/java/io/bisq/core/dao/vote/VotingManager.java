@@ -78,7 +78,7 @@ public class VotingManager {
 
         ListPersistable<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
         if (persisted != null)
-            voteItemsLists.addAll(persisted.getListPayload());
+            voteItemsLists.addAll(persisted.getList());
     }
 
     @VisibleForTesting

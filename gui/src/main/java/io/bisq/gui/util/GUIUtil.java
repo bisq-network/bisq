@@ -123,7 +123,7 @@ public class GUIUtil {
                 ListPersistable<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
-                    persisted.getListPayload().stream().forEach(paymentAccount -> {
+                    persisted.getList().stream().forEach(paymentAccount -> {
                         final String id = paymentAccount.getId();
                         if (user.getPaymentAccount(id) == null) {
                             user.addPaymentAccount(paymentAccount);

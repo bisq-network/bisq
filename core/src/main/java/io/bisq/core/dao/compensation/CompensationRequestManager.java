@@ -82,7 +82,7 @@ public class CompensationRequestManager {
 
         ListPersistable<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
         if (persisted != null)
-            model.setPersistedCompensationRequest(persisted.getListPayload());
+            model.setPersistedCompensationRequest(persisted.getList());
 
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
