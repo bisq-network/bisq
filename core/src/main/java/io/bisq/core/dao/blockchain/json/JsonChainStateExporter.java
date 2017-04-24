@@ -58,6 +58,10 @@ public class JsonChainStateExporter {
         this.bsqChainState = bsqChainState;
         this.dumpBlockchainData = dumpBlockchainData;
 
+        init(storageDir, dumpBlockchainData);
+    }
+
+    private void init(@Named(Storage.STORAGE_DIR) File storageDir, @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
         if (dumpBlockchainData) {
             txDir = new File(Paths.get(storageDir.getAbsolutePath(), "tx").toString());
             txOutputDir = new File(Paths.get(storageDir.getAbsolutePath(), "txo").toString());
@@ -72,20 +76,20 @@ public class JsonChainStateExporter {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
+            if (!txDir.mkdir())
+                log.warn("make txDir failed.\ntxDir=" + txDir.getAbsolutePath());
+
+            if (!txOutputDir.mkdir())
+                log.warn("make txOutputDir failed.\ntxOutputDir=" + txOutputDir.getAbsolutePath());
+
+            if (!bsqChainStateDir.mkdir())
+                log.warn("make bsqChainStateDir failed.\nbsqChainStateDir=" + bsqChainStateDir.getAbsolutePath());
+
+            txFileManager = new JsonFileManager(txDir);
+            txOutputFileManager = new JsonFileManager(txOutputDir);
+            bsqChainStateFileManager = new JsonFileManager(bsqChainStateDir);
         }
-
-        if (!txDir.mkdir())
-            log.warn("make txDir failed.\ntxDir=" + txDir.getAbsolutePath());
-
-        if (!txOutputDir.mkdir())
-            log.warn("make txOutputDir failed.\ntxOutputDir=" + txOutputDir.getAbsolutePath());
-
-        if (!bsqChainStateDir.mkdir())
-            log.warn("make bsqChainStateDir failed.\nbsqChainStateDir=" + bsqChainStateDir.getAbsolutePath());
-
-        txFileManager = new JsonFileManager(txDir);
-        txOutputFileManager = new JsonFileManager(txOutputDir);
-        bsqChainStateFileManager = new JsonFileManager(bsqChainStateDir);
     }
 
     public void shutDown() {
