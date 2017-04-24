@@ -17,8 +17,6 @@
 
 package io.bisq.core.app;
 
-import io.bisq.common.Timer;
-import io.bisq.common.UserThread;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
 import io.bisq.core.user.Preferences;
@@ -33,7 +31,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class AppSetupWithP2PAndDAO extends AppSetup {
@@ -59,16 +56,10 @@ public class AppSetupWithP2PAndDAO extends AppSetup {
 
     @Override
     protected void startBasicServices() {
-        Timer startupTimeout = UserThread.runAfter(() -> {
-            log.error("Could nto startup after 4 minutes. We shut down.");
-            System.exit(0);
-        }, 4, TimeUnit.MINUTES);
-
         p2pNetWorkReady = initP2PNetwork();
 
         p2pNetWorkReady.addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                startupTimeout.stop();
                 onBasicServicesInitialized();
             }
         });

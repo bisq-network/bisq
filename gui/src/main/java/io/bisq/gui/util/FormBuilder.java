@@ -726,11 +726,37 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, AddressTextField> addLabelAddressTextField(GridPane gridPane, int rowIndex, String title) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
+        return addLabelAddressTextField(gridPane, rowIndex, title, 0);
+    }
+
+    public static Tuple2<Label, AddressTextField> addLabelAddressTextField(GridPane gridPane, int rowIndex, String title, double top) {
+        Label label = addLabel(gridPane, rowIndex, title, top);
 
         AddressTextField addressTextField = new AddressTextField();
         GridPane.setRowIndex(addressTextField, rowIndex);
         GridPane.setColumnIndex(addressTextField, 1);
+        GridPane.setMargin(addressTextField, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(addressTextField);
+
+        return new Tuple2<>(label, addressTextField);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label  + BsqAddressTextField
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple2<Label, BsqAddressTextField> addLabelBsqAddressTextField(GridPane gridPane, int rowIndex, String title) {
+        return addLabelBsqAddressTextField(gridPane, rowIndex, title, 0);
+    }
+
+    public static Tuple2<Label, BsqAddressTextField> addLabelBsqAddressTextField(GridPane gridPane, int rowIndex, String title, double top) {
+        Label label = addLabel(gridPane, rowIndex, title, top);
+
+        BsqAddressTextField addressTextField = new BsqAddressTextField();
+        GridPane.setRowIndex(addressTextField, rowIndex);
+        GridPane.setColumnIndex(addressTextField, 1);
+        GridPane.setMargin(addressTextField, new Insets(top, 0, 0, 0));
         gridPane.getChildren().add(addressTextField);
 
         return new Tuple2<>(label, addressTextField);

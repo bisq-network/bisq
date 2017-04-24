@@ -820,31 +820,29 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 headerLabel.setText(formatter.formatDateTime(new Date(item.getDate())));
                                 messageLabel.setText(item.getMessage());
                                 attachmentsBox.getChildren().clear();
-                                if (item.getAttachments() != null) {
-                                    if (item.getAttachments().size() > 0) {
-                                        AnchorPane.setBottomAnchor(messageLabel, bottomBorder + attachmentsBoxHeight + 10);
-                                        attachmentsBox.getChildren().add(new Label(Res.get("support.attachments") + " ") {{
-                                            setPadding(new Insets(0, 0, 3, 0));
-                                            if (isMyMsg)
-                                                setStyle("-fx-text-fill: white;");
-                                            else
-                                                setStyle("-fx-text-fill: black;");
-                                        }});
-                                        item.getAttachments().stream().forEach(attachment -> {
-                                            final Label icon = new Label();
-                                            setPadding(new Insets(0, 0, 3, 0));
-                                            if (isMyMsg)
-                                                icon.getStyleClass().add("attachment-icon");
-                                            else
-                                                icon.getStyleClass().add("attachment-icon-black");
+                                if (item.getAttachments() != null && item.getAttachments().size() > 0) {
+                                    AnchorPane.setBottomAnchor(messageLabel, bottomBorder + attachmentsBoxHeight + 10);
+                                    attachmentsBox.getChildren().add(new Label(Res.get("support.attachments") + " ") {{
+                                        setPadding(new Insets(0, 0, 3, 0));
+                                        if (isMyMsg)
+                                            setStyle("-fx-text-fill: white;");
+                                        else
+                                            setStyle("-fx-text-fill: black;");
+                                    }});
+                                    item.getAttachments().stream().forEach(attachment -> {
+                                        final Label icon = new Label();
+                                        setPadding(new Insets(0, 0, 3, 0));
+                                        if (isMyMsg)
+                                            icon.getStyleClass().add("attachment-icon");
+                                        else
+                                            icon.getStyleClass().add("attachment-icon-black");
 
-                                            AwesomeDude.setIcon(icon, AwesomeIcon.FILE_TEXT);
-                                            icon.setPadding(new Insets(-2, 0, 0, 0));
-                                            icon.setTooltip(new Tooltip(attachment.getFileName()));
-                                            icon.setOnMouseClicked(event -> onOpenAttachment(attachment));
-                                            attachmentsBox.getChildren().add(icon);
-                                        });
-                                    }
+                                        AwesomeDude.setIcon(icon, AwesomeIcon.FILE_TEXT);
+                                        icon.setPadding(new Insets(-2, 0, 0, 0));
+                                        icon.setTooltip(new Tooltip(attachment.getFileName()));
+                                        icon.setOnMouseClicked(event -> onOpenAttachment(attachment));
+                                        attachmentsBox.getChildren().add(icon);
+                                    });
                                 } else {
                                     AnchorPane.setBottomAnchor(messageLabel, bottomBorder + 10);
                                 }

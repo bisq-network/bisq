@@ -310,9 +310,31 @@ public class BSFormatter {
             if (monetary instanceof Fiat)
                 return formatFiat((Fiat) monetary, fiatFormat, appendCurrencyCode);
             else
-                return formatAltcoin((Altcoin) monetary, appendCurrencyCode);
+                return formatAltcoinVolume((Altcoin) monetary, appendCurrencyCode);
         } else {
             return "";
+        }
+    }
+
+    public String formatAltcoinVolume(Altcoin altcoin, boolean appendCurrencyCode) {
+        if (altcoin != null) {
+            try {
+                // TODO quick hack...
+                String res;
+                if (altcoin.getCurrencyCode().equals("BSQ"))
+                    res = altcoinFormat.noCode().minDecimals(3).repeatOptionalDecimals(0, 0).format(altcoin).toString();
+                else
+                    res = altcoinFormat.noCode().format(altcoin).toString();
+                if (appendCurrencyCode)
+                    return res + " " + altcoin.getCurrencyCode();
+                else
+                    return res;
+            } catch (Throwable t) {
+                log.warn("Exception at formatAltcoinVolume: " + t.toString());
+                return Res.get("shared.na") + " " + altcoin.getCurrencyCode();
+            }
+        } else {
+            return Res.get("shared.na");
         }
     }
 

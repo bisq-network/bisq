@@ -188,7 +188,6 @@ public class BsqParser {
                 bsqChainState.addUnspentTxOutput(txOutput);
             });
             tx.setTxType(TxType.GENESIS);
-            tx.setVerified(true);
 
             bsqChainState.setGenesisTx(tx);
             bsqChainState.addTxToMap(tx);
@@ -213,7 +212,7 @@ public class BsqParser {
         outerLoop:
         for (Tx tx : transactions) {
             for (TxInput input : tx.getInputs()) {
-                if (intraBlockSpendingTxIdSet.contains(input.getSpendingTxId())) {
+                if (intraBlockSpendingTxIdSet.contains(input.getTxId())) {
                     // We have an input from one of the intra-block-transactions, so we cannot process that tx now.
                     // We add the tx for later parsing to the txsWithInputsFromSameBlock and move to the next tx.
                     txsWithInputsFromSameBlock.add(tx);
@@ -278,8 +277,7 @@ public class BsqParser {
                 spentTxOutput.setUnspent(false);
                 bsqChainState.removeUnspentTxOutput(spentTxOutput);
                 spentTxOutput.setSpentInfo(new SpentInfo(blockHeight, tx.getId(), inputIndex));
-                input.setBsqValue(spentTxOutput.getValue());
-                input.setVerified(true);
+                input.setConnectedTxOutput(spentTxOutput);
                 availableValue = availableValue + spentTxOutput.getValue();
             }
         }
@@ -300,7 +298,7 @@ public class BsqParser {
                     txOutput.setVerified(true);
                     txOutput.setUnspent(true);
                     bsqChainState.addUnspentTxOutput(txOutput);
-                    tx.setTxType(TxType.SEND_BSQ);
+                    tx.setTxType(TxType.TRANSFER_BSQ);
                     txOutput.setTxOutputType(TxOutputType.BSQ_OUTPUT);
 
                     availableValue -= txOutputValue;
@@ -336,13 +334,13 @@ public class BsqParser {
         return isBsqTx;
     }
 
-    private Set<String> getIntraBlockSpendingTxIdSet(List<Tx> transactions) {
-        Set<String> txIdSet = transactions.stream().map(Tx::getId).collect(Collectors.toSet());
+    private Set<String> getIntraBlockSpendingTxIdSet(List<Tx> txs) {
+        Set<String> txIdSet = txs.stream().map(Tx::getId).collect(Collectors.toSet());
         Set<String> intraBlockSpendingTxIdSet = new HashSet<>();
-        transactions.stream()
+        txs.stream()
                 .forEach(tx -> tx.getInputs().stream()
-                        .filter(input -> txIdSet.contains(input.getSpendingTxId()))
-                        .forEach(input -> intraBlockSpendingTxIdSet.add(input.getSpendingTxId())));
+                        .filter(input -> txIdSet.contains(input.getTxId()))
+                        .forEach(input -> intraBlockSpendingTxIdSet.add(input.getTxId())));
         return intraBlockSpendingTxIdSet;
     }
 }

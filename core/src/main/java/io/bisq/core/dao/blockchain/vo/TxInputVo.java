@@ -28,10 +28,10 @@ import javax.annotation.concurrent.Immutable;
 public class TxInputVo implements Persistable {
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private final String spendingTxId;
-    private final int spendingTxOutputIndex;
+    private final String txId;
+    private final int txOutputIndex;
 
     public TxIdIndexTuple getTxIdIndexTuple() {
-        return new TxIdIndexTuple(spendingTxId, spendingTxOutputIndex);
+        return new TxIdIndexTuple(txId, txOutputIndex);
     }
 }

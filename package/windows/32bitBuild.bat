@@ -19,7 +19,7 @@ call "%JAVA_HOME%\bin\javapackager.exe" -deploy ^
 -title bisq ^
 -vendor bisq ^
 -outdir %outdir% ^
--appclass io.bisq.app.BisqAppMain ^
+-appclass io.bisq.gui.app.BisqAppMain ^
 -srcfiles %outdir%\bisq.jar ^
 -srcfiles "core/src/main/resources/bisq.policy" ^
 -outfile bisq ^

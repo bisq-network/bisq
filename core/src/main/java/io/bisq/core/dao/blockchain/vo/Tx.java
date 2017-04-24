@@ -22,6 +22,7 @@ import io.bisq.common.persistence.Persistable;
 import lombok.Data;
 import lombok.experimental.Delegate;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,7 +36,6 @@ public class Tx implements Persistable {
     private final List<TxInput> inputs;
     private final List<TxOutput> outputs;
 
-    private boolean isVerified;
     private long burntFee;
     private TxType txType;
 
@@ -50,7 +50,6 @@ public class Tx implements Persistable {
     }
 
     public void reset() {
-        isVerified = false;
         burntFee = 0;
         txType = null;
         inputs.stream().forEach(TxInput::reset);
@@ -64,9 +63,11 @@ public class Tx implements Persistable {
                 ",\nid='" + getId() + '\'' +
                 ",\nblockHeight=" + getBlockHeight() +
                 ",\nblockHash=" + getBlockHash() +
+                ",\ntime=" + new Date(getTime()) +
                 ",\ninputs=" + inputs +
                 ",\noutputs=" + outputs +
-                ",\ntxVersion=" + getTxVersion() +
+                ",\nburntFee=" + burntFee +
+                ",\ntxType=" + txType +
                 "}\n";
     }
 }

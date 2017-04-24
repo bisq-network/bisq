@@ -21,6 +21,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.protocol.SellerProtocol;
 import io.bisq.network.p2p.NodeAddress;
@@ -41,22 +42,19 @@ public abstract class SellerTrade extends Trade {
                 boolean isCurrencyForTakerFeeBtc,
                 long tradePrice,
                 NodeAddress tradingPeerNodeAddress,
-                Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice, tradingPeerNodeAddress, storage);
+                Storage<? extends TradableList> storage,
+                BtcWalletService btcWalletService) {
+        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice,
+                tradingPeerNodeAddress, storage, btcWalletService);
     }
 
     SellerTrade(Offer offer,
                 Coin txFee,
                 Coin takeOfferFee,
                 boolean isCurrencyForTakerFeeBtc,
-                Storage<? extends TradableList> storage) {
-        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, storage);
-    }
-
-    @Override
-    protected void initStates() {
-        if (state == null)
-            state = State.PREPARATION;
+                Storage<? extends TradableList> storage,
+                BtcWalletService btcWalletService) {
+        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
     }
 
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

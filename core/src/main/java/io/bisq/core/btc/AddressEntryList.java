@@ -27,8 +27,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Wallet;
 import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.wallet.Wallet;
 
 import java.util.ArrayList;
 import java.util.List;

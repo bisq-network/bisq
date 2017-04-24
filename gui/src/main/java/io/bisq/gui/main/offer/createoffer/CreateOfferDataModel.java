@@ -32,6 +32,8 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.listeners.BalanceListener;
+import io.bisq.core.btc.wallet.BsqBalanceListener;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
@@ -68,7 +70,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 class CreateOfferDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
+    private BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final User user;
     private final KeyRing keyRing;
@@ -81,7 +84,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final AddressEntry addressEntry;
     private Coin makerFee;
     private boolean isCurrencyForMakerFeeBtc;
-    private final BalanceListener balanceListener;
+    private final BalanceListener btcBalanceListener;
+    private final BsqBalanceListener bsqBalanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
     private Offer.Direction direction;
@@ -91,7 +95,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final StringProperty tradeCurrencyCode = new SimpleStringProperty();
     private final StringProperty btcCode = new SimpleStringProperty();
 
-    private final BooleanProperty isWalletFunded = new SimpleBooleanProperty();
+    private final BooleanProperty isBtcWalletFunded = new SimpleBooleanProperty();
+    final BooleanProperty allowBsqFeePayment = new SimpleBooleanProperty(false);
     private final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
     //final BooleanProperty isMainNet = new SimpleBooleanProperty();
     //final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
@@ -116,6 +121,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     Coin totalAvailableBalance;
     private double marketPriceMargin = 0;
     private Coin txFeeFromFeeService;
+    private boolean marketPriceAvailable;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -123,11 +129,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService walletService,
-                         Preferences preferences, User user, KeyRing keyRing, P2PService p2PService, PriceFeedService priceFeedService,
+    CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
+                         Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
+                         PriceFeedService priceFeedService,
                          FeeService feeService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
+        this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.user = user;
         this.keyRing = keyRing;
@@ -140,13 +148,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 UUID.randomUUID().toString() + "-" +
                 Version.VERSION.replace(".", "");
         shortOfferId = Utilities.getShortId(offerId);
-        addressEntry = walletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
+        addressEntry = btcWalletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
 
         useMarketBasedPrice.set(preferences.isUsePercentageBasedPrice());
         buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsCoin());
         sellerSecurityDeposit = Restrictions.SELLER_SECURITY_DEPOSIT;
 
-        balanceListener = new BalanceListener(getAddressEntry().getAddress()) {
+        btcBalanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance();
@@ -173,6 +181,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
                     });
                 }*/
             }
+        };
+
+        bsqBalanceListener = (availableBalance, unverifiedBalance) -> {
+            updateBalance();
         };
 
         paymentAccountsChangeListener = change -> fillPaymentAccounts();
@@ -205,13 +217,15 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void addListeners() {
-        walletService.addBalanceListener(balanceListener);
+        btcWalletService.addBalanceListener(btcBalanceListener);
+        bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
         user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
     }
 
 
     private void removeListeners() {
-        walletService.removeBalanceListener(balanceListener);
+        btcWalletService.removeBalanceListener(btcBalanceListener);
+        bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
         user.getPaymentAccountsAsObservable().removeListener(paymentAccountsChangeListener);
     }
 
@@ -272,6 +286,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         calculateVolume();
         calculateTotalToPay();
+        updateBalance();
 
         return true;
     }
@@ -287,7 +302,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Offer createAndGetOffer() {
-        long priceAsLong = price.get() != null && !useMarketBasedPrice.get() ? price.get().getValue() : 0L;
+        final boolean useMarketBasedPriceValue = marketPriceAvailable && useMarketBasedPrice.get();
+        long priceAsLong = price.get() != null && !useMarketBasedPriceValue ? price.get().getValue() : 0L;
         // We use precision 8 in AltcoinPrice but in OfferPayload we use Fiat with precision 4. Will be refactored once in a bigger update....
         // TODO use same precision for both in next release
         String currencyCode = tradeCurrencyCode.get();
@@ -295,7 +311,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         String baseCurrencyCode = isCryptoCurrency ? currencyCode : "BTC";
         String counterCurrencyCode = isCryptoCurrency ? "BTC" : currencyCode;
 
-        double marketPriceMarginParam = useMarketBasedPrice.get() ? marketPriceMargin : 0;
+        double marketPriceMarginParam = useMarketBasedPriceValue ? marketPriceMargin : 0;
         long amount = this.amount.get() != null ? this.amount.get().getValue() : 0L;
         long minAmount = this.minAmount.get() != null ? this.minAmount.get().getValue() : 0L;
 
@@ -352,7 +368,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 OfferPayload.Direction.valueOf(direction.name()),
                 priceAsLong,
                 marketPriceMarginParam,
-                useMarketBasedPrice.get(),
+                useMarketBasedPriceValue,
                 amount,
                 minAmount,
                 baseCurrencyCode,
@@ -367,7 +383,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 bankId,
                 acceptedBanks,
                 Version.VERSION,
-                walletService.getLastBlockSeenHeight(),
+                btcWalletService.getLastBlockSeenHeight(),
                 txFeeFromFeeService.value,
                 makerFee.value,
                 isCurrencyForMakerFeeBtc,
@@ -441,7 +457,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     void fundFromSavingsWallet() {
         this.useSavingsWallet = true;
         updateBalance();
-        if (!isWalletFunded.get()) {
+        if (!isBtcWalletFunded.get()) {
             this.useSavingsWallet = false;
             updateBalance();
         }
@@ -576,9 +592,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void updateBalance() {
-        Coin tradeWalletBalance = walletService.getBalanceForAddress(addressEntry.getAddress());
+        Coin tradeWalletBalance = btcWalletService.getBalanceForAddress(addressEntry.getAddress());
         if (useSavingsWallet) {
-            Coin savingWalletBalance = walletService.getSavingWalletBalance();
+            Coin savingWalletBalance = btcWalletService.getSavingWalletBalance();
             totalAvailableBalance = savingWalletBalance.add(tradeWalletBalance);
             if (totalToPayAsCoin.get() != null) {
                 if (totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
@@ -598,9 +614,9 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         log.debug("missingCoin " + missingCoin.get().toFriendlyString());
 
-        isWalletFunded.set(isBalanceSufficient(balance.get()));
+        isBtcWalletFunded.set(isBalanceSufficient(balance.get()));
         //noinspection PointlessBooleanExpression,ConstantConditions
-        if (totalToPayAsCoin.get() != null && isWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
+        if (totalToPayAsCoin.get() != null && isBtcWalletFunded.get() && walletFundedNotification == null && !DevEnv.DEV_MODE) {
             walletFundedNotification = new Notification()
                     .headLine(Res.get("notification.walletUpdate.headline"))
                     .notification(Res.get("notification.walletUpdate.msg", formatter.formatCoinWithCode(totalToPayAsCoin.get())))
@@ -608,6 +624,14 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
             walletFundedNotification.show();
         }
+        updateAllowBsqFeePayment();
+    }
+
+    void updateAllowBsqFeePayment() {
+        if (makerFee != null && bsqWalletService.getAvailableBalance() != null)
+            allowBsqFeePayment.set(bsqWalletService.getAvailableBalance().compareTo(makerFee) >= 0);
+        else
+            allowBsqFeePayment.set(true); //TODO shoudl it be false by default?
     }
 
     private boolean isBalanceSufficient(Coin balance) {
@@ -630,8 +654,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     public void swapTradeToSavings() {
-        walletService.swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
-        walletService.swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE);
+        btcWalletService.swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
+        btcWalletService.swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.RESERVED_FOR_TRADE);
     }
 
     private void fillPaymentAccounts() {
@@ -723,8 +747,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return btcCode;
     }
 
-    ReadOnlyBooleanProperty getIsWalletFunded() {
-        return isWalletFunded;
+    ReadOnlyBooleanProperty getIsBtcWalletFunded() {
+        return isBtcWalletFunded;
     }
 
     ReadOnlyBooleanProperty getUseMarketBasedPrice() {
@@ -753,5 +777,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     public boolean getCurrencyForMakerFeeBtc() {
         return isCurrencyForMakerFeeBtc;
+    }
+
+    public Coin getBsqBalance() {
+        return bsqWalletService.getAvailableBalance();
+    }
+
+    public void setMarketPriceAvailable(boolean marketPriceAvailable) {
+        this.marketPriceAvailable = marketPriceAvailable;
     }
 }

@@ -40,8 +40,8 @@ public class PeerManagerTest {
 
         seedNodes = new HashSet<>();
         if (useLocalhostForP2P) {
-            //seedNodes.add(new Address("localhost:8001"));
-            // seedNodes.add(new Address("localhost:8002"));
+            //seedNodes.add(new NodeAddress("localhost:8001"));
+            // seedNodes.add(new NodeAddress("localhost:8002"));
             seedNodes.add(new NodeAddress("localhost:8003"));
             sleepTime = 100;
 

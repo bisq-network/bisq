@@ -678,6 +678,7 @@ public final class Preferences implements Persistable {
                 .setMaxPriceDistanceInPercent(maxPriceDistanceInPercent)
                 .setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically)
                 .setUsePercentageBasedPrice(usePercentageBasedPrice)
+                .setPayFeeInBtc(payFeeInBtc)
                 .putAllPeerTagMap(peerTagMap)
                 .setBitcoinNodes(bitcoinNodes)
                 .addAllIgnoreTradersList(ignoreTradersList)

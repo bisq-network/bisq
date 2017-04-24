@@ -22,11 +22,7 @@ import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.HDUtils;
 import org.bitcoinj.crypto.KeyCrypter;
-import org.bitcoinj.store.UnreadableWalletException;
-import org.bitcoinj.wallet.DeterministicKeyChain;
-import org.bitcoinj.wallet.DeterministicSeed;
-import org.bitcoinj.wallet.KeyChainFactory;
-import org.bitcoinj.wallet.Protos;
+import org.bitcoinj.wallet.*;
 
 class BisqKeyChainFactory implements KeyChainFactory {
     private final boolean useBitcoinDeterministicKeyChain;

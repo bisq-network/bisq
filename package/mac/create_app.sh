@@ -31,7 +31,7 @@ $JAVA_HOME/bin/javapackager \
     -outdir gui/deploy \
     -srcfiles "gui/deploy/bisq-$version.jar" \
     -srcfiles "core/src/main/resources/bisq.policy" \
-    -appclass io.bisq.app.BisqAppMain \
+    -appclass io.bisq.gui.app.BisqAppMain \
     -outfile bisq
  
 # when we have support for security manager we use that     

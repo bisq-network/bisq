@@ -87,13 +87,15 @@ public abstract class BsqNode {
 
     public void onAllServicesInitialized(ErrorMessageHandler errorMessageHandler) {
         applySnapshot();
-
+        log.info("onAllServicesInitialized");
         if (p2PService.isBootstrapped()) {
+            log.info("onAllServicesInitialized: isBootstrapped");
             onP2PNetworkReady();
         } else {
             p2PService.addP2PServiceListener(new BootstrapListener() {
                 @Override
                 public void onBootstrapComplete() {
+                    log.info("onAllServicesInitialized: onBootstrapComplete");
                     onP2PNetworkReady();
                 }
             });
@@ -112,6 +114,7 @@ public abstract class BsqNode {
 
     @SuppressWarnings("WeakerAccess")
     protected void startParseBlocks() {
+        log.info("startParseBlocks");
         int startBlockHeight = Math.max(genesisBlockHeight, bsqChainState.getChainHeadHeight() + 1);
         log.info("Parse blocks:\n" +
                         "   Start block height={}\n" +

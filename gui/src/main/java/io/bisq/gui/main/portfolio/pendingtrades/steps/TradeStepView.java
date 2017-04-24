@@ -110,7 +110,7 @@ public abstract class TradeStepView extends AnchorPane {
                 updateDisputeState(newValue);
         });
 
-        tradePeriodStateSubscription = EasyBind.subscribe(trade.getTradePeriodStateProperty(), newValue -> {
+        tradePeriodStateSubscription = EasyBind.subscribe(trade.tradePeriodStateProperty(), newValue -> {
             if (newValue != null)
                 updateTradePeriodState(newValue);
         });

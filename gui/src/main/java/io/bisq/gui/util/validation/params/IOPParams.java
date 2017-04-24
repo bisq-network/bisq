@@ -75,4 +75,14 @@ public class IOPParams extends NetworkParameters {
     public boolean hasMaxMoney() {
         return false;
     }
+
+    @Override
+    public BitcoinSerializer getSerializer(boolean parseRetain) {
+        return null;
+    }
+
+    @Override
+    public int getProtocolVersionNum(ProtocolVersion version) {
+        return 0;
+    }
 }

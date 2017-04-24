@@ -21,7 +21,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.exceptions.TransactionVerificationException;
 import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.listeners.AddressConfidenceListener;
@@ -38,6 +37,8 @@ import org.bitcoinj.script.Script;
 import org.bitcoinj.signers.TransactionSigner;
 import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.*;
+import org.bitcoinj.wallet.listeners.AbstractWalletEventListener;
+import org.bitcoinj.wallet.listeners.WalletEventListener;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,8 +105,6 @@ public abstract class WalletService {
 
     void decryptWallet(@NotNull KeyParameter key) {
         wallet.decrypt(key);
-        // Overwrite first with random bytes before setting to null
-        Utilities.overwriteWithRandomBytes(key.getKey());
         aesKey = null;
     }
 
@@ -222,7 +221,7 @@ public abstract class WalletService {
                 txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey());
                 log.warn("Input {} already correctly spends output, assuming SIGHASH type used will be safe and skipping signing.", index);
                 return;
-            } catch (ScriptException e) {
+            } catch (ScriptException e) {  
                 // Expected.
             }
 
@@ -239,7 +238,7 @@ public abstract class WalletService {
                     // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
                     // we sign missing pieces (to check this would require either assuming any signatures are signing
                     // standard output types or a way to get processed signatures out of script execution)
-                    txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey());
+                    txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
                     log.warn("Input {} already correctly spends output, assuming SIGHASH type used will be safe and skipping signing.", index);
                     return;
                 } catch (ScriptException e) {
@@ -313,7 +312,7 @@ public abstract class WalletService {
         List<TransactionConfidence> transactionConfidenceList = getOutputsWithConnectedOutputs(tx)
                 .stream()
                 .filter(WalletUtils::isOutputScriptConvertableToAddress)
-                .filter(output -> address.equals(WalletUtils.getAddressFromOutput(output)))
+                .filter(output -> address != null && address.equals(WalletUtils.getAddressFromOutput(output)))
                 .map(o -> tx.getConfidence())
                 .collect(Collectors.toList());
         return getMostRecentConfidence(transactionConfidenceList);
@@ -367,6 +366,10 @@ public abstract class WalletService {
         return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
     }
 
+    public Coin getEstimatedBalance() {
+        return wallet != null ? wallet.getBalance(Wallet.BalanceType.ESTIMATED) : Coin.ZERO;
+    }
+
     public Coin getBalanceForAddress(Address address) {
         return wallet != null ? getBalance(wallet.calculateAllSpendCandidates(), address) : Coin.ZERO;
     }
@@ -375,6 +378,7 @@ public abstract class WalletService {
         Coin balance = Coin.ZERO;
         for (TransactionOutput output : transactionOutputs) {
             if (WalletUtils.isOutputScriptConvertableToAddress(output) &&
+                    address != null &&
                     address.equals(WalletUtils.getAddressFromOutput(output)))
                 balance = balance.add(output.getValue());
         }
@@ -387,6 +391,7 @@ public abstract class WalletService {
         int outputs = 0;
         for (TransactionOutput output : transactionOutputs) {
             if (WalletUtils.isOutputScriptConvertableToAddress(output) &&
+                    address != null &&
                     address.equals(WalletUtils.getAddressFromOutput(output)))
                 outputs++;
         }
@@ -408,7 +413,8 @@ public abstract class WalletService {
 
     public void emptyWallet(String toAddress, KeyParameter aesKey, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler)
             throws InsufficientMoneyException, AddressFormatException {
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.emptyWallet(new Address(params, toAddress));
+        SendRequest sendRequest = SendRequest.emptyWallet(Address.fromBase58(params, toAddress));
+        sendRequest.fee = Coin.ZERO;
         sendRequest.feePerKb = getTxFeeForWithdrawalPerByte().multiply(1000);
         sendRequest.aesKey = aesKey;
         Wallet.SendResult sendResult = wallet.sendCoins(sendRequest);
@@ -550,11 +556,7 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static void printTx(String tracePrefix, Transaction tx) {
-        int size = tx.bitcoinSerialize().length;
-        log.info("\n" + tracePrefix + ":\n" +
-                tx.toString() +
-                "Satoshi/byte: " + (tx.getFee() != null ? tx.getFee().value / size : "No fee set yet") +
-                " (size: " + size + ")");
+        log.info("\n" + tracePrefix + ":\n" + tx.toString());
     }
 
 

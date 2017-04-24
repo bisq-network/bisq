@@ -129,8 +129,11 @@ public class TradeManager {
 
         tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
         trades = new TradableList<>(tradableListStorage, "PendingTrades");
-        trades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
-
+        trades.forEach(trade -> {
+            trade.setTransientFields(tradableListStorage, btcWalletService);
+            trade.getOffer().setPriceFeedService(priceFeedService);
+        });
+       
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
             public void onDirectMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress peerNodeAddress) {
@@ -192,12 +195,10 @@ public class TradeManager {
         List<Trade> removePreparedTradeList = new ArrayList<>();
         tradesForStatistics = new ArrayList<>();
         for (Trade trade : trades) {
-            trade.setStorage(tradableListStorage);
-
             if (trade.isDepositPublished() ||
                     (trade.isTakerFeePublished() && !trade.hasFailed())) {
                 initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
-                        trade.getProcessModel().getFundsNeededForTrade());
+                        trade.getProcessModel().getFundsNeededForTradeAsLong());
                 trade.updateDepositTxFromWallet();
                 tradesForStatistics.add(trade);
             } else if (trade.isTakerFeePublished()) {
@@ -273,16 +274,17 @@ public class TradeManager {
                         Coin.valueOf(payDepositRequest.txFee),
                         Coin.valueOf(payDepositRequest.takerFee),
                         payDepositRequest.isCurrencyForTakerFeeBtc,
-                        tradableListStorage);
+                        tradableListStorage,
+                        btcWalletService);
             else
                 trade = new SellerAsMakerTrade(offer,
                         Coin.valueOf(payDepositRequest.txFee),
                         Coin.valueOf(payDepositRequest.takerFee),
                         payDepositRequest.isCurrencyForTakerFeeBtc,
-                        tradableListStorage);
+                        tradableListStorage,
+                        btcWalletService);
 
-            trade.setStorage(tradableListStorage);
-            initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTrade());
+            initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTradeAsLong());
             trades.add(trade);
             ((MakerTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
         } else {
@@ -375,11 +377,25 @@ public class TradeManager {
                              TradeResultHandler tradeResultHandler) {
         Trade trade;
         if (offer.isBuyOffer())
-            trade = new SellerAsTakerTrade(offer, amount, txFee, takerFee, isCurrencyForTakerFeeBtc,
-                    tradePrice, model.getPeerNodeAddress(), tradableListStorage);
+            trade = new SellerAsTakerTrade(offer,
+                    amount,
+                    txFee,
+                    takerFee,
+                    isCurrencyForTakerFeeBtc,
+                    tradePrice,
+                    model.getPeerNodeAddress(),
+                    tradableListStorage,
+                    btcWalletService);
         else
-            trade = new BuyerAsTakerTrade(offer, amount, txFee, takerFee, isCurrencyForTakerFeeBtc,
-                    tradePrice, model.getPeerNodeAddress(), tradableListStorage);
+            trade = new BuyerAsTakerTrade(offer,
+                    amount,
+                    txFee,
+                    takerFee,
+                    isCurrencyForTakerFeeBtc,
+                    tradePrice,
+                    model.getPeerNodeAddress(),
+                    tradableListStorage,
+                    btcWalletService);
 
         trade.setTakerPaymentAccountId(paymentAccountId);
 

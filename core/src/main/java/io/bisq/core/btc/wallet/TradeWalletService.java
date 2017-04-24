@@ -22,7 +22,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.bisq.common.app.Log;
-import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.InsufficientFundsException;
 import io.bisq.core.btc.data.InputsAndChangeOutput;
@@ -37,6 +36,8 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.wallet.SendRequest;
+import org.bitcoinj.wallet.Wallet;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,10 +126,6 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void setAesKey(@Nullable KeyParameter newAesKey) {
-        // Overwrite first with random bytes before setting to null
-        if (newAesKey == null && this.aesKey != null)
-            Utilities.overwriteWithRandomBytes(this.aesKey.getKey());
-
         this.aesKey = newAesKey;
     }
 
@@ -169,14 +166,14 @@ public class TradeWalletService {
         log.debug("feeReceiverAddresses " + feeReceiverAddresses);
 
         Transaction tradingFeeTx = new Transaction(params);
-        tradingFeeTx.addOutput(tradingFee, new Address(params, feeReceiverAddresses));
+        tradingFeeTx.addOutput(tradingFee, Address.fromBase58(params, feeReceiverAddresses));
         // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
         tradingFeeTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
 
         // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to
         // wait for 1 confirmation)
         // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tradingFeeTx);
+        SendRequest sendRequest = SendRequest.forTx(tradingFeeTx);
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
         if (useSavingsWallet)
@@ -184,8 +181,10 @@ public class TradeWalletService {
         else
             sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
         // We use a fixed fee
-        sendRequest.feePerKb = Coin.ZERO;
+
         sendRequest.fee = txFee;
+        sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
 
         // Change is optional in case of overpay or use of funds from savings wallet
         sendRequest.changeAddress = changeAddress;
@@ -243,7 +242,7 @@ public class TradeWalletService {
         // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
 
         // WalletService.printTx("preparedBsqTx", preparedBsqTx);
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(preparedBsqTx);
+        SendRequest sendRequest = SendRequest.forTx(preparedBsqTx);
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
         if (useSavingsWallet)
@@ -251,8 +250,10 @@ public class TradeWalletService {
         else
             sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
         // We use a fixed fee
-        sendRequest.feePerKb = Coin.ZERO;
         sendRequest.fee = txFee;
+        sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
+
         sendRequest.signInputs = false;
 
         // Change is optional in case of overpay or use of funds from savings wallet
@@ -481,7 +482,7 @@ public class TradeWalletService {
         TransactionOutput takerTransactionOutput = null;
         if (takerChangeOutputValue > 0 && takerChangeAddressString != null)
             takerTransactionOutput = new TransactionOutput(params, preparedDepositTx, Coin.valueOf(takerChangeOutputValue),
-                    new Address(params, takerChangeAddressString));
+                    Address.fromBase58(params, takerChangeAddressString));
 
         if (makerIsBuyer) {
             // Add optional buyer outputs
@@ -809,9 +810,9 @@ public class TradeWalletService {
         Transaction preparedPayoutTx = new Transaction(params);
         preparedPayoutTx.addInput(p2SHMultiSigOutput);
         if (buyerPayoutAmount.isGreaterThan(Coin.ZERO))
-            preparedPayoutTx.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
+            preparedPayoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
         if (sellerPayoutAmount.isGreaterThan(Coin.ZERO))
-            preparedPayoutTx.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
+            preparedPayoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
 
         // take care of sorting!
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
@@ -878,9 +879,9 @@ public class TradeWalletService {
         Transaction payoutTx = new Transaction(params);
         payoutTx.addInput(p2SHMultiSigOutput);
         if (buyerPayoutAmount.isGreaterThan(Coin.ZERO))
-            payoutTx.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
+            payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
         if (sellerPayoutAmount.isGreaterThan(Coin.ZERO))
-            payoutTx.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
+            payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
 
         // take care of sorting!
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
@@ -963,11 +964,11 @@ public class TradeWalletService {
         payoutTx.addInput(new TransactionInput(params, depositTx, p2SHMultiSigOutputScript.getProgram(), new TransactionOutPoint(params, 0, spendTxHash), msOutput));
 
         if (buyerPayoutAmount.isGreaterThan(Coin.ZERO))
-            payoutTx.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
+            payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
         if (sellerPayoutAmount.isGreaterThan(Coin.ZERO))
-            payoutTx.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
+            payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
         if (arbitratorPayoutAmount.isGreaterThan(Coin.ZERO))
-            payoutTx.addOutput(arbitratorPayoutAmount, new Address(params, arbitratorAddressString));
+            payoutTx.addOutput(arbitratorPayoutAmount, Address.fromBase58(params, arbitratorAddressString));
 
         // take care of sorting!
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
@@ -1138,8 +1139,8 @@ public class TradeWalletService {
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction transaction = new Transaction(params);
         transaction.addInput(p2SHMultiSigOutput);
-        transaction.addOutput(buyerPayoutAmount, new Address(params, buyerAddressString));
-        transaction.addOutput(sellerPayoutAmount, new Address(params, sellerAddressString));
+        transaction.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
+        transaction.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
         return transaction;
     }
 
@@ -1166,12 +1167,13 @@ public class TradeWalletService {
     private void addAvailableInputsAndChangeOutputs(Transaction transaction, Address address, Address changeAddress, Coin txFee) throws WalletException {
         try {
             // Lets let the framework do the work to find the right inputs
-            Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(transaction);
+            SendRequest sendRequest = SendRequest.forTx(transaction);
             sendRequest.shuffleOutputs = false;
             sendRequest.aesKey = aesKey;
             // We use a fixed fee
-            sendRequest.feePerKb = Coin.ZERO;
             sendRequest.fee = txFee;
+            sendRequest.feePerKb = Coin.ZERO;
+            sendRequest.ensureMinRequiredFee = false;
             // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
             sendRequest.coinSelector = new BtcCoinSelector(address);
             // We use always the same address in a trade for all transactions

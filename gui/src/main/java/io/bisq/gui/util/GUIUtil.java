@@ -31,6 +31,7 @@ import io.bisq.common.persistence.ListPersistable;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
@@ -50,8 +51,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.uri.BitcoinURI;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -381,5 +384,12 @@ public class GUIUtil {
             }
             component.setPrefHeight(available - initialOccupiedHeight.get());
         }, 100, TimeUnit.MILLISECONDS);
+    }
+
+    public static String getBitcoinURI(String address, Coin amount, String label) {
+        return address != null ?
+                BitcoinURI.convertToBitcoinURI(Address.fromBase58(WalletUtils.getParameters(),
+                        address), amount, label, null) :
+                "";
     }
 }

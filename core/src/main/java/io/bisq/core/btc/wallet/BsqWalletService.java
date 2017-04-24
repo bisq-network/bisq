@@ -28,11 +28,13 @@ import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.user.Preferences;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.*;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.CoinSelection;
+import org.bitcoinj.wallet.SendRequest;
+import org.bitcoinj.wallet.Wallet;
+import org.bitcoinj.wallet.listeners.AbstractWalletEventListener;
 
 import javax.inject.Inject;
 import java.util.HashSet;
@@ -51,7 +53,6 @@ public class BsqWalletService extends WalletService {
 
     private final BsqCoinSelector bsqCoinSelector;
     private BsqChainState bsqChainState;
-    @Getter
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
     private Coin availableBsqBalance = Coin.ZERO;
@@ -184,8 +185,13 @@ public class BsqWalletService extends WalletService {
     // BSQ TransactionOutputs and Transactions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public ObservableList<Transaction> getWalletTransactions() {
+        return walletTransactions;
+    }
+
     private void updateBsqWalletTransactions() {
-        walletTransactions.setAll(getBsqWalletTransactions());
+        walletTransactions.setAll(getTransactions(false));
+        // walletTransactions.setAll(getBsqWalletTransactions());
         updateBsqBalance();
     }
 
@@ -196,7 +202,7 @@ public class BsqWalletService extends WalletService {
                 .collect(Collectors.toSet());
     }
 
-    public Set<Transaction> getInvalidBsqTransactions() {
+    public Set<Transaction> getUnverifiedBsqTransactions() {
         Set<Transaction> bsqWalletTransactions = getBsqWalletTransactions();
         Set<Transaction> walletTxs = getTransactions(false).stream().collect(Collectors.toSet());
         checkArgument(walletTxs.size() >= bsqWalletTransactions.size(),
@@ -273,11 +279,12 @@ public class BsqWalletService extends WalletService {
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
-        tx.addOutput(receiverAmount, new Address(params, receiverAddress));
+        tx.addOutput(receiverAmount, Address.fromBase58(params, receiverAddress));
 
-        Wallet.SendRequest sendRequest = Wallet.SendRequest.forTx(tx);
+        SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = Coin.ZERO;
         sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
         sendRequest.aesKey = aesKey;
         sendRequest.shuffleOutputs = false;
         sendRequest.signInputs = false;
@@ -316,7 +323,7 @@ public class BsqWalletService extends WalletService {
 
     protected Set<Address> getAllAddressesFromActiveKeys() throws UTXOProviderException {
         return wallet.getActiveKeychain().getLeafKeys().stream().
-                map(key -> new Address(params, key.getPubKeyHash())).
+                map(key -> Address.fromP2SHHash(params, key.getPubKeyHash())).
                 collect(Collectors.toSet());
     }
 
@@ -326,7 +333,6 @@ public class BsqWalletService extends WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Address getUnusedAddress() {
-        //TODO check if current address was used, otherwise get fresh
-        return wallet.freshReceiveAddress();
+        return wallet.currentReceiveAddress();
     }
 }

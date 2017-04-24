@@ -32,4 +32,5 @@ public class TxVo implements Persistable {
     private final String id;
     private final int blockHeight;
     private final String blockHash;
+    private final long time;
 }

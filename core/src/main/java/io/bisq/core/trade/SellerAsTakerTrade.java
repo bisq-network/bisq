@@ -19,14 +19,13 @@ package io.bisq.core.trade;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
 import io.bisq.core.trade.protocol.TakerProtocol;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
-
-import java.io.IOException;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -47,18 +46,10 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                               boolean isCurrencyForTakerFeeBtc,
                               long tradePrice,
                               NodeAddress tradingPeerNodeAddress,
-                              Storage<? extends TradableList> storage) {
-        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice, tradingPeerNodeAddress, storage);
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            initStateProperties();
-            initAmountProperty();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
+                              Storage<? extends TradableList> storage,
+                              BtcWalletService btcWalletService) {
+        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice,
+                tradingPeerNodeAddress, storage, btcWalletService);
     }
 
     @Override

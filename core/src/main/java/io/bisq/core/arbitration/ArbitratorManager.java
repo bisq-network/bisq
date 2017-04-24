@@ -215,6 +215,7 @@ public class ArbitratorManager {
                 arbitrator.getRegistrationPubKey(),
                 arbitrator.getRegistrationSignature(),
                 arbitrator.getEmailAddress(),
+                null,
                 arbitrator.getExtraDataMap());
     }
 

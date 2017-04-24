@@ -20,9 +20,10 @@ package io.bisq.core.dao.blockchain.json;
 import lombok.Getter;
 
 public enum JsonTxType {
-    UNDEFINED("Undefined"),
+    UNVERIFIED("Unverified"),
+    INVALID("Invalid"),
     GENESIS("Genesis"),
-    SEND_BSQ("Send BSQ"),
+    TRANSFER_BSQ("Transfer BSQ"),
     PAY_TRADE_FEE("Pay trade fee"),
     COMPENSATION_REQUEST("Compensation request"),
     VOTE("Vote"),

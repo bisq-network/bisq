@@ -28,6 +28,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.vo.Tx;
+import io.bisq.core.dao.blockchain.vo.TxOutput;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Utils;
 import org.jetbrains.annotations.NotNull;
@@ -105,7 +106,7 @@ public class JsonChainStateExporter {
                                 new JsonScriptPubKey(txOutput.getPubKeyScript()),
                                 txOutput.getSpentInfo() != null ?
                                         new JsonSpentInfo(txOutput.getSpentInfo()) : null,
-                                txOutput.getTime(),
+                                tx.getTime(),
                                 txType,
                                 txType != null ? txType.getDisplayString() : "",
                                 txOutput.getOpReturnData() != null ? Utils.HEX.encode(txOutput.getOpReturnData()) : null
@@ -114,19 +115,25 @@ public class JsonChainStateExporter {
                         txOutputFileManager.writeToDisc(Utilities.objectToJson(outputForJson), outputForJson.getId());
                     });
 
+
                     List<JsonTxInput> inputs = tx.getInputs().stream()
-                            .map(txInput -> new JsonTxInput(txInput.getSpendingTxOutputIndex(),
-                                    txInput.getSpendingTxId(),
-                                    txInput.getBsqValue(),
-                                    txInput.isVerified()))
+                            .map(txInput -> {
+                                final TxOutput connectedTxOutput = txInput.getConnectedTxOutput();
+                                return new JsonTxInput(txInput.getTxOutputIndex(),
+                                        txInput.getTxId(),
+                                        connectedTxOutput != null ? connectedTxOutput.getValue() : 0,
+                                        connectedTxOutput != null ? connectedTxOutput.isVerified() : false,
+                                        connectedTxOutput != null ? connectedTxOutput.getAddress() : null,
+                                        tx.getTime());
+                            })
                             .collect(Collectors.toList());
 
                     final JsonTx jsonTx = new JsonTx(txId,
                             tx.getBlockHeight(),
                             tx.getBlockHash(),
+                            tx.getTime(),
                             inputs,
                             outputs,
-                            tx.isVerified(),
                             txType,
                             txType != null ? txType.getDisplayString() : "",
                             tx.getBurntFee());

@@ -138,9 +138,6 @@
                                             com.google.inject:guice:3.0:jar:null:compile:9d84f15fe35e2c716a02979fb62f50a29f38aefa
                                         </urn>
                                         <urn>
-                                            com.google.protobuf:protobuf-java:2.5.0:jar:null:compile:a10732c76bfacdbd633a7eb0f7968b1059a65dfa
-                                        </urn>
-                                        <urn>
                                             com.google.zxing:core:2.0:jar:null:compile:001a5b8ccf93ca2fb7c40a94417f8485e3c8b4a6
                                         </urn>
                                         <urn>
@@ -264,6 +261,9 @@
                                         </urn>
                                         <urn>
                                             org.springframework:spring-test:4.1.1.RELEASE:jar:null:test:406ce9c05253f7dd75ac3f31170c71cca7419d8a
+                                        </urn>
+                                        <urn>
+                                            com.google.protobuf:protobuf-java:3.2.0:jar:null:compile:62ccf171a106ff6791507f2d5364c275f9a3131d
                                         </urn>
 
                                         <!-- A check for the rules themselves -->

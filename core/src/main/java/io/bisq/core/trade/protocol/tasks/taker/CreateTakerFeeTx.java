@@ -73,7 +73,7 @@ public class CreateTakerFeeTx extends TradeTask {
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
-                        processModel.getFundsNeededForTrade(),
+                        processModel.getFundsNeededForTradeAsLong(),
                         processModel.isUseSavingsWallet(),
                         trade.getTakerFee(),
                         trade.getTxFee(),
@@ -92,7 +92,7 @@ public class CreateTakerFeeTx extends TradeTask {
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
-                        processModel.getFundsNeededForTrade(),
+                        processModel.getFundsNeededForTradeAsLong(),
                         processModel.isUseSavingsWallet(),
                         trade.getTxFee());
 

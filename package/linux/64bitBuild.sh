@@ -28,7 +28,7 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles $jarFile:$jdkfixFile \
     -srcfiles "core/src/main/resources/bisq.policy" \
     -srcfiles package/linux/LICENSE \
-    -appclass io.bisq.app.BisqAppMain \
+    -appclass io.bisq.gui.app.BisqAppMain \
     -outfile bisq
      
 # when we have support for security manager we use that     

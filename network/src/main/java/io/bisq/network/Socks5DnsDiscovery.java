@@ -110,7 +110,9 @@ public class Socks5DnsDiscovery extends MultiplexingDiscovery {
          * Returns peer addresses.  The actual DNS lookup is performed here.
          */
         @Override
-        public InetSocketAddress[] getPeers(long timeoutValue, TimeUnit timeoutUnit) throws PeerDiscoveryException {
+        public InetSocketAddress[] getPeers(long services, long timeoutValue, TimeUnit timeoutUnit) throws PeerDiscoveryException {
+            if (services != 0)
+                throw new PeerDiscoveryException("DNS seeds cannot filter by services: " + services);
             try {
                 InetSocketAddress addr = new InetSocketAddress(DnsLookupTor.lookup(proxy, hostname), params.getPort());
                 return new InetSocketAddress[]{addr};

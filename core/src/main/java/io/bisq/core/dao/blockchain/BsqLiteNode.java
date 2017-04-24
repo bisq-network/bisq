@@ -98,12 +98,12 @@ public class BsqLiteNode extends BsqNode {
         NodeAddress peersNodeAddress = p2PService.getSeedNodeAddresses().stream().findFirst().get();
 
         GetBsqBlocksRequest getBsqBlocksRequest = new GetBsqBlocksRequest(startBlockHeight);
-
+        log.info("sendMessage " + getBsqBlocksRequest + " to " + peersNodeAddress);
         SettableFuture<Connection> future = p2PService.getNetworkNode().sendMessage(peersNodeAddress, getBsqBlocksRequest);
         Futures.addCallback(future, new FutureCallback<Connection>() {
             @Override
             public void onSuccess(Connection connection) {
-                log.trace("onSuccess Send " + getBsqBlocksRequest + " to " + peersNodeAddress + " succeeded.");
+                log.info("onSuccess Send " + getBsqBlocksRequest + " to " + peersNodeAddress + " succeeded.");
             }
 
             @Override
@@ -111,6 +111,7 @@ public class BsqLiteNode extends BsqNode {
                 log.error(throwable.toString());
             }
         });
+        
         
        /* 
         requestBsqBlocksHandler.request(peersNodeAddress, startBlockHeight, bsqBlockList -> {
@@ -132,7 +133,9 @@ public class BsqLiteNode extends BsqNode {
             GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) msg;
             byte[] bsqBlocksBytes = getBsqBlocksResponse.getBsqBlocksBytes();
             List<BsqBlock> bsqBlockList = Utilities.<ArrayList<BsqBlock>>deserialize(bsqBlocksBytes);
-            log.debug("received msg with {} items", bsqBlockList.size());
+            log.info("received msg with {} items", bsqBlockList.size());
+            // Be safe and reset all mutable data in case the provider would not have done it
+            bsqBlockList.stream().forEach(BsqBlock::reset);
             bsqLiteNodeExecutor.parseBsqBlocksForLiteNode(bsqBlockList,
                     genesisBlockHeight,
                     genesisTxId,
@@ -151,7 +154,9 @@ public class BsqLiteNode extends BsqNode {
             NewBsqBlockBroadcastMsg newBsqBlockBroadcastMsg = (NewBsqBlockBroadcastMsg) msg;
             byte[] bsqBlockBytes = newBsqBlockBroadcastMsg.getBsqBlockBytes();
             BsqBlock bsqBlock = Utilities.<BsqBlock>deserialize(bsqBlockBytes);
-            log.debug("received broadcastNewBsqBlock bsqBlock {}", bsqBlock);
+            // Be safe and reset all mutable data in case the provider would not have done it
+            bsqBlock.reset();
+            log.info("received broadcastNewBsqBlock bsqBlock {}", bsqBlock);
             if (!bsqChainState.containsBlock(bsqBlock)) {
                 bsqLiteNodeExecutor.parseBsqBlockForLiteNode(bsqBlock,
                         genesisBlockHeight,

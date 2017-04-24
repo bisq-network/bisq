@@ -89,6 +89,7 @@ public class BsqFullNode extends BsqNode {
 
     @Override
     protected void parseBlocksWithChainHeadHeight(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
+        log.info("parseBlocksWithChainHeadHeight startBlockHeight={}", startBlockHeight);
         bsqFullNodeExecutor.requestChainHeadHeight(chainHeadHeight -> {
             parseBlocks(startBlockHeight, genesisBlockHeight, genesisTxId, chainHeadHeight);
         }, throwable -> {
@@ -138,6 +139,7 @@ public class BsqFullNode extends BsqNode {
 
     @Override
     protected void onParseBlockchainComplete(int genesisBlockHeight, String genesisTxId) {
+        log.info("onParseBlockchainComplete");
         parseBlockchainComplete = true;
         // We register our handler for new blocks
         bsqFullNodeExecutor.addBlockHandler(btcdBlock -> {
@@ -155,6 +157,7 @@ public class BsqFullNode extends BsqNode {
                     });
         });
 
+        log.info("Register MessageListener");
         p2PService.getNetworkNode().addMessageListener(this::onMessage);
     }
 
@@ -163,17 +166,18 @@ public class BsqFullNode extends BsqNode {
         if (msg instanceof GetBsqBlocksRequest && connection.getPeersNodeAddressOptional().isPresent()) {
             GetBsqBlocksRequest getBsqBlocksRequest = (GetBsqBlocksRequest) msg;
             final NodeAddress peersNodeAddress = connection.getPeersNodeAddressOptional().get();
-            log.debug("Received getBsqBlocksRequest with data: {} from {}",
+            log.info("Received getBsqBlocksRequest with data: {} from {}",
                     getBsqBlocksRequest.getFromBlockHeight(), peersNodeAddress);
 
-            byte[] bsqBlockListBytes = bsqChainState.getSerializedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
+            // reset it done in getSerializedResettedBlocksFrom
+            byte[] bsqBlockListBytes = bsqChainState.getSerializedResettedBlocksFrom(getBsqBlocksRequest.getFromBlockHeight());
             final GetBsqBlocksResponse bsqBlocksResponse = new GetBsqBlocksResponse(bsqBlockListBytes);
             SettableFuture<Connection> future = p2PService.getNetworkNode().sendMessage(peersNodeAddress,
                     bsqBlocksResponse);
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(Connection connection) {
-                    log.trace("onSuccess Send " + bsqBlocksResponse + " to " + peersNodeAddress + " succeeded.");
+                    log.info("onSuccess Send " + bsqBlocksResponse + " to " + peersNodeAddress + " succeeded.");
                 }
 
                 @Override

@@ -28,9 +28,9 @@ public class JsonTx {
     private final String id;
     private final int blockHeight;
     private final String blockHash;
+    private final long time;
     private final List<JsonTxInput> inputs;
     private final List<JsonTxOutput> outputs;
-    private final boolean isVerified;
     private final JsonTxType txType;
     private final String txTypeDisplayString;
     private final long burntFee;

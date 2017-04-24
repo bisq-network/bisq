@@ -21,7 +21,7 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bisq.common.locale.Res;
 import io.bisq.common.util.Utilities;
-import io.bisq.gui.main.overlays.popups.Popup;
+import io.bisq.gui.main.overlays.notifications.Notification;
 import io.bisq.gui.util.GUIUtil;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -32,14 +32,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-
-public class AddressTextField extends AnchorPane {
-    private static final Logger log = LoggerFactory.getLogger(AddressTextField.class);
-
+public class BsqAddressTextField extends AnchorPane {
     private final StringProperty address = new SimpleStringProperty();
     private final StringProperty paymentLabel = new SimpleStringProperty();
     private final ObjectProperty<Coin> amountAsCoin = new SimpleObjectProperty<>(Coin.ZERO);
@@ -50,18 +44,25 @@ public class AddressTextField extends AnchorPane {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressTextField() {
+    public BsqAddressTextField() {
         TextField textField = new TextField();
         textField.setId("address-text-field");
         textField.setEditable(false);
         textField.textProperty().bind(address);
-        String tooltipText = Res.get("addressTextField.openWallet");
+        String tooltipText = Res.get("addressTextField.copyToClipboard");
         Tooltip.install(textField, new Tooltip(tooltipText));
 
         textField.setOnMousePressed(event -> wasPrimaryButtonDown = event.isPrimaryButtonDown());
         textField.setOnMouseReleased(event -> {
-            if (wasPrimaryButtonDown)
-                GUIUtil.showFeeInfoBeforeExecute(AddressTextField.this::openWallet);
+            if (wasPrimaryButtonDown && address.get() != null && address.get().length() > 0) {
+                Utilities.copyToClipboard(address.get());
+                Notification walletFundedNotification = new Notification()
+                        .notification(Res.get("addressTextField.addressCopiedToClipboard"))
+                        .hideCloseButton()
+                        .autoClose();
+
+                walletFundedNotification.show();
+            }
 
             wasPrimaryButtonDown = false;
         });
@@ -70,12 +71,6 @@ public class AddressTextField extends AnchorPane {
         //TODO app wide focus
         //focusedProperty().addListener((ov, oldValue, newValue) -> textField.requestFocus());
 
-        Label extWalletIcon = new Label();
-        extWalletIcon.setLayoutY(3);
-        extWalletIcon.getStyleClass().add("copy-icon");
-        Tooltip.install(extWalletIcon, new Tooltip(tooltipText));
-        AwesomeDude.setIcon(extWalletIcon, AwesomeIcon.SIGNIN);
-        extWalletIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
 
         Label copyIcon = new Label();
         copyIcon.setLayoutY(3);
@@ -88,20 +83,10 @@ public class AddressTextField extends AnchorPane {
         }));
 
         AnchorPane.setRightAnchor(copyIcon, 5.0);
-        AnchorPane.setRightAnchor(extWalletIcon, 30.0);
-        AnchorPane.setRightAnchor(textField, 55.0);
+        AnchorPane.setRightAnchor(textField, 30.0);
         AnchorPane.setLeftAnchor(textField, 0.0);
 
-        getChildren().addAll(textField, extWalletIcon, copyIcon);
-    }
-
-    private void openWallet() {
-        try {
-            Utilities.openURI(URI.create(getBitcoinURI()));
-        } catch (Exception e) {
-            log.warn(e.getMessage());
-            new Popup<>().warning(Res.get("addressTextField.openWallet.failed")).show();
-        }
+        getChildren().addAll(textField, copyIcon);
     }
 
 
@@ -143,19 +128,5 @@ public class AddressTextField extends AnchorPane {
 
     public void setPaymentLabel(String paymentLabel) {
         this.paymentLabel.set(paymentLabel);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private String getBitcoinURI() {
-        if (amountAsCoin.get().isNegative()) {
-            log.warn("Amount must not be negative");
-            setAmountAsCoin(Coin.ZERO);
-        }
-        return GUIUtil.getBitcoinURI(address.get(), amountAsCoin.get(),
-                paymentLabel.get());
     }
 }

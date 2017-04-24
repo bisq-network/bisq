@@ -42,6 +42,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
@@ -50,8 +51,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 @Getter
+@Slf4j
 public class ProcessModel implements Model, Serializable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -79,9 +80,13 @@ public class ProcessModel implements Model, Serializable {
     private String accountId;
     private PubKeyRing pubKeyRing;
 
-    // Mutable
+    // Transient/Mutable
+    transient private Transaction takeOfferFeeTx;
     @Setter
     transient private TradeMsg tradeMessage;
+
+    // Mutable
+    private String takeOfferFeeTxId;
     @Setter
     private byte[] payoutTxSignature;
     @Setter
@@ -98,11 +103,9 @@ public class ProcessModel implements Model, Serializable {
     @Setter
     private String changeOutputAddress;
     @Setter
-    private Transaction takeOfferFeeTx;
-    @Setter
     private boolean useSavingsWallet;
     @Setter
-    private Coin fundsNeededForTrade;
+    private long fundsNeededForTradeAsLong;
     @Setter
     private byte[] myMultiSigPubKey;
     // that is used to store temp. the peers address when we get an incoming message before the message is verified.
@@ -137,8 +140,7 @@ public class ProcessModel implements Model, Serializable {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;
-        this.fundsNeededForTrade = fundsNeededForTrade;
-
+        fundsNeededForTradeAsLong = fundsNeededForTrade.value;
         offerId = offer.getId();
         accountId = user.getAccountId();
         pubKeyRing = keyRing.getPubKeyRing();
@@ -167,7 +169,6 @@ public class ProcessModel implements Model, Serializable {
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
     }
 
-
     public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,
                                                       PaymentAccountFilter[] appliedPaymentAccountFilter) {
         return filterManager.getFilter() != null &&
@@ -191,5 +192,20 @@ public class ProcessModel implements Model, Serializable {
                         })
                         .findAny()
                         .isPresent();
+    }
+
+    public Coin getFundsNeededForTradeAsLong() {
+        return Coin.valueOf(fundsNeededForTradeAsLong);
+    }
+
+    public Transaction getTakeOfferFeeTx() {
+        if (takeOfferFeeTx == null)
+            takeOfferFeeTx = bsqWalletService.getTransaction(Sha256Hash.wrap(takeOfferFeeTxId));
+        return takeOfferFeeTx;
+    }
+
+    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
+        this.takeOfferFeeTx = takeOfferFeeTx;
+        takeOfferFeeTxId = takeOfferFeeTx.getHashAsString();
     }
 }
