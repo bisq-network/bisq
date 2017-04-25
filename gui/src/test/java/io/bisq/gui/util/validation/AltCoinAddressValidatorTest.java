@@ -105,4 +105,34 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("2a65Aca4D5fC5B5C859090a6c34d16413539822g").isValid);
         assertFalse(validator.validate("").isValid);
     }
+    @Test
+    public void test888() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("888");
+
+        assertTrue(validator.validate("8TP9rh3SH6n9cSLmV22vnSNNw56LKGpLra").isValid);
+        assertTrue(validator.validate("37NwrYsD1HxQW5zfLTuQcUUXGMPvQgzTSn").isValid);
+
+        assertFalse(validator.validate("1ANNa15ZQXAZUgFiqJ2i7Z2DPU2J6hW62i").isValid);
+        assertFalse(validator.validate("38NwrYsD1HxQW5zfLT0QcUUXGMPvQgzTSn").isValid);
+        assertFalse(validator.validate("8tP9rh3SH6n9cSLmV22vnSNNw56LKGpLrB").isValid);
+        assertFalse(validator.validate("8Zbvjr").isValid);
+    }
+
+    @Test
+    public void testNXT() {
+        AltCoinAddressValidator validator = new AltCoinAddressValidator();
+        validator.setCurrencyCode("NXT");
+
+        assertTrue(validator.validate("NXT-JM2U-U4AE-G7WF-3NP9F").isValid);
+        assertTrue(validator.validate("NXT-6UNJ-UMFM-Z525-4S24M").isValid);
+        assertTrue(validator.validate("NXT-2223-2222-KB8Y-22222").isValid);
+
+        assertFalse(validator.validate("").isValid);
+        assertFalse(validator.validate("abcde").isValid);
+        assertFalse(validator.validate("NXT-").isValid);
+        assertFalse(validator.validate("NXT-JM2U-U4AE-G7WF-3ND9F").isValid);
+        assertFalse(validator.validate("NXT-JM2U-U4AE-G7WF-3Np9F").isValid);
+        assertFalse(validator.validate("NXT-2222-2222-2222-22222").isValid);
+    }
 }

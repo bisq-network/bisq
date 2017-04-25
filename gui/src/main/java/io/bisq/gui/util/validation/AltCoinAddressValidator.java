@@ -18,6 +18,12 @@
 package io.bisq.gui.util.validation;
 
 
+import io.bitsquare.gui.util.validation.altcoins.ByteballAddressValidator;
+import io.bitsquare.gui.util.validation.altcoins.OctocoinAddressValidator;
+import io.bitsquare.gui.util.validation.altcoins.NxtReedSolomon;
+import io.bitsquare.gui.util.validation.params.IOPParams;
+import io.bitsquare.gui.util.validation.params.OctocoinParams;
+import io.bitsquare.gui.util.validation.params.PivxParams;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.util.validation.altcoins.ByteballAddressValidator;
 import io.bisq.gui.util.validation.params.IOPParams;
@@ -61,11 +67,11 @@ public final class AltCoinAddressValidator extends InputValidator {
             switch (currencyCode) {
                 case "ETH":
                     // https://github.com/ethereum/web3.js/blob/master/lib/utils/utils.js#L403
-                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))                
+                    if (!input.matches("^(0x)?[0-9a-fA-F]{40}$"))
                         return regexTestFailed;
                     else
-                        return new ValidationResult(true);                
-                // Example for BTC, though for BTC we use the BitcoinJ library address check
+                        return new ValidationResult(true);
+                    // Example for BTC, though for BTC we use the BitcoinJ library address check
                 case "BTC":
                     // taken form: https://stackoverflow.com/questions/21683680/regex-to-match-bitcoin-addresses
                     if (input.matches("^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
@@ -114,6 +120,21 @@ public final class AltCoinAddressValidator extends InputValidator {
                     } else {
                         return regexTestFailed;
                     }
+                case "888":
+                    if (input.matches("^[83][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
+                        if (OctocoinAddressValidator.ValidateAddress(input)) {
+                            try {
+                                new Address(OctocoinParams.get(), input);
+                                return new ValidationResult(true);
+                            } catch (AddressFormatException e) {
+                                return new ValidationResult(false, getErrorMessage(e));
+                            }
+                        } else {
+                            return wrongChecksum;
+                        }
+                    } else {
+                        return regexTestFailed;
+                    }
                 case "ZEC":
                     // We only support t addresses (transparent transactions)
                     if (input.startsWith("t"))
@@ -138,6 +159,16 @@ public final class AltCoinAddressValidator extends InputValidator {
                     }*/
                 case "GBYTE":
                     return ByteballAddressValidator.validate(input);
+                case "NXT":
+                    if (!input.startsWith("NXT-") || !input.equals(input.toUpperCase())) {
+                        return regexTestFailed;
+                    }
+                    try {
+                        long accountId = NxtReedSolomon.decode(input.substring(4));
+                        return new ValidationResult(accountId != 0);
+                    } catch (NxtReedSolomon.DecodeException e) {
+                        return wrongChecksum;
+                    }
                 default:
                     log.debug("Validation for AltCoinAddress not implemented yet. currencyCode: " + currencyCode);
                     return validationResult;
