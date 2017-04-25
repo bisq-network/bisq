@@ -138,6 +138,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("HNC", "HunCoin"));
         result.add(new CryptoCurrency("IOC", "I/O Coin"));
         result.add(new CryptoCurrency("IOP", "Fermat"));
+        result.add(new CryptoCurrency("JNS", "Janus", true));
         result.add(new CryptoCurrency("JPYT", "JPY Tether"));
         result.add(new CryptoCurrency("JBS", "Jumbucks"));
         result.add(new CryptoCurrency("LBC", "LBRY Credits"));
@@ -158,6 +159,7 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("NBT", "NuBits"));
         result.add(new CryptoCurrency("NSR", "NuShares"));
         result.add(new CryptoCurrency("NXT", "Nxt"));
+        result.add(new CryptoCurrency("888", "OctoCoin"));
         result.add(new CryptoCurrency("OK", "OKCash"));
         result.add(new CryptoCurrency("OMNI", "Omni"));
         result.add(new CryptoCurrency("OPAL", "Opal"));
