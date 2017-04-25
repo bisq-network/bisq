@@ -1,14 +1,30 @@
 /*
+ * This file is part of bisq.
+ *
+ * bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+/*
     Reed Solomon Encoding and Decoding for Nxt
 
     Version: 1.0, license: Public Domain, coder: NxtChg (admin@nxtchg.com)
     Java Version: ChuckOne (ChuckOne@mail.de).
 */
 
-package io.bitsquare.gui.util.validation.altcoins;
+package io.bisq.gui.util.validation.altcoins;
 
 
-public final class NxtReedSolomon {
+public final class NxtReedSolomonValidator {
 
     private static final int[] initial_codeword = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     private static final int[] gexp = {1, 2, 4, 8, 16, 5, 10, 20, 13, 26, 17, 7, 14, 28, 29, 31, 27, 19, 3, 6, 12, 24, 21, 15, 30, 25, 23, 11, 22, 9, 18, 1};
@@ -23,13 +39,13 @@ public final class NxtReedSolomon {
 
         String plain_string = Long.toUnsignedString(plain);
         int length = plain_string.length();
-        int[] plain_string_10 = new int[NxtReedSolomon.base_10_length];
+        int[] plain_string_10 = new int[NxtReedSolomonValidator.base_10_length];
         for (int i = 0; i < length; i++) {
-            plain_string_10[i] = (int)plain_string.charAt(i) - (int)'0';
+            plain_string_10[i] = (int) plain_string.charAt(i) - (int) '0';
         }
 
         int codeword_length = 0;
-        int[] codeword = new int[NxtReedSolomon.initial_codeword.length];
+        int[] codeword = new int[NxtReedSolomonValidator.initial_codeword.length];
 
         do {  // base 10 to base 32 conversion
             int new_length = 0;
@@ -48,24 +64,24 @@ public final class NxtReedSolomon {
             length = new_length;
             codeword[codeword_length] = digit_32;
             codeword_length += 1;
-        } while(length > 0);
+        } while (length > 0);
 
         int[] p = {0, 0, 0, 0};
-        for (int i = NxtReedSolomon.base_32_length - 1; i >= 0; i--) {
+        for (int i = NxtReedSolomonValidator.base_32_length - 1; i >= 0; i--) {
             final int fb = codeword[i] ^ p[3];
-            p[3] = p[2] ^ NxtReedSolomon.gmult(30, fb);
-            p[2] = p[1] ^ NxtReedSolomon.gmult(6, fb);
-            p[1] = p[0] ^ NxtReedSolomon.gmult(9, fb);
-            p[0] =        NxtReedSolomon.gmult(17, fb);
+            p[3] = p[2] ^ NxtReedSolomonValidator.gmult(30, fb);
+            p[2] = p[1] ^ NxtReedSolomonValidator.gmult(6, fb);
+            p[1] = p[0] ^ NxtReedSolomonValidator.gmult(9, fb);
+            p[0] = NxtReedSolomonValidator.gmult(17, fb);
         }
 
-        System.arraycopy(p, 0, codeword, NxtReedSolomon.base_32_length, NxtReedSolomon.initial_codeword.length - NxtReedSolomon.base_32_length);
+        System.arraycopy(p, 0, codeword, NxtReedSolomonValidator.base_32_length, NxtReedSolomonValidator.initial_codeword.length - NxtReedSolomonValidator.base_32_length);
 
         StringBuilder cypher_string_builder = new StringBuilder();
         for (int i = 0; i < 17; i++) {
-            final int codework_index = NxtReedSolomon.codeword_map[i];
+            final int codework_index = NxtReedSolomonValidator.codeword_map[i];
             final int alphabet_index = codeword[codework_index];
-            cypher_string_builder.append(NxtReedSolomon.alphabet.charAt(alphabet_index));
+            cypher_string_builder.append(NxtReedSolomonValidator.alphabet.charAt(alphabet_index));
 
             if ((i & 3) == 3 && i < 13) {
                 cypher_string_builder.append('-');
@@ -76,14 +92,14 @@ public final class NxtReedSolomon {
 
     public static long decode(String cypher_string) throws DecodeException {
 
-        int[] codeword = new int[NxtReedSolomon.initial_codeword.length];
-        System.arraycopy(NxtReedSolomon.initial_codeword, 0, codeword, 0, NxtReedSolomon.initial_codeword.length);
+        int[] codeword = new int[NxtReedSolomonValidator.initial_codeword.length];
+        System.arraycopy(NxtReedSolomonValidator.initial_codeword, 0, codeword, 0, NxtReedSolomonValidator.initial_codeword.length);
 
         int codeword_length = 0;
         for (int i = 0; i < cypher_string.length(); i++) {
-            int position_in_alphabet = NxtReedSolomon.alphabet.indexOf(cypher_string.charAt(i));
+            int position_in_alphabet = NxtReedSolomonValidator.alphabet.indexOf(cypher_string.charAt(i));
 
-            if (position_in_alphabet <= -1 || position_in_alphabet > NxtReedSolomon.alphabet.length()) {
+            if (position_in_alphabet <= -1 || position_in_alphabet > NxtReedSolomonValidator.alphabet.length()) {
                 continue;
             }
 
@@ -91,16 +107,16 @@ public final class NxtReedSolomon {
                 throw new CodewordTooLongException();
             }
 
-            int codework_index = NxtReedSolomon.codeword_map[codeword_length];
+            int codework_index = NxtReedSolomonValidator.codeword_map[codeword_length];
             codeword[codework_index] = position_in_alphabet;
             codeword_length += 1;
         }
 
-        if (codeword_length == 17 && !NxtReedSolomon.is_codeword_valid(codeword) || codeword_length != 17) {
+        if (codeword_length == 17 && !NxtReedSolomonValidator.is_codeword_valid(codeword) || codeword_length != 17) {
             throw new CodewordInvalidException();
         }
 
-        int length = NxtReedSolomon.base_32_length;
+        int length = NxtReedSolomonValidator.base_32_length;
         int[] cypher_string_32 = new int[length];
         for (int i = 0; i < length; i++) {
             cypher_string_32[i] = codeword[length - i - 1];
@@ -124,7 +140,7 @@ public final class NxtReedSolomon {
                 }
             }
             length = new_length;
-            plain_string_builder.append((char)(digit_10 + (int)'0'));
+            plain_string_builder.append((char) (digit_10 + (int) '0'));
         } while (length > 0);
 
         return Long.parseUnsignedLong(plain_string_builder.reverse().toString());
@@ -135,9 +151,9 @@ public final class NxtReedSolomon {
             return 0;
         }
 
-        int idx = (NxtReedSolomon.glog[a] + NxtReedSolomon.glog[b]) % 31;
+        int idx = (NxtReedSolomonValidator.glog[a] + NxtReedSolomonValidator.glog[b]) % 31;
 
-        return NxtReedSolomon.gexp[idx];
+        return NxtReedSolomonValidator.gexp[idx];
     }
 
     private static boolean is_codeword_valid(int[] codeword) {
@@ -156,7 +172,7 @@ public final class NxtReedSolomon {
                     pos -= 14;
                 }
 
-                t ^= NxtReedSolomon.gmult(codeword[pos], NxtReedSolomon.gexp[(i * j) % 31]);
+                t ^= NxtReedSolomonValidator.gmult(codeword[pos], NxtReedSolomonValidator.gexp[(i * j) % 31]);
             }
 
             sum |= t;
@@ -174,7 +190,8 @@ public final class NxtReedSolomon {
     static final class CodewordInvalidException extends DecodeException {
     }
 
-    private NxtReedSolomon() {} // never
+    private NxtReedSolomonValidator() {
+    } // never
 }
 
 

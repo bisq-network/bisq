@@ -18,15 +18,12 @@
 package io.bisq.gui.util.validation;
 
 
-import io.bitsquare.gui.util.validation.altcoins.ByteballAddressValidator;
-import io.bitsquare.gui.util.validation.altcoins.OctocoinAddressValidator;
-import io.bitsquare.gui.util.validation.altcoins.NxtReedSolomon;
-import io.bitsquare.gui.util.validation.params.IOPParams;
-import io.bitsquare.gui.util.validation.params.OctocoinParams;
-import io.bitsquare.gui.util.validation.params.PivxParams;
 import io.bisq.common.locale.Res;
 import io.bisq.gui.util.validation.altcoins.ByteballAddressValidator;
+import io.bisq.gui.util.validation.altcoins.NxtReedSolomonValidator;
+import io.bisq.gui.util.validation.altcoins.OctocoinAddressValidator;
 import io.bisq.gui.util.validation.params.IOPParams;
+import io.bisq.gui.util.validation.params.OctocoinParams;
 import io.bisq.gui.util.validation.params.PivxParams;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -164,9 +161,9 @@ public final class AltCoinAddressValidator extends InputValidator {
                         return regexTestFailed;
                     }
                     try {
-                        long accountId = NxtReedSolomon.decode(input.substring(4));
+                        long accountId = NxtReedSolomonValidator.decode(input.substring(4));
                         return new ValidationResult(accountId != 0);
-                    } catch (NxtReedSolomon.DecodeException e) {
+                    } catch (NxtReedSolomonValidator.DecodeException e) {
                         return wrongChecksum;
                     }
                 default:
