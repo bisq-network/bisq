@@ -47,6 +47,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -81,6 +82,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     private Label chainHeightLabel;
     private BsqChainStateListener bsqChainStateListener;
     private BsqBalanceListener bsqBalanceListener;
+    private ProgressBar chainSyncIndicator;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -116,16 +118,25 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         addConfidenceColumn();
         addTxTypeColumn();
 
+        chainSyncIndicator = new ProgressBar();
+        chainSyncIndicator.setPrefWidth(120);
+        chainSyncIndicator.setProgress(-1);
+        chainSyncIndicator.setPadding(new Insets(-6, 0, -10, 5));
+
         chainHeightLabel = FormBuilder.addLabel(root, ++gridRow, "");
         chainHeightLabel.setId("num-offers");
         chainHeightLabel.setPadding(new Insets(-5, 0, -10, 5));
+
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.getChildren().addAll(chainHeightLabel, chainSyncIndicator);
 
         VBox vBox = new VBox();
         vBox.setSpacing(10);
         GridPane.setRowIndex(vBox, ++gridRow);
         GridPane.setColumnSpan(vBox, 2);
         GridPane.setMargin(vBox, new Insets(40, -10, 5, -10));
-        vBox.getChildren().addAll(tableView, chainHeightLabel);
+        vBox.getChildren().addAll(tableView, hBox);
         root.getChildren().add(vBox);
 
         walletBsqTransactionsListener = change -> updateList();
@@ -170,9 +181,26 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
     }
 
     private void onChainHeightChanged() {
-        chainHeightLabel.setText(Res.get("dao.wallet.chainHeight",
-                bsqChainState.getChainHeadHeight(),
-                bsqWalletService.getBestChainHeight()));
+        if (bsqWalletService.getBestChainHeight() > 0) {
+            final boolean synced = bsqWalletService.getBestChainHeight() == bsqChainState.getChainHeadHeight();
+            chainSyncIndicator.setVisible(!synced);
+            chainSyncIndicator.setManaged(!synced);
+            if (bsqChainState.getChainHeadHeight() > 0)
+                chainSyncIndicator.setProgress((double) bsqChainState.getChainHeadHeight() / (double) bsqWalletService.getBestChainHeight());
+
+            if (synced)
+                chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
+                        bsqChainState.getChainHeadHeight(),
+                        bsqWalletService.getBestChainHeight()));
+            else
+                chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
+                        bsqChainState.getChainHeadHeight(),
+                        bsqWalletService.getBestChainHeight()));
+        } else {
+            chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
+                    bsqChainState.getChainHeadHeight(),
+                    bsqWalletService.getBestChainHeight()));
+        }
     }
 
     private void updateList() {
