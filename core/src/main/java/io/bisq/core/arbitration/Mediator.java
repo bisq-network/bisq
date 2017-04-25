@@ -61,8 +61,8 @@ public final class Mediator implements StoragePayload {
     @Nullable
     private final String info;
 
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     private Map<String, String> extraDataMap;
@@ -114,16 +114,17 @@ public final class Mediator implements StoragePayload {
     }
 
     public static Mediator fromProto(PB.Mediator mediator) {
-        List<String> strings = mediator.getLanguageCodesList().stream().collect(Collectors.toList());
+        List<String> langCodes = mediator.getLanguageCodesList().stream().collect(Collectors.toList());
         Date date = new Date(mediator.getRegistrationDate());
         String emailAddress = mediator.getEmailAddress().isEmpty() ? null : mediator.getEmailAddress();
         return new Mediator(NodeAddress.fromProto(mediator.getNodeAddress()),
                 ProtoUtil.getPubKeyRing(mediator.getPubKeyRing()),
-                strings,
+                langCodes,
                 date,
                 mediator.getRegistrationPubKey().toByteArray(),
                 mediator.getRegistrationSignature(),
                 emailAddress,
+                mediator.getInfo(),
                 CollectionUtils.isEmpty(mediator.getExtraDataMapMap()) ?
                         null : mediator.getExtraDataMapMap());
 
