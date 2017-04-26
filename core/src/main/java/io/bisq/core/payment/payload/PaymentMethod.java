@@ -17,9 +17,11 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Res;
 import io.bisq.common.persistence.Persistable;
+import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -168,5 +170,18 @@ public final class PaymentMethod implements Persistable, Comparable {
             return this.id.compareTo(((PaymentMethod) other).id);
         else
             return 0;
+    }
+
+    @Override
+    public PB.PaymentMethod toProto() {
+        return PB.PaymentMethod.newBuilder()
+                .setId(id)
+                .setMaxTradePeriod(maxTradePeriod)
+                .setMaxTradeLimit(maxTradeLimit).build();
+    }
+
+    public static PaymentMethod fromProto(PB.PaymentMethod paymentMethod) {
+        return new PaymentMethod(paymentMethod.getId(), paymentMethod.getMaxTradePeriod(),
+                Coin.valueOf(paymentMethod.getMaxTradeLimit()));
     }
 }

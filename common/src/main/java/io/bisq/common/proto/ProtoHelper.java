@@ -17,9 +17,11 @@
 
 package io.bisq.common.proto;
 
+import com.google.protobuf.Message;
 import io.bisq.common.Marshaller;
 
 import java.util.Collection;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ProtoHelper {
@@ -30,5 +32,11 @@ public class ProtoHelper {
 
     public static Iterable collectionToProto(Collection<? extends Marshaller> collection) {
         return collection.stream().map(o -> o.toProto()).collect(Collectors.toList());
+    }
+
+    public static <T> Iterable<T> collectionToProto(Collection<? extends Marshaller> collection, Function<? super Message, T> extra) {
+        return collection.stream().map(o -> {
+            return extra.apply(o.toProto());
+        }).collect(Collectors.toList());
     }
 }

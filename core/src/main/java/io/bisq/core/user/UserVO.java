@@ -27,6 +27,7 @@ import io.bisq.core.filter.Filter;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
+import io.bisq.generated.protobuffer.PB.StoragePayload;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -66,13 +67,13 @@ public class UserVO implements Persistable {
     }
 
     @Override
-    public Message toProto() {
+    public PB.DiskEnvelope toProto() {
         PB.User.Builder builder = PB.User.newBuilder()
                 .setAccountId(accountID)
                 .addAllPaymentAccounts(ProtoHelper.collectionToProto(paymentAccounts))
                 .addAllAcceptedLanguageLocaleCodes(acceptedLanguageLocaleCodes)
-                .addAllAcceptedArbitrators(ProtoHelper.collectionToProto(acceptedArbitrators))
-                .addAllAcceptedMediators(ProtoHelper.collectionToProto(acceptedMediators));
+                .addAllAcceptedArbitrators(ProtoHelper.collectionToProto(acceptedArbitrators, (Message storage) -> ((PB.StoragePayload)storage).getArbitrator()))
+                .addAllAcceptedMediators(ProtoHelper.collectionToProto(acceptedMediators, (Message storage) -> ((PB.StoragePayload)storage).getMediator()));
 
         Optional.ofNullable(currentPaymentAccount)
                 .ifPresent(paymentAccount -> builder.setCurrentPaymentAccount(paymentAccount.toProto()));
@@ -90,10 +91,10 @@ public class UserVO implements Persistable {
     }
 
     public static UserVO fromProto(PB.User user) {
-        Set<PaymentAccount> collect = user.getPaymentAccountsList().stream().map(paymentAccount -> ProtoUtil.getPaymentAccount(paymentAccount)).collect(Collectors.toSet());
+        Set<PaymentAccount> collect = user.getPaymentAccountsList().stream().map(paymentAccount -> PaymentAccount.fromProto(paymentAccount)).collect(Collectors.toSet());
         UserVO vo = new UserVO(user.getAccountId(),
                 collect,
-                user.hasCurrentPaymentAccount() ? ProtoUtil.getPaymentAccount(user.getCurrentPaymentAccount()) : null,
+                user.hasCurrentPaymentAccount() ? PaymentAccount.fromProto(user.getCurrentPaymentAccount()) : null,
                 user.getAcceptedLanguageLocaleCodesList(),
                 user.hasDevelopersAlert() ? Alert.fromProto(user.getDevelopersAlert()) : null,
                 user.hasDisplayedAlert() ? Alert.fromProto(user.getDisplayedAlert()) : null,

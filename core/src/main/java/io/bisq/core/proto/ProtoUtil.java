@@ -125,8 +125,4 @@ public class ProtoUtil {
                                                         CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload) {
         countryBasedPaymentAccountPayload.setCountryCode(protoEntry.getCountryBasedPaymentAccountPayload().getCountryCode());
     }
-
-    public static PaymentAccount getPaymentAccount(PB.PaymentAccount account) {
-        return PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(account.getPaymentMethod().getId()));
-    }
 }

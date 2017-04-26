@@ -232,9 +232,7 @@ public class FileManager<T extends Persistable> {
                 // when rename temp file
                 fileOutputStream.close();
             } else {
-                log.warn("skipping serializable write: {}", serializable.getClass());
-                return;
-                /*
+                log.warn("serializable write: {}", serializable.getClass());
                 // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
                 // and we need to close it
                 // manually before replacing file with temp file
@@ -253,7 +251,6 @@ public class FileManager<T extends Persistable> {
                 // when rename temp file
                 fileOutputStream.close();
                 objectOutputStream.close();
-                */
             }
             renameTempFileToFile(tempFile, storageFile);
         } catch (Throwable t) {

@@ -27,6 +27,7 @@ import io.bisq.network.p2p.peers.BroadcastHandler;
 import io.bisq.network.p2p.peers.Broadcaster;
 import io.bisq.network.p2p.storage.messages.*;
 import io.bisq.network.p2p.storage.payload.*;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -64,8 +65,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private final Map<ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();
     private final CopyOnWriteArraySet<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private Timer removeExpiredEntriesTimer;
-    private HashMap<ByteArray, MapValue> sequenceNumberMap = new HashMap<>();
-    private final Storage<HashMapPersistable<ByteArray, MapValue>> sequenceNumberMapStorage;
+    private SequenceNumberMap sequenceNumberMap = new SequenceNumberMap();
+    private final Storage<SequenceNumberMap> sequenceNumberMapStorage;
     private HashMap<ByteArray, ProtectedStorageEntry> persistedMap = new HashMap<>();
     private final Storage<HashMapPersistable<ByteArray, ProtectedStorageEntry>> persistedEntryMapStorage;
 
@@ -90,10 +91,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private void init(File storageDir) {
         sequenceNumberMapStorage.setNumMaxBackupFiles(5);
         persistedEntryMapStorage.setNumMaxBackupFiles(1);
-
-        HashMapPersistable<ByteArray, MapValue> persistedSequenceNumberMap = sequenceNumberMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName("SequenceNumberMap");
+        SequenceNumberMap persistedSequenceNumberMap = sequenceNumberMapStorage.initAndGetPersisted(sequenceNumberMap);
         if (persistedSequenceNumberMap != null)
-            sequenceNumberMap = getPurgedSequenceNumberMap(persistedSequenceNumberMap.getHashMap());
+            sequenceNumberMap.setHashMap(getPurgedSequenceNumberMap(persistedSequenceNumberMap.getHashMap()));
 
         final String storageFileName = "PersistedP2PStorageData";
 
@@ -156,7 +156,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                             listener -> listener.onRemoved(protectedDataToRemove)));
 
             if (sequenceNumberMap.size() > 1000)
-                sequenceNumberMap = getPurgedSequenceNumberMap(sequenceNumberMap);
+                sequenceNumberMap.setHashMap(getPurgedSequenceNumberMap(sequenceNumberMap.getHashMap()));
         }, CHECK_TTL_INTERVAL_SEC);
     }
 
@@ -292,8 +292,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             if (hasSequenceNrIncreased) {
                 sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
                 // We set the delay higher as we might receive a batch of items
-                sequenceNumberMapStorage.queueUpForSave(new HashMapPersistable<>(sequenceNumberMap,
-                        getSequenceNumberToProtoMethod()), 2000);
+                sequenceNumberMapStorage.queueUpForSave(new SequenceNumberMap(sequenceNumberMap), 2000);
 
                 if (allowBroadcast)
                     broadcast(new AddDataMsg(protectedStorageEntry), sender, listener, isDataOwner);
@@ -338,7 +337,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     storedData.updateSignature(signature);
                     printData("after refreshTTL");
                     sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
-                    sequenceNumberMapStorage.queueUpForSave(new HashMapPersistable<>(sequenceNumberMap), 1000);
+                    sequenceNumberMapStorage.queueUpForSave(new SequenceNumberMap(sequenceNumberMap), 1000);
 
                     broadcast(refreshTTLMessage, sender, null, isDataOwner);
                 }
@@ -367,7 +366,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
             printData("after remove");
             sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
-            sequenceNumberMapStorage.queueUpForSave(new HashMapPersistable<>(sequenceNumberMap), 300);
+            sequenceNumberMapStorage.queueUpForSave(new SequenceNumberMap(sequenceNumberMap), 300);
 
             broadcast(new RemoveDataMsg(protectedStorageEntry), sender, null, isDataOwner);
         } else {
@@ -395,7 +394,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfData);
             printData("after removeMailboxData");
             sequenceNumberMap.put(hashOfData, new MapValue(protectedMailboxStorageEntry.sequenceNumber, System.currentTimeMillis()));
-            sequenceNumberMapStorage.queueUpForSave(new HashMapPersistable<>(sequenceNumberMap), 300);
+            sequenceNumberMapStorage.queueUpForSave(new SequenceNumberMap(sequenceNumberMap), 300);
 
             broadcast(new RemoveMailboxDataMsg(protectedMailboxStorageEntry), sender, null, isDataOwner);
         } else {
@@ -664,22 +663,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
     }
 
-
-    @NotNull
-    /** convert sequence number hashmap to proto representation */
-    private Function<HashMap<ByteArray, MapValue>, Message> getSequenceNumberToProtoMethod() {
-        return (HashMap<ByteArray, MapValue> map) -> {
-            Map<String, PB.MapValue> protoResult =
-                    map.entrySet().stream()
-                            .collect(Collectors.toMap(
-                                    e -> e.getKey().toString(),
-                                    e -> PB.MapValue.newBuilder().setSequenceNr(e.getValue().sequenceNr)
-                                            .setTimeStamp(e.getValue().timeStamp).build())
-                            );
-            return PB.DiskEnvelope.newBuilder().setSequenceNumberMap(PB.SequenceNumberMap.newBuilder().putAllSequenceNumberMap(protoResult)).build();
-        };
-    }
-
     @NotNull
     /** convert hashmap to proto representation */
     private Function<HashMap<ByteArray, ProtectedStorageEntry>, Message> getPersistedEntryMapToProtoMethod() {
@@ -733,35 +716,28 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
      * Used as key object in map for cryptographic hash of stored data as byte[] as primitive data type cannot be
      * used as key
      */
+    @EqualsAndHashCode
+    @AllArgsConstructor
     public static final class ByteArray implements Persistable {
         // That object is saved to disc. We need to take care of changes to not break deserialization.
         private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
         public final byte[] bytes;
 
-        public ByteArray(byte[] bytes) {
-            this.bytes = bytes;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof ByteArray)) return false;
-
-            ByteArray byteArray = (ByteArray) o;
-            return Arrays.equals(bytes, byteArray.bytes);
-        }
-
-        @Override
-        public int hashCode() {
-            return bytes != null ? Arrays.hashCode(bytes) : 0;
-        }
-
         @Override
         public String toString() {
             return "ByteArray{" +
                     "bytes as Hex=" + Hex.toHexString(bytes) +
                     '}';
+        }
+
+        @Override
+        public PB.ByteArray toProto() {
+            return PB.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes)).build();
+        }
+
+        public static ByteArray fromProto(PB.ByteArray byteArray) {
+            return new ByteArray(byteArray.getBytes().toByteArray());
         }
     }
 
@@ -787,6 +763,15 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     "sequenceNr=" + sequenceNr +
                     ", timeStamp=" + timeStamp +
                     '}';
+        }
+
+        @Override
+        public PB.MapValue toProto() {
+            return PB.MapValue.newBuilder().setSequenceNr(sequenceNr).setTimeStamp(timeStamp).build();
+        }
+
+        public static MapValue fromProto(PB.MapValue value) {
+            return new MapValue(value.getSequenceNr(), value.getTimeStamp());
         }
     }
 }

@@ -1,6 +1,7 @@
 package io.bisq.core.proto;
 
 import com.google.inject.Provider;
+import com.neemre.btcdcli4j.core.domain.Payment;
 import io.bisq.common.crypto.Hash;
 import io.bisq.common.locale.*;
 import io.bisq.common.persistence.HashMapPersistable;
@@ -10,6 +11,7 @@ import io.bisq.common.persistence.Persistable;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryList;
+import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
@@ -17,14 +19,13 @@ import io.bisq.core.user.UserVO;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.peers.peerexchange.Peer;
 import io.bisq.network.p2p.storage.P2PDataStorage;
+import io.bisq.network.p2p.storage.SequenceNumberMap;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static io.bisq.core.proto.ProtoUtil.getPaymentAccount;
 
 /**
  * If the Messages class is giving errors in IntelliJ, you should change the IntelliJ IDEA Platform Properties file,
@@ -87,7 +88,7 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
                 break;
                 */
             case SEQUENCE_NUMBER_MAP:
-                result = getSequenceNumberMap(envelope.getSequenceNumberMap());
+                result = SequenceNumberMap.fromProto(envelope.getSequenceNumberMap());
                 break;
             case TRADE_STATISTICS_LIST:
                 result = getTradeStatisticsList(envelope.getTradeStatisticsList());
@@ -100,14 +101,8 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         return Optional.ofNullable(result);
     }
 
-    private Persistable getSequenceNumberMap(PB.SequenceNumberMap sequenceNumberMap) {
-        Map<String, PB.MapValue> sequenceNumberMapMap = sequenceNumberMap.getSequenceNumberMapMap();
-        HashMap<String, P2PDataStorage.MapValue> result = new HashMap<>();
-        for(final Map.Entry<String, PB.MapValue> entry: sequenceNumberMapMap.entrySet()) {
-            result.put(entry.getKey(), new P2PDataStorage.MapValue(entry.getValue().getSequenceNr(), entry.getValue().getTimeStamp()));
-        }
-        return new HashMapPersistable<>(result);
-    }
+
+
 
     private Persistable getTradeStatisticsList(PB.TradeStatisticsList tradeStatisticsList) {
         return new ListPersistable<>(tradeStatisticsList.getTradeStatisticsList().stream()
@@ -165,7 +160,7 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         preferences.setTradeChartsScreenCurrencyCode(env.getTradeChartsScreenCurrencyCode().isEmpty() ? null : env.getTradeChartsScreenCurrencyCode());
         preferences.setBuyScreenCurrencyCode(env.getBuyScreenCurrencyCode().isEmpty() ? null : env.getBuyScreenCurrencyCode());
         preferences.setSellScreenCurrencyCode(env.getSellScreenCurrencyCode().isEmpty() ? null : env.getSellScreenCurrencyCode());
-        preferences.setSelectedPaymentAccountForCreateOffer(env.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod() ? getPaymentAccount(env.getSelectedPaymentAccountForCreateOffer()) : null);
+        preferences.setSelectedPaymentAccountForCreateOffer(env.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod() ? PaymentAccount.fromProto(env.getSelectedPaymentAccountForCreateOffer()) : null);
 
         preferences.setDoPersist(true);
         return preferences;

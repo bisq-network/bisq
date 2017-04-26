@@ -20,8 +20,10 @@ package io.bisq.core.payment;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.persistence.Persistable;
+import io.bisq.common.proto.ProtoHelper;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,10 +32,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @EqualsAndHashCode
 @ToString
@@ -116,6 +115,20 @@ public abstract class PaymentAccount implements Persistable {
 
     @Override
     public PB.PaymentAccount toProto() {
-        return PB.PaymentAccount.newBuilder().setPaymentMethod(PB.PaymentMethod.newBuilder().setId(paymentMethod.getId())).build();
+        PB.PaymentAccount.Builder builder = PB.PaymentAccount.newBuilder()
+                .setId(paymentMethod.getId())
+                .setCreationDate(creationDate)
+                .setPaymentMethod(paymentMethod.toProto())
+                .setAccountName(accountName)
+                .addAllTradeCurrencies(ProtoHelper.collectionToProto(tradeCurrencies))
+                .setPaymentAccountPayload((PB.PaymentAccountPayload) paymentAccountPayload.toProto());
+        Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((PB.TradeCurrency) selectedTradeCurrency.toProto()));
+        return builder.build();
     }
+
+    // complicated: uses a factory to get the specific type, which then calls the ctor which does getPayload for id etc
+    public static PaymentAccount fromProto(PB.PaymentAccount account) {
+        return PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(account.getPaymentMethod().getId()));
+    }
+
 }
