@@ -770,6 +770,7 @@ message DiskEnvelope {
         PersistedEntryMap persisted_entry_map = 9;
         LongPersistable bloom_filter_nonce = 10;
         TradeStatisticsList trade_statistics_list = 12;
+        VoteItemsList vote_items_list = 13;
     }
 }
 
@@ -788,7 +789,6 @@ message PeersList {
 message TradeStatisticsList {
     repeated TradeStatistics trade_statistics = 1;
 }
-
 
 message PersistedEntryMap {
     map<string, ProtectedStorageEntry> persisted_entry_map = 1;
@@ -1146,7 +1146,7 @@ message VoteItem {
     string name = 2;
     int64 default_value = 3;
     bool has_voted = 4;
-    bytes value = 5;
+    uint32 value = 5; // https://stackoverflow.com/questions/17594881/store-a-single-byte-in-a-protobuf-message
 }
 
 message VoteItemsList {

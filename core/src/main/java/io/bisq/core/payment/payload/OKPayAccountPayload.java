@@ -57,15 +57,15 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
 
     @Override
     public PB.PaymentAccountPayload toProto() {
-        PB.OKPayAccountPayload.Builder builder = PB.OKPayAccountPayload.newBuilder();
-        PB.OKPayAccountPayload.Builder thisClass =
-                builder.setAccountNr(accountNr);
+        PB.OKPayAccountPayload.Builder builder = PB.OKPayAccountPayload.newBuilder()
+                .setAccountNr(accountNr);
+
         PB.PaymentAccountPayload.Builder paymentAccountPayload =
                 PB.PaymentAccountPayload.newBuilder()
                         .setId(id)
                         .setPaymentMethodId(paymentMethodId)
                         .setMaxTradePeriod(maxTradePeriod)
-                        .setOKPayAccountPayload(thisClass);
+                        .setOKPayAccountPayload(builder);
         return paymentAccountPayload.build();
     }
 }

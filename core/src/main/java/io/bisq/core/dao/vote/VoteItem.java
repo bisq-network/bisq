@@ -19,19 +19,22 @@ package io.bisq.core.dao.vote;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
+import io.bisq.generated.protobuffer.PB;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 //TODO if sent over wire make final
+@Slf4j
 public class VoteItem implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
-    private static final Logger log = LoggerFactory.getLogger(VoteItem.class);
     //  public final String version;
     public final VotingType votingType;
     @Nullable
@@ -85,5 +88,23 @@ public class VoteItem implements Persistable {
                 ", name='" + name + '\'' +
                 ", value=" + value +
                 '}';
+    }
+
+    @Override
+    public PB.VoteItem toProto() {
+        PB.VoteItem.Builder builder = PB.VoteItem.newBuilder()
+                .setVotingType(PB.VoteItem.VotingType.valueOf(votingType.name()))
+                .setDefaultValue(defaultValue)
+                .setHasVoted(hasVoted)
+                .setValue(value);
+        Optional.ofNullable(name).ifPresent(builder::setName);
+        return builder.build();
+    }
+
+    public static VoteItem fromProto(PB.VoteItem voteItem) {
+        VotingDefaultValues defaultValues = new VotingDefaultValues();
+        VotingType votingType = VotingType.valueOf(voteItem.getVotingType().name());
+        defaultValues.setValueByVotingType(votingType, voteItem.getValue());
+        return new VoteItem(votingType, voteItem.getName(), (byte) voteItem.getValue(), defaultValues);
     }
 }

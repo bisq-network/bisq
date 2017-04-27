@@ -40,7 +40,7 @@ https://developers.google.com/protocol-buffers/docs/proto3#default
  
 For Java -> Protobuffer, you should extract the name from the Java enum:
 
-    .setContext(Messages.AddressEntry.Context.valueOf(context.name()))
+    .setContext(PB.AddressEntry.Context.valueOf(context.name()))
 
 For Protobuffer -> Java, do the opposite:
 

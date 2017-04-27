@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.ListPersistable;
+import io.bisq.common.proto.ProtoHelper;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -30,6 +31,7 @@ import io.bisq.core.dao.compensation.CompensationRequest;
 import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.provider.fee.FeeService;
+import io.bisq.generated.protobuffer.PB;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
@@ -309,7 +311,11 @@ public class VotingManager {
         //TODO check equals code
         if (!voteItemsLists.contains(voteItemsList)) {
             voteItemsLists.add(voteItemsList);
-            voteItemCollectionsStorage.queueUpForSave(new ListPersistable<>(voteItemsLists), 500);
+            ListPersistable<VoteItemsList> serializable = new ListPersistable<>(voteItemsLists);
+            serializable.setToProto((list) -> PB.DiskEnvelope.newBuilder()
+                    .setVoteItemsList(PB.VoteItemsList.newBuilder()
+                            .addAllVoteItem(ProtoHelper.collectionToProto(voteItemsList.getAllVoteItemList()))).build());
+            voteItemCollectionsStorage.queueUpForSave(serializable, 500);
         }
     }
 
