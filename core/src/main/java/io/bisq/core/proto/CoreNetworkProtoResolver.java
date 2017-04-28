@@ -245,7 +245,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 .collect(Collectors.toList());
 
         return new PublishDepositTxRequest(publishDepositTxRequest.getTradeId(),
-                getPaymentAccountPayload(publishDepositTxRequest.getMakerPaymentAccountPayload()),
+                PaymentAccountPayload.fromProto(publishDepositTxRequest.getMakerPaymentAccountPayload()),
                 publishDepositTxRequest.getMakerAccountId(),
                 publishDepositTxRequest.getMakerMultiSigPubKey().toByteArray(),
                 publishDepositTxRequest.getMakerContractAsJson(),
@@ -278,7 +278,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 payDepositRequest.getTakerMultiSigPubKey().toByteArray(),
                 payDepositRequest.getTakerPayoutAddressString(),
                 ProtoUtil.getPubKeyRing(payDepositRequest.getTakerPubKeyRing()),
-                getPaymentAccountPayload(payDepositRequest.getTakerPaymentAccountPayload()),
+                PaymentAccountPayload.fromProto(payDepositRequest.getTakerPaymentAccountPayload()),
                 payDepositRequest.getTakerAccountId(),
                 payDepositRequest.getTakerFeeTxId(),
                 arbitratorNodeAddresses,
@@ -530,11 +530,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     // Payload
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @NotNull
-    public static OKPayAccountPayload getOkPayAccountPayload(PB.PaymentAccountPayload protoEntry) {
-        return new OKPayAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                protoEntry.getMaxTradePeriod(), protoEntry.getOKPayAccountPayload().getAccountNr());
-    }
+
 
     private static PrivateNotificationPayload getPrivateNotification(PB.PrivateNotificationPayload privateNotification) {
         return new PrivateNotificationPayload(privateNotification.getMessage());
@@ -607,104 +603,6 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     // Handle by PaymentAccountPayload.MessageCase
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static PaymentAccountPayload getPaymentAccountPayload(PB.PaymentAccountPayload protoEntry) {
-        PaymentAccountPayload result = null;
-        switch (protoEntry.getMessageCase()) {
-            case ALI_PAY_ACCOUNT_PAYLOAD:
-                result = new AliPayAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                        protoEntry.getMaxTradePeriod(), protoEntry.getAliPayAccountPayload().getAccountNr());
-                break;
-            case CHASE_QUICK_PAY_ACCOUNT_PAYLOAD:
-                result = new ChaseQuickPayAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                        protoEntry.getMaxTradePeriod(), protoEntry.getChaseQuickPayAccountPayload().getEmail(),
-                        protoEntry.getChaseQuickPayAccountPayload().getHolderName());
-                break;
-            case CLEAR_XCHANGE_ACCOUNT_PAYLOAD:
-                result = new ClearXchangeAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                        protoEntry.getMaxTradePeriod(), protoEntry.getClearXchangeAccountPayload().getHolderName(),
-                        protoEntry.getClearXchangeAccountPayloadOrBuilder().getEmailOrMobileNr());
-                break;
-            case COUNTRY_BASED_PAYMENT_ACCOUNT_PAYLOAD:
-                switch (protoEntry.getCountryBasedPaymentAccountPayload().getMessageCase()) {
-                    case BANK_ACCOUNT_PAYLOAD:
-                        switch (protoEntry.getCountryBasedPaymentAccountPayload().getBankAccountPayload().getMessageCase()) {
-                            case NATIONAL_BANK_ACCOUNT_PAYLOAD:
-                                NationalBankAccountPayload nationalBankAccountPayload = new NationalBankAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                                        protoEntry.getMaxTradePeriod());
-                                ProtoUtil.fillInBankAccountPayload(protoEntry, nationalBankAccountPayload);
-                                ProtoUtil.fillInCountryBasedPaymentAccountPayload(protoEntry, nationalBankAccountPayload);
-                                result = nationalBankAccountPayload;
-                                break;
-                            case SAME_BANK_ACCONT_PAYLOAD:
-                                SameBankAccountPayload sameBankAccountPayload = new SameBankAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                                        protoEntry.getMaxTradePeriod());
-                                ProtoUtil.fillInBankAccountPayload(protoEntry, sameBankAccountPayload);
-                                ProtoUtil.fillInCountryBasedPaymentAccountPayload(protoEntry, sameBankAccountPayload);
-                                result = sameBankAccountPayload;
-                                break;
-                            case SPECIFIC_BANKS_ACCOUNT_PAYLOAD:
-                                SpecificBanksAccountPayload specificBanksAccountPayload = new SpecificBanksAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                                        protoEntry.getMaxTradePeriod());
-                                ProtoUtil.fillInBankAccountPayload(protoEntry, specificBanksAccountPayload);
-                                ProtoUtil.fillInCountryBasedPaymentAccountPayload(protoEntry, specificBanksAccountPayload);
-                                result = specificBanksAccountPayload;
-                                break;
-                        }
-                        break;
-                    case CASH_DEPOSIT_ACCOUNT_PAYLOAD:
-                        CashDepositAccountPayload cashDepositAccountPayload = new CashDepositAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                                protoEntry.getMaxTradePeriod());
-                        ProtoUtil.fillInCountryBasedPaymentAccountPayload(protoEntry, cashDepositAccountPayload);
-                        result = cashDepositAccountPayload;
-                        break;
-                    case SEPA_ACCOUNT_PAYLOAD:
-                        SepaAccountPayload sepaAccountPayload = new SepaAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                                protoEntry.getMaxTradePeriod(), CountryUtil.getAllSepaCountries());
-                        ProtoUtil.fillInCountryBasedPaymentAccountPayload(protoEntry, sepaAccountPayload);
-                        result = sepaAccountPayload;
-                        break;
-                }
-                break;
-            case CRYPTO_CURRENCY_ACCOUNT_PAYLOAD:
-                result = new CryptoCurrencyAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                        protoEntry.getMaxTradePeriod(), protoEntry.getCryptoCurrencyAccountPayload().getAddress());
-                break;
-            case FASTER_PAYMENTS_ACCOUNT_PAYLOAD:
-                result = new FasterPaymentsAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                        protoEntry.getMaxTradePeriod(), protoEntry.getFasterPaymentsAccountPayload().getSortCode(),
-                        protoEntry.getFasterPaymentsAccountPayload().getAccountNr());
-                break;
-            case INTERAC_E_TRANSFER_ACCOUNT_PAYLOAD:
-                PB.InteracETransferAccountPayload interacETransferAccountPayload =
-                        protoEntry.getInteracETransferAccountPayload();
-                result = new InteracETransferAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                        protoEntry.getMaxTradePeriod(), interacETransferAccountPayload.getEmail(),
-                        interacETransferAccountPayload.getHolderName(),
-                        interacETransferAccountPayload.getQuestion(),
-                        interacETransferAccountPayload.getAnswer());
-                break;
-            case O_K_PAY_ACCOUNT_PAYLOAD:
-                result = getOkPayAccountPayload(protoEntry);
-                break;
-            case PERFECT_MONEY_ACCOUNT_PAYLOAD:
-                result = new PerfectMoneyAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                        protoEntry.getMaxTradePeriod(), protoEntry.getPerfectMoneyAccountPayload().getAccountNr());
-                break;
-            case SWISH_ACCOUNT_PAYLOAD:
-                result = new SwishAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                        protoEntry.getMaxTradePeriod(), protoEntry.getSwishAccountPayload().getMobileNr(),
-                        protoEntry.getSwishAccountPayload().getHolderName());
-                break;
-            case U_S_POSTAL_MONEY_ORDER_ACCOUNT_PAYLOAD:
-                result = new USPostalMoneyOrderAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                        protoEntry.getMaxTradePeriod(), protoEntry.getUSPostalMoneyOrderAccountPayload().getPostalAddress(),
-                        protoEntry.getUSPostalMoneyOrderAccountPayload().getHolderName());
-                break;
-            default:
-                log.error("Unknown paymentaccountcontractdata:{}", protoEntry.getMessageCase());
-        }
-        return result;
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

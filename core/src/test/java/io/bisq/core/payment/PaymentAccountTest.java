@@ -28,10 +28,12 @@ public class PaymentAccountTest {
         OKPayAccount account = new OKPayAccount();
         String name = "name";
         account.setAccountName(name);
-        account.setAccountNr("nr");
+        String nr = "nr";
+        account.setAccountNr(nr);
 
         OKPayAccount newVo = (OKPayAccount) PaymentAccount.fromProto(account.toProto());
         assertEquals(name, newVo.getAccountName());
+        assertEquals(nr, newVo.getAccountNr());
 
     }
 

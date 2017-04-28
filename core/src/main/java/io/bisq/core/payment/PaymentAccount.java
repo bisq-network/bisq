@@ -57,7 +57,8 @@ public abstract class PaymentAccount implements Persistable {
     @Setter
     protected TradeCurrency selectedTradeCurrency;
     @Getter
-    public final PaymentAccountPayload paymentAccountPayload;
+    @Setter
+    public PaymentAccountPayload paymentAccountPayload;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -133,6 +134,7 @@ public abstract class PaymentAccount implements Persistable {
         paymentAccount.setAccountName(account.getAccountName());
         paymentAccount.getTradeCurrencies().addAll(account.getTradeCurrenciesList().stream().map(tradeCurrency -> TradeCurrency.fromProto(tradeCurrency)).collect(Collectors.toList()));
         paymentAccount.setSelectedTradeCurrency(paymentAccount.getSelectedTradeCurrency());
+        paymentAccount.setPaymentAccountPayload(PaymentAccountPayload.fromProto(account.getPaymentAccountPayload()));
         return paymentAccount;
     }
 

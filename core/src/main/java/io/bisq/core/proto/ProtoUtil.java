@@ -27,6 +27,7 @@ import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountFactory;
 import io.bisq.core.payment.payload.BankAccountPayload;
 import io.bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.Contract;
 import io.bisq.generated.protobuffer.PB;
@@ -68,8 +69,8 @@ public class ProtoUtil {
                 contract.getIsBuyerMakerAndSellerTaker(),
                 contract.getMakerAccountId(),
                 contract.getTakerAccountId(),
-                CoreNetworkProtoResolver.getPaymentAccountPayload(contract.getMakerPaymentAccountPayload()),
-                CoreNetworkProtoResolver.getPaymentAccountPayload(contract.getTakerPaymentAccountPayload()),
+                PaymentAccountPayload.fromProto(contract.getMakerPaymentAccountPayload()),
+                PaymentAccountPayload.fromProto(contract.getTakerPaymentAccountPayload()),
                 getPubKeyRing(contract.getMakerPubKeyRing()),
                 getPubKeyRing(contract.getTakerPubKeyRing()),
                 contract.getMakerPayoutAddressString(),
@@ -111,7 +112,7 @@ public class ProtoUtil {
     // PaymentAccountPayload Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    static void fillInBankAccountPayload(PB.PaymentAccountPayload protoEntry, BankAccountPayload bankAccountPayload) {
+    public static void fillInBankAccountPayload(PB.PaymentAccountPayload protoEntry, BankAccountPayload bankAccountPayload) {
         PB.BankAccountPayload bankProto = protoEntry.getCountryBasedPaymentAccountPayload().getBankAccountPayload();
         bankAccountPayload.setHolderName(bankProto.getHolderName());
         bankAccountPayload.setBankName(bankProto.getBankName());
@@ -121,7 +122,7 @@ public class ProtoUtil {
         bankAccountPayload.setAccountType(bankProto.getAccountType());
     }
 
-    static void fillInCountryBasedPaymentAccountPayload(PB.PaymentAccountPayload protoEntry,
+    public static void fillInCountryBasedPaymentAccountPayload(PB.PaymentAccountPayload protoEntry,
                                                         CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload) {
         countryBasedPaymentAccountPayload.setCountryCode(protoEntry.getCountryBasedPaymentAccountPayload().getCountryCode());
     }
