@@ -19,9 +19,11 @@ package io.bisq.common.locale;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
+import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -29,6 +31,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode
 @ToString
 @Getter
+@Slf4j
 public abstract class TradeCurrency implements Persistable, Comparable<TradeCurrency> {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -63,5 +66,18 @@ public abstract class TradeCurrency implements Persistable, Comparable<TradeCurr
     @Override
     public int compareTo(@NotNull TradeCurrency other) {
         return this.code.compareTo(other.code);
+    }
+
+    public static TradeCurrency fromProto(PB.TradeCurrency tradeCurrency) {
+        switch (tradeCurrency.getMessageCase()) {
+            case FIAT_CURRENCY:
+                return new FiatCurrency(tradeCurrency.getCode());
+            case CRYPTO_CURRENCY:
+                return new CryptoCurrency(tradeCurrency.getCode(), tradeCurrency.getName(), tradeCurrency.getSymbol(),
+                        tradeCurrency.getCryptoCurrency().getIsAsset());
+            default:
+                log.warn("Unknown tradecurrency: {}", tradeCurrency.getMessageCase());
+                return null;
+        }
     }
 }

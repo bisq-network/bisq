@@ -120,9 +120,9 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         PB.Country userCountry = env.getUserCountry();
         preferences.setUserCountry(new Country(userCountry.getCode(), userCountry.getName(), new Region(userCountry.getRegion().getCode(), userCountry.getRegion().getName())));
         env.getFiatCurrenciesList().stream()
-                .forEach(tradeCurrency -> preferences.addFiatCurrency((FiatCurrency) getTradeCurrency(tradeCurrency)));
+                .forEach(tradeCurrency -> preferences.addFiatCurrency((FiatCurrency) TradeCurrency.fromProto(tradeCurrency)));
         env.getCryptoCurrenciesList().stream()
-                .forEach(tradeCurrency -> preferences.addCryptoCurrency((CryptoCurrency) getTradeCurrency(tradeCurrency)));
+                .forEach(tradeCurrency -> preferences.addCryptoCurrency((CryptoCurrency) TradeCurrency.fromProto(tradeCurrency)));
         PB.BlockChainExplorer bceMain = env.getBlockChainExplorerMainNet();
         preferences.setBlockChainExplorerMainNet(new BlockChainExplorer(bceMain.getName(), bceMain.getTxUrl(), bceMain.getAddressUrl()));
         PB.BlockChainExplorer bceTest = env.getBlockChainExplorerTestNet();
@@ -134,7 +134,7 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         preferences.setUseTorForBitcoinJ(env.getUseTorForBitcoinJ());
         preferences.setShowOwnOffersInOfferBook(env.getShowOwnOffersInOfferBook());
         PB.TradeCurrency preferredTradeCurrency = env.getPreferredTradeCurrency();
-        preferences.setPreferredTradeCurrency(getTradeCurrency(preferredTradeCurrency));
+        preferences.setPreferredTradeCurrency(TradeCurrency.fromProto(preferredTradeCurrency));
         preferences.setWithdrawalTxFeeInBytes(env.getWithdrawalTxFeeInBytes());
         preferences.setMaxPriceDistanceInPercent(env.getMaxPriceDistanceInPercent());
 
@@ -164,21 +164,6 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
 
         preferences.setDoPersist(true);
         return preferences;
-    }
-
-
-    private TradeCurrency getTradeCurrency(PB.TradeCurrency tradeCurrency) {
-        switch (tradeCurrency.getMessageCase()) {
-            case FIAT_CURRENCY:
-                return new FiatCurrency(tradeCurrency.getCode());
-            case CRYPTO_CURRENCY:
-                return new CryptoCurrency(tradeCurrency.getCode(), tradeCurrency.getName(), tradeCurrency.getSymbol(),
-                        tradeCurrency.getCryptoCurrency().getIsAsset());
-            default:
-                log.warn("Unknown tradecurrency: {}", tradeCurrency.getMessageCase());
-        }
-
-        return null;
     }
 
     private Locale getLocale(PB.Locale locale) {

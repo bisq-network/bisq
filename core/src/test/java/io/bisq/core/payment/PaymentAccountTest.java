@@ -1,3 +1,10 @@
+package io.bisq.core.payment;
+
+import io.bisq.core.user.UserVO;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+
 /*
  * This file is part of bisq.
  *
@@ -14,20 +21,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+public class PaymentAccountTest {
 
-package io.bisq.common;
+    @Test
+    public void test() {
+        OKPayAccount account = new OKPayAccount();
+        String name = "name";
+        account.setAccountName(name);
+        account.setAccountNr("nr");
 
-import com.google.protobuf.Message;
-import org.apache.commons.lang3.NotImplementedException;
+        OKPayAccount newVo = (OKPayAccount) PaymentAccount.fromProto(account.toProto());
+        assertEquals(name, newVo.getAccountName());
 
-import java.io.Serializable;
-
-public interface Marshaller extends Serializable {
-    default Message toProto() {
-        throw new NotImplementedException("toProtobuf not yet implemented.");
-    }
-    default Object fromProto() {
-        throw new NotImplementedException("toProtobuf not yet implemented.");
     }
 
 }

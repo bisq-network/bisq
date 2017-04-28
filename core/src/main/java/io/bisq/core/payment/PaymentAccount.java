@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @EqualsAndHashCode
 @ToString
@@ -128,7 +129,11 @@ public abstract class PaymentAccount implements Persistable {
 
     // complicated: uses a factory to get the specific type, which then calls the ctor which does getPayload for id etc
     public static PaymentAccount fromProto(PB.PaymentAccount account) {
-        return PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(account.getPaymentMethod().getId()));
+        PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(account.getPaymentMethod().getId()));
+        paymentAccount.setAccountName(account.getAccountName());
+        paymentAccount.getTradeCurrencies().addAll(account.getTradeCurrenciesList().stream().map(tradeCurrency -> TradeCurrency.fromProto(tradeCurrency)).collect(Collectors.toList()));
+        paymentAccount.setSelectedTradeCurrency(paymentAccount.getSelectedTradeCurrency());
+        return paymentAccount;
     }
 
 }
