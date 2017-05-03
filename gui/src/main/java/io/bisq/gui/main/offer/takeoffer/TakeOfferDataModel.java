@@ -27,6 +27,7 @@ import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.listeners.BalanceListener;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.PaymentAccountUtil;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -167,7 +168,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         if (DevEnv.DEV_MODE)
             amount.set(offer.getAmount());
 
-        securityDeposit = offer.getDirection() == Offer.Direction.SELL ?
+        securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
                 getBuyerSecurityDeposit() :
                 getSellerSecurityDeposit();
 
@@ -307,7 +308,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Offer.Direction getDirection() {
+    OfferPayload.Direction getDirection() {
         return offer.getDirection();
     }
 
@@ -389,7 +390,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     private boolean isBuyOffer() {
-        return getDirection() == Offer.Direction.BUY;
+        return getDirection() == OfferPayload.Direction.BUY;
     }
 
     void updateTradeFee() {

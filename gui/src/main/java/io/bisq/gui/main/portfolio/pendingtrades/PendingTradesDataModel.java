@@ -30,6 +30,7 @@ import io.bisq.core.arbitration.DisputeAlreadyOpenException;
 import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.BuyerTrade;
 import io.bisq.core.trade.SellerTrade;
@@ -206,7 +207,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     boolean isBuyOffer() {
-        return getOffer() != null && getOffer().getDirection() == Offer.Direction.BUY;
+        return getOffer() != null && getOffer().getDirection() == OfferPayload.Direction.BUY;
     }
 
     boolean isBuyer() {
@@ -268,7 +269,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return getOffer() != null ? getOffer().getCurrencyCode() : "";
     }
 
-    public Offer.Direction getDirection(Offer offer) {
+    public OfferPayload.Direction getDirection(Offer offer) {
         isMaker = tradeManager.isMyOffer(offer);
         return isMaker ? offer.getDirection() : offer.getMirroredDirection();
     }
@@ -407,7 +408,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
-                    trade.getOffer().getDirection() == Offer.Direction.BUY ? isMaker : !isMaker,
+                    trade.getOffer().getDirection() == OfferPayload.Direction.BUY ? isMaker : !isMaker,
                     isMaker,
                     keyRing.getPubKeyRing(),
                     trade.getDate(),

@@ -19,6 +19,7 @@ package io.bisq.gui.main.portfolio.failedtrades;
 
 import com.google.inject.Inject;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.gui.common.model.ActivatableDataModel;
@@ -57,7 +58,7 @@ class FailedTradesDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public Offer.Direction getDirection(Offer offer) {
+    public OfferPayload.Direction getDirection(Offer offer) {
         return failedTradesManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 

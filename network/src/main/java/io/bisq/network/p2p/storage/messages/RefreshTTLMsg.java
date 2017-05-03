@@ -1,6 +1,7 @@
 package io.bisq.network.p2p.storage.messages;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
 import io.bisq.common.Marshaller;
 import io.bisq.common.app.Version;
 import io.bisq.common.network.Msg;
@@ -40,12 +41,17 @@ public final class RefreshTTLMsg extends BroadcastMsg implements Marshaller {
     }
 
     @Override
-    public PB.Envelope toProto() {
+    public PB.Envelope toEnvelopeProto() {
         PB.Envelope.Builder builder = Msg.getEnv();
         return builder.setRefreshTtlMessage(builder.getRefreshTtlMessageBuilder()
                 .setHashOfDataAndSeqNr(ByteString.copyFrom(hashOfDataAndSeqNr))
                 .setHashOfPayload(ByteString.copyFrom(hashOfPayload))
                 .setSequenceNumber(sequenceNumber)
                 .setSignature(ByteString.copyFrom(signature))).build();
+    }
+
+    @Override
+    public Message toProto() {
+        return toEnvelopeProto().getPreliminaryGetDataRequest();
     }
 }

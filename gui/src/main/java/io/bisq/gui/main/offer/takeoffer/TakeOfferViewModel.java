@@ -20,6 +20,7 @@ package io.bisq.gui.main.offer.takeoffer;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.Trade;
@@ -401,7 +402,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void addBindings() {
         volume.bind(createStringBinding(() -> btcFormatter.formatVolume(dataModel.volume.get()), dataModel.volume));
 
-        if (dataModel.getDirection() == Offer.Direction.SELL) {
+        if (dataModel.getDirection() == OfferPayload.Direction.SELL) {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
         } else {
             volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));
@@ -537,7 +538,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     boolean isSeller() {
-        return dataModel.getDirection() == Offer.Direction.BUY;
+        return dataModel.getDirection() == OfferPayload.Direction.BUY;
     }
 
     private InputValidator.ValidationResult isBtcInputValid(String input) {

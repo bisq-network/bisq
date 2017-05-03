@@ -200,7 +200,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
 
     private static Msg getOfferAvailabilityRequest(PB.Envelope envelope) {
         PB.OfferAvailabilityRequest msg = envelope.getOfferAvailabilityRequest();
-        return new OfferAvailabilityRequest(msg.getOfferId(), ProtoUtil.getPubKeyRing(msg.getPubKeyRing()), msg.getTakersTradePrice());
+        return new OfferAvailabilityRequest(msg.getOfferId(), PubKeyRing.fromProto(msg.getPubKeyRing()), msg.getTakersTradePrice());
     }
 
     private static Msg getPrivateNotificationMessage(PB.PrivateNotificationMessage privateNotificationMessage) {
@@ -277,7 +277,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 payDepositRequest.getChangeOutputAddress(),
                 payDepositRequest.getTakerMultiSigPubKey().toByteArray(),
                 payDepositRequest.getTakerPayoutAddressString(),
-                ProtoUtil.getPubKeyRing(payDepositRequest.getTakerPubKeyRing()),
+                PubKeyRing.fromProto(payDepositRequest.getTakerPubKeyRing()),
                 PaymentAccountPayload.fromProto(payDepositRequest.getTakerPaymentAccountPayload()),
                 payDepositRequest.getTakerAccountId(),
                 payDepositRequest.getTakerFeeTxId(),
@@ -517,7 +517,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                         extraDataMapMap);
                 break;
             case OFFER_PAYLOAD:
-                storagePayload = getOfferPayload(protoEntry.getOfferPayload());
+                storagePayload = OfferPayload.fromProto(protoEntry.getOfferPayload());
                 break;
             default:
                 log.error("Unknown storagepayload:{}", protoEntry.getMessageCase());
@@ -535,69 +535,6 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     private static PrivateNotificationPayload getPrivateNotification(PB.PrivateNotificationPayload privateNotification) {
         return new PrivateNotificationPayload(privateNotification.getMessage());
     }
-
-    public static OfferPayload getOfferPayload(PB.OfferPayload pbOffer) {
-        List<NodeAddress> arbitratorNodeAddresses = pbOffer.getArbitratorNodeAddressesList().stream()
-                .map(NodeAddress::fromProto).collect(Collectors.toList());
-        List<NodeAddress> mediatorNodeAddresses = pbOffer.getMediatorNodeAddressesList().stream()
-                .map(NodeAddress::fromProto).collect(Collectors.toList());
-
-        // Nullable object need to be checked against the default values in PB (not nice... ;-( )
-
-        // convert these lists because otherwise when they're empty they are lazyStringArrayList objects and NOT serializable,
-        // which is needed for the P2PStorage getHash() operation
-        List<String> acceptedCountryCodes = pbOffer.getAcceptedCountryCodesList().isEmpty() ?
-                null : pbOffer.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
-        List<String> acceptedBankIds = pbOffer.getAcceptedBankIdsList().isEmpty() ?
-                null : pbOffer.getAcceptedBankIdsList().stream().collect(Collectors.toList());
-        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(pbOffer.getExtraDataMapMap()) ?
-                null : pbOffer.getExtraDataMapMap();
-        final String countryCode1 = pbOffer.getCountryCode();
-        String countryCode = countryCode1.isEmpty() ? null : countryCode1;
-        String bankId = pbOffer.getBankId().isEmpty() ? null : pbOffer.getBankId();
-        String offerFeePaymentTxId = pbOffer.getOfferFeePaymentTxId().isEmpty() ? null : pbOffer.getOfferFeePaymentTxId();
-        String hashOfChallenge = pbOffer.getHashOfChallenge().isEmpty() ? null : pbOffer.getHashOfChallenge();
-
-        return new OfferPayload(pbOffer.getId(),
-                pbOffer.getDate(),
-                NodeAddress.fromProto(pbOffer.getMakerNodeAddress()),
-                ProtoUtil.getPubKeyRing(pbOffer.getPubKeyRing()),
-                OfferPayload.Direction.fromProto(pbOffer.getDirection()),
-                pbOffer.getPrice(),
-                pbOffer.getMarketPriceMargin(),
-                pbOffer.getUseMarketBasedPrice(),
-                pbOffer.getAmount(),
-                pbOffer.getMinAmount(),
-                pbOffer.getBaseCurrencyCode(),
-                pbOffer.getCounterCurrencyCode(),
-                arbitratorNodeAddresses,
-                mediatorNodeAddresses,
-                pbOffer.getPaymentMethodId(),
-                pbOffer.getMakerPaymentAccountId(),
-                offerFeePaymentTxId,
-                countryCode,
-                acceptedCountryCodes,
-                bankId,
-                acceptedBankIds,
-                pbOffer.getVersionNr(),
-                pbOffer.getBlockHeightAtOfferCreation(),
-                pbOffer.getTxFee(),
-                pbOffer.getMakerFee(),
-                pbOffer.getIsCurrencyForMakerFeeBtc(),
-                pbOffer.getBuyerSecurityDeposit(),
-                pbOffer.getSellerSecurityDeposit(),
-                pbOffer.getMaxTradeLimit(),
-                pbOffer.getMaxTradePeriod(),
-                pbOffer.getUseAutoClose(),
-                pbOffer.getUseReOpenAfterAutoClose(),
-                pbOffer.getLowerClosePrice(),
-                pbOffer.getUpperClosePrice(),
-                pbOffer.getIsPrivateOffer(),
-                hashOfChallenge,
-                extraDataMapMap);
-    }
-
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Handle by PaymentAccountPayload.MessageCase

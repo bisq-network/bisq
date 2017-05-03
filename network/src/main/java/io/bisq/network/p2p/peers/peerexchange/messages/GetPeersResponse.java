@@ -44,7 +44,7 @@ public final class GetPeersResponse extends PeerExchangeMsg implements Supported
     }
 
     @Override
-    public PB.Envelope toProto() {
+    public PB.Envelope toEnvelopeProto() {
         PB.Envelope.Builder envelopeBuilder = Msg.getEnv();
 
         PB.GetPeersResponse.Builder msgBuilder = PB.GetPeersResponse.newBuilder();

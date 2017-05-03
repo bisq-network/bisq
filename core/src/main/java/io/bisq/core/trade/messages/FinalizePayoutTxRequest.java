@@ -61,7 +61,7 @@ public final class FinalizePayoutTxRequest extends TradeMsg implements MailboxMs
     }
 
     @Override
-    public PB.Envelope toProto() {
+    public PB.Envelope toEnvelopeProto() {
         PB.Envelope.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest.newBuilder()
                 .setMessageVersion(getMessageVersion())

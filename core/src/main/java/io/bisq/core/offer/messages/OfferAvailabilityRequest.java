@@ -27,7 +27,7 @@ import io.bisq.network.p2p.SupportedCapabilitiesMsg;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 
-// We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection 
+// We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
 public final class OfferAvailabilityRequest extends OfferMsg implements SupportedCapabilitiesMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -62,7 +62,7 @@ public final class OfferAvailabilityRequest extends OfferMsg implements Supporte
     }
 
     @Override
-    public PB.Envelope toProto() {
+    public PB.Envelope toEnvelopeProto() {
         return Msg.getEnv()
                 .setOfferAvailabilityRequest(PB.OfferAvailabilityRequest.newBuilder()
                         .setOfferId(offerId)

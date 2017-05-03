@@ -1,5 +1,6 @@
 package io.bisq.core.offer;
 
+import com.google.protobuf.Message;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
@@ -8,6 +9,7 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Altcoin;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
+import io.bisq.common.persistence.Persistable;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Utilities;
@@ -17,6 +19,7 @@ import io.bisq.core.offer.availability.OfferAvailabilityProtocol;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.*;
 import lombok.Getter;
@@ -37,13 +40,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class Offer implements Serializable {
+public class Offer implements Persistable, Serializable {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum Direction {BUY, SELL}
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enums
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public enum State {
         UNDEFINED,
@@ -53,7 +59,6 @@ public class Offer implements Serializable {
         REMOVED,
         MAKER_OFFLINE
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -87,21 +92,6 @@ public class Offer implements Serializable {
     public Offer(OfferPayload offerPayload) {
         this.offerPayload = offerPayload;
     }
-
-    // TODO still needed as we get the offer from persistence serialized
-    // can be removed once we have full PB support
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            stateProperty = new SimpleObjectProperty<>(Offer.State.UNDEFINED);
-
-            // we don't need to fill it as the error message is only relevant locally, so we don't store it in the transmitted object
-            errorMessageProperty = new SimpleStringProperty();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Availability
@@ -138,10 +128,10 @@ public class Offer implements Serializable {
                 double factor;
                 double marketPriceMargin = offerPayload.getMarketPriceMargin();
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                    factor = getDirection() == Offer.Direction.SELL ?
+                    factor = getDirection() == OfferPayload.Direction.SELL ?
                             1 - marketPriceMargin : 1 + marketPriceMargin;
                 } else {
-                    factor = getDirection() == Offer.Direction.BUY ?
+                    factor = getDirection() == OfferPayload.Direction.BUY ?
                             1 - marketPriceMargin : 1 + marketPriceMargin;
                 }
                 double marketPriceAsDouble = marketPrice.getPrice();
@@ -296,11 +286,11 @@ public class Offer implements Serializable {
     }
 
     public boolean isBuyOffer() {
-        return getDirection() == Offer.Direction.BUY;
+        return getDirection() == OfferPayload.Direction.BUY;
     }
 
-    public Offer.Direction getMirroredDirection() {
-        return getDirection() == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
+    public OfferPayload.Direction getMirroredDirection() {
+        return getDirection() == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
     }
 
     public boolean isMyOffer(KeyRing keyRing) {
@@ -326,8 +316,8 @@ public class Offer implements Serializable {
     // Delegate Getter (boilerplate code generated via IntelliJ generate delegate feature)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Offer.Direction getDirection() {
-        return Offer.Direction.valueOf(offerPayload.getDirection().name());
+    public OfferPayload.Direction getDirection() {
+        return OfferPayload.Direction.valueOf(offerPayload.getDirection().name());
     }
 
     public String getId() {
@@ -475,5 +465,14 @@ public class Offer implements Serializable {
                 ", state=" + state +
                 ", offerPayload=" + offerPayload +
                 '}';
+    }
+
+    @Override
+    public PB.Offer toProto() {
+        return PB.Offer.newBuilder().setOfferPayload(offerPayload.toProto().getOfferPayload()).build();
+    }
+
+    public static Offer fromProto(PB.Offer proto) {
+        return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
     }
 }

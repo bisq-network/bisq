@@ -23,6 +23,7 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.view.ActivatableView;
@@ -54,7 +55,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final Preferences preferences;
-    private final Offer.Direction direction;
+    private final OfferPayload.Direction direction;
 
     private Offer offer;
     private TradeCurrency tradeCurrency;
@@ -67,7 +68,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
-        this.direction = (this instanceof BuyOfferView) ? Offer.Direction.BUY : Offer.Direction.SELL;
+        this.direction = (this instanceof BuyOfferView) ? OfferPayload.Direction.BUY : OfferPayload.Direction.SELL;
     }
 
     @Override
@@ -144,7 +145,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private void loadView(Class<? extends View> viewClass) {
         TabPane tabPane = root;
         View view;
-        boolean isBuy = direction == Offer.Direction.BUY;
+        boolean isBuy = direction == OfferPayload.Direction.BUY;
 
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);

@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.provider.price.PriceFeedService;
@@ -71,7 +72,7 @@ class OpenOffersDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public Offer.Direction getDirection(Offer offer) {
+    public OfferPayload.Direction getDirection(Offer offer) {
         return openOfferManager.isMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 

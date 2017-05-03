@@ -115,7 +115,7 @@ public class P2PDataStorageTest {
         assertTrue(checkSignature(data));
 
         ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
-        data.toProto().writeTo(byteOutputStream);
+        data.toEnvelopeProto().writeTo(byteOutputStream);
 
         //TODO CoreProtobufferResolver is not accessible here
         // We should refactor it so that the classes themselves know how to deserialize
@@ -134,7 +134,7 @@ public class P2PDataStorageTest {
     public void testOfferRoundtrip() throws InvalidProtocolBufferException {
         OfferPayload offer = getDummyOffer();
         try {
-            String buffer = JsonFormat.printer().print(offer.toProto().getOfferPayload());
+            String buffer = JsonFormat.printer().print(offer.toEnvelopeProto().getOfferPayload());
             JsonFormat.Parser parser = JsonFormat.parser();
             PB.OfferPayload.Builder builder = PB.OfferPayload.newBuilder();
             parser.merge(buffer, builder);

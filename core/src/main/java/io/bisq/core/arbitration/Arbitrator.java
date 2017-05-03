@@ -124,7 +124,7 @@ public final class Arbitrator implements StoragePayload {
         return new Arbitrator(NodeAddress.fromProto(arbitrator.getNodeAddress()),
                 arbitrator.getBtcPubKey().toByteArray(),
                 arbitrator.getBtcAddress(),
-                ProtoUtil.getPubKeyRing(arbitrator.getPubKeyRing()),
+                PubKeyRing.fromProto(arbitrator.getPubKeyRing()),
                 strings,
                 date,
                 arbitrator.getRegistrationPubKey().toByteArray(),

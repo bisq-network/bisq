@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
 
 @EqualsAndHashCode(callSuper = true)
 @Immutable
-// We use a MailboxMessage here because the taker has paid already the trade fee and it could be that 
-// we lost connection to him but we are complete on our side. So even if the peer is offline he can 
+// We use a MailboxMessage here because the taker has paid already the trade fee and it could be that
+// we lost connection to him but we are complete on our side. So even if the peer is offline he can
 // continue later to complete the deposit tx.
 public final class PublishDepositTxRequest extends TradeMsg implements MailboxMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
@@ -88,7 +88,7 @@ public final class PublishDepositTxRequest extends TradeMsg implements MailboxMs
     }
 
     @Override
-    public PB.Envelope toProto() {
+    public PB.Envelope toEnvelopeProto() {
         PB.Envelope.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setPublishDepositTxRequest(baseEnvelope.getPublishDepositTxRequestBuilder()
                 .setMessageVersion(getMessageVersion())

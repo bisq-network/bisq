@@ -132,7 +132,7 @@ public final class DisputeCommunicationMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.Envelope toProto() {
+    public PB.Envelope toEnvelopeProto() {
         PB.Envelope.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setDisputeCommunicationMessage(PB.DisputeCommunicationMessage.newBuilder()
                 .setDate(date)

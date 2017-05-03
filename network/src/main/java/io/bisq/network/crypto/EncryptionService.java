@@ -82,7 +82,7 @@ public class EncryptionService {
     }
 
     private static byte[] encryptPayloadWithHmac(Msg msg, SecretKey secretKey) throws CryptoException {
-        return Encryption.encryptPayloadWithHmac(msg.toProto().toByteArray(), secretKey);
+        return Encryption.encryptPayloadWithHmac(msg.toEnvelopeProto().toByteArray(), secretKey);
     }
 
     /**
@@ -98,7 +98,7 @@ public class EncryptionService {
         // Create a symmetric key
         SecretKey secretKey = Encryption.generateSecretKey();
 
-        // Encrypt secretKey with receiver's publicKey 
+        // Encrypt secretKey with receiver's publicKey
         byte[] encryptedSecretKey = Encryption.encryptSecretKey(secretKey, encryptionPublicKey);
 
         // Encrypt with sym key payload with appended hmac

@@ -21,6 +21,7 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.protobuf.Message;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
@@ -40,6 +41,7 @@ import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.protocol.ProcessModel;
 import io.bisq.core.trade.protocol.TradeProtocol;
 import io.bisq.core.user.User;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
@@ -70,13 +72,13 @@ public abstract class Trade implements Tradable, Model {
     private static final Logger log = LoggerFactory.getLogger(Trade.class);
 
     public enum State {
-        // #################### Phase PREPARATION 
+        // #################### Phase PREPARATION
         // When trade protocol starts no funds are on stake
         PREPARATION(Phase.PREPARATION),
 
         // At first part maker/taker have different roles
         // taker perspective
-        // #################### Phase TAKER_FEE_PAID 
+        // #################### Phase TAKER_FEE_PAID
         TAKER_PUBLISHED_TAKER_FEE_TX(Phase.TAKER_FEE_PUBLISHED),
 
         // PUBLISH_DEPOSIT_TX_REQUEST
@@ -90,7 +92,7 @@ public abstract class Trade implements Tradable, Model {
         TAKER_RECEIVED_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
 
 
-        // #################### Phase DEPOSIT_PAID 
+        // #################### Phase DEPOSIT_PAID
         TAKER_PUBLISHED_DEPOSIT_TX(Phase.DEPOSIT_PUBLISHED),
 
 
@@ -488,7 +490,7 @@ public abstract class Trade implements Tradable, Model {
     public void setTakeOfferDate(Date takeOfferDate) {
         this.takeOfferDate = takeOfferDate.getTime();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Model implementation
@@ -828,6 +830,22 @@ public abstract class Trade implements Tradable, Model {
             setState(State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
     }
 
+    /*
+    @Override
+    public Message toProto() {
+        return PB.Trade.newBuilder()
+                .setOffer(offer.toProto())
+                .setProcessModel(processModel.toproto())
+                .setTakerFeeTxId(takerFeeTxId)
+                .setDepositTxId(depositTxId)
+                .setPayoutTxId(payoutTxId)
+                .setTradeAmountAsLong(tradeAmountAsLong)
+                .setTxFeeAsLong(txFeeAsLong)
+                .setTakerFeeAsLong(takerFeeAsLong)
+                .setDecryptedMsgWithPubKey((PB.DecryptedMsgWithPubKey) decryptedMsgWithPubKey.toProto())
+                ;
+    }
+*/
     @Override
     public String toString() {
         return "Trade{" +

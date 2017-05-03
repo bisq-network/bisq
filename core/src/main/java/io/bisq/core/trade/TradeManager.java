@@ -34,6 +34,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.offer.availability.OfferAvailabilityModel;
@@ -133,7 +134,7 @@ public class TradeManager {
             trade.setTransientFields(tradableListStorage, btcWalletService);
             trade.getOffer().setPriceFeedService(priceFeedService);
         });
-       
+
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
             public void onDirectMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress peerNodeAddress) {
@@ -194,19 +195,20 @@ public class TradeManager {
         List<Trade> addTradeToFailedTradesList = new ArrayList<>();
         List<Trade> removePreparedTradeList = new ArrayList<>();
         tradesForStatistics = new ArrayList<>();
-        for (Trade trade : trades) {
-            if (trade.isDepositPublished() ||
-                    (trade.isTakerFeePublished() && !trade.hasFailed())) {
-                initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
-                        trade.getProcessModel().getFundsNeededForTradeAsLong());
-                trade.updateDepositTxFromWallet();
-                tradesForStatistics.add(trade);
-            } else if (trade.isTakerFeePublished()) {
-                addTradeToFailedTradesList.add(trade);
-            } else {
-                removePreparedTradeList.add(trade);
-            }
-        }
+        trades.forEach(trade -> {
+                    if (trade.isDepositPublished() ||
+                            (trade.isTakerFeePublished() && !trade.hasFailed())) {
+                        initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
+                                trade.getProcessModel().getFundsNeededForTradeAsLong());
+                        trade.updateDepositTxFromWallet();
+                        tradesForStatistics.add(trade);
+                    } else if (trade.isTakerFeePublished()) {
+                        addTradeToFailedTradesList.add(trade);
+                    } else {
+                        removePreparedTradeList.add(trade);
+                    }
+                }
+        );
 
         for (Trade trade : addTradeToFailedTradesList)
             addTradeToFailedTrades(trade);
@@ -507,11 +509,11 @@ public class TradeManager {
     }
 
     public boolean isBuyer(Offer offer) {
-        // If I am the maker, we use the offer direction, otherwise the mirrored direction
+        // If I am the maker, we use the OfferPayload.Direction, otherwise the mirrored direction
         if (isMyOffer(offer))
             return offer.isBuyOffer();
         else
-            return offer.getDirection() == Offer.Direction.SELL;
+            return offer.getDirection() == OfferPayload.Direction.SELL;
     }
 
     public Optional<Trade> getTradeById(String tradeId) {

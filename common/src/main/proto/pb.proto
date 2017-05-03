@@ -771,6 +771,7 @@ message DiskEnvelope {
         LongPersistable bloom_filter_nonce = 10;
         TradeStatisticsList trade_statistics_list = 12;
         VoteItemsList vote_items_list = 13;
+        TradableList tradable_list = 14;
     }
 }
 
@@ -942,19 +943,17 @@ message Region {
     string name = 2;
 }
 message Tradable {
-
     oneof message {
         OpenOffer open_offer = 1;
-        //+OpenOffer (io.bisq.core.offer)
-        //A Trade (io.bisq.core.trade)
-        //A BuyerTrade (io.bisq.core.trade)
-        //BuyerAsOffererTrade (io.bisq.core.trade)
-        //BuyerAsTakerTrade (io.bisq.core.trade)
-        //A SellerTrade (io.bisq.core.trade)
-        //SellerAsOffererTrade (io.bisq.core.trade)
-        //SellerAsTakerTrade (io.bisq.core.trade)
+        BuyerAsMakerTrade buyer_as_maker_trade = 2;
+        BuyerAsTakerTrade  buyer_as_taker_trade= 3;
+        SellerAsMakerTrade seller_as_maker_trade = 4;
+        SellerAsTakerTrade seller_as_taker_trade = 5;
     }
+}
 
+message TradableList {
+    repeated Tradable tradable = 1;
 }
 
 message OpenOffer {
@@ -1021,7 +1020,7 @@ message Trade {
     }
 
 
-    enum PeriodState {
+    enum TradePeriodState {
         TRADE_PERIOD_STATE_UNKNOWN_FAILURE = 0;
         NORMAL = 1;
         HALF_REACHED = 2;
@@ -1030,45 +1029,46 @@ message Trade {
 
     Offer offer = 1;
     ProcessModel process_model = 2;
-    DecryptedMsgWithPubKey decrypted_msg_with_pub_key = 3;
-    int64 take_offerint64 = 4;
-    Coin trade_amount = 5;
-    Coin tx_fee = 6;
-    Coin take_offer_fee = 7;
-    int64 trade_price = 8;
-    NodeAddress trading_peer_node_address = 9;
-    string take_offer_fee_tx_id = 10;
-    State state = 11;
-    DisputeState dispute_state = 12;
-    PeriodState trade_period_state = 13;
-    Transaction deposit_tx = 14;
-    Contract contract = 15;
-    string contract_as_json = 16;
-    bytes contract_hash = 17;
-    string taker_contract_signature = 18;
-    string offerer_contract_signature = 19;
-    Transaction payout_tx = 20;
-    int64 lock_time_as_block_height = 21;
+    string taker_fee_tx_id = 3;
+    string deposit_tx_id = 4;
+    string payout_tx_id = 5;
+    int64 trade_amount_as_long = 6;
+    int64 tx_fee_as_long = 7;
+    int64 taker_fee_as_long = 8;
+    DecryptedMsgWithPubKey decrypted_msg_with_pub_key = 9;
+    int64 take_offer_date = 10;
+    bool is_currency_for_taker_fee_btc = 11;
+    int64 trade_price = 12;
+    NodeAddress trading_peer_node_address = 13;
+    State state = 14;
+    DisputeState dispute_state = 15;
+    TradePeriodState trade_period_state = 16;
+    Contract contract = 17;
+    string contract_as_json = 18;
+    bytes contract_hash = 19;
+    string taker_contract_signature = 20;
+    string maker_contract_signature = 21;
     NodeAddress arbitrator_node_address = 22;
-    bytes arbitrator_btc_pub_key = 23;
-    string taker_payment_account_id = 24;
-    string error_message = 25;
+    NodeAddress mediator_node_address = 23;
+    bytes arbitrator_btc_pub_key = 24;
+    string taker_payment_account_id = 25;
+    string error_message = 26;
 }
 
-message BuyerTrade {
-}
-message BuyerAsOffererTrade {
+message BuyerAsMakerTrade {
+    Trade trade = 1;
 }
 message BuyerAsTakerTrade {
+    Trade trade = 1;
 }
 message SellerTrade {
+    Trade trade = 1;
 }
-message SellerAsOffererTrade {
+message SellerAsMakerTrade {
+    Trade trade = 1;
 }
 message SellerAsTakerTrade {
-}
-
-message TradableList {
+    Trade trade = 1;
 }
 
 message TradeCurrency {
@@ -1193,7 +1193,16 @@ message ProcessModel {
 }
 
 message Offer {
+    enum State {
+       UNDEFINED = 0;
+       OFFER_FEE_PAID = 1;
+       AVAILABLE = 2;
+       NOT_AVAILABLE = 3;
+       REMOVED = 4;
+       MAKER_OFFLINE = 5;
+    }
 
+    OfferPayload offer_payload = 1;
 }
 
 message MockMailboxPayload {

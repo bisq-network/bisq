@@ -88,7 +88,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final BsqBalanceListener bsqBalanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
-    private Offer.Direction direction;
+    private OfferPayload.Direction direction;
 
     private TradeCurrency tradeCurrency;
 
@@ -235,7 +235,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // called before activate()
-    boolean initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
+    boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
 
         fillPaymentAccounts();
@@ -493,7 +493,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         return true;
     }
 
-    Offer.Direction getDirection() {
+    OfferPayload.Direction getDirection() {
         return direction;
     }
 
@@ -588,7 +588,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     boolean isBuyOffer() {
-        return direction == Offer.Direction.BUY;
+        return direction == OfferPayload.Direction.BUY;
     }
 
     private void updateBalance() {
@@ -731,7 +731,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
         this.minAmount.set(minAmount);
     }
 
-    void setDirection(Offer.Direction direction) {
+    void setDirection(OfferPayload.Direction direction) {
         this.direction = direction;
     }
 

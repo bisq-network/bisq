@@ -27,6 +27,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.DontShowAgainLookup;
@@ -238,7 +239,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         model.dataModel.onTabSelected(isSelected);
     }
 
-    public void initWithData(Offer.Direction direction, TradeCurrency tradeCurrency) {
+    public void initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
         boolean result = model.initWithData(direction, tradeCurrency);
 
         if (!result) {
@@ -251,7 +252,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     }).show();
         }
 
-        if (direction == Offer.Direction.BUY) {
+        if (direction == OfferPayload.Direction.BUY) {
             imageView.setId("image-buy-large");
 
             placeOfferButton.setId("buy-button-big");

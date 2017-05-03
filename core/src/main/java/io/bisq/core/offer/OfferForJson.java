@@ -15,7 +15,7 @@ import java.util.Date;
 public class OfferForJson {
     private static final Logger log = LoggerFactory.getLogger(OfferForJson.class);
 
-    public final Offer.Direction direction;
+    public final OfferPayload.Direction direction;
     public final String currencyCode;
     public final long minAmount;
     public final long amount;
@@ -29,7 +29,7 @@ public class OfferForJson {
 
     // primaryMarket fields are based on industry standard where primaryMarket is always in the focus (in the app BTC is always in the focus - will be changed in a larger refactoring once)
     public String currencyPair;
-    public Offer.Direction primaryMarketDirection;
+    public OfferPayload.Direction primaryMarketDirection;
 
     public String priceDisplayString;
     public String primaryMarketAmountDisplayString;
@@ -44,7 +44,7 @@ public class OfferForJson {
     public long primaryMarketMinVolume;
 
 
-    public OfferForJson(Offer.Direction direction,
+    public OfferForJson(OfferPayload.Direction direction,
                         String currencyCode,
                         Coin minAmount,
                         Coin amount,
@@ -89,13 +89,13 @@ public class OfferForJson {
         try {
             final Price price = getPrice();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                primaryMarketDirection = direction == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
+                primaryMarketDirection = direction == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
                 currencyPair = currencyCode + "/" + "BTC";
 
                 // int precision = 8;
                 //decimalFormat.setMaximumFractionDigits(precision);
 
-                // amount and volume is inverted for json    
+                // amount and volume is inverted for json
                 priceDisplayString = altcoinFormat.noCode().format(price.getMonetary()).toString();
                 primaryMarketMinAmountDisplayString = altcoinFormat.noCode().format(getMinVolume().getMonetary()).toString();
                 primaryMarketAmountDisplayString = altcoinFormat.noCode().format(getVolume().getMonetary()).toString();
@@ -116,7 +116,7 @@ public class OfferForJson {
                 // primaryMarketMinVolumeDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();
                 // primaryMarketVolumeDisplayString = coinFormat.noCode().format(getAmountAsCoin()).toString();
 
-                
+
                 /*primaryMarketPrice = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(value, precision));
                 primaryMarketMinAmount = (long) MathUtils.scaleUpByPowerOf10(getMinVolume().longValue(), precision);
                 primaryMarketAmount = (long) MathUtils.scaleUpByPowerOf10(getVolume().longValue(), precision);
@@ -138,8 +138,8 @@ public class OfferForJson {
                 primaryMarketAmount = getAmountAsCoin().getValue();
                 primaryMarketMinVolume = getMinVolume().getValue();
                 primaryMarketVolume = getVolume().getValue();
-                
-           /*     
+
+           /*
                 priceDisplayString = fiatFormat.noCode().format(price.getMonetary()).toString();
 
                 primaryMarketMinAmountDisplayString = coinFormat.noCode().format(getMinAmountAsCoin()).toString();

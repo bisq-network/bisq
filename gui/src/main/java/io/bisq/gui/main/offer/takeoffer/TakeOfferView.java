@@ -27,6 +27,7 @@ import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Tuple3;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.DontShowAgainLookup;
@@ -234,7 +235,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         model.initWithData(offer);
         priceAsPercentageInputBox.setVisible(offer.isUseMarketBasedPrice());
 
-        if (model.getOffer().getDirection() == Offer.Direction.SELL) {
+        if (model.getOffer().getDirection() == OfferPayload.Direction.SELL) {
             imageView.setId("image-buy-large");
             directionLabel.setId("direction-icon-label-buy");
 

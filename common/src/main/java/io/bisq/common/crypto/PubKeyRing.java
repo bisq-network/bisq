@@ -121,6 +121,12 @@ public final class PubKeyRing implements Payload {
                 .build();
     }
 
+    public static PubKeyRing fromProto(PB.PubKeyRing pubKeyRing) {
+        return new PubKeyRing(pubKeyRing.getSignaturePubKeyBytes().toByteArray(),
+                pubKeyRing.getEncryptionPubKeyBytes().toByteArray(),
+                pubKeyRing.getPgpPubKeyAsPem());
+    }
+
     // Hex
     @Override
     public String toString() {

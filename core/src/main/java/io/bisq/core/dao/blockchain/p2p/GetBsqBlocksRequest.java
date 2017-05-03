@@ -22,7 +22,7 @@ public final class GetBsqBlocksRequest implements DirectMsg {
 
 
     @Override
-    public PB.Envelope toProto() {
+    public PB.Envelope toEnvelopeProto() {
         final PB.GetBsqBlocksRequest.Builder builder = PB.GetBsqBlocksRequest.newBuilder()
                 .setFromBlockHeight(fromBlockHeight);
         return Msg.getEnv().setGetBsqBlocksRequest(builder).build();

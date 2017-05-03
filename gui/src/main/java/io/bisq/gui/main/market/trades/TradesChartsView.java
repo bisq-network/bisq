@@ -23,7 +23,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
-import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.gui.common.view.ActivatableViewAndModel;
 import io.bisq.gui.common.view.FxmlView;
@@ -358,7 +358,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private void updateChartData() {
         volumeSeries.getData().setAll(model.volumeItems);
 
-        // At price chart we need to set the priceSeries new otherwise the lines are not rendered correctly 
+        // At price chart we need to set the priceSeries new otherwise the lines are not rendered correctly
         // TODO should be fixed in candle chart
         priceSeries.getData().clear();
         priceSeries = new XYChart.Series<>();
@@ -648,7 +648,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @NotNull
     private String getDirectionLabel(TradeStatistics item) {
-        return formatter.getDirectionWithCode(Offer.Direction.valueOf(item.direction.name()), item.getCurrencyCode());
+        return formatter.getDirectionWithCode(OfferPayload.Direction.valueOf(item.direction.name()), item.getCurrencyCode());
     }
 
     @NotNull

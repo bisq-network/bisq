@@ -72,7 +72,7 @@ public class EncryptionServiceTests {
     }
 
     //TODO CoreProtobufferResolver is not accessible here
-// We should refactor it so that the classes themselves know how to deserialize 
+// We should refactor it so that the classes themselves know how to deserialize
 // so we don't get dependencies from core objects here
 /*
     @Test
@@ -135,7 +135,7 @@ public class EncryptionServiceTests {
         }
 
         @Override
-        public PB.Envelope toProto() {
+        public PB.Envelope toEnvelopeProto() {
             return PB.Envelope.newBuilder().setPing(PB.Ping.newBuilder().setNonce(nonce)).build();
         }
     }
@@ -167,7 +167,7 @@ final class TestMsg implements MailboxMsg {
     }
 
     @Override
-    public PB.Envelope toProto() {
+    public PB.Envelope toEnvelopeProto() {
         throw new NotImplementedException();
     }
 }

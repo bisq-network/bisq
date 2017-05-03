@@ -17,18 +17,22 @@
 
 package io.bisq.core.offer;
 
+import com.google.protobuf.Message;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Version;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.TradableList;
+import io.bisq.generated.protobuffer.PB;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.Date;
 
+@EqualsAndHashCode
 @Slf4j
 public final class OpenOffer implements Tradable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -55,19 +59,6 @@ public final class OpenOffer implements Tradable {
     public OpenOffer(Offer offer, Storage<TradableList<OpenOffer>> storage) {
         this.offer = offer;
         this.storage = storage;
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-
-            // If we have a reserved state from the local db we reset it
-            if (state == State.RESERVED)
-                setState(State.AVAILABLE);
-
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
     }
 
     public Date getDate() {
@@ -120,31 +111,26 @@ public final class OpenOffer implements Tradable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        OpenOffer openOffer = (OpenOffer) o;
-
-        if (offer != null ? !offer.equals(openOffer.offer) : openOffer.offer != null) return false;
-        return state == openOffer.state;
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = offer != null ? offer.hashCode() : 0;
-        result = 31 * result + (state != null ? state.hashCode() : 0);
-        return result;
-    }
-
-    @Override
     public String toString() {
         return "OpenOffer{" +
                 "\n\toffer=" + offer +
                 "\n\tstate=" + state +
                 '}';
     }
+
+    @Override
+    public Message toProto() {
+        return PB.OpenOffer.newBuilder().setOffer(offer.toProto())
+                .setState(PB.OpenOffer.State.valueOf(state.name())).build();
+    }
+
+    // TODO set storage
+    public static Tradable fromProto(PB.OpenOffer proto, Storage<TradableList<OpenOffer>> storage) {
+        OpenOffer openOffer = new OpenOffer(Offer.fromProto(proto.getOffer()), storage);
+        // If we have a reserved state from the local db we reset it
+        if (openOffer.getState() == State.RESERVED)
+            openOffer.setState(State.AVAILABLE);
+        return openOffer;
+    }
 }
 
-   

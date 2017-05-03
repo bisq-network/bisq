@@ -19,6 +19,7 @@ package io.bisq.gui.main.portfolio.closedtrades;
 
 import com.google.inject.Inject;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.gui.common.model.ActivatableDataModel;
@@ -56,7 +57,7 @@ class ClosedTradesDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public Offer.Direction getDirection(Offer offer) {
+    public OfferPayload.Direction getDirection(Offer offer) {
         return closedTradableManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 

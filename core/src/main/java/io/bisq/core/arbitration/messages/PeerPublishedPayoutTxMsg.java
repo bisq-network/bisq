@@ -46,7 +46,7 @@ public final class PeerPublishedPayoutTxMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.Envelope toProto() {
+    public PB.Envelope toEnvelopeProto() {
         PB.Envelope.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage.newBuilder()
                 .setTransaction(ByteString.copyFrom(transaction))

@@ -25,6 +25,7 @@ import io.bisq.common.locale.Res;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.util.Tuple3;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.User;
@@ -155,7 +156,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         String fiatDirectionInfo = ":";
         String btcDirectionInfo = ":";
-        Offer.Direction direction = offer.getDirection();
+        OfferPayload.Direction direction = offer.getDirection();
         String currencyCode = offer.getCurrencyCode();
         String offerTypeLabel = Res.getWithCol("shared.offerType");
         String toReceive = " " + Res.get("shared.toReceive");
@@ -164,13 +165,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == Offer.Direction.BUY ? toReceive : toSpend;
-            btcDirectionInfo = direction == Offer.Direction.SELL ? toReceive : toSpend;
+            fiatDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
+            btcDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
         } else if (placeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == Offer.Direction.SELL ? toReceive : toSpend;
-            btcDirectionInfo = direction == Offer.Direction.BUY ? toReceive : toSpend;
+            fiatDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
+            btcDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
         } else {
             addLabelTextField(gridPane, rowIndex, offerTypeLabel,
                     formatter.getDirectionBothSides(direction, currencyCode), firstRowDistance);

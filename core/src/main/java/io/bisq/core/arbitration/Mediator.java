@@ -118,7 +118,7 @@ public final class Mediator implements StoragePayload {
         Date date = new Date(mediator.getRegistrationDate());
         String emailAddress = mediator.getEmailAddress().isEmpty() ? null : mediator.getEmailAddress();
         return new Mediator(NodeAddress.fromProto(mediator.getNodeAddress()),
-                ProtoUtil.getPubKeyRing(mediator.getPubKeyRing()),
+                PubKeyRing.fromProto(mediator.getPubKeyRing()),
                 langCodes,
                 date,
                 mediator.getRegistrationPubKey().toByteArray(),

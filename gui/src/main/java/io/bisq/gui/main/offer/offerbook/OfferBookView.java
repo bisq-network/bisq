@@ -25,6 +25,7 @@ import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.alert.PrivateNotificationManager;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.gui.Navigation;
@@ -281,13 +282,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         createOfferButton.setDisable(false);
     }
 
-    public void setDirection(Offer.Direction direction) {
+    public void setDirection(OfferPayload.Direction direction) {
         model.initWithDirection(direction);
         ImageView iconView = new ImageView();
 
         createOfferButton.setGraphic(iconView);
-        iconView.setId(direction == Offer.Direction.SELL ? "image-sell-white" : "image-buy-white");
-        createOfferButton.setId(direction == Offer.Direction.SELL ? "sell-button-big" : "buy-button-big");
+        iconView.setId(direction == OfferPayload.Direction.SELL ? "image-sell-white" : "image-buy-white");
+        createOfferButton.setId(direction == OfferPayload.Direction.SELL ? "sell-button-big" : "buy-button-big");
 
         setDirectionTitles();
     }
@@ -295,15 +296,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void setDirectionTitles() {
         TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
         if (selectedTradeCurrency != null) {
-            Offer.Direction direction = model.getDirection();
-            String directionText = direction == Offer.Direction.BUY ? Res.get("shared.buy") : Res.get("shared.sell");
-            String mirroredDirectionText = direction == Offer.Direction.SELL ? Res.get("shared.buy") : Res.get("shared.sell");
+            OfferPayload.Direction direction = model.getDirection();
+            String directionText = direction == OfferPayload.Direction.BUY ? Res.get("shared.buy") : Res.get("shared.sell");
+            String mirroredDirectionText = direction == OfferPayload.Direction.SELL ? Res.get("shared.buy") : Res.get("shared.sell");
             String code = selectedTradeCurrency.getCode();
             if (model.showAllTradeCurrenciesProperty.get())
                 createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC"));
             else if (selectedTradeCurrency instanceof FiatCurrency)
                 createOfferButton.setText(Res.get("offerbook.createOfferTo", directionText, "BTC") + " " +
-                        (direction == Offer.Direction.BUY ?
+                        (direction == OfferPayload.Direction.BUY ?
                                 Res.get("offerbook.buyWithOtherCurrency", code) :
                                 Res.get("offerbook.sellForOtherCurrency", code)));
             else
@@ -704,7 +705,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setStyle("-fx-text-fill: #444;"); // does not take the font colors sometimes from the style
                                         button.setOnAction(e -> onRemoveOpenOffer(offer));
                                     } else {
-                                        boolean isSellOffer = offer.getDirection() == Offer.Direction.SELL;
+                                        boolean isSellOffer = offer.getDirection() == OfferPayload.Direction.SELL;
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
                                         button.setStyle("-fx-text-fill: white;"); // does not take the font colors sometimes from the style

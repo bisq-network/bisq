@@ -31,7 +31,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
@@ -71,7 +71,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
             return OfferPayload.Direction.valueOf(direction.name());
         }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -234,6 +233,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     }
 
 
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Overridden Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -252,6 +253,16 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     public long getTTL() {
         return TTL;
     }
+
+
+    //TODO remove
+    public String getCurrencyCode() {
+        if (CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()))
+            return getBaseCurrencyCode();
+        else
+            return getCounterCurrencyCode();
+    }
+
 
     @Override
     public PB.StoragePayload toProto() {
@@ -310,11 +321,64 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         return PB.StoragePayload.newBuilder().setOfferPayload(offerBuilder).build();
     }
 
-    //TODO remove
-    public String getCurrencyCode() {
-        if (CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()))
-            return getBaseCurrencyCode();
-        else
-            return getCounterCurrencyCode();
+    public static OfferPayload fromProto(PB.OfferPayload proto) {
+        List<NodeAddress> arbitratorNodeAddresses = proto.getArbitratorNodeAddressesList().stream()
+                .map(NodeAddress::fromProto).collect(Collectors.toList());
+        List<NodeAddress> mediatorNodeAddresses = proto.getMediatorNodeAddressesList().stream()
+                .map(NodeAddress::fromProto).collect(Collectors.toList());
+
+        // Nullable object need to be checked against the default values in PB (not nice... ;-( )
+
+        // convert these lists because otherwise when they're empty they are lazyStringArrayList objects and NOT serializable,
+        // which is needed for the P2PStorage getHash() operation
+        List<String> acceptedCountryCodes = proto.getAcceptedCountryCodesList().isEmpty() ?
+                null : proto.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
+        List<String> acceptedBankIds = proto.getAcceptedBankIdsList().isEmpty() ?
+                null : proto.getAcceptedBankIdsList().stream().collect(Collectors.toList());
+        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMapMap()) ?
+                null : proto.getExtraDataMapMap();
+        final String countryCode1 = proto.getCountryCode();
+        String countryCode = countryCode1.isEmpty() ? null : countryCode1;
+        String bankId = proto.getBankId().isEmpty() ? null : proto.getBankId();
+        String offerFeePaymentTxId = proto.getOfferFeePaymentTxId().isEmpty() ? null : proto.getOfferFeePaymentTxId();
+        String hashOfChallenge = proto.getHashOfChallenge().isEmpty() ? null : proto.getHashOfChallenge();
+
+        return new OfferPayload(proto.getId(),
+                proto.getDate(),
+                NodeAddress.fromProto(proto.getMakerNodeAddress()),
+                PubKeyRing.fromProto(proto.getPubKeyRing()),
+                OfferPayload.Direction.fromProto(proto.getDirection()),
+                proto.getPrice(),
+                proto.getMarketPriceMargin(),
+                proto.getUseMarketBasedPrice(),
+                proto.getAmount(),
+                proto.getMinAmount(),
+                proto.getBaseCurrencyCode(),
+                proto.getCounterCurrencyCode(),
+                arbitratorNodeAddresses,
+                mediatorNodeAddresses,
+                proto.getPaymentMethodId(),
+                proto.getMakerPaymentAccountId(),
+                offerFeePaymentTxId,
+                countryCode,
+                acceptedCountryCodes,
+                bankId,
+                acceptedBankIds,
+                proto.getVersionNr(),
+                proto.getBlockHeightAtOfferCreation(),
+                proto.getTxFee(),
+                proto.getMakerFee(),
+                proto.getIsCurrencyForMakerFeeBtc(),
+                proto.getBuyerSecurityDeposit(),
+                proto.getSellerSecurityDeposit(),
+                proto.getMaxTradeLimit(),
+                proto.getMaxTradePeriod(),
+                proto.getUseAutoClose(),
+                proto.getUseReOpenAfterAutoClose(),
+                proto.getLowerClosePrice(),
+                proto.getUpperClosePrice(),
+                proto.getIsPrivateOffer(),
+                hashOfChallenge,
+                extraDataMapMap);
     }
 }

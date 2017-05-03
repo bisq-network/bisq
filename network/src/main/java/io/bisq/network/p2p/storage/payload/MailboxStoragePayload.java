@@ -55,8 +55,8 @@ public final class MailboxStoragePayload implements StoragePayload {
      */
     public transient PublicKey receiverPubKeyForRemoveOperation;
     private final byte[] receiverPubKeyForRemoveOperationBytes;
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Getter
     @Nullable
@@ -116,7 +116,7 @@ public final class MailboxStoragePayload implements StoragePayload {
     @Override
     public PB.StoragePayload toProto() {
         final PB.MailboxStoragePayload.Builder builder = PB.MailboxStoragePayload.newBuilder()
-                .setPrefixedSealedAndSignedMessage(prefixedSealedAndSignedMessage.toProto().getPrefixedSealedAndSignedMessage())
+                .setPrefixedSealedAndSignedMessage(prefixedSealedAndSignedMessage.toEnvelopeProto().getPrefixedSealedAndSignedMessage())
                 .setSenderPubKeyForAddOperationBytes(ByteString.copyFrom(senderPubKeyForAddOperationBytes))
                 .setReceiverPubKeyForRemoveOperationBytes(ByteString.copyFrom(receiverPubKeyForRemoveOperationBytes));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);

@@ -246,7 +246,7 @@ public final class DisputeResult implements Payload {
                 .setIdVerification(idVerification)
                 .setScreenCast(screenCast)
                 .setSummaryNotes(summaryNotes)
-                .setDisputeCommunicationMessage(disputeCommunicationMessage.toProto().getDisputeCommunicationMessage())
+                .setDisputeCommunicationMessage(disputeCommunicationMessage.toEnvelopeProto().getDisputeCommunicationMessage())
                 .setArbitratorSignature(ByteString.copyFrom(arbitratorSignature))
                 .setBuyerPayoutAmount(buyerPayoutAmount)
                 .setSellerPayoutAmount(sellerPayoutAmount)

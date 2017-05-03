@@ -26,8 +26,6 @@ public interface Marshaller extends Serializable {
     default Message toProto() {
         throw new NotImplementedException("toProtobuf not yet implemented.");
     }
-    default Object fromProto() {
-        throw new NotImplementedException("toProtobuf not yet implemented.");
-    }
+    //Object fromProto();
 
 }

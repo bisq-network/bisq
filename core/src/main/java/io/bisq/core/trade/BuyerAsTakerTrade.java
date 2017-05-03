@@ -17,6 +17,7 @@
 
 package io.bisq.core.trade;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -66,5 +67,15 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     public void takeAvailableOffer() {
         checkArgument(tradeProtocol instanceof TakerProtocol, "tradeProtocol NOT instanceof TakerProtocol");
         ((TakerProtocol) tradeProtocol).takeAvailableOffer();
+    }
+
+    @Override
+    public Message toProto() {
+        return null;
+    }
+
+    public static Tradable fromProto() {
+        // reset State (see readObject)
+        return null;
     }
 }

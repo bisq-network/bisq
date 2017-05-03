@@ -24,6 +24,7 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.monetary.Price;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.Navigation;
@@ -240,7 +241,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getDirection().equals(Offer.Direction.BUY))
+                        && e.getDirection().equals(OfferPayload.Direction.BUY))
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
                     long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
@@ -251,12 +252,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         allBuyOffers = filterOffersWithRelevantPrices(allBuyOffers);
-        buildChartAndTableEntries(allBuyOffers, Offer.Direction.BUY, buyData, topBuyOfferList);
+        buildChartAndTableEntries(allBuyOffers, OfferPayload.Direction.BUY, buyData, topBuyOfferList);
 
         List<Offer> allSellOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getDirection().equals(Offer.Direction.SELL))
+                        && e.getDirection().equals(OfferPayload.Direction.SELL))
                 .sorted((o1, o2) -> {
                     long a = o1.getPrice() != null ? o1.getPrice().getValue() : 0;
                     long b = o2.getPrice() != null ? o2.getPrice().getValue() : 0;
@@ -267,7 +268,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList());
 
         allSellOffers = filterOffersWithRelevantPrices(allSellOffers);
-        buildChartAndTableEntries(allSellOffers, Offer.Direction.SELL, sellData, topSellOfferList);
+        buildChartAndTableEntries(allSellOffers, OfferPayload.Direction.SELL, sellData, topSellOfferList);
     }
 
     // If there are more then 3 offers we ignore the offers which are further than 30% from the best price
@@ -290,7 +291,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         return offers;
     }
 
-    private void buildChartAndTableEntries(List<Offer> sortedList, Offer.Direction direction, List<XYChart.Data> data, ObservableList<OfferListItem> offerTableList) {
+    private void buildChartAndTableEntries(List<Offer> sortedList, OfferPayload.Direction direction, List<XYChart.Data> data, ObservableList<OfferListItem> offerTableList) {
         data.clear();
         double accumulatedAmount = 0;
         List<OfferListItem> offerTableListTemp = new ArrayList<>();
@@ -303,12 +304,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
                 double priceAsDouble = (double) price.getValue() / LongMath.pow(10, price.smallestUnitExponent());
                 if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
-                    if (direction.equals(Offer.Direction.SELL))
+                    if (direction.equals(OfferPayload.Direction.SELL))
                         data.add(0, new XYChart.Data<>(priceAsDouble, accumulatedAmount));
                     else
                         data.add(new XYChart.Data<>(priceAsDouble, accumulatedAmount));
                 } else {
-                    if (direction.equals(Offer.Direction.BUY))
+                    if (direction.equals(OfferPayload.Direction.BUY))
                         data.add(0, new XYChart.Data<>(priceAsDouble, accumulatedAmount));
                     else
                         data.add(new XYChart.Data<>(priceAsDouble, accumulatedAmount));

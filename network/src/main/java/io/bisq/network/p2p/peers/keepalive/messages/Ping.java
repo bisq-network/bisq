@@ -17,7 +17,7 @@ public final class Ping extends KeepAliveMsg {
     }
 
     @Override
-    public PB.Envelope toProto() {
+    public PB.Envelope toEnvelopeProto() {
         PB.Envelope.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setPing(baseEnvelope.getPingBuilder()
                 .setNonce(nonce)

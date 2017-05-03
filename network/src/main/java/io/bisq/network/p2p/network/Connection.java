@@ -198,7 +198,7 @@ public class Connection implements MessageListener {
                     lastSendTimeStamp = now;
                     String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
 
-                    envelope = msg.toProto();
+                    envelope = msg.toEnvelopeProto();
                     log.debug("Sending message: {}", Utilities.toTruncatedString(envelope.toString(), 10000));
 
                     if (msg instanceof Ping | msg instanceof RefreshTTLMsg) {

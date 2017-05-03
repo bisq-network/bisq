@@ -23,17 +23,14 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Price;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.filter.PaymentAccountFilter;
-import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.payment.PaymentAccountFactory;
+import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.payload.BankAccountPayload;
 import io.bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
-import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.Contract;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import org.bitcoinj.core.Coin;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -50,15 +47,15 @@ public class ProtoUtil {
     static Dispute getDispute(PB.Dispute dispute) {
         return new Dispute(dispute.getTradeId(), dispute.getTraderId(),
                 dispute.getDisputeOpenerIsBuyer(), dispute.getDisputeOpenerIsMaker(),
-                getPubKeyRing(dispute.getTraderPubKeyRing()), new Date(dispute.getTradeDate()), getContract(dispute.getContract()),
+                PubKeyRing.fromProto(dispute.getTraderPubKeyRing()), new Date(dispute.getTradeDate()), getContract(dispute.getContract()),
                 dispute.getContractHash().toByteArray(), dispute.getDepositTxSerialized().toByteArray(),
                 dispute.getPayoutTxSerialized().toByteArray(),
                 dispute.getDepositTxId(), dispute.getPayoutTxId(), dispute.getContractAsJson(), dispute.getMakerContractSignature(),
-                dispute.getTakerContractSignature(), getPubKeyRing(dispute.getArbitratorPubKeyRing()), dispute.getIsSupportTicket());
+                dispute.getTakerContractSignature(), PubKeyRing.fromProto(dispute.getArbitratorPubKeyRing()), dispute.getIsSupportTicket());
     }
 
     private static Contract getContract(PB.Contract contract) {
-        return new Contract(CoreNetworkProtoResolver.getOfferPayload(contract.getOfferPayload()),
+        return new Contract(OfferPayload.fromProto(contract.getOfferPayload()),
                 Coin.valueOf(contract.getTradeAmount()),
                 Price.valueOf(getCurrencyCode(contract.getOfferPayload()), contract.getTradePrice()),
                 contract.getTakerFeeTxId(),
@@ -71,20 +68,14 @@ public class ProtoUtil {
                 contract.getTakerAccountId(),
                 PaymentAccountPayload.fromProto(contract.getMakerPaymentAccountPayload()),
                 PaymentAccountPayload.fromProto(contract.getTakerPaymentAccountPayload()),
-                getPubKeyRing(contract.getMakerPubKeyRing()),
-                getPubKeyRing(contract.getTakerPubKeyRing()),
+                PubKeyRing.fromProto(contract.getMakerPubKeyRing()),
+                PubKeyRing.fromProto(contract.getTakerPubKeyRing()),
                 contract.getMakerPayoutAddressString(),
                 contract.getTakerPayoutAddressString(),
                 contract.getMakerBtcPubKey().toByteArray(),
                 contract.getTakerBtcPubKey().toByteArray());
     }
 
-    @NotNull
-    public static PubKeyRing getPubKeyRing(PB.PubKeyRing pubKeyRing) {
-        return new PubKeyRing(pubKeyRing.getSignaturePubKeyBytes().toByteArray(),
-                pubKeyRing.getEncryptionPubKeyBytes().toByteArray(),
-                pubKeyRing.getPgpPubKeyAsPem());
-    }
 
     public static PaymentAccountFilter getPaymentAccountFilter(PB.PaymentAccountFilter accountFilter) {
         return new PaymentAccountFilter(accountFilter.getPaymentMethodId(), accountFilter.getGetMethodName(),

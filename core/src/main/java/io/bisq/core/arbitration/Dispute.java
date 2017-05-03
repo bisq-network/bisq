@@ -397,7 +397,7 @@ public final class Dispute implements Payload {
                 .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProto())
                 .setIsSupportTicket(isSupportTicket)
                 .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream().map(
-                        disputeCommunicationMessage -> disputeCommunicationMessage.toProto().getDisputeCommunicationMessage()).collect(Collectors.toList()))
+                        disputeCommunicationMessage -> disputeCommunicationMessage.toEnvelopeProto().getDisputeCommunicationMessage()).collect(Collectors.toList()))
                 .setIsClosed(isClosed);
 
         Optional.ofNullable(depositTxSerialized).ifPresent(tx -> builder.setDepositTxSerialized(ByteString.copyFrom(tx)));

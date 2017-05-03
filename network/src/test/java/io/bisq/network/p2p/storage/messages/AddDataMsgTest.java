@@ -47,10 +47,10 @@ public class AddDataMsgTest {
         ProtectedStorageEntry protectedStorageEntry = new ProtectedMailboxStorageEntry(mailboxStoragePayload,
                 keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
         AddDataMsg dataMessage1 = new AddDataMsg(protectedStorageEntry);
-        PB.Envelope envelope = dataMessage1.toProto();
+        PB.Envelope envelope = dataMessage1.toEnvelopeProto();
 
         //TODO CoreProtobufferResolver is not accessible here
-        // We should refactor it so that the classes themselves know how to deserialize 
+        // We should refactor it so that the classes themselves know how to deserialize
         // so we don't get dependencies from core objects here
       /*  AddDataMessage dataMessage2 = (AddDataMessage) ProtoBufferUtilities.getAddDataMessage(envelope);
 

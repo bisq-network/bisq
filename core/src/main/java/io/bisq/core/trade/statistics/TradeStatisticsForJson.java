@@ -4,7 +4,7 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.common.util.MathUtils;
-import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +16,7 @@ public final class TradeStatisticsForJson {
     private static final Logger log = LoggerFactory.getLogger(TradeStatisticsForJson.class);
 
     public final String currency;
-    public final Offer.Direction direction;
+    public final OfferPayload.Direction direction;
     public final long tradePrice;
     public final long tradeAmount;
     public final long tradeDate;
@@ -31,7 +31,7 @@ public final class TradeStatisticsForJson {
 
     // primaryMarket fields are based on industry standard where primaryMarket is always in the focus (in the app BTC is always in the focus - will be changed in a larger refactoring once)
     public String currencyPair;
-    public Offer.Direction primaryMarketDirection;
+    public OfferPayload.Direction primaryMarketDirection;
 
     public long primaryMarketTradePrice;
     public long primaryMarketTradeAmount;
@@ -39,7 +39,7 @@ public final class TradeStatisticsForJson {
 
 
     public TradeStatisticsForJson(TradeStatistics tradeStatistics) {
-        this.direction = Offer.Direction.valueOf(tradeStatistics.direction.name());
+        this.direction = OfferPayload.Direction.valueOf(tradeStatistics.direction.name());
         this.currency = tradeStatistics.getCurrencyCode();
         this.paymentMethod = tradeStatistics.paymentMethodId;
         this.offerDate = tradeStatistics.offerDate;
@@ -57,7 +57,7 @@ public final class TradeStatisticsForJson {
         try {
             final Price tradePrice = getTradePrice();
             if (CurrencyUtil.isCryptoCurrency(currency)) {
-                primaryMarketDirection = direction == Offer.Direction.BUY ? Offer.Direction.SELL : Offer.Direction.BUY;
+                primaryMarketDirection = direction == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
                 currencyPair = currency + "/" + "BTC";
 
                 primaryMarketTradePrice = tradePrice.getValue();

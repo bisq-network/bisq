@@ -46,7 +46,7 @@ public final class PeerOpenedDisputeMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.Envelope toProto() {
+    public PB.Envelope toEnvelopeProto() {
         PB.Envelope.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage.newBuilder()
                 .setDispute(dispute.toProto())
