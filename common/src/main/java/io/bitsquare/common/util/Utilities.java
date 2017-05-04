@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.crypto.Cipher;
 import java.awt.*;
 import java.io.*;
@@ -207,12 +208,22 @@ public class Utilities {
         }
     }
 
-    public static Task<File> downloadFile(String fileURL, String saveDir, ProgressIndicator indicator) throws IOException {
+    /**
+     * Creates and starts a Task for background downloading
+     * @param fileURL URL of file to be downloaded
+     * @param saveDir Directory to save file to
+     * @param indicator Progress indicator, can be {@code null}
+     * @param downloadType enum to identify downloaded files after completion, options are {INST, KEY, SIG, MISC}
+     * @param index For coordination between key and sig files
+     * @return The task handling the download
+     * @throws IOException
+     */
+    public static DownloadUtil downloadFile(String fileURL, String saveDir, @Nullable ProgressIndicator indicator, DownloadType downloadType, byte index) throws IOException {
         DownloadUtil task;
         if (saveDir != null)
-            task = new DownloadUtil(fileURL, saveDir);
+            task = new DownloadUtil(fileURL, saveDir, downloadType, index);
         else
-            task = new DownloadUtil(fileURL); // Tries to use system temp directory
+            task = new DownloadUtil(fileURL, downloadType, index); // Tries to use system temp directory
         if (indicator != null) {
             indicator.progressProperty().unbind();
             indicator.progressProperty().bind(task.progressProperty());
