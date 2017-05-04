@@ -24,6 +24,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.protocol.BuyerAsTakerProtocol;
 import io.bisq.core.trade.protocol.TakerProtocol;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
@@ -43,13 +44,13 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     public BuyerAsTakerTrade(Offer offer,
                              Coin tradeAmount,
                              Coin txFee,
-                             Coin takeOfferFee,
+                             Coin takerFee,
                              boolean isCurrencyForTakerFeeBtc,
                              long tradePrice,
                              NodeAddress tradingPeerNodeAddress,
                              Storage<? extends TradableList> storage,
                              BtcWalletService btcWalletService) {
-        super(offer, tradeAmount, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, tradePrice,
+        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice,
                 tradingPeerNodeAddress, storage, btcWalletService);
     }
 
@@ -70,12 +71,19 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     }
 
     @Override
-    public Message toProto() {
-        return null;
+    public PB.Tradable toProto() {
+        return PB.Tradable.newBuilder()
+                .setBuyerAsTakerTrade(PB.BuyerAsTakerTrade.newBuilder().setTrade((PB.Trade) super.toProto())).build();
     }
 
-    public static Tradable fromProto() {
-        // reset State (see readObject)
-        return null;
+    public static Tradable fromProto(PB.BuyerAsTakerTrade proto, Storage<? extends TradableList> storage,
+                                     BtcWalletService btcWalletService) {
+        PB.Trade trade = proto.getTrade();
+        return new BuyerAsTakerTrade(Offer.fromProto(trade.getOffer()),
+                Coin.valueOf(trade.getTxFeeAsLong()), Coin.valueOf(trade.getTakerFeeAsLong()),
+                Coin.valueOf(trade.getTakerFeeAsLong()),
+                trade.getIsCurrencyForTakerFeeBtc(), trade.getTradePrice(),
+                NodeAddress.fromProto(trade.getTradingPeerNodeAddress()), storage,
+                btcWalletService);
     }
 }

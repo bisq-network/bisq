@@ -39,23 +39,23 @@ public abstract class BuyerTrade extends Trade {
     BuyerTrade(Offer offer,
                Coin tradeAmount,
                Coin txFee,
-               Coin takeOfferFee,
+               Coin takerFee,
                boolean isCurrencyForTakerFeeBtc,
                long tradePrice,
                NodeAddress tradingPeerNodeAddress,
                Storage<? extends TradableList> storage,
                BtcWalletService btcWalletService) {
-        super(offer, tradeAmount, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, tradePrice,
+        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice,
                 tradingPeerNodeAddress, storage, btcWalletService);
     }
 
     BuyerTrade(Offer offer,
                Coin txFee,
-               Coin takeOfferFee,
+               Coin takerFee,
                boolean isCurrencyForTakerFeeBtc,
                Storage<? extends TradableList> storage,
                BtcWalletService btcWalletService) {
-        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
+        super(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
     }
 
     public void onFiatPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

@@ -24,6 +24,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.trade.protocol.MakerProtocol;
 import io.bisq.core.trade.protocol.SellerAsMakerProtocol;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
@@ -40,11 +41,11 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
 
     public SellerAsMakerTrade(Offer offer,
                               Coin txFee,
-                              Coin takeOfferFee,
+                              Coin takerFee,
                               boolean isCurrencyForTakerFeeBtc,
                               Storage<? extends TradableList> storage,
                               BtcWalletService btcWalletService) {
-        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
+        super(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
     }
 
     @Override
@@ -60,5 +61,19 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
     @Override
     public void handleTakeOfferRequest(TradeMsg message, NodeAddress taker) {
         ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(message, taker);
+    }
+
+    @Override
+    public PB.Tradable toProto() {
+        return PB.Tradable.newBuilder()
+                .setSellerAsMakerTrade(PB.SellerAsMakerTrade.newBuilder().setTrade((PB.Trade) super.toProto())).build();
+    }
+
+    public static Tradable fromProto(PB.BuyerAsTakerTrade proto, Storage<? extends TradableList> storage,
+                                     BtcWalletService btcWalletService) {
+        PB.Trade trade = proto.getTrade();
+        return new SellerAsMakerTrade(Offer.fromProto(trade.getOffer()),
+                Coin.valueOf(trade.getTxFeeAsLong()), Coin.valueOf(trade.getTakerFeeAsLong()),
+                trade.getIsCurrencyForTakerFeeBtc(), storage, btcWalletService);
     }
 }

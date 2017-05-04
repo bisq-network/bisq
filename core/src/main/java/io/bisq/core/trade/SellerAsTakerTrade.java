@@ -23,6 +23,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
 import io.bisq.core.trade.protocol.TakerProtocol;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
@@ -66,5 +67,21 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
     public void takeAvailableOffer() {
         checkArgument(tradeProtocol instanceof TakerProtocol, "tradeProtocol NOT instanceof TakerProtocol");
         ((TakerProtocol) tradeProtocol).takeAvailableOffer();
+    }
+
+
+    @Override
+    public PB.Tradable toProto() {
+        return PB.Tradable.newBuilder()
+                .setSellerAsTakerTrade(PB.SellerAsTakerTrade.newBuilder().setTrade((PB.Trade) super.toProto())).build();
+    }
+
+    public static Tradable fromProto(PB.BuyerAsTakerTrade proto, Storage<? extends TradableList> storage,
+                                     BtcWalletService btcWalletService) {
+        PB.Trade trade = proto.getTrade();
+        return new SellerAsTakerTrade(Offer.fromProto(trade.getOffer()), Coin.valueOf(trade.getTradeAmountAsLong()),
+                Coin.valueOf(trade.getTxFeeAsLong()), Coin.valueOf(trade.getTakerFeeAsLong()),
+                trade.getIsCurrencyForTakerFeeBtc(), trade.getTradePrice(),
+                NodeAddress.fromProto(trade.getTradingPeerNodeAddress()), storage, btcWalletService);
     }
 }

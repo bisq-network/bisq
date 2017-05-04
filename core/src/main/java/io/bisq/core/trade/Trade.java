@@ -21,6 +21,7 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
@@ -267,7 +268,8 @@ public abstract class Trade implements Tradable, Model {
     }
 
     // taker
-    protected Trade(Offer offer, Coin tradeAmount,
+    protected Trade(Offer offer,
+                    Coin tradeAmount,
                     Coin txFee,
                     Coin takerFee,
                     boolean isCurrencyForTakerFeeBtc,
@@ -830,22 +832,38 @@ public abstract class Trade implements Tradable, Model {
             setState(State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
     }
 
-    /*
     @Override
     public Message toProto() {
         return PB.Trade.newBuilder()
                 .setOffer(offer.toProto())
-                .setProcessModel(processModel.toproto())
+               // TODO  .setProcessModel(processModel.toproto())
                 .setTakerFeeTxId(takerFeeTxId)
                 .setDepositTxId(depositTxId)
                 .setPayoutTxId(payoutTxId)
                 .setTradeAmountAsLong(tradeAmountAsLong)
                 .setTxFeeAsLong(txFeeAsLong)
                 .setTakerFeeAsLong(takerFeeAsLong)
-                .setDecryptedMsgWithPubKey((PB.DecryptedMsgWithPubKey) decryptedMsgWithPubKey.toProto())
-                ;
+                // TODO .setDecryptedMsgWithPubKey((PB.DecryptedMsgWithPubKey) decryptedMsgWithPubKey.toProto())
+                .setTakeOfferDate(takeOfferDate)
+                .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
+                .setTradePrice(tradePrice)
+                .setTradingPeerNodeAddress(tradingPeerNodeAddress.toProto())
+                .setState(PB.Trade.State.valueOf(state.name()))
+                .setDisputeState(PB.Trade.DisputeState.valueOf(disputeState.name()))
+                .setTradePeriodState(PB.Trade.TradePeriodState.valueOf(tradePeriodState.name()))
+                .setContract(contract.toProto())
+                .setContractAsJson(contractAsJson)
+                .setContractHash(ByteString.copyFrom(contractHash))
+                .setTakerContractSignature(takerContractSignature)
+                .setMakerContractSignature(makerContractSignature)
+                .setArbitratorNodeAddress(arbitratorNodeAddress.toProto())
+                .setMediatorNodeAddress(mediatorNodeAddress.toProto())
+                .setArbitratorBtcPubKey(ByteString.copyFrom(arbitratorBtcPubKey))
+                .setTakerPaymentAccountId(takerPaymentAccountId)
+                .setErrorMessage(errorMessage)
+                .build();
     }
-*/
+
     @Override
     public String toString() {
         return "Trade{" +

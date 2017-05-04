@@ -65,18 +65,17 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
         ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(message, taker);
     }
 
-    /*
     @Override
     public PB.Tradable toProto() {
-        return PB.Tradable.newBuilder().setBuyerAsMakerTrade(PB.BuyerAsMakerTrade.newBuilder().setTrade(super.toProto())).build();
+        return PB.Tradable.newBuilder()
+                .setBuyerAsMakerTrade(PB.BuyerAsMakerTrade.newBuilder().setTrade((PB.Trade) super.toProto())).build();
     }
 
-    public static Tradable fromProto(PB.BuyerAsMakerTrade proto, Storage<? extends TradableList> storage) {
+    public static Tradable fromProto(PB.BuyerAsMakerTrade proto, Storage<? extends TradableList> storage,
+                                     BtcWalletService btcWalletService) {
         return new BuyerAsMakerTrade(Offer.fromProto(proto.getTrade().getOffer()),
-                Coin.valueOf(proto.getTrade().getTxFee().getValue()),
-                Coin.valueOf(proto.getTrade().getTakeOffer().getValue()),
-
-                );
+                Coin.valueOf(proto.getTrade().getTxFeeAsLong()),
+                Coin.valueOf(proto.getTrade().getTakerFeeAsLong()),
+                proto.getTrade().getIsCurrencyForTakerFeeBtc(), storage, btcWalletService);
     }
-    */
 }
