@@ -74,7 +74,7 @@ For Mac OSX, you will need to set JAVA_HOME as:
     $ . ~/.bashrc
 
 
-### 2. Install the latest protobuffer release on your machine (3.2.0 at the time of writing):
+### 2. Install the latest protobuffer release on your machine (3.3.0 at the time of writing):
 https://github.com/google/protobuf/releases
 
 ### 2.1 Increase the Intellij Idea Code insight limit, because it breaks on the generated protobuffer files:

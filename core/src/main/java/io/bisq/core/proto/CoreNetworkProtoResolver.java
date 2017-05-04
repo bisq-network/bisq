@@ -486,22 +486,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 storagePayload = Filter.fromProto(protoEntry.getFilter());
                 break;
             case COMPENSATION_REQUEST_PAYLOAD:
-                PB.CompensationRequestPayload compensationRequestPayload = protoEntry.getCompensationRequestPayload();
-                extraDataMapMap = CollectionUtils.isEmpty(compensationRequestPayload.getExtraDataMapMap()) ?
-                        null : compensationRequestPayload.getExtraDataMapMap();
-                storagePayload = new CompensationRequestPayload(compensationRequestPayload.getUid(),
-                        compensationRequestPayload.getName(),
-                        compensationRequestPayload.getTitle(),
-                        compensationRequestPayload.getCategory(),
-                        compensationRequestPayload.getDescription(),
-                        compensationRequestPayload.getLink(),
-                        new Date(compensationRequestPayload.getStartDate()),
-                        new Date(compensationRequestPayload.getEndDate()),
-                        Coin.valueOf(compensationRequestPayload.getRequestedBtc()),
-                        compensationRequestPayload.getBtcAddress(),
-                        new NodeAddress(compensationRequestPayload.getNodeAddress()),
-                        compensationRequestPayload.getP2PStorageSignaturePubKeyBytes().toByteArray(),
-                        extraDataMapMap);
+                storagePayload = CompensationRequestPayload.fromProto(protoEntry.getCompensationRequestPayload());
                 break;
             case TRADE_STATISTICS:
                 storagePayload = TradeStatistics.fromProto(protoEntry.getTradeStatistics());

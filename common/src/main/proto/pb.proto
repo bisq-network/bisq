@@ -765,17 +765,13 @@ message DiskEnvelope {
         PeersList peers_list = 4;
         Preferences preferences = 5;
         User user = 6;
-        PersistedP2PStorageData persisted_p2p_storage_data = 7;
+        CompensationRequestPayload compensation_request_payload = 7;
         SequenceNumberMap sequence_number_map = 8;
         PersistedEntryMap persisted_entry_map = 9;
         TradeStatisticsList trade_statistics_list = 10;
         VoteItemsList vote_items_list = 11;
         TradableList tradable_list = 12;
     }
-}
-
-message PersistedP2PStorageData {
-    // TODO ???
 }
 
 message PeersList {
@@ -1174,17 +1170,21 @@ message Transaction {
 
 message ProcessModel {
      TradingPeer trading_peer = 1;
-     bytes payout_tx_signature = 2;
-     repeated NodeAddress taker_accepted_arbitrator_node_addresses = 3;
-     NodeAddress temp_trading_peer_node_address = 4;
-     bytes prepared_deposit_tx = 5;
-     repeated RawTransactionInput raw_transaction_inputs = 6;
-     int64 change_output_value = 7;
-     string change_output_address = 8;
-     Transaction take_offer_fee_tx = 9;
-     bool use_savings_wallet = 10;
-     Coin funds_needed_for_trade = 11;
-     bytes my_multi_sig_pub_key = 12;
+     string offer_id = 2;
+     string account_id = 3;
+     PubKeyRing pub_key_ring = 4;
+     string take_offer_fee_tx_id = 5;
+     bytes payout_tx_signature = 6;
+     repeated NodeAddress taker_accepted_arbitrator_node_addresses = 7;
+     repeated NodeAddress taker_accepted_mediator_node_addresses = 8;
+     bytes prepared_deposit_tx = 9;
+     repeated RawTransactionInput raw_transaction_inputs = 10;
+     int64 change_output_value = 11;
+     string change_output_address = 12;
+     bool use_savings_wallet = 13;
+     int64 funds_needed_for_trade_as_long = 14;
+     bytes my_multi_sig_pub_key = 15;
+     NodeAddress temp_trading_peer_node_address = 16;
 }
 
 message Offer {

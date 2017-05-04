@@ -17,11 +17,13 @@
 
 package io.bisq.core.trade.protocol;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.persistence.Persistable;
+import io.bisq.common.proto.ProtoHelper;
 import io.bisq.common.taskrunner.Model;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -51,6 +53,7 @@ import org.bitcoinj.core.Transaction;
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -213,43 +216,23 @@ public class ProcessModel implements Model, Persistable {
 
     @Override
     public Message toProto() {
-        // TODO
         return PB.ProcessModel.newBuilder()
                 .setTradingPeer((PB.TradingPeer) tradingPeer.toProto())
+                .setOfferId(offerId)
+                .setAccountId(accountId)
+                .setPubKeyRing(pubKeyRing.toProto())
+                .setTakeOfferFeeTxId(takeOfferFeeTxId)
+                .setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature))
+                .addAllTakerAcceptedArbitratorNodeAddresses(ProtoHelper.collectionToProto(takerAcceptedArbitratorNodeAddresses))
+                .addAllTakerAcceptedMediatorNodeAddresses(ProtoHelper.collectionToProto(takerAcceptedMediatorNodeAddresses))
+                .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
+                .addAllRawTransactionInputs(ProtoHelper.collectionToProto(rawTransactionInputs))
+                .setChangeOutputValue(changeOutputValue)
+                .setChangeOutputAddress(changeOutputAddress)
+                .setUseSavingsWallet(useSavingsWallet)
+                .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong)
+                .setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey))
+                .setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProto())
                 .build();
-/*
-        private final TradingPeer tradingPeer = new TradingPeer();
-        private String offerId;
-        private String accountId;
-        private PubKeyRing pubKeyRing;
-
-        // Mutable
-        private String takeOfferFeeTxId;
-        @Setter
-        private byte[] payoutTxSignature;
-        @Setter
-        private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
-        @Setter
-        private List<NodeAddress> takerAcceptedMediatorNodeAddresses;
-        @Setter
-        private byte[] preparedDepositTx;
-        @Setter
-        private ArrayList<RawTransactionInput> rawTransactionInputs;
-        @Setter
-        private long changeOutputValue;
-        @Nullable
-        @Setter
-        private String changeOutputAddress;
-        @Setter
-        private boolean useSavingsWallet;
-        @Setter
-        private long fundsNeededForTradeAsLong;
-        @Setter
-        private byte[] myMultiSigPubKey;
-        // that is used to store temp. the peers address when we get an incoming message before the message is verified.
-        // After successful verified we copy that over to the trade.tradingPeerAddress
-        @Setter
-        private NodeAddress tempTradingPeerNodeAddress;
-        */
     }
 }

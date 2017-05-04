@@ -7,6 +7,7 @@ import io.bisq.common.persistence.Persistable;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryList;
+import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.user.BlockChainExplorer;
@@ -73,18 +74,15 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
             case PEERS_LIST:
                 result = getPeersList(envelope.getPeersList());
                 break;
-
+            case COMPENSATION_REQUEST_PAYLOAD:
+                result = CompensationRequestPayload.fromProto(envelope.getCompensationRequestPayload());
+                break;
             case PREFERENCES:
                 result = fillPreferences(envelope, preferencesProvider.get());
                 break;
             case USER:
                 result = UserVO.fromProto(envelope.getUser());
                 break;
-                /*
-            case PERSISTED_P2P_STORAGE_DATA:
-                result = getPing(envelope);
-                break;
-                */
             case SEQUENCE_NUMBER_MAP:
                 result = SequenceNumberMap.fromProto(envelope.getSequenceNumberMap());
                 break;

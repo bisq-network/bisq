@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
 import org.bouncycastle.util.encoders.Hex;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -80,8 +81,8 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     // Set after we signed and set the hash. The hash is used in the OP_RETURN of the fee tx
     @JsonExclude
     private String feeTxId;
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new 
+    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
+    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     private Map<String, String> extraDataMap;
@@ -114,7 +115,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                 endDate,
                 requestedBtc,
                 btcAddress,
-                nodeAddress,
+                nodeAddress.getFullAddress(),
                 new X509EncodedKeySpec(p2pStorageSignaturePubKey.getEncoded()).getEncoded(),
                 null);
     }
@@ -130,7 +131,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                                       Date endDate,
                                       Coin requestedBtc,
                                       String btcAddress,
-                                      NodeAddress nodeAddress,
+                                      String nodeAddress,
                                       byte[] p2pStorageSignaturePubKeyBytes,
                                       @Nullable Map<String, String> extraDataMap) {
 
@@ -147,7 +148,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
         this.endDate = endDate.getTime();
         this.requestedBtc = requestedBtc.value;
         this.btcAddress = btcAddress;
-        this.nodeAddress = nodeAddress.getFullAddress();
+        this.nodeAddress = nodeAddress;
         this.p2pStorageSignaturePubKeyBytes = p2pStorageSignaturePubKeyBytes;
 
         this.extraDataMap = extraDataMap;
@@ -228,6 +229,14 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                 .setFeeTxId(feeTxId);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
         return PB.StoragePayload.newBuilder().setCompensationRequestPayload(builder).build();
+    }
+
+    public static CompensationRequestPayload fromProto(PB.CompensationRequestPayload proto) {
+        return new CompensationRequestPayload(proto.getUid(), proto.getName(), proto.getTitle(), proto.getCategory(),
+                proto.getDescription(), proto.getLink(), new Date(proto.getStartDate()), new Date(proto.getEndDate()),
+                Coin.valueOf(proto.getRequestedBtc()), proto.getBtcAddress(),
+                proto.getNodeAddress(), proto.getP2PStorageSignaturePubKeyBytes().toByteArray(),
+                CollectionUtils.isEmpty(proto.getExtraDataMapMap()) ? null : proto.getExtraDataMapMap());
     }
 
     @Override
