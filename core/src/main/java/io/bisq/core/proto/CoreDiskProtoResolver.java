@@ -1,12 +1,8 @@
 package io.bisq.core.proto;
 
 import com.google.inject.Provider;
-import com.neemre.btcdcli4j.core.domain.Payment;
-import io.bisq.common.crypto.Hash;
 import io.bisq.common.locale.*;
-import io.bisq.common.persistence.HashMapPersistable;
 import io.bisq.common.persistence.ListPersistable;
-import io.bisq.common.persistence.LongPersistable;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.core.btc.AddressEntry;
@@ -18,13 +14,15 @@ import io.bisq.core.user.Preferences;
 import io.bisq.core.user.UserVO;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.peers.peerexchange.Peer;
-import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.SequenceNumberMap;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -92,9 +90,6 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
                 break;
             case TRADE_STATISTICS_LIST:
                 result = getTradeStatisticsList(envelope.getTradeStatisticsList());
-            case BLOOM_FILTER_NONCE:
-                result = getLongPersistable(envelope.getBloomFilterNonce());
-                break;
             default:
                 log.warn("Unknown message case:{}:{}", envelope.getMessageCase());
         }
@@ -181,10 +176,5 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         });
         addressEntryList.setDoPersist(true);
         return addressEntryList;
-    }
-
-
-    public LongPersistable getLongPersistable(PB.LongPersistable bloomFilterNonce) {
-        return new LongPersistable(bloomFilterNonce.getLong());
     }
 }
