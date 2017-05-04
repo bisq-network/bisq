@@ -366,6 +366,7 @@ public abstract class Trade implements Tradable, Model {
         return decryptedMsgWithPubKey;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // States
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -836,14 +837,14 @@ public abstract class Trade implements Tradable, Model {
     public Message toProto() {
         return PB.Trade.newBuilder()
                 .setOffer(offer.toProto())
-               // TODO  .setProcessModel(processModel.toproto())
+                .setProcessModel((PB.ProcessModel) processModel.toProto())
                 .setTakerFeeTxId(takerFeeTxId)
                 .setDepositTxId(depositTxId)
                 .setPayoutTxId(payoutTxId)
                 .setTradeAmountAsLong(tradeAmountAsLong)
                 .setTxFeeAsLong(txFeeAsLong)
                 .setTakerFeeAsLong(takerFeeAsLong)
-                // TODO .setDecryptedMsgWithPubKey((PB.DecryptedMsgWithPubKey) decryptedMsgWithPubKey.toProto())
+                        // TODO .setDecryptedMsgWithPubKey((PB.DecryptedMsgWithPubKey) decryptedMsgWithPubKey.toProto())
                 .setTakeOfferDate(takeOfferDate)
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setTradePrice(tradePrice)
@@ -863,7 +864,6 @@ public abstract class Trade implements Tradable, Model {
                 .setErrorMessage(errorMessage)
                 .build();
     }
-
     @Override
     public String toString() {
         return "Trade{" +

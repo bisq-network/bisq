@@ -17,11 +17,13 @@
 
 package io.bisq.core.trade.protocol;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
+import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -52,5 +54,29 @@ public final class TradingPeer implements Persistable {
     private String changeOutputAddress;
 
     public TradingPeer() {
+    }
+
+    @Override
+    public Message toProto() {
+        // TODO
+        // nullable
+        // changeOutputAddress
+        //  .setRawTransactionInputs(rawTransactionInputs)
+        // .setPaymentAccountPayload(paymentAccountPayload.toProto())
+        // .setSignature(signature)
+        // .setMultiSigPubKey(multiSigPubKey)
+        return PB.TradingPeer.newBuilder()
+                .setAccountId(accountId)
+               /* .setPaymentAccountPayload(paymentAccountPayload.toProto())*/
+                .setPayoutAddressString(payoutAddressString)
+                .setContractAsJson(contractAsJson)
+                .setContractSignature(contractSignature)
+              /*  .setSignature(signature)*/
+                .setPubKeyRing(pubKeyRing.toProto())
+              /*  .setMultiSigPubKey(multiSigPubKey)*/
+                /*.setRawTransactionInputs(rawTransactionInputs)*/
+                .setChangeOutputValue(changeOutputValue)
+               /* .setChangeOutputAddress(changeOutputAddress)*/
+                .build();
     }
 }

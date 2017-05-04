@@ -17,9 +17,11 @@
 
 package io.bisq.core.trade.protocol;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.persistence.Persistable;
 import io.bisq.common.taskrunner.Model;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -36,6 +38,7 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.user.User;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import lombok.Getter;
@@ -46,14 +49,13 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Slf4j
-public class ProcessModel implements Model, Serializable {
+public class ProcessModel implements Model, Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
@@ -207,5 +209,47 @@ public class ProcessModel implements Model, Serializable {
     public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
         this.takeOfferFeeTx = takeOfferFeeTx;
         takeOfferFeeTxId = takeOfferFeeTx.getHashAsString();
+    }
+
+    @Override
+    public Message toProto() {
+        // TODO
+        return PB.ProcessModel.newBuilder()
+                .setTradingPeer((PB.TradingPeer) tradingPeer.toProto())
+                .build();
+/*
+        private final TradingPeer tradingPeer = new TradingPeer();
+        private String offerId;
+        private String accountId;
+        private PubKeyRing pubKeyRing;
+
+        // Mutable
+        private String takeOfferFeeTxId;
+        @Setter
+        private byte[] payoutTxSignature;
+        @Setter
+        private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
+        @Setter
+        private List<NodeAddress> takerAcceptedMediatorNodeAddresses;
+        @Setter
+        private byte[] preparedDepositTx;
+        @Setter
+        private ArrayList<RawTransactionInput> rawTransactionInputs;
+        @Setter
+        private long changeOutputValue;
+        @Nullable
+        @Setter
+        private String changeOutputAddress;
+        @Setter
+        private boolean useSavingsWallet;
+        @Setter
+        private long fundsNeededForTradeAsLong;
+        @Setter
+        private byte[] myMultiSigPubKey;
+        // that is used to store temp. the peers address when we get an incoming message before the message is verified.
+        // After successful verified we copy that over to the trade.tradingPeerAddress
+        @Setter
+        private NodeAddress tempTradingPeerNodeAddress;
+        */
     }
 }

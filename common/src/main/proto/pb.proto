@@ -768,19 +768,14 @@ message DiskEnvelope {
         PersistedP2PStorageData persisted_p2p_storage_data = 7;
         SequenceNumberMap sequence_number_map = 8;
         PersistedEntryMap persisted_entry_map = 9;
-        LongPersistable bloom_filter_nonce = 10;
-        TradeStatisticsList trade_statistics_list = 12;
-        VoteItemsList vote_items_list = 13;
-        TradableList tradable_list = 14;
+        TradeStatisticsList trade_statistics_list = 10;
+        VoteItemsList vote_items_list = 11;
+        TradableList tradable_list = 12;
     }
 }
 
 message PersistedP2PStorageData {
     // TODO ???
-}
-
-message LongPersistable {
-    int64 long = 1;
 }
 
 message PeersList {

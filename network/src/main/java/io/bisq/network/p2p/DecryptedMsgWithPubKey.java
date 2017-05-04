@@ -39,14 +39,16 @@ public final class DecryptedMsgWithPubKey implements Persistable {
         this.signaturePubKey = signaturePubKey;
     }
 
-    /*
+
     @Override
     public Message toProto() {
+        // TODO
         return PB.DecryptedMsgWithPubKey.newBuilder()
                 // TODO .setMessage(msg.toEnvelopeProto())
-                .setSignaturePubKey(signaturePubKey.toProto());
+               /* .setSignaturePubKey(signaturePubKey.toProto())*/
+                .build();
     }
-*/
+
     @Override
     public String toString() {
         return "DecryptedMsgWithPubKey{" +
