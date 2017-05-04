@@ -27,10 +27,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.handlers.ExceptionHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.persistence.LongPersistable;
-import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.FileUtil;
-import io.bisq.common.storage.Storage;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.*;
 import io.bisq.core.user.Preferences;
@@ -83,8 +80,6 @@ public class WalletsSetup {
     private final NetworkParameters params;
     private final File walletDir;
     private final int socks5DiscoverMode;
-    private final Long bloomFilterTweak;
-    private final Storage<LongPersistable> storage;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     private final DownloadListener downloadListener = new DownloadListener();
@@ -104,7 +99,6 @@ public class WalletsSetup {
                         Preferences preferences,
                         BisqEnvironment bisqEnvironment,
                         Socks5ProxyProvider socks5ProxyProvider,
-                        PersistenceProtoResolver persistenceProtoResolver,
                         @Named(BtcOptionKeys.WALLET_DIR) File appDir,
                         @Named(BtcOptionKeys.SOCKS5_DISCOVER_MODE) String socks5DiscoverModeString) {
         this.regTestHost = regTestHost;
@@ -119,15 +113,6 @@ public class WalletsSetup {
         params = WalletUtils.getParameters();
         walletDir = new File(appDir, "bitcoin");
         PeerGroup.setIgnoreHttpSeeds(true);
-
-        storage = new Storage<>(walletDir, persistenceProtoResolver);
-        LongPersistable nonce = storage.initAndGetPersistedWithFileName("BloomFilterNonce");
-        if (nonce != null) {
-            bloomFilterTweak = nonce.getLongPayload();
-        } else {
-            bloomFilterTweak = new Random().nextLong();
-            storage.queueUpForSave(new LongPersistable(bloomFilterTweak), 10);
-        }
     }
 
 
