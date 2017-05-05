@@ -255,6 +255,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     processProtectedMailboxStorageEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
             });
         } else {
+            // If our HS is still not published 
             networkNode.nodeAddressProperty().addListener((observable, oldValue, newValue) -> {
                 if (newValue != null) {
                     p2PDataStorage.getMap().values().stream().forEach(protectedStorageEntry -> {

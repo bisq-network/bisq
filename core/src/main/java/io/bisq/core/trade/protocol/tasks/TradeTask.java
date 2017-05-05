@@ -21,8 +21,6 @@ import io.bisq.common.taskrunner.Task;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.ProcessModel;
-import io.bisq.network.p2p.DecryptedMsgWithPubKey;
-import io.bisq.network.p2p.MailboxMsg;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -56,16 +54,5 @@ public abstract class TradeTask extends Task<Trade> {
         appendExceptionToErrorMessage(t);
         trade.setErrorMessage(errorMessage);
         super.failed();
-    }
-
-    protected void removeMailboxMessageAfterProcessing() {
-        if (processModel.getTradeMessage() instanceof MailboxMsg) {
-            DecryptedMsgWithPubKey mailboxMessage = trade.getMailboxMessage();
-            if (mailboxMessage != null && mailboxMessage.msg.equals(processModel.getTradeMessage())) {
-                log.debug("Remove mailboxMessage from P2P network. mailboxMessage = " + mailboxMessage);
-                processModel.getP2PService().removeEntryFromMailbox(mailboxMessage);
-                trade.removeMailboxMessage();
-            }
-        }
     }
 }

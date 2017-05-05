@@ -194,8 +194,6 @@ public abstract class Trade implements Tradable, Model {
     private long tradeAmountAsLong;
     private long txFeeAsLong;
     private long takerFeeAsLong;
-    @Nullable
-    private DecryptedMsgWithPubKey decryptedMsgWithPubKey;
     private long takeOfferDate;
 
     private boolean isCurrencyForTakerFeeBtc;
@@ -237,7 +235,7 @@ public abstract class Trade implements Tradable, Model {
     transient private StringProperty errorMessageProperty;
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Volume> tradeVolumeProperty;
-    transient private Set<DecryptedMsgWithPubKey> mailboxMessageSet = new HashSet<>();
+    transient private Set<DecryptedMsgWithPubKey> decryptedMsgWithPubKeySet = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -313,13 +311,14 @@ public abstract class Trade implements Tradable, Model {
                 useSavingsWallet,
                 fundsNeededForTrade);
 
-        createProtocol();
+        createTradeProtocol();
 
-        log.trace("init: decryptedMsgWithPubKey = " + decryptedMsgWithPubKey);
-        if (decryptedMsgWithPubKey != null && !getMailboxMessageSet().contains(decryptedMsgWithPubKey)) {
-            getMailboxMessageSet().add(decryptedMsgWithPubKey);
-            tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
-        }
+        // if we have already received a msg we apply it. 
+        // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context 
+        // or async calls there.
+        log.trace("init: getMailboxMessageSet() = " + getDecryptedMsgWithPubKeySet());
+        getDecryptedMsgWithPubKeySet().stream()
+                .forEach(msg -> tradeProtocol.applyMailboxMessage(msg, this));
     }
 
 
@@ -348,23 +347,26 @@ public abstract class Trade implements Tradable, Model {
         return depositTx;
     }
 
-    public void setMailboxMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
-        log.trace("setMailboxMessage decryptedMsgWithPubKey=" + decryptedMsgWithPubKey);
-        this.decryptedMsgWithPubKey = decryptedMsgWithPubKey;
+    // We don't need to persist the msg as if we dont apply it it will not be removed from the P2P network and we 
+    // will received it again at next startup. Such might happen in edge cases when the user shuts down after we 
+    // received the msb but before the init is called.
+    public void addDecryptedMsgWithPubKey(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
+        log.trace("setDecryptedMsgWithPubKey decryptedMsgWithPubKey=" + decryptedMsgWithPubKey);
+        if (!getDecryptedMsgWithPubKeySet().contains(decryptedMsgWithPubKey)) {
+            getDecryptedMsgWithPubKeySet().add(decryptedMsgWithPubKey);
 
-        if (tradeProtocol != null && decryptedMsgWithPubKey != null && !getMailboxMessageSet().contains(decryptedMsgWithPubKey)) {
-            getMailboxMessageSet().add(decryptedMsgWithPubKey);
-            tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
+            // If we have already initialized we apply. 
+            // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context 
+            // or async calls there.
+            if (tradeProtocol != null)
+                tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
         }
     }
 
-    public void removeMailboxMessage() {
-        log.trace("removeMailboxMessage");
-        this.decryptedMsgWithPubKey = null;
-    }
-
-    public DecryptedMsgWithPubKey getMailboxMessage() {
-        return decryptedMsgWithPubKey;
+    public void removeDecryptedMsgWithPubKey(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
+        log.trace("removeDecryptedMsgWithPubKey decryptedMsgWithPubKey=" + decryptedMsgWithPubKey);
+        if (getDecryptedMsgWithPubKeySet().contains(decryptedMsgWithPubKey))
+            getDecryptedMsgWithPubKeySet().remove(decryptedMsgWithPubKey);
     }
 
 
@@ -467,10 +469,11 @@ public abstract class Trade implements Tradable, Model {
         return errorMessageProperty;
     }
 
-    private Set<DecryptedMsgWithPubKey> getMailboxMessageSet() {
-        if (mailboxMessageSet == null)
-            mailboxMessageSet = new HashSet<>();
-        return mailboxMessageSet;
+    //TODO can be removed after PB is applied. mailboxMessageSet can be used then instead of getMailboxMessageSet().
+    private Set<DecryptedMsgWithPubKey> getDecryptedMsgWithPubKeySet() {
+        if (decryptedMsgWithPubKeySet == null)
+            decryptedMsgWithPubKeySet = new HashSet<>();
+        return decryptedMsgWithPubKeySet;
     }
 
     public ObjectProperty<Coin> getTradeAmountProperty() {
@@ -479,7 +482,6 @@ public abstract class Trade implements Tradable, Model {
 
         return tradeAmountProperty;
     }
-
 
     public ObjectProperty<Volume> getTradeVolumeProperty() {
         if (tradeVolumeProperty == null)
@@ -494,7 +496,7 @@ public abstract class Trade implements Tradable, Model {
     public void setTakeOfferDate(Date takeOfferDate) {
         this.takeOfferDate = takeOfferDate.getTime();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Model implementation
@@ -826,7 +828,7 @@ public abstract class Trade implements Tradable, Model {
         }
     }
 
-    abstract protected void createProtocol();
+    abstract protected void createTradeProtocol();
 
     private void setConfirmedState() {
         // we only apply the state if we are not already further in the process
@@ -842,7 +844,7 @@ public abstract class Trade implements Tradable, Model {
                 "\n\ttradeVolume=" + getTradeVolumeProperty().get() +
                 "\n\toffer=" + offer +
                 "\n\tprocessModel=" + processModel +
-                "\n\tdecryptedMsgWithPubKey=" + decryptedMsgWithPubKey +
+                "\n\tdecryptedMsgWithPubKeySet=" + getDecryptedMsgWithPubKeySet() +
                 "\n\ttakeOfferDate=" + getTakeOfferDate() +
                 "\n\tstate=" + getState() +
                 "\n\tdisputeState=" + getDisputeState() +

@@ -48,7 +48,7 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
     }
 
     @Override
-    protected void createProtocol() {
+    protected void createTradeProtocol() {
         tradeProtocol = new SellerAsMakerProtocol(this);
     }
 

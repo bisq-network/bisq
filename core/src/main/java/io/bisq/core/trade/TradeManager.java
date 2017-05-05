@@ -146,6 +146,8 @@ public class TradeManager {
                 }
             }
         });
+
+        // Might get called at startup after HS is published. Can be before or after initPendingTrades.
         p2PService.addDecryptedMailboxListener(new DecryptedMailboxListener() {
             @Override
             public void onMailboxMessageAdded(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress senderNodeAddress) {
@@ -158,7 +160,7 @@ public class TradeManager {
                     Optional<Trade> tradeOptional = trades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
                     // The mailbox message will be removed inside the tasks after they are processed successfully
                     if (tradeOptional.isPresent())
-                        tradeOptional.get().setMailboxMessage(decryptedMsgWithPubKey);
+                        tradeOptional.get().addDecryptedMsgWithPubKey(decryptedMsgWithPubKey);
                 }
             }
         });

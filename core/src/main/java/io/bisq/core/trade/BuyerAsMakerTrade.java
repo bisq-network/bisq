@@ -49,7 +49,7 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
     }
 
     @Override
-    protected void createProtocol() {
+    protected void createTradeProtocol() {
         tradeProtocol = new BuyerAsMakerProtocol(this);
     }
 
