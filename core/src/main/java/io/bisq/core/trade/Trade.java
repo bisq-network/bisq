@@ -461,7 +461,7 @@ public abstract class Trade implements Tradable, Model {
         return errorMessageProperty;
     }
 
-    public Set<DecryptedMsgWithPubKey> getMailboxMessageSet() {
+    private Set<DecryptedMsgWithPubKey> getMailboxMessageSet() {
         if (mailboxMessageSet == null)
             mailboxMessageSet = new HashSet<>();
         return mailboxMessageSet;
