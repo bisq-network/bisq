@@ -358,9 +358,15 @@ public abstract class Trade implements Tradable, Model {
         }
     }
 
+    public void removeMailboxMessage() {
+        log.trace("removeMailboxMessage");
+        this.decryptedMsgWithPubKey = null;
+    }
+
     public DecryptedMsgWithPubKey getMailboxMessage() {
         return decryptedMsgWithPubKey;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // States
