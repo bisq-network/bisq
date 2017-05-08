@@ -17,10 +17,11 @@
 
 package io.bisq.core.trade;
 
-import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.offer.OpenOffer;
 import io.bisq.generated.protobuffer.PB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class TradableList<T extends Tradable> implements Persistable {
@@ -59,6 +61,12 @@ public final class TradableList<T extends Tradable> implements Persistable {
         if (persisted != null) {
             list.addAll(persisted.getList());
         }
+        observableList = FXCollections.observableArrayList(list);
+    }
+
+    public TradableList(Storage<TradableList<T>> storage, List<T> list) {
+        this.storage = storage;
+        list.addAll(list);
         observableList = FXCollections.observableArrayList(list);
     }
 
@@ -101,4 +109,40 @@ public final class TradableList<T extends Tradable> implements Persistable {
         return list.contains(thing);
     }
 
+    public static TradableList fromProto(PB.TradableList proto, Storage<TradableList<OpenOffer>> openOfferStorage,
+                                         Storage<TradableList<BuyerAsMakerTrade>> buyerAsMakerTradeStorage,
+                                         Storage<TradableList<BuyerAsTakerTrade>> buyerAsTakerTradeStorage,
+                                         Storage<TradableList<SellerAsMakerTrade>> sellerAsMakerTradeStorage,
+                                         Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage,
+                                         BtcWalletService btcWalletService) {
+        List collect = proto.getTradableList().stream().map(tradable -> {
+            switch (tradable.getMessageCase()) {
+                case OPEN_OFFER:
+                    return OpenOffer.fromProto(tradable.getOpenOffer(), openOfferStorage);
+                case BUYER_AS_MAKER_TRADE:
+                    return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), buyerAsMakerTradeStorage, btcWalletService);
+                case BUYER_AS_TAKER_TRADE:
+                    return BuyerAsTakerTrade.fromProto(tradable.getBuyerAsTakerTrade(), buyerAsTakerTradeStorage, btcWalletService);
+                case SELLER_AS_MAKER_TRADE:
+                    return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), sellerAsMakerTradeStorage, btcWalletService);
+                case SELLER_AS_TAKER_TRADE:
+                    return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), sellerAsTakerTradeStorage, btcWalletService);
+            }
+            return null;
+        }).collect(Collectors.toList());
+        switch (collect.get(0).getClass().getSimpleName()) {
+            case "OpenOffer":
+                return new TradableList<OpenOffer>(openOfferStorage, collect);
+            case "BuyerAsMakerTrade":
+                return new TradableList<BuyerAsMakerTrade>(buyerAsMakerTradeStorage, collect);
+            case "BuyerAsTakerTrade":
+                return new TradableList<BuyerAsTakerTrade>(buyerAsTakerTradeStorage, collect);
+            case "SellerAsMakerTrade":
+                return new TradableList<SellerAsMakerTrade>(sellerAsMakerTradeStorage, collect);
+            case "SellerAsTakerTrade":
+                return new TradableList<SellerAsTakerTrade>(sellerAsTakerTradeStorage, collect);
+        }
+
+        return null;
+    }
 }

@@ -69,7 +69,7 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                 .setSellerAsMakerTrade(PB.SellerAsMakerTrade.newBuilder().setTrade((PB.Trade) super.toProto())).build();
     }
 
-    public static Tradable fromProto(PB.BuyerAsTakerTrade proto, Storage<? extends TradableList> storage,
+    public static Tradable fromProto(PB.SellerAsMakerTrade proto, Storage<? extends TradableList> storage,
                                      BtcWalletService btcWalletService) {
         PB.Trade trade = proto.getTrade();
         return new SellerAsMakerTrade(Offer.fromProto(trade.getOffer()),

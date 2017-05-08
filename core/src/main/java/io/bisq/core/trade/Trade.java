@@ -38,6 +38,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.protocol.ProcessModel;
 import io.bisq.core.trade.protocol.TradeProtocol;
@@ -864,6 +865,7 @@ public abstract class Trade implements Tradable, Model {
                 .setErrorMessage(errorMessage)
                 .build();
     }
+
     @Override
     public String toString() {
         return "Trade{" +

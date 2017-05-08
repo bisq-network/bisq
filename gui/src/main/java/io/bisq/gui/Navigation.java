@@ -17,19 +17,26 @@
 
 package io.bisq.gui;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.storage.Storage;
+import io.bisq.generated.protobuffer.PB;
 import io.bisq.gui.common.view.View;
 import io.bisq.gui.common.view.ViewPath;
 import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.market.MarketView;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 public final class Navigation implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
@@ -53,6 +60,8 @@ public final class Navigation implements Persistable {
     transient private ViewPath returnPath;
 
     // Persisted fields
+    @Getter
+    @Setter
     private ViewPath previousPath;
 
 
@@ -69,6 +78,16 @@ public final class Navigation implements Persistable {
 
         // need to be null initially and not DEFAULT_VIEW_PATH to navigate through all items
         currentPath = null;
+    }
+
+    /** used for deserialisation/fromProto */
+    public Navigation(List<Class<? extends View>> classes) {
+        previousPath = new ViewPath(Lists.newArrayList());
+        previousPath.addAll(classes);
+
+        // need to be null initially and not DEFAULT_VIEW_PATH to navigate through all items
+        currentPath = null;
+        storage = null;
     }
 
     @SuppressWarnings("unchecked")
@@ -133,7 +152,23 @@ public final class Navigation implements Persistable {
         this.returnPath = returnPath;
     }
 
-    private ViewPath getPreviousPath() {
-        return previousPath;
+
+    @Override
+    public Message toProto() {
+        return PB.Navigation.newBuilder().setPreviousPath(PB.ViewPath.newBuilder()
+                .addAllViewPath(previousPath.stream()
+                        .map(aClass -> aClass.getName()).collect(Collectors.toList()))).build();
+    }
+
+    public static Navigation fromProto(PB.Navigation proto) {
+        List<Class<? extends View>> classStream = proto.getPreviousPath().getViewPathList().stream().map(s -> {
+            try {
+                return ((Class<? extends View>) Class.forName(s));
+            } catch (ClassNotFoundException e) {
+                log.warn("Could not find the Viewpath class {}; exception: {}", s, e);
+            }
+            return null;
+        }).collect(Collectors.toList());
+        return new Navigation(classStream);
     }
 }

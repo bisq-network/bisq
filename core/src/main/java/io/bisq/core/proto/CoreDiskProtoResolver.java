@@ -5,10 +5,14 @@ import io.bisq.common.locale.*;
 import io.bisq.common.persistence.ListPersistable;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.proto.PersistenceProtoResolver;
+import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryList;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
+import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.trade.*;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
@@ -44,12 +48,31 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
     private Provider<AddressEntryList> addressEntryListProvider;
     private Provider<Preferences> preferencesProvider;
 
+    private Storage<TradableList<OpenOffer>> openOfferStorage;
+    private Storage<TradableList<BuyerAsMakerTrade>> buyerAsMakerTradeStorage;
+    private Storage<TradableList<BuyerAsTakerTrade>> buyerAsTakerTradeStorage;
+    private Storage<TradableList<SellerAsMakerTrade>> sellerAsMakerTradeStorage;
+    private Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage;
+    private Provider<BtcWalletService> btcWalletService;
+
     @Inject
     public CoreDiskProtoResolver(Provider<Preferences> preferencesProvider,
-                                 Provider<AddressEntryList> addressEntryListProvider
+                                 Provider<AddressEntryList> addressEntryListProvider,
+                                 Storage<TradableList<OpenOffer>> openOfferStorage,
+                                 Storage<TradableList<BuyerAsMakerTrade>> buyerAsMakerTradeStorage,
+                                 Storage<TradableList<BuyerAsTakerTrade>> buyerAsTakerTradeStorage,
+                                 Storage<TradableList<SellerAsMakerTrade>> sellerAsMakerTradeStorage,
+                                 Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage,
+                                 Provider<BtcWalletService> btcWalletService
     ) {
         this.preferencesProvider = preferencesProvider;
         this.addressEntryListProvider = addressEntryListProvider;
+        this.openOfferStorage = openOfferStorage;
+        this.buyerAsMakerTradeStorage = buyerAsMakerTradeStorage;
+        this.buyerAsTakerTradeStorage = buyerAsTakerTradeStorage;
+        this.sellerAsMakerTradeStorage = sellerAsMakerTradeStorage;
+        this.sellerAsTakerTradeStorage = sellerAsTakerTradeStorage;
+        this.btcWalletService = btcWalletService;
     }
 
     @Override
@@ -68,9 +91,12 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
                 break;
                 /*
             case NAVIGATION:
-                result = getPing(envelope);
+                result = PB.Navigation.fromp(envelope);
                 break;
                 */
+            case TRADABLE_LIST:
+                result = getTradableList(envelope.getTradableList());
+                break;
             case PEERS_LIST:
                 result = getPeersList(envelope.getPeersList());
                 break;
@@ -94,8 +120,9 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         return Optional.ofNullable(result);
     }
 
-
-
+    private Persistable getTradableList(PB.TradableList tradableList) {
+        return TradableList.fromProto(tradableList, openOfferStorage, buyerAsMakerTradeStorage, buyerAsTakerTradeStorage, sellerAsMakerTradeStorage, sellerAsTakerTradeStorage, btcWalletService.get());
+    }
 
     private Persistable getTradeStatisticsList(PB.TradeStatisticsList tradeStatisticsList) {
         return new ListPersistable<>(tradeStatisticsList.getTradeStatisticsList().stream()

@@ -18,7 +18,12 @@
 package io.bisq.core.trade;
 
 import io.bisq.common.persistence.Persistable;
+import io.bisq.common.storage.Storage;
+import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OpenOffer;
+import io.bisq.generated.protobuffer.PB;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 
@@ -30,4 +35,6 @@ public interface Tradable extends Persistable {
     String getId();
 
     String getShortId();
+
+
 }

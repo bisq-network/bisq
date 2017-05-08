@@ -76,7 +76,7 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                 .setSellerAsTakerTrade(PB.SellerAsTakerTrade.newBuilder().setTrade((PB.Trade) super.toProto())).build();
     }
 
-    public static Tradable fromProto(PB.BuyerAsTakerTrade proto, Storage<? extends TradableList> storage,
+    public static Tradable fromProto(PB.SellerAsTakerTrade proto, Storage<? extends TradableList> storage,
                                      BtcWalletService btcWalletService) {
         PB.Trade trade = proto.getTrade();
         return new SellerAsTakerTrade(Offer.fromProto(trade.getOffer()), Coin.valueOf(trade.getTradeAmountAsLong()),

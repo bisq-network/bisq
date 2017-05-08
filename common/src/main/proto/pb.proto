@@ -1109,7 +1109,7 @@ message User {
 }
 
 message ViewPath {
-    // TODO BALLOONS INTO 40 classes !!!!!!!!!!!!!!!!
+    repeated string view_path = 1;
 }
 
 message VoteItem {
