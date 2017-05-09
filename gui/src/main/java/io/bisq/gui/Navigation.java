@@ -23,6 +23,7 @@ import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.proto.ViewPathAsString;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.gui.common.view.View;
 import io.bisq.gui.common.view.ViewPath;
@@ -30,18 +31,21 @@ import io.bisq.gui.main.MainView;
 import io.bisq.gui.main.market.MarketView;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.omg.CORBA.PRIVATE_MEMBER;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
+@Slf4j
 public final class Navigation implements Persistable {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(Navigation.class);
 
     private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, MarketView.class);
 
@@ -53,11 +57,13 @@ public final class Navigation implements Persistable {
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to
     // prevent invalid array modification
     transient private final CopyOnWriteArraySet<Listener> listeners = new CopyOnWriteArraySet<>();
-    transient private final Storage<Navigation> storage;
+    transient private final Storage<ViewPathAsString> storage;
     transient private ViewPath currentPath;
     // Used for returning to the last important view. After setup is done we want to
     // return to the last opened view (e.g. sell/buy)
     transient private ViewPath returnPath;
+    // this string is updated just before saving to disk so it reflects the latest currentPath situation.
+    transient private ViewPathAsString viewPathAsString = new ViewPathAsString();
 
     // Persisted fields
     @Getter
@@ -66,13 +72,14 @@ public final class Navigation implements Persistable {
 
 
     @Inject
-    public Navigation(Storage<Navigation> storage) {
+    public Navigation(Storage<ViewPathAsString> storage) {
         this.storage = storage;
         storage.setNumMaxBackupFiles(3);
 
-        Navigation persisted = storage.initAndGetPersisted(this);
-        if (persisted != null) {
-            previousPath = persisted.getPreviousPath();
+        ViewPathAsString result = storage.initAndGetPersisted(viewPathAsString);
+        if (result != null && !CollectionUtils.isEmpty(result.getViewPath())) {
+            ViewPath persisted = fromViewPathAsString(result);
+            previousPath = persisted;
         } else
             previousPath = DEFAULT_VIEW_PATH;
 
@@ -81,13 +88,16 @@ public final class Navigation implements Persistable {
     }
 
     /** used for deserialisation/fromProto */
-    public Navigation(List<Class<? extends View>> classes) {
-        previousPath = new ViewPath(Lists.newArrayList());
-        previousPath.addAll(classes);
-
-        // need to be null initially and not DEFAULT_VIEW_PATH to navigate through all items
-        currentPath = null;
-        storage = null;
+    private ViewPath fromViewPathAsString(ViewPathAsString viewPathAsString) {
+        List<Class<? extends View>> classStream = viewPathAsString.getViewPath().stream().map(s -> {
+            try {
+                return ((Class<? extends View>) Class.forName(s));
+            } catch (ClassNotFoundException e) {
+                log.warn("Could not find the Viewpath class {}; exception: {}", s, e);
+            }
+            return null;
+        }).collect(Collectors.toList());
+        return new ViewPath(classStream);
     }
 
     @SuppressWarnings("unchecked")
@@ -121,8 +131,15 @@ public final class Navigation implements Persistable {
 
         currentPath = newPath;
         previousPath = currentPath;
-        storage.queueUpForSave(1000);
+        queueUpForSave();
         listeners.stream().forEach((e) -> e.onNavigationRequested(currentPath));
+    }
+
+    private void queueUpForSave() {
+        if(currentPath.tip() != null) {
+            viewPathAsString.setViewPath(currentPath.stream().map(aClass -> aClass.getName()).collect(Collectors.toList()));
+        }
+        storage.queueUpForSave(viewPathAsString, 1000);
     }
 
     public void navigateToPreviousVisitedView() {
@@ -152,23 +169,8 @@ public final class Navigation implements Persistable {
         this.returnPath = returnPath;
     }
 
-
     @Override
     public Message toProto() {
-        return PB.Navigation.newBuilder().setPreviousPath(PB.ViewPath.newBuilder()
-                .addAllViewPath(previousPath.stream()
-                        .map(aClass -> aClass.getName()).collect(Collectors.toList()))).build();
-    }
-
-    public static Navigation fromProto(PB.Navigation proto) {
-        List<Class<? extends View>> classStream = proto.getPreviousPath().getViewPathList().stream().map(s -> {
-            try {
-                return ((Class<? extends View>) Class.forName(s));
-            } catch (ClassNotFoundException e) {
-                log.warn("Could not find the Viewpath class {}; exception: {}", s, e);
-            }
-            return null;
-        }).collect(Collectors.toList());
-        return new Navigation(classStream);
+        return PB.DiskEnvelope.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder().addAllViewPath(viewPathAsString.getViewPath())).build();
     }
 }

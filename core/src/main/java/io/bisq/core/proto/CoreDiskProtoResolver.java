@@ -89,11 +89,9 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
             case ADDRESS_ENTRY_LIST:
                 result = fillAddressEntryList(envelope, addressEntryListProvider.get());
                 break;
-                /*
-            case NAVIGATION:
-                result = PB.Navigation.fromp(envelope);
+            case VIEW_PATH_AS_STRING:
+                result = ViewPathAsString.fromProto(envelope.getViewPathAsString());
                 break;
-                */
             case TRADABLE_LIST:
                 result = getTradableList(envelope.getTradableList());
                 break;

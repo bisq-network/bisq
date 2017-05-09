@@ -761,7 +761,7 @@ message DiskEnvelope {
     int64 local_db_version = 1;
     oneof message {
         AddressEntryList address_entry_list = 2;
-        Navigation navigation = 3;
+        ViewPathAsString view_path_as_string = 3;
         PeersList peers_list = 4;
         Preferences preferences = 5;
         User user = 6;
@@ -868,10 +868,6 @@ message DecryptedMsgWithPubKey {
 
 message DisputeList {
     repeated Dispute dispute = 1;
-}
-
-message Navigation {
-    ViewPath previous_path = 1;
 }
 
 // there is a paymentaccountfactory !!!
@@ -1108,7 +1104,7 @@ message User {
     Mediator registered_mediator = 11;
 }
 
-message ViewPath {
+message ViewPathAsString {
     repeated string view_path = 1;
 }
 
