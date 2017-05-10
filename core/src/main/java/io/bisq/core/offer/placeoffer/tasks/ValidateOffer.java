@@ -53,7 +53,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
             checkCoinNotNullOrZero(offer.getMinAmount(), "MinAmount");
             checkCoinNotNullOrZero(offer.getMakerFee(), "MakerFee");
 
-            checkArgument(offer.getMakerFee().value >= FeeService.getMinMakerFee(offer.isCurrencyForMakerFeeBtc()),
+            checkArgument(offer.getMakerFee().value >= FeeService.getMinMakerFee(offer.isCurrencyForMakerFeeBtc()).value,
                     "createOfferFee must not be less than FeeService.MIN_CREATE_OFFER_FEE_IN_BTC. " +
                             "MakerFee=" + offer.getMakerFee().toFriendlyString());
 

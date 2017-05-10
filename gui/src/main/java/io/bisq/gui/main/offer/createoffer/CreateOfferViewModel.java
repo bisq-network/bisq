@@ -296,7 +296,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                                 double percentage = dataModel.getDirection() == compareDirection ? 1 - relation : relation - 1;
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
-                                dataModel.updateTradeFee();
                                 marketPriceMargin.set(btcFormatter.formatToPercent(percentage));
                             } catch (NumberFormatException t) {
                                 marketPriceMargin.set("");
@@ -325,7 +324,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
                             if (marketPrice != null && marketPrice.isValid()) {
                                 percentage = MathUtils.roundDouble(percentage, 4);
                                 dataModel.setMarketPriceMargin(percentage);
-                                dataModel.updateTradeFee();
                                 double marketPriceAsDouble = marketPrice.getPrice();
                                 final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
                                 final Offer.Direction compareDirection = isCryptoCurrency ?
@@ -441,7 +439,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private void applyMakerFee() {
         makerFee.set(getFormatterForMakerFee().formatCoin(dataModel.getMakerFee()));
-        makerFeeCurrencyCode.set(dataModel.getCurrencyForMakerFeeBtc() ? "BTC" : "BSQ");
+        makerFeeCurrencyCode.set(dataModel.isCurrencyForMakerFeeBtc() ? "BTC" : "BSQ");
     }
 
     private void updateMarketPriceAvailable() {
@@ -609,7 +607,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     void setCurrencyForMakerFeeBtc(boolean currencyForMakerFeeBtc) {
-        dataModel.setCurrencyForMakerFeeBtc(currencyForMakerFeeBtc);
+        dataModel.setPreferredCurrencyForMakerFeeBtc(currencyForMakerFeeBtc);
         applyMakerFee();
     }
 
@@ -802,7 +800,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         //TODO use last bisq market price to estimate BSQ val
         final Coin makerFeeAsCoin = dataModel.getMakerFee();
         final String makerFee = getFormatterForMakerFee().formatCoinWithCode(makerFeeAsCoin);
-        if (dataModel.getCurrencyForMakerFeeBtc())
+        if (dataModel.isCurrencyForMakerFeeBtc())
             return makerFee + GUIUtil.getPercentageOfTradeAmount(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
         else
             return makerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(makerFeeAsCoin)) + ")";
@@ -810,7 +808,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     public String getTotalToPayInfo() {
         final String totalToPay = this.totalToPay.get();
-        if (dataModel.getCurrencyForMakerFeeBtc())
+        if (dataModel.isCurrencyForMakerFeeBtc())
             return totalToPay;
         else
             return totalToPay + " + " + bsqFormatter.formatCoinWithCode(dataModel.getMakerFee());
@@ -875,7 +873,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         } else {
             dataModel.setAmount(null);
         }
-        dataModel.updateTradeFee();
     }
 
     private void setMinAmountToModel() {
@@ -895,7 +892,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         } else {
             dataModel.setPrice(null);
         }
-        dataModel.updateTradeFee();
     }
 
     private void setVolumeToModel() {
@@ -908,7 +904,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
         } else {
             dataModel.setVolume(null);
         }
-        dataModel.updateTradeFee();
     }
 
     private void setBuyerSecurityDepositToModel() {
@@ -989,6 +984,6 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
     }
 
     private BSFormatter getFormatterForMakerFee() {
-        return dataModel.getCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
+        return dataModel.isCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
 }

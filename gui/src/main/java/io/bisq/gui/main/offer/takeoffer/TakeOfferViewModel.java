@@ -242,7 +242,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     private void applyTakerFee() {
         takerFee.set(getFormatter().formatCoin(dataModel.getTakerFee()));
-        takerFeeCurrencyCode.set(dataModel.getCurrencyForTakerFeeBtc() ? "BTC" : "BSQ");
+        takerFeeCurrencyCode.set(dataModel.isCurrencyForTakerFeeBtc() ? "BTC" : "BSQ");
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -581,7 +581,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         //TODO use last bisq market price to estimate BSQ val
         final Coin takerFeeAsCoin = dataModel.getTakerFee();
         final String takerFee = getFormatter().formatCoinWithCode(takerFeeAsCoin);
-        if (dataModel.getCurrencyForTakerFeeBtc())
+        if (dataModel.isCurrencyForTakerFeeBtc())
             return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
         else
             return takerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(takerFeeAsCoin)) + ")";
@@ -589,7 +589,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public String getTotalToPayInfo() {
         final String totalToPay = this.totalToPay.get();
-        if (dataModel.getCurrencyForTakerFeeBtc())
+        if (dataModel.isCurrencyForTakerFeeBtc())
             return totalToPay;
         else
             return totalToPay + " + " + bsqFormatter.formatCoinWithCode(dataModel.getTakerFee());
@@ -635,7 +635,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     private BSFormatter getFormatter() {
-        return dataModel.getCurrencyForTakerFeeBtc() ? btcFormatter : bsqFormatter;
+        return dataModel.isCurrencyForTakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
 
 }

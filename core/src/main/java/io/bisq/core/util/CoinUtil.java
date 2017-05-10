@@ -19,19 +19,15 @@ package io.bisq.core.util;
 
 import io.bisq.common.util.MathUtils;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class CoinUtil {
-    private static final Logger log = LoggerFactory.getLogger(CoinUtil.class);
-
-
     public static Coin getFeePerBtc(Coin feePerBtc, Coin amount) {
         double feePerBtcAsDouble = (double) feePerBtc.value;
         double amountAsDouble = (double) amount.value;
         double btcAsDouble = (double) Coin.COIN.value;
         return Coin.valueOf(Math.round(feePerBtcAsDouble * (amountAsDouble / btcAsDouble)));
     }
+
 
     public static Coin minCoin(Coin a, Coin b) {
         return a.compareTo(b) <= 0 ? a : b;
@@ -44,5 +40,4 @@ public class CoinUtil {
     public static double getFeePerByte(Coin miningFee, int txSize) {
         return MathUtils.roundDouble(((double) miningFee.value / (double) txSize), 2);
     }
-
 }
