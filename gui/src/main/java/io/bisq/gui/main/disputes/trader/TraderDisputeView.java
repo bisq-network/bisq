@@ -632,7 +632,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 if (p2PService.isBootstrapped()) {
                     String text = inputTextArea.getText();
                     if (!text.isEmpty())
-                        onSendMessage(text, selectedDispute);
+                        if (text.length() < 5_000)
+                            onSendMessage(text, selectedDispute);
+                        else
+                            new Popup<>().information(Res.get("popup.warning.messageTooLong")).show();
                 } else {
                     new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
                 }
