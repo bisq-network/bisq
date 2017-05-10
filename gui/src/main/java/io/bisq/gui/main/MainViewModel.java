@@ -86,6 +86,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.store.BlockStoreException;
+import org.bitcoinj.store.ChainFileLockedException;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
@@ -443,12 +444,11 @@ public class MainViewModel implements ViewModel {
                                 numBtcPeers,
                                 Res.get("mainView.footer.btcInfo.connectionFailed"),
                                 btcNetworkAsString);
+                        log.error(exception.getMessage());
                         if (exception instanceof TimeoutException) {
                             walletServiceErrorMsg.set(Res.get("mainView.walletServiceErrorMsg.timeout"));
                         } else if (exception.getCause() instanceof BlockStoreException) {
-                            log.error(exception.getMessage());
-                            // Ugly, but no other way to cover that specific case
-                            if (exception.getMessage().equals("org.bitcoinj.store.BlockStoreException: org.bitcoinj.store.BlockStoreException: Store file is already locked by another process")) {
+                            if (exception.getCause().getCause() instanceof ChainFileLockedException) {
                                 new Popup<>().warning(Res.get("popup.warning.startupFailed.twoInstances"))
                                         .useShutDownButton()
                                         .show();
@@ -555,7 +555,7 @@ public class MainViewModel implements ViewModel {
         daoManager.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
 
         priceFeedService.onAllServicesInitialized();
-        
+
         setupBtcNumPeersWatcher();
         setupP2PNumPeersWatcher();
         updateBalance();
