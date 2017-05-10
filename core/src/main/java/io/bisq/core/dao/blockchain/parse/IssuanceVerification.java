@@ -51,12 +51,13 @@ public class IssuanceVerification {
         this.compensationRequestModel = compensationRequestModel;
     }
 
-    boolean maybeProcessData(Tx tx, int outputIndex) {
+    boolean maybeProcessData(Tx tx) {
         List<TxOutput> outputs = tx.getOutputs();
-        if (outputIndex == 0 && outputs.size() >= 2) {
-            TxOutput btcTxOutput = outputs.get(0);
-            TxOutput bsqTxOutput = outputs.get(1);
+        if (outputs.size() >= 2) {
+            TxOutput bsqTxOutput = outputs.get(0);
+            TxOutput btcTxOutput = outputs.get(1);
             final String btcAddress = btcTxOutput.getAddress();
+            // TODO find address by block range/cycle
             final Optional<CompensationRequest> compensationRequest = compensationRequestModel.findByAddress(btcAddress);
             if (compensationRequest.isPresent()) {
                 final CompensationRequest compensationRequest1 = compensationRequest.get();

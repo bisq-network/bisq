@@ -289,6 +289,7 @@ public class BsqParser {
             // We use order of output index. An output is a BSQ utxo as long there is enough input value
             final List<TxOutput> outputs = tx.getOutputs();
             TxOutput btcOutput = null;
+            TxOutput bsqOutput = null;
             for (int index = 0; index < outputs.size(); index++) {
                 TxOutput txOutput = outputs.get(index);
                 final long txOutputValue = txOutput.getValue();
@@ -300,17 +301,13 @@ public class BsqParser {
                     bsqChainState.addUnspentTxOutput(txOutput);
                     tx.setTxType(TxType.TRANSFER_BSQ);
                     txOutput.setTxOutputType(TxOutputType.BSQ_OUTPUT);
+                    bsqOutput = txOutput;
 
                     availableValue -= txOutputValue;
                     if (availableValue == 0) {
                         log.debug("We don't have anymore BSQ to spend");
                     }
-                } else if (issuanceVerification.maybeProcessData(tx, index)) {
-                    // it is not a BSQ or OP_RETURN output
-                    // check is we have a sponsor tx
-                    log.debug("We got a issuance tx and process the data");
-                    break;
-                } else if (opReturnVerification.maybeProcessOpReturnData(tx, index, availableValue, blockHeight, btcOutput)) {
+                } else if (opReturnVerification.maybeProcessOpReturnData(tx, index, availableValue, blockHeight, btcOutput, bsqOutput)) {
                     log.debug("We processed valid DAO OP_RETURN data");
                 } else {
                     btcOutput = txOutput;
@@ -329,6 +326,9 @@ public class BsqParser {
                 if (tx.getTxType() == null)
                     tx.setTxType(TxType.PAY_TRADE_FEE);
             }
+        } else if (issuanceVerification.maybeProcessData(tx)) {
+            // We don't have any BSQ input, so we test if it is a sponsor/issuance tx
+            log.debug("We got a issuance tx and process the data");
         }
 
         return isBsqTx;
