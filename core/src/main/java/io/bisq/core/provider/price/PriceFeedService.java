@@ -84,6 +84,9 @@ public class PriceFeedService {
         request();
     }
 
+    public String getProviderNodeAddress() {
+        return httpClient.getBaseUrl();
+    }
 
     private void request() {
         requestAllPrices(priceProvider, () -> {
