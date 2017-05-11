@@ -41,6 +41,8 @@ import io.bisq.core.trade.TradeManager;
 import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
+import io.bisq.network.p2p.DecryptedMsgWithPubKey;
+import io.bisq.network.p2p.MailboxMsg;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import lombok.Getter;
@@ -53,7 +55,6 @@ import org.bitcoinj.core.Transaction;
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -89,6 +90,8 @@ public class ProcessModel implements Model, Persistable {
     transient private Transaction takeOfferFeeTx;
     @Setter
     transient private TradeMsg tradeMessage;
+    @Setter
+    transient private DecryptedMsgWithPubKey decryptedMsgWithPubKey;
 
     // Mutable
     private String takeOfferFeeTxId;
@@ -234,5 +237,16 @@ public class ProcessModel implements Model, Persistable {
                 .setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey))
                 .setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProto())
                 .build();
+    }
+
+
+    public void removeMailboxMessageAfterProcessing(Trade trade) {
+        if (tradeMessage instanceof MailboxMsg &&
+                decryptedMsgWithPubKey != null &&
+                decryptedMsgWithPubKey.msg.equals(tradeMessage)) {
+            log.debug("Remove decryptedMsgWithPubKey from P2P network. decryptedMsgWithPubKey = " + decryptedMsgWithPubKey);
+            p2PService.removeEntryFromMailbox(decryptedMsgWithPubKey);
+            trade.removeDecryptedMsgWithPubKey(decryptedMsgWithPubKey);
+        }
     }
 }
