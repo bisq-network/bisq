@@ -45,14 +45,14 @@ public class FeeService {
     public static final long DEFAULT_TX_FEE = 150;
 
     private static final long MIN_MAKER_FEE_IN_BTC = 10_000;
-    private static final long MIN_MAKER_FEE_IN_BSQ = 10;
-    private static final long DEFAULT_MAKER_FEE_IN_BTC_PER_BTC = 30_000;
-    private static final long DEFAULT_MAKER_FEE_IN_BSQ_PER_BTC = 30;
-
     private static final long MIN_TAKER_FEE_IN_BTC = 10_000;
-    private static final long MIN_TAKER_FEE_IN_BSQ = 10;
-    private static final long DEFAULT_TAKER_FEE_IN_BTC_PER_BTC = 40_000;
-    private static final long DEFAULT_TAKER_FEE_IN_BSQ_PER_BTC = 40;
+    private static final long DEFAULT_MAKER_FEE_IN_BTC = 30_000;
+    private static final long DEFAULT_TAKER_FEE_IN_BTC = 40_000;
+
+    private static final long MIN_MAKER_FEE_IN_MBSQ = 10;
+    private static final long MIN_TAKER_FEE_IN_MBSQ = 10;
+    private static final long DEFAULT_MAKER_FEE_IN_MBSQ = 30;
+    private static final long DEFAULT_TAKER_FEE_IN_MBSQ = 40;
 
 
     // 0.00216 btc is for 3 x tx fee for taker -> about 2 EUR!
@@ -126,21 +126,21 @@ public class FeeService {
             return Coin.valueOf(DEFAULT_TX_FEE);
     }
 
-    public static long getMakerFeePerBtc(boolean currencyForMakerFeeBtc) {
-        return currencyForMakerFeeBtc ? DEFAULT_MAKER_FEE_IN_BTC_PER_BTC : DEFAULT_MAKER_FEE_IN_BSQ_PER_BTC;
+    public static Coin getMakerFeePerBtc(boolean currencyForMakerFeeBtc) {
+        return currencyForMakerFeeBtc ? Coin.valueOf(DEFAULT_MAKER_FEE_IN_BTC) : Coin.valueOf(DEFAULT_MAKER_FEE_IN_MBSQ);
     }
 
-    public static long getMinMakerFee(boolean currencyForMakerFeeBtc) {
-        return currencyForMakerFeeBtc ? MIN_MAKER_FEE_IN_BTC : MIN_MAKER_FEE_IN_BSQ;
+    public static Coin getMinMakerFee(boolean currencyForMakerFeeBtc) {
+        return currencyForMakerFeeBtc ? Coin.valueOf(MIN_MAKER_FEE_IN_BTC) : Coin.valueOf(MIN_MAKER_FEE_IN_MBSQ);
     }
 
 
-    public static long getTakerFeePerBtc(boolean currencyForTakerFeeBtc) {
-        return currencyForTakerFeeBtc ? DEFAULT_TAKER_FEE_IN_BTC_PER_BTC : DEFAULT_TAKER_FEE_IN_BSQ_PER_BTC;
+    public static Coin getTakerFeePerBtc(boolean currencyForTakerFeeBtc) {
+        return currencyForTakerFeeBtc ? Coin.valueOf(DEFAULT_TAKER_FEE_IN_BTC) : Coin.valueOf(DEFAULT_TAKER_FEE_IN_MBSQ);
     }
 
-    public static long getMinTakerFee(boolean currencyForTakerFeeBtc) {
-        return currencyForTakerFeeBtc ? MIN_TAKER_FEE_IN_BTC : MIN_TAKER_FEE_IN_BSQ;
+    public static Coin getMinTakerFee(boolean currencyForTakerFeeBtc) {
+        return currencyForTakerFeeBtc ? Coin.valueOf(MIN_TAKER_FEE_IN_BTC) : Coin.valueOf(MIN_TAKER_FEE_IN_MBSQ);
     }
 
 

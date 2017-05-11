@@ -175,7 +175,7 @@ public class Connection implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Called form various threads
+    // Called from various threads
     public void sendMessage(Msg msg) {
 
         if (!stopped) {

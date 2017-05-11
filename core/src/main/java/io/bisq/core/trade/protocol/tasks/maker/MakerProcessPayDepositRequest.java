@@ -92,7 +92,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
-            removeMailboxMessageAfterProcessing();
+            processModel.removeMailboxMessageAfterProcessing(trade);
 
             complete();
         } catch (Throwable t) {

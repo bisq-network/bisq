@@ -93,10 +93,12 @@ public abstract class TradeProtocol {
 
     public void applyMailboxMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, Trade trade) {
         log.debug("applyMailboxMessage " + decryptedMsgWithPubKey.msg);
-        if (decryptedMsgWithPubKey.signaturePubKey.equals(processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey()))
+        if (decryptedMsgWithPubKey.signaturePubKey.equals(processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey())) {
+            processModel.setDecryptedMsgWithPubKey(decryptedMsgWithPubKey);
             doApplyMailboxMessage(decryptedMsgWithPubKey.msg, trade);
-        else
+        } else {
             log.error("SignaturePubKey in message does not match the SignaturePubKey we have stored to that trading peer.");
+        }
     }
 
     protected abstract void doApplyMailboxMessage(Msg msg, Trade trade);

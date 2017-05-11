@@ -27,7 +27,9 @@ public enum JsonTxType {
     PAY_TRADE_FEE("Pay trade fee"),
     COMPENSATION_REQUEST("Compensation request"),
     VOTE("Vote"),
-    ISSUANCE("Issuance");
+    ISSUANCE("Issuance"),
+    LOCK_UP("Lockup"),
+    UN_LOCK("Unlock");
 
     @Getter
     private String displayString;

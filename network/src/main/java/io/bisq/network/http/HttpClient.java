@@ -3,6 +3,7 @@ package io.bisq.network.http;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.app.Version;
 import io.bisq.network.Socks5ProxyProvider;
+import lombok.Getter;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -36,6 +37,7 @@ public class HttpClient {
 
     @Nullable
     private Socks5ProxyProvider socks5ProxyProvider;
+    @Getter
     private String baseUrl;
     private boolean ignoreSocks5Proxy;
     private final String uid;

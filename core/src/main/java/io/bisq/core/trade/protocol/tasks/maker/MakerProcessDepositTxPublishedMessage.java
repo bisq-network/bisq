@@ -56,7 +56,7 @@ public class MakerProcessDepositTxPublishedMessage extends TradeTask {
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
-            removeMailboxMessageAfterProcessing();
+            processModel.removeMailboxMessageAfterProcessing(trade);
 
             trade.setState(Trade.State.MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
 

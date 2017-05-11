@@ -40,7 +40,7 @@ public class OpReturnVerification {
     }
 
     boolean maybeProcessOpReturnData(Tx tx, int index, long availableValue,
-                                     int blockHeight, TxOutput btcOutput) {
+                                     int blockHeight, TxOutput btcOutput, TxOutput bsqOutput) {
         List<TxOutput> txOutputs = tx.getOutputs();
         TxOutput txOutput = txOutputs.get(index);
         final long txOutputValue = txOutput.getValue();
@@ -55,7 +55,7 @@ public class OpReturnVerification {
                         return compensationRequestVerification.maybeProcessData(tx, opReturnData, txOutput,
                                 availableValue, blockHeight, btcOutput);
                     case DaoConstants.OP_RETURN_TYPE_VOTE:
-                        return votingVerification.maybeProcessData(tx, opReturnData, txOutput, availableValue, blockHeight);
+                        return votingVerification.maybeProcessData(tx, opReturnData, txOutput, availableValue, blockHeight, bsqOutput);
                     default:
                         log.warn("OP_RETURN data version does not match expected version bytes. opReturnData={}",
                                 Utils.HEX.encode(opReturnData));

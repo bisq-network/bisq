@@ -26,7 +26,7 @@ public class SeedNodesRepository {
             // DevFlags.STRESS_TEST_MODE ? new NodeAddress("hlitt7z4bec4kdh4.onion:8000") : new NodeAddress("23bnormzh2mvkz3z.onion:8000"),
 
             // testnet
-            new NodeAddress("7qib4qu7h3qcox2r.onion:8001"),
+          /*  new NodeAddress("7qib4qu7h3qcox2r.onion:8001"),*/
             new NodeAddress("nbphlanpgbei4okt.onion:8001"),
 
             // regtest

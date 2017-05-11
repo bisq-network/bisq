@@ -302,7 +302,13 @@ class TradesChartsViewModel extends ActivatableViewModel {
             accumulatedAmount += item.tradeAmount;
         }
 
-        // TODO close, open not set
+        List<TradeStatistics> list = new ArrayList<>(set);
+        list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? -1 : (o1.tradeDate == o2.tradeDate ? 0 : 1)));
+        if (list.size() > 0) {
+            open = list.get(0).tradePrice;
+            close = list.get(list.size() - 1).tradePrice;
+        }
+
         long averagePrice;
         boolean isBullish;
         if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
@@ -313,13 +319,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
             isBullish = close > open;
             double accumulatedVolumeAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedVolume, Coin.SMALLEST_UNIT_EXPONENT);
             averagePrice = MathUtils.roundDoubleToLong(accumulatedVolumeAsDouble / (double) accumulatedAmount);
-        }
-
-        List<TradeStatistics> list = new ArrayList<>(set);
-        list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? -1 : (o1.tradeDate == o2.tradeDate ? 0 : 1)));
-        if (list.size() > 0) {
-            open = list.get(0).tradePrice;
-            close = list.get(list.size() - 1).tradePrice;
         }
 
         final Date dateFrom = new Date(getTimeFromTickIndex(tick));

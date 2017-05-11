@@ -25,6 +25,7 @@ import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.listeners.BalanceListener;
+import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
@@ -47,6 +48,8 @@ import javafx.collections.ObservableList;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -57,15 +60,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 class TakeOfferDataModel extends ActivatableDataModel {
     private final TradeManager tradeManager;
-    private final BtcWalletService walletService;
+    private final BtcWalletService btcWalletService;
+    private final BsqWalletService bsqWalletService;
     private final User user;
     private final FeeService feeService;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private final BSFormatter formatter;
 
-    private Coin takerFee;
-    private boolean isCurrencyForTakerFeeBtc;
     private Coin txFeeFromFeeService;
     private Coin securityDeposit;
     // Coin feeFromFundingTx = Coin.NEGATIVE_SATOSHI;
@@ -99,11 +101,13 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     @Inject
     TakeOfferDataModel(TradeManager tradeManager,
-                       BtcWalletService walletService, User user, FeeService feeService,
+                       BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
+                       User user, FeeService feeService,
                        Preferences preferences, PriceFeedService priceFeedService,
                        BSFormatter formatter) {
         this.tradeManager = tradeManager;
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
+        this.bsqWalletService = bsqWalletService;
         this.user = user;
         this.feeService = feeService;
         this.preferences = preferences;
@@ -111,7 +115,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.formatter = formatter;
 
         // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
-        isCurrencyForTakerFeeBtc = preferences.getPayFeeInBtc();
     }
 
     @Override
@@ -156,7 +159,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void initWithData(Offer offer) {
         this.offer = offer;
         tradePrice = offer.getPrice();
-        addressEntry = walletService.getOrCreateAddressEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
+        addressEntry = btcWalletService.getOrCreateAddressEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
         checkNotNull(addressEntry, "addressEntry must not be null");
 
         ObservableList<PaymentAccount> possiblePaymentAccounts = getPossiblePaymentAccounts();
@@ -262,7 +265,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     // have it persisted as well.
     void onTakeOffer(TradeResultHandler tradeResultHandler) {
         checkNotNull(txFeeFromFeeService, "txFeeFromFeeService must not be null");
-        checkNotNull(takerFee, "takerFee must not be null");
+        checkNotNull(getTakerFee(), "takerFee must not be null");
 
         Coin fundsNeededForTrade = getSecurityDeposit().add(txFeeFromFeeService).add(txFeeFromFeeService);
         if (isBuyOffer())
@@ -270,8 +273,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
         tradeManager.onTakeOffer(amount.get(),
                 txFeeFromFeeService,
-                takerFee,
-                isCurrencyForTakerFeeBtc,
+                getTakerFee(),
+                isCurrencyForTakerFeeBtc(),
                 tradePrice.getValue(),
                 fundsNeededForTrade,
                 offer,
@@ -299,8 +302,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     void setCurrencyForTakerFeeBtc(boolean currencyForTakerFeeBtc) {
         preferences.setPayFeeInBtc(currencyForTakerFeeBtc);
-        this.isCurrencyForTakerFeeBtc = currencyForTakerFeeBtc;
-        updateTradeFee();
     }
 
 
@@ -324,6 +325,17 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return user.getAcceptedArbitrators().size() > 0;
     }
 
+    boolean isCurrencyForTakerFeeBtc() {
+        return preferences.getPayFeeInBtc() || !isBsqForFeeAvailable();
+    }
+
+    boolean isTakerFeeValid() {
+        return preferences.getPayFeeInBtc() || isBsqForFeeAvailable();
+    }
+
+    boolean isBsqForFeeAvailable() {
+        return getTakerFee(false) != null && bsqWalletService.getAvailableBalance() != null && !bsqWalletService.getAvailableBalance().subtract(getTakerFee(false)).isNegative();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bindings, listeners
@@ -338,16 +350,13 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     private void addListeners() {
-        walletService.addBalanceListener(balanceListener);
+        btcWalletService.addBalanceListener(balanceListener);
     }
 
     private void removeListeners() {
-        walletService.removeBalanceListener(balanceListener);
+        btcWalletService.removeBalanceListener(balanceListener);
     }
 
-    public boolean getCurrencyForTakerFeeBtc() {
-        return isCurrencyForTakerFeeBtc;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
@@ -367,7 +376,6 @@ class TakeOfferDataModel extends ActivatableDataModel {
     void applyAmount(Coin amount) {
         this.amount.set(amount);
 
-        updateTradeFee();
         calculateTotalToPay();
     }
 
@@ -375,10 +383,12 @@ class TakeOfferDataModel extends ActivatableDataModel {
         // Taker pays 2 times the tx fee because the mining fee might be different when maker created the offer
         // and reserved his funds, so that would not work well with dynamic fees.
         // The mining fee for the takeOfferFee tx is deducted from the createOfferFee and not visible to the trader
+        final Coin takerFee = getTakerFee();
         if (offer != null && amount.get() != null && takerFee != null) {
             Coin feeAndSecDeposit = getTotalTxFee().add(securityDeposit);
-            if (isCurrencyForTakerFeeBtc)
+            if (isCurrencyForTakerFeeBtc()) {
                 feeAndSecDeposit = feeAndSecDeposit.add(takerFee);
+            }
             if (isBuyOffer())
                 totalToPayAsCoin.set(feeAndSecDeposit.add(amount.get()));
             else
@@ -393,20 +403,29 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return getDirection() == OfferPayload.Direction.BUY;
     }
 
-    void updateTradeFee() {
+    @Nullable
+    Coin getTakerFee(boolean isCurrencyForTakerFeeBtc) {
         Coin amount = this.amount.get();
         if (amount != null) {
             // TODO write unit test for that
-            takerFee = CoinUtil.getFeePerBtc(Coin.valueOf(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc)), amount);
-            takerFee = Coin.valueOf(Math.max(takerFee.value, FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc)));
+            Coin feePerBtc = CoinUtil.getFeePerBtc(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc), amount);
+            return CoinUtil.maxCoin(feePerBtc, FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc));
+        } else {
+            return null;
         }
     }
 
+    @Nullable
+    public Coin getTakerFee() {
+        return getTakerFee(isCurrencyForTakerFeeBtc());
+    }
+
+
     @SuppressWarnings("PointlessBooleanExpression")
     private void updateBalance() {
-        Coin tradeWalletBalance = walletService.getBalanceForAddress(addressEntry.getAddress());
+        Coin tradeWalletBalance = btcWalletService.getBalanceForAddress(addressEntry.getAddress());
         if (useSavingsWallet) {
-            Coin savingWalletBalance = walletService.getSavingWalletBalance();
+            Coin savingWalletBalance = btcWalletService.getSavingWalletBalance();
             totalAvailableBalance = savingWalletBalance.add(tradeWalletBalance);
             if (totalToPayAsCoin.get() != null) {
                 if (totalAvailableBalance.compareTo(totalToPayAsCoin.get()) > 0)
@@ -441,8 +460,8 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     public void swapTradeToSavings() {
-        walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
-        walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
+        btcWalletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
+        btcWalletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
     }
 
   /*  private void setFeeFromFundingTx(Coin fee) {
@@ -491,15 +510,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
         return CurrencyUtil.getNameByCode(offer.getCurrencyCode());
     }
 
-    public Coin getTakerFee() {
-        return takerFee;
-    }
-
     public Coin getTotalTxFee() {
-        if (isCurrencyForTakerFeeBtc)
+        if (isCurrencyForTakerFeeBtc())
             return txFeeFromFeeService.multiply(3);
         else
-            return txFeeFromFeeService.multiply(3).subtract(takerFee);
+            return txFeeFromFeeService.multiply(3).subtract(getTakerFee());
     }
 
     public AddressEntry getAddressEntry() {
@@ -520,5 +535,9 @@ class TakeOfferDataModel extends ActivatableDataModel {
 
     public Coin getSellerSecurityDeposit() {
         return offer.getSellerSecurityDeposit();
+    }
+
+    public Coin getBsqBalance() {
+        return bsqWalletService.getAvailableBalance();
     }
 }
