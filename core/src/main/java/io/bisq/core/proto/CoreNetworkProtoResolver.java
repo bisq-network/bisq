@@ -2,7 +2,6 @@ package io.bisq.core.proto;
 
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.crypto.SealedAndSigned;
-import io.bisq.common.locale.CountryUtil;
 import io.bisq.common.network.Msg;
 import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.core.alert.Alert;
@@ -19,12 +18,11 @@ import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMsg;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.filter.Filter;
-import io.bisq.core.filter.PaymentAccountFilter;
 import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.messages.OfferAvailabilityRequest;
 import io.bisq.core.offer.messages.OfferAvailabilityResponse;
-import io.bisq.core.payment.payload.*;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.messages.*;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.generated.protobuffer.PB;
@@ -48,7 +46,6 @@ import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.util.CollectionUtils;
@@ -57,7 +54,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.bisq.generated.protobuffer.PB.Envelope.MessageCase.*;
+import static io.bisq.generated.protobuffer.PB.Msg.MessageCase.*;
 
 /**
  * If the Messages class is giving errors in IntelliJ, you should change the IntelliJ IDEA Platform Properties file,
@@ -79,11 +76,11 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Handle by Envelope.MessagesCase
+    // Handle by Msg.MessagesCase
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Optional<Msg> fromProto(PB.Envelope envelope) {
+    public Optional<Msg> fromProto(PB.Msg envelope) {
         if (Objects.isNull(envelope)) {
             log.warn("fromProtoBuf called with empty envelope.");
             return Optional.empty();
@@ -198,7 +195,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     // Msg
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static Msg getOfferAvailabilityRequest(PB.Envelope envelope) {
+    private static Msg getOfferAvailabilityRequest(PB.Msg envelope) {
         PB.OfferAvailabilityRequest msg = envelope.getOfferAvailabilityRequest();
         return new OfferAvailabilityRequest(msg.getOfferId(), PubKeyRing.fromProto(msg.getPubKeyRing()), msg.getTakersTradePrice());
     }
@@ -216,7 +213,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 payoutTxPublishedMessage.getUid());
     }
 
-    private static Msg getOfferAvailabilityResponse(PB.Envelope envelope) {
+    private static Msg getOfferAvailabilityResponse(PB.Msg envelope) {
         PB.OfferAvailabilityResponse msg = envelope.getOfferAvailabilityResponse();
         return new OfferAvailabilityResponse(msg.getOfferId(),
                 AvailabilityResult.valueOf(
@@ -225,7 +222,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
 
 
     @NotNull
-    private static Msg getPrefixedSealedAndSignedMessage(PB.Envelope envelope) {
+    private static Msg getPrefixedSealedAndSignedMessage(PB.Msg envelope) {
         return getPrefixedSealedAndSignedMessage(envelope.getPrefixedSealedAndSignedMessage());
     }
 
@@ -355,11 +352,11 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
         return new RemoveMailboxDataMsg(getProtectedMailBoxStorageEntry(msg.getProtectedStorageEntry()));
     }
 
-    public static Msg getAddDataMessage(PB.Envelope envelope) {
+    public static Msg getAddDataMessage(PB.Msg envelope) {
         return new AddDataMsg(getProtectedOrMailboxStorageEntry(envelope.getAddDataMessage().getEntry()));
     }
 
-    private static Msg getRemoveDataMessage(PB.Envelope envelope) {
+    private static Msg getRemoveDataMessage(PB.Msg envelope) {
         return new RemoveDataMsg(getProtectedStorageEntry(envelope.getRemoveDataMessage().getProtectedStorageEntry()));
     }
 
@@ -374,7 +371,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getGetDataResponse(PB.Envelope envelope) {
+    private static Msg getGetDataResponse(PB.Msg envelope) {
         HashSet<ProtectedStorageEntry> set = new HashSet<>(
                 envelope.getGetDataResponse().getDataSetList()
                         .stream()
@@ -385,7 +382,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getGetPeersResponse(PB.Envelope envelope) {
+    private static Msg getGetPeersResponse(PB.Msg envelope) {
         Msg result;
         PB.GetPeersResponse msg = envelope.getGetPeersResponse();
         HashSet<Peer> set = new HashSet<>(
@@ -399,7 +396,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getGetPeersRequest(PB.Envelope envelope) {
+    private static Msg getGetPeersRequest(PB.Msg envelope) {
         NodeAddress nodeAddress;
         Msg result;
         PB.GetPeersRequest msg = envelope.getGetPeersRequest();
@@ -415,7 +412,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getGetUpdatedDataRequest(PB.Envelope envelope) {
+    private static Msg getGetUpdatedDataRequest(PB.Msg envelope) {
         NodeAddress nodeAddress;
         Msg result;
         PB.GetUpdatedDataRequest msg = envelope.getGetUpdatedDataRequest();
@@ -426,7 +423,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getPreliminaryGetDataRequest(PB.Envelope envelope) {
+    private static Msg getPreliminaryGetDataRequest(PB.Msg envelope) {
         Msg result;
         result = new PreliminaryGetDataRequest(envelope.getPreliminaryGetDataRequest().getNonce(),
                 ProtoUtil.getByteSet(envelope.getPreliminaryGetDataRequest().getExcludedKeysList()));
@@ -434,14 +431,14 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getCloseConnectionMessage(PB.Envelope envelope) {
+    private static Msg getCloseConnectionMessage(PB.Msg envelope) {
         Msg result;
         result = new CloseConnectionMsg(envelope.getCloseConnectionMessage().getReason());
         return result;
     }
 
     @NotNull
-    private static Msg getRefreshTTLMessage(PB.Envelope envelope) {
+    private static Msg getRefreshTTLMessage(PB.Msg envelope) {
         Msg result;
         PB.RefreshTTLMessage msg = envelope.getRefreshTtlMessage();
         result = new RefreshTTLMsg(msg.getHashOfDataAndSeqNr().toByteArray(),
@@ -450,14 +447,14 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getPong(PB.Envelope envelope) {
+    private static Msg getPong(PB.Msg envelope) {
         Msg result;
         result = new Pong(envelope.getPong().getRequestNonce());
         return result;
     }
 
     @NotNull
-    private static Msg getPing(PB.Envelope envelope) {
+    private static Msg getPing(PB.Msg envelope) {
         Msg result;
         result = new Ping(envelope.getPing().getNonce(), envelope.getPing().getLastRoundTripTime());
         return result;

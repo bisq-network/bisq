@@ -60,8 +60,8 @@ public final class FiatTransferStartedMsg extends TradeMsg implements MailboxMsg
     }
 
     @Override
-    public PB.Envelope toEnvelopeProto() {
-        PB.Envelope.Builder baseEnvelope = Msg.getEnv();
+    public PB.Msg toEnvelopeProto() {
+        PB.Msg.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setFiatTransferStartedMessage(baseEnvelope.getFiatTransferStartedMessageBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)

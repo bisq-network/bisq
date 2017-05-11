@@ -46,8 +46,8 @@ public final class DisputeResultMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.Envelope toEnvelopeProto() {
-        PB.Envelope.Builder baseEnvelope = Msg.getEnv();
+    public PB.Msg toEnvelopeProto() {
+        PB.Msg.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
                 .setDisputeResult(disputeResult.toProto())
                 .setMyNodeAddress(myNodeAddress.toProto())

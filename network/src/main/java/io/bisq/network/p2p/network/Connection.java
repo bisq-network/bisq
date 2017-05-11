@@ -193,7 +193,7 @@ public class Connection implements MessageListener {
                         Thread.sleep(50);
                     }
 
-                    PB.Envelope envelope;
+                    PB.Msg envelope;
 
                     lastSendTimeStamp = now;
                     String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
@@ -762,11 +762,11 @@ public class Connection implements MessageListener {
                         }
 
                         // Reading the protobuffer message from the inputstream
-                        PB.Envelope envelope;
+                        PB.Msg envelope;
                         try {
                             //TODO check
                             // if (protoInputStream.available() > 0) {
-                            envelope = PB.Envelope.parseDelimitedFrom(protoInputStream);
+                            envelope = PB.Msg.parseDelimitedFrom(protoInputStream);
                            /* } else {
                                 // we probably got a network issue so return here
                                // stop();
@@ -846,7 +846,7 @@ public class Connection implements MessageListener {
                             return;
 
                         // Check P2P network ID
-                        int messageVersion = envelope.getP2PMessageVersion();
+                        int messageVersion = envelope.getMsgVersion();
                         if (messageVersion != Version.getP2PMessageVersion()) {
                             reportInvalidRequest(RuleViolation.WRONG_NETWORK_ID);
                             if (DevEnv.DEV_MODE)

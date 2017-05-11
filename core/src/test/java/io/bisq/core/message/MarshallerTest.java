@@ -17,8 +17,8 @@ public class MarshallerTest {
     public void getBaseEnvelopeTest() {
         PB.Ping Ping = PB.Ping.newBuilder().setNonce(100).build();
         PB.Pong Pong = PB.Pong.newBuilder().setRequestNonce(1000).build();
-        PB.Envelope envelope1 = PB.Envelope.newBuilder().setPing(Ping).build();
-        PB.Envelope envelope2 = PB.Envelope.newBuilder().setPong(Pong).build();
+        PB.Msg envelope1 = PB.Msg.newBuilder().setPing(Ping).build();
+        PB.Msg envelope2 = PB.Msg.newBuilder().setPong(Pong).build();
         log.info(Ping.toString());
         log.info(Pong.toString());
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -26,12 +26,12 @@ public class MarshallerTest {
             envelope1.writeDelimitedTo(outputStream);
             envelope2.writeDelimitedTo(outputStream);
             ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-            PB.Envelope envelope3 = PB.Envelope.parseDelimitedFrom(inputStream);
-            PB.Envelope envelope4 = PB.Envelope.parseDelimitedFrom(inputStream);
+            PB.Msg envelope3 = PB.Msg.parseDelimitedFrom(inputStream);
+            PB.Msg envelope4 = PB.Msg.parseDelimitedFrom(inputStream);
 
 
             log.info("message: {}", envelope3.getPing());
-            //log.info("peerseesd empty: '{}'",envelope3.getPong().equals(PB.Envelope.) == "");
+            //log.info("peerseesd empty: '{}'",envelope3.getPong().equals(PB.Msg.) == "");
             assertTrue(isPing(envelope3));
             assertTrue(!isPing(envelope4));
 
@@ -45,7 +45,7 @@ public class MarshallerTest {
 
     }
 
-    public boolean isPing(PB.Envelope envelope) {
+    public boolean isPing(PB.Msg envelope) {
         return !envelope.getPing().getDefaultInstanceForType().equals(envelope.getPing());
     }
 }

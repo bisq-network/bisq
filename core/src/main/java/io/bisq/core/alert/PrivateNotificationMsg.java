@@ -45,8 +45,8 @@ public class PrivateNotificationMsg implements MailboxMsg {
     }
 
     @Override
-    public PB.Envelope toEnvelopeProto() {
-        PB.Envelope.Builder baseEnvelope = Msg.getEnv();
+    public PB.Msg toEnvelopeProto() {
+        PB.Msg.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setPrivateNotificationMessage(baseEnvelope.getPrivateNotificationMessageBuilder()
                 .setMessageVersion(messageVersion)
                 .setUid(uid)

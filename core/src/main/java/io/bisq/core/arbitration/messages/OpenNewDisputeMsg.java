@@ -46,8 +46,8 @@ public final class OpenNewDisputeMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.Envelope toEnvelopeProto() {
-        PB.Envelope.Builder baseEnvelope = Msg.getEnv();
+    public PB.Msg toEnvelopeProto() {
+        PB.Msg.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setOpenNewDisputeMessage(PB.OpenNewDisputeMessage.newBuilder()
                 .setDispute(dispute.toProto()).setMyNodeAddress(myNodeAddress.toProto()).setUid(getUID())).build();
     }

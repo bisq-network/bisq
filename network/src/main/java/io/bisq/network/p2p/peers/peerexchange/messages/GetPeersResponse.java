@@ -44,8 +44,8 @@ public final class GetPeersResponse extends PeerExchangeMsg implements Supported
     }
 
     @Override
-    public PB.Envelope toEnvelopeProto() {
-        PB.Envelope.Builder envelopeBuilder = Msg.getEnv();
+    public PB.Msg toEnvelopeProto() {
+        PB.Msg.Builder envelopeBuilder = Msg.getEnv();
 
         PB.GetPeersResponse.Builder msgBuilder = PB.GetPeersResponse.newBuilder();
         msgBuilder.setRequestNonce(requestNonce);

@@ -6,11 +6,11 @@ import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 
 public interface Msg extends Marshaller {
-    static PB.Envelope.Builder getEnv() {
-        return PB.Envelope.newBuilder().setP2PMessageVersion(Version.getP2PMessageVersion());
+    static PB.Msg.Builder getEnv() {
+        return PB.Msg.newBuilder().setMsgVersion(Version.getP2PMessageVersion());
     }
 
     int getMessageVersion();
 
-    PB.Envelope toEnvelopeProto();
+    PB.Msg toEnvelopeProto();
 }

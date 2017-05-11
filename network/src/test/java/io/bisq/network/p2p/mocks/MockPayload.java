@@ -21,7 +21,7 @@ public final class MockPayload implements Msg, ExpirablePayload {
     }
 
     @Override
-    public PB.Envelope toEnvelopeProto() {
+    public PB.Msg toEnvelopeProto() {
         throw new NotImplementedException();
     }
 

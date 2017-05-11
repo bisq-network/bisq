@@ -176,7 +176,7 @@ public class TestUtils {
     public static NetworkProtoResolver getNetworkProtoResolver() {
         return new NetworkProtoResolver() {
             @Override
-            public Optional<Msg> fromProto(PB.Envelope envelope) {
+            public Optional<Msg> fromProto(PB.Msg envelope) {
                 return Optional.empty();
             }
         };

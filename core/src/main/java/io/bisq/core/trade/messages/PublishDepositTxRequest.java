@@ -88,8 +88,8 @@ public final class PublishDepositTxRequest extends TradeMsg implements MailboxMs
     }
 
     @Override
-    public PB.Envelope toEnvelopeProto() {
-        PB.Envelope.Builder baseEnvelope = Msg.getEnv();
+    public PB.Msg toEnvelopeProto() {
+        PB.Msg.Builder baseEnvelope = Msg.getEnv();
         return baseEnvelope.setPublishDepositTxRequest(baseEnvelope.getPublishDepositTxRequestBuilder()
                 .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)

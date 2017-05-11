@@ -31,8 +31,8 @@ public final class CloseConnectionMsg implements Msg {
     }
 
     //@Override
-    public PB.Envelope toEnvelopeProto() {
-        PB.Envelope.Builder envelopeBuilder = Msg.getEnv();
+    public PB.Msg toEnvelopeProto() {
+        PB.Msg.Builder envelopeBuilder = Msg.getEnv();
         return envelopeBuilder.setCloseConnectionMessage(envelopeBuilder.getCloseConnectionMessageBuilder()
                 .setMessageVersion(messageVersion)
                 .setReason(reason)).build();

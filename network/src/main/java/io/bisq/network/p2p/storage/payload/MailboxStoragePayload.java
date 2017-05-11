@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Envelope message which support a time to live and sender and receiver's pub keys for storage operations.
+ * Payload which supports a time to live and sender and receiver's pub keys for storage operations.
  * It  differs from the ProtectedExpirableMessage in the way that the sender is permitted to do an add operation
  * but only the receiver is permitted to remove the data.
  * That is the typical requirement for a mailbox like system.
