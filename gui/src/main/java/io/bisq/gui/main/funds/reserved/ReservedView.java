@@ -127,7 +127,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
-        openOfferManager.getOpenOffers().addListener(openOfferListChangeListener);
+        openOfferManager.getOpenOfferList().addListener(openOfferListChangeListener);
         tradeManager.getTrades().addListener(tradeListChangeListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
@@ -138,7 +138,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
-        openOfferManager.getOpenOffers().removeListener(openOfferListChangeListener);
+        openOfferManager.getOpenOfferList().removeListener(openOfferListChangeListener);
         tradeManager.getTrades().removeListener(tradeListChangeListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(ReservedListItem::cleanup);
@@ -152,7 +152,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(ReservedListItem::cleanup);
-        observableList.setAll(openOfferManager.getOpenOffers().stream()
+        observableList.setAll(openOfferManager.getOpenOfferList().stream()
                 .map(openOffer -> new ReservedListItem(openOffer,
                         walletService.getOrCreateAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE),
                         walletService,

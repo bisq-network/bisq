@@ -24,6 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Objects;
@@ -58,21 +60,18 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
     @Inject
     public CoreDiskProtoResolver(Provider<Preferences> preferencesProvider,
                                  Provider<AddressEntryList> addressEntryListProvider,
-                                 Storage<TradableList<OpenOffer>> openOfferStorage,
-                                 Storage<TradableList<BuyerAsMakerTrade>> buyerAsMakerTradeStorage,
-                                 Storage<TradableList<BuyerAsTakerTrade>> buyerAsTakerTradeStorage,
-                                 Storage<TradableList<SellerAsMakerTrade>> sellerAsMakerTradeStorage,
-                                 Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage,
-                                 Provider<BtcWalletService> btcWalletService
+                                 Provider<BtcWalletService> btcWalletService,
+                                 @Named(Storage.STORAGE_DIR) File storageDir
     ) {
         this.preferencesProvider = preferencesProvider;
         this.addressEntryListProvider = addressEntryListProvider;
-        this.openOfferStorage = openOfferStorage;
-        this.buyerAsMakerTradeStorage = buyerAsMakerTradeStorage;
-        this.buyerAsTakerTradeStorage = buyerAsTakerTradeStorage;
-        this.sellerAsMakerTradeStorage = sellerAsMakerTradeStorage;
-        this.sellerAsTakerTradeStorage = sellerAsTakerTradeStorage;
         this.btcWalletService = btcWalletService;
+
+        openOfferStorage = new Storage<>(storageDir, this);
+        buyerAsMakerTradeStorage = new Storage<>(storageDir, this);
+        buyerAsTakerTradeStorage = new Storage<>(storageDir, this);
+        sellerAsMakerTradeStorage = new Storage<>(storageDir, this);
+        sellerAsTakerTradeStorage = new Storage<>(storageDir, this);
     }
 
     @Override
@@ -124,11 +123,11 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
 
     private Persistable getTradeStatisticsList(PB.TradeStatisticsList tradeStatisticsList) {
         return new ListPersistable<>(tradeStatisticsList.getTradeStatisticsList().stream()
-                .map(tradeStatistics -> TradeStatistics.fromProto(tradeStatistics)).collect(Collectors.toList()));
+                .map(TradeStatistics::fromProto).collect(Collectors.toList()));
     }
 
     private Persistable getPeersList(PB.PeersList envelope) {
-        return new ListPersistable<>(envelope.getPeersList().stream().map(peer -> Peer.fromProto(peer))
+        return new ListPersistable<>(envelope.getPeersList().stream().map(Peer::fromProto)
                 .collect(Collectors.toList()));
     }
 

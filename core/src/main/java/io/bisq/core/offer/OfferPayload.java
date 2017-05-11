@@ -48,17 +48,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnlinePayload {
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Static
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    //TODO remove once PB work is completed
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    @JsonExclude
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
     public static final long TTL = TimeUnit.MINUTES.toMillis(DevEnv.STRESS_TEST_MODE ? 6 : 6);
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
@@ -263,6 +253,10 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
             return getCounterCurrencyCode();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public PB.StoragePayload toProto() {

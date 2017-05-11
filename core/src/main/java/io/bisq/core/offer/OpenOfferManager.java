@@ -80,7 +80,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final ClosedTradableManager closedTradableManager;
     private final Preferences preferences;
 
-    private final TradableList<OpenOffer> openOffers;
+    private final TradableList<OpenOffer> openOfferList;
     private final Storage<TradableList<OpenOffer>> openOffersStorage;
     private boolean stopped;
     private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, retryRepublishOffersTimer;
@@ -114,8 +114,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.preferences = preferences;
 
         openOffersStorage = new Storage<>(storageDir, persistenceProtoResolver);
-        openOffers = new TradableList<>(openOffersStorage, "OpenOffers");
-        openOffers.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
+        openOfferList = new TradableList<>(openOffersStorage, "OpenOffers");
+        openOfferList.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
 
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -155,9 +155,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         // we remove own offers from offerbook when we go offline
         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
 
-        final int size = openOffers.size();
+        final int size = openOfferList.size();
         if (offerBookService.isBootstrapped()) {
-            openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayload()));
+            openOfferList.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayload()));
             if (completeHandler != null)
                 UserThread.runAfter(completeHandler::run, size * 200 + 500, TimeUnit.MILLISECONDS);
         } else {
@@ -167,7 +167,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     public void removeAllOpenOffers(@Nullable Runnable completeHandler) {
-        removeOpenOffers(getOpenOffers(), completeHandler);
+        removeOpenOffers(getOpenOfferList(), completeHandler);
     }
 
     public void removeOpenOffers(List<OpenOffer> openOffers, @Nullable Runnable completeHandler) {
@@ -276,7 +276,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 model,
                 transaction -> {
                     OpenOffer openOffer = new OpenOffer(offer, openOffersStorage);
-                    openOffers.add(openOffer);
+                    openOfferList.add(openOffer);
                     openOffersStorage.queueUpForSave();
                     resultHandler.handleResult(transaction);
                     if (!stopped) {
@@ -312,7 +312,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 () -> {
                     offer.setState(Offer.State.REMOVED);
                     openOffer.setState(OpenOffer.State.CANCELED);
-                    openOffers.remove(openOffer);
+                    openOfferList.remove(openOffer);
                     closedTradableManager.add(openOffer);
                     walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
                     walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
@@ -324,7 +324,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     // Close openOffer after deposit published
     public void closeOpenOffer(Offer offer) {
         findOpenOffer(offer.getId()).ifPresent(openOffer -> {
-            openOffers.remove(openOffer);
+            openOfferList.remove(openOffer);
             openOffer.setState(OpenOffer.State.CLOSED);
             offerBookService.removeOffer(openOffer.getOffer().getOfferPayload(),
                     () -> log.trace("Successful removed offer"),
@@ -345,16 +345,16 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         return offer.isMyOffer(keyRing);
     }
 
-    public ObservableList<OpenOffer> getOpenOffers() {
-        return openOffers.getObservableList();
+    public ObservableList<OpenOffer> getOpenOfferList() {
+        return openOfferList.getObservableList();
     }
 
     public Optional<OpenOffer> findOpenOffer(String offerId) {
-        return openOffers.stream().filter(openOffer -> openOffer.getId().equals(offerId)).findAny();
+        return openOfferList.stream().filter(openOffer -> openOffer.getId().equals(offerId)).findAny();
     }
 
     public Optional<OpenOffer> getOpenOfferById(String offerId) {
-        return openOffers.stream().filter(e -> e.getId().equals(offerId)).findFirst();
+        return openOfferList.stream().filter(e -> e.getId().equals(offerId)).findFirst();
     }
 
 
@@ -444,8 +444,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void republishOffers() {
-        int size = openOffers.size();
-        final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers.getList());
+        int size = openOfferList.size();
+        final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOfferList.getList());
         Log.traceCall("Number of offer for republish: " + size);
         if (!stopped) {
             stopPeriodicRefreshOffersTimer();
@@ -457,7 +457,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 final long maxDelay = (i + 2) * delay;
                 final OpenOffer openOffer = openOffersList.get(i);
                 UserThread.runAfterRandomDelay(() -> {
-                    if (openOffers.contains(openOffer)) {
+                    if (openOfferList.contains(openOffer)) {
                         // The openOffer.getId().contains("_") check is because there was once a version
                         // where we encoded the version nr in the offer id with a "_" as separator.
                         // That caused several issues and was reverted. So if there are still old offers out with that
@@ -527,11 +527,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         if (periodicRefreshOffersTimer == null)
             periodicRefreshOffersTimer = UserThread.runPeriodically(() -> {
                         if (!stopped) {
-                            int size = openOffers.size();
+                            int size = openOfferList.size();
                             Log.traceCall("Number of offer for refresh: " + size);
 
                             //we clone our list as openOffers might change during our delayed call
-                            final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers.getList());
+                            final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOfferList.getList());
                             for (int i = 0; i < size; i++) {
                                 // we delay to avoid reaching throttle limits
                                 // roughly 4 offers per second
@@ -542,7 +542,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                 final OpenOffer openOffer = openOffersList.get(i);
                                 UserThread.runAfterRandomDelay(() -> {
                                     // we need to check if in the meantime the offer has been removed
-                                    if (openOffers.contains(openOffer))
+                                    if (openOfferList.contains(openOffer))
                                         refreshOffer(openOffer);
                                 }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
                             }

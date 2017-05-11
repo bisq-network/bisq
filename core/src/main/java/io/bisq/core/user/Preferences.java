@@ -1,7 +1,6 @@
 package io.bisq.core.user;
 
 import com.google.protobuf.Message;
-import com.google.protobuf.Parser;
 import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
@@ -693,10 +692,5 @@ public final class Preferences implements Persistable {
         Optional.ofNullable(selectedPaymentAccountForCreateOffer).ifPresent(
                 account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProto()));
         return PB.DiskEnvelope.newBuilder().setPreferences(builder).build();
-    }
-
-    @Override
-    public Parser getParser() {
-        return null;
     }
 }

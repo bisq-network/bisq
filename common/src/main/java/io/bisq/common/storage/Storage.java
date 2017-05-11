@@ -177,7 +177,7 @@ public class Storage<T extends Persistable> {
 
                 return persistedObject;
             } catch (Throwable t) {
-                log.error("Version of persisted class has changed. We cannot read the persisted data anymore. " +
+                log.error("We cannot read the persisted data. " +
                         "We make a backup and remove the inconsistent file. fileName=" + fileName);
                 log.error(t.getMessage());
                 try {

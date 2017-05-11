@@ -113,7 +113,7 @@ public class FileManager<T extends Persistable> {
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
             persistable = persistenceProtoResolver.fromProto(PB.DiskEnvelope.parseDelimitedFrom(fileInputStream));
         } catch (Throwable t) {
-            log.warn("Exception at proto read: " + t.getMessage() + " " + file.getName());
+            log.error("Exception at proto read: " + t.getMessage() + " " + file.getName());
         }
 
         if (persistable.isPresent()) {

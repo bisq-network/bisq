@@ -108,7 +108,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     }
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
-        boolean isPaymentAccountUsed = openOfferManager.getOpenOffers().stream()
+        boolean isPaymentAccountUsed = openOfferManager.getOpenOfferList().stream()
                 .filter(o -> o.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()))
                 .findAny()
                 .isPresent();

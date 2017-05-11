@@ -20,7 +20,6 @@ package io.bisq.core.offer;
 import com.google.protobuf.Message;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
-import io.bisq.common.app.Version;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.TradableList;
@@ -29,15 +28,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.util.Date;
 
 @EqualsAndHashCode
 @Slf4j
 public final class OpenOffer implements Tradable {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state.
     private static final long TIMEOUT_SEC = 30;
     transient private Timer timeoutTimer;
@@ -60,6 +55,32 @@ public final class OpenOffer implements Tradable {
         this.offer = offer;
         this.storage = storage;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public Message toProto() {
+        final PB.OpenOffer build = PB.OpenOffer.newBuilder()
+                .setOffer(offer.toProto())
+                .setState(PB.OpenOffer.State.valueOf(state.name()))
+                .build();
+        return build;
+    }
+
+    public static Tradable fromProto(PB.OpenOffer proto, Storage<TradableList<OpenOffer>> storage) {
+        OpenOffer openOffer = new OpenOffer(Offer.fromProto(proto.getOffer()), storage);
+        // If we have a reserved state from the local db we reset it
+        if (openOffer.getState() == State.RESERVED)
+            openOffer.setState(State.AVAILABLE);
+        return openOffer;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Date getDate() {
         return offer.getDate();
@@ -116,21 +137,6 @@ public final class OpenOffer implements Tradable {
                 "\n\toffer=" + offer +
                 "\n\tstate=" + state +
                 '}';
-    }
-
-    @Override
-    public Message toProto() {
-        return PB.OpenOffer.newBuilder().setOffer(offer.toProto())
-                .setState(PB.OpenOffer.State.valueOf(state.name())).build();
-    }
-
-    // TODO set storage
-    public static Tradable fromProto(PB.OpenOffer proto, Storage<TradableList<OpenOffer>> storage) {
-        OpenOffer openOffer = new OpenOffer(Offer.fromProto(proto.getOffer()), storage);
-        // If we have a reserved state from the local db we reset it
-        if (openOffer.getState() == State.RESERVED)
-            openOffer.setState(State.AVAILABLE);
-        return openOffer;
     }
 }
 

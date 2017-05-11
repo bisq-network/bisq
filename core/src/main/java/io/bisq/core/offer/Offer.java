@@ -1,6 +1,5 @@
 package io.bisq.core.offer;
 
-import com.google.protobuf.Message;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
@@ -29,7 +28,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.Date;

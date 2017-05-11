@@ -193,21 +193,18 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             UserThread.runAfter(() -> {
                 amount.set("0.001");
                 minAmount.set(amount.get());
-                UserThread.runAfter(() -> {
-                    price.set("0.001");
-                    onFocusOutPriceAsPercentageTextField(true, false);
-                    applyMakerFee();
-                }, 200, TimeUnit.MILLISECONDS);
-
+                price.set("0.001");
+                onFocusOutPriceAsPercentageTextField(true, false);
+                applyMakerFee();
+                updateButtonDisableState();
                 setAmountToModel();
                 setMinAmountToModel();
                 setPriceToModel();
                 dataModel.calculateVolume();
-
                 dataModel.calculateTotalToPay();
                 updateButtonDisableState();
                 updateSpinnerInfo();
-            }, 10, TimeUnit.MILLISECONDS);
+            }, 100, TimeUnit.MILLISECONDS);
         }
 
         addBindings();

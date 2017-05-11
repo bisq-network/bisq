@@ -18,7 +18,6 @@
 package io.bisq.core.trade;
 
 import com.google.protobuf.Message;
-import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.proto.ProtoHelper;
 import io.bisq.common.storage.Storage;
@@ -28,8 +27,7 @@ import io.bisq.generated.protobuffer.PB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.Getter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,20 +35,14 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public final class TradableList<T extends Tradable> implements Persistable {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
-    private static final Logger log = LoggerFactory.getLogger(TradableList.class);
-
-    transient final private Storage<TradableList<T>> storage;
-    // Use getObservableList() also class locally, to be sure that object exists in case we use the object as deserialized form
-    transient private ObservableList<T> observableList;
-
     @Getter
     private List<T> list = new ArrayList<>();
 
-    // Superclass is ArrayList, which will be persisted
+    transient final private Storage<TradableList<T>> storage;
+    transient private ObservableList<T> observableList = FXCollections.observableArrayList(list);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -59,18 +51,71 @@ public final class TradableList<T extends Tradable> implements Persistable {
     public TradableList(Storage<TradableList<T>> storage, String fileName) {
         this.storage = storage;
 
-        TradableList<T> persisted = storage.initAndGetPersisted(this, fileName);
-        if (persisted != null) {
+        // TradableList<T> persisted = storage.initAndGetPersisted(this, fileName);
+        TradableList<T> persisted = storage.initAndGetPersistedWithFileName(fileName);
+        if (persisted != null)
             list.addAll(persisted.getList());
-        }
-        observableList = FXCollections.observableArrayList(list);
     }
 
-    public TradableList(Storage<TradableList<T>> storage, List<T> list) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private TradableList(Storage<TradableList<T>> storage, List<T> list) {
         this.storage = storage;
-        list.addAll(list);
-        observableList = FXCollections.observableArrayList(list);
+        this.list.addAll(list);
     }
+
+    @Override
+    public Message toProto() {
+        return PB.DiskEnvelope.newBuilder().setTradableList(PB.TradableList.newBuilder()
+                .addAllTradable(ProtoHelper.collectionToProto(list))).build();
+    }
+
+    public static TradableList fromProto(PB.TradableList proto,
+                                         Storage<TradableList<OpenOffer>> openOfferStorage,
+                                         Storage<TradableList<BuyerAsMakerTrade>> buyerAsMakerTradeStorage,
+                                         Storage<TradableList<BuyerAsTakerTrade>> buyerAsTakerTradeStorage,
+                                         Storage<TradableList<SellerAsMakerTrade>> sellerAsMakerTradeStorage,
+                                         Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage,
+                                         BtcWalletService btcWalletService) {
+        List list = proto.getTradableList().stream().map(tradable -> {
+            switch (tradable.getMessageCase()) {
+                case OPEN_OFFER:
+                    return OpenOffer.fromProto(tradable.getOpenOffer(), openOfferStorage);
+                case BUYER_AS_MAKER_TRADE:
+                    return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), buyerAsMakerTradeStorage, btcWalletService);
+                case BUYER_AS_TAKER_TRADE:
+                    return BuyerAsTakerTrade.fromProto(tradable.getBuyerAsTakerTrade(), buyerAsTakerTradeStorage, btcWalletService);
+                case SELLER_AS_MAKER_TRADE:
+                    return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), sellerAsMakerTradeStorage, btcWalletService);
+                case SELLER_AS_TAKER_TRADE:
+                    return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), sellerAsTakerTradeStorage, btcWalletService);
+            }
+            return null;
+        }).collect(Collectors.toList());
+
+        switch (list.get(0).getClass().getSimpleName()) {
+            case "OpenOffer":
+                return new TradableList<OpenOffer>(openOfferStorage, list);
+            case "BuyerAsMakerTrade":
+                return new TradableList<BuyerAsMakerTrade>(buyerAsMakerTradeStorage, list);
+            case "BuyerAsTakerTrade":
+                return new TradableList<BuyerAsTakerTrade>(buyerAsTakerTradeStorage, list);
+            case "SellerAsMakerTrade":
+                return new TradableList<SellerAsMakerTrade>(sellerAsMakerTradeStorage, list);
+            case "SellerAsTakerTrade":
+                return new TradableList<SellerAsTakerTrade>(sellerAsTakerTradeStorage, list);
+        }
+
+        return null;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean add(T tradable) {
         boolean changed = list.add(tradable);
@@ -80,7 +125,7 @@ public final class TradableList<T extends Tradable> implements Persistable {
         return changed;
     }
 
-    public boolean remove(Object tradable) {
+    public boolean remove(T tradable) {
         boolean changed = list.remove(tradable);
         getObservableList().remove(tradable);
         if (changed)
@@ -109,48 +154,5 @@ public final class TradableList<T extends Tradable> implements Persistable {
 
     public boolean contains(T thing) {
         return list.contains(thing);
-    }
-
-    @Override
-    public Message toProto() {
-        return PB.DiskEnvelope.newBuilder().setTradableList(PB.TradableList.newBuilder()
-                .addAllTradable(ProtoHelper.collectionToProto(list))).build();
-    }
-
-    public static TradableList fromProto(PB.TradableList proto, Storage<TradableList<OpenOffer>> openOfferStorage,
-                                         Storage<TradableList<BuyerAsMakerTrade>> buyerAsMakerTradeStorage,
-                                         Storage<TradableList<BuyerAsTakerTrade>> buyerAsTakerTradeStorage,
-                                         Storage<TradableList<SellerAsMakerTrade>> sellerAsMakerTradeStorage,
-                                         Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage,
-                                         BtcWalletService btcWalletService) {
-        List collect = proto.getTradableList().stream().map(tradable -> {
-            switch (tradable.getMessageCase()) {
-                case OPEN_OFFER:
-                    return OpenOffer.fromProto(tradable.getOpenOffer(), openOfferStorage);
-                case BUYER_AS_MAKER_TRADE:
-                    return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), buyerAsMakerTradeStorage, btcWalletService);
-                case BUYER_AS_TAKER_TRADE:
-                    return BuyerAsTakerTrade.fromProto(tradable.getBuyerAsTakerTrade(), buyerAsTakerTradeStorage, btcWalletService);
-                case SELLER_AS_MAKER_TRADE:
-                    return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), sellerAsMakerTradeStorage, btcWalletService);
-                case SELLER_AS_TAKER_TRADE:
-                    return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), sellerAsTakerTradeStorage, btcWalletService);
-            }
-            return null;
-        }).collect(Collectors.toList());
-        switch (collect.get(0).getClass().getSimpleName()) {
-            case "OpenOffer":
-                return new TradableList<OpenOffer>(openOfferStorage, collect);
-            case "BuyerAsMakerTrade":
-                return new TradableList<BuyerAsMakerTrade>(buyerAsMakerTradeStorage, collect);
-            case "BuyerAsTakerTrade":
-                return new TradableList<BuyerAsTakerTrade>(buyerAsTakerTradeStorage, collect);
-            case "SellerAsMakerTrade":
-                return new TradableList<SellerAsMakerTrade>(sellerAsMakerTradeStorage, collect);
-            case "SellerAsTakerTrade":
-                return new TradableList<SellerAsTakerTrade>(sellerAsTakerTradeStorage, collect);
-        }
-
-        return null;
     }
 }
