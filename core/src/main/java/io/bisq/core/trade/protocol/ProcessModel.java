@@ -39,7 +39,7 @@ import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.trade.messages.TradeMsg;
-import io.bisq.core.user.User;
+import io.bisq.core.user.UserModel;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.MailboxMsg;
@@ -73,7 +73,7 @@ public class ProcessModel implements Model, Persistable {
     transient private TradeWalletService tradeWalletService;
     transient private Offer offer;
     @Getter
-    transient private User user;
+    transient private UserModel userModel;
     transient private FilterManager filterManager;
     @Getter
     transient private KeyRing keyRing;
@@ -132,7 +132,7 @@ public class ProcessModel implements Model, Persistable {
                                          BtcWalletService walletService,
                                          BsqWalletService bsqWalletService,
                                          TradeWalletService tradeWalletService,
-                                         User user,
+                                         UserModel userModel,
                                          FilterManager filterManager,
                                          KeyRing keyRing,
                                          boolean useSavingsWallet,
@@ -143,14 +143,14 @@ public class ProcessModel implements Model, Persistable {
         this.btcWalletService = walletService;
         this.bsqWalletService = bsqWalletService;
         this.tradeWalletService = tradeWalletService;
-        this.user = user;
+        this.userModel = userModel;
         this.filterManager = filterManager;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;
         fundsNeededForTradeAsLong = fundsNeededForTrade.value;
         offerId = offer.getId();
-        accountId = user.getAccountId();
+        accountId = userModel.getAccountId();
         pubKeyRing = keyRing.getPubKeyRing();
     }
 
@@ -171,9 +171,9 @@ public class ProcessModel implements Model, Persistable {
     public PaymentAccountPayload getPaymentAccountPayload(Trade trade) {
         PaymentAccount paymentAccount;
         if (trade instanceof MakerTrade)
-            paymentAccount = user.getPaymentAccount(offer.getMakerPaymentAccountId());
+            paymentAccount = userModel.getPaymentAccount(offer.getMakerPaymentAccountId());
         else
-            paymentAccount = user.getPaymentAccount(trade.getTakerPaymentAccountId());
+            paymentAccount = userModel.getPaymentAccount(trade.getTakerPaymentAccountId());
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
     }
 

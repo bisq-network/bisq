@@ -106,7 +106,7 @@ public class TradeStatisticsManager {
 
                 if (storeLocally) {
                     ListPersistable<TradeStatistics> serializable = new ListPersistable<>(tradeStatisticsSet);
-                    serializable.setToProto((list) -> PB.DiskEnvelope.newBuilder()
+                    serializable.setToProto((list) -> PB.Persistable.newBuilder()
                             .setTradeStatisticsList(PB.TradeStatisticsList.newBuilder()
                                     .addAllTradeStatistics(ProtoHelper.collectionToProto(list))).build());
                     statisticsStorage.queueUpForSave(serializable, 2000);

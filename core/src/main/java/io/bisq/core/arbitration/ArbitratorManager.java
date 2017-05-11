@@ -25,7 +25,7 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.User;
+import io.bisq.core.user.UserModel;
 import io.bisq.network.p2p.BootstrapListener;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
@@ -88,7 +88,7 @@ public class ArbitratorManager {
 
     private final KeyRing keyRing;
     private final ArbitratorService arbitratorService;
-    private final User user;
+    private final UserModel userModel;
     private final Preferences preferences;
     private final ObservableMap<NodeAddress, Arbitrator> arbitratorsObservableMap = FXCollections.observableHashMap();
     private final List<Arbitrator> persistedAcceptedArbitrators;
@@ -100,17 +100,17 @@ public class ArbitratorManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ArbitratorManager(KeyRing keyRing, ArbitratorService arbitratorService, User user, Preferences preferences) {
+    public ArbitratorManager(KeyRing keyRing, ArbitratorService arbitratorService, UserModel userModel, Preferences preferences) {
         this.keyRing = keyRing;
         this.arbitratorService = arbitratorService;
-        this.user = user;
+        this.userModel = userModel;
         this.preferences = preferences;
 
-        persistedAcceptedArbitrators = new ArrayList<>(user.getAcceptedArbitrators());
-        user.clearAcceptedArbitrators();
+        persistedAcceptedArbitrators = new ArrayList<>(userModel.getAcceptedArbitrators());
+        userModel.clearAcceptedArbitrators();
 
         // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
-        user.clearAcceptedMediators();
+        userModel.clearAcceptedMediators();
 
         arbitratorService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
@@ -138,7 +138,7 @@ public class ArbitratorManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
-        if (user.getRegisteredArbitrator() != null) {
+        if (userModel.getRegisteredArbitrator() != null) {
             P2PService p2PService = arbitratorService.getP2PService();
             if (p2PService.isBootstrapped())
                 isBootstrapped();
@@ -174,17 +174,17 @@ public class ArbitratorManager {
         arbitratorsObservableMap.values().stream()
                 .filter(arbitrator -> persistedAcceptedArbitrators.contains(arbitrator))
                 .forEach(a -> {
-                    user.addAcceptedArbitrator(a);
-                    user.addAcceptedMediator(getMediator(a)
+                    userModel.addAcceptedArbitrator(a);
+                    userModel.addAcceptedMediator(getMediator(a)
                     );
                 });
 
         if (preferences.isAutoSelectArbitrators()) {
             arbitratorsObservableMap.values().stream()
-                    .filter(user::hasMatchingLanguage)
+                    .filter(userModel::hasMatchingLanguage)
                     .forEach(a -> {
-                        user.addAcceptedArbitrator(a);
-                        user.addAcceptedMediator(getMediator(a)
+                        userModel.addAcceptedArbitrator(a);
+                        userModel.addAcceptedMediator(getMediator(a)
                         );
                     });
         } else {
@@ -192,12 +192,12 @@ public class ArbitratorManager {
             // we use a delay as we might get our matching arbitrator a bit delayed (first we get one we did not selected
             // then we get our selected one - we don't want to activate the first in that case)
             UserThread.runAfter(() -> {
-                if (user.getAcceptedArbitrators().isEmpty()) {
+                if (userModel.getAcceptedArbitrators().isEmpty()) {
                     arbitratorsObservableMap.values().stream()
-                            .filter(user::hasMatchingLanguage)
+                            .filter(userModel::hasMatchingLanguage)
                             .forEach(a -> {
-                                user.addAcceptedArbitrator(a);
-                                user.addAcceptedMediator(getMediator(a)
+                                userModel.addAcceptedArbitrator(a);
+                                userModel.addAcceptedMediator(getMediator(a)
                                 );
                             });
                 }
@@ -220,7 +220,7 @@ public class ArbitratorManager {
     }
 
     public void addArbitrator(Arbitrator arbitrator, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        user.setRegisteredArbitrator(arbitrator);
+        userModel.setRegisteredArbitrator(arbitrator);
         arbitratorsObservableMap.put(arbitrator.getNodeAddress(), arbitrator);
         arbitratorService.addArbitrator(arbitrator,
                 () -> {
@@ -234,9 +234,9 @@ public class ArbitratorManager {
     }
 
     public void removeArbitrator(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
+        Arbitrator registeredArbitrator = userModel.getRegisteredArbitrator();
         if (registeredArbitrator != null) {
-            user.setRegisteredArbitrator(null);
+            userModel.setRegisteredArbitrator(null);
             arbitratorsObservableMap.remove(registeredArbitrator.getNodeAddress());
             arbitratorService.removeArbitrator(registeredArbitrator,
                     () -> {
@@ -278,7 +278,7 @@ public class ArbitratorManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void republishArbitrator() {
-        Arbitrator registeredArbitrator = user.getRegisteredArbitrator();
+        Arbitrator registeredArbitrator = userModel.getRegisteredArbitrator();
         if (registeredArbitrator != null) {
             addArbitrator(registeredArbitrator,
                     this::updateArbitratorMap,

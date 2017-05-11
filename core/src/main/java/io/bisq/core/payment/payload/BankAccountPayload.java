@@ -19,6 +19,7 @@ package io.bisq.core.payment.payload;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.BankUtil;
+import io.bisq.common.locale.CountryUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +27,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.Locale;
 
 @Setter
 @EqualsAndHashCode(callSuper = true)
@@ -57,12 +57,12 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
     }
 
     @Override
-    public String getPaymentDetails(Locale locale) {
-        return "Bank account transfer - " + getPaymentDetailsForTradePopup(locale).replace("\n", ", ");
+    public String getPaymentDetails() {
+        return "Bank account transfer - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
-    public String getPaymentDetailsForTradePopup(Locale locale) {
+    public String getPaymentDetailsForTradePopup() {
         String bankName = BankUtil.isBankNameRequired(countryCode) ?
                 BankUtil.getBankNameLabel(countryCode) + " " + this.bankName + "\n" : "";
         String bankId = BankUtil.isBankIdRequired(countryCode) ?
@@ -83,7 +83,7 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
                 accountNr +
                 accountType +
                 holderIdString +
-                "Country of bank: " + new Locale(locale.getLanguage(), countryCode).getDisplayCountry();
+                "Country of bank: " + CountryUtil.getNameByCode(countryCode);
     }
 
     protected String getHolderIdLabel() {

@@ -38,8 +38,8 @@ public class ViewPathAsString implements Persistable {
 
     @Override
     public Message toProto() {
-        return CollectionUtils.isEmpty(viewPath)?PB.DiskEnvelope.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder()).build()
-                :PB.DiskEnvelope.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder().addAllViewPath(viewPath)).build();
+        return CollectionUtils.isEmpty(viewPath) ? PB.Persistable.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder()).build()
+                : PB.Persistable.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder().addAllViewPath(viewPath)).build();
     }
 
     public static Persistable fromProto(PB.ViewPathAsString viewPathAsString) {

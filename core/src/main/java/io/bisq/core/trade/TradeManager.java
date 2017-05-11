@@ -46,7 +46,7 @@ import io.bisq.core.trade.messages.PayDepositRequest;
 import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
-import io.bisq.core.user.User;
+import io.bisq.core.user.UserModel;
 import io.bisq.core.util.Validator;
 import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
@@ -78,7 +78,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
-    private final User user;
+    private final UserModel userModel;
     private final KeyRing keyRing;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
@@ -102,7 +102,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeManager(User user,
+    public TradeManager(UserModel userModel,
                         KeyRing keyRing,
                         BtcWalletService btcWalletService,
                         BsqWalletService bsqWalletService,
@@ -116,7 +116,7 @@ public class TradeManager {
                         TradeStatisticsManager tradeStatisticsManager,
                         PersistenceProtoResolver persistenceProtoResolver,
                         @Named(Storage.STORAGE_DIR) File storageDir) {
-        this.user = user;
+        this.userModel = userModel;
         this.keyRing = keyRing;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
@@ -306,7 +306,7 @@ public class TradeManager {
                 tradeWalletService,
                 this,
                 openOfferManager,
-                user,
+                userModel,
                 filterManager,
                 keyRing,
                 useSavingsWallet,

@@ -21,7 +21,6 @@ import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import lombok.Getter;
 import lombok.Setter;
-import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +38,7 @@ public final class CompensationRequest implements Persistable {
     @Setter
     private boolean accepted;
     @Setter
-    private Coin fundsReceived;
+    private long fundsReceived;
     //TODO
     @Setter
     private boolean inVotePeriod = true;

@@ -26,7 +26,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -60,12 +59,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return null;
-    }
-
-    @Override
-    public String getPaymentDetailsForTradePopup(Locale locale) {
-        return super.getPaymentDetailsForTradePopup(locale) + "\n" +
+        return super.getPaymentDetailsForTradePopup() + "\n" +
                 "Accepted banks: " + Joiner.on(", ").join(acceptedBanks);
     }
 

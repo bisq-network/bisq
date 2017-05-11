@@ -55,10 +55,10 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
         try {
             runInterceptHook();
 
-            NodeAddress selectedArbitratorNodeAddress = ArbitratorSelectionRule.select(model.getUser().getAcceptedArbitratorAddresses(),
+            NodeAddress selectedArbitratorNodeAddress = ArbitratorSelectionRule.select(model.getUserModel().getAcceptedArbitratorAddresses(),
                     model.getOffer());
             log.debug("selectedArbitratorAddress " + selectedArbitratorNodeAddress);
-            Arbitrator selectedArbitrator = model.getUser().getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
+            Arbitrator selectedArbitrator = model.getUserModel().getAcceptedArbitratorByAddress(selectedArbitratorNodeAddress);
             checkNotNull(selectedArbitrator, "selectedArbitrator must not be null at CreateOfferFeeTx");
             BtcWalletService walletService = model.getWalletService();
             String id = offer.getId();

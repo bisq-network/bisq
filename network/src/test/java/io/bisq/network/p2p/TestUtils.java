@@ -185,7 +185,7 @@ public class TestUtils {
     public static PersistenceProtoResolver getPersistenceProtoResolver() {
         return new PersistenceProtoResolver() {
             @Override
-            public Optional<Persistable> fromProto(PB.DiskEnvelope envelope) {
+            public Optional<Persistable> fromProto(PB.Persistable envelope) {
                 return null;
             }
         };

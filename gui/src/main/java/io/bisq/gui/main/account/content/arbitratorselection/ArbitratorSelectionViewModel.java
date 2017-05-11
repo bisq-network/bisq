@@ -23,7 +23,7 @@ import io.bisq.common.locale.LanguageUtil;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.User;
+import io.bisq.core.user.UserModel;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.util.BSFormatter;
 import io.bisq.network.p2p.NodeAddress;
@@ -34,7 +34,7 @@ import javafx.collections.ObservableList;
 import java.util.stream.Collectors;
 
 class ArbitratorSelectionViewModel extends ActivatableDataModel {
-    private final User user;
+    private final UserModel userModel;
     private final ArbitratorManager arbitratorManager;
     private final Preferences preferences;
     private final KeyRing keyRing;
@@ -45,9 +45,9 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     private final MapChangeListener<NodeAddress, Arbitrator> arbitratorMapChangeListener;
 
     @Inject
-    public ArbitratorSelectionViewModel(User user, ArbitratorManager arbitratorManager, Preferences preferences,
+    public ArbitratorSelectionViewModel(UserModel userModel, ArbitratorManager arbitratorManager, Preferences preferences,
                                         KeyRing keyRing, BSFormatter formatter) {
-        this.user = user;
+        this.userModel = userModel;
         this.arbitratorManager = arbitratorManager;
         this.preferences = preferences;
         this.keyRing = keyRing;
@@ -64,7 +64,7 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
 
     @Override
     protected void activate() {
-        languageCodes.setAll(user.getAcceptedLanguageLocaleCodes());
+        languageCodes.setAll(userModel.getAcceptedLanguageLocaleCodes());
         arbitratorManager.getArbitratorsObservableMap().addListener(arbitratorMapChangeListener);
         arbitratorManager.updateArbitratorMap();
         applyArbitratorMap();
@@ -79,7 +79,7 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
 
     void onAddLanguage(String code) {
         if (code != null) {
-            boolean changed = user.addAcceptedLanguageLocale(code);
+            boolean changed = userModel.addAcceptedLanguageLocale(code);
             if (changed)
                 languageCodes.add(code);
         }
@@ -89,7 +89,7 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
 
     void onRemoveLanguage(String code) {
         if (code != null) {
-            boolean changed = user.removeAcceptedLanguageLocale(code);
+            boolean changed = userModel.removeAcceptedLanguageLocale(code);
             if (changed)
                 languageCodes.remove(code);
         }
@@ -99,32 +99,32 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
 
     void onAddArbitrator(Arbitrator arbitrator) {
         if (!arbitratorIsTrader(arbitrator)) {
-            user.addAcceptedArbitrator(arbitrator);
+            userModel.addAcceptedArbitrator(arbitrator);
 
             // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
-            user.addAcceptedMediator(ArbitratorManager.getMediator(arbitrator));
+            userModel.addAcceptedMediator(ArbitratorManager.getMediator(arbitrator));
         }
     }
 
     void onRemoveArbitrator(Arbitrator arbitrator) {
         if (arbitrator != null) {
-            user.removeAcceptedArbitrator(arbitrator);
+            userModel.removeAcceptedArbitrator(arbitrator);
 
             // TODO we mirror arbitrator data for mediator as long we have not impl. it in the UI
-            user.removeAcceptedMediator(ArbitratorManager.getMediator(arbitrator));
+            userModel.removeAcceptedMediator(ArbitratorManager.getMediator(arbitrator));
         }
     }
 
     public boolean isDeselectAllowed(ArbitratorListItem arbitratorListItem) {
         return arbitratorListItem != null
-                && user.getAcceptedArbitrators() != null
-                && user.getAcceptedArbitrators().size() > 1;
+                && userModel.getAcceptedArbitrators() != null
+                && userModel.getAcceptedArbitrators().size() > 1;
     }
 
     public boolean isAcceptedArbitrator(Arbitrator arbitrator) {
         return arbitrator != null &&
-                user.getAcceptedArbitrators() != null &&
-                user.getAcceptedArbitrators().contains(arbitrator) &&
+                userModel.getAcceptedArbitrators() != null &&
+                userModel.getAcceptedArbitrators().contains(arbitrator) &&
                 !isMyOwnRegisteredArbitrator(arbitrator);
     }
 
@@ -133,11 +133,11 @@ class ArbitratorSelectionViewModel extends ActivatableDataModel {
     }
 
     public boolean hasMatchingLanguage(Arbitrator arbitrator) {
-        return user.hasMatchingLanguage(arbitrator);
+        return userModel.hasMatchingLanguage(arbitrator);
     }
 
     public boolean isMyOwnRegisteredArbitrator(Arbitrator arbitrator) {
-        return user.isMyOwnRegisteredArbitrator(arbitrator);
+        return userModel.isMyOwnRegisteredArbitrator(arbitrator);
     }
 
     private void updateAutoSelectArbitrators() {

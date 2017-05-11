@@ -120,7 +120,7 @@ public final class AddressEntryList implements Persistable {
 
     @Override
     public Message toProto() {
-        final PB.DiskEnvelope build = PB.DiskEnvelope.newBuilder().setAddressEntryList(PB.AddressEntryList.newBuilder()
+        final PB.Persistable build = PB.Persistable.newBuilder().setAddressEntryList(PB.AddressEntryList.newBuilder()
                 .addAllAddressEntry(stream()
                         .map(addressEntry -> ((PB.AddressEntry) addressEntry.toProto()))
                         .collect(Collectors.toList())))

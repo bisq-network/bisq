@@ -28,7 +28,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
-import io.bisq.core.user.User;
+import io.bisq.core.user.UserModel;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.components.BusyAnimation;
 import io.bisq.gui.main.MainView;
@@ -59,7 +59,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     protected static final Logger log = LoggerFactory.getLogger(OfferDetailsWindow.class);
 
     private final BSFormatter formatter;
-    private final User user;
+    private final UserModel userModel;
     private final KeyRing keyRing;
     private final Navigation navigation;
     private Offer offer;
@@ -75,10 +75,10 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferDetailsWindow(BSFormatter formatter, User user, KeyRing keyRing,
+    public OfferDetailsWindow(BSFormatter formatter, UserModel userModel, KeyRing keyRing,
                               Navigation navigation) {
         this.formatter = formatter;
-        this.user = user;
+        this.userModel = userModel;
         this.keyRing = keyRing;
         this.navigation = navigation;
         type = Type.Confirmation;
@@ -211,7 +211,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         }
         final PaymentMethod paymentMethod = offer.getPaymentMethod();
         final String makerPaymentAccountId = offer.getMakerPaymentAccountId();
-        final PaymentAccount paymentAccount = user.getPaymentAccount(makerPaymentAccountId);
+        final PaymentAccount paymentAccount = userModel.getPaymentAccount(makerPaymentAccountId);
         String bankId = offer.getBankId();
         if (bankId == null || bankId.equals("null"))
             bankId = "";
@@ -363,7 +363,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         });
 
         button.setOnAction(e -> {
-            if (user.getAcceptedArbitrators().size() > 0) {
+            if (userModel.getAcceptedArbitrators().size() > 0) {
                 button.setDisable(true);
                 cancelButton.setDisable(true);
                 busyAnimation.play();

@@ -17,7 +17,6 @@
 
 package io.bisq.gui;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
@@ -32,9 +31,6 @@ import io.bisq.gui.main.market.MarketView;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.omg.CORBA.PRIVATE_MEMBER;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -171,6 +167,6 @@ public final class Navigation implements Persistable {
 
     @Override
     public Message toProto() {
-        return PB.DiskEnvelope.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder().addAllViewPath(viewPathAsString.getViewPath())).build();
+        return PB.Persistable.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder().addAllViewPath(viewPathAsString.getViewPath())).build();
     }
 }

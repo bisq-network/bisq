@@ -23,7 +23,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferBookService;
-import io.bisq.core.user.User;
+import io.bisq.core.user.UserModel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public class PlaceOfferModel implements Model {
     private final TradeWalletService tradeWalletService;
     private final BsqWalletService bsqWalletService;
     private final OfferBookService offerBookService;
-    private final User user;
+    private final UserModel userModel;
 
     // Mutable
     @Setter
@@ -56,7 +56,7 @@ public class PlaceOfferModel implements Model {
                            TradeWalletService tradeWalletService,
                            BsqWalletService bsqWalletService,
                            OfferBookService offerBookService,
-                           User user) {
+                           UserModel userModel) {
         this.offer = offer;
         this.reservedFundsForOffer = reservedFundsForOffer;
         this.useSavingsWallet = useSavingsWallet;
@@ -64,7 +64,7 @@ public class PlaceOfferModel implements Model {
         this.tradeWalletService = tradeWalletService;
         this.bsqWalletService = bsqWalletService;
         this.offerBookService = offerBookService;
-        this.user = user;
+        this.userModel = userModel;
     }
 
     @Override

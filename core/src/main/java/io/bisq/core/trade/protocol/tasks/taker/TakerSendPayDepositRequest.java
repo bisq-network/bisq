@@ -70,8 +70,8 @@ public class TakerSendPayDepositRequest extends TradeTask {
                     processModel.getPaymentAccountPayload(trade),
                     processModel.getAccountId(),
                     trade.getTakerFeeTxId(),
-                    new ArrayList<>(processModel.getUser().getAcceptedArbitratorAddresses()),
-                    new ArrayList<>(processModel.getUser().getAcceptedMediatorAddresses()),
+                    new ArrayList<>(processModel.getUserModel().getAcceptedArbitratorAddresses()),
+                    new ArrayList<>(processModel.getUserModel().getAcceptedMediatorAddresses()),
                     trade.getArbitratorNodeAddress(),
                     trade.getMediatorNodeAddress()
             );

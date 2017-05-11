@@ -635,7 +635,7 @@ public class PeerManager implements ConnectionListener {
 
     private Function<List<Peer>, Message> getListToProto() {
         return (List<Peer> list) -> {
-            return PB.DiskEnvelope.newBuilder().setPeersList(PB.PeersList.newBuilder().addAllPeers(ProtoHelper.collectionToProto((Collection<? extends Marshaller>) list))).build();
+            return PB.Persistable.newBuilder().setPeersList(PB.PeersList.newBuilder().addAllPeers(ProtoHelper.collectionToProto((Collection<? extends Marshaller>) list))).build();
         };
     }
 }

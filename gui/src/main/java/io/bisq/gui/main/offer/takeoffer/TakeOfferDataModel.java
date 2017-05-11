@@ -37,7 +37,7 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.trade.handlers.TradeResultHandler;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.User;
+import io.bisq.core.user.UserModel;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.main.overlays.notifications.Notification;
@@ -62,7 +62,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     private final TradeManager tradeManager;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
-    private final User user;
+    private final UserModel userModel;
     private final FeeService feeService;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
@@ -102,13 +102,13 @@ class TakeOfferDataModel extends ActivatableDataModel {
     @Inject
     TakeOfferDataModel(TradeManager tradeManager,
                        BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                       User user, FeeService feeService,
+                       UserModel userModel, FeeService feeService,
                        Preferences preferences, PriceFeedService priceFeedService,
                        BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
-        this.user = user;
+        this.userModel = userModel;
         this.feeService = feeService;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
@@ -318,11 +318,11 @@ class TakeOfferDataModel extends ActivatableDataModel {
     }
 
     ObservableList<PaymentAccount> getPossiblePaymentAccounts() {
-        return PaymentAccountUtil.getPossiblePaymentAccounts(offer, user.getPaymentAccounts());
+        return PaymentAccountUtil.getPossiblePaymentAccounts(offer, userModel.getPaymentAccounts());
     }
 
     boolean hasAcceptedArbitrators() {
-        return user.getAcceptedArbitrators().size() > 0;
+        return userModel.getAcceptedArbitrators().size() > 0;
     }
 
     boolean isCurrencyForTakerFeeBtc() {

@@ -19,6 +19,7 @@ package io.bisq.core.payment.payload;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.BankUtil;
+import io.bisq.common.locale.CountryUtil;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,7 +28,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.Locale;
 
 @Setter
 @EqualsAndHashCode(callSuper = true)
@@ -63,12 +63,12 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
     }
 
     @Override
-    public String getPaymentDetails(Locale locale) {
+    public String getPaymentDetails() {
         return "Cash deposit - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
-    public String getPaymentDetailsForTradePopup(Locale locale) {
+    public String getPaymentDetailsForTradePopup() {
         String bankName = BankUtil.isBankNameRequired(countryCode) ?
                 BankUtil.getBankNameLabel(countryCode) + " " + this.bankName + "\n" : "";
         String bankId = BankUtil.isBankIdRequired(countryCode) ?
@@ -93,7 +93,7 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 accountType +
                 holderIdString +
                 requirementsString +
-                "Country of bank: " + new Locale(locale.getLanguage(), countryCode).getDisplayCountry();
+                "Country of bank: " + CountryUtil.getNameByCode(countryCode);
     }
 
     @Override

@@ -35,7 +35,7 @@ public class TakerSelectMediator extends TradeTask {
         try {
             runInterceptHook();
 
-            trade.applyMediatorNodeAddress(MediatorSelectionRule.select(processModel.getUser().getAcceptedMediatorAddresses(),
+            trade.applyMediatorNodeAddress(MediatorSelectionRule.select(processModel.getUserModel().getAcceptedMediatorAddresses(),
                     processModel.getOffer()));
 
             complete();

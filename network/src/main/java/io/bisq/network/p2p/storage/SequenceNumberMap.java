@@ -53,8 +53,8 @@ public class SequenceNumberMap implements Persistable {
     }
 
     @Override
-    public PB.DiskEnvelope toProto() {
-        return PB.DiskEnvelope.newBuilder().setSequenceNumberMap(
+    public PB.Persistable toProto() {
+        return PB.Persistable.newBuilder().setSequenceNumberMap(
                 PB.SequenceNumberMap.newBuilder().addAllSequenceNumberEntries(
                         hashMap.entrySet().stream()
                                 .map(entry ->

@@ -691,6 +691,6 @@ public final class Preferences implements Persistable {
         Optional.ofNullable(sellScreenCurrencyCode).ifPresent(code -> builder.setSellScreenCurrencyCode(code));
         Optional.ofNullable(selectedPaymentAccountForCreateOffer).ifPresent(
                 account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProto()));
-        return PB.DiskEnvelope.newBuilder().setPreferences(builder).build();
+        return PB.Persistable.newBuilder().setPreferences(builder).build();
     }
 }

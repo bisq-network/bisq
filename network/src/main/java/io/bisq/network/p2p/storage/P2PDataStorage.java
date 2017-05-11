@@ -672,7 +672,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                     e -> e.getKey().toString(),
                                     e -> (PB.ProtectedStorageEntry) e.getValue().toProto())
                             );
-            return PB.DiskEnvelope.newBuilder().setPersistedEntryMap(PB.PersistedEntryMap.newBuilder().putAllPersistedEntryMap(protoResult)).build();
+            return PB.Persistable.newBuilder().setPersistedEntryMap(PB.PersistedEntryMap.newBuilder().putAllPersistedEntryMap(protoResult)).build();
         };
     }
 

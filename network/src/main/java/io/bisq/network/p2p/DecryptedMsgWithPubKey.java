@@ -17,17 +17,14 @@
 
 package io.bisq.network.p2p;
 
-import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.network.Msg;
-import io.bisq.common.persistence.Persistable;
-import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 
 import java.security.PublicKey;
 
 @EqualsAndHashCode
-public final class DecryptedMsgWithPubKey implements Persistable {
+public final class DecryptedMsgWithPubKey {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
@@ -37,16 +34,6 @@ public final class DecryptedMsgWithPubKey implements Persistable {
     public DecryptedMsgWithPubKey(Msg msg, PublicKey signaturePubKey) {
         this.msg = msg;
         this.signaturePubKey = signaturePubKey;
-    }
-
-
-    @Override
-    public Message toProto() {
-        // TODO
-        return PB.DecryptedMsgWithPubKey.newBuilder()
-                // TODO .setMessage(msg.toEnvelopeProto())
-               /* .setSignaturePubKey(signaturePubKey.toProto())*/
-                .build();
     }
 
     @Override

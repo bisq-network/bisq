@@ -1,6 +1,5 @@
 package io.bisq.core.payment;
 
-import io.bisq.core.user.UserVO;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

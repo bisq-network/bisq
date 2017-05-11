@@ -23,9 +23,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
-import java.util.Locale;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -42,18 +39,7 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
         super(paymentMethodName, id, maxTradePeriod);
     }
 
-    public String getPaymentDetails() {
-        throw new NotImplementedException();
-    }
+    abstract public String getPaymentDetails();
 
-    abstract public String getPaymentDetails(Locale locale);
-
-    /**
-     * needs Locale for country based
-     */
-    public String getPaymentDetailsForTradePopup() {
-        throw new NotImplementedException();
-    }
-
-    abstract public String getPaymentDetailsForTradePopup(Locale locale);
+    abstract public String getPaymentDetailsForTradePopup();
 }

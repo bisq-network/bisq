@@ -69,7 +69,7 @@ public final class TradableList<T extends Tradable> implements Persistable {
 
     @Override
     public Message toProto() {
-        return PB.DiskEnvelope.newBuilder().setTradableList(PB.TradableList.newBuilder()
+        return PB.Persistable.newBuilder().setTradableList(PB.TradableList.newBuilder()
                 .addAllTradable(ProtoHelper.collectionToProto(list))).build();
     }
 

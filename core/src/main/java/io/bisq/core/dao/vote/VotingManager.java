@@ -312,7 +312,7 @@ public class VotingManager {
         if (!voteItemsLists.contains(voteItemsList)) {
             voteItemsLists.add(voteItemsList);
             ListPersistable<VoteItemsList> serializable = new ListPersistable<>(voteItemsLists);
-            serializable.setToProto((list) -> PB.DiskEnvelope.newBuilder()
+            serializable.setToProto((list) -> PB.Persistable.newBuilder()
                     .setVoteItemsList(PB.VoteItemsList.newBuilder()
                             .addAllVoteItem(ProtoHelper.collectionToProto(voteItemsList.getAllVoteItemList()))).build());
             voteItemCollectionsStorage.queueUpForSave(serializable, 500);

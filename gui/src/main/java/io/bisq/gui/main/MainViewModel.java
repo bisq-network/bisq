@@ -58,7 +58,7 @@ import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.User;
+import io.bisq.core.user.UserModel;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.components.BalanceWithConfirmationTextField;
 import io.bisq.gui.components.TxIdTextField;
@@ -160,7 +160,7 @@ public class MainViewModel implements ViewModel {
 
     private MonadicBinding<Boolean> allServicesDone, tradesAndUIReady;
     final PriceFeedService priceFeedService;
-    private final User user;
+    private final UserModel userModel;
     private int numBtcPeers = 0;
     private Timer checkNumberOfBtcPeersTimer;
     private Timer checkNumberOfP2pNetworkPeersTimer;
@@ -184,7 +184,7 @@ public class MainViewModel implements ViewModel {
                          BtcWalletService btcWalletService, PriceFeedService priceFeedService,
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
-                         User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
+                         UserModel userModel, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
                          FilterManager filterManager, WalletPasswordWindow walletPasswordWindow,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
                          DaoManager daoManager, EncryptionService encryptionService,
@@ -194,7 +194,7 @@ public class MainViewModel implements ViewModel {
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
         this.priceFeedService = priceFeedService;
-        this.user = user;
+        this.userModel = userModel;
         this.arbitratorManager = arbitratorManager;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
@@ -561,7 +561,7 @@ public class MainViewModel implements ViewModel {
         updateBalance();
         if (DevEnv.DEV_MODE) {
             preferences.setShowOwnOffersInOfferBook(true);
-            if (user.getPaymentAccounts().isEmpty())
+            if (userModel.getPaymentAccounts().isEmpty())
                 setupDevDummyPaymentAccounts();
         }
 
@@ -572,7 +572,7 @@ public class MainViewModel implements ViewModel {
         showAppScreen.set(true);
 
         String key = "remindPasswordAndBackup";
-        user.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
+        userModel.getPaymentAccountsAsObservable().addListener((SetChangeListener<PaymentAccount>) change -> {
             if (!walletsManager.areWalletsEncrypted() && preferences.showAgain(key) && change.wasAdded()) {
                 new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
                         .information(Res.get("popup.securityRecommendation.msg"))
@@ -908,8 +908,8 @@ public class MainViewModel implements ViewModel {
     }
 
     private void displayAlertIfPresent(Alert alert) {
-        boolean alreadyDisplayed = alert != null && alert.equals(user.getDisplayedAlert());
-        user.setDisplayedAlert(alert);
+        boolean alreadyDisplayed = alert != null && alert.equals(userModel.getDisplayedAlert());
+        userModel.setDisplayedAlert(alert);
         if (alert != null &&
                 !alreadyDisplayed &&
                 (!alert.isUpdateInfo() || alert.isNewVersion()))
@@ -968,7 +968,7 @@ public class MainViewModel implements ViewModel {
         Coin sum = Coin.valueOf(tradeManager.getLockedTradeStream()
                 .mapToLong(trade -> {
                     Coin lockedTradeAmount = btcWalletService.getOrCreateAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG).getCoinLockedInMultiSig();
-                    return lockedTradeAmount != null ? lockedTradeAmount.getValue() : 0;
+                    return lockedTradeAmount.getValue();
                 })
                 .sum());
         lockedBalance.set(formatter.formatCoinWithCode(sum));
@@ -1020,12 +1020,12 @@ public class MainViewModel implements ViewModel {
         okPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
         okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
         okPayAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
-        user.addPaymentAccount(okPayAccount);
+        userModel.addPaymentAccount(okPayAccount);
 
         CryptoCurrencyAccount cryptoCurrencyAccount = new CryptoCurrencyAccount();
         cryptoCurrencyAccount.setAccountName("ETH dummy");// Don't translate only for dev
         cryptoCurrencyAccount.setAddress("0x" + new Random().nextInt(1000000));
         cryptoCurrencyAccount.setSingleTradeCurrency(CurrencyUtil.getCryptoCurrency("ETH").get());
-        user.addPaymentAccount(cryptoCurrencyAccount);
+        userModel.addPaymentAccount(cryptoCurrencyAccount);
     }
 }

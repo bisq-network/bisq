@@ -42,7 +42,7 @@ import io.bisq.core.trade.TradableList;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.handlers.TransactionResultHandler;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.User;
+import io.bisq.core.user.UserModel;
 import io.bisq.core.util.Validator;
 import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.peers.PeerManager;
@@ -71,7 +71,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevEnv.STRESS_TEST_MODE ? 4 : 4);
 
     private final KeyRing keyRing;
-    private final User user;
+    private final UserModel userModel;
     private final P2PService p2PService;
     private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
@@ -92,7 +92,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     @Inject
     public OpenOfferManager(KeyRing keyRing,
-                            User user,
+                            UserModel userModel,
                             P2PService p2PService,
                             BtcWalletService walletService,
                             TradeWalletService tradeWalletService,
@@ -104,7 +104,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             PersistenceProtoResolver persistenceProtoResolver,
                             @Named(Storage.STORAGE_DIR) File storageDir) {
         this.keyRing = keyRing;
-        this.user = user;
+        this.userModel = userModel;
         this.p2PService = p2PService;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
@@ -271,7 +271,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 tradeWalletService,
                 bsqWalletService,
                 offerBookService,
-                user);
+                userModel);
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 transaction -> {
@@ -382,7 +382,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         availabilityResult = AvailabilityResult.AVAILABLE;
 
                         // TODO mediators not impl yet
-                        List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
+                        List<NodeAddress> acceptedArbitrators = userModel.getAcceptedArbitratorAddresses();
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
                             // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
                             // in trade price between the peers. Also here poor connectivity might cause market price API connection

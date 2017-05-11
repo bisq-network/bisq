@@ -16,7 +16,7 @@ import io.bisq.core.trade.*;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.UserVO;
+import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.peers.peerexchange.Peer;
 import io.bisq.network.p2p.storage.SequenceNumberMap;
@@ -75,7 +75,7 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
     }
 
     @Override
-    public Optional<Persistable> fromProto(PB.DiskEnvelope envelope) {
+    public Optional<Persistable> fromProto(PB.Persistable envelope) {
         if (Objects.isNull(envelope)) {
             log.warn("fromProtoBuf called with empty disk envelope.");
             return Optional.empty();
@@ -104,7 +104,7 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
                 result = fillPreferences(envelope, preferencesProvider.get());
                 break;
             case USER:
-                result = UserVO.fromProto(envelope.getUser());
+                result = User.fromProto(envelope.getUser());
                 break;
             case SEQUENCE_NUMBER_MAP:
                 result = SequenceNumberMap.fromProto(envelope.getSequenceNumberMap());
@@ -131,7 +131,7 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
                 .collect(Collectors.toList()));
     }
 
-    private Preferences fillPreferences(PB.DiskEnvelope envelope, Preferences preferences) {
+    private Preferences fillPreferences(PB.Persistable envelope, Preferences preferences) {
         final PB.Preferences env = envelope.getPreferences();
         preferences.setUserLanguage(env.getUserLanguage());
         PB.Country userCountry = env.getUserCountry();
@@ -187,13 +187,13 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         return new Locale(locale.getLanguage(), locale.getCountry(), locale.getVariant());
     }
 
-    private AddressEntryList fillAddressEntryList(PB.DiskEnvelope envelope, AddressEntryList addressEntryList) {
+    private AddressEntryList fillAddressEntryList(PB.Persistable envelope, AddressEntryList addressEntryList) {
         envelope.getAddressEntryList().getAddressEntryList().stream().forEach(addressEntry -> {
             final AddressEntry entry = new AddressEntry(addressEntry.getPubKey().toByteArray(),
                     addressEntry.getPubKeyHash().toByteArray(),
                     AddressEntry.Context.valueOf(addressEntry.getContext().name()),
                     addressEntry.getOfferId(),
-                    Coin.valueOf(addressEntry.getCoinLockedInMultiSig().getValue()));
+                    Coin.valueOf(addressEntry.getCoinLockedInMultiSig()));
             addressEntryList.addAddressEntry(entry);
         });
         addressEntryList.setDoPersist(true);

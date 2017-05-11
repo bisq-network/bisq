@@ -38,11 +38,10 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
-import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.protocol.ProcessModel;
 import io.bisq.core.trade.protocol.TradeProtocol;
-import io.bisq.core.user.User;
+import io.bisq.core.user.UserModel;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.NodeAddress;
@@ -297,7 +296,7 @@ public abstract class Trade implements Tradable, Model {
                      TradeWalletService tradeWalletService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
-                     User user,
+                     UserModel userModel,
                      FilterManager filterManager,
                      KeyRing keyRing,
                      boolean useSavingsWallet,
@@ -310,7 +309,7 @@ public abstract class Trade implements Tradable, Model {
                 btcWalletService,
                 bsqWalletService,
                 tradeWalletService,
-                user,
+                userModel,
                 filterManager,
                 keyRing,
                 useSavingsWallet,
@@ -742,13 +741,13 @@ public abstract class Trade implements Tradable, Model {
     public void applyArbitratorNodeAddress(NodeAddress arbitratorNodeAddress) {
         this.arbitratorNodeAddress = arbitratorNodeAddress;
 
-        Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
+        Arbitrator arbitrator = processModel.getUserModel().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
         checkNotNull(arbitrator, "arbitrator must not be null");
         arbitratorBtcPubKey = arbitrator.getBtcPubKey();
     }
 
     public byte[] getArbitratorBtcPubKey() {
-        Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
+        Arbitrator arbitrator = processModel.getUserModel().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
         checkNotNull(arbitrator, "arbitrator must not be null");
         arbitratorBtcPubKey = arbitrator.getBtcPubKey();
 
@@ -763,7 +762,7 @@ public abstract class Trade implements Tradable, Model {
     public void applyMediatorNodeAddress(NodeAddress mediatorNodeAddress) {
         this.mediatorNodeAddress = mediatorNodeAddress;
 
-        Mediator mediator = processModel.getUser().getAcceptedMediatorByAddress(mediatorNodeAddress);
+        Mediator mediator = processModel.getUserModel().getAcceptedMediatorByAddress(mediatorNodeAddress);
         checkNotNull(mediator, "mediator must not be null");
     }
 
@@ -852,7 +851,6 @@ public abstract class Trade implements Tradable, Model {
                 .setTradeAmountAsLong(tradeAmountAsLong)
                 .setTxFeeAsLong(txFeeAsLong)
                 .setTakerFeeAsLong(takerFeeAsLong)
-                        // TODO .setDecryptedMsgWithPubKey((PB.DecryptedMsgWithPubKey) decryptedMsgWithPubKey.toProto())
                 .setTakeOfferDate(takeOfferDate)
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setTradePrice(tradePrice)

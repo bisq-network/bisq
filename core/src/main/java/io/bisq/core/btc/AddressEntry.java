@@ -70,9 +70,9 @@ public final class AddressEntry implements Persistable {
     private final byte[] pubKey;
     @Getter
     private final byte[] pubKeyHash;
+
     @Nullable
-    @Getter
-    private Coin coinLockedInMultiSig;
+    private long coinLockedInMultiSig;
 
     @Nullable
     transient private DeterministicKey keyPair;
@@ -110,7 +110,7 @@ public final class AddressEntry implements Persistable {
         this.pubKeyHash = pubKeyHash;
         this.context = context;
         this.offerId = offerId;
-        this.coinLockedInMultiSig = coinLockedInMultiSig;
+        this.coinLockedInMultiSig = coinLockedInMultiSig.value;
     }
 
     // Set after wallet is ready
@@ -128,7 +128,7 @@ public final class AddressEntry implements Persistable {
     }
 
     public void setCoinLockedInMultiSig(@NotNull Coin coinLockedInMultiSig) {
-        this.coinLockedInMultiSig = coinLockedInMultiSig;
+        this.coinLockedInMultiSig = coinLockedInMultiSig.value;
     }
 
 
@@ -168,6 +168,10 @@ public final class AddressEntry implements Persistable {
         return isOpenOffer() || isTrade();
     }
 
+    public Coin getCoinLockedInMultiSig() {
+        return Coin.valueOf(coinLockedInMultiSig);
+    }
+
     @Override
     public String toString() {
         return "AddressEntry{" +
@@ -182,11 +186,9 @@ public final class AddressEntry implements Persistable {
         PB.AddressEntry.Builder builder = PB.AddressEntry.newBuilder()
                 .setContext(PB.AddressEntry.Context.valueOf(context.name()))
                 .setPubKey(ByteString.copyFrom(pubKey))
+                .setCoinLockedInMultiSig(coinLockedInMultiSig)
                 .setPubKeyHash(ByteString.copyFrom(pubKeyHash));
         Optional.ofNullable(offerId).ifPresent(builder::setOfferId);
-        Optional.ofNullable(coinLockedInMultiSig).ifPresent(coinLockedInMultiSig -> {
-            builder.setCoinLockedInMultiSig(PB.Coin.newBuilder().setValue(coinLockedInMultiSig.getValue()));
-        });
         return builder.build();
     }
 }

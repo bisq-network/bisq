@@ -50,7 +50,6 @@ import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 
 @Slf4j
 public class BsqWalletService extends WalletService {
-
     private final BsqCoinSelector bsqCoinSelector;
     private BsqChainState bsqChainState;
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();

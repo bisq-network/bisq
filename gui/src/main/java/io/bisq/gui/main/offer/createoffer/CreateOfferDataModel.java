@@ -44,7 +44,7 @@ import io.bisq.core.provider.fee.FeeService;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.handlers.TransactionResultHandler;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.User;
+import io.bisq.core.user.UserModel;
 import io.bisq.core.util.CoinUtil;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.main.overlays.notifications.Notification;
@@ -74,7 +74,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private final BtcWalletService btcWalletService;
     private BsqWalletService bsqWalletService;
     private final Preferences preferences;
-    private final User user;
+    private final UserModel userModel;
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
@@ -128,14 +128,14 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
     @Inject
     CreateOfferDataModel(OpenOfferManager openOfferManager, BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                         Preferences preferences, User user, KeyRing keyRing, P2PService p2PService,
+                         Preferences preferences, UserModel userModel, KeyRing keyRing, P2PService p2PService,
                          PriceFeedService priceFeedService,
                          FeeService feeService, BSFormatter formatter) {
         this.openOfferManager = openOfferManager;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
-        this.user = user;
+        this.userModel = userModel;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
@@ -216,14 +216,14 @@ class CreateOfferDataModel extends ActivatableDataModel {
     private void addListeners() {
         btcWalletService.addBalanceListener(btcBalanceListener);
         bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
-        user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
+        userModel.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
     }
 
 
     private void removeListeners() {
         btcWalletService.removeBalanceListener(btcBalanceListener);
         bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
-        user.getPaymentAccountsAsObservable().removeListener(paymentAccountsChangeListener);
+        userModel.getPaymentAccountsAsObservable().removeListener(paymentAccountsChangeListener);
     }
 
 
@@ -239,10 +239,10 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         PaymentAccount account;
         PaymentAccount lastSelectedPaymentAccount = preferences.getSelectedPaymentAccountForCreateOffer();
-        if (lastSelectedPaymentAccount != null && user.getPaymentAccounts().contains(lastSelectedPaymentAccount))
+        if (lastSelectedPaymentAccount != null && userModel.getPaymentAccounts().contains(lastSelectedPaymentAccount))
             account = lastSelectedPaymentAccount;
         else
-            account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
+            account = userModel.findFirstPaymentAccountWithCurrency(tradeCurrency);
 
         if (account != null && isNotUSBankAccount(account)) {
             paymentAccount = account;
@@ -370,8 +370,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 minAmount,
                 baseCurrencyCode,
                 counterCurrencyCode,
-                Lists.newArrayList(user.getAcceptedArbitratorAddresses()),
-                Lists.newArrayList(user.getAcceptedMediatorAddresses()),
+                Lists.newArrayList(userModel.getAcceptedArbitratorAddresses()),
+                Lists.newArrayList(userModel.getAcceptedMediatorAddresses()),
                 paymentAccount.getPaymentMethod().getId(),
                 paymentAccount.getId(),
                 null,
@@ -509,7 +509,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     boolean hasAcceptedArbitrators() {
-        return user.getAcceptedArbitrators().size() > 0;
+        return userModel.getAcceptedArbitrators().size() > 0;
     }
 
     public void setUseMarketBasedPrice(boolean useMarketBasedPrice) {
@@ -655,7 +655,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void fillPaymentAccounts() {
-        paymentAccounts.setAll(user.getPaymentAccounts().stream()
+        paymentAccounts.setAll(userModel.getPaymentAccounts().stream()
                 .filter(this::isNotUSBankAccount)
                 .collect(Collectors.toSet()));
     }

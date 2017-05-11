@@ -19,6 +19,7 @@ package io.bisq.core.payment.payload;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Country;
+import io.bisq.common.locale.CountryUtil;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -28,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -68,21 +68,16 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     }
 
     @Override
-    public String getPaymentDetails(Locale locale) {
+    public String getPaymentDetails() {
         return "SEPA - Holder name: " + holderName + ", IBAN: " + iban + ", BIC: " + bic + ", country code: " + getCountryCode();
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return null;
-    }
-
-    @Override
-    public String getPaymentDetailsForTradePopup(Locale locale) {
         return "Holder name: " + holderName + "\n" +
                 "IBAN: " + iban + "\n" +
                 "BIC: " + bic + "\n" +
-                "Country of bank: " + new Locale(locale.getLanguage(), countryCode).getDisplayCountry();
+                "Country of bank: " + CountryUtil.getNameByCode(countryCode);
     }
 
     @Override
