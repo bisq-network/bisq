@@ -948,12 +948,12 @@ message OpenOffer {
         UNKNOWN_FAILURE = 0;
         AVAILABLE = 1;
         RESERVED = 2;
-        CLOSED = 4;
-        CANCELED = 5;
+        CLOSED = 3;
+        CANCELED = 4;
     }
 
-    Offer offer = 6;
-    State state = 7;
+    Offer offer = 5;
+    State state = 6;
 }
 
 
