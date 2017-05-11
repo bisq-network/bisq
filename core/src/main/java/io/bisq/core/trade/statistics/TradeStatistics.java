@@ -1,6 +1,5 @@
 package io.bisq.core.trade.statistics;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Altcoin;
@@ -32,8 +31,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Immutable
 public final class TradeStatistics implements LazyProcessedStoragePayload, /*CapabilityRequiringPayload,*/ PersistedStoragePayload {
-    @JsonExclude
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     @JsonExclude
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
@@ -87,8 +84,12 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, /*Cap
                 null);
     }
 
-    // Called from PB
-    public TradeStatistics(OfferPayload.Direction direction,
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private TradeStatistics(OfferPayload.Direction direction,
                            String baseCurrency,
                            String counterCurrency,
                            String offerPaymentMethod,
@@ -121,6 +122,54 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, /*Cap
         this.pubKeyRing = pubKeyRing;
         this.extraDataMap = extraDataMap;
     }
+
+    @Override
+    public PB.StoragePayload toProto() {
+        final PB.TradeStatistics.Builder builder = PB.TradeStatistics.newBuilder()
+                .setBaseCurrency(baseCurrency)
+                .setCounterCurrency(counterCurrency)
+                .setDirection(PB.OfferPayload.Direction.valueOf(direction.name()))
+                .setTradePrice(tradePrice)
+                .setTradeAmount(tradeAmount)
+                .setTradeDate(tradeDate)
+                .setPaymentMethodId(paymentMethodId)
+                .setOfferDate(offerDate)
+                .setUseMarketBasedPrice(useMarketBasedPrice)
+                .setMarketPriceMargin(marketPriceMargin)
+                .setOfferAmount(offerAmount)
+                .setOfferMinAmount(offerMinAmount)
+                .setOfferId(offerId)
+                .setDepositTxId(depositTxId)
+                .setPubKeyRing(pubKeyRing.toProto());
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
+        return PB.StoragePayload.newBuilder().setTradeStatistics(builder).build();
+    }
+
+    public static TradeStatistics fromProto(PB.TradeStatistics tradeStatistics) {
+        return new TradeStatistics(
+                OfferPayload.Direction.fromProto(tradeStatistics.getDirection()),
+                tradeStatistics.getBaseCurrency(),
+                tradeStatistics.getCounterCurrency(),
+                tradeStatistics.getPaymentMethodId(),
+                tradeStatistics.getOfferDate(),
+                tradeStatistics.getUseMarketBasedPrice(),
+                tradeStatistics.getMarketPriceMargin(),
+                tradeStatistics.getOfferAmount(),
+                tradeStatistics.getOfferMinAmount(),
+                tradeStatistics.getOfferId(),
+                tradeStatistics.getTradePrice(),
+                tradeStatistics.getTradeAmount(),
+                tradeStatistics.getTradeDate(),
+                tradeStatistics.getDepositTxId(),
+                PubKeyRing.fromProto(tradeStatistics.getPubKeyRing()),
+                CollectionUtils.isEmpty(tradeStatistics.getExtraDataMapMap()) ?
+                        null : tradeStatistics.getExtraDataMapMap());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public long getTTL() {
@@ -161,50 +210,6 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, /*Cap
             return new Volume(new AltcoinExchangeRate((Altcoin) getTradePrice().getMonetary()).coinToAltcoin(getTradeAmount()));
         else
             return new Volume(new ExchangeRate((Fiat) getTradePrice().getMonetary()).coinToFiat(getTradeAmount()));
-    }
-
-    @Override
-    public PB.StoragePayload toProto() {
-        final PB.TradeStatistics.Builder builder = PB.TradeStatistics.newBuilder()
-                .setBaseCurrency(baseCurrency)
-                .setCounterCurrency(counterCurrency)
-                .setDirection(PB.OfferPayload.Direction.valueOf(direction.name()))
-                .setTradePrice(tradePrice)
-                .setTradeAmount(tradeAmount)
-                .setTradeDate(tradeDate)
-                .setPaymentMethodId(paymentMethodId)
-                .setOfferDate(offerDate)
-                .setUseMarketBasedPrice(useMarketBasedPrice)
-                .setMarketPriceMargin(marketPriceMargin)
-                .setOfferAmount(offerAmount)
-                .setOfferMinAmount(offerMinAmount)
-                .setOfferId(offerId)
-                .setDepositTxId(depositTxId)
-                .setPubKeyRing(pubKeyRing.toProto());
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
-        return PB.StoragePayload.newBuilder().setTradeStatistics(builder).build();
-    }
-
-    public static TradeStatistics fromProto(PB.TradeStatistics tradeStatistics) {
-        return new TradeStatistics(OfferPayload.Direction.fromProto(tradeStatistics.getDirection()),
-                tradeStatistics.getBaseCurrency(),
-                tradeStatistics.getCounterCurrency(),
-                tradeStatistics.getPaymentMethodId(),
-                tradeStatistics.getOfferDate(),
-                tradeStatistics.getUseMarketBasedPrice(),
-                tradeStatistics.getMarketPriceMargin(),
-                tradeStatistics.getOfferAmount(),
-                tradeStatistics.getOfferMinAmount(),
-                tradeStatistics.getOfferId(),
-                tradeStatistics.getTradePrice(),
-                tradeStatistics.getTradeAmount(),
-                tradeStatistics.getTradeDate(),
-                tradeStatistics.getDepositTxId(),
-                new PubKeyRing(tradeStatistics.getPubKeyRing().getSignaturePubKeyBytes().toByteArray(),
-                        tradeStatistics.getPubKeyRing().getEncryptionPubKeyBytes().toByteArray(),
-                        tradeStatistics.getPubKeyRing().getPgpPubKeyAsPem()),
-                CollectionUtils.isEmpty(tradeStatistics.getExtraDataMapMap()) ?
-                        null : tradeStatistics.getExtraDataMapMap());
     }
 
     // We don't include the pubKeyRing as both traders might publish it if the maker uses an old

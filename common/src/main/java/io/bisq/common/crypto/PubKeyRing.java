@@ -19,10 +19,8 @@ package io.bisq.common.crypto;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.Payload;
-import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -31,7 +29,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -46,70 +43,36 @@ import java.security.spec.X509EncodedKeySpec;
 @Slf4j
 @EqualsAndHashCode
 public final class PubKeyRing implements Payload {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
-    // Payload
     private final byte[] signaturePubKeyBytes;
     private final byte[] encryptionPubKeyBytes;
     private String pgpPubKeyAsPem;
 
-    // Domain
-    @Getter
     transient private PublicKey signaturePubKey;
-    @Getter
     transient private PublicKey encryptionPubKey;
-    @Getter
+
     @Nullable
     // TODO  remove Nullable once impl.
     transient private PGPPublicKey pgpPubKey;
 
     public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey, @Nullable PGPPublicKey pgpPubKey) {
+        this(new X509EncodedKeySpec(signaturePubKey.getEncoded()).getEncoded(),
+                new X509EncodedKeySpec(encryptionPubKey.getEncoded()).getEncoded(),
+                PGP.getPEMFromPubKey(pgpPubKey));
+
         this.signaturePubKey = signaturePubKey;
         this.encryptionPubKey = encryptionPubKey;
         this.pgpPubKey = pgpPubKey;
-
-        this.signaturePubKeyBytes = new X509EncodedKeySpec(signaturePubKey.getEncoded()).getEncoded();
-        this.encryptionPubKeyBytes = new X509EncodedKeySpec(encryptionPubKey.getEncoded()).getEncoded();
-
-        //TODO not impl yet
-        pgpPubKeyAsPem = PGP.getPEMFromPubKey(pgpPubKey);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public PubKeyRing(byte[] signaturePubKeyBytes, byte[] encryptionPubKeyBytes, @NotNull String pgpPubKeyAsPem) {
         this.signaturePubKeyBytes = signaturePubKeyBytes;
         this.encryptionPubKeyBytes = encryptionPubKeyBytes;
         this.pgpPubKeyAsPem = pgpPubKeyAsPem;
-        init();
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            init();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
-    }
-
-    private void init() {
-        try {
-            signaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC")
-                    .generatePublic(new X509EncodedKeySpec(signaturePubKeyBytes));
-            encryptionPubKey = KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC")
-                    .generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
-
-            try {
-                this.pgpPubKey = PGP.getPubKeyFromPEM(pgpPubKeyAsPem);
-            } catch (IOException | PGPException e) {
-                log.error(e.toString());
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
-            e.printStackTrace();
-            log.error(e.getMessage() + toString());
-        }
     }
 
     @Override
@@ -125,6 +88,50 @@ public final class PubKeyRing implements Payload {
         return new PubKeyRing(pubKeyRing.getSignaturePubKeyBytes().toByteArray(),
                 pubKeyRing.getEncryptionPubKeyBytes().toByteArray(),
                 pubKeyRing.getPgpPubKeyAsPem());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public PublicKey getSignaturePubKey() {
+        if (signaturePubKey == null) {
+            try {
+                signaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC")
+                        .generatePublic(new X509EncodedKeySpec(signaturePubKeyBytes));
+            } catch (InvalidKeySpecException | NoSuchProviderException | NoSuchAlgorithmException e) {
+                log.error("Key cannot be created. error={}, signaturePubKeyBytes.length={}", e.getMessage(), signaturePubKeyBytes.length);
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        }
+        return signaturePubKey;
+    }
+
+    public PublicKey getEncryptionPubKey() {
+        if (encryptionPubKey == null) {
+            try {
+                encryptionPubKey = KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
+            } catch (InvalidKeySpecException | NoSuchProviderException | NoSuchAlgorithmException e) {
+                log.error("Key cannot be created. error={}, encryptionPubKeyBytes.length={}", e.getMessage(), encryptionPubKeyBytes.length);
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        }
+        return encryptionPubKey;
+    }
+
+    public PGPPublicKey getPgpPubKey() {
+        if (pgpPubKey == null)
+            try {
+                pgpPubKey = PGP.getPubKeyFromPEM(pgpPubKeyAsPem);
+            } catch (NoSuchAlgorithmException | PGPException | IOException | InvalidKeySpecException e) {
+                log.error("Key cannot be created. error={}, pgpPubKeyAsPem={}", e.getMessage(), pgpPubKeyAsPem);
+                e.printStackTrace();
+                //throw new RuntimeException(e);
+            }
+        return pgpPubKey;
     }
 
     // Hex
