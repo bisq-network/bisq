@@ -18,20 +18,16 @@
 package io.bisq.core.user;
 
 import com.google.protobuf.Message;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.persistence.Persistable;
-import io.bisq.common.proto.ProtoHelper;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.Mediator;
 import io.bisq.core.filter.Filter;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.proto.ProtoUtil;
-import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -39,7 +35,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
 import lombok.AllArgsConstructor;
-import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -56,44 +51,43 @@ import java.util.stream.Collectors;
 @Slf4j
 @AllArgsConstructor
 public final class User implements Persistable {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
-    // persisted fields
-    private UserVO userVO = new UserVO();
+    private UserVO userVO;
 
     // Transient immutable fields
     transient final private Storage<UserVO> storage;
+    transient final private KeyRing keyRing;
     transient private Set<TradeCurrency> tradeCurrenciesInPaymentAccounts;
 
     // Observable wrappers
-    transient final private ObservableSet<PaymentAccount> paymentAccountsAsObservable = FXCollections.observableSet(userVO.getPaymentAccounts());
-    transient final private ObjectProperty<PaymentAccount> currentPaymentAccountProperty = new SimpleObjectProperty<>(userVO.getCurrentPaymentAccount());
+    transient private ObservableSet<PaymentAccount> paymentAccountsAsObservable;
+    transient private ObjectProperty<PaymentAccount> currentPaymentAccountProperty;
 
 
     @Inject
     public User(Storage<UserVO> storage, KeyRing keyRing) throws NoSuchAlgorithmException {
         this.storage = storage;
+        this.keyRing = keyRing;
+    }
+
+    // for unit tests
+    public User() {
+        storage = null;
+        keyRing = null;
+    }
+
+    public void init() {
+        UserVO persisted = storage.initAndGetPersistedWithFileName("UserVO");
+        userVO = persisted != null ? persisted : new UserVO();
+
+        paymentAccountsAsObservable = FXCollections.observableSet(userVO.getPaymentAccounts());
+        currentPaymentAccountProperty = new SimpleObjectProperty<>(userVO.getCurrentPaymentAccount());
         userVO.setAccountID(String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode())));
         // language setup
         userVO.getAcceptedLanguageLocaleCodes().add(LanguageUtil.getDefaultLanguageLocaleAsCode());
         String english = LanguageUtil.getEnglishLanguageLocaleCode();
         if (!userVO.getAcceptedLanguageLocaleCodes().contains(english))
             userVO.getAcceptedLanguageLocaleCodes().add(english);
-    }
 
-    // for unit tests
-    public User() {
-        this.storage = null;
-    }
-
-    public void init() {
-        UserVO persisted = storage.initAndGetPersisted(userVO);
-        if (persisted != null) {
-            userVO = persisted;
-            paymentAccountsAsObservable.addAll(userVO.getPaymentAccounts());
-            currentPaymentAccountProperty.set(userVO.getCurrentPaymentAccount());
-        }
         storage.queueUpForSave();
 
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
