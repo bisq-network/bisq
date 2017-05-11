@@ -139,7 +139,7 @@ public final class Alert implements StoragePayload {
 
     //Marshaller
     @Override
-    public PB.StoragePayload toProto() {
+    public PB.StoragePayload toProtoMessage() {
         checkNotNull(getStoragePublicKeyBytes(), "storagePublicKeyBytes must not be null");
         checkNotNull(getSignatureAsBase64(), "signatureAsBase64 must not be null");
         final PB.Alert.Builder builder = PB.Alert.newBuilder()

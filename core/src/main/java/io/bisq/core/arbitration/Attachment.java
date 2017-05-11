@@ -40,7 +40,7 @@ public final class Attachment implements Payload {
     }
 
     @Override
-    public PB.Attachment toProto() {
+    public PB.Attachment toProtoMessage() {
         return PB.Attachment.newBuilder().setBytes(ByteString.copyFrom(bytes))
                 .setFileName(fileName).build();
     }

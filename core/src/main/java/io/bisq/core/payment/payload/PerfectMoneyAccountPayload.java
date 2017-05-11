@@ -56,7 +56,7 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.PerfectMoneyAccountPayload.Builder thisClass =
                 PB.PerfectMoneyAccountPayload.newBuilder().setAccountNr(accountNr);
         PB.PaymentAccountPayload.Builder paymentAccountPayload =

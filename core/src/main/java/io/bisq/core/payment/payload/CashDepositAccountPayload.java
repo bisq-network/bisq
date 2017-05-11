@@ -97,7 +97,7 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.CashDepositAccountPayload.Builder cashDepositAccountPayload =
                 PB.CashDepositAccountPayload.newBuilder()
                         .setHolderName(holderName)

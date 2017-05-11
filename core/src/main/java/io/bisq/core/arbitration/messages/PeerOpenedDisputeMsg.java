@@ -46,11 +46,11 @@ public final class PeerOpenedDisputeMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         return msgBuilder.setPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage.newBuilder()
-                .setDispute(dispute.toProto())
-                .setMyNodeAddress(myNodeAddress.toProto())
+                .setDispute(dispute.toProtoMessage())
+                .setMyNodeAddress(myNodeAddress.toProtoMessage())
                 .setUid(getUID())).build();
     }
 }

@@ -40,7 +40,7 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.NationalBankAccountPayload.Builder thisClass =
                 PB.NationalBankAccountPayload.newBuilder();
         PB.BankAccountPayload.Builder bankAccountPayload =

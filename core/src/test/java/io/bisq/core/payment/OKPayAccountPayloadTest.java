@@ -32,7 +32,7 @@ public class OKPayAccountPayloadTest {
         OKPayAccountPayload accountPayload = new OKPayAccountPayload("method", "id", 100);
         accountPayload.setAccountNr("AccNr");
         try {
-            String buffer = JsonFormat.printer().print(accountPayload.toProto().getOKPayAccountPayload());
+            String buffer = JsonFormat.printer().print(accountPayload.toProtoMessage().getOKPayAccountPayload());
             JsonFormat.Parser parser = JsonFormat.parser();
             PB.OKPayAccountPayload.Builder builder = PB.OKPayAccountPayload.newBuilder();
             parser.merge(buffer, builder);

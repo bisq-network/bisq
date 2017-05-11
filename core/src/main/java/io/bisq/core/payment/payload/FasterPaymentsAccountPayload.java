@@ -60,7 +60,7 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.FasterPaymentsAccountPayload.Builder thisClass =
                 PB.FasterPaymentsAccountPayload.newBuilder()
                         .setSortCode(sortCode)

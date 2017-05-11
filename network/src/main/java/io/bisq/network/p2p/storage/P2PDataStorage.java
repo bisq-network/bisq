@@ -670,7 +670,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     map.entrySet().stream()
                             .collect(Collectors.toMap(
                                     e -> e.getKey().toString(),
-                                    e -> (PB.ProtectedStorageEntry) e.getValue().toProto())
+                                            e -> (PB.ProtectedStorageEntry) e.getValue().toProtoMessage())
                             );
             return PB.Persistable.newBuilder().setPersistedEntryMap(PB.PersistedEntryMap.newBuilder().putAllPersistedEntryMap(protoResult)).build();
         };
@@ -704,8 +704,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
 
         @Override
-        public com.google.protobuf.Message toProto() {
-            return PB.DataAndSeqNrPair.newBuilder().setPayload((PB.StoragePayload) data.toProto()).setSequenceNumber(sequenceNumber).build();
+        public com.google.protobuf.Message toProtoMessage() {
+            return PB.DataAndSeqNrPair.newBuilder().setPayload((PB.StoragePayload) data.toProtoMessage()).setSequenceNumber(sequenceNumber).build();
         }
     }
 
@@ -730,7 +730,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
 
         @Override
-        public PB.ByteArray toProto() {
+        public PB.ByteArray toProtoMessage() {
             return PB.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes)).build();
         }
 
@@ -764,7 +764,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
 
         @Override
-        public PB.MapValue toProto() {
+        public PB.MapValue toProtoMessage() {
             return PB.MapValue.newBuilder().setSequenceNr(sequenceNr).setTimeStamp(timeStamp).build();
         }
 

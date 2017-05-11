@@ -54,7 +54,7 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.AliPayAccountPayload.Builder thisClass =
                 PB.AliPayAccountPayload.newBuilder().setAccountNr(accountNr);
         PB.PaymentAccountPayload.Builder paymentAccountPayload =

@@ -259,12 +259,12 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.StoragePayload toProto() {
+    public PB.StoragePayload toProtoMessage() {
         List<PB.NodeAddress> arbitratorNodeAddresses = this.arbitratorNodeAddresses.stream()
-                .map(NodeAddress::toProto)
+                .map(NodeAddress::toProtoMessage)
                 .collect(Collectors.toList());
         List<PB.NodeAddress> mediatorNodeAddresses = this.mediatorNodeAddresses.stream()
-                .map(NodeAddress::toProto)
+                .map(NodeAddress::toProtoMessage)
                 .collect(Collectors.toList());
         PB.OfferPayload.Builder offerBuilder = PB.OfferPayload.newBuilder()
                 .setDirection(PB.OfferPayload.Direction.valueOf(direction.name()))
@@ -281,8 +281,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setMarketPriceMargin(marketPriceMargin)
                 .setAmount(amount)
                 .setMinAmount(minAmount)
-                .setMakerNodeAddress(makerNodeAddress.toProto())
-                .setPubKeyRing(pubKeyRing.toProto())
+                .setMakerNodeAddress(makerNodeAddress.toProtoMessage())
+                .setPubKeyRing(pubKeyRing.toProtoMessage())
                 .setMakerPaymentAccountId(makerPaymentAccountId)
                 .setVersionNr(versionNr)
                 .setBlockHeightAtOfferCreation(blockHeightAtOfferCreation)

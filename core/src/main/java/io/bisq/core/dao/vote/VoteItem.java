@@ -21,8 +21,6 @@ import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -91,7 +89,7 @@ public class VoteItem implements Persistable {
     }
 
     @Override
-    public PB.VoteItem toProto() {
+    public PB.VoteItem toProtoMessage() {
         PB.VoteItem.Builder builder = PB.VoteItem.newBuilder()
                 .setVotingType(PB.VoteItem.VotingType.valueOf(votingType.name()))
                 .setDefaultValue(defaultValue)

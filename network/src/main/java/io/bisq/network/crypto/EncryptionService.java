@@ -82,7 +82,7 @@ public class EncryptionService {
     }
 
     private static byte[] encryptPayloadWithHmac(Msg msg, SecretKey secretKey) throws CryptoException {
-        return Encryption.encryptPayloadWithHmac(msg.toEnvelopeProto().toByteArray(), secretKey);
+        return Encryption.encryptPayloadWithHmac(msg.toProtoMsg().toByteArray(), secretKey);
     }
 
     /**
@@ -118,7 +118,7 @@ public class EncryptionService {
      * @return Hash of data
      */
     public static byte[] getHash(Marshaller data) {
-        return Hash.getHash(data.toProto().toByteArray());
+        return Hash.getHash(data.toProtoMessage().toByteArray());
     }
 }
 

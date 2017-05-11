@@ -56,7 +56,7 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.CryptoCurrencyAccountPayload.Builder cryptoCurrencyAccountPayload =
                 PB.CryptoCurrencyAccountPayload.newBuilder().setAddress(address);
         PB.PaymentAccountPayload.Builder paymentAccountPayload =

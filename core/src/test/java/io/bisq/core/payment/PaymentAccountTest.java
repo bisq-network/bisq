@@ -30,7 +30,7 @@ public class PaymentAccountTest {
         String nr = "nr";
         account.setAccountNr(nr);
 
-        OKPayAccount newVo = (OKPayAccount) PaymentAccount.fromProto(account.toProto());
+        OKPayAccount newVo = (OKPayAccount) PaymentAccount.fromProto(account.toProtoMessage());
         assertEquals(name, newVo.getAccountName());
         assertEquals(nr, newVo.getAccountNr());
 

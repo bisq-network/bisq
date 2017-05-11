@@ -88,21 +88,21 @@ public final class PublishDepositTxRequest extends TradeMsg implements MailboxMs
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         return msgBuilder.setPublishDepositTxRequest(msgBuilder.getPublishDepositTxRequestBuilder()
                 .setMessageVersion(getMsgVersion())
                 .setTradeId(tradeId)
-                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProto())
+                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
                 .setMakerAccountId(makerAccountId)
                 .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
                 .setMakerContractAsJson(makerContractAsJson)
                 .setMakerContractSignature(makerContractSignature)
                 .setMakerPayoutAddressString(makerPayoutAddressString)
                 .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
-                .setSenderNodeAddress(senderNodeAddress.toProto())
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setUid(uid)
-                .addAllMakerInputs(makerInputs.stream().map(rawTransactionInput -> rawTransactionInput.toProto()).collect(Collectors.toList()))).build();
+                .addAllMakerInputs(makerInputs.stream().map(rawTransactionInput -> rawTransactionInput.toProtoMessage()).collect(Collectors.toList()))).build();
     }
 
     @Override

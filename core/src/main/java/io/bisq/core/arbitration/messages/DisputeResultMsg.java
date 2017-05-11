@@ -46,11 +46,11 @@ public final class DisputeResultMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         return msgBuilder.setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
-                .setDisputeResult(disputeResult.toProto())
-                .setMyNodeAddress(myNodeAddress.toProto())
+                .setDisputeResult(disputeResult.toProtoMessage())
+                .setMyNodeAddress(myNodeAddress.toProtoMessage())
                 .setUid(getUID()))
                 .build();
     }

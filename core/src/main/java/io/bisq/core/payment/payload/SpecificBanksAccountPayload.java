@@ -64,7 +64,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.SpecificBanksAccountPayload.Builder specificBanksAccountPayload =
                 PB.SpecificBanksAccountPayload.newBuilder().addAllAcceptedBanks(acceptedBanks);
         PB.BankAccountPayload.Builder bankAccountPayload =

@@ -54,7 +54,7 @@ public final class CryptoCurrency extends TradeCurrency {
     }
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         PB.TradeCurrency.Builder builder = PB.TradeCurrency.newBuilder()
                 .setCode(code)
                 .setName(name)

@@ -218,12 +218,12 @@ public class ProcessModel implements Model, Persistable {
     }
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         return PB.ProcessModel.newBuilder()
-                .setTradingPeer((PB.TradingPeer) tradingPeer.toProto())
+                .setTradingPeer((PB.TradingPeer) tradingPeer.toProtoMessage())
                 .setOfferId(offerId)
                 .setAccountId(accountId)
-                .setPubKeyRing(pubKeyRing.toProto())
+                .setPubKeyRing(pubKeyRing.toProtoMessage())
                 .setTakeOfferFeeTxId(takeOfferFeeTxId)
                 .setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature))
                 .addAllTakerAcceptedArbitratorNodeAddresses(ProtoHelper.collectionToProto(takerAcceptedArbitratorNodeAddresses))
@@ -235,7 +235,7 @@ public class ProcessModel implements Model, Persistable {
                 .setUseSavingsWallet(useSavingsWallet)
                 .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong)
                 .setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey))
-                .setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProto())
+                .setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage())
                 .build();
     }
 

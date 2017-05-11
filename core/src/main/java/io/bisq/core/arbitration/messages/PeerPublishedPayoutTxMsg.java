@@ -46,12 +46,12 @@ public final class PeerPublishedPayoutTxMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         return msgBuilder.setPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage.newBuilder()
                 .setTransaction(ByteString.copyFrom(transaction))
                 .setTradeId(tradeId)
-                .setMyNodeAddress(myNodeAddress.toProto())).build();
+                .setMyNodeAddress(myNodeAddress.toProtoMessage())).build();
     }
 
     // transaction not displayed for privacy reasons...

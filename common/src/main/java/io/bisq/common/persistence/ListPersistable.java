@@ -55,7 +55,7 @@ public class ListPersistable<T extends Persistable> implements Persistable {
     }
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         if(Objects.isNull(toProto)) {
             throw new NotImplementedException();
         }

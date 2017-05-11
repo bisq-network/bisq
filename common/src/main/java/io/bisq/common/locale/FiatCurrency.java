@@ -66,7 +66,7 @@ public final class FiatCurrency extends TradeCurrency {
     }
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         PB.Currency.Builder currencyBuilder = PB.Currency.newBuilder().setCurrencyCode(currency.getCurrencyCode());
         PB.FiatCurrency.Builder fiatCurrencyBuilder = PB.FiatCurrency.newBuilder().setCurrency(currencyBuilder);
 

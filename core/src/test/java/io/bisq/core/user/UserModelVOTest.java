@@ -31,7 +31,7 @@ public class UserModelVOTest {
         User vo = new User();
         vo.setAccountID("accountId");
 
-        User newVo = User.fromProto(vo.toProto().getUser());
+        User newVo = User.fromProto(vo.toProtoMessage().getUser());
     }
 
     @Test
@@ -44,6 +44,6 @@ public class UserModelVOTest {
         vo.setRegisteredMediator(MediatorTest.getMediatorMock());
         vo.setAcceptedArbitrators(Lists.newArrayList(ArbitratorTest.getArbitratorMock()));
         vo.setAcceptedMediators(Lists.newArrayList(MediatorTest.getMediatorMock()));
-        User newVo = User.fromProto(vo.toProto().getUser());
+        User newVo = User.fromProto(vo.toProtoMessage().getUser());
     }
 }

@@ -132,7 +132,7 @@ public final class DisputeCommunicationMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         return msgBuilder.setDisputeCommunicationMessage(PB.DisputeCommunicationMessage.newBuilder()
                 .setDate(date)
@@ -140,10 +140,10 @@ public final class DisputeCommunicationMsg extends DisputeMsg {
                 .setTraderId(traderId)
                 .setSenderIsTrader(senderIsTrader)
                 .setMessage(message)
-                .addAllAttachments(attachments.stream().map(attachment -> attachment.toProto()).collect(Collectors.toList()))
+                .addAllAttachments(attachments.stream().map(attachment -> attachment.toProtoMessage()).collect(Collectors.toList()))
                 .setArrived(arrived)
                 .setStoredInMailbox(storedInMailbox)
                 .setIsSystemMessage(isSystemMessage)
-                .setMyNodeAddress(myNodeAddress.toProto())).build();
+                .setMyNodeAddress(myNodeAddress.toProtoMessage())).build();
     }
 }

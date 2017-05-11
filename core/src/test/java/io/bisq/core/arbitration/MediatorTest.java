@@ -32,7 +32,7 @@ public class MediatorTest {
         Mediator Mediator = getMediatorMock();
 
 
-        Mediator newVo = Mediator.fromProto(Mediator.toProto().getMediator());
+        Mediator newVo = Mediator.fromProto(Mediator.toProtoMessage().getMediator());
     }
 
     public static Mediator getMediatorMock() {

@@ -56,7 +56,7 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.OKPayAccountPayload.Builder builder = PB.OKPayAccountPayload.newBuilder()
                 .setAccountNr(accountNr);
 

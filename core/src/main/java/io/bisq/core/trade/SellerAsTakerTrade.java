@@ -71,9 +71,9 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
 
 
     @Override
-    public PB.Tradable toProto() {
+    public PB.Tradable toProtoMessage() {
         return PB.Tradable.newBuilder()
-                .setSellerAsTakerTrade(PB.SellerAsTakerTrade.newBuilder().setTrade((PB.Trade) super.toProto())).build();
+                .setSellerAsTakerTrade(PB.SellerAsTakerTrade.newBuilder().setTrade((PB.Trade) super.toProtoMessage())).build();
     }
 
     public static Tradable fromProto(PB.SellerAsTakerTrade proto, Storage<? extends TradableList> storage,

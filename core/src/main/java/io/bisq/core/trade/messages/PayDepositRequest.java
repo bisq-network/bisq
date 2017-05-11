@@ -105,7 +105,7 @@ public final class PayDepositRequest extends TradeMsg {
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         PB.PayDepositRequest.Builder builderForValue = PB.PayDepositRequest.newBuilder()
                 .setTradeId(tradeId)
@@ -116,20 +116,20 @@ public final class PayDepositRequest extends TradeMsg {
                 .setTakerFee(takerFee)
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .addAllRawTransactionInputs(rawTransactionInputs.stream()
-                        .map(rawTransactionInput -> rawTransactionInput.toProto()).collect(Collectors.toList()))
+                        .map(rawTransactionInput -> rawTransactionInput.toProtoMessage()).collect(Collectors.toList()))
                 .setChangeOutputValue(changeOutputValue)
                 .setTakerPayoutAddressString(takerPayoutAddressString)
-                .setTakerPubKeyRing(takerPubKeyRing.toProto())
-                .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProto())
+                .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
+                .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
                 .setTakerAccountId(takerAccountId)
                 .setTakerFeeTxId(takeOfferFeeTxId)
                 .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream()
-                        .map(nodeAddress -> nodeAddress.toProto()).collect(Collectors.toList()))
+                        .map(nodeAddress -> nodeAddress.toProtoMessage()).collect(Collectors.toList()))
                 .addAllAcceptedMediatorNodeAddresses(acceptedMediatorNodeAddresses.stream()
-                        .map(nodeAddress -> nodeAddress.toProto()).collect(Collectors.toList()))
-                .setArbitratorNodeAddress(arbitratorNodeAddress.toProto())
-                .setMediatorNodeAddress(mediatorNodeAddress.toProto())
-                .setSenderNodeAddress(senderNodeAddress.toProto());
+                        .map(nodeAddress -> nodeAddress.toProtoMessage()).collect(Collectors.toList()))
+                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
+                .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage());
         Optional.ofNullable(changeOutputAddress).ifPresent(builderForValue::setChangeOutputAddress);
         return msgBuilder.setPayDepositRequest(builderForValue).build();
     }

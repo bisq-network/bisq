@@ -381,7 +381,7 @@ public final class Dispute implements Payload {
     }
 
     @Override
-    public PB.Dispute toProto() {
+    public PB.Dispute toProtoMessage() {
         PB.Dispute.Builder builder = PB.Dispute.newBuilder()
                 .setTradeId(tradeId)
                 .setId(id)
@@ -389,15 +389,15 @@ public final class Dispute implements Payload {
                 .setDisputeOpenerIsBuyer(disputeOpenerIsBuyer)
                 .setDisputeOpenerIsMaker(disputeOpenerIsMaker)
                 .setOpeningDate(openingDate)
-                .setTraderPubKeyRing(traderPubKeyRing.toProto())
+                .setTraderPubKeyRing(traderPubKeyRing.toProtoMessage())
                 .setTradeDate(tradeDate)
-                .setContract(contract.toProto())
+                .setContract(contract.toProtoMessage())
                 .setContractHash(ByteString.copyFrom(contractHash))
                 .setContractAsJson(contractAsJson)
-                .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProto())
+                .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage())
                 .setIsSupportTicket(isSupportTicket)
                 .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream().map(
-                        disputeCommunicationMessage -> disputeCommunicationMessage.toEnvelopeProto().getDisputeCommunicationMessage()).collect(Collectors.toList()))
+                        disputeCommunicationMessage -> disputeCommunicationMessage.toProtoMsg().getDisputeCommunicationMessage()).collect(Collectors.toList()))
                 .setIsClosed(isClosed);
 
         Optional.ofNullable(depositTxSerialized).ifPresent(tx -> builder.setDepositTxSerialized(ByteString.copyFrom(tx)));
@@ -407,7 +407,7 @@ public final class Dispute implements Payload {
         Optional.ofNullable(disputePayoutTxId).ifPresent(builder::setDisputePayoutTxId);
         Optional.ofNullable(takerContractSignature).ifPresent(builder::setTakerContractSignature);
         Optional.ofNullable(makerContractSignature).ifPresent(builder::setMakerContractSignature);
-        Optional.ofNullable(disputeResult).ifPresent(result -> builder.setDisputeResult(disputeResult.toProto()));
+        Optional.ofNullable(disputeResult).ifPresent(result -> builder.setDisputeResult(disputeResult.toProtoMessage()));
         return builder.build();
     }
 }

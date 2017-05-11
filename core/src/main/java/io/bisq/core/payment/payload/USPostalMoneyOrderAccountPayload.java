@@ -61,7 +61,7 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.USPostalMoneyOrderAccountPayload.Builder thisClass =
                 PB.USPostalMoneyOrderAccountPayload.newBuilder()
                         .setPostalAddress(postalAddress)

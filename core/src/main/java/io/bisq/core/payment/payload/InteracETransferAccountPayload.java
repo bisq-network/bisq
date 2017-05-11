@@ -66,7 +66,7 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.InteracETransferAccountPayload.Builder interacETransferAccountPayload =
                 PB.InteracETransferAccountPayload.newBuilder()
                         .setEmail(email)

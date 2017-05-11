@@ -37,7 +37,7 @@ public final class BlockChainExplorer implements Persistable {
     }
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         return PB.BlockChainExplorer.newBuilder().setName(name).setTxUrl(txUrl).setAddressUrl(addressUrl).build();
     }
 }

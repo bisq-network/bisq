@@ -55,14 +55,14 @@ public final class PayoutTxPublishedMsg extends TradeMsg implements MailboxMsg {
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         return msgBuilder.setPayoutTxPublishedMessage(msgBuilder.getPayoutTxPublishedMessageBuilder()
                 .setUid(uid)
                 .setMessageVersion(getMsgVersion())
                 .setTradeId(tradeId)
                 .setPayoutTx(ByteString.copyFrom(payoutTx))
-                .setSenderNodeAddress(senderNodeAddress.toProto())).build();
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())).build();
     }
 
     // payoutTx not printed for privacy reasons

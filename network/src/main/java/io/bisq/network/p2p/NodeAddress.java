@@ -52,7 +52,7 @@ public final class NodeAddress implements Persistable, Payload {
         return hostName.replace(".onion", "");
     }
 
-    public PB.NodeAddress toProto() {
+    public PB.NodeAddress toProtoMessage() {
         return PB.NodeAddress.newBuilder().setHostName(hostName).setPort(port).build();
     }
 

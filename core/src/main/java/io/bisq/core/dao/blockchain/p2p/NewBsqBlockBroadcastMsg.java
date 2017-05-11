@@ -19,15 +19,15 @@ public final class NewBsqBlockBroadcastMsg extends BroadcastMsg {
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         final PB.NewBsqBlockBroadcastMsg.Builder builder = PB.NewBsqBlockBroadcastMsg.newBuilder()
                 .setBsqBlockBytes(ByteString.copyFrom(bsqBlockBytes));
         return Msg.getMsgBuilder().setNewBsqBlockBroadcastMsg(builder).build();
     }
 
     @Override
-    public Message toProto() {
-        return toEnvelopeProto().getNewBsqBlockBroadcastMsg();
+    public Message toProtoMessage() {
+        return toProtoMsg().getNewBsqBlockBroadcastMsg();
     }
 
     public static Msg fromProto(PB.Msg envelope) {

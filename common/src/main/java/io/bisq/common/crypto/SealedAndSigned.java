@@ -84,7 +84,7 @@ public final class SealedAndSigned implements Payload {
     }
 
 
-    public PB.SealedAndSigned toProto() {
+    public PB.SealedAndSigned toProtoMessage() {
         return PB.SealedAndSigned.newBuilder().setEncryptedSecretKey(ByteString.copyFrom(encryptedSecretKey))
                 .setEncryptedPayloadWithHmac(ByteString.copyFrom(encryptedPayloadWithHmac))
                 .setSignature(ByteString.copyFrom(signature)).setSigPublicKeyBytes(ByteString.copyFrom(sigPublicKeyBytes))

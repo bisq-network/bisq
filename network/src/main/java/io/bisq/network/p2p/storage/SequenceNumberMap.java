@@ -53,13 +53,13 @@ public class SequenceNumberMap implements Persistable {
     }
 
     @Override
-    public PB.Persistable toProto() {
+    public PB.Persistable toProtoMessage() {
         return PB.Persistable.newBuilder().setSequenceNumberMap(
                 PB.SequenceNumberMap.newBuilder().addAllSequenceNumberEntries(
                         hashMap.entrySet().stream()
                                 .map(entry ->
-                                        PB.SequenceNumberEntry.newBuilder().setBytes(entry.getKey().toProto())
-                                                .setMapValue(entry.getValue().toProto()).build())
+                                        PB.SequenceNumberEntry.newBuilder().setBytes(entry.getKey().toProtoMessage())
+                                                .setMapValue(entry.getValue().toProtoMessage()).build())
                                 .collect(Collectors.toList()))).build();
     }
 

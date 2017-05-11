@@ -20,7 +20,6 @@ package io.bisq.core.arbitration;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.core.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
@@ -102,11 +101,11 @@ public final class Arbitrator implements StoragePayload {
     }
 
     @Override
-    public PB.StoragePayload toProto() {
+    public PB.StoragePayload toProtoMessage() {
         final PB.Arbitrator.Builder builder = PB.Arbitrator.newBuilder()
                 .setBtcPubKey(ByteString.copyFrom(btcPubKey))
-                .setPubKeyRing(pubKeyRing.toProto())
-                .setNodeAddress(nodeAddress.toProto())
+                .setPubKeyRing(pubKeyRing.toProtoMessage())
+                .setNodeAddress(nodeAddress.toProtoMessage())
                 .addAllLanguageCodes(languageCodes)
                 .setBtcAddress(btcAddress)
                 .setRegistrationDate(registrationDate)

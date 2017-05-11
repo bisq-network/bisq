@@ -127,7 +127,7 @@ public final class Filter implements StoragePayload {
     }
 
     @Override
-    public PB.StoragePayload toProto() {
+    public PB.StoragePayload toProtoMessage() {
         List<PB.PaymentAccountFilter> paymentAccountFilterList;
         paymentAccountFilterList = bannedPaymentAccounts.stream()
                 .map(PaymentAccountFilter::toProtoBuf).collect(Collectors.toList());

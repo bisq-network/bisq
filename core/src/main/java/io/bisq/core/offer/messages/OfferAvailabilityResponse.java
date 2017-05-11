@@ -58,7 +58,7 @@ public final class OfferAvailabilityResponse extends OfferMsg implements Support
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         return msgBuilder.setOfferAvailabilityResponse(PB.OfferAvailabilityResponse.newBuilder().setMessageVersion(getMsgVersion())
                 .setOfferId(offerId)

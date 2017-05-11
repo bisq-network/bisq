@@ -166,7 +166,7 @@ public final class Navigation implements Persistable {
     }
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         return PB.Persistable.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder().addAllViewPath(viewPathAsString.getViewPath())).build();
     }
 }

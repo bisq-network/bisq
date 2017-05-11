@@ -37,7 +37,7 @@ public class ViewPathAsString implements Persistable {
     List<String> viewPath = Lists.newArrayList();
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         return CollectionUtils.isEmpty(viewPath) ? PB.Persistable.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder()).build()
                 : PB.Persistable.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder().addAllViewPath(viewPath)).build();
     }

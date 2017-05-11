@@ -103,8 +103,8 @@ public class ProtectedStorageEntry implements Payload {
         return (System.currentTimeMillis() - creationTimeStamp) > storagePayload.getTTL();
     }
 
-    public Message toProto() {
-        return PB.ProtectedStorageEntry.newBuilder().setStoragePayload((PB.StoragePayload) storagePayload.toProto())
+    public Message toProtoMessage() {
+        return PB.ProtectedStorageEntry.newBuilder().setStoragePayload((PB.StoragePayload) storagePayload.toProtoMessage())
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes)).setSequenceNumber(sequenceNumber)
                 .setSignature(ByteString.copyFrom(signature)).setCreationTimeStamp(creationTimeStamp).build();
     }

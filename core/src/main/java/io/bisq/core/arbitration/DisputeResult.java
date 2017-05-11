@@ -236,7 +236,7 @@ public final class DisputeResult implements Payload {
     }
 
     @Override
-    public PB.DisputeResult toProto() {
+    public PB.DisputeResult toProtoMessage() {
         return PB.DisputeResult.newBuilder()
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
@@ -246,7 +246,7 @@ public final class DisputeResult implements Payload {
                 .setIdVerification(idVerification)
                 .setScreenCast(screenCast)
                 .setSummaryNotes(summaryNotes)
-                .setDisputeCommunicationMessage(disputeCommunicationMessage.toEnvelopeProto().getDisputeCommunicationMessage())
+                .setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoMsg().getDisputeCommunicationMessage())
                 .setArbitratorSignature(ByteString.copyFrom(arbitratorSignature))
                 .setBuyerPayoutAmount(buyerPayoutAmount)
                 .setSellerPayoutAmount(sellerPayoutAmount)

@@ -17,7 +17,6 @@
 
 package io.bisq.core.trade;
 
-import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -66,9 +65,9 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
     }
 
     @Override
-    public PB.Tradable toProto() {
+    public PB.Tradable toProtoMessage() {
         return PB.Tradable.newBuilder()
-                .setBuyerAsMakerTrade(PB.BuyerAsMakerTrade.newBuilder().setTrade((PB.Trade) super.toProto())).build();
+                .setBuyerAsMakerTrade(PB.BuyerAsMakerTrade.newBuilder().setTrade((PB.Trade) super.toProtoMessage())).build();
     }
 
     public static Tradable fromProto(PB.BuyerAsMakerTrade proto, Storage<? extends TradableList> storage,

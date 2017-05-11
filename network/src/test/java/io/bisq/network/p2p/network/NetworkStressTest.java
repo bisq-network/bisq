@@ -823,7 +823,7 @@ final class StressTestDirectMsg implements DirectMsg {
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         throw new NotImplementedException();
     }
 
@@ -851,7 +851,7 @@ final class StressTestMailboxMsg implements MailboxMsg {
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         throw new NotImplementedException();
     }
 

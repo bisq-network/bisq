@@ -63,8 +63,8 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         }
     }
 
-    public PB.ProtectedMailboxStorageEntry toProto() {
-        return PB.ProtectedMailboxStorageEntry.newBuilder().setEntry((PB.ProtectedStorageEntry) super.toProto())
+    public PB.ProtectedMailboxStorageEntry toProtoMessage() {
+        return PB.ProtectedMailboxStorageEntry.newBuilder().setEntry((PB.ProtectedStorageEntry) super.toProtoMessage())
                 .setReceiversPubKeyBytes(ByteString.copyFrom(receiversPubKeyBytes)).build();
     }
 

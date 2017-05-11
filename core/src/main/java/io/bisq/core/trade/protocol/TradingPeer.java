@@ -57,7 +57,7 @@ public final class TradingPeer implements Persistable {
     }
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         // TODO
         // nullable
         // changeOutputAddress
@@ -72,7 +72,7 @@ public final class TradingPeer implements Persistable {
                 .setContractAsJson(contractAsJson)
                 .setContractSignature(contractSignature)
               /*  .setSignature(signature)*/
-                .setPubKeyRing(pubKeyRing.toProto())
+                .setPubKeyRing(pubKeyRing.toProtoMessage())
               /*  .setMultiSigPubKey(multiSigPubKey)*/
                 /*.setRawTransactionInputs(rawTransactionInputs)*/
                 .setChangeOutputValue(changeOutputValue)

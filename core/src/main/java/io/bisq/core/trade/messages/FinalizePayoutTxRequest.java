@@ -61,14 +61,14 @@ public final class FinalizePayoutTxRequest extends TradeMsg implements MailboxMs
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         return msgBuilder.setFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest.newBuilder()
                 .setMessageVersion(getMsgVersion())
                 .setTradeId(tradeId)
                 .setSellerSignature(ByteString.copyFrom(sellerSignature))
                 .setSellerPayoutAddress(sellerPayoutAddress)
-                .setSenderNodeAddress(senderNodeAddress.toProto())
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setUid(uid)).build();
     }
 

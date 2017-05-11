@@ -81,7 +81,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.SepaAccountPayload.Builder sepaAccountPayload =
                 PB.SepaAccountPayload.newBuilder()
                         .setHolderName(holderName)

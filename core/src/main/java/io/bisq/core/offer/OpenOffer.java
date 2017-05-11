@@ -61,9 +61,9 @@ public final class OpenOffer implements Tradable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         final PB.OpenOffer build = PB.OpenOffer.newBuilder()
-                .setOffer(offer.toProto())
+                .setOffer(offer.toProtoMessage())
                 .setState(PB.OpenOffer.State.valueOf(state.name()))
                 .build();
         return build;

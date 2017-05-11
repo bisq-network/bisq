@@ -60,7 +60,7 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.ClearXchangeAccountPayload.Builder thisClass =
                 PB.ClearXchangeAccountPayload.newBuilder()
                         .setHolderName(holderName)

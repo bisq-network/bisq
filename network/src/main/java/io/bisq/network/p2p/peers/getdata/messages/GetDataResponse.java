@@ -44,7 +44,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMsg, Extended
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.GetDataResponse.Builder builder = PB.GetDataResponse.newBuilder();
         builder.addAllDataSet(
                 dataSet.stream()
@@ -52,9 +52,9 @@ public final class GetDataResponse implements SupportedCapabilitiesMsg, Extended
                             PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder builder1 =
                                     PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.newBuilder();
                             if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
-                                builder1.setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProto());
+                                builder1.setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage());
                             } else {
-                                builder1.setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProto());
+                                builder1.setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage());
                             }
                             return builder1.build();
                         })

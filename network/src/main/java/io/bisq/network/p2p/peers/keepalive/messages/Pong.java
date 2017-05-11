@@ -22,7 +22,7 @@ public final class Pong extends KeepAliveMsg {
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         return msgBuilder.setPong(PB.Pong.newBuilder().setRequestNonce(requestNonce)).build();
     }

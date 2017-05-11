@@ -75,44 +75,44 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
     }
 
     @Override
-    public Optional<Persistable> fromProto(PB.Persistable envelope) {
-        if (Objects.isNull(envelope)) {
-            log.warn("fromProtoBuf called with empty disk envelope.");
+    public Optional<Persistable> fromProto(PB.Persistable persistable) {
+        if (Objects.isNull(persistable)) {
+            log.warn("fromProtoBuf called with empty disk persistable.");
             return Optional.empty();
         }
 
-        log.debug("Convert protobuffer disk envelope: {}", envelope.getMessageCase());
+        log.debug("Convert protobuffer disk persistable: {}", persistable.getMessageCase());
 
         Persistable result = null;
-        switch (envelope.getMessageCase()) {
+        switch (persistable.getMessageCase()) {
             case ADDRESS_ENTRY_LIST:
-                result = fillAddressEntryList(envelope, addressEntryListProvider.get());
+                result = fillAddressEntryList(persistable, addressEntryListProvider.get());
                 break;
             case VIEW_PATH_AS_STRING:
-                result = ViewPathAsString.fromProto(envelope.getViewPathAsString());
+                result = ViewPathAsString.fromProto(persistable.getViewPathAsString());
                 break;
             case TRADABLE_LIST:
-                result = getTradableList(envelope.getTradableList());
+                result = getTradableList(persistable.getTradableList());
                 break;
             case PEERS_LIST:
-                result = getPeersList(envelope.getPeersList());
+                result = getPeersList(persistable.getPeersList());
                 break;
             case COMPENSATION_REQUEST_PAYLOAD:
-                result = CompensationRequestPayload.fromProto(envelope.getCompensationRequestPayload());
+                result = CompensationRequestPayload.fromProto(persistable.getCompensationRequestPayload());
                 break;
             case PREFERENCES:
-                result = fillPreferences(envelope, preferencesProvider.get());
+                result = fillPreferences(persistable, preferencesProvider.get());
                 break;
             case USER:
-                result = User.fromProto(envelope.getUser());
+                result = User.fromProto(persistable.getUser());
                 break;
             case SEQUENCE_NUMBER_MAP:
-                result = SequenceNumberMap.fromProto(envelope.getSequenceNumberMap());
+                result = SequenceNumberMap.fromProto(persistable.getSequenceNumberMap());
                 break;
             case TRADE_STATISTICS_LIST:
-                result = getTradeStatisticsList(envelope.getTradeStatisticsList());
+                result = getTradeStatisticsList(persistable.getTradeStatisticsList());
             default:
-                log.warn("Unknown message case:{}:{}", envelope.getMessageCase());
+                log.warn("Unknown message case:{}:{}", persistable.getMessageCase());
         }
         return Optional.ofNullable(result);
     }

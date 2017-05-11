@@ -44,7 +44,7 @@ public final class Country implements Persistable {
     }
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         return PB.Country.newBuilder().setCode(code).setName(name)
                 .setRegion(PB.Region.newBuilder().setCode(region.code).setName(region.name)).build();
     }

@@ -54,7 +54,7 @@ public final class RawTransactionInput implements Payload {
     }
 
     @Override
-    public PB.RawTransactionInput toProto() {
+    public PB.RawTransactionInput toProtoMessage() {
         return PB.RawTransactionInput.newBuilder()
                 .setIndex(index)
                 .setParentTransaction(ByteString.copyFrom(parentTransaction))

@@ -60,14 +60,14 @@ public final class FiatTransferStartedMsg extends TradeMsg implements MailboxMsg
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         return msgBuilder.setFiatTransferStartedMessage(msgBuilder.getFiatTransferStartedMessageBuilder()
                 .setMessageVersion(getMsgVersion())
                 .setTradeId(tradeId)
                 .setBuyerSignature(ByteString.copyFrom(buyerSignature))
                 .setBuyerPayoutAddress(buyerPayoutAddress)
-                .setSenderNodeAddress(senderNodeAddress.toProto())
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setUid(uid)).build();
     }
 

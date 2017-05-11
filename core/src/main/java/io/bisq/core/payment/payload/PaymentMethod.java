@@ -17,7 +17,6 @@
 
 package io.bisq.core.payment.payload;
 
-import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.Res;
 import io.bisq.common.persistence.Persistable;
@@ -172,7 +171,7 @@ public final class PaymentMethod implements Persistable, Comparable {
     }
 
     @Override
-    public PB.PaymentMethod toProto() {
+    public PB.PaymentMethod toProtoMessage() {
         return PB.PaymentMethod.newBuilder()
                 .setId(id)
                 .setMaxTradePeriod(maxTradePeriod)

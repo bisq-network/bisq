@@ -80,113 +80,113 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Optional<Msg> fromProto(PB.Msg envelope) {
-        if (Objects.isNull(envelope)) {
-            log.warn("fromProtoBuf called with empty envelope.");
+    public Optional<Msg> fromProto(PB.Msg msg) {
+        if (Objects.isNull(msg)) {
+            log.warn("fromProtoBuf called with empty msg.");
             return Optional.empty();
         }
-        if (envelope.getMessageCase() != PING && envelope.getMessageCase() != PONG &&
-                envelope.getMessageCase() != REFRESH_TTL_MESSAGE) {
-            log.debug("Convert protobuffer envelope: {}, {}", envelope.getMessageCase(), envelope.toString());
+        if (msg.getMessageCase() != PING && msg.getMessageCase() != PONG &&
+                msg.getMessageCase() != REFRESH_TTL_MESSAGE) {
+            log.debug("Convert protobuffer msg: {}, {}", msg.getMessageCase(), msg.toString());
         } else {
-            log.debug("Convert protobuffer envelope: {}", envelope.getMessageCase());
-            log.trace("Convert protobuffer envelope: {}", envelope.toString());
+            log.debug("Convert protobuffer msg: {}", msg.getMessageCase());
+            log.trace("Convert protobuffer msg: {}", msg.toString());
         }
 
         Msg result = null;
-        switch (envelope.getMessageCase()) {
+        switch (msg.getMessageCase()) {
             case PING:
-                result = getPing(envelope);
+                result = getPing(msg);
                 break;
             case PONG:
-                result = getPong(envelope);
+                result = getPong(msg);
                 break;
             case REFRESH_TTL_MESSAGE:
-                result = getRefreshTTLMessage(envelope);
+                result = getRefreshTTLMessage(msg);
                 break;
             case CLOSE_CONNECTION_MESSAGE:
-                result = getCloseConnectionMessage(envelope);
+                result = getCloseConnectionMessage(msg);
                 break;
             case PRELIMINARY_GET_DATA_REQUEST:
-                result = getPreliminaryGetDataRequest(envelope);
+                result = getPreliminaryGetDataRequest(msg);
                 break;
             case GET_UPDATED_DATA_REQUEST:
-                result = getGetUpdatedDataRequest(envelope);
+                result = getGetUpdatedDataRequest(msg);
                 break;
             case GET_PEERS_REQUEST:
-                result = getGetPeersRequest(envelope);
+                result = getGetPeersRequest(msg);
                 break;
             case GET_PEERS_RESPONSE:
-                result = getGetPeersResponse(envelope);
+                result = getGetPeersResponse(msg);
                 break;
             case GET_DATA_RESPONSE:
-                result = getGetDataResponse(envelope);
+                result = getGetDataResponse(msg);
                 break;
             case PREFIXED_SEALED_AND_SIGNED_MESSAGE:
-                result = getPrefixedSealedAndSignedMessage(envelope);
+                result = getPrefixedSealedAndSignedMessage(msg);
                 break;
             case OFFER_AVAILABILITY_RESPONSE:
-                result = getOfferAvailabilityResponse(envelope);
+                result = getOfferAvailabilityResponse(msg);
                 break;
             case OFFER_AVAILABILITY_REQUEST:
-                result = getOfferAvailabilityRequest(envelope);
+                result = getOfferAvailabilityRequest(msg);
                 break;
             case GET_BSQ_BLOCKS_REQUEST:
-                result = GetBsqBlocksRequest.fromProto(envelope);
+                result = GetBsqBlocksRequest.fromProto(msg);
                 break;
             case GET_BSQ_BLOCKS_RESPONSE:
-                result = GetBsqBlocksResponse.fromProto(envelope);
+                result = GetBsqBlocksResponse.fromProto(msg);
                 break;
             case NEW_BSQ_BLOCK_BROADCAST_MSG:
-                result = NewBsqBlockBroadcastMsg.fromProto(envelope);
+                result = NewBsqBlockBroadcastMsg.fromProto(msg);
                 break;
             case REMOVE_DATA_MESSAGE:
-                result = getRemoveDataMessage(envelope);
+                result = getRemoveDataMessage(msg);
                 break;
             case ADD_DATA_MESSAGE:
-                result = getAddDataMessage(envelope);
+                result = getAddDataMessage(msg);
                 break;
             case REMOVE_MAILBOX_DATA_MESSAGE:
-                result = getRemoveMailBoxDataMessage(envelope.getRemoveMailboxDataMessage());
+                result = getRemoveMailBoxDataMessage(msg.getRemoveMailboxDataMessage());
                 break;
             case DEPOSIT_TX_PUBLISHED_MESSAGE:
-                result = getDepositTxPublishedMessage(envelope.getDepositTxPublishedMessage());
+                result = getDepositTxPublishedMessage(msg.getDepositTxPublishedMessage());
                 break;
             case FINALIZE_PAYOUT_TX_REQUEST:
-                result = getFinalizePayoutTxRequest(envelope.getFinalizePayoutTxRequest());
+                result = getFinalizePayoutTxRequest(msg.getFinalizePayoutTxRequest());
                 break;
             case DISPUTE_COMMUNICATION_MESSAGE:
-                result = getDisputeCommunicationMessage(envelope.getDisputeCommunicationMessage());
+                result = getDisputeCommunicationMessage(msg.getDisputeCommunicationMessage());
                 break;
             case OPEN_NEW_DISPUTE_MESSAGE:
-                result = getOpenNewDisputeMessage(envelope.getOpenNewDisputeMessage());
+                result = getOpenNewDisputeMessage(msg.getOpenNewDisputeMessage());
                 break;
             case PEER_OPENED_DISPUTE_MESSAGE:
-                result = getPeerOpenedDisputeMessage(envelope.getPeerOpenedDisputeMessage());
+                result = getPeerOpenedDisputeMessage(msg.getPeerOpenedDisputeMessage());
                 break;
             case DISPUTE_RESULT_MESSAGE:
-                result = getDisputeResultMessage(envelope.getDisputeResultMessage());
+                result = getDisputeResultMessage(msg.getDisputeResultMessage());
                 break;
             case PEER_PUBLISHED_PAYOUT_TX_MESSAGE:
-                result = getPeerPublishedPayoutTxMessage(envelope.getPeerPublishedPayoutTxMessage());
+                result = getPeerPublishedPayoutTxMessage(msg.getPeerPublishedPayoutTxMessage());
                 break;
             case PAY_DEPOSIT_REQUEST:
-                result = getPayDepositRequest(envelope.getPayDepositRequest());
+                result = getPayDepositRequest(msg.getPayDepositRequest());
                 break;
             case PUBLISH_DEPOSIT_TX_REQUEST:
-                result = getPublishDepositTxRequest(envelope.getPublishDepositTxRequest());
+                result = getPublishDepositTxRequest(msg.getPublishDepositTxRequest());
                 break;
             case FIAT_TRANSFER_STARTED_MESSAGE:
-                result = getFiatTransferStartedMessage(envelope.getFiatTransferStartedMessage());
+                result = getFiatTransferStartedMessage(msg.getFiatTransferStartedMessage());
                 break;
             case PAYOUT_TX_PUBLISHED_MESSAGE:
-                result = getPayoutTxPublishedMessage(envelope.getPayoutTxPublishedMessage());
+                result = getPayoutTxPublishedMessage(msg.getPayoutTxPublishedMessage());
                 break;
             case PRIVATE_NOTIFICATION_MESSAGE:
-                result = getPrivateNotificationMessage(envelope.getPrivateNotificationMessage());
+                result = getPrivateNotificationMessage(msg.getPrivateNotificationMessage());
                 break;
             default:
-                log.warn("Unknown message case:{}:{}", envelope.getMessageCase());
+                log.warn("Unknown message case:{}:{}", msg.getMessageCase());
         }
         return Optional.ofNullable(result);
     }
@@ -431,10 +431,8 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getCloseConnectionMessage(PB.Msg envelope) {
-        Msg result;
-        result = new CloseConnectionMsg(envelope.getCloseConnectionMessage().getReason());
-        return result;
+    private static Msg getCloseConnectionMessage(PB.Msg msg) {
+        return new CloseConnectionMsg(msg.getCloseConnectionMessage().getReason());
     }
 
     @NotNull

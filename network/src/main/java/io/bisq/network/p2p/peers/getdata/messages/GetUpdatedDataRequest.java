@@ -49,11 +49,11 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMsg, GetDa
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         return Msg.getMsgBuilder().setGetUpdatedDataRequest(
                 PB.GetUpdatedDataRequest.newBuilder()
                         .setMessageVersion(messageVersion)
-                        .setSenderNodeAddress(senderNodeAddress.toProto())
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setNonce(nonce)
                         .addAllExcludedKeys(excludedKeys.stream()
                                 .map(ByteString::copyFrom).collect(Collectors.toList()))).build();

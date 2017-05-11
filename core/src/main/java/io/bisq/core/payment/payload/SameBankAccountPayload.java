@@ -41,7 +41,7 @@ public final class SameBankAccountPayload extends BankAccountPayload {
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.SameBankAccountPayload sameBankAccountPayload =
                 PB.SameBankAccountPayload.getDefaultInstance();
         PB.BankAccountPayload.Builder bankAccountPayload =

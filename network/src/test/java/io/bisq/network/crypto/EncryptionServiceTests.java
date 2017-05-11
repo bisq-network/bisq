@@ -135,7 +135,7 @@ public class EncryptionServiceTests {
         }
 
         @Override
-        public PB.Msg toEnvelopeProto() {
+        public PB.Msg toProtoMsg() {
             return PB.Msg.newBuilder().setPing(PB.Ping.newBuilder().setNonce(nonce)).build();
         }
     }
@@ -167,7 +167,7 @@ final class TestMsg implements MailboxMsg {
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         throw new NotImplementedException();
     }
 }

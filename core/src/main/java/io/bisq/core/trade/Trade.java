@@ -841,10 +841,10 @@ public abstract class Trade implements Tradable, Model {
     }
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         return PB.Trade.newBuilder()
-                .setOffer(offer.toProto())
-                .setProcessModel((PB.ProcessModel) processModel.toProto())
+                .setOffer(offer.toProtoMessage())
+                .setProcessModel((PB.ProcessModel) processModel.toProtoMessage())
                 .setTakerFeeTxId(takerFeeTxId)
                 .setDepositTxId(depositTxId)
                 .setPayoutTxId(payoutTxId)
@@ -854,17 +854,17 @@ public abstract class Trade implements Tradable, Model {
                 .setTakeOfferDate(takeOfferDate)
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setTradePrice(tradePrice)
-                .setTradingPeerNodeAddress(tradingPeerNodeAddress.toProto())
+                .setTradingPeerNodeAddress(tradingPeerNodeAddress.toProtoMessage())
                 .setState(PB.Trade.State.valueOf(state.name()))
                 .setDisputeState(PB.Trade.DisputeState.valueOf(disputeState.name()))
                 .setTradePeriodState(PB.Trade.TradePeriodState.valueOf(tradePeriodState.name()))
-                .setContract(contract.toProto())
+                .setContract(contract.toProtoMessage())
                 .setContractAsJson(contractAsJson)
                 .setContractHash(ByteString.copyFrom(contractHash))
                 .setTakerContractSignature(takerContractSignature)
                 .setMakerContractSignature(makerContractSignature)
-                .setArbitratorNodeAddress(arbitratorNodeAddress.toProto())
-                .setMediatorNodeAddress(mediatorNodeAddress.toProto())
+                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
+                .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
                 .setArbitratorBtcPubKey(ByteString.copyFrom(arbitratorBtcPubKey))
                 .setTakerPaymentAccountId(takerPaymentAccountId)
                 .setErrorMessage(errorMessage)

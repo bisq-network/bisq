@@ -60,7 +60,7 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.SwishAccountPayload.Builder thisClass =
                 PB.SwishAccountPayload.newBuilder()
                         .setMobileNr(mobileNr)

@@ -87,7 +87,7 @@ public final class PrivateNotificationPayload implements Payload {
     }
 
     @Override
-    public PB.PrivateNotificationPayload toProto() {
+    public PB.PrivateNotificationPayload toProtoMessage() {
         return PB.PrivateNotificationPayload.newBuilder()
                 .setMessage(message)
                 .setSignatureAsBase64(signatureAsBase64)

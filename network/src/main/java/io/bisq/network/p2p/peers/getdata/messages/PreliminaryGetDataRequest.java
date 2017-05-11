@@ -60,7 +60,7 @@ public final class PreliminaryGetDataRequest implements AnonymousMsg, GetDataReq
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder envelopeBuilder = Msg.getMsgBuilder();
         PB.PreliminaryGetDataRequest.Builder msgBuilder = envelopeBuilder.getPreliminaryGetDataRequestBuilder()
                 .setMessageVersion(messageVersion)
@@ -71,7 +71,7 @@ public final class PreliminaryGetDataRequest implements AnonymousMsg, GetDataReq
     }
 
     @Override
-    public Message toProto() {
-        return toEnvelopeProto().getPreliminaryGetDataRequest();
+    public Message toProtoMessage() {
+        return toProtoMsg().getPreliminaryGetDataRequest();
     }
 }

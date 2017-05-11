@@ -124,7 +124,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, /*Cap
     }
 
     @Override
-    public PB.StoragePayload toProto() {
+    public PB.StoragePayload toProtoMessage() {
         final PB.TradeStatistics.Builder builder = PB.TradeStatistics.newBuilder()
                 .setBaseCurrency(baseCurrency)
                 .setCounterCurrency(counterCurrency)
@@ -140,7 +140,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, /*Cap
                 .setOfferMinAmount(offerMinAmount)
                 .setOfferId(offerId)
                 .setDepositTxId(depositTxId)
-                .setPubKeyRing(pubKeyRing.toProto());
+                .setPubKeyRing(pubKeyRing.toProtoMessage());
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
         return PB.StoragePayload.newBuilder().setTradeStatistics(builder).build();
     }

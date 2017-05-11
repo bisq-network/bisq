@@ -42,7 +42,7 @@ public final class Region implements Persistable {
     }
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         return PB.Region.newBuilder().setCode(code).setName(name).build();
     }
 }

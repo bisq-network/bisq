@@ -31,7 +31,7 @@ public class ArbitratorTest {
         Arbitrator arbitrator = getArbitratorMock();
 
 
-        Arbitrator newVo = Arbitrator.fromProto(arbitrator.toProto().getArbitrator());
+        Arbitrator newVo = Arbitrator.fromProto(arbitrator.toProtoMessage().getArbitrator());
     }
 
     public static Arbitrator getArbitratorMock() {

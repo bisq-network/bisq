@@ -40,7 +40,7 @@ public final class RefreshTTLMsg extends BroadcastMsg {
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         PB.Msg.Builder builder = Msg.getMsgBuilder();
         return builder.setRefreshTtlMessage(builder.getRefreshTtlMessageBuilder()
                 .setHashOfDataAndSeqNr(ByteString.copyFrom(hashOfDataAndSeqNr))
@@ -50,7 +50,7 @@ public final class RefreshTTLMsg extends BroadcastMsg {
     }
 
     @Override
-    public Message toProto() {
-        return toEnvelopeProto().getPreliminaryGetDataRequest();
+    public Message toProtoMessage() {
+        return toProtoMsg().getPreliminaryGetDataRequest();
     }
 }

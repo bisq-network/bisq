@@ -76,7 +76,7 @@ public final class PubKeyRing implements Payload {
     }
 
     @Override
-    public PB.PubKeyRing toProto() {
+    public PB.PubKeyRing toProtoMessage() {
         return PB.PubKeyRing.newBuilder()
                 .setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes))
                 .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes))

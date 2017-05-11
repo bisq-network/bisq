@@ -31,12 +31,12 @@ public class ProtoHelper {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Iterable collectionToProto(Collection<? extends Marshaller> collection) {
-        return collection.stream().map(Marshaller::toProto).collect(Collectors.toList());
+        return collection.stream().map(Marshaller::toProtoMessage).collect(Collectors.toList());
     }
 
     public static <T> Iterable<T> collectionToProto(Collection<? extends Marshaller> collection, Function<? super Message, T> extra) {
         return collection.stream().map(o -> {
-            return extra.apply(o.toProto());
+            return extra.apply(o.toProtoMessage());
         }).collect(Collectors.toList());
     }
 }

@@ -23,7 +23,6 @@ import io.bisq.common.persistence.Persistable;
 import io.bisq.common.proto.ProtoHelper;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
-import io.bisq.core.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -116,15 +115,15 @@ public abstract class PaymentAccount implements Persistable {
     protected abstract PaymentAccountPayload getPayload();
 
     @Override
-    public PB.PaymentAccount toProto() {
+    public PB.PaymentAccount toProtoMessage() {
         PB.PaymentAccount.Builder builder = PB.PaymentAccount.newBuilder()
                 .setId(paymentMethod.getId())
                 .setCreationDate(creationDate)
-                .setPaymentMethod(paymentMethod.toProto())
+                .setPaymentMethod(paymentMethod.toProtoMessage())
                 .setAccountName(accountName)
                 .addAllTradeCurrencies(ProtoHelper.collectionToProto(tradeCurrencies))
-                .setPaymentAccountPayload((PB.PaymentAccountPayload) paymentAccountPayload.toProto());
-        Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((PB.TradeCurrency) selectedTradeCurrency.toProto()));
+                .setPaymentAccountPayload((PB.PaymentAccountPayload) paymentAccountPayload.toProtoMessage());
+        Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((PB.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
         return builder.build();
     }
 

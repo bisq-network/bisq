@@ -62,7 +62,7 @@ public class User implements Persistable {
     }
 
     @Override
-    public PB.Persistable toProto() {
+    public PB.Persistable toProtoMessage() {
         PB.User.Builder builder = PB.User.newBuilder()
                 .setAccountId(accountID)
                 .addAllPaymentAccounts(ProtoHelper.collectionToProto(paymentAccounts))
@@ -71,17 +71,17 @@ public class User implements Persistable {
                 .addAllAcceptedMediators(ProtoHelper.collectionToProto(acceptedMediators, (Message storage) -> ((PB.StoragePayload)storage).getMediator()));
 
         Optional.ofNullable(currentPaymentAccount)
-                .ifPresent(paymentAccount -> builder.setCurrentPaymentAccount(paymentAccount.toProto()));
+                .ifPresent(paymentAccount -> builder.setCurrentPaymentAccount(paymentAccount.toProtoMessage()));
         Optional.ofNullable(developersAlert)
-                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProto().getAlert()));
+                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProtoMessage().getAlert()));
         Optional.ofNullable(displayedAlert)
-                .ifPresent(displayedAlert -> builder.setDisplayedAlert(displayedAlert.toProto().getAlert()));
+                .ifPresent(displayedAlert -> builder.setDisplayedAlert(displayedAlert.toProtoMessage().getAlert()));
         Optional.ofNullable(developersFilter)
-                .ifPresent(developersFilter -> builder.setDevelopersFilter(developersFilter.toProto().getFilter()));
+                .ifPresent(developersFilter -> builder.setDevelopersFilter(developersFilter.toProtoMessage().getFilter()));
         Optional.ofNullable(registeredArbitrator)
-                .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProto().getArbitrator()));
+                .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProtoMessage().getArbitrator()));
         Optional.ofNullable(registeredMediator)
-                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProto().getAlert()));
+                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProtoMessage().getAlert()));
         return PB.Persistable.newBuilder().setUser(builder).build();
     }
 

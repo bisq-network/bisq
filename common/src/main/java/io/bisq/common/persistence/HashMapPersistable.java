@@ -24,10 +24,8 @@ import lombok.experimental.Delegate;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class HashMapPersistable<K, V> implements Persistable {
     @Delegate
@@ -46,7 +44,7 @@ public class HashMapPersistable<K, V> implements Persistable {
     }
 
     @Override
-    public Message toProto() {
+    public Message toProtoMessage() {
         if(Objects.isNull(toProto)) {
             throw new NotImplementedException();
         }

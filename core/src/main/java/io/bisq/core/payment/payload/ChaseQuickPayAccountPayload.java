@@ -60,7 +60,7 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     }
 
     @Override
-    public PB.PaymentAccountPayload toProto() {
+    public PB.PaymentAccountPayload toProtoMessage() {
         PB.ChaseQuickPayAccountPayload.Builder chaseQuickPayAccountPayload =
                 PB.ChaseQuickPayAccountPayload.newBuilder()
                         .setEmail(email)

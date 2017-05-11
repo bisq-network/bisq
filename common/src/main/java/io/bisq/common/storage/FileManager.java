@@ -182,14 +182,14 @@ public class FileManager<T extends Persistable> {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void saveNowInternal(T serializable) {
+    private void saveNowInternal(T persistable) {
         long now = System.currentTimeMillis();
-        saveToFile(serializable, dir, storageFile);
+        saveToFile(persistable, dir, storageFile);
         log.trace("Save {} completed in {} msec", storageFile, System.currentTimeMillis() - now);
     }
 
     // TODO Sometimes we get a ConcurrentModificationException here
-    private synchronized void saveToFile(T serializable, File dir, File storageFile) {
+    private synchronized void saveToFile(T persistable, File dir, File storageFile) {
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
         ObjectOutputStream objectOutputStream = null;
@@ -197,11 +197,11 @@ public class FileManager<T extends Persistable> {
 
         // is it a protobuffer thing?
 
-        PB.Persistable protoDiskEnvelope = null;
+        PB.Persistable protoPersistable = null;
         try {
-            protoDiskEnvelope = (PB.Persistable) serializable.toProto();
+            protoPersistable = (PB.Persistable) persistable.toProtoMessage();
         } catch (Throwable e) {
-            log.debug("Not protobufferable: {}, {}, {}", serializable.getClass().getSimpleName(), storageFile, e.getStackTrace());
+            log.debug("Not protobufferable: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }
 
         try {
@@ -211,16 +211,16 @@ public class FileManager<T extends Persistable> {
 
             tempFile = File.createTempFile("temp", null, dir);
             tempFile.deleteOnExit();
-            if (serializable instanceof PlainTextWrapper) {
+            if (persistable instanceof PlainTextWrapper) {
                 // When we dump json files we don't want to safe it as java serialized string objects, so we use PrintWriter instead.
                 printWriter = new PrintWriter(tempFile);
-                printWriter.println(((PlainTextWrapper) serializable).plainText);
-            } else if (protoDiskEnvelope != null) {
+                printWriter.println(((PlainTextWrapper) persistable).plainText);
+            } else if (protoPersistable != null) {
                 fileOutputStream = new FileOutputStream(tempFile);
 
-                log.info("Writing protobuffer to disc:{}", serializable.getClass());
+                log.info("Writing protobuffer to disc:{}", persistable.getClass());
                 writeLock.lock();
-                protoDiskEnvelope.writeDelimitedTo(fileOutputStream);
+                protoPersistable.writeDelimitedTo(fileOutputStream);
 
                 // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
                 // to not write through to physical media for at least a few seconds, but this is the best we can do.
@@ -232,7 +232,7 @@ public class FileManager<T extends Persistable> {
                 // when rename temp file
                 fileOutputStream.close();
             } else {
-                log.warn("serializable write: {},{}", serializable.getClass(), serializable.toString());
+                log.warn("persistable write: {},{}", persistable.getClass(), persistable.toString());
                 /*
                 // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
                 // and we need to close it
@@ -241,7 +241,7 @@ public class FileManager<T extends Persistable> {
                 objectOutputStream = new ObjectOutputStream(fileOutputStream);
 
                 writeLock.lock();
-                objectOutputStream.writeObject(serializable);
+                objectOutputStream.writeObject(persistable);
                 // Attempt to force the bits to hit the disk. In reality the OS or hard disk itself may still decide
                 // to not write through to physical media for at least a few seconds, but this is the best we can do.
                 fileOutputStream.flush();

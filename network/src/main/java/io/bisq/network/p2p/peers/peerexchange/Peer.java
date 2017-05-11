@@ -60,8 +60,8 @@ public final class Peer implements Payload, Persistable {
     }
 
     @Override
-    public PB.Peer toProto() {
-        return PB.Peer.newBuilder().setNodeAddress(nodeAddress.toProto())
+    public PB.Peer toProtoMessage() {
+        return PB.Peer.newBuilder().setNodeAddress(nodeAddress.toProtoMessage())
                 .setDate(date.getTime()).build();
     }
 

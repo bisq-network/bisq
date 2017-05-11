@@ -177,23 +177,23 @@ public final class Contract implements Payload {
 
 
     @Override
-    public PB.Contract toProto() {
+    public PB.Contract toProtoMessage() {
         return PB.Contract.newBuilder()
-                .setOfferPayload(offerPayload.toProto().getOfferPayload())
+                .setOfferPayload(offerPayload.toProtoMessage().getOfferPayload())
                 .setTradeAmount(tradeAmount)
                 .setTradePrice(tradePrice)
                 .setTakerFeeTxId(takerFeeTxID)
-                .setArbitratorNodeAddress(arbitratorNodeAddress.toProto())
-                .setMediatorNodeAddress(mediatorNodeAddress.toProto())
+                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
+                .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
                 .setIsBuyerMakerAndSellerTaker(isBuyerMakerAndSellerTaker)
                 .setMakerAccountId(makerAccountId)
                 .setTakerAccountId(takerAccountId)
-                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProto())
-                .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProto())
-                .setMakerPubKeyRing(makerPubKeyRing.toProto())
-                .setTakerPubKeyRing(takerPubKeyRing.toProto())
-                .setBuyerNodeAddress(buyerNodeAddress.toProto())
-                .setSellerNodeAddress(sellerNodeAddress.toProto())
+                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
+                .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
+                .setMakerPubKeyRing(makerPubKeyRing.toProtoMessage())
+                .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
+                .setBuyerNodeAddress(buyerNodeAddress.toProtoMessage())
+                .setSellerNodeAddress(sellerNodeAddress.toProtoMessage())
                 .setMakerPayoutAddressString(makerPayoutAddressString)
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setMakerBtcPubKey(ByteString.copyFrom(makerMultiSigPubKey))

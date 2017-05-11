@@ -461,8 +461,8 @@ public class Offer implements Persistable, Serializable {
     }
 
     @Override
-    public PB.Offer toProto() {
-        return PB.Offer.newBuilder().setOfferPayload(offerPayload.toProto().getOfferPayload()).build();
+    public PB.Offer toProtoMessage() {
+        return PB.Offer.newBuilder().setOfferPayload(offerPayload.toProtoMessage().getOfferPayload()).build();
     }
 
     public static Offer fromProto(PB.Offer proto) {

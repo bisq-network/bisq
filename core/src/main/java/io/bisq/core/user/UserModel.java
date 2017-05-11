@@ -352,7 +352,7 @@ public final class UserModel implements Persistable {
     }
 
     @Override
-    public Message toProto() {
-        return user.toProto();
+    public Message toProtoMessage() {
+        return user.toProtoMessage();
     }
 }

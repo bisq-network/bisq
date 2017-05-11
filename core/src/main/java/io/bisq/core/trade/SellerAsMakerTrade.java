@@ -64,9 +64,9 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
     }
 
     @Override
-    public PB.Tradable toProto() {
+    public PB.Tradable toProtoMessage() {
         return PB.Tradable.newBuilder()
-                .setSellerAsMakerTrade(PB.SellerAsMakerTrade.newBuilder().setTrade((PB.Trade) super.toProto())).build();
+                .setSellerAsMakerTrade(PB.SellerAsMakerTrade.newBuilder().setTrade((PB.Trade) super.toProtoMessage())).build();
     }
 
     public static Tradable fromProto(PB.SellerAsMakerTrade proto, Storage<? extends TradableList> storage,

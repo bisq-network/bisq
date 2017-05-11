@@ -62,11 +62,11 @@ public final class OfferAvailabilityRequest extends OfferMsg implements Supporte
     }
 
     @Override
-    public PB.Msg toEnvelopeProto() {
+    public PB.Msg toProtoMsg() {
         return Msg.getMsgBuilder()
                 .setOfferAvailabilityRequest(PB.OfferAvailabilityRequest.newBuilder()
                         .setOfferId(offerId)
-                        .setPubKeyRing(pubKeyRing.toProto())
+                        .setPubKeyRing(pubKeyRing.toProtoMessage())
                         .setTakersTradePrice(takersTradePrice)
                         .addAllSupportedCapabilities(supportedCapabilities)).build();
     }
