@@ -461,10 +461,7 @@ public class PeerManager implements ConnectionListener {
             persistedPeers.remove(persistedPeer);
 
             if (dbStorage != null) {
-                ListPersistable serializable = new ListPersistable(persistedPeers);
-                serializable.setToProto((list) -> PB.DiskEnvelope.newBuilder()
-                        .setPeersList(PB.PeersList.newBuilder()
-                                .addAllPeers(ProtoHelper.collectionToProto((Collection<? extends Marshaller>) list))));
+                ListPersistable serializable = new ListPersistable(persistedPeers, getListToProto());
                 dbStorage.queueUpForSave(serializable, 2000);
             }
 
@@ -638,7 +635,7 @@ public class PeerManager implements ConnectionListener {
 
     private Function<List<Peer>, Message> getListToProto() {
         return (List<Peer> list) -> {
-            return PB.DiskEnvelope.newBuilder().setPeersList(PB.PeersList.newBuilder().addAllPeers(ProtoHelper.collectionToProto(list))).build();
+            return PB.DiskEnvelope.newBuilder().setPeersList(PB.PeersList.newBuilder().addAllPeers(ProtoHelper.collectionToProto((Collection<? extends Marshaller>) list))).build();
         };
     }
 }
