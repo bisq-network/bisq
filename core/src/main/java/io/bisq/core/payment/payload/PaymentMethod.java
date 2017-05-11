@@ -83,8 +83,7 @@ public final class PaymentMethod implements Persistable, Comparable {
 
     public static final List<PaymentMethod> ALL_VALUES = new ArrayList<>(Arrays.asList(
             // EUR
-            SEPA = new PaymentMethod(SEPA_ID, 8 * DAY, Coin.parseCoin("0.5")),
-            // sepa takes 1-3 business days. We use 8 days to include safety for holidays
+            SEPA = new PaymentMethod(SEPA_ID, 4 * DAY, Coin.parseCoin("0.5")),
 
             // Global
             NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, Coin.parseCoin("0.5")),
