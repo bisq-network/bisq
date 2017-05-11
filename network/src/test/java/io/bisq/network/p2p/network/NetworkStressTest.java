@@ -818,7 +818,7 @@ final class StressTestDirectMsg implements DirectMsg {
     }
 
     @Override
-    public int getMessageVersion() {
+    public int getMsgVersion() {
         return messageVersion;
     }
 
@@ -846,7 +846,7 @@ final class StressTestMailboxMsg implements MailboxMsg {
     }
 
     @Override
-    public int getMessageVersion() {
+    public int getMsgVersion() {
         return messageVersion;
     }
 

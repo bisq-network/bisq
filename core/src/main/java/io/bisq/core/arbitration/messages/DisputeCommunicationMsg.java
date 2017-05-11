@@ -133,8 +133,8 @@ public final class DisputeCommunicationMsg extends DisputeMsg {
 
     @Override
     public PB.Msg toEnvelopeProto() {
-        PB.Msg.Builder baseEnvelope = Msg.getEnv();
-        return baseEnvelope.setDisputeCommunicationMessage(PB.DisputeCommunicationMessage.newBuilder()
+        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
+        return msgBuilder.setDisputeCommunicationMessage(PB.DisputeCommunicationMessage.newBuilder()
                 .setDate(date)
                 .setTradeId(tradeId)
                 .setTraderId(traderId)

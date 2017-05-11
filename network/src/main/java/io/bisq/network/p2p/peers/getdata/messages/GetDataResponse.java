@@ -39,7 +39,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMsg, Extended
     }
 
     @Override
-    public int getMessageVersion() {
+    public int getMsgVersion() {
         return messageVersion;
     }
 
@@ -61,7 +61,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMsg, Extended
                         .collect(Collectors.toList()))
                 .setRequestNonce(requestNonce)
                 .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
-        return Msg.getEnv().setGetDataResponse(builder).build();
+        return Msg.getMsgBuilder().setGetDataResponse(builder).build();
     }
 
 

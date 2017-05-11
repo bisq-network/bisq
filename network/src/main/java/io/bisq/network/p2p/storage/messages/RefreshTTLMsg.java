@@ -41,7 +41,7 @@ public final class RefreshTTLMsg extends BroadcastMsg {
 
     @Override
     public PB.Msg toEnvelopeProto() {
-        PB.Msg.Builder builder = Msg.getEnv();
+        PB.Msg.Builder builder = Msg.getMsgBuilder();
         return builder.setRefreshTtlMessage(builder.getRefreshTtlMessageBuilder()
                 .setHashOfDataAndSeqNr(ByteString.copyFrom(hashOfDataAndSeqNr))
                 .setHashOfPayload(ByteString.copyFrom(hashOfPayload))

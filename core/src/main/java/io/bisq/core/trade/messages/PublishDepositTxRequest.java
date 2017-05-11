@@ -89,9 +89,9 @@ public final class PublishDepositTxRequest extends TradeMsg implements MailboxMs
 
     @Override
     public PB.Msg toEnvelopeProto() {
-        PB.Msg.Builder baseEnvelope = Msg.getEnv();
-        return baseEnvelope.setPublishDepositTxRequest(baseEnvelope.getPublishDepositTxRequestBuilder()
-                .setMessageVersion(getMessageVersion())
+        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
+        return msgBuilder.setPublishDepositTxRequest(msgBuilder.getPublishDepositTxRequestBuilder()
+                .setMessageVersion(getMsgVersion())
                 .setTradeId(tradeId)
                 .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProto())
                 .setMakerAccountId(makerAccountId)

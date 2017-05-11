@@ -40,8 +40,8 @@ public final class RemoveDataMsg extends BroadcastMsg {
 
     @Override
     public PB.Msg toEnvelopeProto() {
-        PB.Msg.Builder baseEnvelope = Msg.getEnv();
-        return baseEnvelope.setRemoveDataMessage(PB.RemoveDataMessage.newBuilder()
+        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
+        return msgBuilder.setRemoveDataMessage(PB.RemoveDataMessage.newBuilder()
                 .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProto())).build();
 
     }

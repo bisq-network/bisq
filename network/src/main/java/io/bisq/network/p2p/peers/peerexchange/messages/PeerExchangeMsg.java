@@ -8,7 +8,7 @@ abstract class PeerExchangeMsg implements Msg {
     private final int messageVersion = Version.getP2PMessageVersion();
 
     @Override
-    public int getMessageVersion() {
+    public int getMsgVersion() {
         return messageVersion;
     }
 

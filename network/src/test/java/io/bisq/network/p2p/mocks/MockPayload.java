@@ -16,7 +16,7 @@ public final class MockPayload implements Msg, ExpirablePayload {
     }
 
     @Override
-    public int getMessageVersion() {
+    public int getMsgVersion() {
         return messageVersion;
     }
 

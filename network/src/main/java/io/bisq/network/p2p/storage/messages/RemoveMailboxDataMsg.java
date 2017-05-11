@@ -40,8 +40,8 @@ public final class RemoveMailboxDataMsg extends BroadcastMsg {
 
     @Override
     public PB.Msg toEnvelopeProto() {
-        PB.Msg.Builder baseEnvelope = Msg.getEnv();
-        return baseEnvelope.setRemoveMailboxDataMessage(PB.RemoveMailboxDataMessage.newBuilder()
+        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
+        return msgBuilder.setRemoveMailboxDataMessage(PB.RemoveMailboxDataMessage.newBuilder()
                 .setProtectedStorageEntry(protectedMailboxStorageEntry.toProto())).build();
 
     }

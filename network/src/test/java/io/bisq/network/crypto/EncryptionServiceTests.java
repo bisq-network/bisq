@@ -130,7 +130,7 @@ public class EncryptionServiceTests {
         }
 
         @Override
-        public int getMessageVersion() {
+        public int getMsgVersion() {
             return 0;
         }
 
@@ -162,7 +162,7 @@ final class TestMsg implements MailboxMsg {
     }
 
     @Override
-    public int getMessageVersion() {
+    public int getMsgVersion() {
         return messageVersion;
     }
 

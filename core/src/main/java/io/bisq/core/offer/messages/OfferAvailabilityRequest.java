@@ -63,7 +63,7 @@ public final class OfferAvailabilityRequest extends OfferMsg implements Supporte
 
     @Override
     public PB.Msg toEnvelopeProto() {
-        return Msg.getEnv()
+        return Msg.getMsgBuilder()
                 .setOfferAvailabilityRequest(PB.OfferAvailabilityRequest.newBuilder()
                         .setOfferId(offerId)
                         .setPubKeyRing(pubKeyRing.toProto())

@@ -47,8 +47,8 @@ public final class PeerPublishedPayoutTxMsg extends DisputeMsg {
 
     @Override
     public PB.Msg toEnvelopeProto() {
-        PB.Msg.Builder baseEnvelope = Msg.getEnv();
-        return baseEnvelope.setPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage.newBuilder()
+        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
+        return msgBuilder.setPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage.newBuilder()
                 .setTransaction(ByteString.copyFrom(transaction))
                 .setTradeId(tradeId)
                 .setMyNodeAddress(myNodeAddress.toProto())).build();

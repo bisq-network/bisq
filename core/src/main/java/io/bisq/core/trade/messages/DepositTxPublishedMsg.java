@@ -57,9 +57,9 @@ public final class DepositTxPublishedMsg extends TradeMsg implements MailboxMsg 
 
     @Override
     public PB.Msg toEnvelopeProto() {
-        PB.Msg.Builder baseEnvelope = Msg.getEnv();
-        return baseEnvelope.setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
-                .setMessageVersion(getMessageVersion())
+        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
+        return msgBuilder.setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
+                .setMessageVersion(getMsgVersion())
                 .setTradeId(tradeId)
                 .setDepositTx(ByteString.copyFrom(depositTx))
                 .setSenderNodeAddress(senderNodeAddress.toProto())

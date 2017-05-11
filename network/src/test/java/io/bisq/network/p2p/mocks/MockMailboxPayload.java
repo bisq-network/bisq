@@ -23,7 +23,7 @@ public final class MockMailboxPayload implements MailboxMsg, ExpirablePayload {
     }
 
     @Override
-    public int getMessageVersion() {
+    public int getMsgVersion() {
         return messageVersion;
     }
 

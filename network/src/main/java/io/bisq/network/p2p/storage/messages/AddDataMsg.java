@@ -41,7 +41,7 @@ public final class AddDataMsg extends BroadcastMsg {
 
     @Override
     public PB.Msg toEnvelopeProto() {
-        PB.Msg.Builder baseEnvelope = Msg.getEnv();
+        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         PB.AddDataMessage.Builder builder;
         PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder choiceBuilder;
         choiceBuilder = PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.newBuilder();
@@ -53,7 +53,7 @@ public final class AddDataMsg extends BroadcastMsg {
             builder = PB.AddDataMessage.newBuilder().setEntry(
                     choiceBuilder.setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProto()));
         }
-        return baseEnvelope.setAddDataMessage(builder).build();
+        return msgBuilder.setAddDataMessage(builder).build();
     }
 
     @Override

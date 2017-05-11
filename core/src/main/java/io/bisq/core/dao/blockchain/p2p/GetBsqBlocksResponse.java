@@ -22,7 +22,7 @@ public final class GetBsqBlocksResponse implements DirectMsg, ExtendedDataSizePe
     public PB.Msg toEnvelopeProto() {
         final PB.GetBsqBlocksResponse.Builder builder = PB.GetBsqBlocksResponse.newBuilder()
                 .setBsqBlocksBytes(ByteString.copyFrom(bsqBlocksBytes));
-        return Msg.getEnv().setGetBsqBlocksResponse(builder).build();
+        return Msg.getMsgBuilder().setGetBsqBlocksResponse(builder).build();
     }
 
     public static Msg fromProto(PB.Msg envelope) {

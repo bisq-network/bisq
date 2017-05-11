@@ -106,7 +106,7 @@ public final class PayDepositRequest extends TradeMsg {
 
     @Override
     public PB.Msg toEnvelopeProto() {
-        PB.Msg.Builder baseEnvelope = Msg.getEnv();
+        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
         PB.PayDepositRequest.Builder builderForValue = PB.PayDepositRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setTradeAmount(tradeAmount)
@@ -131,7 +131,7 @@ public final class PayDepositRequest extends TradeMsg {
                 .setMediatorNodeAddress(mediatorNodeAddress.toProto())
                 .setSenderNodeAddress(senderNodeAddress.toProto());
         Optional.ofNullable(changeOutputAddress).ifPresent(builderForValue::setChangeOutputAddress);
-        return baseEnvelope.setPayDepositRequest(builderForValue).build();
+        return msgBuilder.setPayDepositRequest(builderForValue).build();
     }
 
     // Use Hex for bytes

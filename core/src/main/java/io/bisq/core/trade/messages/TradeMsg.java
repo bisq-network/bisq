@@ -39,7 +39,7 @@ public abstract class TradeMsg implements DirectMsg {
     }
 
     @Override
-    public int getMessageVersion() {
+    public int getMsgVersion() {
         return messageVersion;
     }
 }

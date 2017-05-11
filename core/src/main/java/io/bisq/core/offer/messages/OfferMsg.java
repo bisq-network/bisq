@@ -36,7 +36,7 @@ public abstract class OfferMsg implements DirectMsg {
     }
 
     @Override
-    public int getMessageVersion() {
+    public int getMsgVersion() {
         return messageVersion;
     }
 

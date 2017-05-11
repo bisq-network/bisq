@@ -34,7 +34,7 @@ public abstract class DisputeMsg implements MailboxMsg {
     }
 
     @Override
-    public int getMessageVersion() {
+    public int getMsgVersion() {
         return messageVersion;
     }
 

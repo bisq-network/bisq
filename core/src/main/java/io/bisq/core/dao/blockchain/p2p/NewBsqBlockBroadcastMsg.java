@@ -22,7 +22,7 @@ public final class NewBsqBlockBroadcastMsg extends BroadcastMsg {
     public PB.Msg toEnvelopeProto() {
         final PB.NewBsqBlockBroadcastMsg.Builder builder = PB.NewBsqBlockBroadcastMsg.newBuilder()
                 .setBsqBlockBytes(ByteString.copyFrom(bsqBlockBytes));
-        return Msg.getEnv().setNewBsqBlockBroadcastMsg(builder).build();
+        return Msg.getMsgBuilder().setNewBsqBlockBroadcastMsg(builder).build();
     }
 
     @Override
