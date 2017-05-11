@@ -48,7 +48,7 @@ public class SellerProcessFiatTransferStartedMessage extends TradeTask {
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
-            removeMailboxMessageAfterProcessing();
+            processModel.removeMailboxMessageAfterProcessing(trade);
 
             trade.setState(Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG);
 

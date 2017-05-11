@@ -234,5 +234,6 @@ public class ProcessModel implements Model, Persistable {
                 .setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey))
                 .setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProto())
                 .build();
+
     }
 }

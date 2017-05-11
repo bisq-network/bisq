@@ -47,17 +47,20 @@ public class VotingVerification {
         return false;
     }
 
-    boolean maybeProcessData(Tx tx, byte[] opReturnData, TxOutput txOutput, long fee, int blockHeight) {
-        final int sizeOfCompRequestsVotes = (int) opReturnData[22];
-        if (Version.VOTING_VERSION == opReturnData[1] &&
-                sizeOfCompRequestsVotes % 2 == 0 &&
-                (opReturnData.length - 1) % 2 == 0 &&
-                opReturnData.length >= 23 + sizeOfCompRequestsVotes * 2 &&
-                fee == bsqChainState.getVotingFee(blockHeight) &&
-                bsqChainState.isVotingPeriodValid(blockHeight)) {
-            txOutput.setTxOutputType(TxOutputType.VOTING_OP_RETURN_OUTPUT);
-            tx.setTxType(TxType.VOTE);
-            return true;
+    boolean maybeProcessData(Tx tx, byte[] opReturnData, TxOutput txOutput, long fee, int blockHeight, TxOutput bsqOutput) {
+        if (Version.VOTING_VERSION == opReturnData[1] && opReturnData.length > 22) {
+            final int sizeOfCompRequestsVotes = (int) opReturnData[22];
+            if (bsqOutput != null &&
+                    sizeOfCompRequestsVotes % 2 == 0 &&
+                    opReturnData.length % 2 == 1 &&
+                    opReturnData.length >= 23 + sizeOfCompRequestsVotes * 2 &&
+                    fee == bsqChainState.getVotingFee(blockHeight) &&
+                    bsqChainState.isVotingPeriodValid(blockHeight)) {
+                txOutput.setTxOutputType(TxOutputType.VOTING_OP_RETURN_OUTPUT);
+                tx.setTxType(TxType.VOTE);
+                // TODO use bsqOutput as weight
+                return true;
+            }
         }
         return false;
     }

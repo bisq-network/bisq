@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 // We are in UserThread context. We get callbacks from threaded classes which are already mapped to the UserThread.
@@ -128,14 +129,23 @@ public class BsqLiteNode extends BsqNode {
     }
 
     // TODO use handler class
+
+    // server delivered 5 times the GetBsqBlocksResponse. after restart it was ok again.
+    // so issue is on fullnode side...
+    byte[] pastRequests;
     private void onMessage(Msg msg, Connection connection) {
         if (msg instanceof GetBsqBlocksResponse && connection.getPeersNodeAddressOptional().isPresent()) {
             GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) msg;
             byte[] bsqBlocksBytes = getBsqBlocksResponse.getBsqBlocksBytes();
+            if (Arrays.equals(pastRequests, bsqBlocksBytes)) {
+                log.error("We got that message already. That should not happen.");
+                return;
+            }
+            pastRequests = bsqBlocksBytes;
             List<BsqBlock> bsqBlockList = Utilities.<ArrayList<BsqBlock>>deserialize(bsqBlocksBytes);
             log.info("received msg with {} items", bsqBlockList.size(), bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
             if (bsqBlockList.size() > 0)
-                log.info("block height of last item: ", bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
+                log.info("block height of last item: {}", bsqBlockList.get(bsqBlockList.size() - 1).getHeight());
             // Be safe and reset all mutable data in case the provider would not have done it
             bsqBlockList.stream().forEach(BsqBlock::reset);
             bsqLiteNodeExecutor.parseBsqBlocksForLiteNode(bsqBlockList,

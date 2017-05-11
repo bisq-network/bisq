@@ -55,7 +55,7 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     }
 
     @Override
-    protected void createProtocol() {
+    protected void createTradeProtocol() {
         tradeProtocol = new BuyerAsTakerProtocol(this);
     }
 

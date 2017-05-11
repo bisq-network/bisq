@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.List;
 
+import static javafx.beans.binding.Bindings.createBooleanBinding;
 import static javafx.scene.layout.AnchorPane.*;
 
 @FxmlView
@@ -319,7 +320,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                     String res = Res.get("mainView.marketPrice.tooltip",
                             "https://bitcoinaverage.com",
                             "",
-                            formatter.formatTime(model.priceFeedService.getLastRequestTimeStampBtcAverage()));
+                            formatter.formatTime(model.priceFeedService.getLastRequestTimeStampBtcAverage()),
+                            model.priceFeedService.getProviderNodeAddress());
                     btcAverageIconButton.setTooltip(
                             new Tooltip(res)
                     );
@@ -339,11 +341,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         poloniexIconButton.visibleProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.managedProperty().bind(model.isCryptoCurrencyPriceFeedSelected);
         poloniexIconButton.setOnMouseEntered(e -> {
-            String altcoinExtra = Res.get("mainView.marketPrice.tooltip.altcoinExtra");
+            String altcoinExtra = "\n" + Res.get("mainView.marketPrice.tooltip.altcoinExtra");
             String res = Res.get("mainView.marketPrice.tooltip",
                     "https://poloniex.com",
                     altcoinExtra,
-                    formatter.formatTime(model.priceFeedService.getLastRequestTimeStampPoloniex()));
+                    formatter.formatTime(model.priceFeedService.getLastRequestTimeStampPoloniex()),
+                    model.priceFeedService.getProviderNodeAddress());
             poloniexIconButton.setTooltip(
                     new Tooltip(res)
             );
@@ -352,6 +355,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Label label = new Label(Res.get("mainView.marketPrice.provider"));
         label.setId("nav-balance-label");
         label.setPadding(new Insets(0, 5, 0, 2));
+        label.visibleProperty().bind(createBooleanBinding(() -> model.isCryptoCurrencyPriceFeedSelected.get() || model.isFiatCurrencyPriceFeedSelected.get(),
+                model.isCryptoCurrencyPriceFeedSelected, model.isFiatCurrencyPriceFeedSelected));
+        label.managedProperty().bind(label.visibleProperty());
 
         HBox hBox2 = new HBox();
         hBox2.getChildren().setAll(label, btcAverageIconButton, poloniexIconButton);
