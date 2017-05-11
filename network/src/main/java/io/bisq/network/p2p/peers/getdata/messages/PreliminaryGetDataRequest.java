@@ -2,7 +2,6 @@ package io.bisq.network.p2p.peers.getdata.messages;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import io.bisq.common.Marshaller;
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.network.Msg;
@@ -15,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public final class PreliminaryGetDataRequest implements AnonymousMsg, GetDataRequest, SupportedCapabilitiesMsg, Marshaller {
+public final class PreliminaryGetDataRequest implements AnonymousMsg, GetDataRequest, SupportedCapabilitiesMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

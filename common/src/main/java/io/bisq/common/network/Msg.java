@@ -13,5 +13,4 @@ public interface Msg extends Marshaller {
     int getMessageVersion();
 
     PB.Envelope toEnvelopeProto();
-
 }

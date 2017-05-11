@@ -18,9 +18,13 @@
 package io.bisq.common;
 
 import com.google.protobuf.Message;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.io.Serializable;
 
 public interface Marshaller extends Serializable {
-    Message toProto();
+    //TODO
+    default Message toProto() {
+        throw new NotImplementedException("toProtobuf not yet implemented.");
+    }
 }

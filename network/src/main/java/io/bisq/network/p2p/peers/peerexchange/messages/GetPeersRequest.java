@@ -1,6 +1,5 @@
 package io.bisq.network.p2p.peers.peerexchange.messages;
 
-import io.bisq.common.Marshaller;
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.network.Msg;
@@ -17,7 +16,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class GetPeersRequest extends PeerExchangeMsg implements SendersNodeAddressMsg, SupportedCapabilitiesMsg, Marshaller {
+public final class GetPeersRequest extends PeerExchangeMsg implements SendersNodeAddressMsg, SupportedCapabilitiesMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

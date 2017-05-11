@@ -3,7 +3,7 @@ package io.bisq.network.p2p.storage;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import io.bisq.common.Marshaller;
+import io.bisq.common.Payload;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
@@ -38,7 +38,6 @@ import org.spongycastle.util.encoders.Hex;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -681,13 +680,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     // Static class
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     /**
      * Used as container for calculating cryptographic hash of data and sequenceNumber.
      * Needs to be Serializable because we convert the object to a byte array via java serialization
      * before calculating the hash.
      */
-    public static final class DataAndSeqNrPair implements Serializable, Marshaller {
+    public static final class DataAndSeqNrPair implements Payload {
         // data are only used for calculating cryptographic hash from both values so they are kept private
         private final StoragePayload data;
         private final int sequenceNumber;

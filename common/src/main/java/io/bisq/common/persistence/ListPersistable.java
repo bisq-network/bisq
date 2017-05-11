@@ -18,7 +18,6 @@
 package io.bisq.common.persistence;
 
 import com.google.protobuf.Message;
-import io.bisq.common.Marshaller;
 import lombok.Getter;
 import lombok.Setter;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -29,7 +28,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ListPersistable<T extends Marshaller> implements Persistable {
+public class ListPersistable<T extends Persistable> implements Persistable {
     @Getter
     @Setter
     private List<T> list;
