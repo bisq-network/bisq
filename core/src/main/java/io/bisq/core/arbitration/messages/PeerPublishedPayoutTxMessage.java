@@ -28,18 +28,18 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
 
     public final byte[] transaction;
     public final String tradeId;
-    private final NodeAddress myNodeAddress;
+    private final NodeAddress senderNodeAddress;
 
-    public PeerPublishedPayoutTxMessage(byte[] transaction, String tradeId, NodeAddress myNodeAddress, String uid) {
+    public PeerPublishedPayoutTxMessage(byte[] transaction, String tradeId, NodeAddress senderNodeAddress, String uid) {
         super(uid);
         this.transaction = transaction;
         this.tradeId = tradeId;
-        this.myNodeAddress = myNodeAddress;
+        this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public NodeAddress getSenderNodeAddress() {
-        return myNodeAddress;
+        return senderNodeAddress;
     }
 
     @Override
@@ -48,7 +48,7 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
         return msgBuilder.setPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage.newBuilder()
                 .setTransaction(ByteString.copyFrom(transaction))
                 .setTradeId(tradeId)
-                .setMyNodeAddress(myNodeAddress.toProtoMessage())).build();
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())).build();
     }
 
     // transaction not displayed for privacy reasons...
@@ -57,7 +57,7 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
         return "PeerPublishedPayoutTxMessage{" +
                 "transaction not displayed for privacy reasons..." +
                 ", tradeId='" + tradeId + '\'' +
-                ", myNodeAddress=" + myNodeAddress +
+                ", senderNodeAddress=" + senderNodeAddress +
                 "} " + super.toString();
     }
 }

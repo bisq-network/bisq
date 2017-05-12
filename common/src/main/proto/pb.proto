@@ -248,7 +248,7 @@ message PayoutTxPublishedMessage {
 message PeerPublishedPayoutTxMessage {
     bytes transaction = 1;
     string trade_id = 2;
-    NodeAddress my_node_address = 3;
+    NodeAddress sender_node_address = 3;
     string uid = 4;
 }
 
@@ -257,13 +257,13 @@ message PeerPublishedPayoutTxMessage {
 
 message OpenNewDisputeMessage {
     Dispute dispute = 1;
-    NodeAddress my_node_address = 2;
+    NodeAddress sender_node_address = 2;
     string uid = 3;
 }
 
 message PeerOpenedDisputeMessage {
     Dispute dispute = 1;
-    NodeAddress my_node_address = 2;
+    NodeAddress sender_node_address = 2;
     string uid = 3;
 }
 
@@ -277,21 +277,21 @@ message DisputeCommunicationMessage {
     bool arrived = 7;
     bool stored_in_mailbox = 8;
     bool is_system_message = 9;
-    NodeAddress my_node_address = 10;
+    NodeAddress sender_node_address = 10;
     string uid = 11;
 }
 
 message DisputeResultMessage {
     string uid = 1;
     DisputeResult dispute_result = 2;
-    NodeAddress my_node_address = 3;
+    NodeAddress sender_node_address = 3;
 }
 
 
 message PrivateNotificationMessage {
     int32 message_version = 1;
     string uid = 2;
-    NodeAddress my_node_address = 3;
+    NodeAddress sender_node_address = 3;
     PrivateNotificationPayload private_notification_payload = 4;
 }
 

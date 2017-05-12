@@ -29,23 +29,23 @@ import lombok.ToString;
 public final class OpenNewDisputeMessage extends DisputeMessage {
 
     public final Dispute dispute;
-    private final NodeAddress myNodeAddress;
+    private final NodeAddress senderNodeAddress;
 
-    public OpenNewDisputeMessage(Dispute dispute, NodeAddress myNodeAddress, String uid) {
+    public OpenNewDisputeMessage(Dispute dispute, NodeAddress senderNodeAddress, String uid) {
         super(uid);
         this.dispute = dispute;
-        this.myNodeAddress = myNodeAddress;
+        this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public NodeAddress getSenderNodeAddress() {
-        return myNodeAddress;
+        return senderNodeAddress;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         return msgBuilder.setOpenNewDisputeMessage(PB.OpenNewDisputeMessage.newBuilder()
-                .setDispute(dispute.toProtoMessage()).setMyNodeAddress(myNodeAddress.toProtoMessage()).setUid(getUid())).build();
+                .setDispute(dispute.toProtoMessage()).setSenderNodeAddress(senderNodeAddress.toProtoMessage()).setUid(getUid())).build();
     }
 }

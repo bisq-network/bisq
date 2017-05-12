@@ -48,7 +48,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     private final int traderId;
     private final boolean senderIsTrader;
     private final String message;
-    private final NodeAddress myNodeAddress;
+    private final NodeAddress senderNodeAddress;
     @Nullable
     private final ArrayList<Attachment> attachments = new ArrayList<>();
     private boolean arrived;
@@ -65,7 +65,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                                        boolean senderIsTrader,
                                        String message,
                                        @Nullable List<Attachment> attachments,
-                                       NodeAddress myNodeAddress,
+                                       NodeAddress senderNodeAddress,
                                        long date,
                                        boolean arrived,
                                        boolean storedInMailbox,
@@ -75,7 +75,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
         this.message = message;
-        this.myNodeAddress = myNodeAddress;
+        this.senderNodeAddress = senderNodeAddress;
         this.date = date;
         this.arrived = arrived;
         this.storedInMailbox = storedInMailbox;
@@ -99,7 +99,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
 
     @Override
     public NodeAddress getSenderNodeAddress() {
-        return myNodeAddress;
+        return senderNodeAddress;
     }
 
     public void addAttachment(Attachment attachment) {
@@ -141,6 +141,6 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 .setArrived(arrived)
                 .setStoredInMailbox(storedInMailbox)
                 .setIsSystemMessage(isSystemMessage)
-                .setMyNodeAddress(myNodeAddress.toProtoMessage())).build();
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())).build();
     }
 }

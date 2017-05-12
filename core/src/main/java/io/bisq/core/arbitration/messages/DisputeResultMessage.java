@@ -29,17 +29,17 @@ import lombok.ToString;
 public final class DisputeResultMessage extends DisputeMessage {
 
     public final DisputeResult disputeResult;
-    private final NodeAddress myNodeAddress;
+    private final NodeAddress senderNodeAddress;
 
-    public DisputeResultMessage(DisputeResult disputeResult, NodeAddress myNodeAddress, String uid) {
+    public DisputeResultMessage(DisputeResult disputeResult, NodeAddress senderNodeAddress, String uid) {
         super(uid);
         this.disputeResult = disputeResult;
-        this.myNodeAddress = myNodeAddress;
+        this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public NodeAddress getSenderNodeAddress() {
-        return myNodeAddress;
+        return senderNodeAddress;
     }
 
     @Override
@@ -47,7 +47,7 @@ public final class DisputeResultMessage extends DisputeMessage {
         PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         return msgBuilder.setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
                 .setDisputeResult(disputeResult.toProtoMessage())
-                .setMyNodeAddress(myNodeAddress.toProtoMessage())
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setUid(getUid()))
                 .build();
     }

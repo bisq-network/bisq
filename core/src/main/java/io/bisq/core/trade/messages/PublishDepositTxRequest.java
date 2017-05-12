@@ -26,24 +26,22 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.annotation.concurrent.Immutable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@EqualsAndHashCode(callSuper = true)
-@Immutable
 // We use a MailboxMessage here because the taker has paid already the trade fee and it could be that
 // we lost connection to him but we are complete on our side. So even if the peer is offline he can
 // continue later to complete the deposit tx.
+
+@EqualsAndHashCode(callSuper = true)
+@Value
+@Slf4j
 public final class PublishDepositTxRequest extends TradeMessage implements MailboxMessage {
-
-    private static final Logger log = LoggerFactory.getLogger(PublishDepositTxRequest.class);
-
     public final PaymentAccountPayload makerPaymentAccountPayload;
     public final String makerAccountId;
     public final String makerContractAsJson;
@@ -54,6 +52,12 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
     public final byte[] makerMultiSigPubKey;
     private final NodeAddress senderNodeAddress;
     private final String uid;
+
+
+    @Override
+    public NodeAddress getSenderNodeAddress() {
+        return null;
+    }
 
     public PublishDepositTxRequest(String tradeId,
                                    PaymentAccountPayload makerPaymentAccountPayload,
@@ -114,15 +118,5 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 ", makerInputs=" + makerInputs +
                 ", makerMultiSigPubKey=" + Hex.toHexString(makerMultiSigPubKey) +
                 "} " + super.toString();
-    }
-
-    @Override
-    public NodeAddress getSenderNodeAddress() {
-        return null;
-    }
-
-    @Override
-    public String getUid() {
-        return null;
     }
 }

@@ -28,17 +28,17 @@ import lombok.ToString;
 @ToString
 public final class PeerOpenedDisputeMessage extends DisputeMessage {
     public final Dispute dispute;
-    private final NodeAddress myNodeAddress;
+    private final NodeAddress senderNodeAddress;
 
-    public PeerOpenedDisputeMessage(Dispute dispute, NodeAddress myNodeAddress, String uid) {
+    public PeerOpenedDisputeMessage(Dispute dispute, NodeAddress senderNodeAddress, String uid) {
         super(uid);
         this.dispute = dispute;
-        this.myNodeAddress = myNodeAddress;
+        this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public NodeAddress getSenderNodeAddress() {
-        return myNodeAddress;
+        return senderNodeAddress;
     }
 
     @Override
@@ -46,7 +46,7 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
         PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         return msgBuilder.setPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage.newBuilder()
                 .setDispute(dispute.toProtoMessage())
-                .setMyNodeAddress(myNodeAddress.toProtoMessage())
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setUid(getUid())).build();
     }
 }

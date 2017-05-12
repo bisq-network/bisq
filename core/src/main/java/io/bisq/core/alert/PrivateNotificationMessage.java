@@ -11,15 +11,15 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 @Slf4j
 public class PrivateNotificationMessage implements MailboxMessage {
-    private final NodeAddress myNodeAddress;
+    private final NodeAddress senderNodeAddress;
     private final PrivateNotificationPayload privateNotificationPayload;
     private final String uid;
     private final int messageVersion = Version.getP2PMessageVersion();
 
     public PrivateNotificationMessage(PrivateNotificationPayload privateNotificationPayload,
-                                      NodeAddress myNodeAddress,
+                                      NodeAddress senderNodeAddress,
                                       String uid) {
-        this.myNodeAddress = myNodeAddress;
+        this.senderNodeAddress = senderNodeAddress;
         this.privateNotificationPayload = privateNotificationPayload;
         this.uid = uid;
     }
@@ -30,7 +30,7 @@ public class PrivateNotificationMessage implements MailboxMessage {
 
     public static NetworkEnvelope fromProto(PB.PrivateNotificationMessage proto) {
         return new PrivateNotificationMessage(PrivateNotificationPayload.fromProto(proto.getPrivateNotificationPayload()),
-                NodeAddress.fromProto(proto.getMyNodeAddress()),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid());
     }
 
@@ -40,14 +40,14 @@ public class PrivateNotificationMessage implements MailboxMessage {
         return msgBuilder.setPrivateNotificationMessage(msgBuilder.getPrivateNotificationMessageBuilder()
                 .setMessageVersion(messageVersion)
                 .setUid(uid)
-                .setMyNodeAddress(myNodeAddress.toProtoMessage())
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setPrivateNotificationPayload(privateNotificationPayload.toProtoMessage())).build();
     }
 
 
     @Override
     public NodeAddress getSenderNodeAddress() {
-        return myNodeAddress;
+        return senderNodeAddress;
     }
 
     @Override

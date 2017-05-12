@@ -282,7 +282,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     private static NetworkEnvelope getPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
         return new PeerPublishedPayoutTxMessage(peerPublishedPayoutTxMessage.getTransaction().toByteArray(),
                 peerPublishedPayoutTxMessage.getTradeId(),
-                NodeAddress.fromProto(peerPublishedPayoutTxMessage.getMyNodeAddress()),
+                NodeAddress.fromProto(peerPublishedPayoutTxMessage.getSenderNodeAddress()),
                 peerPublishedPayoutTxMessage.getUid());
     }
 
@@ -300,18 +300,18 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 disputeResultproto.getArbitratorPubKey().toByteArray(), disputeResultproto.getCloseDate(),
                 disputeResultproto.getIsLoserPublisher());
         return new DisputeResultMessage(disputeResult,
-                NodeAddress.fromProto(disputeResultMessage.getMyNodeAddress()),
+                NodeAddress.fromProto(disputeResultMessage.getSenderNodeAddress()),
                 disputeResultMessage.getUid());
     }
 
     private static NetworkEnvelope getPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         return new PeerOpenedDisputeMessage(ProtoUtil.getDispute(peerOpenedDisputeMessage.getDispute()),
-                NodeAddress.fromProto(peerOpenedDisputeMessage.getMyNodeAddress()), peerOpenedDisputeMessage.getUid());
+                NodeAddress.fromProto(peerOpenedDisputeMessage.getSenderNodeAddress()), peerOpenedDisputeMessage.getUid());
     }
 
     private static NetworkEnvelope getOpenNewDisputeMessage(PB.OpenNewDisputeMessage openNewDisputeMessage) {
         return new OpenNewDisputeMessage(ProtoUtil.getDispute(openNewDisputeMessage.getDispute()),
-                NodeAddress.fromProto(openNewDisputeMessage.getMyNodeAddress()), openNewDisputeMessage.getUid());
+                NodeAddress.fromProto(openNewDisputeMessage.getSenderNodeAddress()), openNewDisputeMessage.getUid());
     }
 
     private static NetworkEnvelope getDisputeCommunicationMessage(PB.DisputeCommunicationMessage disputeCommunicationMessage) {
@@ -322,7 +322,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 disputeCommunicationMessage.getAttachmentsList().stream()
                         .map(attachment -> new Attachment(attachment.getFileName(), attachment.getBytes().toByteArray()))
                         .collect(Collectors.toList()),
-                NodeAddress.fromProto(disputeCommunicationMessage.getMyNodeAddress()),
+                NodeAddress.fromProto(disputeCommunicationMessage.getSenderNodeAddress()),
                 disputeCommunicationMessage.getDate(),
                 disputeCommunicationMessage.getArrived(),
                 disputeCommunicationMessage.getStoredInMailbox(),
