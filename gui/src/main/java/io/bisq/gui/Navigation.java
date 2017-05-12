@@ -18,12 +18,8 @@
 package io.bisq.gui;
 
 import com.google.inject.Inject;
-import com.google.protobuf.Message;
-import io.bisq.common.app.Version;
-import io.bisq.common.persistence.Persistable;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.proto.ViewPathAsString;
-import io.bisq.generated.protobuffer.PB;
 import io.bisq.gui.common.view.View;
 import io.bisq.gui.common.view.ViewPath;
 import io.bisq.gui.main.MainView;
@@ -39,12 +35,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class Navigation implements Persistable {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
+public final class Navigation {
     private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, MarketView.class);
-
 
     public interface Listener {
         void onNavigationRequested(ViewPath path);
@@ -163,10 +155,5 @@ public final class Navigation implements Persistable {
 
     public void setReturnPath(ViewPath returnPath) {
         this.returnPath = returnPath;
-    }
-
-    @Override
-    public Message toProtoMessage() {
-        return PB.Persistable.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder().addAllViewPath(viewPathAsString.getViewPath())).build();
     }
 }

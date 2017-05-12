@@ -19,7 +19,7 @@ package io.bisq.core.dao.compensation;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
-import io.bisq.common.persistence.ListPersistable;
+import io.bisq.common.persistable.PersistableList;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -50,7 +50,7 @@ public class CompensationRequestManager {
     private final BsqWalletService bsqWalletService;
     private final CompensationRequestModel model;
     private final VotingDefaultValues votingDefaultValues;
-    private final Storage<ListPersistable<CompensationRequest>> compensationRequestsStorage;
+    private final Storage<PersistableList<CompensationRequest>> compensationRequestsStorage;
 
     private CompensationRequest selectedCompensationRequest;
     private int bestChainHeight = -1;
@@ -69,7 +69,7 @@ public class CompensationRequestManager {
                                       DaoPeriodService daoPeriodService,
                                       CompensationRequestModel model,
                                       VotingDefaultValues votingDefaultValues,
-                                      Storage<ListPersistable<CompensationRequest>> compensationRequestsStorage) {
+                                      Storage<PersistableList<CompensationRequest>> compensationRequestsStorage) {
         this.p2PService = p2PService;
         this.daoPeriodService = daoPeriodService;
         this.btcWalletService = btcWalletService;
@@ -80,7 +80,7 @@ public class CompensationRequestManager {
 
         observableList = FXCollections.observableArrayList(model.getList());
 
-        ListPersistable<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
+        PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
         if (persisted != null)
             model.setPersistedCompensationRequest(persisted.getList());
 
@@ -121,7 +121,7 @@ public class CompensationRequestManager {
         if (!contains(compensationRequestPayload)) {
             model.addCompensationRequest(new CompensationRequest(compensationRequestPayload));
             if (storeLocally)
-                compensationRequestsStorage.queueUpForSave(new ListPersistable<>(model.getList()), 500);
+                compensationRequestsStorage.queueUpForSave(new PersistableList<>(model.getList()), 500);
         } else {
             log.warn("We have already an item with the same CompensationRequest.");
         }

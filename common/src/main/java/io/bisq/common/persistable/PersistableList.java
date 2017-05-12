@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.persistence;
+package io.bisq.common.persistable;
 
 import com.google.protobuf.Message;
 import lombok.Getter;
@@ -28,28 +28,28 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ListPersistable<T extends Persistable> implements Persistable {
+public class PersistableList<T extends PersistablePayload> implements PersistableEnvelope {
     @Getter
     @Setter
     private List<T> list;
     @Setter
     private Function<List<T>, Message> toProto;
 
-    public ListPersistable(List<T> list) {
+    public PersistableList(List<T> list) {
         this.list = list;
     }
 
-    public ListPersistable(List<T> list,  Function<List<T>, Message> toProto) {
+    public PersistableList(List<T> list, Function<List<T>, Message> toProto) {
         this(list);
         this.toProto = toProto;
     }
 
     /** convenience ctor */
-    public ListPersistable(HashSet<T> set) {
+    public PersistableList(HashSet<T> set) {
         this(set.stream().collect(Collectors.toList()));
     }
     /** convenience ctor */
-    public ListPersistable(HashSet<T> set,  Function<List<T>, Message> toProto) {
+    public PersistableList(HashSet<T> set, Function<List<T>, Message> toProto) {
         this(set);
         this.toProto = toProto;
     }

@@ -20,7 +20,7 @@ package io.bisq.core.btc;
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.common.storage.Storage;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
@@ -40,7 +40,7 @@ import java.util.stream.Stream;
  */
 @ToString
 @Slf4j
-public final class AddressEntryList implements Persistable {
+public final class AddressEntryList implements PersistableEnvelope {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
@@ -120,7 +120,7 @@ public final class AddressEntryList implements Persistable {
 
     @Override
     public Message toProtoMessage() {
-        final PB.Persistable build = PB.Persistable.newBuilder().setAddressEntryList(PB.AddressEntryList.newBuilder()
+        final PB.DiscEnvelope build = PB.DiscEnvelope.newBuilder().setAddressEntryList(PB.AddressEntryList.newBuilder()
                 .addAllAddressEntry(stream()
                         .map(addressEntry -> ((PB.AddressEntry) addressEntry.toProtoMessage()))
                         .collect(Collectors.toList())))

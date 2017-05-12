@@ -1,7 +1,7 @@
 package io.bisq.common;
 
 /**
- * Marker interface for data which is sent over the wire
+ * Interface for objects used inside an Envelope or other Payloads.
  */
-public interface Payload extends Marshaller {
+public interface Payload extends Proto {
 }

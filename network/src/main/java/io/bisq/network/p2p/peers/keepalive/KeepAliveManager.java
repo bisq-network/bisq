@@ -6,7 +6,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.PeerManager;
 import io.bisq.network.p2p.peers.keepalive.messages.Ping;
@@ -70,11 +70,11 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Msg msg, Connection connection) {
-        if (msg instanceof Ping) {
-            Log.traceCall(msg.toString() + "\n\tconnection=" + connection);
+    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
+        if (wireEnvelope instanceof Ping) {
+            Log.traceCall(wireEnvelope.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
-                Ping ping = (Ping) msg;
+                Ping ping = (Ping) wireEnvelope;
 
                 // We get from peer last measured rrt
                 connection.getStatistic().setRoundTripTime(ping.lastRoundTripTime);

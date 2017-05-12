@@ -19,7 +19,7 @@ package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -88,8 +88,8 @@ public final class PublishDepositTxRequest extends TradeMsg implements MailboxMs
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
-        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
+    public PB.WireEnvelope toProtoMsg() {
+        PB.WireEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
         return msgBuilder.setPublishDepositTxRequest(msgBuilder.getPublishDepositTxRequestBuilder()
                 .setMessageVersion(getMsgVersion())
                 .setTradeId(tradeId)

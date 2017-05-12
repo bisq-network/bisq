@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.PeerManager;
@@ -144,9 +144,9 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Msg msg, Connection connection) {
-        if (msg instanceof GetPeersRequest) {
-            Log.traceCall(msg.toString() + "\n\tconnection=" + connection);
+    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
+        if (wireEnvelope instanceof GetPeersRequest) {
+            Log.traceCall(wireEnvelope.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
@@ -166,7 +166,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                                 peerManager.handleConnectionFault(connection);
                             }
                         });
-                getPeersRequestHandler.handle((GetPeersRequest) msg, connection);
+                getPeersRequestHandler.handle((GetPeersRequest) wireEnvelope, connection);
             } else {
                 log.warn("We have stopped already. We ignore that onMessage call.");
             }

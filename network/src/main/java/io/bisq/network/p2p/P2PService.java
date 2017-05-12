@@ -12,7 +12,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.FileUtil;
@@ -441,13 +441,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Msg msg, Connection connection) {
-        if (msg instanceof PrefixedSealedAndSignedMsg) {
-            Log.traceCall("\n\t" + msg.toString() + "\n\tconnection=" + connection);
+    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
+        if (wireEnvelope instanceof PrefixedSealedAndSignedMsg) {
+            Log.traceCall("\n\t" + wireEnvelope.toString() + "\n\tconnection=" + connection);
             // Seed nodes don't have set the encryptionService
             if (optionalEncryptionService.isPresent()) {
                 try {
-                    PrefixedSealedAndSignedMsg prefixedSealedAndSignedMessage = (PrefixedSealedAndSignedMsg) msg;
+                    PrefixedSealedAndSignedMsg prefixedSealedAndSignedMessage = (PrefixedSealedAndSignedMsg) wireEnvelope;
                     if (verifyAddressPrefixHash(prefixedSealedAndSignedMessage)) {
                         // We set connectionType to that connection to avoid that is get closed when
                         // we get too many connection attempts.
@@ -469,7 +469,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         log.debug("Wrong receiverAddressMaskHash. The message is not intended for us.");
                     }
                 } catch (CryptoException e) {
-                    log.debug(msg.toString());
+                    log.debug(wireEnvelope.toString());
                     log.debug(e.toString());
                     log.debug("Decryption of prefixedSealedAndSignedMessage.sealedAndSigned failed. " +
                             "That is expected if the message is not intended for us.");
@@ -562,8 +562,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 try {
                     DecryptedMsgWithPubKey decryptedMsgWithPubKey = optionalEncryptionService.get().decryptAndVerify(
                             prefixedSealedAndSignedMessage.sealedAndSigned);
-                    if (decryptedMsgWithPubKey.msg instanceof MailboxMsg) {
-                        MailboxMsg mailboxMessage = (MailboxMsg) decryptedMsgWithPubKey.msg;
+                    if (decryptedMsgWithPubKey.wireEnvelope instanceof MailboxMsg) {
+                        MailboxMsg mailboxMessage = (MailboxMsg) decryptedMsgWithPubKey.wireEnvelope;
                         NodeAddress senderNodeAddress = mailboxMessage.getSenderNodeAddress();
                         checkNotNull(senderNodeAddress, "senderAddress must not be null for mailbox network_messages");
 
@@ -574,7 +574,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                 e -> e.onMailboxMessageAdded(decryptedMsgWithPubKey, senderNodeAddress));
                     } else {
                         log.warn("tryDecryptMailboxData: Expected MailboxMessage but got other type. " +
-                                "decryptedMsgWithPubKey.message=", decryptedMsgWithPubKey.msg);
+                                "decryptedMsgWithPubKey.message=", decryptedMsgWithPubKey.wireEnvelope);
                     }
                 } catch (CryptoException e) {
                     log.debug(e.toString());
@@ -738,7 +738,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
-            MailboxMsg mailboxMessage = (MailboxMsg) decryptedMsgWithPubKey.msg;
+            MailboxMsg mailboxMessage = (MailboxMsg) decryptedMsgWithPubKey.wireEnvelope;
             String uid = mailboxMessage.getUID();
             if (mailboxMap.containsKey(uid)) {
                 ProtectedMailboxStorageEntry mailboxData = mailboxMap.get(uid);

@@ -21,7 +21,7 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
@@ -57,14 +57,14 @@ public class OfferAvailabilityProtocol {
         this.errorMessageHandler = errorMessageHandler;
 
         decryptedDirectMessageListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
-            Msg msg = decryptedMessageWithPubKey.msg;
-            if (msg instanceof OfferMsg) {
-                OfferMsg offerMessage = (OfferMsg) msg;
+            NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
+            if (wireEnvelope instanceof OfferMsg) {
+                OfferMsg offerMessage = (OfferMsg) wireEnvelope;
                 Validator.nonEmptyStringOf(offerMessage.offerId);
-                if (msg instanceof OfferAvailabilityResponse
+                if (wireEnvelope instanceof OfferAvailabilityResponse
                         && model.offer.getId().equals(offerMessage.offerId)) {
-                    log.trace("handle OfferAvailabilityResponse = " + msg.getClass().getSimpleName() + " from " + peersNodeAddress);
-                    handle((OfferAvailabilityResponse) msg);
+                    log.trace("handle OfferAvailabilityResponse = " + wireEnvelope.getClass().getSimpleName() + " from " + peersNodeAddress);
+                    handle((OfferAvailabilityResponse) wireEnvelope);
                 }
             }
         };

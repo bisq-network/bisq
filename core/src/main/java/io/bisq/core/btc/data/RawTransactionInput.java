@@ -18,8 +18,8 @@
 package io.bisq.core.btc.data;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.Payload;
-import io.bisq.common.app.Version;
+import io.bisq.common.network.NetworkPayload;
+import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import org.bouncycastle.util.encoders.Hex;
@@ -28,10 +28,7 @@ import javax.annotation.concurrent.Immutable;
 
 @EqualsAndHashCode
 @Immutable
-public final class RawTransactionInput implements Payload {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
+public final class RawTransactionInput implements NetworkPayload, PersistablePayload {
     // Payload
     public final long index;
     public final byte[] parentTransaction;

@@ -8,7 +8,8 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Altcoin;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.network.NetworkPayload;
+import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.common.util.MathUtils;
 import io.bisq.common.util.Utilities;
@@ -28,7 +29,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.annotation.Nullable;
-import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.Date;
 import java.util.List;
@@ -38,7 +38,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class Offer implements Persistable, Serializable {
+public class Offer implements NetworkPayload, PersistablePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums

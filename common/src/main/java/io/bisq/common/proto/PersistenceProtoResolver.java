@@ -17,11 +17,11 @@
 
 package io.bisq.common.proto;
 
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.generated.protobuffer.PB;
 
 import java.util.Optional;
 
 public interface PersistenceProtoResolver {
-    Optional<Persistable> fromProto(PB.Persistable persistable);
+    Optional<PersistableEnvelope> fromProto(PB.DiscEnvelope persistable);
 }

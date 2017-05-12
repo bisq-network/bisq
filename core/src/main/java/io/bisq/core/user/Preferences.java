@@ -5,7 +5,7 @@ import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.*;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.BitcoinNetwork;
@@ -32,7 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class Preferences implements Persistable {
+public final class Preferences implements PersistableEnvelope {
 
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
@@ -691,6 +691,6 @@ public final class Preferences implements Persistable {
         Optional.ofNullable(sellScreenCurrencyCode).ifPresent(code -> builder.setSellScreenCurrencyCode(code));
         Optional.ofNullable(selectedPaymentAccountForCreateOffer).ifPresent(
                 account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProtoMessage()));
-        return PB.Persistable.newBuilder().setPreferences(builder).build();
+        return PB.DiscEnvelope.newBuilder().setPreferences(builder).build();
     }
 }

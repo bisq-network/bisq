@@ -22,7 +22,7 @@ import com.google.inject.name.Named;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.NodeAddress;
@@ -75,9 +75,9 @@ public class PrivateNotificationManager {
 
     private void handleMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress senderNodeAddress) {
         this.decryptedMsgWithPubKey = decryptedMsgWithPubKey;
-        Msg msg = decryptedMsgWithPubKey.msg;
-        if (msg instanceof PrivateNotificationMsg) {
-            PrivateNotificationMsg privateNotificationMessage = (PrivateNotificationMsg) msg;
+        NetworkEnvelope wireEnvelope = decryptedMsgWithPubKey.wireEnvelope;
+        if (wireEnvelope instanceof PrivateNotificationMsg) {
+            PrivateNotificationMsg privateNotificationMessage = (PrivateNotificationMsg) wireEnvelope;
             log.trace("Received privateNotificationMessage: " + privateNotificationMessage);
             if (privateNotificationMessage.getSenderNodeAddress().equals(senderNodeAddress)) {
                 final PrivateNotificationPayload privateNotification = privateNotificationMessage.privateNotificationPayload;

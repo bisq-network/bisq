@@ -19,10 +19,10 @@ package io.bisq.core.user;
 
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 
-public final class BlockChainExplorer implements Persistable {
+public final class BlockChainExplorer implements PersistablePayload {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

@@ -4,7 +4,7 @@ import com.google.common.util.concurrent.*;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.common.util.Utilities;
 import io.bisq.network.p2p.NodeAddress;
@@ -67,8 +67,8 @@ public abstract class NetworkNode implements MessageListener {
     // when the events happen.
     abstract public void start(@Nullable SetupListener setupListener);
 
-    public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress, Msg msg) {
-        Log.traceCall("peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + Utilities.toTruncatedString(msg));
+    public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress, NetworkEnvelope wireEnvelope) {
+        Log.traceCall("peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + Utilities.toTruncatedString(wireEnvelope));
         checkNotNull(peersNodeAddress, "peerAddress must not be null");
 
         Connection connection = getOutboundConnection(peersNodeAddress);
@@ -76,7 +76,7 @@ public abstract class NetworkNode implements MessageListener {
             connection = getInboundConnection(peersNodeAddress);
 
         if (connection != null) {
-            return sendMessage(connection, msg);
+            return sendMessage(connection, wireEnvelope);
         } else {
             log.debug("We have not found any connection for peerAddress {}.\n\t" +
                     "We will create a new outbound connection.", peersNodeAddress);
@@ -114,7 +114,7 @@ public abstract class NetworkNode implements MessageListener {
                         } catch (Throwable throwable) {
                             log.error("Error at closing socket " + throwable);
                         }
-                        existingConnection.sendMessage(msg);
+                        existingConnection.sendMessage(wireEnvelope);
                         return existingConnection;
                     } else {
                         final ConnectionListener connectionListener = new ConnectionListener() {
@@ -152,11 +152,11 @@ public abstract class NetworkNode implements MessageListener {
                                 + "\nmyNodeAddress=" + getNodeAddress()
                                 + "\npeersNodeAddress=" + peersNodeAddress
                                 + "\nuid=" + outboundConnection.getUid()
-                                + "\nmessage=" + msg
+                                + "\nmessage=" + wireEnvelope
                                 + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
                         // can take a while when using tor
-                        outboundConnection.sendMessage(msg);
+                        outboundConnection.sendMessage(wireEnvelope);
                         return outboundConnection;
                     }
                 } catch (Throwable throwable) {
@@ -225,12 +225,12 @@ public abstract class NetworkNode implements MessageListener {
     }
 
 
-    public SettableFuture<Connection> sendMessage(Connection connection, Msg msg) {
-        Log.traceCall("\n\tmessage=" + Utilities.toTruncatedString(msg) + "\n\tconnection=" + connection);
+    public SettableFuture<Connection> sendMessage(Connection connection, NetworkEnvelope wireEnvelope) {
+        Log.traceCall("\n\tmessage=" + Utilities.toTruncatedString(wireEnvelope) + "\n\tconnection=" + connection);
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.getUid());
-            connection.sendMessage(msg);
+            connection.sendMessage(wireEnvelope);
             return connection;
         });
         final SettableFuture<Connection> resultFuture = SettableFuture.create();
@@ -306,8 +306,8 @@ public abstract class NetworkNode implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Msg msg, Connection connection) {
-        messageListeners.stream().forEach(e -> e.onMessage(msg, connection));
+    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
+        messageListeners.stream().forEach(e -> e.onMessage(wireEnvelope, connection));
     }
 
 

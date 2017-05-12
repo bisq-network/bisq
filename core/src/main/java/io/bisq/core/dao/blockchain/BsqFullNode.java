@@ -23,7 +23,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
@@ -162,9 +162,9 @@ public class BsqFullNode extends BsqNode {
     }
 
     // TODO use handler class
-    private void onMessage(Msg msg, Connection connection) {
-        if (msg instanceof GetBsqBlocksRequest && connection.getPeersNodeAddressOptional().isPresent()) {
-            GetBsqBlocksRequest getBsqBlocksRequest = (GetBsqBlocksRequest) msg;
+    private void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
+        if (wireEnvelope instanceof GetBsqBlocksRequest && connection.getPeersNodeAddressOptional().isPresent()) {
+            GetBsqBlocksRequest getBsqBlocksRequest = (GetBsqBlocksRequest) wireEnvelope;
             final NodeAddress peersNodeAddress = connection.getPeersNodeAddressOptional().get();
             log.info("Received getBsqBlocksRequest with data: {} from {}",
                     getBsqBlocksRequest.getFromBlockHeight(), peersNodeAddress);

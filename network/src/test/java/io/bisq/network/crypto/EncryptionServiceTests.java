@@ -23,7 +23,7 @@ import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMsg;
@@ -122,7 +122,7 @@ public class EncryptionServiceTests {
         log.trace("took " + (System.currentTimeMillis() - ts) + " ms.");
     }*/
 
-    private static class MockMsg implements Msg {
+    private static class MockMsg implements NetworkEnvelope {
         public final int nonce;
 
         public MockMsg(int nonce) {
@@ -135,8 +135,8 @@ public class EncryptionServiceTests {
         }
 
         @Override
-        public PB.Msg toProtoMsg() {
-            return PB.Msg.newBuilder().setPing(PB.Ping.newBuilder().setNonce(nonce)).build();
+        public PB.WireEnvelope toProtoMsg() {
+            return PB.WireEnvelope.newBuilder().setPing(PB.Ping.newBuilder().setNonce(nonce)).build();
         }
     }
 }
@@ -167,7 +167,7 @@ final class TestMsg implements MailboxMsg {
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
+    public PB.WireEnvelope toProtoMsg() {
         throw new NotImplementedException();
     }
 }

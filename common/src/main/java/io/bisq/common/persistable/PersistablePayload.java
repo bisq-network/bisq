@@ -15,12 +15,12 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common;
+package io.bisq.common.persistable;
 
-import com.google.protobuf.Message;
+import io.bisq.common.Payload;
 
-import java.io.Serializable;
-
-public interface Marshaller extends Serializable {
-    Message toProtoMessage();
+/**
+ * Interface for objects used inside Envelope or other Payloads.
+ */
+public interface PersistablePayload extends Payload {
 }

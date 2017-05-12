@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.network;
 
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 
 public interface MessageListener {
-    void onMessage(Msg msg, Connection connection);
+    void onMessage(NetworkEnvelope wireEnvelope, Connection connection);
 }

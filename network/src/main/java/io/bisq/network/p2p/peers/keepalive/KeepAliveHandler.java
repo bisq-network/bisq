@@ -6,7 +6,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.MessageListener;
 import io.bisq.network.p2p.network.NetworkNode;
@@ -122,11 +122,11 @@ class KeepAliveHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Msg msg, Connection connection) {
-        if (msg instanceof Pong) {
-            Log.traceCall(msg.toString() + "\n\tconnection=" + connection);
+    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
+        if (wireEnvelope instanceof Pong) {
+            Log.traceCall(wireEnvelope.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
-                Pong pong = (Pong) msg;
+                Pong pong = (Pong) wireEnvelope;
                 if (pong.requestNonce == nonce) {
                     int roundTripTime = (int) (System.currentTimeMillis() - sendTs);
                     log.trace("roundTripTime=" + roundTripTime + "\n\tconnection=" + connection);

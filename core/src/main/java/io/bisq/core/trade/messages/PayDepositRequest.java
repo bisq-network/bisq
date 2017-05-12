@@ -20,7 +20,7 @@ package io.bisq.core.trade.messages;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.generated.protobuffer.PB;
@@ -105,8 +105,8 @@ public final class PayDepositRequest extends TradeMsg {
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
-        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
+    public PB.WireEnvelope toProtoMsg() {
+        PB.WireEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
         PB.PayDepositRequest.Builder builderForValue = PB.PayDepositRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setTradeAmount(tradeAmount)

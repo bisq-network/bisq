@@ -2,8 +2,8 @@ package io.bisq.core.proto;
 
 import com.google.inject.Provider;
 import io.bisq.common.locale.*;
-import io.bisq.common.persistence.ListPersistable;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistableEnvelope;
+import io.bisq.common.persistable.PersistableList;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.AddressEntry;
@@ -16,7 +16,7 @@ import io.bisq.core.trade.*;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.User;
+import io.bisq.core.user.UserPayload;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.peers.peerexchange.Peer;
 import io.bisq.network.p2p.storage.SequenceNumberMap;
@@ -75,7 +75,7 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
     }
 
     @Override
-    public Optional<Persistable> fromProto(PB.Persistable persistable) {
+    public Optional<PersistableEnvelope> fromProto(PB.DiscEnvelope persistable) {
         if (Objects.isNull(persistable)) {
             log.warn("fromProtoBuf called with empty disk persistable.");
             return Optional.empty();
@@ -83,7 +83,7 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
 
         log.debug("Convert protobuffer disk persistable: {}", persistable.getMessageCase());
 
-        Persistable result = null;
+        PersistableEnvelope result = null;
         switch (persistable.getMessageCase()) {
             case ADDRESS_ENTRY_LIST:
                 result = fillAddressEntryList(persistable, addressEntryListProvider.get());
@@ -98,13 +98,14 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
                 result = getPeersList(persistable.getPeersList());
                 break;
             case COMPENSATION_REQUEST_PAYLOAD:
+                // TODO There will be another object for PersistableEnvelope
                 result = CompensationRequestPayload.fromProto(persistable.getCompensationRequestPayload());
                 break;
             case PREFERENCES:
                 result = fillPreferences(persistable, preferencesProvider.get());
                 break;
-            case USER:
-                result = User.fromProto(persistable.getUser());
+            case USER_PAYLOAD:
+                result = UserPayload.fromProto(persistable.getUserPayload());
                 break;
             case SEQUENCE_NUMBER_MAP:
                 result = SequenceNumberMap.fromProto(persistable.getSequenceNumberMap());
@@ -117,21 +118,21 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         return Optional.ofNullable(result);
     }
 
-    private Persistable getTradableList(PB.TradableList tradableList) {
+    private PersistableEnvelope getTradableList(PB.TradableList tradableList) {
         return TradableList.fromProto(tradableList, openOfferStorage, buyerAsMakerTradeStorage, buyerAsTakerTradeStorage, sellerAsMakerTradeStorage, sellerAsTakerTradeStorage, btcWalletService.get());
     }
 
-    private Persistable getTradeStatisticsList(PB.TradeStatisticsList tradeStatisticsList) {
-        return new ListPersistable<>(tradeStatisticsList.getTradeStatisticsList().stream()
+    private PersistableEnvelope getTradeStatisticsList(PB.TradeStatisticsList tradeStatisticsList) {
+        return new PersistableList<>(tradeStatisticsList.getTradeStatisticsList().stream()
                 .map(TradeStatistics::fromProto).collect(Collectors.toList()));
     }
 
-    private Persistable getPeersList(PB.PeersList envelope) {
-        return new ListPersistable<>(envelope.getPeersList().stream().map(Peer::fromProto)
+    private PersistableEnvelope getPeersList(PB.PeersList envelope) {
+        return new PersistableList<>(envelope.getPeersList().stream().map(Peer::fromProto)
                 .collect(Collectors.toList()));
     }
 
-    private Preferences fillPreferences(PB.Persistable envelope, Preferences preferences) {
+    private Preferences fillPreferences(PB.DiscEnvelope envelope, Preferences preferences) {
         final PB.Preferences env = envelope.getPreferences();
         preferences.setUserLanguage(env.getUserLanguage());
         PB.Country userCountry = env.getUserCountry();
@@ -187,7 +188,7 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         return new Locale(locale.getLanguage(), locale.getCountry(), locale.getVariant());
     }
 
-    private AddressEntryList fillAddressEntryList(PB.Persistable envelope, AddressEntryList addressEntryList) {
+    private AddressEntryList fillAddressEntryList(PB.DiscEnvelope envelope, AddressEntryList addressEntryList) {
         envelope.getAddressEntryList().getAddressEntryList().stream().forEach(addressEntry -> {
             final AddressEntry entry = new AddressEntry(addressEntry.getPubKey().toByteArray(),
                     addressEntry.getPubKeyHash().toByteArray(),

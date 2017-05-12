@@ -23,20 +23,20 @@ import org.junit.Test;
  * You should have received a copy of the GNU Affero General Public License
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-public class UserModelVOTest {
+public class UserPayloadModelVOTest {
 
 
     @Test
     public void testRoundtrip() {
-        User vo = new User();
+        UserPayload vo = new UserPayload();
         vo.setAccountID("accountId");
 
-        User newVo = User.fromProto(vo.toProtoMessage().getUser());
+        UserPayload newVo = UserPayload.fromProto(vo.toProtoMessage().getUserPayload());
     }
 
     @Test
     public void testRoundtripFull() {
-        User vo = new User();
+        UserPayload vo = new UserPayload();
         vo.setAccountID("accountId");
         vo.setDisplayedAlert(new Alert("message", true, "version", new byte[]{12,-64,12}, "string", null));
         vo.setDevelopersFilter(new Filter(Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), "string", new byte[]{10,0,0}, null));
@@ -44,6 +44,6 @@ public class UserModelVOTest {
         vo.setRegisteredMediator(MediatorTest.getMediatorMock());
         vo.setAcceptedArbitrators(Lists.newArrayList(ArbitratorTest.getArbitratorMock()));
         vo.setAcceptedMediators(Lists.newArrayList(MediatorTest.getMediatorMock()));
-        User newVo = User.fromProto(vo.toProtoMessage().getUser());
+        UserPayload newVo = UserPayload.fromProto(vo.toProtoMessage().getUserPayload());
     }
 }

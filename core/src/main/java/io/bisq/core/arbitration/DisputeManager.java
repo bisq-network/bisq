@@ -27,7 +27,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.Res;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.arbitration.messages.*;
@@ -169,18 +169,18 @@ public class DisputeManager {
 
     private void applyMessages() {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
-            Msg msg = decryptedMessageWithPubKey.msg;
-            log.debug("decryptedDirectMessageWithPubKeys.message " + msg);
-            if (msg instanceof DisputeMsg)
-                dispatchMessage((DisputeMsg) msg);
+            NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
+            log.debug("decryptedDirectMessageWithPubKeys.message " + wireEnvelope);
+            if (wireEnvelope instanceof DisputeMsg)
+                dispatchMessage((DisputeMsg) wireEnvelope);
         });
         decryptedDirectMessageWithPubKeys.clear();
 
         decryptedMailboxMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
-            Msg msg = decryptedMessageWithPubKey.msg;
-            log.debug("decryptedMessageWithPubKey.message " + msg);
-            if (msg instanceof DisputeMsg) {
-                dispatchMessage((DisputeMsg) msg);
+            NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
+            log.debug("decryptedMessageWithPubKey.message " + wireEnvelope);
+            if (wireEnvelope instanceof DisputeMsg) {
+                dispatchMessage((DisputeMsg) wireEnvelope);
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
             }
         });

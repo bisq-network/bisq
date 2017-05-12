@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.persistence;
+package io.bisq.common.persistable;
 
 import com.google.protobuf.Message;
 import lombok.Getter;
@@ -27,18 +27,18 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.function.Function;
 
-public class HashMapPersistable<K, V> implements Persistable {
+public class PersistableHashMap<K extends PersistablePayload, V extends PersistablePayload> implements PersistableEnvelope {
     @Delegate
     @Getter
     private HashMap<K, V> hashMap = new HashMap<>();
     @Setter
     private Function<HashMap<K, V>, Message> toProto;
 
-    public HashMapPersistable(HashMap<K, V> hashMap) {
+    public PersistableHashMap(HashMap<K, V> hashMap) {
         this.hashMap = hashMap;
     }
 
-    public HashMapPersistable(HashMap<K, V> hashMap, Function<HashMap<K, V>, Message> toProto) {
+    public PersistableHashMap(HashMap<K, V> hashMap, Function<HashMap<K, V>, Message> toProto) {
         this(hashMap);
         setToProto(toProto);
     }

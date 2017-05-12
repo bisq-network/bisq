@@ -18,9 +18,9 @@
 package io.bisq.network.crypto;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import io.bisq.common.Marshaller;
 import io.bisq.common.crypto.*;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.network.NetworkPayload;
 import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
@@ -45,8 +45,8 @@ public class EncryptionService {
         this.networkProtoResolver = networkProtoResolver;
     }
 
-    public SealedAndSigned encryptAndSign(PubKeyRing pubKeyRing, Msg msg) throws CryptoException {
-        return encryptHybridWithSignature(msg, keyRing.getSignatureKeyPair(), pubKeyRing.getEncryptionPubKey());
+    public SealedAndSigned encryptAndSign(PubKeyRing pubKeyRing, NetworkEnvelope wireEnvelope) throws CryptoException {
+        return encryptHybridWithSignature(wireEnvelope, keyRing.getSignatureKeyPair(), pubKeyRing.getEncryptionPubKey());
     }
 
     /**
@@ -65,8 +65,8 @@ public class EncryptionService {
 
         try {
             final byte[] bytes = Encryption.decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey);
-            final PB.Msg envelope = PB.Msg.parseFrom(bytes);
-            Msg decryptedPayload = networkProtoResolver.fromProto(envelope).get();
+            final PB.WireEnvelope envelope = PB.WireEnvelope.parseFrom(bytes);
+            NetworkEnvelope decryptedPayload = networkProtoResolver.fromProto(envelope).get();
             return new DecryptedDataTuple(decryptedPayload, sealedAndSigned.sigPublicKey);
         } catch (InvalidProtocolBufferException e) {
             throw new CryptoException("Unable to parse protobuffer message.", e);
@@ -81,8 +81,8 @@ public class EncryptionService {
                 decryptedDataTuple.sigPublicKey);
     }
 
-    private static byte[] encryptPayloadWithHmac(Msg msg, SecretKey secretKey) throws CryptoException {
-        return Encryption.encryptPayloadWithHmac(msg.toProtoMsg().toByteArray(), secretKey);
+    private static byte[] encryptPayloadWithHmac(NetworkEnvelope wireEnvelope, SecretKey secretKey) throws CryptoException {
+        return Encryption.encryptPayloadWithHmac(wireEnvelope.toProtoMsg().toByteArray(), secretKey);
     }
 
     /**
@@ -92,7 +92,7 @@ public class EncryptionService {
      * @return A SealedAndSigned object.
      * @throws CryptoException
      */
-    public static SealedAndSigned encryptHybridWithSignature(Msg payload, KeyPair signatureKeyPair,
+    public static SealedAndSigned encryptHybridWithSignature(NetworkEnvelope payload, KeyPair signatureKeyPair,
                                                              PublicKey encryptionPublicKey)
             throws CryptoException {
         // Create a symmetric key
@@ -117,7 +117,7 @@ public class EncryptionService {
      * @param data Any serializable object. Will be converted into a byte array using Java serialisation.
      * @return Hash of data
      */
-    public static byte[] getHash(Marshaller data) {
+    public static byte[] getHash(NetworkPayload data) {
         return Hash.getHash(data.toProtoMessage().toByteArray());
     }
 }

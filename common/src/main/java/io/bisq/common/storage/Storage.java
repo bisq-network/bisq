@@ -18,7 +18,7 @@
 package io.bisq.common.storage;
 
 import com.google.inject.Inject;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>
  * The write operation used a background thread and supports a delayed write to avoid too many repeated write operations.
  */
-public class Storage<T extends Persistable> {
+public class Storage<T extends PersistableEnvelope> {
     private static final Logger log = LoggerFactory.getLogger(Storage.class);
     public static final String STORAGE_DIR = "storageDir";
 

@@ -17,11 +17,11 @@
 
 package io.bisq.common.proto;
 
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 
 import java.util.Optional;
 
 public interface NetworkProtoResolver {
-    Optional<Msg> fromProto(PB.Msg msg);
+    Optional<NetworkEnvelope> fromProto(PB.WireEnvelope msg);
 }

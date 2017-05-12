@@ -20,7 +20,7 @@ package io.bisq.common.storage;
 import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import io.bisq.common.UserThread;
 import io.bisq.common.io.LookAheadObjectInputStream;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
-public class FileManager<T extends Persistable> {
+public class FileManager<T extends PersistableEnvelope> {
     private final File dir;
     private final File storageFile;
     private final ScheduledThreadPoolExecutor executor;
@@ -108,16 +108,16 @@ public class FileManager<T extends Persistable> {
 
     public synchronized T read(File file) throws IOException, ClassNotFoundException {
         log.debug("read" + file);
-        Optional<Persistable> persistable = Optional.empty();
+        Optional<PersistableEnvelope> persistable = Optional.empty();
 
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
-            persistable = persistenceProtoResolver.fromProto(PB.Persistable.parseDelimitedFrom(fileInputStream));
+            persistable = persistenceProtoResolver.fromProto(PB.DiscEnvelope.parseDelimitedFrom(fileInputStream));
         } catch (Throwable t) {
             log.error("Exception at proto read: " + t.getMessage() + " " + file.getName());
         }
 
         if (persistable.isPresent()) {
-            log.info("Reading Persistable: {}", persistable.get().getClass());
+            log.info("Reading DiscEnvelope: {}", persistable.get().getClass());
             //noinspection unchecked
             return (T) persistable.get();
         }
@@ -197,9 +197,9 @@ public class FileManager<T extends Persistable> {
 
         // is it a protobuffer thing?
 
-        PB.Persistable protoPersistable = null;
+        PB.DiscEnvelope protoPersistable = null;
         try {
-            protoPersistable = (PB.Persistable) persistable.toProtoMessage();
+            protoPersistable = (PB.DiscEnvelope) persistable.toProtoMessage();
         } catch (Throwable e) {
             log.debug("Not protobufferable: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }

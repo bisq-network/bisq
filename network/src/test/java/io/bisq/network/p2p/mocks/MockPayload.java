@@ -1,12 +1,12 @@
 package io.bisq.network.p2p.mocks;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.ExpirablePayload;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-public final class MockPayload implements Msg, ExpirablePayload {
+public final class MockPayload implements NetworkEnvelope, ExpirablePayload {
     public final String msg;
     public long ttl;
     private final int messageVersion = Version.getP2PMessageVersion();
@@ -21,7 +21,7 @@ public final class MockPayload implements Msg, ExpirablePayload {
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
+    public PB.WireEnvelope toProtoMsg() {
         throw new NotImplementedException();
     }
 

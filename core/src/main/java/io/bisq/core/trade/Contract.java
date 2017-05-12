@@ -19,10 +19,10 @@ package io.bisq.core.trade;
 
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
-import io.bisq.common.Payload;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.monetary.Price;
+import io.bisq.common.network.NetworkPayload;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -40,7 +40,7 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @SuppressWarnings("WeakerAccess")
 @Immutable
-public final class Contract implements Payload {
+public final class Contract implements NetworkPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     @JsonExclude
     public static final long serialVersionUID = Version.P2P_NETWORK_VERSION;

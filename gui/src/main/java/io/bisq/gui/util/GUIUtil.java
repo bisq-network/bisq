@@ -27,7 +27,7 @@ import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.Res;
 import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.persistence.ListPersistable;
+import io.bisq.common.persistable.PersistableList;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -35,7 +35,7 @@ import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.UserModel;
+import io.bisq.core.user.User;
 import io.bisq.gui.components.indicator.TxConfidenceIndicator;
 import io.bisq.gui.main.overlays.popups.Popup;
 import javafx.beans.property.DoubleProperty;
@@ -102,8 +102,8 @@ public class GUIUtil {
                                       Preferences preferences, Stage stage, PersistenceProtoResolver persistenceProtoResolver) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
-            Storage<ListPersistable<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
-            paymentAccountsStorage.initAndGetPersisted(new ListPersistable<>(accounts), fileName);
+            Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
+            paymentAccountsStorage.initAndGetPersisted(new PersistableList<>(accounts), fileName);
             paymentAccountsStorage.queueUpForSave();
             new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
         } else {
@@ -111,7 +111,7 @@ public class GUIUtil {
         }
     }
 
-    public static void importAccounts(UserModel userModel, String fileName, Preferences preferences, Stage stage,
+    public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage,
                                       PersistenceProtoResolver persistenceProtoResolver) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setInitialDirectory(new File(preferences.getDirectoryChooserPath()));
@@ -122,14 +122,14 @@ public class GUIUtil {
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
-                Storage<ListPersistable<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
-                ListPersistable<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
+                Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
+                PersistableList<PaymentAccount> persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
                     persisted.getList().stream().forEach(paymentAccount -> {
                         final String id = paymentAccount.getId();
-                        if (userModel.getPaymentAccount(id) == null) {
-                            userModel.addPaymentAccount(paymentAccount);
+                        if (user.getPaymentAccount(id) == null) {
+                            user.addPaymentAccount(paymentAccount);
                             msg.append(Res.get("guiUtil.accountExport.tradingAccount", id));
                         } else {
                             msg.append(Res.get("guiUtil.accountImport.noImport", id));

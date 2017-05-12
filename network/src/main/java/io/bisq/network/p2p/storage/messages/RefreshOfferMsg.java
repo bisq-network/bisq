@@ -3,7 +3,7 @@ package io.bisq.network.p2p.storage.messages;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 
 import java.util.Arrays;
@@ -40,8 +40,8 @@ public final class RefreshOfferMsg extends BroadcastMsg {
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
-        PB.Msg.Builder builder = Msg.getMsgBuilder();
+    public PB.WireEnvelope toProtoMsg() {
+        PB.WireEnvelope.Builder builder = NetworkEnvelope.getMsgBuilder();
         return builder.setRefreshOfferMsg(builder.getRefreshOfferMsgBuilder()
                 .setHashOfDataAndSeqNr(ByteString.copyFrom(hashOfDataAndSeqNr))
                 .setHashOfPayload(ByteString.copyFrom(hashOfPayload))

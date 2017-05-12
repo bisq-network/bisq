@@ -1,6 +1,6 @@
 package io.bisq.network.p2p;
 
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 
-public interface AnonymousMsg extends Msg {
+public interface AnonymousMsg extends NetworkEnvelope {
 }

@@ -22,7 +22,7 @@ import com.google.inject.name.Named;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.app.AppOptionKeys;
-import io.bisq.core.user.UserModel;
+import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
@@ -47,7 +47,7 @@ public class FilterManager {
 
     private final P2PService p2PService;
     private final KeyRing keyRing;
-    private final UserModel userModel;
+    private final User user;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
 
     private static final String pubKeyAsHex = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
@@ -61,11 +61,11 @@ public class FilterManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FilterManager(P2PService p2PService, KeyRing keyRing, UserModel userModel,
+    public FilterManager(P2PService p2PService, KeyRing keyRing, User user,
                          @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
-        this.userModel = userModel;
+        this.user = user;
 
         if (!ignoreDevMsg) {
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
@@ -105,13 +105,13 @@ public class FilterManager {
 
     public boolean addFilterMessageIfKeyIsValid(Filter filter, String privKeyString) {
         // if there is a previous message we remove that first
-        if (userModel.getDevelopersFilter() != null)
+        if (user.getDevelopersFilter() != null)
             removeFilterMessageIfKeyIsValid(privKeyString);
 
         boolean isKeyValid = isKeyValid(privKeyString);
         if (isKeyValid) {
             signAndAddSignatureToFilter(filter);
-            userModel.setDevelopersFilter(filter);
+            user.setDevelopersFilter(filter);
 
             boolean result = p2PService.addData(filter, true);
             if (result)
@@ -123,12 +123,12 @@ public class FilterManager {
 
     public boolean removeFilterMessageIfKeyIsValid(String privKeyString) {
         if (isKeyValid(privKeyString)) {
-            Filter filter = userModel.getDevelopersFilter();
+            Filter filter = user.getDevelopersFilter();
             if (filter == null) {
                 log.warn("Developers filter is null");
             } else if (p2PService.removeData(filter, true)) {
                 log.trace("Remove filter from network was successful. FilterMessage = " + filter);
-                userModel.setDevelopersFilter(null);
+                user.setDevelopersFilter(null);
             } else {
                 log.warn("Filter remove failed");
             }
@@ -172,6 +172,6 @@ public class FilterManager {
 
     @Nullable
     public Filter getDevelopersFilter() {
-        return userModel.getDevelopersFilter();
+        return user.getDevelopersFilter();
     }
 }

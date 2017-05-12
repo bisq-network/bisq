@@ -19,7 +19,7 @@ package io.bisq.core.dao.compensation;
 
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistablePayload;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 // Represents the state of the CompensationRequest data
 @Getter
 
-public final class CompensationRequest implements Persistable {
+public final class CompensationRequest implements PersistablePayload {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

@@ -30,7 +30,7 @@ import io.bisq.core.trade.Contract;
 import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.closed.ClosedTradableManager;
-import io.bisq.core.user.UserModel;
+import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableWithDataModel;
 import io.bisq.gui.common.model.ViewModel;
 import io.bisq.gui.util.BSFormatter;
@@ -81,7 +81,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public final BtcAddressValidator btcAddressValidator;
 
     public final P2PService p2PService;
-    public final UserModel userModel;
+    public final User user;
     private final ClosedTradableManager closedTradableManager;
     public final Clock clock;
 
@@ -101,7 +101,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   BsqFormatter bsqFormatter,
                                   BtcAddressValidator btcAddressValidator,
                                   P2PService p2PService,
-                                  UserModel userModel,
+                                  User user,
                                   ClosedTradableManager closedTradableManager,
                                   Clock clock) {
         super(dataModel);
@@ -110,7 +110,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.bsqFormatter = bsqFormatter;
         this.btcAddressValidator = btcAddressValidator;
         this.p2PService = p2PService;
-        this.userModel = userModel;
+        this.user = user;
         this.closedTradableManager = closedTradableManager;
         this.clock = clock;
     }

@@ -22,7 +22,7 @@ import com.google.inject.name.Named;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.app.AppOptionKeys;
-import io.bisq.core.user.UserModel;
+import io.bisq.core.user.User;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.storage.HashMapChangedListener;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -45,7 +45,7 @@ public class AlertManager {
 
     private final P2PService p2PService;
     private final KeyRing keyRing;
-    private final UserModel userModel;
+    private final User user;
     private final ObjectProperty<Alert> alertMessageProperty = new SimpleObjectProperty<>();
 
     // Pub key for developer global alert message
@@ -60,10 +60,10 @@ public class AlertManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AlertManager(P2PService p2PService, KeyRing keyRing, UserModel userModel, @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
+    public AlertManager(P2PService p2PService, KeyRing keyRing, User user, @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.p2PService = p2PService;
         this.keyRing = keyRing;
-        this.userModel = userModel;
+        this.user = user;
 
         if (!ignoreDevMsg) {
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
@@ -100,13 +100,13 @@ public class AlertManager {
 
     public boolean addAlertMessageIfKeyIsValid(Alert alert, String privKeyString) {
         // if there is a previous message we remove that first
-        if (userModel.getDevelopersAlert() != null)
+        if (user.getDevelopersAlert() != null)
             removeAlertMessageIfKeyIsValid(privKeyString);
 
         boolean isKeyValid = isKeyValid(privKeyString);
         if (isKeyValid) {
             signAndAddSignatureToAlertMessage(alert);
-            userModel.setDevelopersAlert(alert);
+            user.setDevelopersAlert(alert);
             boolean result = p2PService.addData(alert, true);
             if (result) {
                 log.trace("Add alertMessage to network was successful. AlertMessage = " + alert);
@@ -117,12 +117,12 @@ public class AlertManager {
     }
 
     public boolean removeAlertMessageIfKeyIsValid(String privKeyString) {
-        Alert alert = userModel.getDevelopersAlert();
+        Alert alert = user.getDevelopersAlert();
         if (isKeyValid(privKeyString) && alert != null) {
             if (p2PService.removeData(alert, true))
                 log.trace("Remove alertMessage from network was successful. AlertMessage = " + alert);
 
-            userModel.setDevelopersAlert(null);
+            user.setDevelopersAlert(null);
             return true;
         } else {
             return false;

@@ -19,7 +19,7 @@ package io.bisq.core.proto;
 
 import com.google.common.collect.Lists;
 import com.google.protobuf.Message;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,18 +31,18 @@ import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
-public class ViewPathAsString implements Persistable {
+public class ViewPathAsString implements PersistableEnvelope {
     @Getter
     @Setter
     List<String> viewPath = Lists.newArrayList();
 
     @Override
     public Message toProtoMessage() {
-        return CollectionUtils.isEmpty(viewPath) ? PB.Persistable.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder()).build()
-                : PB.Persistable.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder().addAllViewPath(viewPath)).build();
+        return CollectionUtils.isEmpty(viewPath) ? PB.DiscEnvelope.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder()).build()
+                : PB.DiscEnvelope.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder().addAllViewPath(viewPath)).build();
     }
 
-    public static Persistable fromProto(PB.ViewPathAsString viewPathAsString) {
+    public static PersistableEnvelope fromProto(PB.ViewPathAsString viewPathAsString) {
         return new ViewPathAsString(viewPathAsString.getViewPathList());
     }
 }

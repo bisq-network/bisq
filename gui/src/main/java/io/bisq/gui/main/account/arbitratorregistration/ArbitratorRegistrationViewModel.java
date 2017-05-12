@@ -26,7 +26,7 @@ import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.ArbitratorManager;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.wallet.BtcWalletService;
-import io.bisq.core.user.UserModel;
+import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
@@ -42,7 +42,7 @@ import java.util.Date;
 
 class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     private final ArbitratorManager arbitratorManager;
-    private final UserModel userModel;
+    private final User user;
     private final P2PService p2PService;
     private final BtcWalletService walletService;
     private final KeyRing keyRing;
@@ -65,12 +65,12 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
 
     @Inject
     public ArbitratorRegistrationViewModel(ArbitratorManager arbitratorManager,
-                                           UserModel userModel,
+                                           User user,
                                            P2PService p2PService,
                                            BtcWalletService walletService,
                                            KeyRing keyRing) {
         this.arbitratorManager = arbitratorManager;
-        this.userModel = userModel;
+        this.user = user;
         this.p2PService = p2PService;
         this.walletService = walletService;
         this.keyRing = keyRing;
@@ -78,7 +78,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
         arbitratorMapChangeListener = new MapChangeListener<NodeAddress, Arbitrator>() {
             @Override
             public void onChanged(Change<? extends NodeAddress, ? extends Arbitrator> change) {
-                Arbitrator myRegisteredArbitrator = userModel.getRegisteredArbitrator();
+                Arbitrator myRegisteredArbitrator = user.getRegisteredArbitrator();
                 myArbitratorProperty.set(myRegisteredArbitrator);
 
                 // We don't reset the languages in case of revocation, as its likely that the arbitrator will use the same again when he re-activate
@@ -94,7 +94,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
     @Override
     protected void activate() {
         arbitratorManager.getArbitratorsObservableMap().addListener(arbitratorMapChangeListener);
-        Arbitrator myRegisteredArbitrator = userModel.getRegisteredArbitrator();
+        Arbitrator myRegisteredArbitrator = user.getRegisteredArbitrator();
         myArbitratorProperty.set(myRegisteredArbitrator);
         updateDisableStates();
     }

@@ -2,7 +2,7 @@ package io.bisq.network.p2p.peers.getdata.messages;
 
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.ExtendedDataSizePermission;
 import io.bisq.network.p2p.SupportedCapabilitiesMsg;
@@ -44,7 +44,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMsg, Extended
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
+    public PB.WireEnvelope toProtoMsg() {
         PB.GetDataResponse.Builder builder = PB.GetDataResponse.newBuilder();
         builder.addAllDataSet(
                 dataSet.stream()
@@ -61,7 +61,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMsg, Extended
                         .collect(Collectors.toList()))
                 .setRequestNonce(requestNonce)
                 .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
-        return Msg.getMsgBuilder().setGetDataResponse(builder).build();
+        return NetworkEnvelope.getMsgBuilder().setGetDataResponse(builder).build();
     }
 
 

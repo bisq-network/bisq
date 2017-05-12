@@ -2,7 +2,7 @@ package io.bisq.network.p2p.peers.getdata.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.SendersNodeAddressMsg;
@@ -49,8 +49,8 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMsg, GetDa
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
-        return Msg.getMsgBuilder().setGetUpdatedDataRequest(
+    public PB.WireEnvelope toProtoMsg() {
+        return NetworkEnvelope.getMsgBuilder().setGetUpdatedDataRequest(
                 PB.GetUpdatedDataRequest.newBuilder()
                         .setMessageVersion(messageVersion)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())

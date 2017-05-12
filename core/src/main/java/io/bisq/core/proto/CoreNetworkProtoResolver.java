@@ -2,7 +2,7 @@ package io.bisq.core.proto;
 
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.crypto.SealedAndSigned;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.alert.PrivateNotificationMsg;
@@ -54,7 +54,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.bisq.generated.protobuffer.PB.Msg.MessageCase.*;
+import static io.bisq.generated.protobuffer.PB.WireEnvelope.MessageCase.*;
 
 /**
  * If the Messages class is giving errors in IntelliJ, you should change the IntelliJ IDEA Platform Properties file,
@@ -80,7 +80,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Optional<Msg> fromProto(PB.Msg msg) {
+    public Optional<NetworkEnvelope> fromProto(PB.WireEnvelope msg) {
         if (Objects.isNull(msg)) {
             log.warn("fromProtoBuf called with empty msg.");
             return Optional.empty();
@@ -93,7 +93,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
             log.trace("Convert protobuffer msg: {}", msg.toString());
         }
 
-        Msg result = null;
+        NetworkEnvelope result = null;
         switch (msg.getMessageCase()) {
             case PING:
                 result = getPing(msg);
@@ -195,25 +195,25 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     // Msg
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static Msg getOfferAvailabilityRequest(PB.Msg envelope) {
+    private static NetworkEnvelope getOfferAvailabilityRequest(PB.WireEnvelope envelope) {
         PB.OfferAvailabilityRequest msg = envelope.getOfferAvailabilityRequest();
         return new OfferAvailabilityRequest(msg.getOfferId(), PubKeyRing.fromProto(msg.getPubKeyRing()), msg.getTakersTradePrice());
     }
 
-    private static Msg getPrivateNotificationMessage(PB.PrivateNotificationMessage privateNotificationMessage) {
+    private static NetworkEnvelope getPrivateNotificationMessage(PB.PrivateNotificationMessage privateNotificationMessage) {
         return new PrivateNotificationMsg(getPrivateNotification(privateNotificationMessage.getPrivateNotificationPayload()),
                 NodeAddress.fromProto(privateNotificationMessage.getMyNodeAddress()),
                 privateNotificationMessage.getUid());
     }
 
-    private static Msg getPayoutTxPublishedMessage(PB.PayoutTxPublishedMessage payoutTxPublishedMessage) {
+    private static NetworkEnvelope getPayoutTxPublishedMessage(PB.PayoutTxPublishedMessage payoutTxPublishedMessage) {
         return new PayoutTxPublishedMsg(payoutTxPublishedMessage.getTradeId(),
                 payoutTxPublishedMessage.getPayoutTx().toByteArray(),
                 NodeAddress.fromProto(payoutTxPublishedMessage.getSenderNodeAddress()),
                 payoutTxPublishedMessage.getUid());
     }
 
-    private static Msg getOfferAvailabilityResponse(PB.Msg envelope) {
+    private static NetworkEnvelope getOfferAvailabilityResponse(PB.WireEnvelope envelope) {
         PB.OfferAvailabilityResponse msg = envelope.getOfferAvailabilityResponse();
         return new OfferAvailabilityResponse(msg.getOfferId(),
                 AvailabilityResult.valueOf(
@@ -222,11 +222,11 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
 
 
     @NotNull
-    private static Msg getPrefixedSealedAndSignedMessage(PB.Msg envelope) {
+    private static NetworkEnvelope getPrefixedSealedAndSignedMessage(PB.WireEnvelope envelope) {
         return getPrefixedSealedAndSignedMessage(envelope.getPrefixedSealedAndSignedMessage());
     }
 
-    private static Msg getFiatTransferStartedMessage(PB.FiatTransferStartedMessage fiatTransferStartedMessage) {
+    private static NetworkEnvelope getFiatTransferStartedMessage(PB.FiatTransferStartedMessage fiatTransferStartedMessage) {
         return new FiatTransferStartedMsg(fiatTransferStartedMessage.getTradeId(),
                 fiatTransferStartedMessage.getBuyerPayoutAddress(),
                 NodeAddress.fromProto(fiatTransferStartedMessage.getSenderNodeAddress()),
@@ -235,7 +235,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
         );
     }
 
-    private static Msg getPublishDepositTxRequest(PB.PublishDepositTxRequest publishDepositTxRequest) {
+    private static NetworkEnvelope getPublishDepositTxRequest(PB.PublishDepositTxRequest publishDepositTxRequest) {
         List<RawTransactionInput> rawTransactionInputs = publishDepositTxRequest.getMakerInputsList().stream()
                 .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
                         rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
@@ -254,7 +254,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 publishDepositTxRequest.getUid());
     }
 
-    private static Msg getPayDepositRequest(PB.PayDepositRequest payDepositRequest) {
+    private static NetworkEnvelope getPayDepositRequest(PB.PayDepositRequest payDepositRequest) {
         List<RawTransactionInput> rawTransactionInputs = payDepositRequest.getRawTransactionInputsList().stream()
                 .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
                         rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
@@ -284,14 +284,14 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 NodeAddress.fromProto(payDepositRequest.getMediatorNodeAddress()));
     }
 
-    private static Msg getPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
+    private static NetworkEnvelope getPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
         return new PeerPublishedPayoutTxMsg(peerPublishedPayoutTxMessage.getTransaction().toByteArray(),
                 peerPublishedPayoutTxMessage.getTradeId(),
                 NodeAddress.fromProto(peerPublishedPayoutTxMessage.getMyNodeAddress()),
                 peerPublishedPayoutTxMessage.getUid());
     }
 
-    private static Msg getDisputeResultMessage(PB.DisputeResultMessage disputeResultMessage) {
+    private static NetworkEnvelope getDisputeResultMessage(PB.DisputeResultMessage disputeResultMessage) {
 
         PB.DisputeResult disputeResultproto = disputeResultMessage.getDisputeResult();
         DisputeResult disputeResult = new DisputeResult(disputeResultproto.getTradeId(),
@@ -309,17 +309,17 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 disputeResultMessage.getUid());
     }
 
-    private static Msg getPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
+    private static NetworkEnvelope getPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         return new PeerOpenedDisputeMsg(ProtoUtil.getDispute(peerOpenedDisputeMessage.getDispute()),
                 NodeAddress.fromProto(peerOpenedDisputeMessage.getMyNodeAddress()), peerOpenedDisputeMessage.getUid());
     }
 
-    private static Msg getOpenNewDisputeMessage(PB.OpenNewDisputeMessage openNewDisputeMessage) {
+    private static NetworkEnvelope getOpenNewDisputeMessage(PB.OpenNewDisputeMessage openNewDisputeMessage) {
         return new OpenNewDisputeMsg(ProtoUtil.getDispute(openNewDisputeMessage.getDispute()),
                 NodeAddress.fromProto(openNewDisputeMessage.getMyNodeAddress()), openNewDisputeMessage.getUid());
     }
 
-    private static Msg getDisputeCommunicationMessage(PB.DisputeCommunicationMessage disputeCommunicationMessage) {
+    private static NetworkEnvelope getDisputeCommunicationMessage(PB.DisputeCommunicationMessage disputeCommunicationMessage) {
         return new DisputeCommunicationMsg(disputeCommunicationMessage.getTradeId(),
                 disputeCommunicationMessage.getTraderId(),
                 disputeCommunicationMessage.getSenderIsTrader(),
@@ -334,7 +334,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 disputeCommunicationMessage.getUid());
     }
 
-    private static Msg getFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest finalizePayoutTxRequest) {
+    private static NetworkEnvelope getFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest finalizePayoutTxRequest) {
         return new FinalizePayoutTxRequest(finalizePayoutTxRequest.getTradeId(),
                 finalizePayoutTxRequest.getSellerSignature().toByteArray(),
                 finalizePayoutTxRequest.getSellerPayoutAddress(),
@@ -342,21 +342,21 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 finalizePayoutTxRequest.getUid());
     }
 
-    private static Msg getDepositTxPublishedMessage(PB.DepositTxPublishedMessage depositTxPublishedMessage) {
+    private static NetworkEnvelope getDepositTxPublishedMessage(PB.DepositTxPublishedMessage depositTxPublishedMessage) {
         return new DepositTxPublishedMsg(depositTxPublishedMessage.getTradeId(),
                 depositTxPublishedMessage.getDepositTx().toByteArray(),
                 NodeAddress.fromProto(depositTxPublishedMessage.getSenderNodeAddress()), depositTxPublishedMessage.getUid());
     }
 
-    private static Msg getRemoveMailBoxDataMessage(PB.RemoveMailboxDataMessage msg) {
+    private static NetworkEnvelope getRemoveMailBoxDataMessage(PB.RemoveMailboxDataMessage msg) {
         return new RemoveMailboxDataMsg(getProtectedMailBoxStorageEntry(msg.getProtectedStorageEntry()));
     }
 
-    public static Msg getAddDataMessage(PB.Msg envelope) {
+    public static NetworkEnvelope getAddDataMessage(PB.WireEnvelope envelope) {
         return new AddDataMsg(getProtectedOrMailboxStorageEntry(envelope.getAddDataMessage().getEntry()));
     }
 
-    private static Msg getRemoveDataMessage(PB.Msg envelope) {
+    private static NetworkEnvelope getRemoveDataMessage(PB.WireEnvelope envelope) {
         return new RemoveDataMsg(getProtectedStorageEntry(envelope.getRemoveDataMessage().getProtectedStorageEntry()));
     }
 
@@ -371,7 +371,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getGetDataResponse(PB.Msg envelope) {
+    private static NetworkEnvelope getGetDataResponse(PB.WireEnvelope envelope) {
         HashSet<ProtectedStorageEntry> set = new HashSet<>(
                 envelope.getGetDataResponse().getDataSetList()
                         .stream()
@@ -382,8 +382,8 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getGetPeersResponse(PB.Msg envelope) {
-        Msg result;
+    private static NetworkEnvelope getGetPeersResponse(PB.WireEnvelope envelope) {
+        NetworkEnvelope result;
         PB.GetPeersResponse msg = envelope.getGetPeersResponse();
         HashSet<Peer> set = new HashSet<>(
                 msg.getReportedPeersList()
@@ -396,9 +396,9 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getGetPeersRequest(PB.Msg envelope) {
+    private static NetworkEnvelope getGetPeersRequest(PB.WireEnvelope envelope) {
         NodeAddress nodeAddress;
-        Msg result;
+        NetworkEnvelope result;
         PB.GetPeersRequest msg = envelope.getGetPeersRequest();
         nodeAddress = new NodeAddress(msg.getSenderNodeAddress().getHostName(), msg.getSenderNodeAddress().getPort());
         HashSet<Peer> set = new HashSet<>(
@@ -412,9 +412,9 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getGetUpdatedDataRequest(PB.Msg envelope) {
+    private static NetworkEnvelope getGetUpdatedDataRequest(PB.WireEnvelope envelope) {
         NodeAddress nodeAddress;
-        Msg result;
+        NetworkEnvelope result;
         PB.GetUpdatedDataRequest msg = envelope.getGetUpdatedDataRequest();
         nodeAddress = new NodeAddress(msg.getSenderNodeAddress().getHostName(), msg.getSenderNodeAddress().getPort());
         Set<byte[]> updatedDataRequestSet = ProtoUtil.getByteSet(msg.getExcludedKeysList());
@@ -423,20 +423,20 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getPreliminaryGetDataRequest(PB.Msg envelope) {
-        Msg result;
+    private static NetworkEnvelope getPreliminaryGetDataRequest(PB.WireEnvelope envelope) {
+        NetworkEnvelope result;
         result = new PreliminaryGetDataRequest(envelope.getPreliminaryGetDataRequest().getNonce(),
                 ProtoUtil.getByteSet(envelope.getPreliminaryGetDataRequest().getExcludedKeysList()));
         return result;
     }
 
     @NotNull
-    private static Msg getCloseConnectionMessage(PB.Msg msg) {
+    private static NetworkEnvelope getCloseConnectionMessage(PB.WireEnvelope msg) {
         return new CloseConnectionMsg(msg.getCloseConnectionMessage().getReason());
     }
 
     @NotNull
-    private static Msg getRefreshTTLMessage(PB.Msg msg) {
+    private static NetworkEnvelope getRefreshTTLMessage(PB.WireEnvelope msg) {
         PB.RefreshOfferMsg refreshOfferMsg = msg.getRefreshOfferMsg();
         return new RefreshOfferMsg(refreshOfferMsg.getHashOfDataAndSeqNr().toByteArray(),
                 refreshOfferMsg.getSignature().toByteArray(),
@@ -445,15 +445,15 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getPong(PB.Msg envelope) {
-        Msg result;
+    private static NetworkEnvelope getPong(PB.WireEnvelope envelope) {
+        NetworkEnvelope result;
         result = new Pong(envelope.getPong().getRequestNonce());
         return result;
     }
 
     @NotNull
-    private static Msg getPing(PB.Msg envelope) {
-        Msg result;
+    private static NetworkEnvelope getPing(PB.WireEnvelope envelope) {
+        NetworkEnvelope result;
         result = new Ping(envelope.getPing().getNonce(), envelope.getPing().getLastRoundTripTime());
         return result;
     }

@@ -17,88 +17,335 @@
 
 package io.bisq.core.user;
 
-import com.google.protobuf.Message;
-import io.bisq.common.persistence.Persistable;
-import io.bisq.common.proto.ProtoHelper;
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.locale.LanguageUtil;
+import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.Mediator;
 import io.bisq.core.filter.Filter;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.generated.protobuffer.PB;
+import io.bisq.network.p2p.NodeAddress;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
+import javafx.collections.SetChangeListener;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import javax.inject.Inject;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+/**
+ * The User is persisted locally.
+ * It must never be transmitted over the wire (messageKeyPair contains private key!).
+ */
 @Slf4j
-@Data
 @AllArgsConstructor
-public class User implements Persistable {
-    // Persisted fields
-    private String accountID;
-    private Set<PaymentAccount> paymentAccounts = new HashSet<>();
-    @Nullable
-    private PaymentAccount currentPaymentAccount;
-    private List<String> acceptedLanguageLocaleCodes = new ArrayList<>();
-    @Nullable
-    private Alert developersAlert;
-    @Nullable
-    private Alert displayedAlert;
-    @Nullable
-    private Filter developersFilter;
-    @Nullable
-    private Arbitrator registeredArbitrator;
-    @Nullable
-    private Mediator registeredMediator;
+public final class User {
+    private UserPayload userPayload;
 
-    private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
-    private List<Mediator> acceptedMediators = new ArrayList<>();
+    // Transient immutable fields
+    transient final private Storage<UserPayload> storage;
+    transient final private KeyRing keyRing;
+    transient private Set<TradeCurrency> tradeCurrenciesInPaymentAccounts;
 
+    // Observable wrappers
+    transient private ObservableSet<PaymentAccount> paymentAccountsAsObservable;
+    transient private ObjectProperty<PaymentAccount> currentPaymentAccountProperty;
+
+    @Inject
+    public User(Storage<UserPayload> storage, KeyRing keyRing) throws NoSuchAlgorithmException {
+        this.storage = storage;
+        this.keyRing = keyRing;
+    }
+
+    // for unit tests
     public User() {
+        storage = null;
+        keyRing = null;
     }
 
-    @Override
-    public PB.Persistable toProtoMessage() {
-        PB.User.Builder builder = PB.User.newBuilder()
-                .setAccountId(accountID)
-                .addAllPaymentAccounts(ProtoHelper.collectionToProto(paymentAccounts))
-                .addAllAcceptedLanguageLocaleCodes(acceptedLanguageLocaleCodes)
-                .addAllAcceptedArbitrators(ProtoHelper.collectionToProto(acceptedArbitrators, (Message storage) -> ((PB.StoragePayload)storage).getArbitrator()))
-                .addAllAcceptedMediators(ProtoHelper.collectionToProto(acceptedMediators, (Message storage) -> ((PB.StoragePayload)storage).getMediator()));
+    public void init() {
+        UserPayload persisted = storage.initAndGetPersistedWithFileName("UserVO");
+        userPayload = persisted != null ? persisted : new UserPayload();
 
-        Optional.ofNullable(currentPaymentAccount)
-                .ifPresent(paymentAccount -> builder.setCurrentPaymentAccount(paymentAccount.toProtoMessage()));
-        Optional.ofNullable(developersAlert)
-                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProtoMessage().getAlert()));
-        Optional.ofNullable(displayedAlert)
-                .ifPresent(displayedAlert -> builder.setDisplayedAlert(displayedAlert.toProtoMessage().getAlert()));
-        Optional.ofNullable(developersFilter)
-                .ifPresent(developersFilter -> builder.setDevelopersFilter(developersFilter.toProtoMessage().getFilter()));
-        Optional.ofNullable(registeredArbitrator)
-                .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProtoMessage().getArbitrator()));
-        Optional.ofNullable(registeredMediator)
-                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProtoMessage().getAlert()));
-        return PB.Persistable.newBuilder().setUser(builder).build();
+        paymentAccountsAsObservable = FXCollections.observableSet(userPayload.getPaymentAccounts());
+        currentPaymentAccountProperty = new SimpleObjectProperty<>(userPayload.getCurrentPaymentAccount());
+        userPayload.setAccountID(String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode())));
+        // language setup
+        userPayload.getAcceptedLanguageLocaleCodes().add(LanguageUtil.getDefaultLanguageLocaleAsCode());
+        String english = LanguageUtil.getEnglishLanguageLocaleCode();
+        if (!userPayload.getAcceptedLanguageLocaleCodes().contains(english))
+            userPayload.getAcceptedLanguageLocaleCodes().add(english);
+
+        storage.queueUpForSave();
+
+        // Use that to guarantee update of the serializable field and to make a storage update in case of a change
+        paymentAccountsAsObservable.addListener((SetChangeListener<PaymentAccount>) change -> {
+            userPayload.setPaymentAccounts(new HashSet<>(paymentAccountsAsObservable));
+            tradeCurrenciesInPaymentAccounts = userPayload.getPaymentAccounts().stream().flatMap(e -> e.getTradeCurrencies().stream()).collect(Collectors.toSet());
+            storage.queueUpForSave();
+        });
+        currentPaymentAccountProperty.addListener((ov) -> {
+            userPayload.setCurrentPaymentAccount(currentPaymentAccountProperty.get());
+            storage.queueUpForSave();
+        });
+
+        tradeCurrenciesInPaymentAccounts = userPayload.getPaymentAccounts().stream().flatMap(e -> e.getTradeCurrencies().stream()).collect(Collectors.toSet());
     }
 
-    public static User fromProto(PB.User user) {
-        Set<PaymentAccount> collect = user.getPaymentAccountsList().stream().map(paymentAccount -> PaymentAccount.fromProto(paymentAccount)).collect(Collectors.toSet());
-        User vo = new User(user.getAccountId(),
-                collect,
-                user.hasCurrentPaymentAccount() ? PaymentAccount.fromProto(user.getCurrentPaymentAccount()) : null,
-                user.getAcceptedLanguageLocaleCodesList(),
-                user.hasDevelopersAlert() ? Alert.fromProto(user.getDevelopersAlert()) : null,
-                user.hasDisplayedAlert() ? Alert.fromProto(user.getDisplayedAlert()) : null,
-                user.hasDevelopersFilter() ? Filter.fromProto(user.getDevelopersFilter()) : null,
-                user.hasRegisteredArbitrator() ? Arbitrator.fromProto(user.getRegisteredArbitrator()) : null,
-                user.hasRegisteredMediator() ? Mediator.fromProto(user.getRegisteredMediator()) : null,
-                user.getAcceptedArbitratorsList().stream().map(Arbitrator::fromProto).collect(Collectors.toList()),
-                user.getAcceptedMediatorsList().stream().map(Mediator::fromProto).collect(Collectors.toList())
-        );
-        return vo;
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addPaymentAccount(PaymentAccount paymentAccount) {
+        paymentAccountsAsObservable.add(paymentAccount);
+        setCurrentPaymentAccount(paymentAccount);
+    }
+
+    public void removePaymentAccount(PaymentAccount paymentAccount) {
+        paymentAccountsAsObservable.remove(paymentAccount);
+    }
+
+    public void setCurrentPaymentAccount(PaymentAccount paymentAccount) {
+        currentPaymentAccountProperty.set(paymentAccount);
+    }
+
+    public boolean addAcceptedLanguageLocale(String localeCode) {
+        if (!userPayload.getAcceptedLanguageLocaleCodes().contains(localeCode)) {
+            boolean changed = userPayload.getAcceptedLanguageLocaleCodes().add(localeCode);
+            if (changed)
+                storage.queueUpForSave();
+            return changed;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean removeAcceptedLanguageLocale(String languageLocaleCode) {
+        boolean changed = userPayload.getAcceptedLanguageLocaleCodes().remove(languageLocaleCode);
+        if (changed)
+            storage.queueUpForSave();
+        return changed;
+    }
+
+    public void addAcceptedArbitrator(Arbitrator arbitrator) {
+        if (!userPayload.getAcceptedArbitrators().contains(arbitrator) && !isMyOwnRegisteredArbitrator(arbitrator)) {
+            boolean changed = userPayload.getAcceptedArbitrators().add(arbitrator);
+            if (changed)
+                storage.queueUpForSave();
+        }
+    }
+
+    public void addAcceptedMediator(Mediator mediator) {
+        if (!userPayload.getAcceptedMediators().contains(mediator) && !isMyOwnRegisteredMediator(mediator)) {
+            boolean changed = userPayload.getAcceptedMediators().add(mediator);
+            if (changed)
+                storage.queueUpForSave();
+        }
+    }
+
+    public boolean isMyOwnRegisteredArbitrator(Arbitrator arbitrator) {
+        return arbitrator.equals(userPayload.getRegisteredArbitrator());
+    }
+
+    public boolean isMyOwnRegisteredMediator(Mediator mediator) {
+        return mediator.equals(userPayload.getRegisteredArbitrator());
+    }
+
+    public void removeAcceptedArbitrator(Arbitrator arbitrator) {
+        boolean changed = userPayload.getAcceptedArbitrators().remove(arbitrator);
+        if (changed)
+            storage.queueUpForSave();
+    }
+
+    public void clearAcceptedArbitrators() {
+        userPayload.getAcceptedArbitrators().clear();
+        storage.queueUpForSave();
+    }
+
+    public void removeAcceptedMediator(Mediator mediator) {
+        boolean changed = userPayload.getAcceptedMediators().remove(mediator);
+        if (changed)
+            storage.queueUpForSave();
+    }
+
+    public void clearAcceptedMediators() {
+        userPayload.getAcceptedMediators().clear();
+        storage.queueUpForSave();
+    }
+
+    public void setRegisteredArbitrator(@Nullable Arbitrator arbitrator) {
+        userPayload.setRegisteredArbitrator(arbitrator);
+        storage.queueUpForSave();
+    }
+
+    public void setRegisteredMediator(@Nullable Mediator mediator) {
+        userPayload.setRegisteredMediator(mediator);
+        storage.queueUpForSave();
+    }
+
+    public void setDevelopersFilter(@Nullable Filter developersFilter) {
+        userPayload.setDevelopersFilter(developersFilter);
+        storage.queueUpForSave();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Nullable
+    public PaymentAccount getPaymentAccount(String paymentAccountId) {
+        Optional<PaymentAccount> optional = userPayload.getPaymentAccounts().stream().filter(e -> e.getId().equals(paymentAccountId)).findAny();
+        if (optional.isPresent())
+            return optional.get();
+        else
+            return null;
+    }
+
+    public String getAccountId() {
+        return userPayload.getAccountID();
+    }
+
+   /* public boolean isRegistered() {
+        return getAccountId() != null;
+    }*/
+
+    private PaymentAccount getCurrentPaymentAccount() {
+        return userPayload.getCurrentPaymentAccount();
+    }
+
+    public ObjectProperty<PaymentAccount> currentPaymentAccountProperty() {
+        return currentPaymentAccountProperty;
+    }
+
+    public Set<PaymentAccount> getPaymentAccounts() {
+        return userPayload.getPaymentAccounts();
+    }
+
+    public ObservableSet<PaymentAccount> getPaymentAccountsAsObservable() {
+        return paymentAccountsAsObservable;
+    }
+
+    @Nullable
+    public Arbitrator getRegisteredArbitrator() {
+        return userPayload.getRegisteredArbitrator();
+    }
+
+    @Nullable
+    public Mediator getRegisteredMediator() {
+        return userPayload.getRegisteredMediator();
+    }
+
+    public List<Arbitrator> getAcceptedArbitrators() {
+        return userPayload.getAcceptedArbitrators();
+    }
+
+    public List<NodeAddress> getAcceptedArbitratorAddresses() {
+        return userPayload.getAcceptedArbitrators().stream().map(Arbitrator::getNodeAddress).collect(Collectors.toList());
+    }
+
+    public List<Mediator> getAcceptedMediators() {
+        return userPayload.getAcceptedMediators();
+    }
+
+    public List<NodeAddress> getAcceptedMediatorAddresses() {
+        return userPayload.getAcceptedMediators().stream().map(Mediator::getNodeAddress).collect(Collectors.toList());
+    }
+
+    public List<String> getAcceptedLanguageLocaleCodes() {
+        return userPayload.getAcceptedLanguageLocaleCodes() != null ? userPayload.getAcceptedLanguageLocaleCodes() : new ArrayList<>();
+    }
+
+    public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
+        Optional<Arbitrator> arbitratorOptional = userPayload.getAcceptedArbitrators().stream()
+                .filter(e -> e.getNodeAddress().equals(nodeAddress))
+                .findFirst();
+        if (arbitratorOptional.isPresent())
+            return arbitratorOptional.get();
+        else
+            return null;
+    }
+
+    public Mediator getAcceptedMediatorByAddress(NodeAddress nodeAddress) {
+        Optional<Mediator> mediatorOptionalOptional = userPayload.getAcceptedMediators().stream()
+                .filter(e -> e.getNodeAddress().equals(nodeAddress))
+                .findFirst();
+        if (mediatorOptionalOptional.isPresent())
+            return mediatorOptionalOptional.get();
+        else
+            return null;
+    }
+
+    @Nullable
+    public Filter getDevelopersFilter() {
+        return userPayload.getDevelopersFilter();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+  /*  public Optional<TradeCurrency> getPaymentAccountForCurrency(TradeCurrency tradeCurrency) {
+        return getPaymentAccounts().stream()
+                .flatMap(e -> e.getTradeCurrencies().stream())
+                .filter(e -> e.equals(tradeCurrency))
+                .findFirst();
+    }*/
+
+    @Nullable
+    public PaymentAccount findFirstPaymentAccountWithCurrency(TradeCurrency tradeCurrency) {
+        for (PaymentAccount paymentAccount : userPayload.getPaymentAccounts()) {
+            for (TradeCurrency tradeCurrency1 : paymentAccount.getTradeCurrencies()) {
+                if (tradeCurrency1.equals(tradeCurrency))
+                    return paymentAccount;
+            }
+        }
+        return null;
+    }
+
+    public boolean hasMatchingLanguage(Arbitrator arbitrator) {
+        if (arbitrator != null) {
+            for (String acceptedCode : userPayload.getAcceptedLanguageLocaleCodes()) {
+                for (String itemCode : arbitrator.getLanguageCodes()) {
+                    if (acceptedCode.equals(itemCode))
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean hasPaymentAccountForCurrency(TradeCurrency tradeCurrency) {
+        return findFirstPaymentAccountWithCurrency(tradeCurrency) != null;
+    }
+
+    public void setDevelopersAlert(@Nullable Alert developersAlert) {
+        userPayload.setDevelopersAlert(developersAlert);
+        storage.queueUpForSave();
+    }
+
+    @Nullable
+    public Alert getDevelopersAlert() {
+        return userPayload.getDevelopersAlert();
+    }
+
+    public void setDisplayedAlert(@Nullable Alert displayedAlert) {
+        userPayload.setDisplayedAlert(displayedAlert);
+        storage.queueUpForSave();
+    }
+
+    @Nullable
+    public Alert getDisplayedAlert() {
+        return userPayload.getDisplayedAlert();
     }
 }

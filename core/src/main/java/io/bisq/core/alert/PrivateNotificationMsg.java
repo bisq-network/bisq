@@ -1,7 +1,7 @@
 package io.bisq.core.alert;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMsg;
 import io.bisq.network.p2p.NodeAddress;
@@ -45,8 +45,8 @@ public class PrivateNotificationMsg implements MailboxMsg {
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
-        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
+    public PB.WireEnvelope toProtoMsg() {
+        PB.WireEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
         return msgBuilder.setPrivateNotificationMessage(msgBuilder.getPrivateNotificationMessageBuilder()
                 .setMessageVersion(messageVersion)
                 .setUid(uid)

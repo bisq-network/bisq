@@ -19,7 +19,7 @@ package io.bisq.core.trade.protocol;
 
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.core.trade.BuyerAsMakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.DepositTxPublishedMsg;
@@ -83,18 +83,18 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void doApplyMailboxMessage(Msg msg, Trade trade) {
+    public void doApplyMailboxMessage(NetworkEnvelope wireEnvelope, Trade trade) {
         this.trade = trade;
 
-        if (msg instanceof MailboxMsg) {
-            MailboxMsg mailboxMessage = (MailboxMsg) msg;
+        if (wireEnvelope instanceof MailboxMsg) {
+            MailboxMsg mailboxMessage = (MailboxMsg) wireEnvelope;
             NodeAddress peerNodeAddress = mailboxMessage.getSenderNodeAddress();
-            if (msg instanceof DepositTxPublishedMsg)
-                handle((DepositTxPublishedMsg) msg, peerNodeAddress);
-            else if (msg instanceof PayoutTxPublishedMsg)
-                handle((PayoutTxPublishedMsg) msg, peerNodeAddress);
+            if (wireEnvelope instanceof DepositTxPublishedMsg)
+                handle((DepositTxPublishedMsg) wireEnvelope, peerNodeAddress);
+            else if (wireEnvelope instanceof PayoutTxPublishedMsg)
+                handle((PayoutTxPublishedMsg) wireEnvelope, peerNodeAddress);
             else
-                log.error("We received an unhandled MailboxMessage" + msg.toString());
+                log.error("We received an unhandled MailboxMessage" + wireEnvelope.toString());
         }
     }
 

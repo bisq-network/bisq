@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.network;
 
 import io.bisq.common.UserThread;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -85,8 +85,8 @@ public class Statistic {
     }
 
     // TODO would need msg inspection to get useful information...
-    public void addReceivedMessage(Msg msg) {
-        String messageClassName = msg.getClass().getSimpleName();
+    public void addReceivedMessage(NetworkEnvelope wireEnvelope) {
+        String messageClassName = wireEnvelope.getClass().getSimpleName();
         int counter = 1;
         if (receivedMessages.containsKey(messageClassName))
             counter = receivedMessages.get(messageClassName) + 1;
@@ -94,8 +94,8 @@ public class Statistic {
         receivedMessages.put(messageClassName, counter);
     }
 
-    public void addSentMessage(Msg msg) {
-        String messageClassName = msg.getClass().getSimpleName();
+    public void addSentMessage(NetworkEnvelope wireEnvelope) {
+        String messageClassName = wireEnvelope.getClass().getSimpleName();
         int counter = 1;
         if (sentMessages.containsKey(messageClassName))
             counter = sentMessages.get(messageClassName) + 1;

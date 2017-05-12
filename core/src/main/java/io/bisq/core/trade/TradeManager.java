@@ -24,7 +24,7 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.AddressEntry;
@@ -46,7 +46,7 @@ import io.bisq.core.trade.messages.PayDepositRequest;
 import io.bisq.core.trade.messages.TradeMsg;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
-import io.bisq.core.user.UserModel;
+import io.bisq.core.user.User;
 import io.bisq.core.util.Validator;
 import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
@@ -78,7 +78,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class TradeManager {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
-    private final UserModel userModel;
+    private final User user;
     private final KeyRing keyRing;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
@@ -102,7 +102,7 @@ public class TradeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeManager(UserModel userModel,
+    public TradeManager(User user,
                         KeyRing keyRing,
                         BtcWalletService btcWalletService,
                         BsqWalletService bsqWalletService,
@@ -116,7 +116,7 @@ public class TradeManager {
                         TradeStatisticsManager tradeStatisticsManager,
                         PersistenceProtoResolver persistenceProtoResolver,
                         @Named(Storage.STORAGE_DIR) File storageDir) {
-        this.userModel = userModel;
+        this.user = user;
         this.keyRing = keyRing;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
@@ -138,12 +138,12 @@ public class TradeManager {
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
             public void onDirectMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress peerNodeAddress) {
-                Msg msg = decryptedMsgWithPubKey.msg;
+                NetworkEnvelope wireEnvelope = decryptedMsgWithPubKey.wireEnvelope;
 
                 // Handler for incoming initial network_messages from taker
-                if (msg instanceof PayDepositRequest) {
-                    log.trace("Received PayDepositRequest: " + msg);
-                    handleInitialTakeOfferRequest((PayDepositRequest) msg, peerNodeAddress);
+                if (wireEnvelope instanceof PayDepositRequest) {
+                    log.trace("Received PayDepositRequest: " + wireEnvelope);
+                    handleInitialTakeOfferRequest((PayDepositRequest) wireEnvelope, peerNodeAddress);
                 }
             }
         });
@@ -154,10 +154,10 @@ public class TradeManager {
             public void onMailboxMessageAdded(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress senderNodeAddress) {
                 log.trace("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMsgWithPubKey);
                 log.trace("onMailboxMessageAdded senderAddress: " + senderNodeAddress);
-                Msg msg = decryptedMsgWithPubKey.msg;
-                if (msg instanceof TradeMsg) {
-                    log.trace("Received TradeMessage: " + msg);
-                    String tradeId = ((TradeMsg) msg).tradeId;
+                NetworkEnvelope wireEnvelope = decryptedMsgWithPubKey.wireEnvelope;
+                if (wireEnvelope instanceof TradeMsg) {
+                    log.trace("Received TradeMessage: " + wireEnvelope);
+                    String tradeId = ((TradeMsg) wireEnvelope).tradeId;
                     Optional<Trade> tradeOptional = trades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
                     // The mailbox message will be removed inside the tasks after they are processed successfully
                     if (tradeOptional.isPresent())
@@ -306,7 +306,7 @@ public class TradeManager {
                 tradeWalletService,
                 this,
                 openOfferManager,
-                userModel,
+                user,
                 filterManager,
                 keyRing,
                 useSavingsWallet,

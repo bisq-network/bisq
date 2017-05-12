@@ -6,7 +6,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.network.p2p.NodeAddress;
@@ -122,13 +122,13 @@ class RequestBsqBlocksHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Msg msg, Connection connection) {
+    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
         if (connection.getPeersNodeAddressOptional().isPresent() &&
                 connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
-            if (msg instanceof GetBsqBlocksResponse) {
-                Log.traceCall(msg.toString() + "\n\tconnection=" + connection);
+            if (wireEnvelope instanceof GetBsqBlocksResponse) {
+                Log.traceCall(wireEnvelope.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
-                    GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) msg;
+                    GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) wireEnvelope;
                     stopTimeoutTimer();
                     checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
                             "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +

@@ -6,7 +6,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
@@ -163,18 +163,18 @@ public class RequestDataHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Msg msg, Connection connection) {
+    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
         if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
-            if (msg instanceof GetDataResponse) {
-                Log.traceCall(msg.toString() + "\n\tconnection=" + connection);
+            if (wireEnvelope instanceof GetDataResponse) {
+                Log.traceCall(wireEnvelope.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
-                    GetDataResponse getDataResponse = (GetDataResponse) msg;
+                    GetDataResponse getDataResponse = (GetDataResponse) wireEnvelope;
                     Map<String, Set<StoragePayload>> payloadByClassName = new HashMap<>();
                     final HashSet<ProtectedStorageEntry> dataSet = getDataResponse.dataSet;
                     dataSet.stream().forEach(e -> {
                         final StoragePayload storagePayload = e.getStoragePayload();
                         if (storagePayload == null) {
-                            log.warn("StoragePayload was null: {}", msg.toString());
+                            log.warn("StoragePayload was null: {}", wireEnvelope.toString());
                             return;
                         }
 

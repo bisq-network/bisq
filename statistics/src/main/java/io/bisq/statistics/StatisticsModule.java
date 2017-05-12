@@ -36,7 +36,7 @@ import io.bisq.core.proto.CoreDiskProtoResolver;
 import io.bisq.core.proto.CoreNetworkProtoResolver;
 import io.bisq.core.trade.TradeModule;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.UserModel;
+import io.bisq.core.user.User;
 import io.bisq.network.crypto.EncryptionServiceModule;
 import io.bisq.network.p2p.P2PModule;
 import org.slf4j.Logger;
@@ -58,7 +58,7 @@ class StatisticsModule extends AppModule {
     protected void configure() {
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
-        bind(UserModel.class).in(Singleton.class);
+        bind(User.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
         bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);

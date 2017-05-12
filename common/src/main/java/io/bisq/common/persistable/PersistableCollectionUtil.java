@@ -15,26 +15,25 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.proto;
+package io.bisq.common.persistable;
 
 import com.google.protobuf.Message;
-import io.bisq.common.Marshaller;
 
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ProtoHelper {
+public class PersistableCollectionUtil {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Convenience
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Iterable collectionToProto(Collection<? extends Marshaller> collection) {
-        return collection.stream().map(Marshaller::toProtoMessage).collect(Collectors.toList());
+    public static Iterable collectionToProto(Collection<? extends PersistablePayload> collection) {
+        return collection.stream().map(e -> e.toProtoMessage()).collect(Collectors.toList());
     }
 
-    public static <T> Iterable<T> collectionToProto(Collection<? extends Marshaller> collection, Function<? super Message, T> extra) {
+    public static <T> Iterable<T> collectionToProto(Collection<? extends PersistablePayload> collection, Function<? super Message, T> extra) {
         return collection.stream().map(o -> {
             return extra.apply(o.toProtoMessage());
         }).collect(Collectors.toList());

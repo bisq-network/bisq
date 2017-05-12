@@ -19,6 +19,7 @@ package io.bisq.core.dao.compensation;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
+import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
@@ -51,7 +52,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Getter
 @Setter
-public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload {
+// TODO There will be another object for PersistableEnvelope
+public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload, PersistableEnvelope {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     public static final long TTL = TimeUnit.DAYS.toMillis(30);

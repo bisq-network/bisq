@@ -23,7 +23,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
@@ -133,9 +133,10 @@ public class BsqLiteNode extends BsqNode {
     // server delivered 5 times the GetBsqBlocksResponse. after restart it was ok again.
     // so issue is on fullnode side...
     byte[] pastRequests;
-    private void onMessage(Msg msg, Connection connection) {
-        if (msg instanceof GetBsqBlocksResponse && connection.getPeersNodeAddressOptional().isPresent()) {
-            GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) msg;
+
+    private void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
+        if (wireEnvelope instanceof GetBsqBlocksResponse && connection.getPeersNodeAddressOptional().isPresent()) {
+            GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) wireEnvelope;
             byte[] bsqBlocksBytes = getBsqBlocksResponse.getBsqBlocksBytes();
             if (Arrays.equals(pastRequests, bsqBlocksBytes)) {
                 log.error("We got that message already. That should not happen.");
@@ -162,8 +163,8 @@ public class BsqLiteNode extends BsqNode {
                             throwable.printStackTrace();
                         }
                     });
-        } else if (parseBlockchainComplete && msg instanceof NewBsqBlockBroadcastMsg) {
-            NewBsqBlockBroadcastMsg newBsqBlockBroadcastMsg = (NewBsqBlockBroadcastMsg) msg;
+        } else if (parseBlockchainComplete && wireEnvelope instanceof NewBsqBlockBroadcastMsg) {
+            NewBsqBlockBroadcastMsg newBsqBlockBroadcastMsg = (NewBsqBlockBroadcastMsg) wireEnvelope;
             byte[] bsqBlockBytes = newBsqBlockBroadcastMsg.getBsqBlockBytes();
             BsqBlock bsqBlock = Utilities.<BsqBlock>deserialize(bsqBlockBytes);
             // Be safe and reset all mutable data in case the provider would not have done it

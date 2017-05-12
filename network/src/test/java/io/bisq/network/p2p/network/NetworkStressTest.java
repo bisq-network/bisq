@@ -557,9 +557,9 @@ public class NetworkStressTest {
 
             // Make the peer ready for receiving direct network_messages.
             srcPeer.addDecryptedDirectMessageListener((decryptedMsgWithPubKey, peerNodeAddress) -> {
-                if (!(decryptedMsgWithPubKey.msg instanceof StressTestDirectMsg))
+                if (!(decryptedMsgWithPubKey.wireEnvelope instanceof StressTestDirectMsg))
                     return;
-                StressTestDirectMsg directMessage = (StressTestDirectMsg) (decryptedMsgWithPubKey.msg);
+                StressTestDirectMsg directMessage = (StressTestDirectMsg) (decryptedMsgWithPubKey.wireEnvelope);
                 if ((directMessage.getData().equals("test/" + srcPeerAddress)))
                     receivedDirectLatch.countDown();
             });
@@ -741,9 +741,9 @@ public class NetworkStressTest {
     private void addMailboxListeners(P2PService peer, CountDownLatch receivedMailboxLatch) {
         class MailboxMessageListener implements DecryptedDirectMessageListener, DecryptedMailboxListener {
             private void handle(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
-                if (!(decryptedMsgWithPubKey.msg instanceof StressTestMailboxMsg))
+                if (!(decryptedMsgWithPubKey.wireEnvelope instanceof StressTestMailboxMsg))
                     return;
-                StressTestMailboxMsg msg = (StressTestMailboxMsg) (decryptedMsgWithPubKey.msg);
+                StressTestMailboxMsg msg = (StressTestMailboxMsg) (decryptedMsgWithPubKey.wireEnvelope);
                 if ((msg.getData().equals("test/" + peer.getAddress())))
                     countDownAndPrint(receivedMailboxLatch, 'm');
             }
@@ -823,7 +823,7 @@ final class StressTestDirectMsg implements DirectMsg {
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
+    public PB.WireEnvelope toProtoMsg() {
         throw new NotImplementedException();
     }
 
@@ -851,7 +851,7 @@ final class StressTestMailboxMsg implements MailboxMsg {
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
+    public PB.WireEnvelope toProtoMsg() {
         throw new NotImplementedException();
     }
 

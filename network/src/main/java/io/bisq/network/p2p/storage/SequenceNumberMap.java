@@ -17,7 +17,7 @@
 
 package io.bisq.network.p2p.storage;
 
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  * in protobuffer the map construct can't be anything, so the straightforward mapping was not possible.
  * Hence this Persistable class.
  */
-public class SequenceNumberMap implements Persistable {
+public class SequenceNumberMap implements PersistableEnvelope {
     @Delegate(excludes = ExcludeFromDelegate.class)
     @Getter
     @Setter
@@ -53,8 +53,8 @@ public class SequenceNumberMap implements Persistable {
     }
 
     @Override
-    public PB.Persistable toProtoMessage() {
-        return PB.Persistable.newBuilder().setSequenceNumberMap(
+    public PB.DiscEnvelope toProtoMessage() {
+        return PB.DiscEnvelope.newBuilder().setSequenceNumberMap(
                 PB.SequenceNumberMap.newBuilder().addAllSequenceNumberEntries(
                         hashMap.entrySet().stream()
                                 .map(entry ->

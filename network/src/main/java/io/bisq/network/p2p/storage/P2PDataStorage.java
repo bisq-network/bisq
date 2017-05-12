@@ -3,16 +3,16 @@ package io.bisq.network.p2p.storage;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import io.bisq.common.Payload;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.network.Msg;
-import io.bisq.common.persistence.HashMapPersistable;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.network.NetworkPayload;
+import io.bisq.common.persistable.PersistableHashMap;
+import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.ResourceNotFoundException;
@@ -67,7 +67,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private SequenceNumberMap sequenceNumberMap = new SequenceNumberMap();
     private final Storage<SequenceNumberMap> sequenceNumberMapStorage;
     private HashMap<ByteArray, ProtectedStorageEntry> persistedMap = new HashMap<>();
-    private final Storage<HashMapPersistable<ByteArray, ProtectedStorageEntry>> persistedEntryMapStorage;
+    private final Storage<PersistableHashMap<ByteArray, ProtectedStorageEntry>> persistedEntryMapStorage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +112,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             log.debug(storageFileName + " file exists already.");
         }
 
-        HashMapPersistable<ByteArray, ProtectedStorageEntry> persisted = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName(storageFileName);
+        PersistableHashMap<ByteArray, ProtectedStorageEntry> persisted = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName(storageFileName);
         if (persisted != null) {
             persistedMap = persisted.getHashMap();
             map.putAll(persistedMap);
@@ -165,18 +165,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(Msg msg, Connection connection) {
-        if (msg instanceof BroadcastMsg) {
-            Log.traceCall(Utilities.toTruncatedString(msg) + "\n\tconnection=" + connection);
+    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
+        if (wireEnvelope instanceof BroadcastMsg) {
+            Log.traceCall(Utilities.toTruncatedString(wireEnvelope) + "\n\tconnection=" + connection);
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
-                if (msg instanceof AddDataMsg) {
-                    add(((AddDataMsg) msg).protectedStorageEntry, peersNodeAddress, null, false);
-                } else if (msg instanceof RemoveDataMsg) {
-                    remove(((RemoveDataMsg) msg).protectedStorageEntry, peersNodeAddress, false);
-                } else if (msg instanceof RemoveMailboxDataMsg) {
-                    removeMailboxData(((RemoveMailboxDataMsg) msg).protectedMailboxStorageEntry, peersNodeAddress, false);
-                } else if (msg instanceof RefreshOfferMsg) {
-                    refreshTTL((RefreshOfferMsg) msg, peersNodeAddress, false);
+                if (wireEnvelope instanceof AddDataMsg) {
+                    add(((AddDataMsg) wireEnvelope).protectedStorageEntry, peersNodeAddress, null, false);
+                } else if (wireEnvelope instanceof RemoveDataMsg) {
+                    remove(((RemoveDataMsg) wireEnvelope).protectedStorageEntry, peersNodeAddress, false);
+                } else if (wireEnvelope instanceof RemoveMailboxDataMsg) {
+                    removeMailboxData(((RemoveMailboxDataMsg) wireEnvelope).protectedMailboxStorageEntry, peersNodeAddress, false);
+                } else if (wireEnvelope instanceof RefreshOfferMsg) {
+                    refreshTTL((RefreshOfferMsg) wireEnvelope, peersNodeAddress, false);
                 }
             });
         }
@@ -279,7 +279,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 // If we get a PersistedStoragePayload we save to disc
                 if (storagePayload instanceof PersistedStoragePayload) {
                     persistedMap.put(hashOfPayload, protectedStorageEntry);
-                    persistedEntryMapStorage.queueUpForSave(new HashMapPersistable<>(persistedMap, getPersistedEntryMapToProtoMethod()), 5000);
+                    persistedEntryMapStorage.queueUpForSave(new PersistableHashMap<>(persistedMap, getPersistedEntryMapToProtoMethod()), 5000);
                 }
 
                 hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry));
@@ -672,7 +672,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                                     e -> e.getKey().toString(),
                                             e -> (PB.ProtectedStorageEntry) e.getValue().toProtoMessage())
                             );
-            return PB.Persistable.newBuilder().setPersistedEntryMap(PB.PersistedEntryMap.newBuilder().putAllPersistedEntryMap(protoResult)).build();
+            return PB.DiscEnvelope.newBuilder().setPersistedEntryMap(PB.PersistedEntryMap.newBuilder().putAllPersistedEntryMap(protoResult)).build();
         };
     }
 
@@ -685,7 +685,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
      * Needs to be Serializable because we convert the object to a byte array via java serialization
      * before calculating the hash.
      */
-    public static final class DataAndSeqNrPair implements Payload {
+    public static final class DataAndSeqNrPair implements NetworkPayload {
         // data are only used for calculating cryptographic hash from both values so they are kept private
         private final StoragePayload data;
         private final int sequenceNumber;
@@ -716,7 +716,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
      */
     @EqualsAndHashCode
     @AllArgsConstructor
-    public static final class ByteArray implements Persistable {
+    public static final class ByteArray implements PersistablePayload {
         // That object is saved to disc. We need to take care of changes to not break deserialization.
         private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
@@ -743,7 +743,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
      * Used as value in map
      */
     @EqualsAndHashCode
-    public static final class MapValue implements Persistable {
+    public static final class MapValue implements PersistablePayload {
         // That object is saved to disc. We need to take care of changes to not break deserialization.
         private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

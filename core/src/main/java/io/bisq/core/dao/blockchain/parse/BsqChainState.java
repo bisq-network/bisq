@@ -20,7 +20,7 @@ package io.bisq.core.dao.blockchain.parse;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.FunctionalReadWriteLock;
@@ -46,7 +46,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 // Represents mutable state of BSQ chain data
 // We get accessed the data from different threads so we need to make sure it is thread safe.
 @Slf4j
-public class BsqChainState implements Persistable {
+public class BsqChainState implements PersistableEnvelope {
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
 

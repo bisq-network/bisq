@@ -1,7 +1,7 @@
 package io.bisq.core.dao.blockchain.p2p;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DirectMsg;
 import lombok.Getter;
@@ -22,13 +22,13 @@ public final class GetBsqBlocksRequest implements DirectMsg {
 
 
     @Override
-    public PB.Msg toProtoMsg() {
+    public PB.WireEnvelope toProtoMsg() {
         final PB.GetBsqBlocksRequest.Builder builder = PB.GetBsqBlocksRequest.newBuilder()
                 .setFromBlockHeight(fromBlockHeight);
-        return Msg.getMsgBuilder().setGetBsqBlocksRequest(builder).build();
+        return NetworkEnvelope.getMsgBuilder().setGetBsqBlocksRequest(builder).build();
     }
 
-    public static Msg fromProto(PB.Msg msg) {
+    public static NetworkEnvelope fromProto(PB.WireEnvelope msg) {
         return new GetBsqBlocksRequest(msg.getGetBsqBlocksRequest().getFromBlockHeight());
     }
 }

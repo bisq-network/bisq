@@ -2,13 +2,12 @@ package io.bisq.network.p2p.peers;
 
 import com.google.protobuf.Message;
 import io.bisq.common.Clock;
-import io.bisq.common.Marshaller;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.persistence.ListPersistable;
+import io.bisq.common.persistable.PersistableCollectionUtil;
+import io.bisq.common.persistable.PersistableList;
 import io.bisq.common.proto.PersistenceProtoResolver;
-import io.bisq.common.proto.ProtoHelper;
 import io.bisq.common.storage.Storage;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
@@ -79,7 +78,7 @@ public class PeerManager implements ConnectionListener {
     private final NetworkNode networkNode;
     private final Clock clock;
     private final Set<NodeAddress> seedNodeAddresses;
-    private final Storage<ListPersistable<Peer>> dbStorage;
+    private final Storage<PersistableList<Peer>> dbStorage;
 
     private final HashSet<Peer> persistedPeers = new HashSet<>();
     private final Set<Peer> reportedPeers = new HashSet<>();
@@ -102,7 +101,7 @@ public class PeerManager implements ConnectionListener {
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
         dbStorage = new Storage<>(storageDir, persistenceProtoResolver);
-        ListPersistable persistedList = dbStorage.initAndGetPersistedWithFileName("PersistedPeers");
+        PersistableList persistedList = dbStorage.initAndGetPersistedWithFileName("PersistedPeers");
         if (persistedList != null) {
             log.debug("We have persisted reported list. persistedList.size()=" + persistedList.getList().size());
             this.persistedPeers.addAll(persistedList.getList());
@@ -395,7 +394,7 @@ public class PeerManager implements ConnectionListener {
             persistedPeers.addAll(reportedPeersToAdd);
             purgePersistedPeersIfExceeds();
             if (dbStorage != null)
-                dbStorage.queueUpForSave(new ListPersistable(persistedPeers, getListToProto()), 2000); // We clone it to avoid ConcurrentModificationExceptions at save
+                dbStorage.queueUpForSave(new PersistableList(persistedPeers, getListToProto()), 2000); // We clone it to avoid ConcurrentModificationExceptions at save
 
             printReportedPeers();
         } else {
@@ -461,7 +460,7 @@ public class PeerManager implements ConnectionListener {
             persistedPeers.remove(persistedPeer);
 
             if (dbStorage != null) {
-                ListPersistable serializable = new ListPersistable(persistedPeers, getListToProto());
+                PersistableList serializable = new PersistableList(persistedPeers, getListToProto());
                 dbStorage.queueUpForSave(serializable, 2000);
             }
 
@@ -635,7 +634,7 @@ public class PeerManager implements ConnectionListener {
 
     private Function<List<Peer>, Message> getListToProto() {
         return (List<Peer> list) -> {
-            return PB.Persistable.newBuilder().setPeersList(PB.PeersList.newBuilder().addAllPeers(ProtoHelper.collectionToProto((Collection<? extends Marshaller>) list))).build();
+            return PB.DiscEnvelope.newBuilder().setPeersList(PB.PeersList.newBuilder().addAllPeers(PersistableCollectionUtil.collectionToProto(list))).build();
         };
     }
 }

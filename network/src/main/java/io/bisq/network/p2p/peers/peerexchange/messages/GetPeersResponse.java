@@ -2,7 +2,7 @@ package io.bisq.network.p2p.peers.peerexchange.messages;
 
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.SupportedCapabilitiesMsg;
 import io.bisq.network.p2p.peers.peerexchange.Peer;
@@ -44,8 +44,8 @@ public final class GetPeersResponse extends PeerExchangeMsg implements Supported
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
-        PB.Msg.Builder envelopeBuilder = Msg.getMsgBuilder();
+    public PB.WireEnvelope toProtoMsg() {
+        PB.WireEnvelope.Builder envelopeBuilder = NetworkEnvelope.getMsgBuilder();
 
         PB.GetPeersResponse.Builder msgBuilder = PB.GetPeersResponse.newBuilder();
         msgBuilder.setRequestNonce(requestNonce);

@@ -36,7 +36,7 @@ import io.bisq.core.proto.CoreDiskProtoResolver;
 import io.bisq.core.proto.CoreNetworkProtoResolver;
 import io.bisq.core.trade.TradeModule;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.UserModel;
+import io.bisq.core.user.User;
 import io.bisq.gui.GuiModule;
 import io.bisq.gui.common.view.CachingViewLoader;
 import io.bisq.gui.main.overlays.notifications.NotificationCenter;
@@ -68,7 +68,7 @@ class BisqAppModule extends AppModule {
         bind(CachingViewLoader.class).in(Singleton.class);
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
-        bind(UserModel.class).in(Singleton.class);
+        bind(User.class).in(Singleton.class);
         bind(NotificationCenter.class).in(Singleton.class);
         bind(Clock.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);

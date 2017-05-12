@@ -18,7 +18,7 @@
 package io.bisq.core.arbitration.messages;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.core.arbitration.DisputeResult;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
@@ -46,8 +46,8 @@ public final class DisputeResultMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
-        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
+    public PB.WireEnvelope toProtoMsg() {
+        PB.WireEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
         return msgBuilder.setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
                 .setDisputeResult(disputeResult.toProtoMessage())
                 .setMyNodeAddress(myNodeAddress.toProtoMessage())

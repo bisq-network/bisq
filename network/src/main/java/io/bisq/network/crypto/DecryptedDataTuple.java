@@ -18,17 +18,17 @@
 package io.bisq.network.crypto;
 
 
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import lombok.EqualsAndHashCode;
 
 import java.security.PublicKey;
 
 @EqualsAndHashCode
 public final class DecryptedDataTuple {
-    public final Msg payload;
+    public final NetworkEnvelope payload;
     public final PublicKey sigPublicKey;
 
-    public DecryptedDataTuple(Msg payload, PublicKey sigPublicKey) {
+    public DecryptedDataTuple(NetworkEnvelope payload, PublicKey sigPublicKey) {
         this.payload = payload;
         this.sigPublicKey = sigPublicKey;
     }

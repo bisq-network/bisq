@@ -20,8 +20,8 @@ package io.bisq.core.dao.vote;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistence.ListPersistable;
-import io.bisq.common.proto.ProtoHelper;
+import io.bisq.common.persistable.PersistableCollectionUtil;
+import io.bisq.common.persistable.PersistableList;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -55,7 +55,7 @@ public class VotingManager {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final FeeService feeService;
-    private final Storage<ListPersistable<VoteItemsList>> voteItemCollectionsStorage;
+    private final Storage<PersistableList<VoteItemsList>> voteItemCollectionsStorage;
     private final CompensationRequestManager compensationRequestManager;
     private final DaoPeriodService daoPeriodService;
     private final VotingDefaultValues votingDefaultValues;
@@ -66,7 +66,7 @@ public class VotingManager {
     public VotingManager(BtcWalletService btcWalletService,
                          BsqWalletService bsqWalletService,
                          FeeService feeService,
-                         Storage<ListPersistable<VoteItemsList>> voteItemCollectionsStorage,
+                         Storage<PersistableList<VoteItemsList>> voteItemCollectionsStorage,
                          CompensationRequestManager compensationRequestManager,
                          DaoPeriodService daoPeriodService,
                          VotingDefaultValues votingDefaultValues) {
@@ -78,7 +78,7 @@ public class VotingManager {
         this.daoPeriodService = daoPeriodService;
         this.votingDefaultValues = votingDefaultValues;
 
-        ListPersistable<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
+        PersistableList<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
         if (persisted != null)
             voteItemsLists.addAll(persisted.getList());
     }
@@ -311,10 +311,10 @@ public class VotingManager {
         //TODO check equals code
         if (!voteItemsLists.contains(voteItemsList)) {
             voteItemsLists.add(voteItemsList);
-            ListPersistable<VoteItemsList> serializable = new ListPersistable<>(voteItemsLists);
-            serializable.setToProto((list) -> PB.Persistable.newBuilder()
+            PersistableList<VoteItemsList> serializable = new PersistableList<>(voteItemsLists);
+            serializable.setToProto((list) -> PB.DiscEnvelope.newBuilder()
                     .setVoteItemsList(PB.VoteItemsList.newBuilder()
-                            .addAllVoteItem(ProtoHelper.collectionToProto(voteItemsList.getAllVoteItemList()))).build());
+                            .addAllVoteItem(PersistableCollectionUtil.collectionToProto(voteItemsList.getAllVoteItemList()))).build());
             voteItemCollectionsStorage.queueUpForSave(serializable, 500);
         }
     }

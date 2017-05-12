@@ -18,8 +18,8 @@
 package io.bisq.common.crypto;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.Payload;
 import io.bisq.common.app.Version;
+import io.bisq.common.network.NetworkPayload;
 import io.bisq.generated.protobuffer.PB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
-public final class SealedAndSigned implements Payload {
+public final class SealedAndSigned implements NetworkPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(SealedAndSigned.class);

@@ -1,10 +1,10 @@
 package io.bisq.network.p2p;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 
-public final class CloseConnectionMsg implements Msg {
+public final class CloseConnectionMsg implements NetworkEnvelope {
     // That object is sent over the wire, so we need to take care of version compatibility.
     // We dont use the Version.NETWORK_PROTOCOL_VERSION here as we report also compatibility issues and
     // a changed version would render that message invalid as well, so the peer cannot get notified about the problem.
@@ -31,8 +31,8 @@ public final class CloseConnectionMsg implements Msg {
     }
 
     //@Override
-    public PB.Msg toProtoMsg() {
-        PB.Msg.Builder envelopeBuilder = Msg.getMsgBuilder();
+    public PB.WireEnvelope toProtoMsg() {
+        PB.WireEnvelope.Builder envelopeBuilder = NetworkEnvelope.getMsgBuilder();
         return envelopeBuilder.setCloseConnectionMessage(envelopeBuilder.getCloseConnectionMessageBuilder()
                 .setMessageVersion(messageVersion)
                 .setReason(reason)).build();

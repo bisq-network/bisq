@@ -36,7 +36,7 @@ import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.UserModel;
+import io.bisq.core.user.User;
 import io.bisq.gui.Navigation;
 import io.bisq.gui.common.model.ActivatableViewModel;
 import io.bisq.gui.main.MainView;
@@ -66,7 +66,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     protected final static Logger log = LoggerFactory.getLogger(OfferBookViewModel.class);
 
     private final OpenOfferManager openOfferManager;
-    private final UserModel userModel;
+    private final User user;
     private final OfferBook offerBook;
     final Preferences preferences;
     private final P2PService p2PService;
@@ -104,14 +104,14 @@ class OfferBookViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferBookViewModel(UserModel userModel, OpenOfferManager openOfferManager, OfferBook offerBook,
+    public OfferBookViewModel(User user, OpenOfferManager openOfferManager, OfferBook offerBook,
                               Preferences preferences, P2PService p2PService, PriceFeedService priceFeedService,
                               ClosedTradableManager closedTradableManager, FilterManager filterManager,
                               Navigation navigation, BSFormatter formatter) {
         super();
 
         this.openOfferManager = openOfferManager;
-        this.userModel = userModel;
+        this.user = user;
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.p2PService = p2PService;
@@ -397,20 +397,20 @@ class OfferBookViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     boolean hasPaymentAccount() {
-        return userModel.currentPaymentAccountProperty().get() != null;
+        return user.currentPaymentAccountProperty().get() != null;
     }
 
     boolean isAnyPaymentAccountValidForOffer(Offer offer) {
-        return PaymentAccountUtil.isAnyPaymentAccountValidForOffer(offer, userModel.getPaymentAccounts());
+        return PaymentAccountUtil.isAnyPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
     }
 
     boolean hasPaymentAccountForCurrency() {
-        return (showAllTradeCurrenciesProperty.get() && !userModel.getPaymentAccounts().isEmpty()) ||
-                userModel.hasPaymentAccountForCurrency(selectedTradeCurrency);
+        return (showAllTradeCurrenciesProperty.get() && !user.getPaymentAccounts().isEmpty()) ||
+                user.hasPaymentAccountForCurrency(selectedTradeCurrency);
     }
 
     boolean hasAcceptedArbitrators() {
-        return userModel.getAcceptedArbitrators() != null && !userModel.getAcceptedArbitrators().isEmpty();
+        return user.getAcceptedArbitrators() != null && !user.getAcceptedArbitrators().isEmpty();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -437,7 +437,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     boolean hasMatchingArbitrator(Offer offer) {
         for (NodeAddress offerArbitratorNodeAddress : offer.getArbitratorNodeAddresses()) {
-            for (NodeAddress acceptedArbitratorNodeAddress : userModel.getAcceptedArbitratorAddresses()) {
+            for (NodeAddress acceptedArbitratorNodeAddress : user.getAcceptedArbitratorAddresses()) {
                 if (offerArbitratorNodeAddress.equals(acceptedArbitratorNodeAddress))
                     return true;
             }

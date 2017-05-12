@@ -17,9 +17,9 @@
 
 package io.bisq.core.payment.payload;
 
-import io.bisq.common.Payload;
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.CountryUtil;
+import io.bisq.common.network.NetworkPayload;
 import io.bisq.core.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
@@ -32,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 @EqualsAndHashCode
 @ToString
 @Slf4j
-public abstract class PaymentAccountPayload implements Payload {
+public abstract class PaymentAccountPayload implements NetworkPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

@@ -20,7 +20,7 @@ package io.bisq.core.offer.messages;
 
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.SupportedCapabilitiesMsg;
@@ -58,8 +58,8 @@ public final class OfferAvailabilityResponse extends OfferMsg implements Support
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
-        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
+    public PB.WireEnvelope toProtoMsg() {
+        PB.WireEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
         return msgBuilder.setOfferAvailabilityResponse(PB.OfferAvailabilityResponse.newBuilder().setMessageVersion(getMsgVersion())
                 .setOfferId(offerId)
                 .setAvailabilityResult(PB.AvailabilityResult.valueOf(availabilityResult.name()))

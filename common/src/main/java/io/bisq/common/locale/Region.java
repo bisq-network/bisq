@@ -19,7 +19,7 @@ package io.bisq.common.locale;
 
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -29,7 +29,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @EqualsAndHashCode
 @ToString
-public final class Region implements Persistable {
+public final class Region implements PersistablePayload {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

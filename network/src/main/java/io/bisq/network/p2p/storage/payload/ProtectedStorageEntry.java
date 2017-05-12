@@ -2,9 +2,10 @@ package io.bisq.network.p2p.storage.payload;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import io.bisq.common.Payload;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
+import io.bisq.common.network.NetworkPayload;
+import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import org.slf4j.Logger;
@@ -20,7 +21,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
 @EqualsAndHashCode
-public class ProtectedStorageEntry implements Payload {
+public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 

@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.peers.keepalive.messages;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 
 public final class Ping extends KeepAliveMsg {
@@ -17,8 +17,8 @@ public final class Ping extends KeepAliveMsg {
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
-        PB.Msg.Builder msgBuilder = Msg.getMsgBuilder();
+    public PB.WireEnvelope toProtoMsg() {
+        PB.WireEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
         return msgBuilder.setPing(msgBuilder.getPingBuilder()
                 .setNonce(nonce)
                 .setLastRoundTripTime(lastRoundTripTime)).build();

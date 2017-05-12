@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.AnonymousMsg;
 import io.bisq.network.p2p.SupportedCapabilitiesMsg;
@@ -60,8 +60,8 @@ public final class PreliminaryGetDataRequest implements AnonymousMsg, GetDataReq
     }
 
     @Override
-    public PB.Msg toProtoMsg() {
-        PB.Msg.Builder envelopeBuilder = Msg.getMsgBuilder();
+    public PB.WireEnvelope toProtoMsg() {
+        PB.WireEnvelope.Builder envelopeBuilder = NetworkEnvelope.getMsgBuilder();
         PB.PreliminaryGetDataRequest.Builder msgBuilder = envelopeBuilder.getPreliminaryGetDataRequestBuilder()
                 .setMessageVersion(messageVersion)
                 .setNonce(nonce);

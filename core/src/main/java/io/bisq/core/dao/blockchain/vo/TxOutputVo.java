@@ -19,7 +19,7 @@ package io.bisq.core.dao.blockchain.vo;
 
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import lombok.Value;
@@ -31,7 +31,7 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @Value
 @Immutable
-public class TxOutputVo implements Persistable {
+public class TxOutputVo implements PersistablePayload {
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     private final int index;

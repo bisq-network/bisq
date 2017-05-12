@@ -18,8 +18,8 @@
 package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.Payload;
 import io.bisq.common.app.Version;
+import io.bisq.common.network.NetworkPayload;
 import io.bisq.core.arbitration.messages.DisputeCommunicationMsg;
 import io.bisq.generated.protobuffer.PB;
 import javafx.beans.property.BooleanProperty;
@@ -36,7 +36,7 @@ import java.io.ObjectInputStream;
 import java.util.Date;
 
 @EqualsAndHashCode
-public final class DisputeResult implements Payload {
+public final class DisputeResult implements NetworkPayload {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final Logger log = LoggerFactory.getLogger(DisputeResult.class);

@@ -7,7 +7,7 @@ import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
 import io.bisq.common.app.Version;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.common.util.Tuple2;
 import io.bisq.common.util.Utilities;
@@ -176,10 +176,10 @@ public class Connection implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Called from various threads
-    public void sendMessage(Msg msg) {
+    public void sendMessage(NetworkEnvelope wireEnvelope) {
 
         if (!stopped) {
-            if (!isCapabilityRequired(msg) || isCapabilitySupported(msg)) {
+            if (!isCapabilityRequired(wireEnvelope) || isCapabilitySupported(wireEnvelope)) {
                 try {
                     Log.traceCall();
 
@@ -193,36 +193,36 @@ public class Connection implements MessageListener {
                         Thread.sleep(50);
                     }
 
-                    PB.Msg envelope;
+                    PB.WireEnvelope envelope;
 
                     lastSendTimeStamp = now;
                     String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
 
-                    envelope = msg.toProtoMsg();
+                    envelope = wireEnvelope.toProtoMsg();
                     log.debug("Sending message: {}", Utilities.toTruncatedString(envelope.toString(), 10000));
 
-                    if (msg instanceof Ping | msg instanceof RefreshOfferMsg) {
+                    if (wireEnvelope instanceof Ping | wireEnvelope instanceof RefreshOfferMsg) {
                         // pings and offer refresh msg we dont want to log in production
                         log.trace("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                         "Sending direct message to peer" +
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
                                 peersNodeAddress, uid, envelope.toString(), envelope.getSerializedSize());
-                    } else if (msg instanceof PrefixedSealedAndSignedMsg && peersNodeAddressOptional.isPresent()) {
+                    } else if (wireEnvelope instanceof PrefixedSealedAndSignedMsg && peersNodeAddressOptional.isPresent()) {
                         setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
                         log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                         "Sending direct message to peer" +
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                                peersNodeAddress, uid, Utilities.toTruncatedString(msg), -1);
-                    } else if (msg instanceof GetDataResponse && ((GetDataResponse) msg).isGetUpdatedDataResponse) {
+                                peersNodeAddress, uid, Utilities.toTruncatedString(wireEnvelope), -1);
+                    } else if (wireEnvelope instanceof GetDataResponse && ((GetDataResponse) wireEnvelope).isGetUpdatedDataResponse) {
                         setPeerType(Connection.PeerType.PEER);
                     } else {
                         log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
-                                peersNodeAddress, uid, Utilities.toTruncatedString(msg), envelope.getSerializedSize());
+                                peersNodeAddress, uid, Utilities.toTruncatedString(wireEnvelope), envelope.getSerializedSize());
                     }
 
                     if (!stopped) {
@@ -231,10 +231,10 @@ public class Connection implements MessageListener {
                         protoOutputStream.flush();
 
                         statistic.addSentBytes(envelope.getSerializedSize());
-                        statistic.addSentMessage(msg);
+                        statistic.addSentMessage(wireEnvelope);
 
                         // We don't want to get the activity ts updated by ping/pong msg
-                        if (!(msg instanceof KeepAliveMsg))
+                        if (!(wireEnvelope instanceof KeepAliveMsg))
                             statistic.updateLastActivityTimestamp();
                     }
                 } catch (Throwable t) {
@@ -250,9 +250,9 @@ public class Connection implements MessageListener {
 
     }
 
-    public boolean isCapabilitySupported(Msg msg) {
-        if (msg instanceof AddDataMsg) {
-            final StoragePayload storagePayload = (((AddDataMsg) msg).protectedStorageEntry).getStoragePayload();
+    public boolean isCapabilitySupported(NetworkEnvelope wireEnvelope) {
+        if (wireEnvelope instanceof AddDataMsg) {
+            final StoragePayload storagePayload = (((AddDataMsg) wireEnvelope).protectedStorageEntry).getStoragePayload();
             if (storagePayload instanceof CapabilityRequiringPayload) {
                 final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) storagePayload).getRequiredCapabilities();
                 final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
@@ -285,8 +285,8 @@ public class Connection implements MessageListener {
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public boolean isCapabilityRequired(Msg msg) {
-        return msg instanceof AddDataMsg && (((AddDataMsg) msg).protectedStorageEntry).getStoragePayload() instanceof CapabilityRequiringPayload;
+    public boolean isCapabilityRequired(NetworkEnvelope wireEnvelope) {
+        return wireEnvelope instanceof AddDataMsg && (((AddDataMsg) wireEnvelope).protectedStorageEntry).getStoragePayload() instanceof CapabilityRequiringPayload;
     }
 
     public List<Integer> getSupportedCapabilities() {
@@ -312,7 +312,7 @@ public class Connection implements MessageListener {
     }
 
     // TODO either use the argument or delete it
-    private boolean violatesThrottleLimit(Msg msg) {
+    private boolean violatesThrottleLimit(NetworkEnvelope wireEnvelope) {
         long now = System.currentTimeMillis();
         boolean violated = false;
         //TODO remove message storage after network is tested stable
@@ -349,7 +349,7 @@ public class Connection implements MessageListener {
             messageTimeStamps.remove(0);
         }
 
-        messageTimeStamps.add(new Tuple2<>(now, msg));
+        messageTimeStamps.add(new Tuple2<>(now, wireEnvelope));
         return violated;
     }
 
@@ -359,9 +359,9 @@ public class Connection implements MessageListener {
 
     // Only receive non - CloseConnectionMessage network_messages
     @Override
-    public void onMessage(Msg msg, Connection connection) {
+    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
         checkArgument(connection.equals(this));
-        UserThread.execute(() -> messageListeners.stream().forEach(e -> e.onMessage(msg, connection)));
+        UserThread.execute(() -> messageListeners.stream().forEach(e -> e.onMessage(wireEnvelope, connection)));
     }
 
 
@@ -762,11 +762,11 @@ public class Connection implements MessageListener {
                         }
 
                         // Reading the protobuffer message from the inputstream
-                        PB.Msg envelope;
+                        PB.WireEnvelope envelope;
                         try {
                             //TODO check
                             // if (protoInputStream.available() > 0) {
-                            envelope = PB.Msg.parseDelimitedFrom(protoInputStream);
+                            envelope = PB.WireEnvelope.parseDelimitedFrom(protoInputStream);
                            /* } else {
                                 // we probably got a network issue so return here
                                // stop();
@@ -782,10 +782,10 @@ public class Connection implements MessageListener {
                             return;
                         }
 
-                        Msg msg;
-                        Optional<Msg> optMessage = networkProtoResolver.fromProto(envelope);
+                        NetworkEnvelope wireEnvelope;
+                        Optional<NetworkEnvelope> optMessage = networkProtoResolver.fromProto(envelope);
                         if (optMessage.isPresent()) {
-                            msg = optMessage.get();
+                            wireEnvelope = optMessage.get();
                         } else {
                             log.warn("Unknown message type received:{}", Utilities.toTruncatedString(envelope));
                             reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
@@ -796,7 +796,7 @@ public class Connection implements MessageListener {
 
                         int size = envelope.getSerializedSize();
 
-                        if (msg instanceof Pong || msg instanceof RefreshOfferMsg) {
+                        if (wireEnvelope instanceof Pong || wireEnvelope instanceof RefreshOfferMsg) {
                             // We only log Pong and RefreshOfferMsg when in dev environment (trace)
                             log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                             "New data arrived at inputHandler of connection {}.\n" +
@@ -822,11 +822,11 @@ public class Connection implements MessageListener {
                         connection.statistic.addReceivedBytes(size);
 
                         // We want to track the network_messages also before the checks, so do it early...
-                        connection.statistic.addReceivedMessage(msg);
+                        connection.statistic.addReceivedMessage(wireEnvelope);
 
                         // First we check thel size
                         boolean exceeds;
-                        if (msg instanceof ExtendedDataSizePermission) {
+                        if (wireEnvelope instanceof ExtendedDataSizePermission) {
                             exceeds = size > MAX_PERMITTED_MSG_SIZE;
                             log.debug("size={}; object={}", size, Utilities.toTruncatedString(envelope, 100));
                         } else {
@@ -841,7 +841,7 @@ public class Connection implements MessageListener {
 
                         // Then check data throttle limit. Do that for non-message type objects as well,
                         // so that's why we use serializable here.
-                        if (connection.violatesThrottleLimit(msg)
+                        if (connection.violatesThrottleLimit(wireEnvelope)
                                 && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
                             return;
 
@@ -856,10 +856,10 @@ public class Connection implements MessageListener {
                         }
 
                         // TODO no inheritance & is this even needed? We can send unsupported stuff to old nodes
-                        if (sharedModel.getSupportedCapabilities() == null && msg instanceof SupportedCapabilitiesMsg)
-                            sharedModel.setSupportedCapabilities(((SupportedCapabilitiesMsg) msg).getSupportedCapabilities());
+                        if (sharedModel.getSupportedCapabilities() == null && wireEnvelope instanceof SupportedCapabilitiesMsg)
+                            sharedModel.setSupportedCapabilities(((SupportedCapabilitiesMsg) wireEnvelope).getSupportedCapabilities());
 
-                        if (msg instanceof CloseConnectionMsg) {
+                        if (wireEnvelope instanceof CloseConnectionMsg) {
                             // If we get a CloseConnectionMessage we shut down
                             log.debug("CloseConnectionMessage received. Reason={}\n\t" +
                                     "connection={}", envelope.getCloseConnectionMessage().getReason(), connection);
@@ -871,11 +871,11 @@ public class Connection implements MessageListener {
                             }
                         } else if (!stopped) {
                             // We don't want to get the activity ts updated by ping/pong msg
-                            if (!(msg instanceof KeepAliveMsg)) {
+                            if (!(wireEnvelope instanceof KeepAliveMsg)) {
                                 connection.statistic.updateLastActivityTimestamp();
                             }
 
-                            if (msg instanceof GetDataRequest) {
+                            if (wireEnvelope instanceof GetDataRequest) {
                                 connection.setPeerType(PeerType.INITIAL_DATA_REQUEST);
                             }
                             // First a seed node gets a message from a peer (PreliminaryDataRequest using
@@ -891,8 +891,8 @@ public class Connection implements MessageListener {
                             // 2. DataRequest (implements SendersNodeAddressMessage)
                             // 3. GetPeersRequest (implements SendersNodeAddressMessage)
                             // 4. DirectMessage (implements SendersNodeAddressMessage)
-                            if (msg instanceof SendersNodeAddressMsg) {
-                                NodeAddress senderNodeAddress = ((SendersNodeAddressMsg) msg).getSenderNodeAddress();
+                            if (wireEnvelope instanceof SendersNodeAddressMsg) {
+                                NodeAddress senderNodeAddress = ((SendersNodeAddressMsg) wireEnvelope).getSenderNodeAddress();
                                 // We must not shut down a banned peer at that moment as it would trigger a connection termination
                                 // and we could not send the CloseConnectionMessage.
                                 // We shut down a banned peer at the next step at setPeersNodeAddress().
@@ -902,17 +902,17 @@ public class Connection implements MessageListener {
                                     // If we have already the peers address we check again if it matches our stored one
                                     checkArgument(peersNodeAddressOptional.get().equals(senderNodeAddress),
                                             "senderNodeAddress not matching connections peer address.\n\t" +
-                                                    "message=" + msg);
+                                                    "message=" + wireEnvelope);
                                 } else {
                                     connection.setPeersNodeAddress(senderNodeAddress);
                                 }
                             }
 
-                            if (msg instanceof PrefixedSealedAndSignedMsg)
+                            if (wireEnvelope instanceof PrefixedSealedAndSignedMsg)
                                 connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
                             // Further treatment of the incoming message
-                            messageListener.onMessage(msg, connection);
+                            messageListener.onMessage(wireEnvelope, connection);
                         }
                     } catch (InvalidClassException e) {
                         log.error(e.getMessage());

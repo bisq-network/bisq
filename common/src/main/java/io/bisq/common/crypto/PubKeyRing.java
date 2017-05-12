@@ -18,7 +18,7 @@
 package io.bisq.common.crypto;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.Payload;
+import io.bisq.common.network.NetworkPayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ import java.security.spec.X509EncodedKeySpec;
  */
 @Slf4j
 @EqualsAndHashCode
-public final class PubKeyRing implements Payload {
+public final class PubKeyRing implements NetworkPayload {
     private final byte[] signaturePubKeyBytes;
     private final byte[] encryptionPubKeyBytes;
     private String pgpPubKeyAsPem;

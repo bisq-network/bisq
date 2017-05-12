@@ -1,10 +1,10 @@
 package io.bisq.network.p2p.storage.payload;
 
-import io.bisq.common.persistence.Persistable;
+import io.bisq.common.persistable.PersistablePayload;
 
 /**
  * Marker interface for payload which gets persisted.
  * Used for TradeStatistics.
  */
-public interface PersistedStoragePayload extends StoragePayload, Persistable {
+public interface PersistedStoragePayload extends StoragePayload, PersistablePayload {
 }

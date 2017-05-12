@@ -22,8 +22,8 @@ import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.persistence.Persistable;
-import io.bisq.common.proto.ProtoHelper;
+import io.bisq.common.persistable.PersistableCollectionUtil;
+import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.common.taskrunner.Model;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -39,7 +39,7 @@ import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.trade.messages.TradeMsg;
-import io.bisq.core.user.UserModel;
+import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DecryptedMsgWithPubKey;
 import io.bisq.network.p2p.MailboxMsg;
@@ -59,7 +59,7 @@ import java.util.List;
 
 @Getter
 @Slf4j
-public class ProcessModel implements Model, Persistable {
+public class ProcessModel implements Model, PersistablePayload {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
@@ -73,7 +73,7 @@ public class ProcessModel implements Model, Persistable {
     transient private TradeWalletService tradeWalletService;
     transient private Offer offer;
     @Getter
-    transient private UserModel userModel;
+    transient private User user;
     transient private FilterManager filterManager;
     @Getter
     transient private KeyRing keyRing;
@@ -132,7 +132,7 @@ public class ProcessModel implements Model, Persistable {
                                          BtcWalletService walletService,
                                          BsqWalletService bsqWalletService,
                                          TradeWalletService tradeWalletService,
-                                         UserModel userModel,
+                                         User user,
                                          FilterManager filterManager,
                                          KeyRing keyRing,
                                          boolean useSavingsWallet,
@@ -143,14 +143,14 @@ public class ProcessModel implements Model, Persistable {
         this.btcWalletService = walletService;
         this.bsqWalletService = bsqWalletService;
         this.tradeWalletService = tradeWalletService;
-        this.userModel = userModel;
+        this.user = user;
         this.filterManager = filterManager;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;
         fundsNeededForTradeAsLong = fundsNeededForTrade.value;
         offerId = offer.getId();
-        accountId = userModel.getAccountId();
+        accountId = user.getAccountId();
         pubKeyRing = keyRing.getPubKeyRing();
     }
 
@@ -171,9 +171,9 @@ public class ProcessModel implements Model, Persistable {
     public PaymentAccountPayload getPaymentAccountPayload(Trade trade) {
         PaymentAccount paymentAccount;
         if (trade instanceof MakerTrade)
-            paymentAccount = userModel.getPaymentAccount(offer.getMakerPaymentAccountId());
+            paymentAccount = user.getPaymentAccount(offer.getMakerPaymentAccountId());
         else
-            paymentAccount = userModel.getPaymentAccount(trade.getTakerPaymentAccountId());
+            paymentAccount = user.getPaymentAccount(trade.getTakerPaymentAccountId());
         return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
     }
 
@@ -226,10 +226,10 @@ public class ProcessModel implements Model, Persistable {
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
                 .setTakeOfferFeeTxId(takeOfferFeeTxId)
                 .setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature))
-                .addAllTakerAcceptedArbitratorNodeAddresses(ProtoHelper.collectionToProto(takerAcceptedArbitratorNodeAddresses))
-                .addAllTakerAcceptedMediatorNodeAddresses(ProtoHelper.collectionToProto(takerAcceptedMediatorNodeAddresses))
+                .addAllTakerAcceptedArbitratorNodeAddresses(PersistableCollectionUtil.collectionToProto(takerAcceptedArbitratorNodeAddresses))
+                .addAllTakerAcceptedMediatorNodeAddresses(PersistableCollectionUtil.collectionToProto(takerAcceptedMediatorNodeAddresses))
                 .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
-                .addAllRawTransactionInputs(ProtoHelper.collectionToProto(rawTransactionInputs))
+                .addAllRawTransactionInputs(PersistableCollectionUtil.collectionToProto(rawTransactionInputs))
                 .setChangeOutputValue(changeOutputValue)
                 .setChangeOutputAddress(changeOutputAddress)
                 .setUseSavingsWallet(useSavingsWallet)
@@ -243,7 +243,7 @@ public class ProcessModel implements Model, Persistable {
     public void removeMailboxMessageAfterProcessing(Trade trade) {
         if (tradeMessage instanceof MailboxMsg &&
                 decryptedMsgWithPubKey != null &&
-                decryptedMsgWithPubKey.msg.equals(tradeMessage)) {
+                decryptedMsgWithPubKey.wireEnvelope.equals(tradeMessage)) {
             log.debug("Remove decryptedMsgWithPubKey from P2P network. decryptedMsgWithPubKey = " + decryptedMsgWithPubKey);
             p2PService.removeEntryFromMailbox(decryptedMsgWithPubKey);
             trade.removeDecryptedMsgWithPubKey(decryptedMsgWithPubKey);

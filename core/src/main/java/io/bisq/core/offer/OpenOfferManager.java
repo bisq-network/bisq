@@ -25,7 +25,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.network.Msg;
+import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.proto.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.AddressEntry;
@@ -42,7 +42,7 @@ import io.bisq.core.trade.TradableList;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.trade.handlers.TransactionResultHandler;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.UserModel;
+import io.bisq.core.user.User;
 import io.bisq.core.util.Validator;
 import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.peers.PeerManager;
@@ -71,7 +71,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DevEnv.STRESS_TEST_MODE ? 4 : 4);
 
     private final KeyRing keyRing;
-    private final UserModel userModel;
+    private final User user;
     private final P2PService p2PService;
     private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
@@ -92,7 +92,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     @Inject
     public OpenOfferManager(KeyRing keyRing,
-                            UserModel userModel,
+                            User user,
                             P2PService p2PService,
                             BtcWalletService walletService,
                             TradeWalletService tradeWalletService,
@@ -104,7 +104,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             PersistenceProtoResolver persistenceProtoResolver,
                             @Named(Storage.STORAGE_DIR) File storageDir) {
         this.keyRing = keyRing;
-        this.userModel = userModel;
+        this.user = user;
         this.p2PService = p2PService;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
@@ -191,9 +191,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         // Handler for incoming offer availability requests
         // We get an encrypted message but don't do the signature check as we don't know the peer yet.
         // A basic sig check is in done also at decryption time
-        Msg msg = decryptedMsgWithPubKey.msg;
-        if (msg instanceof OfferAvailabilityRequest)
-            handleOfferAvailabilityRequest((OfferAvailabilityRequest) msg, peerNodeAddress);
+        NetworkEnvelope wireEnvelope = decryptedMsgWithPubKey.wireEnvelope;
+        if (wireEnvelope instanceof OfferAvailabilityRequest)
+            handleOfferAvailabilityRequest((OfferAvailabilityRequest) wireEnvelope, peerNodeAddress);
     }
 
 
@@ -271,7 +271,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 tradeWalletService,
                 bsqWalletService,
                 offerBookService,
-                userModel);
+                user);
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
                 transaction -> {
@@ -382,7 +382,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         availabilityResult = AvailabilityResult.AVAILABLE;
 
                         // TODO mediators not impl yet
-                        List<NodeAddress> acceptedArbitrators = userModel.getAcceptedArbitratorAddresses();
+                        List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
                             // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
                             // in trade price between the peers. Also here poor connectivity might cause market price API connection

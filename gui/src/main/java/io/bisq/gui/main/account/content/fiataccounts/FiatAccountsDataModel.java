@@ -28,7 +28,7 @@ import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.Preferences;
-import io.bisq.core.user.UserModel;
+import io.bisq.core.user.User;
 import io.bisq.gui.common.model.ActivatableDataModel;
 import io.bisq.gui.util.GUIUtil;
 import javafx.collections.FXCollections;
@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 
 class FiatAccountsDataModel extends ActivatableDataModel {
 
-    final UserModel userModel;
+    final User user;
     private final Preferences preferences;
     private final OpenOfferManager openOfferManager;
     private final TradeManager tradeManager;
@@ -53,9 +53,9 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     private final PersistenceProtoResolver persistenceProtoResolver;
 
     @Inject
-    public FiatAccountsDataModel(UserModel userModel, Preferences preferences, OpenOfferManager openOfferManager,
+    public FiatAccountsDataModel(User user, Preferences preferences, OpenOfferManager openOfferManager,
                                  TradeManager tradeManager, Stage stage, PersistenceProtoResolver persistenceProtoResolver) {
-        this.userModel = userModel;
+        this.user = user;
         this.preferences = preferences;
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
@@ -66,12 +66,12 @@ class FiatAccountsDataModel extends ActivatableDataModel {
 
     @Override
     protected void activate() {
-        userModel.getPaymentAccountsAsObservable().addListener(setChangeListener);
+        user.getPaymentAccountsAsObservable().addListener(setChangeListener);
         fillAndSortPaymentAccounts();
     }
 
     private void fillAndSortPaymentAccounts() {
-        List<PaymentAccount> list = userModel.getPaymentAccounts().stream()
+        List<PaymentAccount> list = user.getPaymentAccounts().stream()
                 .filter(paymentAccount -> !paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
                 .collect(Collectors.toList());
         paymentAccounts.setAll(list);
@@ -80,7 +80,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
 
     @Override
     protected void deactivate() {
-        userModel.getPaymentAccountsAsObservable().removeListener(setChangeListener);
+        user.getPaymentAccountsAsObservable().removeListener(setChangeListener);
     }
 
 
@@ -89,7 +89,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onSaveNewAccount(PaymentAccount paymentAccount) {
-        userModel.addPaymentAccount(paymentAccount);
+        user.addPaymentAccount(paymentAccount);
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
         if (singleTradeCurrency != null) {
@@ -118,22 +118,22 @@ class FiatAccountsDataModel extends ActivatableDataModel {
                 .findAny()
                 .isPresent();
         if (!isPaymentAccountUsed)
-            userModel.removePaymentAccount(paymentAccount);
+            user.removePaymentAccount(paymentAccount);
         return isPaymentAccountUsed;
     }
 
     public void onSelectAccount(PaymentAccount paymentAccount) {
-        userModel.setCurrentPaymentAccount(paymentAccount);
+        user.setCurrentPaymentAccount(paymentAccount);
     }
 
     public void exportAccounts() {
-        ArrayList<PaymentAccount> accounts = new ArrayList<>(userModel.getPaymentAccounts().stream()
+        ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
                 .filter(paymentAccount -> !(paymentAccount instanceof CryptoCurrencyAccount))
                 .collect(Collectors.toList()));
         GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver);
     }
 
     public void importAccounts() {
-        GUIUtil.importAccounts(userModel, accountsFileName, preferences, stage, persistenceProtoResolver);
+        GUIUtil.importAccounts(user, accountsFileName, preferences, stage, persistenceProtoResolver);
     }
 }

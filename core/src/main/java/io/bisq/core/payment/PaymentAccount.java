@@ -19,8 +19,8 @@ package io.bisq.core.payment;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.persistence.Persistable;
-import io.bisq.common.proto.ProtoHelper;
+import io.bisq.common.persistable.PersistableCollectionUtil;
+import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.generated.protobuffer.PB;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @ToString
 @Slf4j
-public abstract class PaymentAccount implements Persistable {
+public abstract class PaymentAccount implements PersistablePayload {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
@@ -121,7 +121,7 @@ public abstract class PaymentAccount implements Persistable {
                 .setCreationDate(creationDate)
                 .setPaymentMethod(paymentMethod.toProtoMessage())
                 .setAccountName(accountName)
-                .addAllTradeCurrencies(ProtoHelper.collectionToProto(tradeCurrencies))
+                .addAllTradeCurrencies(PersistableCollectionUtil.collectionToProto(tradeCurrencies))
                 .setPaymentAccountPayload((PB.PaymentAccountPayload) paymentAccountPayload.toProtoMessage());
         Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((PB.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
         return builder.build();
