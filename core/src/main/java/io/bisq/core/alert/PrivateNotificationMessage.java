@@ -6,10 +6,8 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
 @Value
-@Slf4j
 public class PrivateNotificationMessage implements MailboxMessage {
     private final NodeAddress senderNodeAddress;
     private final PrivateNotificationPayload privateNotificationPayload;
@@ -42,25 +40,5 @@ public class PrivateNotificationMessage implements MailboxMessage {
                 .setUid(uid)
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setPrivateNotificationPayload(privateNotificationPayload.toProtoMessage())).build();
-    }
-
-
-    @Override
-    public NodeAddress getSenderNodeAddress() {
-        return senderNodeAddress;
-    }
-
-    @Override
-    public String getUid() {
-        return uid;
-    }
-
-    @Override
-    public int getMessageVersion() {
-        return messageVersion;
-    }
-
-    public PrivateNotificationPayload getPrivateNotificationPayload() {
-        return privateNotificationPayload;
     }
 }

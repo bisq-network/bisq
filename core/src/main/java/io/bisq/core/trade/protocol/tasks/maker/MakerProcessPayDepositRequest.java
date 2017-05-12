@@ -48,7 +48,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             checkNotNull(payDepositRequest);
             checkTradeId(processModel.getOfferId(), payDepositRequest);
 
-            PaymentAccountPayload paymentAccountPayload = checkNotNull(payDepositRequest.takerPaymentAccountPayload);
+            PaymentAccountPayload paymentAccountPayload = checkNotNull(payDepositRequest.getTakerPaymentAccountPayload());
             final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
             if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
                 failed("Other trader is banned by his trading account data.\n" +
@@ -58,27 +58,27 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             }
             processModel.getTradingPeer().setPaymentAccountPayload(paymentAccountPayload);
 
-            processModel.getTradingPeer().setRawTransactionInputs(checkNotNull(payDepositRequest.rawTransactionInputs));
-            checkArgument(payDepositRequest.rawTransactionInputs.size() > 0);
+            processModel.getTradingPeer().setRawTransactionInputs(checkNotNull(payDepositRequest.getRawTransactionInputs()));
+            checkArgument(payDepositRequest.getRawTransactionInputs().size() > 0);
 
-            processModel.getTradingPeer().setChangeOutputValue(payDepositRequest.changeOutputValue);
-            processModel.getTradingPeer().setChangeOutputAddress(payDepositRequest.changeOutputAddress);
+            processModel.getTradingPeer().setChangeOutputValue(payDepositRequest.getChangeOutputValue());
+            processModel.getTradingPeer().setChangeOutputAddress(payDepositRequest.getChangeOutputAddress());
 
-            processModel.getTradingPeer().setMultiSigPubKey(checkNotNull(payDepositRequest.takerMultiSigPubKey));
-            processModel.getTradingPeer().setPayoutAddressString(nonEmptyStringOf(payDepositRequest.takerPayoutAddressString));
-            processModel.getTradingPeer().setPubKeyRing(checkNotNull(payDepositRequest.takerPubKeyRing));
+            processModel.getTradingPeer().setMultiSigPubKey(checkNotNull(payDepositRequest.getTakerMultiSigPubKey()));
+            processModel.getTradingPeer().setPayoutAddressString(nonEmptyStringOf(payDepositRequest.getTakerPayoutAddressString()));
+            processModel.getTradingPeer().setPubKeyRing(checkNotNull(payDepositRequest.getTakerPubKeyRing()));
 
-            processModel.getTradingPeer().setAccountId(nonEmptyStringOf(payDepositRequest.takerAccountId));
-            trade.setTakerFeeTxId(nonEmptyStringOf(payDepositRequest.takeOfferFeeTxId));
-            processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(payDepositRequest.acceptedArbitratorNodeAddresses));
-            processModel.setTakerAcceptedMediatorNodeAddresses(checkNotNull(payDepositRequest.acceptedMediatorNodeAddresses));
-            if (payDepositRequest.acceptedArbitratorNodeAddresses.isEmpty())
+            processModel.getTradingPeer().setAccountId(nonEmptyStringOf(payDepositRequest.getTakerAccountId()));
+            trade.setTakerFeeTxId(nonEmptyStringOf(payDepositRequest.getTakeOfferFeeTxId()));
+            processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(payDepositRequest.getAcceptedArbitratorNodeAddresses()));
+            processModel.setTakerAcceptedMediatorNodeAddresses(checkNotNull(payDepositRequest.getAcceptedMediatorNodeAddresses()));
+            if (payDepositRequest.getAcceptedArbitratorNodeAddresses().isEmpty())
                 failed("acceptedArbitratorNames must not be empty");
-            trade.applyArbitratorNodeAddress(checkNotNull(payDepositRequest.arbitratorNodeAddress));
-            trade.applyMediatorNodeAddress(checkNotNull(payDepositRequest.mediatorNodeAddress));
+            trade.applyArbitratorNodeAddress(checkNotNull(payDepositRequest.getArbitratorNodeAddress()));
+            trade.applyMediatorNodeAddress(checkNotNull(payDepositRequest.getMediatorNodeAddress()));
 
             try {
-                long takersTradePrice = payDepositRequest.tradePrice;
+                long takersTradePrice = payDepositRequest.getTradePrice();
                 trade.getOffer().checkTradePriceTolerance(takersTradePrice);
                 trade.setTradePrice(takersTradePrice);
             } catch (TradePriceOutOfToleranceException e) {
@@ -87,8 +87,8 @@ public class MakerProcessPayDepositRequest extends TradeTask {
                 failed(e2);
             }
 
-            checkArgument(payDepositRequest.tradeAmount > 0);
-            trade.setTradeAmount(Coin.valueOf(payDepositRequest.tradeAmount));
+            checkArgument(payDepositRequest.getTradeAmount() > 0);
+            trade.setTradeAmount(Coin.valueOf(payDepositRequest.getTradeAmount()));
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 

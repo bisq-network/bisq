@@ -46,7 +46,7 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
             checkTradeId(processModel.getOfferId(), publishDepositTxRequest);
             checkNotNull(publishDepositTxRequest);
 
-            PaymentAccountPayload paymentAccountPayload = checkNotNull(publishDepositTxRequest.makerPaymentAccountPayload);
+            PaymentAccountPayload paymentAccountPayload = checkNotNull(publishDepositTxRequest.getMakerPaymentAccountPayload());
             final PaymentAccountFilter[] appliedPaymentAccountFilter = new PaymentAccountFilter[1];
             if (processModel.isPeersPaymentAccountDataAreBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
                 failed("Other trader is banned by his trading account data.\n" +
@@ -56,14 +56,14 @@ public class TakerProcessPublishDepositTxRequest extends TradeTask {
             }
 
             processModel.getTradingPeer().setPaymentAccountPayload(paymentAccountPayload);
-            processModel.getTradingPeer().setAccountId(nonEmptyStringOf(publishDepositTxRequest.makerAccountId));
-            processModel.getTradingPeer().setMultiSigPubKey(checkNotNull(publishDepositTxRequest.makerMultiSigPubKey));
-            processModel.getTradingPeer().setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.makerContractAsJson));
-            processModel.getTradingPeer().setContractSignature(nonEmptyStringOf(publishDepositTxRequest.makerContractSignature));
-            processModel.getTradingPeer().setPayoutAddressString(nonEmptyStringOf(publishDepositTxRequest.makerPayoutAddressString));
-            processModel.getTradingPeer().setRawTransactionInputs(checkNotNull(publishDepositTxRequest.makerInputs));
-            processModel.setPreparedDepositTx(checkNotNull(publishDepositTxRequest.preparedDepositTx));
-            checkArgument(publishDepositTxRequest.makerInputs.size() > 0);
+            processModel.getTradingPeer().setAccountId(nonEmptyStringOf(publishDepositTxRequest.getMakerAccountId()));
+            processModel.getTradingPeer().setMultiSigPubKey(checkNotNull(publishDepositTxRequest.getMakerMultiSigPubKey()));
+            processModel.getTradingPeer().setContractAsJson(nonEmptyStringOf(publishDepositTxRequest.getMakerContractAsJson()));
+            processModel.getTradingPeer().setContractSignature(nonEmptyStringOf(publishDepositTxRequest.getMakerContractSignature()));
+            processModel.getTradingPeer().setPayoutAddressString(nonEmptyStringOf(publishDepositTxRequest.getMakerPayoutAddressString()));
+            processModel.getTradingPeer().setRawTransactionInputs(checkNotNull(publishDepositTxRequest.getMakerInputs()));
+            processModel.setPreparedDepositTx(checkNotNull(publishDepositTxRequest.getPreparedDepositTx()));
+            checkArgument(publishDepositTxRequest.getMakerInputs().size() > 0);
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

@@ -58,9 +58,9 @@ public abstract class TradeProtocol {
                 log.trace("handleNewMessage: message = " + wireEnvelope.getClass().getSimpleName() + " from " + peersNodeAddress);
                 if (wireEnvelope instanceof TradeMessage) {
                     TradeMessage tradeMessage = (TradeMessage) wireEnvelope;
-                    nonEmptyStringOf(tradeMessage.tradeId);
+                    nonEmptyStringOf(tradeMessage.getTradeId());
 
-                    if (tradeMessage.tradeId.equals(processModel.getOfferId()))
+                    if (tradeMessage.getTradeId().equals(processModel.getOfferId()))
                         doHandleDecryptedMessage(tradeMessage, peersNodeAddress);
                 }
             }

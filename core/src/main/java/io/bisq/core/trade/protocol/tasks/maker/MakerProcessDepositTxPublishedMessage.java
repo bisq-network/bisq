@@ -44,10 +44,10 @@ public class MakerProcessDepositTxPublishedMessage extends TradeTask {
             DepositTxPublishedMessage message = (DepositTxPublishedMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
-            checkArgument(message.depositTx != null);
+            checkArgument(message.getDepositTx() != null);
 
             // To access tx confidence we need to add that tx into our wallet.
-            Transaction txFromSerializedTx = processModel.getBtcWalletService().getTxFromSerializedTx(message.depositTx);
+            Transaction txFromSerializedTx = processModel.getBtcWalletService().getTxFromSerializedTx(message.getDepositTx());
             // update with full tx
             Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(txFromSerializedTx);
             trade.setDepositTx(walletTx);

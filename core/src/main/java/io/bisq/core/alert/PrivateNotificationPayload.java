@@ -23,7 +23,6 @@ import io.bisq.common.network.NetworkPayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
@@ -34,7 +33,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 @EqualsAndHashCode
-@Slf4j
 @Getter
 public final class PrivateNotificationPayload implements NetworkPayload {
     private final String message;

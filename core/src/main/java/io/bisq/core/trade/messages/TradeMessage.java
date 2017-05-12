@@ -20,24 +20,18 @@ package io.bisq.core.trade.messages;
 import io.bisq.common.app.Version;
 import io.bisq.network.p2p.DirectMessage;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
-
-import javax.annotation.concurrent.Immutable;
 
 
 @EqualsAndHashCode
 @ToString
-@Immutable
+@Getter
 public abstract class TradeMessage implements DirectMessage {
-    private final int messageVersion = Version.getP2PMessageVersion();
-    public final String tradeId;
+    protected final int messageVersion = Version.getP2PMessageVersion();
+    protected final String tradeId;
 
     protected TradeMessage(String tradeId) {
         this.tradeId = tradeId;
-    }
-
-    @Override
-    public int getMessageVersion() {
-        return messageVersion;
     }
 }

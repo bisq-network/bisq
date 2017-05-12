@@ -23,15 +23,13 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
-
-import javax.annotation.concurrent.Immutable;
+import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
-@Immutable
+@Value
 public final class FinalizePayoutTxRequest extends TradeMessage implements MailboxMessage {
-
-    public final byte[] sellerSignature;
-    public final String sellerPayoutAddress;
+    private final byte[] sellerSignature;
+    private final String sellerPayoutAddress;
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
@@ -48,35 +46,14 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
     }
 
     @Override
-    public NodeAddress getSenderNodeAddress() {
-        return senderNodeAddress;
-    }
-
-    @Override
-    public String getUid() {
-        return uid;
-    }
-
-    @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         return msgBuilder.setFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest.newBuilder()
                 .setMessageVersion(getMessageVersion())
-                .setTradeId(tradeId)
+                .setTradeId(getTradeId())
                 .setSellerSignature(ByteString.copyFrom(sellerSignature))
                 .setSellerPayoutAddress(sellerPayoutAddress)
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setUid(uid)).build();
-    }
-
-    // sellerSignature not printed for privacy reasons...
-    @Override
-    public String toString() {
-        return "FinalizePayoutTxRequest{" +
-                "sellerSignature not printed for privacy reasons..." +
-                ", sellerPayoutAddress='" + sellerPayoutAddress + '\'' +
-                ", senderNodeAddress=" + senderNodeAddress +
-                ", uid='" + uid + '\'' +
-                "} " + super.toString();
     }
 }

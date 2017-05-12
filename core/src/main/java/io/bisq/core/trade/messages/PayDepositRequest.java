@@ -25,38 +25,36 @@ import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
-import org.bouncycastle.util.encoders.Hex;
+import lombok.Value;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 
 @EqualsAndHashCode(callSuper = true)
-@Immutable
+@Value
 public final class PayDepositRequest extends TradeMessage {
-
-    public final long tradeAmount;
-    public final long tradePrice;
-    public final byte[] takerMultiSigPubKey;
-    public final long txFee;
-    public final long takerFee;
-    public final boolean isCurrencyForTakerFeeBtc;
-    public final List<RawTransactionInput> rawTransactionInputs;
-    public final long changeOutputValue;
+    private final long tradeAmount;
+    private final long tradePrice;
+    private final byte[] takerMultiSigPubKey;
+    private final long txFee;
+    private final long takerFee;
+    private final boolean isCurrencyForTakerFeeBtc;
+    private final List<RawTransactionInput> rawTransactionInputs;
+    private final long changeOutputValue;
     @Nullable
-    public final String changeOutputAddress;
-    public final String takerPayoutAddressString;
-    public final PubKeyRing takerPubKeyRing;
-    public final PaymentAccountPayload takerPaymentAccountPayload;
-    public final String takerAccountId;
-    public final String takeOfferFeeTxId;
-    public final List<NodeAddress> acceptedArbitratorNodeAddresses;
-    public final List<NodeAddress> acceptedMediatorNodeAddresses;
-    public final NodeAddress arbitratorNodeAddress;
-    public final NodeAddress mediatorNodeAddress;
+    private final String changeOutputAddress;
+    private final String takerPayoutAddressString;
+    private final PubKeyRing takerPubKeyRing;
+    private final PaymentAccountPayload takerPaymentAccountPayload;
+    private final String takerAccountId;
+    private final String takeOfferFeeTxId;
+    private final List<NodeAddress> acceptedArbitratorNodeAddresses;
+    private final List<NodeAddress> acceptedMediatorNodeAddresses;
+    private final NodeAddress arbitratorNodeAddress;
+    private final NodeAddress mediatorNodeAddress;
     private final NodeAddress senderNodeAddress;
 
     public PayDepositRequest(NodeAddress senderNodeAddress,
@@ -68,7 +66,7 @@ public final class PayDepositRequest extends TradeMessage {
                              boolean isCurrencyForTakerFeeBtc,
                              List<RawTransactionInput> rawTransactionInputs,
                              long changeOutputValue,
-                             String changeOutputAddress,
+                             @Nullable String changeOutputAddress,
                              byte[] takerMultiSigPubKey,
                              String takerPayoutAddressString,
                              PubKeyRing takerPubKeyRing,
@@ -105,7 +103,7 @@ public final class PayDepositRequest extends TradeMessage {
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         PB.PayDepositRequest.Builder builderForValue = PB.PayDepositRequest.newBuilder()
-                .setTradeId(tradeId)
+                .setTradeId(getTradeId())
                 .setTradeAmount(tradeAmount)
                 .setTradePrice(tradePrice)
                 .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
@@ -113,7 +111,7 @@ public final class PayDepositRequest extends TradeMessage {
                 .setTakerFee(takerFee)
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .addAllRawTransactionInputs(rawTransactionInputs.stream()
-                        .map(rawTransactionInput -> rawTransactionInput.toProtoMessage()).collect(Collectors.toList()))
+                        .map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
                 .setChangeOutputValue(changeOutputValue)
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
@@ -121,39 +119,13 @@ public final class PayDepositRequest extends TradeMessage {
                 .setTakerAccountId(takerAccountId)
                 .setTakerFeeTxId(takeOfferFeeTxId)
                 .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream()
-                        .map(nodeAddress -> nodeAddress.toProtoMessage()).collect(Collectors.toList()))
+                        .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
                 .addAllAcceptedMediatorNodeAddresses(acceptedMediatorNodeAddresses.stream()
-                        .map(nodeAddress -> nodeAddress.toProtoMessage()).collect(Collectors.toList()))
+                        .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
                 .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage());
         Optional.ofNullable(changeOutputAddress).ifPresent(builderForValue::setChangeOutputAddress);
         return msgBuilder.setPayDepositRequest(builderForValue).build();
-    }
-
-    // Use Hex for bytes
-    @Override
-    public String toString() {
-        return "PayDepositRequest{" +
-                "tradeAmount=" + tradeAmount +
-                ", tradePrice=" + tradePrice +
-                ", takerMultiSigPubKey=" + Hex.toHexString(takerMultiSigPubKey) +
-                ", txFee=" + txFee +
-                ", takerFee=" + takerFee +
-                ", isCurrencyForTakerFeeBtc=" + isCurrencyForTakerFeeBtc +
-                ", rawTransactionInputs=" + rawTransactionInputs +
-                ", changeOutputValue=" + changeOutputValue +
-                ", changeOutputAddress='" + changeOutputAddress + '\'' +
-                ", takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
-                ", takerPubKeyRing=" + takerPubKeyRing +
-                ", takerPaymentAccountPayload=" + takerPaymentAccountPayload +
-                ", takerAccountId='" + takerAccountId + '\'' +
-                ", takeOfferFeeTxId='" + takeOfferFeeTxId + '\'' +
-                ", acceptedArbitratorNodeAddresses=" + acceptedArbitratorNodeAddresses +
-                ", acceptedMediatorNodeAddresses=" + acceptedMediatorNodeAddresses +
-                ", arbitratorNodeAddress=" + arbitratorNodeAddress +
-                ", mediatorNodeAddress=" + mediatorNodeAddress +
-                ", senderNodeAddress=" + senderNodeAddress +
-                "} " + super.toString();
     }
 }

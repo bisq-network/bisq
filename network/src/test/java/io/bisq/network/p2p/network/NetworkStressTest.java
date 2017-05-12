@@ -14,6 +14,7 @@ import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import lombok.Value;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
@@ -831,9 +832,9 @@ final class StressTestDirectMessage implements DirectMessage {
     }
 }
 
+@Value
 final class StressTestMailboxMessage implements MailboxMessage {
     private final int messageVersion = Version.getP2PMessageVersion();
-
     private final String uid = UUID.randomUUID().toString();
     private final NodeAddress senderNodeAddress;
     private final String data;
@@ -844,26 +845,7 @@ final class StressTestMailboxMessage implements MailboxMessage {
     }
 
     @Override
-    public int getMessageVersion() {
-        return messageVersion;
-    }
-
-    @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         throw new NotImplementedException();
-    }
-
-    @Override
-    public NodeAddress getSenderNodeAddress() {
-        return senderNodeAddress;
-    }
-
-    @Override
-    public String getUid() {
-        return uid;
-    }
-
-    String getData() {
-        return data;
     }
 }

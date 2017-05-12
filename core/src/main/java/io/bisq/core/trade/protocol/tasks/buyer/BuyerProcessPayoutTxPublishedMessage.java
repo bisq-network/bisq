@@ -44,8 +44,8 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
             PayoutTxPublishedMessage message = (PayoutTxPublishedMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
-            checkArgument(message.payoutTx != null);
-            Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(message.payoutTx);
+            checkArgument(message.getPayoutTx() != null);
+            Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(message.getPayoutTx());
             trade.setPayoutTx(walletTx);
             BtcWalletService.printTx("payoutTx received from peer", walletTx);
 

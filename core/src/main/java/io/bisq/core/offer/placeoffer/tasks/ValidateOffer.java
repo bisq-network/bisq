@@ -142,6 +142,6 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
     }
 
     public static void checkTradeId(String tradeId, TradeMessage tradeMessage) {
-        checkArgument(tradeId.equals(tradeMessage.tradeId));
+        checkArgument(tradeId.equals(tradeMessage.getTradeId()));
     }
 }

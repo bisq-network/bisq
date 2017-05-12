@@ -455,7 +455,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
                         log.debug("Try to decrypt...");
                         DecryptedMessageWithPubKey decryptedMessageWithPubKey = optionalEncryptionService.get().decryptAndVerify(
-                                prefixedSealedAndSignedMessage.sealedAndSigned);
+                                prefixedSealedAndSignedMessage.getSealedAndSigned());
 
                         log.debug("\n\nDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n" +
                                 "Decrypted SealedAndSignedMessage:\ndecryptedMsgWithPubKey={}"
@@ -561,7 +561,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             if (verifyAddressPrefixHash(prefixedSealedAndSignedMessage)) {
                 try {
                     DecryptedMessageWithPubKey decryptedMessageWithPubKey = optionalEncryptionService.get().decryptAndVerify(
-                            prefixedSealedAndSignedMessage.sealedAndSigned);
+                            prefixedSealedAndSignedMessage.getSealedAndSigned());
                     if (decryptedMessageWithPubKey.wireEnvelope instanceof MailboxMessage) {
                         MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.wireEnvelope;
                         NodeAddress senderNodeAddress = mailboxMessage.getSenderNodeAddress();
@@ -906,7 +906,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (networkNode.getNodeAddress() != null) {
             byte[] blurredAddressHash = networkNode.getNodeAddress().getAddressPrefixHash();
             return blurredAddressHash != null &&
-                    Arrays.equals(blurredAddressHash, prefixedSealedAndSignedMessage.addressPrefixHash);
+                    Arrays.equals(blurredAddressHash, prefixedSealedAndSignedMessage.getAddressPrefixHash());
         } else {
             log.debug("myOnionAddress is null at verifyAddressPrefixHash. That is expected at startup.");
             return false;

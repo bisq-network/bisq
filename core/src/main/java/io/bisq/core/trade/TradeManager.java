@@ -157,7 +157,7 @@ public class TradeManager {
                 NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
                 if (wireEnvelope instanceof TradeMessage) {
                     log.trace("Received TradeMessage: " + wireEnvelope);
-                    String tradeId = ((TradeMessage) wireEnvelope).tradeId;
+                    String tradeId = ((TradeMessage) wireEnvelope).getTradeId();
                     Optional<Trade> tradeOptional = trades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
                     // The mailbox message will be removed inside the tasks after they are processed successfully
                     if (tradeOptional.isPresent())
@@ -259,13 +259,13 @@ public class TradeManager {
     private void handleInitialTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {
         log.trace("handleNewMessage: message = " + message.getClass().getSimpleName() + " from " + peerNodeAddress);
         try {
-            Validator.nonEmptyStringOf(message.tradeId);
+            Validator.nonEmptyStringOf(message.getTradeId());
         } catch (Throwable t) {
             log.warn("Invalid requestDepositTxInputsMessage " + message.toString());
             return;
         }
 
-        Optional<OpenOffer> openOfferOptional = openOfferManager.findOpenOffer(message.tradeId);
+        Optional<OpenOffer> openOfferOptional = openOfferManager.findOpenOffer(message.getTradeId());
         if (openOfferOptional.isPresent() && openOfferOptional.get().getState() == OpenOffer.State.AVAILABLE) {
             Offer offer = openOfferOptional.get().getOffer();
             openOfferManager.reserveOpenOffer(openOfferOptional.get());
@@ -275,16 +275,16 @@ public class TradeManager {
             Trade trade;
             if (offer.isBuyOffer())
                 trade = new BuyerAsMakerTrade(offer,
-                        Coin.valueOf(payDepositRequest.txFee),
-                        Coin.valueOf(payDepositRequest.takerFee),
-                        payDepositRequest.isCurrencyForTakerFeeBtc,
+                        Coin.valueOf(payDepositRequest.getTxFee()),
+                        Coin.valueOf(payDepositRequest.getTakerFee()),
+                        payDepositRequest.isCurrencyForTakerFeeBtc(),
                         tradableListStorage,
                         btcWalletService);
             else
                 trade = new SellerAsMakerTrade(offer,
-                        Coin.valueOf(payDepositRequest.txFee),
-                        Coin.valueOf(payDepositRequest.takerFee),
-                        payDepositRequest.isCurrencyForTakerFeeBtc,
+                        Coin.valueOf(payDepositRequest.getTxFee()),
+                        Coin.valueOf(payDepositRequest.getTakerFee()),
+                        payDepositRequest.isCurrencyForTakerFeeBtc(),
                         tradableListStorage,
                         btcWalletService);
 

@@ -23,15 +23,12 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
-import org.bouncycastle.util.encoders.Hex;
-
-import javax.annotation.concurrent.Immutable;
+import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
-@Immutable
+@Value
 public final class DepositTxPublishedMessage extends TradeMessage implements MailboxMessage {
-
-    public final byte[] depositTx;
+    private final byte[] depositTx;
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
@@ -43,33 +40,13 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
     }
 
     @Override
-    public NodeAddress getSenderNodeAddress() {
-        return senderNodeAddress;
-    }
-
-    @Override
-    public String getUid() {
-        return uid;
-    }
-
-    @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         return msgBuilder.setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
                 .setMessageVersion(getMessageVersion())
-                .setTradeId(tradeId)
+                .setTradeId(getTradeId())
                 .setDepositTx(ByteString.copyFrom(depositTx))
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setUid(uid)).build();
-    }
-
-    // Hex
-    @Override
-    public String toString() {
-        return "DepositTxPublishedMessage{" +
-                "depositTx=" + Hex.toHexString(depositTx) +
-                ", senderNodeAddress=" + senderNodeAddress +
-                ", uid='" + uid + '\'' +
-                "} " + super.toString();
     }
 }

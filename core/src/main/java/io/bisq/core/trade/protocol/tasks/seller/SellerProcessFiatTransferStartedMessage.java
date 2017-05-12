@@ -42,8 +42,8 @@ public class SellerProcessFiatTransferStartedMessage extends TradeTask {
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
 
-            processModel.getTradingPeer().setPayoutAddressString(Validator.nonEmptyStringOf(message.buyerPayoutAddress));
-            processModel.getTradingPeer().setSignature(checkNotNull(message.buyerSignature));
+            processModel.getTradingPeer().setPayoutAddressString(Validator.nonEmptyStringOf(message.getBuyerPayoutAddress()));
+            processModel.getTradingPeer().setSignature(checkNotNull(message.getBuyerSignature()));
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

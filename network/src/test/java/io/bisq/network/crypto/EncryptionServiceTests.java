@@ -18,7 +18,6 @@
 package io.bisq.network.crypto;
 
 
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
@@ -26,8 +25,6 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.MailboxMessage;
-import io.bisq.network.p2p.NodeAddress;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -35,7 +32,6 @@ import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +39,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.security.cert.CertificateException;
-import java.util.UUID;
 
 public class EncryptionServiceTests {
     private static final Logger log = LoggerFactory.getLogger(EncryptionServiceTests.class);
@@ -140,34 +135,22 @@ public class EncryptionServiceTests {
         }
     }
 }
-
+/*@Value
 final class TestMessage implements MailboxMessage {
     public String data = "test";
     private final int messageVersion = Version.getP2PMessageVersion();
     private final String uid;
+    private final String senderNodeAddress;
 
     public TestMessage(String data) {
         this.data = data;
         uid = UUID.randomUUID().toString();
+        senderNodeAddress = null;
     }
 
-    @Override
-    public String getUid() {
-        return uid;
-    }
-
-    @Override
-    public NodeAddress getSenderNodeAddress() {
-        return null;
-    }
-
-    @Override
-    public int getMessageVersion() {
-        return messageVersion;
-    }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         throw new NotImplementedException();
     }
-}
+}*/

@@ -28,7 +28,6 @@ import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,22 +41,16 @@ import java.util.stream.Collectors;
 @Value
 @Slf4j
 public final class PublishDepositTxRequest extends TradeMessage implements MailboxMessage {
-    public final PaymentAccountPayload makerPaymentAccountPayload;
-    public final String makerAccountId;
-    public final String makerContractAsJson;
-    public final String makerContractSignature;
-    public final String makerPayoutAddressString;
-    public final byte[] preparedDepositTx;
-    public final List<RawTransactionInput> makerInputs;
-    public final byte[] makerMultiSigPubKey;
+    private final PaymentAccountPayload makerPaymentAccountPayload;
+    private final String makerAccountId;
+    private final String makerContractAsJson;
+    private final String makerContractSignature;
+    private final String makerPayoutAddressString;
+    private final byte[] preparedDepositTx;
+    private final List<RawTransactionInput> makerInputs;
+    private final byte[] makerMultiSigPubKey;
     private final NodeAddress senderNodeAddress;
     private final String uid;
-
-
-    @Override
-    public NodeAddress getSenderNodeAddress() {
-        return null;
-    }
 
     public PublishDepositTxRequest(String tradeId,
                                    PaymentAccountPayload makerPaymentAccountPayload,
@@ -93,7 +86,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
         PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         return msgBuilder.setPublishDepositTxRequest(msgBuilder.getPublishDepositTxRequestBuilder()
                 .setMessageVersion(getMessageVersion())
-                .setTradeId(tradeId)
+                .setTradeId(getTradeId())
                 .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
                 .setMakerAccountId(makerAccountId)
                 .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
@@ -103,20 +96,6 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setUid(uid)
-                .addAllMakerInputs(makerInputs.stream().map(rawTransactionInput -> rawTransactionInput.toProtoMessage()).collect(Collectors.toList()))).build();
-    }
-
-    @Override
-    public String toString() {
-        return "PublishDepositTxRequest{" +
-                "makerPaymentAccountPayload=" + makerPaymentAccountPayload +
-                ", makerAccountId='" + makerAccountId + '\'' +
-                ", makerContractAsJson='" + makerContractAsJson + '\'' +
-                ", makerContractSignature='" + makerContractSignature + '\'' +
-                ", makerPayoutAddressString='" + makerPayoutAddressString + '\'' +
-                ", preparedDepositTx=" + Hex.toHexString(preparedDepositTx) +
-                ", makerInputs=" + makerInputs +
-                ", makerMultiSigPubKey=" + Hex.toHexString(makerMultiSigPubKey) +
-                "} " + super.toString();
+                .addAllMakerInputs(makerInputs.stream().map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))).build();
     }
 }

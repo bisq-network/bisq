@@ -23,17 +23,15 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
-
-import javax.annotation.concurrent.Immutable;
+import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
-@Immutable
+@Value
 public final class FiatTransferStartedMessage extends TradeMessage implements MailboxMessage {
-
-    public final String buyerPayoutAddress;
+    private final String buyerPayoutAddress;
     private final NodeAddress senderNodeAddress;
     private final String uid;
-    public final byte[] buyerSignature;
+    private final byte[] buyerSignature;
 
     public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress,
                                       NodeAddress senderNodeAddress,
@@ -47,35 +45,14 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
     }
 
     @Override
-    public NodeAddress getSenderNodeAddress() {
-        return senderNodeAddress;
-    }
-
-    @Override
-    public String getUid() {
-        return uid;
-    }
-
-    @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         return msgBuilder.setFiatTransferStartedMessage(msgBuilder.getFiatTransferStartedMessageBuilder()
                 .setMessageVersion(getMessageVersion())
-                .setTradeId(tradeId)
+                .setTradeId(getTradeId())
                 .setBuyerSignature(ByteString.copyFrom(buyerSignature))
                 .setBuyerPayoutAddress(buyerPayoutAddress)
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setUid(uid)).build();
-    }
-
-    // buyerSignature not printed for privacy reasons...
-    @Override
-    public String toString() {
-        return "FiatTransferStartedMessage{" +
-                "buyerSignature not printed for privacy reasons..." +
-                ", buyerPayoutAddress='" + buyerPayoutAddress + '\'' +
-                ", senderNodeAddress=" + senderNodeAddress +
-                ", uid='" + uid + '\'' +
-                "} " + super.toString();
     }
 }

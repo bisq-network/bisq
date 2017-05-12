@@ -23,14 +23,12 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
-
-import javax.annotation.concurrent.Immutable;
+import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
-@Immutable
+@Value
 public final class PayoutTxPublishedMessage extends TradeMessage implements MailboxMessage {
-
-    public final byte[] payoutTx;
+    private final byte[] payoutTx;
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
@@ -42,33 +40,13 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
     }
 
     @Override
-    public NodeAddress getSenderNodeAddress() {
-        return senderNodeAddress;
-    }
-
-    @Override
-    public String getUid() {
-        return uid;
-    }
-
-    @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         return msgBuilder.setPayoutTxPublishedMessage(msgBuilder.getPayoutTxPublishedMessageBuilder()
                 .setUid(uid)
                 .setMessageVersion(getMessageVersion())
-                .setTradeId(tradeId)
+                .setTradeId(getTradeId())
                 .setPayoutTx(ByteString.copyFrom(payoutTx))
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())).build();
-    }
-
-    // payoutTx not printed for privacy reasons
-    @Override
-    public String toString() {
-        return "PayoutTxPublishedMessage{" +
-                "payoutTx not printed for privacy reasons..." +
-                ", senderNodeAddress=" + senderNodeAddress +
-                ", uid='" + uid + '\'' +
-                "} " + super.toString();
     }
 }
