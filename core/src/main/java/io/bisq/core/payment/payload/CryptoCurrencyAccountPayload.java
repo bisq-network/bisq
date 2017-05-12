@@ -17,7 +17,6 @@
 
 package io.bisq.core.payment.payload;
 
-import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,8 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private String address;
 

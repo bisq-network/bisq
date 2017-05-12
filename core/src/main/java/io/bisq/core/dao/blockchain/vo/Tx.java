@@ -17,7 +17,6 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.persistable.PersistablePayload;
 import lombok.Data;
 import lombok.experimental.Delegate;
@@ -28,8 +27,6 @@ import java.util.Optional;
 
 @Data
 public class Tx implements PersistablePayload {
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     @Delegate
     private final TxVo txVo;
 

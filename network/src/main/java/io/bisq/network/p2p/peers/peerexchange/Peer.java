@@ -1,6 +1,5 @@
 package io.bisq.network.p2p.peers.peerexchange;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkPayload;
 import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
@@ -14,8 +13,6 @@ import java.util.Date;
 @ToString
 @Slf4j
 public final class Peer implements NetworkPayload, PersistablePayload {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final int MAX_FAILED_CONNECTION_ATTEMPTS = 5;
 
     // Payload

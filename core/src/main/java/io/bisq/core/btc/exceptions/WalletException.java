@@ -17,13 +17,7 @@
 
 package io.bisq.core.btc.exceptions;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class WalletException extends Exception {
-    private static final long serialVersionUID = 4782095361220152803L;
-    private static final Logger log = LoggerFactory.getLogger(WalletException.class);
-
     public WalletException(Throwable t) {
         super(t);
     }

@@ -27,8 +27,6 @@ import javax.annotation.concurrent.Immutable;
 @Value
 @Immutable
 public class TxVo implements PersistablePayload {
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     private final String txVersion = Version.BSQ_TX_VERSION;
     private final String id;
     private final int blockHeight;

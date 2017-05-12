@@ -15,9 +15,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDataRequest, SupportedCapabilitiesMessage {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
     private final int messageVersion = Version.getP2PMessageVersion();
     private final int nonce;
     private final Set<byte[]> excludedKeys;

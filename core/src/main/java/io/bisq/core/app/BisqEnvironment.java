@@ -187,7 +187,7 @@ public class BisqEnvironment extends StandardEnvironment {
         fullDaoNode = commandLineProperties.containsProperty(DaoOptionKeys.FULL_DAO_NODE) ?
                 (String) commandLineProperties.getProperty(DaoOptionKeys.FULL_DAO_NODE) :
                 "";
-        
+
         btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_NODES) :
                 "";
@@ -237,8 +237,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
     private PropertySource<?> defaultProperties() {
         return new PropertiesPropertySource(BISQ_DEFAULT_PROPERTY_SOURCE_NAME, new Properties() {
-            private static final long serialVersionUID = -8478089705207326165L;
-
             {
                 setProperty(CommonOptionKeys.LOG_LEVEL_KEY, logLevel);
 
@@ -264,7 +262,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
                 setProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);
                 setProperty(DaoOptionKeys.FULL_DAO_NODE, fullDaoNode);
-                
+
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);
                 setProperty(BtcOptionKeys.USE_TOR_FOR_BTC, useTorForBtc);
                 setProperty(BtcOptionKeys.WALLET_DIR, btcNetworkDir);

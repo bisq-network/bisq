@@ -18,7 +18,6 @@
 package io.bisq.core.payment.payload;
 
 import com.google.common.base.Joiner;
-import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,8 +31,6 @@ import java.util.ArrayList;
 @Getter
 @Slf4j
 public final class SpecificBanksAccountPayload extends BankAccountPayload {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private ArrayList<String> acceptedBanks;

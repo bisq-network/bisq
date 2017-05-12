@@ -19,7 +19,6 @@ package io.bisq.core.trade.protocol;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.persistable.PersistableCollectionUtil;
@@ -60,9 +59,6 @@ import java.util.List;
 @Getter
 @Slf4j
 public class ProcessModel implements Model, PersistablePayload {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     // Transient/Immutable
     @Getter
     transient private TradeManager tradeManager;

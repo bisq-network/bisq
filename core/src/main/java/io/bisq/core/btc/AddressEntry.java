@@ -19,7 +19,6 @@ package io.bisq.core.btc;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import io.bisq.common.app.Version;
 import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.WalletUtils;
@@ -45,9 +44,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode
 @Slf4j
 public final class AddressEntry implements PersistablePayload {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     public enum Context {
         ARBITRATOR,
         AVAILABLE,

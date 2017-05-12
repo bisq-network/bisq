@@ -12,8 +12,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode
 public final class PrefixedSealedAndSignedMessage implements MailboxMessage, SendersNodeAddressMessage {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final int messageVersion = Version.getP2PMessageVersion();
     private final NodeAddress senderNodeAddress;

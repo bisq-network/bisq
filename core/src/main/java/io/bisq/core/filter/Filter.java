@@ -19,7 +19,6 @@ package io.bisq.core.filter;
 
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.core.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
@@ -47,8 +46,6 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @Slf4j
 public final class Filter implements StoragePayload {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private static final long TTL = TimeUnit.DAYS.toMillis(21);
 
     // Payload

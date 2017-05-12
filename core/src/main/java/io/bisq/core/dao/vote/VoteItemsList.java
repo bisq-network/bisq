@@ -18,11 +18,8 @@
 package io.bisq.core.dao.vote;
 
 import com.google.protobuf.Message;
-import io.bisq.common.app.Version;
 import io.bisq.common.persistable.PersistablePayload;
 import lombok.Getter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,9 +27,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public final class VoteItemsList implements PersistablePayload {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-    private static final Logger log = LoggerFactory.getLogger(VoteItemsList.class);
     private final CompensationRequestVoteItemCollection compensationRequest;
 
     private boolean isMyVote;

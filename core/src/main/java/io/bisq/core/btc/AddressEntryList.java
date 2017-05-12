@@ -19,7 +19,6 @@ package io.bisq.core.btc;
 
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
-import io.bisq.common.app.Version;
 import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.common.storage.Storage;
 import io.bisq.generated.protobuffer.PB;
@@ -41,9 +40,6 @@ import java.util.stream.Stream;
 @ToString
 @Slf4j
 public final class AddressEntryList implements PersistableEnvelope {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     final transient private Storage<AddressEntryList> storage;
     transient private Wallet wallet;
     @Getter

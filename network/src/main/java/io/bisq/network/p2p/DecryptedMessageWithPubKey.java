@@ -17,7 +17,6 @@
 
 package io.bisq.network.p2p;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import lombok.EqualsAndHashCode;
 
@@ -25,9 +24,6 @@ import java.security.PublicKey;
 
 @EqualsAndHashCode
 public final class DecryptedMessageWithPubKey {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     public final NetworkEnvelope wireEnvelope;
     public final PublicKey signaturePubKey;
 

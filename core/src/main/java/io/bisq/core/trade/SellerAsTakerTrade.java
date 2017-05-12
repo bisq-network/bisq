@@ -17,7 +17,6 @@
 
 package io.bisq.core.trade;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
@@ -32,9 +31,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization

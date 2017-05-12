@@ -25,7 +25,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Log;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
@@ -67,9 +66,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * stored in the task model.
  */
 public abstract class Trade implements Tradable, Model {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     private static final Logger log = LoggerFactory.getLogger(Trade.class);
 
     public enum State {

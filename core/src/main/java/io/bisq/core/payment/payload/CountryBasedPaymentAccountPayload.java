@@ -17,7 +17,6 @@
 
 package io.bisq.core.payment.payload;
 
-import io.bisq.common.app.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,8 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPayload {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     protected String countryCode = "";
 

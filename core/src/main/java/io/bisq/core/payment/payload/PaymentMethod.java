@@ -17,7 +17,6 @@
 
 package io.bisq.core.payment.payload;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.locale.Res;
 import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
@@ -41,9 +40,6 @@ import java.util.Optional;
 @ToString
 @Slf4j
 public final class PaymentMethod implements PersistablePayload, Comparable {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     // time in blocks (average 10 min for one block confirmation
     private static final long HOUR = 3600_000;
     private static final long DAY = HOUR * 24;

@@ -19,7 +19,6 @@ package io.bisq.common.locale;
 
 import com.google.protobuf.Message;
 import io.bisq.common.GlobalSettings;
-import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,9 +32,6 @@ import java.util.Optional;
 @ToString
 @Getter
 public final class FiatCurrency extends TradeCurrency {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "★ ";
 

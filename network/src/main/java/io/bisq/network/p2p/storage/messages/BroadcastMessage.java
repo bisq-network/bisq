@@ -4,7 +4,6 @@ import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 
 public abstract class BroadcastMessage implements NetworkEnvelope {
-    //TODO add serialVersionUID also in superclasses as changes would break compatibility
     private final int messageVersion = Version.getP2PMessageVersion();
 
     @Override

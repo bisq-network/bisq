@@ -17,7 +17,6 @@
 
 package io.bisq.core.arbitration.messages;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.generated.protobuffer.PB;
@@ -28,9 +27,6 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @ToString
 public final class PeerOpenedDisputeMessage extends DisputeMessage {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
     public final Dispute dispute;
     private final NodeAddress myNodeAddress;
 

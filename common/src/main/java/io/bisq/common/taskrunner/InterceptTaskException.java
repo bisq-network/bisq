@@ -17,13 +17,7 @@
 
 package io.bisq.common.taskrunner;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class InterceptTaskException extends RuntimeException {
-    private static final Logger log = LoggerFactory.getLogger(InterceptTaskException.class);
-    private static final long serialVersionUID = 5216202440370333534L;
-
     public InterceptTaskException(String message) {
         super(message);
     }

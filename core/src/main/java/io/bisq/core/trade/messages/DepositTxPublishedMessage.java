@@ -18,7 +18,6 @@
 package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMessage;
@@ -31,8 +30,6 @@ import javax.annotation.concurrent.Immutable;
 @EqualsAndHashCode(callSuper = true)
 @Immutable
 public final class DepositTxPublishedMessage extends TradeMessage implements MailboxMessage {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final byte[] depositTx;
     private final NodeAddress senderNodeAddress;

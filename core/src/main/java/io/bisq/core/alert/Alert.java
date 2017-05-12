@@ -42,9 +42,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @ToString
 @Slf4j
 public final class Alert implements StoragePayload {
-    //TODO remove after refact.
-    private static final long serialVersionUID = 1;
-
     private final String message;
     private final String version;
     private final boolean isUpdateInfo;

@@ -17,13 +17,7 @@
 
 package io.bisq.core.btc.exceptions;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class TransactionVerificationException extends Exception {
-    private static final long serialVersionUID = 4447301533313718296L;
-    private static final Logger log = LoggerFactory.getLogger(TransactionVerificationException.class);
-
     public TransactionVerificationException(Throwable t) {
         super(t);
     }

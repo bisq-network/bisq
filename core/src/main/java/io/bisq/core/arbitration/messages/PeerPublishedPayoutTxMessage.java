@@ -18,7 +18,6 @@
 package io.bisq.core.arbitration.messages;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
@@ -26,8 +25,6 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final byte[] transaction;
     public final String tradeId;

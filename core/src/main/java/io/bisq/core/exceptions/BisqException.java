@@ -18,9 +18,6 @@
 package io.bisq.core.exceptions;
 
 public class BisqException extends RuntimeException {
-
-    private static final long serialVersionUID = 556191645860856173L;
-
     public BisqException(Throwable cause) {
         super(cause);
     }

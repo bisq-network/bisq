@@ -1,7 +1,6 @@
 package io.bisq.network.p2p.storage.payload;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +15,6 @@ import java.security.spec.X509EncodedKeySpec;
 
 @Slf4j
 public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     // Payload
     private final byte[] receiversPubKeyBytes;

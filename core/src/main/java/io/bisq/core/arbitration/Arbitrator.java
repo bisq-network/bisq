@@ -18,7 +18,6 @@
 package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
@@ -44,9 +43,6 @@ import java.util.stream.Collectors;
 @ToString
 @Getter
 public final class Arbitrator implements StoragePayload {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
 
     // Payload

@@ -17,7 +17,6 @@
 
 package io.bisq.core.payment.payload;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.locale.BankUtil;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.generated.protobuffer.PB;
@@ -34,8 +33,6 @@ import javax.annotation.Nullable;
 @ToString
 @Slf4j
 public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     @Getter
     protected String holderName;

@@ -17,7 +17,6 @@
 
 package io.bisq.core.dao.vote;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.persistable.PersistablePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,9 +30,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 public final class CompensationRequestVoteItemCollection extends VoteItem implements PersistablePayload {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     @Getter
     private final List<CompensationRequestVoteItem> compensationRequestVoteItems = new ArrayList<>();
 

@@ -17,16 +17,12 @@
 
 package io.bisq.core.payment;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 
 public final class FasterPaymentsAccount extends PaymentAccount {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     public FasterPaymentsAccount() {
         super(PaymentMethod.FASTER_PAYMENTS);
         setSingleTradeCurrency(new FiatCurrency("GBP"));

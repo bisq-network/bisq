@@ -18,7 +18,6 @@
 package io.bisq.core.offer.messages;
 
 import io.bisq.common.app.Capabilities;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
@@ -30,8 +29,6 @@ import java.util.ArrayList;
 // We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
 public final class OfferAvailabilityRequest extends OfferMessage implements SupportedCapabilitiesMessage {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     private final PubKeyRing pubKeyRing;
     public final long takersTradePrice;

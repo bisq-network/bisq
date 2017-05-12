@@ -1,7 +1,6 @@
 package io.bisq.network.p2p.peers.peerexchange.messages;
 
 import io.bisq.common.app.Capabilities;
-import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.SupportedCapabilitiesMessage;
@@ -13,8 +12,6 @@ import java.util.HashSet;
 import java.util.stream.Collectors;
 
 public final class GetPeersResponse extends PeerExchangeMessage implements SupportedCapabilitiesMessage {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final int requestNonce;
     public final HashSet<Peer> reportedPeers;

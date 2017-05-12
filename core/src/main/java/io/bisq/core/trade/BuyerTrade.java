@@ -17,7 +17,6 @@
 
 package io.bisq.core.trade;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.storage.Storage;
@@ -33,9 +32,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class BuyerTrade extends Trade {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     BuyerTrade(Offer offer,
                Coin tradeAmount,
                Coin txFee,

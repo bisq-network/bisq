@@ -17,21 +17,8 @@
 
 package io.bisq.core.btc.exceptions;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class SigningException extends Exception {
-    private static final long serialVersionUID = -4585301671813918976L;
-
-    private static final Logger log = LoggerFactory.getLogger(SigningException.class);
-
     public SigningException(String message) {
         super(message);
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public SigningException(Throwable t) {
-        super(t);
-
     }
 }

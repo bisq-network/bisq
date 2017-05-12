@@ -6,7 +6,6 @@ import com.google.protobuf.Message;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.network.NetworkEnvelope;
@@ -718,8 +717,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     @AllArgsConstructor
     public static final class ByteArray implements PersistablePayload {
         // That object is saved to disc. We need to take care of changes to not break deserialization.
-        private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
         public final byte[] bytes;
 
         @Override
@@ -745,8 +742,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     @EqualsAndHashCode
     public static final class MapValue implements PersistablePayload {
         // That object is saved to disc. We need to take care of changes to not break deserialization.
-        private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
         final public int sequenceNr;
         final public long timeStamp;
 

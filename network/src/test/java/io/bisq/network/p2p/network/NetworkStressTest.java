@@ -808,7 +808,6 @@ public class NetworkStressTest {
 // # MESSAGE CLASSES
 
 final class StressTestDirectMessage implements DirectMessage {
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private final int messageVersion = Version.getP2PMessageVersion();
 
     private final String data;
@@ -833,7 +832,6 @@ final class StressTestDirectMessage implements DirectMessage {
 }
 
 final class StressTestMailboxMessage implements MailboxMessage {
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private final int messageVersion = Version.getP2PMessageVersion();
 
     private final String uid = UUID.randomUUID().toString();

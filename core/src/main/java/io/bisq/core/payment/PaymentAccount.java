@@ -17,7 +17,6 @@
 
 package io.bisq.core.payment;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.persistable.PersistableCollectionUtil;
 import io.bisq.common.persistable.PersistablePayload;
@@ -38,9 +37,6 @@ import java.util.stream.Collectors;
 @ToString
 @Slf4j
 public abstract class PaymentAccount implements PersistablePayload {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     @Getter
     protected final String id;
 

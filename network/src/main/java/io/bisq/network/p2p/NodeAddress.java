@@ -1,6 +1,5 @@
 package io.bisq.network.p2p;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Hash;
 import io.bisq.common.network.NetworkPayload;
 import io.bisq.common.persistable.PersistablePayload;
@@ -14,8 +13,6 @@ import java.util.regex.Pattern;
 @EqualsAndHashCode
 @Slf4j
 public final class NodeAddress implements PersistablePayload, NetworkPayload {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     // Payload
     @Getter

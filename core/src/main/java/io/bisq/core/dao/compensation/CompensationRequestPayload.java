@@ -54,8 +54,6 @@ import java.util.concurrent.TimeUnit;
 @Setter
 // TODO There will be another object for PersistableEnvelope
 public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload, PersistableEnvelope {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
     // Payload

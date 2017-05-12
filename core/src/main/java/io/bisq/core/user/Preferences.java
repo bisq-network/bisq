@@ -3,7 +3,6 @@ package io.bisq.core.user;
 import com.google.protobuf.Message;
 import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.DevEnv;
-import io.bisq.common.app.Version;
 import io.bisq.common.locale.*;
 import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.common.storage.Storage;
@@ -33,9 +32,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public final class Preferences implements PersistableEnvelope {
-
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     // Deactivate mBit for now as most screens are not supporting it yet
     @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")

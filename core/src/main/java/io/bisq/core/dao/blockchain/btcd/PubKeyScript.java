@@ -18,8 +18,6 @@
 package io.bisq.core.dao.blockchain.btcd;
 
 import com.google.common.collect.ImmutableList;
-import io.bisq.common.app.Version;
-import io.bisq.common.util.JsonExclude;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 
@@ -30,9 +28,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Immutable
 public class PubKeyScript implements Serializable {
-    @JsonExclude
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
     private final int reqSigs;
     private final ScriptTypes type;
     private final ImmutableList<String> addresses;

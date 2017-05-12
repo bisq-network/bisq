@@ -18,7 +18,6 @@
 package io.bisq.core.trade.protocol;
 
 import com.google.protobuf.Message;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.core.btc.data.RawTransactionInput;
@@ -35,9 +34,6 @@ import java.util.List;
 @Getter
 @Setter
 public final class TradingPeer implements PersistablePayload {
-    // That object is saved to disc. We need to take care of changes to not break deserialization.
-    private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
-
     private String accountId;
     private PaymentAccountPayload paymentAccountPayload;
     // private Coin payoutAmount;

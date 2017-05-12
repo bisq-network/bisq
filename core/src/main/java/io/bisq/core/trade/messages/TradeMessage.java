@@ -29,8 +29,6 @@ import javax.annotation.concurrent.Immutable;
 @ToString
 @Immutable
 public abstract class TradeMessage implements DirectMessage {
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
-
     private final int messageVersion = Version.getP2PMessageVersion();
     public final String tradeId;
 

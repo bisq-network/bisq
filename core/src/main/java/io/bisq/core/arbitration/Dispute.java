@@ -18,7 +18,6 @@
 package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.network.NetworkPayload;
 import io.bisq.common.storage.Storage;
@@ -44,8 +43,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @EqualsAndHashCode
 public final class Dispute implements NetworkPayload {
-    // That object is sent over the wire, so we need to take care of version compatibility.
-    private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Fields
