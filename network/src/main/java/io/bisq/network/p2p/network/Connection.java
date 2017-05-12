@@ -20,7 +20,7 @@ import io.bisq.network.p2p.peers.keepalive.messages.KeepAliveMsg;
 import io.bisq.network.p2p.peers.keepalive.messages.Ping;
 import io.bisq.network.p2p.peers.keepalive.messages.Pong;
 import io.bisq.network.p2p.storage.messages.AddDataMsg;
-import io.bisq.network.p2p.storage.messages.RefreshTTLMsg;
+import io.bisq.network.p2p.storage.messages.RefreshOfferMsg;
 import io.bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
 import javafx.beans.property.ObjectProperty;
@@ -201,7 +201,7 @@ public class Connection implements MessageListener {
                     envelope = msg.toProtoMsg();
                     log.debug("Sending message: {}", Utilities.toTruncatedString(envelope.toString(), 10000));
 
-                    if (msg instanceof Ping | msg instanceof RefreshTTLMsg) {
+                    if (msg instanceof Ping | msg instanceof RefreshOfferMsg) {
                         // pings and offer refresh msg we dont want to log in production
                         log.trace("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
                                         "Sending direct message to peer" +
@@ -796,8 +796,8 @@ public class Connection implements MessageListener {
 
                         int size = envelope.getSerializedSize();
 
-                        if (msg instanceof Pong || msg instanceof RefreshTTLMsg) {
-                            // We only log Pong and RefreshTTLMessage when in dev environment (trace)
+                        if (msg instanceof Pong || msg instanceof RefreshOfferMsg) {
+                            // We only log Pong and RefreshOfferMsg when in dev environment (trace)
                             log.trace("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +
                                             "New data arrived at inputHandler of connection {}.\n" +
                                             "Received object (truncated)={} / size={}"
@@ -806,7 +806,7 @@ public class Connection implements MessageListener {
                                     Utilities.toTruncatedString(envelope.toString()),
                                     size);
                         } else {
-                            // We want to log all incoming network_messages (except Pong and RefreshTTLMessage)
+                            // We want to log all incoming network_messages (except Pong and RefreshOfferMsg)
                             // so we log before the data type checks
                             //log.info("size={}; object={}", size, Utilities.toTruncatedString(rawInputObject.toString(), 100));
                             log.debug("\n\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n" +

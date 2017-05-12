@@ -175,8 +175,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                     remove(((RemoveDataMsg) msg).protectedStorageEntry, peersNodeAddress, false);
                 } else if (msg instanceof RemoveMailboxDataMsg) {
                     removeMailboxData(((RemoveMailboxDataMsg) msg).protectedMailboxStorageEntry, peersNodeAddress, false);
-                } else if (msg instanceof RefreshTTLMsg) {
-                    refreshTTL((RefreshTTLMsg) msg, peersNodeAddress, false);
+                } else if (msg instanceof RefreshOfferMsg) {
+                    refreshTTL((RefreshOfferMsg) msg, peersNodeAddress, false);
                 }
             });
         }
@@ -304,7 +304,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         return result;
     }
 
-    public boolean refreshTTL(RefreshTTLMsg refreshTTLMessage, @Nullable NodeAddress sender, boolean isDataOwner) {
+    public boolean refreshTTL(RefreshOfferMsg refreshTTLMessage, @Nullable NodeAddress sender, boolean isDataOwner) {
         Log.traceCall();
 
         byte[] hashOfDataAndSeqNr = refreshTTLMessage.hashOfDataAndSeqNr;
@@ -421,7 +421,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         return new ProtectedStorageEntry(storagePayload, ownerStoragePubKey.getPublic(), sequenceNumber, signature);
     }
 
-    public RefreshTTLMsg getRefreshTTLMessage(StoragePayload storagePayload, KeyPair ownerStoragePubKey)
+    public RefreshOfferMsg getRefreshTTLMessage(StoragePayload storagePayload, KeyPair ownerStoragePubKey)
             throws CryptoException {
         ByteArray hashOfPayload = getHashAsByteArray(storagePayload);
         int sequenceNumber;
@@ -432,7 +432,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
         byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(storagePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
-        return new RefreshTTLMsg(hashOfDataAndSeqNr, signature, hashOfPayload.bytes, sequenceNumber);
+        return new RefreshOfferMsg(hashOfDataAndSeqNr, signature, hashOfPayload.bytes, sequenceNumber);
     }
 
     public ProtectedMailboxStorageEntry getMailboxDataWithSignedSeqNr(MailboxStoragePayload expirableMailboxStoragePayload,

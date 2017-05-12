@@ -8,7 +8,7 @@ import io.bisq.generated.protobuffer.PB;
 
 import java.util.Arrays;
 
-public final class RefreshTTLMsg extends BroadcastMsg {
+public final class RefreshOfferMsg extends BroadcastMsg {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -19,10 +19,10 @@ public final class RefreshTTLMsg extends BroadcastMsg {
     public final byte[] hashOfPayload;          // 32 bytes
     public final int sequenceNumber;            // 4 bytes
 
-    public RefreshTTLMsg(byte[] hashOfDataAndSeqNr,
-                         byte[] signature,
-                         byte[] hashOfPayload,
-                         int sequenceNumber) {
+    public RefreshOfferMsg(byte[] hashOfDataAndSeqNr,
+                           byte[] signature,
+                           byte[] hashOfPayload,
+                           int sequenceNumber) {
         this.hashOfDataAndSeqNr = hashOfDataAndSeqNr;
         this.signature = signature;
         this.hashOfPayload = hashOfPayload;
@@ -31,7 +31,7 @@ public final class RefreshTTLMsg extends BroadcastMsg {
 
     @Override
     public String toString() {
-        return "RefreshTTLMessage{" +
+        return "RefreshOfferMsg{" +
                 ", hashOfDataAndSeqNr.hashCode()=" + Arrays.hashCode(hashOfDataAndSeqNr) +
                 ", hashOfPayload.hashCode()=" + Arrays.hashCode(hashOfPayload) +
                 ", sequenceNumber=" + sequenceNumber +
@@ -42,7 +42,7 @@ public final class RefreshTTLMsg extends BroadcastMsg {
     @Override
     public PB.Msg toProtoMsg() {
         PB.Msg.Builder builder = Msg.getMsgBuilder();
-        return builder.setRefreshTtlMessage(builder.getRefreshTtlMessageBuilder()
+        return builder.setRefreshOfferMsg(builder.getRefreshOfferMsgBuilder()
                 .setHashOfDataAndSeqNr(ByteString.copyFrom(hashOfDataAndSeqNr))
                 .setHashOfPayload(ByteString.copyFrom(hashOfPayload))
                 .setSequenceNumber(sequenceNumber)
@@ -51,6 +51,6 @@ public final class RefreshTTLMsg extends BroadcastMsg {
 
     @Override
     public Message toProtoMessage() {
-        return toProtoMsg().getPreliminaryGetDataRequest();
+        return toProtoMsg().getRefreshOfferMsg();
     }
 }

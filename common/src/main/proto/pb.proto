@@ -27,7 +27,7 @@ message Msg {
        
         OfferAvailabilityRequest offer_availability_request = 9;
         OfferAvailabilityResponse offer_availability_response = 10;
-        RefreshTTLMessage refresh_ttl_message = 11;
+        RefreshOfferMsg refresh_offer_msg = 11;
          
         AddDataMessage add_data_message = 12;
         RemoveDataMessage remove_data_message = 13;
@@ -131,7 +131,7 @@ message OfferAvailabilityResponse {
     repeated int32 supported_capabilities = 4;
 }
 
-message RefreshTTLMessage {
+message RefreshOfferMsg {
     bytes hash_of_data_and_seq_nr = 1; // 32 bytes
     bytes signature = 2; // 46 bytes
     bytes hash_of_payload = 3; // 32 bytes

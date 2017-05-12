@@ -38,7 +38,7 @@ import io.bisq.network.p2p.peers.peerexchange.Peer;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersResponse;
 import io.bisq.network.p2p.storage.messages.AddDataMsg;
-import io.bisq.network.p2p.storage.messages.RefreshTTLMsg;
+import io.bisq.network.p2p.storage.messages.RefreshOfferMsg;
 import io.bisq.network.p2p.storage.messages.RemoveDataMsg;
 import io.bisq.network.p2p.storage.messages.RemoveMailboxDataMsg;
 import io.bisq.network.p2p.storage.payload.MailboxStoragePayload;
@@ -86,7 +86,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
             return Optional.empty();
         }
         if (msg.getMessageCase() != PING && msg.getMessageCase() != PONG &&
-                msg.getMessageCase() != REFRESH_TTL_MESSAGE) {
+                msg.getMessageCase() != REFRESH_OFFER_MSG) {
             log.debug("Convert protobuffer msg: {}, {}", msg.getMessageCase(), msg.toString());
         } else {
             log.debug("Convert protobuffer msg: {}", msg.getMessageCase());
@@ -101,7 +101,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
             case PONG:
                 result = getPong(msg);
                 break;
-            case REFRESH_TTL_MESSAGE:
+            case REFRESH_OFFER_MSG:
                 result = getRefreshTTLMessage(msg);
                 break;
             case CLOSE_CONNECTION_MESSAGE:
@@ -436,12 +436,12 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static Msg getRefreshTTLMessage(PB.Msg envelope) {
-        Msg result;
-        PB.RefreshTTLMessage msg = envelope.getRefreshTtlMessage();
-        result = new RefreshTTLMsg(msg.getHashOfDataAndSeqNr().toByteArray(),
-                msg.getSignature().toByteArray(), msg.getHashOfPayload().toByteArray(), msg.getSequenceNumber());
-        return result;
+    private static Msg getRefreshTTLMessage(PB.Msg msg) {
+        PB.RefreshOfferMsg refreshOfferMsg = msg.getRefreshOfferMsg();
+        return new RefreshOfferMsg(refreshOfferMsg.getHashOfDataAndSeqNr().toByteArray(),
+                refreshOfferMsg.getSignature().toByteArray(),
+                refreshOfferMsg.getHashOfPayload().toByteArray(),
+                refreshOfferMsg.getSequenceNumber());
     }
 
     @NotNull
@@ -511,7 +511,6 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-
     private static PrivateNotificationPayload getPrivateNotification(PB.PrivateNotificationPayload privateNotification) {
         return new PrivateNotificationPayload(privateNotification.getMessage());
     }
@@ -519,7 +518,6 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Handle by PaymentAccountPayload.MessageCase
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
