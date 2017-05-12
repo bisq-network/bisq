@@ -48,7 +48,7 @@ public final class DisputeResultMessage extends DisputeMessage {
         return msgBuilder.setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
                 .setDisputeResult(disputeResult.toProtoMessage())
                 .setMyNodeAddress(myNodeAddress.toProtoMessage())
-                .setUid(getUID()))
+                .setUid(getUid()))
                 .build();
     }
 }

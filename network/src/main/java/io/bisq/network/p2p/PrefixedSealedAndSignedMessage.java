@@ -34,7 +34,7 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
     }
 
     @Override
-    public String getUID() {
+    public String getUid() {
         return uid;
     }
 

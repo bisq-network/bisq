@@ -122,7 +122,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
     }
 
     @Override
-    public String getUID() {
+    public String getUid() {
         return null;
     }
 }

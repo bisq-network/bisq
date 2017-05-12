@@ -53,7 +53,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
     }
 
     @Override
-    public String getUID() {
+    public String getUid() {
         return uid;
     }
 

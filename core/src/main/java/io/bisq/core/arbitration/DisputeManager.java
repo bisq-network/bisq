@@ -538,7 +538,7 @@ public class DisputeManager {
         Log.traceCall("disputeCommunicationMessage " + disputeCommunicationMessage);
         final String tradeId = disputeCommunicationMessage.getTradeId();
         Optional<Dispute> disputeOptional = findDispute(tradeId, disputeCommunicationMessage.getTraderId());
-        final String uid = disputeCommunicationMessage.getUID();
+        final String uid = disputeCommunicationMessage.getUid();
         if (disputeOptional.isPresent()) {
             cleanupRetryMap(uid);
 
@@ -564,7 +564,7 @@ public class DisputeManager {
         if (!isArbitrator(disputeResult)) {
             final String tradeId = disputeResult.tradeId;
             Optional<Dispute> disputeOptional = findDispute(tradeId, disputeResult.traderId);
-            final String uid = disputeResultMessage.getUID();
+            final String uid = disputeResultMessage.getUid();
             if (disputeOptional.isPresent()) {
                 cleanupRetryMap(uid);
 
@@ -704,7 +704,7 @@ public class DisputeManager {
 
     // losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
     private void onDisputedPayoutTxMessage(PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
-        final String uid = peerPublishedPayoutTxMessage.getUID();
+        final String uid = peerPublishedPayoutTxMessage.getUid();
         final String tradeId = peerPublishedPayoutTxMessage.tradeId;
         Optional<Dispute> disputeOptional = findOwnDispute(tradeId);
         if (disputeOptional.isPresent()) {

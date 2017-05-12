@@ -47,6 +47,6 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
         return msgBuilder.setPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage.newBuilder()
                 .setDispute(dispute.toProtoMessage())
                 .setMyNodeAddress(myNodeAddress.toProtoMessage())
-                .setUid(getUID())).build();
+                .setUid(getUid())).build();
     }
 }

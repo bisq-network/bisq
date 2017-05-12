@@ -38,7 +38,7 @@ public abstract class DisputeMessage implements MailboxMessage {
     }
 
     @Override
-    public String getUID() {
+    public String getUid() {
         return uid;
     }
 }

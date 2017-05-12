@@ -47,7 +47,7 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
     }
 
     @Override
-    public String getUID() {
+    public String getUid() {
         return uid;
     }
 

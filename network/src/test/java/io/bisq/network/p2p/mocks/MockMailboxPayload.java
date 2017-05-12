@@ -33,7 +33,7 @@ public final class MockMailboxPayload implements MailboxMessage, ExpirablePayloa
     }
 
     @Override
-    public String getUID() {
+    public String getUid() {
         return uid;
     }
 

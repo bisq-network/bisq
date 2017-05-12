@@ -567,7 +567,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         NodeAddress senderNodeAddress = mailboxMessage.getSenderNodeAddress();
                         checkNotNull(senderNodeAddress, "senderAddress must not be null for mailbox network_messages");
 
-                        mailboxMap.put(mailboxMessage.getUID(), protectedMailboxStorageEntry);
+                        mailboxMap.put(mailboxMessage.getUid(), protectedMailboxStorageEntry);
                         log.trace("Decryption of SealedAndSignedMessage succeeded. senderAddress="
                                 + senderNodeAddress + " / my address=" + getAddress());
                         decryptedMailboxListeners.stream().forEach(
@@ -739,7 +739,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
             MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.wireEnvelope;
-            String uid = mailboxMessage.getUID();
+            String uid = mailboxMessage.getUid();
             if (mailboxMap.containsKey(uid)) {
                 ProtectedMailboxStorageEntry mailboxData = mailboxMap.get(uid);
                 if (mailboxData != null && mailboxData.getStoragePayload() instanceof MailboxStoragePayload) {

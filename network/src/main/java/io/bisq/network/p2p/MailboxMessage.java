@@ -21,5 +21,5 @@ package io.bisq.network.p2p;
 public interface MailboxMessage extends DirectMessage {
     NodeAddress getSenderNodeAddress();
 
-    String getUID();
+    String getUid();
 }

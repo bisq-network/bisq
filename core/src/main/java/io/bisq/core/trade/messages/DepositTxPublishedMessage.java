@@ -48,7 +48,7 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
     }
 
     @Override
-    public String getUID() {
+    public String getUid() {
         return uid;
     }
 

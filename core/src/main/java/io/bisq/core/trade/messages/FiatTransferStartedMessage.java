@@ -52,7 +52,7 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
     }
 
     @Override
-    public String getUID() {
+    public String getUid() {
         return uid;
     }
 

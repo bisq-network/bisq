@@ -152,7 +152,7 @@ final class TestMessage implements MailboxMessage {
     }
 
     @Override
-    public String getUID() {
+    public String getUid() {
         return uid;
     }
 
