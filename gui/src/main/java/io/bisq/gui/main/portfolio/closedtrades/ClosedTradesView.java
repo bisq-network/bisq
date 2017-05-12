@@ -139,8 +139,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
                 NodeAddress tradingPeerNodeAddress1 = ((Trade) o1.getTradable()).getTradingPeerNodeAddress();
                 NodeAddress tradingPeerNodeAddress2 = ((Trade) o2.getTradable()).getTradingPeerNodeAddress();
-                String address1 = tradingPeerNodeAddress1 != null ? tradingPeerNodeAddress1.hostName : "";
-                String address2 = tradingPeerNodeAddress2 != null ? tradingPeerNodeAddress2.hostName : "";
+                String address1 = tradingPeerNodeAddress1 != null ? tradingPeerNodeAddress1.getHostName() : "";
+                String address2 = tradingPeerNodeAddress2 != null ? tradingPeerNodeAddress2.getHostName() : "";
                 return address1 != null && address2 != null ? address1.compareTo(address2) : 0;
             } else
                 return 0;
@@ -309,7 +309,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
                                     int numPastTrades = model.getNumPastTrades(newItem.getTradable());
                                     Trade trade = (Trade) newItem.getTradable();
-                                    String hostName = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress().hostName : "";
+                                    String hostName = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress().getHostName() : "";
                                     Node peerInfoIcon = new PeerInfoIcon(hostName,
                                             Res.get("portfolio.closed.peerInfoIcon", hostName),
                                             numPastTrades,

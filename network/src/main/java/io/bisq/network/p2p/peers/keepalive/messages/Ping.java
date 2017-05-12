@@ -2,11 +2,12 @@ package io.bisq.network.p2p.peers.keepalive.messages;
 
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
+import lombok.Value;
 
+@Value
 public final class Ping extends KeepAliveMessage {
-
-    public final int nonce;
-    public final int lastRoundTripTime;
+    private final int nonce;
+    private final int lastRoundTripTime;
 
     public Ping(int nonce, int lastRoundTripTime) {
         this.nonce = nonce;
@@ -19,12 +20,5 @@ public final class Ping extends KeepAliveMessage {
         return msgBuilder.setPing(msgBuilder.getPingBuilder()
                 .setNonce(nonce)
                 .setLastRoundTripTime(lastRoundTripTime)).build();
-    }
-
-    @Override
-    public String toString() {
-        return "Ping{" +
-                ", nonce=" + nonce +
-                "} " + super.toString();
     }
 }

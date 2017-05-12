@@ -275,7 +275,7 @@ public class NetworkStressTest {
         // Create and start the seed node.
         seedNode = new DummySeedNode(testDataDir.toString());
         final NodeAddress seedNodeAddress = newSeedNodeAddress();
-        useLocalhostForP2P = seedNodeAddress.hostName.equals("localhost");
+        useLocalhostForP2P = seedNodeAddress.getHostName().equals("localhost");
         final Set<NodeAddress> seedNodes = new HashSet<>(1);
         seedNodes.add(seedNodeAddress);  // the only seed node in tests
         seedNode.createAndStartP2PService(seedNodeAddress, DummySeedNode.MAX_CONNECTIONS_DEFAULT, useLocalhostForP2P,
@@ -558,9 +558,9 @@ public class NetworkStressTest {
 
             // Make the peer ready for receiving direct network_messages.
             srcPeer.addDecryptedDirectMessageListener((decryptedDirectMessageListener, peerNodeAddress) -> {
-                if (!(decryptedDirectMessageListener.wireEnvelope instanceof StressTestDirectMessage))
+                if (!(decryptedDirectMessageListener.getWireEnvelope() instanceof StressTestDirectMessage))
                     return;
-                StressTestDirectMessage directMessage = (StressTestDirectMessage) (decryptedDirectMessageListener.wireEnvelope);
+                StressTestDirectMessage directMessage = (StressTestDirectMessage) (decryptedDirectMessageListener.getWireEnvelope());
                 if ((directMessage.getData().equals("test/" + srcPeerAddress)))
                     receivedDirectLatch.countDown();
             });
@@ -742,9 +742,9 @@ public class NetworkStressTest {
     private void addMailboxListeners(P2PService peer, CountDownLatch receivedMailboxLatch) {
         class MailboxMessageListener implements DecryptedDirectMessageListener, DecryptedMailboxListener {
             private void handle(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-                if (!(decryptedMessageWithPubKey.wireEnvelope instanceof StressTestMailboxMessage))
+                if (!(decryptedMessageWithPubKey.getWireEnvelope() instanceof StressTestMailboxMessage))
                     return;
-                StressTestMailboxMessage msg = (StressTestMailboxMessage) (decryptedMessageWithPubKey.wireEnvelope);
+                StressTestMailboxMessage msg = (StressTestMailboxMessage) (decryptedMessageWithPubKey.getWireEnvelope());
                 if ((msg.getData().equals("test/" + peer.getAddress())))
                     countDownAndPrint(receivedMailboxLatch, 'm');
             }

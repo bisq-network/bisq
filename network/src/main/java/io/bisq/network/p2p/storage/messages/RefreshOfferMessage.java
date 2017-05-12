@@ -4,17 +4,14 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
+import lombok.Value;
 
-import java.util.Arrays;
-
+@Value
 public final class RefreshOfferMessage extends BroadcastMessage {
-
-    // Serialized data has 400 bytes instead of 114 bytes of the raw content ;-(
-    // When using Protobuffer that should bets much smaller
-    public final byte[] hashOfDataAndSeqNr;     // 32 bytes
-    public final byte[] signature;              // 46 bytes
-    public final byte[] hashOfPayload;          // 32 bytes
-    public final int sequenceNumber;            // 4 bytes
+    private final byte[] hashOfDataAndSeqNr;     // 32 bytes
+    private final byte[] signature;              // 46 bytes
+    private final byte[] hashOfPayload;          // 32 bytes
+    private final int sequenceNumber;            // 4 bytes
 
     public RefreshOfferMessage(byte[] hashOfDataAndSeqNr,
                                byte[] signature,
@@ -24,16 +21,6 @@ public final class RefreshOfferMessage extends BroadcastMessage {
         this.signature = signature;
         this.hashOfPayload = hashOfPayload;
         this.sequenceNumber = sequenceNumber;
-    }
-
-    @Override
-    public String toString() {
-        return "RefreshOfferMsg{" +
-                ", hashOfDataAndSeqNr.hashCode()=" + Arrays.hashCode(hashOfDataAndSeqNr) +
-                ", hashOfPayload.hashCode()=" + Arrays.hashCode(hashOfPayload) +
-                ", sequenceNumber=" + sequenceNumber +
-                ", signature.hashCode()=" + Arrays.hashCode(signature) +
-                '}';
     }
 
     @Override

@@ -155,14 +155,14 @@ class PeerExchangeHandler implements MessageListener {
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
 
                 // Check if the response is for our request
-                if (getPeersResponse.requestNonce == nonce) {
-                    peerManager.addToReportedPeers(getPeersResponse.reportedPeers, connection);
+                if (getPeersResponse.getRequestNonce() == nonce) {
+                    peerManager.addToReportedPeers(getPeersResponse.getReportedPeers(), connection);
                     cleanup();
                     listener.onComplete();
                 } else {
                     log.warn("Nonce not matching. That should never happen.\n\t" +
                                     "We drop that message. nonce={} / requestNonce={}",
-                            nonce, getPeersResponse.requestNonce);
+                            nonce, getPeersResponse.getRequestNonce());
                 }
             } else {
                 log.trace("We have stopped that handler already. We ignore that onMessage call.");

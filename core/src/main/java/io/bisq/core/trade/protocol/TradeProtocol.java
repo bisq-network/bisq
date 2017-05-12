@@ -52,9 +52,9 @@ public abstract class TradeProtocol {
         decryptedDirectMessageListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
             // We check the sig only as soon we have stored the peers pubKeyRing.
             PubKeyRing tradingPeerPubKeyRing = processModel.getTradingPeer().getPubKeyRing();
-            PublicKey signaturePubKey = decryptedMessageWithPubKey.signaturePubKey;
+            PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
             if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
-                NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
+                NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
                 log.trace("handleNewMessage: message = " + wireEnvelope.getClass().getSimpleName() + " from " + peersNodeAddress);
                 if (wireEnvelope instanceof TradeMessage) {
                     TradeMessage tradeMessage = (TradeMessage) wireEnvelope;
@@ -92,10 +92,10 @@ public abstract class TradeProtocol {
     }
 
     public void applyMailboxMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
-        log.debug("applyMailboxMessage " + decryptedMessageWithPubKey.wireEnvelope);
-        if (decryptedMessageWithPubKey.signaturePubKey.equals(processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey())) {
+        log.debug("applyMailboxMessage " + decryptedMessageWithPubKey.getWireEnvelope());
+        if (decryptedMessageWithPubKey.getSignaturePubKey().equals(processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey())) {
             processModel.setDecryptedMessageWithPubKey(decryptedMessageWithPubKey);
-            doApplyMailboxMessage(decryptedMessageWithPubKey.wireEnvelope, trade);
+            doApplyMailboxMessage(decryptedMessageWithPubKey.getWireEnvelope(), trade);
         } else {
             log.error("SignaturePubKey in message does not match the SignaturePubKey we have stored to that trading peer.");
         }

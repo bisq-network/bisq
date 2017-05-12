@@ -13,11 +13,13 @@ public interface NetworkEnvelope extends Envelope {
         return PB.NetworkEnvelope.newBuilder().setMessageVersion(Version.getP2PMessageVersion());
     }
 
+    default int getMessageVersion() {
+        return Version.getP2PMessageVersion();
+    }
+
     default Message toProtoMessage() {
         return toProtoNetworkEnvelope();
     }
-
-    int getMessageVersion();
 
     PB.NetworkEnvelope toProtoNetworkEnvelope();
 }

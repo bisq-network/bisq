@@ -127,7 +127,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         paymentMethodColumn.setComparator((o1, o2) -> o1.getTrade().getOffer().getPaymentMethod().getId().compareTo(o2.getTrade().getOffer().getPaymentMethod().getId()));
         avatarColumn.setComparator((o1, o2) -> {
             if (o1.getTrade().getTradingPeerNodeAddress() != null && o2.getTrade().getTradingPeerNodeAddress() != null)
-                return o1.getTrade().getTradingPeerNodeAddress().hostName.compareTo(o2.getTrade().getTradingPeerNodeAddress().hostName);
+                return o1.getTrade().getTradingPeerNodeAddress().getHostName().compareTo(o2.getTrade().getTradingPeerNodeAddress().getHostName());
             else
                 return 0;
         });
@@ -466,7 +466,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 super.updateItem(newItem, empty);
 
                                 if (newItem != null && !empty && newItem.getTrade().getTradingPeerNodeAddress() != null) {
-                                    String hostName = newItem.getTrade().getTradingPeerNodeAddress().hostName;
+                                    String hostName = newItem.getTrade().getTradingPeerNodeAddress().getHostName();
                                     int numPastTrades = model.getNumPastTrades(newItem.getTrade());
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ?

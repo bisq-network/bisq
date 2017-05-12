@@ -67,7 +67,7 @@ public class SeedNodesRepository {
         String networkIdAsString = String.valueOf(networkId);
         Set<NodeAddress> nodeAddresses = useLocalhostForP2P ? localhostSeedNodeAddresses : torSeedNodeAddresses;
         Set<NodeAddress> filtered = nodeAddresses.stream()
-                .filter(e -> String.valueOf(e.port).endsWith(networkIdAsString))
+                .filter(e -> String.valueOf(e.getPort()).endsWith(networkIdAsString))
                 .filter(e -> !e.equals(nodeAddressToExclude))
                 .collect(Collectors.toSet());
         log.debug("SeedNodeAddresses (useLocalhostForP2P={}) for networkId {}:\nnetworkId={}",

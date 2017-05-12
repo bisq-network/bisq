@@ -482,13 +482,13 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 storagePayload = TradeStatistics.fromProto(protoEntry.getTradeStatistics());
                 break;
             case MAILBOX_STORAGE_PAYLOAD:
-                PB.MailboxStoragePayload mbox = protoEntry.getMailboxStoragePayload();
-                extraDataMapMap = CollectionUtils.isEmpty(mbox.getExtraDataMapMap()) ?
-                        null : mbox.getExtraDataMapMap();
+                PB.MailboxStoragePayload payload = protoEntry.getMailboxStoragePayload();
+                extraDataMapMap = CollectionUtils.isEmpty(payload.getExtraDataMapMap()) ?
+                        null : payload.getExtraDataMapMap();
                 storagePayload = new MailboxStoragePayload(
-                        getPrefixedSealedAndSignedMessage(mbox.getPrefixedSealedAndSignedMessage()),
-                        mbox.getSenderPubKeyForAddOperationBytes().toByteArray(),
-                        mbox.getReceiverPubKeyForRemoveOperationBytes().toByteArray(),
+                        getPrefixedSealedAndSignedMessage(payload.getPrefixedSealedAndSignedMessage()),
+                        payload.getSenderPubKeyForAddOperationBytes().toByteArray(),
+                        payload.getOwnerPubKeyBytes().toByteArray(),
                         extraDataMapMap);
                 break;
             case OFFER_PAYLOAD:
@@ -545,10 +545,10 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
         }
 
         ProtectedMailboxStorageEntry storageEntry = new ProtectedMailboxStorageEntry(
-                entry.creationTimeStamp,
+                entry.getCreationTimeStamp(),
                 (MailboxStoragePayload) entry.getStoragePayload(),
-                entry.ownerPubKey.getEncoded(), entry.sequenceNumber,
-                entry.signature, protoEntry.getReceiversPubKeyBytes().toByteArray());
+                entry.getOwnerPubKey().getEncoded(), entry.getSequenceNumber(),
+                entry.getSignature(), protoEntry.getReceiversPubKeyBytes().toByteArray());
         return storageEntry;
     }
 }

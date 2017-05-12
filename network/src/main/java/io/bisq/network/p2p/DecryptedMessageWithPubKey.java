@@ -18,25 +18,17 @@
 package io.bisq.network.p2p;
 
 import io.bisq.common.network.NetworkEnvelope;
-import lombok.EqualsAndHashCode;
+import lombok.Value;
 
 import java.security.PublicKey;
 
-@EqualsAndHashCode
+@Value
 public final class DecryptedMessageWithPubKey {
-    public final NetworkEnvelope wireEnvelope;
-    public final PublicKey signaturePubKey;
+    private final NetworkEnvelope wireEnvelope;
+    private final PublicKey signaturePubKey;
 
     public DecryptedMessageWithPubKey(NetworkEnvelope wireEnvelope, PublicKey signaturePubKey) {
         this.wireEnvelope = wireEnvelope;
         this.signaturePubKey = signaturePubKey;
-    }
-
-    @Override
-    public String toString() {
-        return "DecryptedMsgWithPubKey{" +
-                "message=" + wireEnvelope +
-                ", signaturePubKey.hashCode()=" + signaturePubKey.hashCode() +
-                '}';
     }
 }

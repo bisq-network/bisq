@@ -216,7 +216,7 @@ public class Connection implements MessageListener {
                                         "Write object to outputStream to peer: {} (uid={})\ntruncated message={} / size={}" +
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
                                 peersNodeAddress, uid, Utilities.toTruncatedString(wireEnvelope), -1);
-                    } else if (wireEnvelope instanceof GetDataResponse && ((GetDataResponse) wireEnvelope).isGetUpdatedDataResponse) {
+                    } else if (wireEnvelope instanceof GetDataResponse && ((GetDataResponse) wireEnvelope).isGetUpdatedDataResponse()) {
                         setPeerType(Connection.PeerType.PEER);
                     } else {
                         log.debug("\n\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n" +
@@ -252,7 +252,7 @@ public class Connection implements MessageListener {
 
     public boolean isCapabilitySupported(NetworkEnvelope wireEnvelope) {
         if (wireEnvelope instanceof AddDataMessage) {
-            final StoragePayload storagePayload = (((AddDataMessage) wireEnvelope).protectedStorageEntry).getStoragePayload();
+            final StoragePayload storagePayload = (((AddDataMessage) wireEnvelope).getProtectedStorageEntry()).getStoragePayload();
             if (storagePayload instanceof CapabilityRequiringPayload) {
                 final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) storagePayload).getRequiredCapabilities();
                 final List<Integer> supportedCapabilities = sharedModel.getSupportedCapabilities();
@@ -286,7 +286,7 @@ public class Connection implements MessageListener {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isCapabilityRequired(NetworkEnvelope wireEnvelope) {
-        return wireEnvelope instanceof AddDataMessage && (((AddDataMessage) wireEnvelope).protectedStorageEntry).getStoragePayload() instanceof CapabilityRequiringPayload;
+        return wireEnvelope instanceof AddDataMessage && (((AddDataMessage) wireEnvelope).getProtectedStorageEntry()).getStoragePayload() instanceof CapabilityRequiringPayload;
     }
 
     public List<Integer> getSupportedCapabilities() {

@@ -484,7 +484,7 @@ message TradeStatistics {
 message MailboxStoragePayload {
     PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 1;
     bytes sender_pub_key_for_add_operation_bytes = 2;
-    bytes receiver_pub_key_for_remove_operation_bytes = 3;
+    bytes owner_pub_key_bytes = 3;
     map<string, string> extra_data_map = 4;
 }
 

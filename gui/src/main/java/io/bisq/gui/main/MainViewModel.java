@@ -624,8 +624,8 @@ public class MainViewModel implements ViewModel {
                             keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
                     DecryptedDataTuple tuple = encryptionService.decryptHybridWithSignature(sealedAndSigned, keyRing.getEncryptionKeyPair().getPrivate());
                     if (tuple.payload instanceof Ping &&
-                            ((Ping) tuple.payload).nonce == payload.nonce &&
-                            ((Ping) tuple.payload).lastRoundTripTime == payload.lastRoundTripTime) {
+                            ((Ping) tuple.payload).getNonce() == payload.getNonce() &&
+                            ((Ping) tuple.payload).getLastRoundTripTime() == payload.getLastRoundTripTime()) {
                         log.debug("Crypto test succeeded");
 
                         if (Security.getProvider("BC") != null) {

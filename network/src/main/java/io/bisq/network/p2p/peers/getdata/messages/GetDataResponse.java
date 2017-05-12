@@ -1,44 +1,29 @@
 package io.bisq.network.p2p.peers.getdata.messages;
 
 import io.bisq.common.app.Capabilities;
-import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.ExtendedDataSizePermission;
 import io.bisq.network.p2p.SupportedCapabilitiesMessage;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
+import lombok.Value;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 
+@Value
 public final class GetDataResponse implements SupportedCapabilitiesMessage, ExtendedDataSizePermission {
-    private final int messageVersion = Version.getP2PMessageVersion();
-
-    public final HashSet<ProtectedStorageEntry> dataSet;
-    public final int requestNonce;
-    public final boolean isGetUpdatedDataResponse;
-
-    @Nullable
+    private final HashSet<ProtectedStorageEntry> dataSet;
+    private final int requestNonce;
+    private final boolean isGetUpdatedDataResponse;
     private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public GetDataResponse(HashSet<ProtectedStorageEntry> dataSet, int requestNonce, boolean isGetUpdatedDataResponse) {
         this.dataSet = dataSet;
         this.requestNonce = requestNonce;
         this.isGetUpdatedDataResponse = isGetUpdatedDataResponse;
-    }
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
-
-    @Override
-    public int getMessageVersion() {
-        return messageVersion;
     }
 
     @Override
@@ -60,17 +45,5 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage, Exte
                 .setRequestNonce(requestNonce)
                 .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
         return NetworkEnvelope.getDefaultBuilder().setGetDataResponse(builder).build();
-    }
-
-
-    @Override
-    public String toString() {
-        return "GetDataResponse{" +
-                "dataSet.size()=" + dataSet.size() +
-                ", isGetUpdatedDataResponse=" + isGetUpdatedDataResponse +
-                ", requestNonce=" + requestNonce +
-                ", supportedCapabilities=" + supportedCapabilities +
-                ", messageVersion=" + messageVersion +
-                '}';
     }
 }

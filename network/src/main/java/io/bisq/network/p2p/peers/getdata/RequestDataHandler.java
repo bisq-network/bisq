@@ -170,7 +170,7 @@ public class RequestDataHandler implements MessageListener {
                 if (!stopped) {
                     GetDataResponse getDataResponse = (GetDataResponse) wireEnvelope;
                     Map<String, Set<StoragePayload>> payloadByClassName = new HashMap<>();
-                    final HashSet<ProtectedStorageEntry> dataSet = getDataResponse.dataSet;
+                    final HashSet<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
                     dataSet.stream().forEach(e -> {
                         final StoragePayload storagePayload = e.getStoragePayload();
                         if (storagePayload == null) {
@@ -191,7 +191,7 @@ public class RequestDataHandler implements MessageListener {
                             .append(e.getKey()).append("; "));
                     log.info(sb.toString());
 
-                    if (getDataResponse.requestNonce == nonce) {
+                    if (getDataResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
                         checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
                                 "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
@@ -240,7 +240,7 @@ public class RequestDataHandler implements MessageListener {
                                         "handshake (timeout causes connection close but peer might have sent a msg before " +
                                         "connection was closed).\n\t" +
                                         "We drop that message. nonce={} / requestNonce={}",
-                                nonce, getDataResponse.requestNonce);
+                                nonce, getDataResponse.getRequestNonce());
                     }
                 } else {
                     log.warn("We have stopped already. We ignore that onDataRequest call.");

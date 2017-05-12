@@ -169,7 +169,7 @@ public class DisputeManager {
 
     private void applyMessages() {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
-            NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
+            NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
             log.debug("decryptedDirectMessageWithPubKeys.message " + wireEnvelope);
             if (wireEnvelope instanceof DisputeMessage)
                 dispatchMessage((DisputeMessage) wireEnvelope);
@@ -177,7 +177,7 @@ public class DisputeManager {
         decryptedDirectMessageWithPubKeys.clear();
 
         decryptedMailboxMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
-            NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
+            NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
             log.debug("decryptedMessageWithPubKey.message " + wireEnvelope);
             if (wireEnvelope instanceof DisputeMessage) {
                 dispatchMessage((DisputeMessage) wireEnvelope);

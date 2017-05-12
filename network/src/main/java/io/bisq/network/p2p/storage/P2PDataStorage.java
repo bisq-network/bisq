@@ -169,11 +169,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             Log.traceCall(Utilities.toTruncatedString(wireEnvelope) + "\n\tconnection=" + connection);
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
                 if (wireEnvelope instanceof AddDataMessage) {
-                    add(((AddDataMessage) wireEnvelope).protectedStorageEntry, peersNodeAddress, null, false);
+                    add(((AddDataMessage) wireEnvelope).getProtectedStorageEntry(), peersNodeAddress, null, false);
                 } else if (wireEnvelope instanceof RemoveDataMessage) {
-                    remove(((RemoveDataMessage) wireEnvelope).protectedStorageEntry, peersNodeAddress, false);
+                    remove(((RemoveDataMessage) wireEnvelope).getProtectedStorageEntry(), peersNodeAddress, false);
                 } else if (wireEnvelope instanceof RemoveMailboxDataMessage) {
-                    removeMailboxData(((RemoveMailboxDataMessage) wireEnvelope).protectedMailboxStorageEntry, peersNodeAddress, false);
+                    removeMailboxData(((RemoveMailboxDataMessage) wireEnvelope).getProtectedMailboxStorageEntry(), peersNodeAddress, false);
                 } else if (wireEnvelope instanceof RefreshOfferMessage) {
                     refreshTTL((RefreshOfferMessage) wireEnvelope, peersNodeAddress, false);
                 }
@@ -259,18 +259,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
         final StoragePayload storagePayload = protectedStorageEntry.getStoragePayload();
         ByteArray hashOfPayload = getHashAsByteArray(storagePayload);
-        boolean sequenceNrValid = isSequenceNrValid(protectedStorageEntry.sequenceNumber, hashOfPayload);
+        boolean sequenceNrValid = isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload);
         boolean result = checkPublicKeys(protectedStorageEntry, true)
                 && checkSignature(protectedStorageEntry)
                 && sequenceNrValid;
 
         boolean containsKey = map.containsKey(hashOfPayload);
         if (containsKey)
-            result = result && checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.ownerPubKey, hashOfPayload);
+            result = result && checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload);
 
         // printData("before add");
         if (result) {
-            final boolean hasSequenceNrIncreased = hasSequenceNrIncreased(protectedStorageEntry.sequenceNumber, hashOfPayload);
+            final boolean hasSequenceNrIncreased = hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload);
             if (!containsKey || hasSequenceNrIncreased) {
                 // At startup we don't have the item so we store it. At updates of the seq nr we store as well.
                 map.put(hashOfPayload, protectedStorageEntry);
@@ -288,7 +288,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             }
 
             if (hasSequenceNrIncreased) {
-                sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
+                sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
                 // We set the delay higher as we might receive a batch of items
                 sequenceNumberMapStorage.queueUpForSave(new SequenceNumberMap(sequenceNumberMap), 2000);
 
@@ -306,10 +306,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     public boolean refreshTTL(RefreshOfferMessage refreshTTLMessage, @Nullable NodeAddress sender, boolean isDataOwner) {
         Log.traceCall();
 
-        byte[] hashOfDataAndSeqNr = refreshTTLMessage.hashOfDataAndSeqNr;
-        byte[] signature = refreshTTLMessage.signature;
-        ByteArray hashOfPayload = new ByteArray(refreshTTLMessage.hashOfPayload);
-        int sequenceNumber = refreshTTLMessage.sequenceNumber;
+        byte[] hashOfDataAndSeqNr = refreshTTLMessage.getHashOfDataAndSeqNr();
+        byte[] signature = refreshTTLMessage.getSignature();
+        ByteArray hashOfPayload = new ByteArray(refreshTTLMessage.getHashOfPayload());
+        int sequenceNumber = refreshTTLMessage.getSequenceNumber();
 
         if (map.containsKey(hashOfPayload)) {
             ProtectedStorageEntry storedData = map.get(hashOfPayload);
@@ -355,15 +355,15 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             log.debug("Remove data ignored as we don't have an entry for that data.");
         boolean result = containsKey
                 && checkPublicKeys(protectedStorageEntry, false)
-                && isSequenceNrValid(protectedStorageEntry.sequenceNumber, hashOfPayload)
+                && isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload)
                 && checkSignature(protectedStorageEntry)
-                && checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.ownerPubKey, hashOfPayload);
+                && checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload);
 
         // printData("before remove");
         if (result) {
             doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
             printData("after remove");
-            sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.sequenceNumber, System.currentTimeMillis()));
+            sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
             sequenceNumberMapStorage.queueUpForSave(new SequenceNumberMap(sequenceNumberMap), 300);
 
             broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
@@ -382,16 +382,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             log.debug("Remove data ignored as we don't have an entry for that data.");
         boolean result = containsKey
                 && checkPublicKeys(protectedMailboxStorageEntry, false)
-                && isSequenceNrValid(protectedMailboxStorageEntry.sequenceNumber, hashOfData)
-                && protectedMailboxStorageEntry.getMailboxStoragePayload().receiverPubKeyForRemoveOperation.equals(protectedMailboxStorageEntry.receiversPubKey) // at remove both keys are the same (only receiver is able to remove data)
+                && isSequenceNrValid(protectedMailboxStorageEntry.getSequenceNumber(), hashOfData)
+                && protectedMailboxStorageEntry.getMailboxStoragePayload().getOwnerPubKey().equals(protectedMailboxStorageEntry.getReceiversPubKey()) // at remove both keys are the same (only receiver is able to remove data)
                 && checkSignature(protectedMailboxStorageEntry)
-                && checkIfStoredMailboxDataMatchesNewMailboxData(protectedMailboxStorageEntry.receiversPubKey, hashOfData);
+                && checkIfStoredMailboxDataMatchesNewMailboxData(protectedMailboxStorageEntry.getReceiversPubKey(), hashOfData);
 
         // printData("before removeMailboxData");
         if (result) {
             doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfData);
             printData("after removeMailboxData");
-            sequenceNumberMap.put(hashOfData, new MapValue(protectedMailboxStorageEntry.sequenceNumber, System.currentTimeMillis()));
+            sequenceNumberMap.put(hashOfData, new MapValue(protectedMailboxStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
             sequenceNumberMapStorage.queueUpForSave(new SequenceNumberMap(sequenceNumberMap), 300);
 
             broadcast(new RemoveMailboxDataMessage(protectedMailboxStorageEntry), sender, null, isDataOwner);
@@ -540,8 +540,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     }
 
     private boolean checkSignature(ProtectedStorageEntry protectedStorageEntry) {
-        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(protectedStorageEntry.getStoragePayload(), protectedStorageEntry.sequenceNumber));
-        return checkSignature(protectedStorageEntry.ownerPubKey, hashOfDataAndSeqNr, protectedStorageEntry.signature);
+        byte[] hashOfDataAndSeqNr = EncryptionService.getHash(new DataAndSeqNrPair(protectedStorageEntry.getStoragePayload(), protectedStorageEntry.getSequenceNumber()));
+        return checkSignature(protectedStorageEntry.getOwnerPubKey(), hashOfDataAndSeqNr, protectedStorageEntry.getSignature());
     }
 
     // Check that the pubkey of the storage entry matches the allowed pubkey for the addition or removal operation
@@ -551,17 +551,17 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (protectedStorageEntry.getStoragePayload() instanceof MailboxStoragePayload) {
             MailboxStoragePayload payload = (MailboxStoragePayload) protectedStorageEntry.getStoragePayload();
             if (isAddOperation)
-                result = payload.senderPubKeyForAddOperation != null &&
-                        payload.senderPubKeyForAddOperation.equals(protectedStorageEntry.ownerPubKey);
+                result = payload.getSenderPubKeyForAddOperation() != null &&
+                        payload.getSenderPubKeyForAddOperation().equals(protectedStorageEntry.getOwnerPubKey());
             else
-                result = payload.receiverPubKeyForRemoveOperation != null &&
-                        payload.receiverPubKeyForRemoveOperation.equals(protectedStorageEntry.ownerPubKey);
+                result = payload.getOwnerPubKey() != null &&
+                        payload.getOwnerPubKey().equals(protectedStorageEntry.getOwnerPubKey());
         } else {
             // TODO We got sometimes a nullPointer at protectedStorageEntry.ownerPubKey
             // Probably caused by an exception at deserialization:  OfferPayload: Cannot be deserialized.null
-            result = protectedStorageEntry.ownerPubKey != null &&
+            result = protectedStorageEntry.getOwnerPubKey() != null &&
                     protectedStorageEntry.getStoragePayload() != null &&
-                    protectedStorageEntry.ownerPubKey.equals(protectedStorageEntry.getStoragePayload().getOwnerPubKey());
+                    protectedStorageEntry.getOwnerPubKey().equals(protectedStorageEntry.getStoragePayload().getOwnerPubKey());
         }
 
         if (!result) {
@@ -579,10 +579,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
 
     private boolean checkIfStoredDataPubKeyMatchesNewDataPubKey(PublicKey ownerPubKey, ByteArray hashOfData) {
         ProtectedStorageEntry storedData = map.get(hashOfData);
-        boolean result = storedData.ownerPubKey != null && storedData.ownerPubKey.equals(ownerPubKey);
+        boolean result = storedData.getOwnerPubKey() != null && storedData.getOwnerPubKey().equals(ownerPubKey);
         if (!result)
             log.warn("New data entry does not match our stored data. storedData.ownerPubKey=" +
-                    (storedData.ownerPubKey != null ? storedData.ownerPubKey.toString() : "null") +
+                    (storedData.getOwnerPubKey() != null ? storedData.getOwnerPubKey().toString() : "null") +
                     ", ownerPubKey=" + ownerPubKey);
 
         return result;
@@ -593,10 +593,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         if (storedData instanceof ProtectedMailboxStorageEntry) {
             ProtectedMailboxStorageEntry entry = (ProtectedMailboxStorageEntry) storedData;
             // publicKey is not the same (stored: sender, new: receiver)
-            boolean result = entry.receiversPubKey.equals(receiversPubKey)
+            boolean result = entry.getReceiversPubKey().equals(receiversPubKey)
                     && getHashAsByteArray(entry.getStoragePayload()).equals(hashOfData);
             if (!result)
-                log.warn("New data entry does not match our stored data. entry.receiversPubKey=" + entry.receiversPubKey
+                log.warn("New data entry does not match our stored data. entry.receiversPubKey=" + entry.getReceiversPubKey()
                         + ", receiversPubKey=" + receiversPubKey);
 
             return result;
@@ -645,11 +645,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                         .append("; Class=")
                         .append(storagePayload.getClass().getSimpleName())
                         .append("; SequenceNumbers (Object/Stored)=")
-                        .append(storageEntry.sequenceNumber)
+                        .append(storageEntry.getSequenceNumber())
                         .append(" / ")
                         .append(mapValue != null ? mapValue.sequenceNr : "null")
                         .append("; TimeStamp (Object/Stored)=")
-                        .append(storageEntry.creationTimeStamp)
+                        .append(storageEntry.getCreationTimeStamp())
                         .append(" / ")
                         .append(mapValue != null ? mapValue.timeStamp : "null")
                         .append("; Payload=")

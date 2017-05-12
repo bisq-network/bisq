@@ -5,39 +5,21 @@ import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.SupportedCapabilitiesMessage;
 import io.bisq.network.p2p.peers.peerexchange.Peer;
+import lombok.Value;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 
+@Value
 public final class GetPeersResponse extends PeerExchangeMessage implements SupportedCapabilitiesMessage {
-
-    public final int requestNonce;
-    public final HashSet<Peer> reportedPeers;
-
-    @Nullable
+    private final int requestNonce;
+    private final HashSet<Peer> reportedPeers;
     private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public GetPeersResponse(int requestNonce, HashSet<Peer> reportedPeers) {
         this.requestNonce = requestNonce;
         this.reportedPeers = reportedPeers;
-    }
-
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
-
-    @Override
-    public String toString() {
-        return "GetPeersResponse{" +
-                "requestNonce=" + requestNonce +
-                ", reportedPeers.size()=" + reportedPeers.size() +
-                ", supportedCapabilities=" + supportedCapabilities +
-                "} " + super.toString();
     }
 
     @Override

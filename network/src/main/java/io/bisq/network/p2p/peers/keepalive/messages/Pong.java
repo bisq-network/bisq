@@ -2,20 +2,14 @@ package io.bisq.network.p2p.peers.keepalive.messages;
 
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
+import lombok.Value;
 
+@Value
 public final class Pong extends KeepAliveMessage {
-
-    public final int requestNonce;
+    private final int requestNonce;
 
     public Pong(int requestNonce) {
         this.requestNonce = requestNonce;
-    }
-
-    @Override
-    public String toString() {
-        return "Pong{" +
-                "requestNonce=" + requestNonce +
-                "} " + super.toString();
     }
 
     @Override

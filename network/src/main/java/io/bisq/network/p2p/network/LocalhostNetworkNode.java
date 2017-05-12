@@ -79,7 +79,7 @@ public class LocalhostNetworkNode extends NetworkNode {
     // Called from NetworkNode thread
     @Override
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
-        return new Socket(peerNodeAddress.hostName, peerNodeAddress.port);
+        return new Socket(peerNodeAddress.getHostName(), peerNodeAddress.getPort());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -57,7 +57,7 @@ public class OfferAvailabilityProtocol {
         this.errorMessageHandler = errorMessageHandler;
 
         decryptedDirectMessageListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
-            NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
+            NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
             if (wireEnvelope instanceof OfferMessage) {
                 OfferMessage offerMessage = (OfferMessage) wireEnvelope;
                 Validator.nonEmptyStringOf(offerMessage.offerId);

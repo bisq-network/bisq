@@ -180,7 +180,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             return offerVolume1 != null && offerVolume2 != null ? offerVolume1.compareTo(offerVolume2) : 0;
         });
         paymentMethodColumn.setComparator((o1, o2) -> o1.getOffer().getPaymentMethod().compareTo(o2.getOffer().getPaymentMethod()));
-        avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().hostName.compareTo(o2.getOffer().getOwnerNodeAddress().hostName));
+        avatarColumn.setComparator((o1, o2) -> o1.getOffer().getOwnerNodeAddress().getHostName().compareTo(o2.getOffer().getOwnerNodeAddress().getHostName()));
 
         nrOfOffersLabel = new Label("");
         nrOfOffersLabel.setId("num-offers");
@@ -758,7 +758,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 super.updateItem(newItem, empty);
 
                                 if (newItem != null && !empty) {
-                                    String hostName = newItem.getOffer().getOwnerNodeAddress().hostName;
+                                    String hostName = newItem.getOffer().getOwnerNodeAddress().getHostName();
                                     int numPastTrades = model.getNumPastTrades(newItem.getOffer());
                                     boolean hasTraded = numPastTrades > 0;
                                     String tooltipText = hasTraded ?

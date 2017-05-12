@@ -127,7 +127,7 @@ class KeepAliveHandler implements MessageListener {
             Log.traceCall(wireEnvelope.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 Pong pong = (Pong) wireEnvelope;
-                if (pong.requestNonce == nonce) {
+                if (pong.getRequestNonce() == nonce) {
                     int roundTripTime = (int) (System.currentTimeMillis() - sendTs);
                     log.trace("roundTripTime=" + roundTripTime + "\n\tconnection=" + connection);
                     connection.getStatistic().setRoundTripTime(roundTripTime);
@@ -136,7 +136,7 @@ class KeepAliveHandler implements MessageListener {
                 } else {
                     log.warn("Nonce not matching. That should never happen.\n\t" +
                                     "We drop that message. nonce={} / requestNonce={}",
-                            nonce, pong.requestNonce);
+                            nonce, pong.getRequestNonce());
                 }
             } else {
                 log.trace("We have stopped already. We ignore that onMessage call.");

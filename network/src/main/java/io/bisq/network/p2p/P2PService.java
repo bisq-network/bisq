@@ -557,13 +557,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         if (optionalEncryptionService.isPresent() && nodeAddress != null && !seedNodesRepository.isSeedNode(nodeAddress)) {
             Log.traceCall();
             MailboxStoragePayload mailboxStoragePayload = protectedMailboxStorageEntry.getMailboxStoragePayload();
-            PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = mailboxStoragePayload.prefixedSealedAndSignedMessage;
+            PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = mailboxStoragePayload.getPrefixedSealedAndSignedMessage();
             if (verifyAddressPrefixHash(prefixedSealedAndSignedMessage)) {
                 try {
                     DecryptedMessageWithPubKey decryptedMessageWithPubKey = optionalEncryptionService.get().decryptAndVerify(
                             prefixedSealedAndSignedMessage.getSealedAndSigned());
-                    if (decryptedMessageWithPubKey.wireEnvelope instanceof MailboxMessage) {
-                        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.wireEnvelope;
+                    if (decryptedMessageWithPubKey.getWireEnvelope() instanceof MailboxMessage) {
+                        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getWireEnvelope();
                         NodeAddress senderNodeAddress = mailboxMessage.getSenderNodeAddress();
                         checkNotNull(senderNodeAddress, "senderAddress must not be null for mailbox network_messages");
 
@@ -574,7 +574,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                 e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, senderNodeAddress));
                     } else {
                         log.warn("tryDecryptMailboxData: Expected MailboxMessage but got other type. " +
-                                "decryptedMsgWithPubKey.message=", decryptedMessageWithPubKey.wireEnvelope);
+                                "decryptedMsgWithPubKey.message=", decryptedMessageWithPubKey.getWireEnvelope());
                     }
                 } catch (CryptoException e) {
                     log.debug(e.toString());
@@ -675,7 +675,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                             // The reason for that check was to separate different callback for different send calls.
                             // We only want to notify our sendMailboxMessageListener for the calls he is interested in.
                             if (message instanceof AddDataMessage &&
-                                    ((AddDataMessage) message).protectedStorageEntry.equals(protectedMailboxStorageEntry)) {
+                                    ((AddDataMessage) message).getProtectedStorageEntry().equals(protectedMailboxStorageEntry)) {
                                 // We delay a bit to give more time for sufficient propagation in the P2P network.
                                 // This should help to avoid situations where a user closes the app too early and the msg
                                 // does not arrive.
@@ -738,13 +738,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
-            MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.wireEnvelope;
+            MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getWireEnvelope();
             String uid = mailboxMessage.getUid();
             if (mailboxMap.containsKey(uid)) {
                 ProtectedMailboxStorageEntry mailboxData = mailboxMap.get(uid);
                 if (mailboxData != null && mailboxData.getStoragePayload() instanceof MailboxStoragePayload) {
                     MailboxStoragePayload expirableMailboxStoragePayload = (MailboxStoragePayload) mailboxData.getStoragePayload();
-                    PublicKey receiversPubKey = mailboxData.receiversPubKey;
+                    PublicKey receiversPubKey = mailboxData.getReceiversPubKey();
                     checkArgument(receiversPubKey.equals(optionalKeyRing.get().getSignatureKeyPair().getPublic()),
                             "receiversPubKey is not matching with our key. That must not happen.");
                     try {

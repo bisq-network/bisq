@@ -10,18 +10,16 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.regex.Pattern;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+@Getter
 @EqualsAndHashCode
 @Slf4j
 public final class NodeAddress implements PersistablePayload, NetworkPayload {
+    private final String hostName;
+    private final int port;
 
-    // Payload
-    @Getter
-    public final String hostName;
-    @Getter
-    public final int port;
-
-    // Domain
-    transient private byte[] addressPrefixHash;
+    private byte[] addressPrefixHash;
 
     public NodeAddress(String hostName, int port) {
         this.hostName = hostName;
@@ -30,12 +28,35 @@ public final class NodeAddress implements PersistablePayload, NetworkPayload {
 
     public NodeAddress(String fullAddress) {
         final String[] split = fullAddress.split(Pattern.quote(":"));
+        checkArgument(split.length == 2, "fullAddress must contain ':'");
         this.hostName = split[0];
         this.port = Integer.parseInt(split[1]);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static NodeAddress fromProto(PB.NodeAddress nodeAddress) {
+        return new NodeAddress(nodeAddress.getHostName(), nodeAddress.getPort());
+    }
+
+    public PB.NodeAddress toProtoMessage() {
+        return PB.NodeAddress.newBuilder().setHostName(hostName).setPort(port).build();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public String getFullAddress() {
         return hostName + ":" + port;
+    }
+
+    public String getHostNameWithoutPostFix() {
+        return hostName.replace(".onion", "");
     }
 
     // We use just a few chars from the full address to blur the potential receiver for sent network_messages
@@ -45,20 +66,9 @@ public final class NodeAddress implements PersistablePayload, NetworkPayload {
         return addressPrefixHash;
     }
 
-    public String getHostNameWithoutPostFix() {
-        return hostName.replace(".onion", "");
-    }
-
-    public PB.NodeAddress toProtoMessage() {
-        return PB.NodeAddress.newBuilder().setHostName(hostName).setPort(port).build();
-    }
-
-    public static NodeAddress fromProto(PB.NodeAddress nodeAddress){
-        return new NodeAddress(nodeAddress.getHostName(), nodeAddress.getPort());
-    }
-
     @Override
     public String toString() {
         return getFullAddress();
     }
+
 }

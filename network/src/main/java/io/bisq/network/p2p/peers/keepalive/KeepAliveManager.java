@@ -77,9 +77,9 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                 Ping ping = (Ping) wireEnvelope;
 
                 // We get from peer last measured rrt
-                connection.getStatistic().setRoundTripTime(ping.lastRoundTripTime);
+                connection.getStatistic().setRoundTripTime(ping.getLastRoundTripTime());
 
-                Pong pong = new Pong(ping.nonce);
+                Pong pong = new Pong(ping.getNonce());
                 SettableFuture<Connection> future = networkNode.sendMessage(connection, pong);
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override

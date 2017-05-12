@@ -138,7 +138,7 @@ public class TradeManager {
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
             public void onDirectMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress peerNodeAddress) {
-                NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
+                NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
 
                 // Handler for incoming initial network_messages from taker
                 if (wireEnvelope instanceof PayDepositRequest) {
@@ -154,7 +154,7 @@ public class TradeManager {
             public void onMailboxMessageAdded(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress) {
                 log.trace("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMessageWithPubKey);
                 log.trace("onMailboxMessageAdded senderAddress: " + senderNodeAddress);
-                NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
+                NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
                 if (wireEnvelope instanceof TradeMessage) {
                     log.trace("Received TradeMessage: " + wireEnvelope);
                     String tradeId = ((TradeMessage) wireEnvelope).getTradeId();

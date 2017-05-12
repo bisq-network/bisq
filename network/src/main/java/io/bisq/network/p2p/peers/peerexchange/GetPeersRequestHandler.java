@@ -68,7 +68,7 @@ class GetPeersRequestHandler {
 
         checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
                 "The peers address must have been already set at the moment");
-        GetPeersResponse getPeersResponse = new GetPeersResponse(getPeersRequest.nonce,
+        GetPeersResponse getPeersResponse = new GetPeersResponse(getPeersRequest.getNonce(),
                 peerManager.getConnectedNonSeedNodeReportedPeers(connection.getPeersNodeAddressOptional().get()));
 
         checkArgument(timeoutTimer == null, "onGetPeersRequest must not be called twice.");
@@ -113,7 +113,7 @@ class GetPeersRequestHandler {
             }
         });
 
-        peerManager.addToReportedPeers(getPeersRequest.reportedPeers, connection);
+        peerManager.addToReportedPeers(getPeersRequest.getReportedPeers(), connection);
     }
 
 

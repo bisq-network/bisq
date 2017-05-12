@@ -75,7 +75,7 @@ public class PrivateNotificationManager {
 
     private void handleMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress) {
         this.decryptedMessageWithPubKey = decryptedMessageWithPubKey;
-        NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
+        NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
         if (wireEnvelope instanceof PrivateNotificationMessage) {
             PrivateNotificationMessage privateNotificationMessage = (PrivateNotificationMessage) wireEnvelope;
             log.trace("Received privateNotificationMessage: " + privateNotificationMessage);

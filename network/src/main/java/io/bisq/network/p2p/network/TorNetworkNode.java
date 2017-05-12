@@ -95,9 +95,9 @@ public class TorNetworkNode extends NetworkNode {
 
     @Override
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
-        checkArgument(peerNodeAddress.hostName.endsWith(".onion"), "PeerAddress is not an onion address");
+        checkArgument(peerNodeAddress.getHostName().endsWith(".onion"), "PeerAddress is not an onion address");
 
-        return torNetworkNode.connectToHiddenService(peerNodeAddress.hostName, peerNodeAddress.port);
+        return torNetworkNode.connectToHiddenService(peerNodeAddress.getHostName(), peerNodeAddress.getPort());
     }
 
     public Socks5Proxy getSocksProxy() {
