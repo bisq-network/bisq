@@ -23,5 +23,5 @@ import io.bisq.generated.protobuffer.PB;
 import java.util.Optional;
 
 public interface NetworkProtoResolver {
-    Optional<NetworkEnvelope> fromProto(PB.WireEnvelope msg);
+    Optional<NetworkEnvelope> fromProto(PB.NetworkEnvelope msg);
 }

@@ -105,8 +105,8 @@ public final class PayDepositRequest extends TradeMsg {
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
-        PB.WireEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoMsg() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
         PB.PayDepositRequest.Builder builderForValue = PB.PayDepositRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setTradeAmount(tradeAmount)

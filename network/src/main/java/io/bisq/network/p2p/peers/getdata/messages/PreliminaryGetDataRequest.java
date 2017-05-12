@@ -60,8 +60,8 @@ public final class PreliminaryGetDataRequest implements AnonymousMsg, GetDataReq
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
-        PB.WireEnvelope.Builder envelopeBuilder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoMsg() {
+        PB.NetworkEnvelope.Builder envelopeBuilder = NetworkEnvelope.getMsgBuilder();
         PB.PreliminaryGetDataRequest.Builder msgBuilder = envelopeBuilder.getPreliminaryGetDataRequestBuilder()
                 .setMessageVersion(messageVersion)
                 .setNonce(nonce);

@@ -17,8 +17,8 @@ public final class Ping extends KeepAliveMsg {
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
-        PB.WireEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoMsg() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
         return msgBuilder.setPing(msgBuilder.getPingBuilder()
                 .setNonce(nonce)
                 .setLastRoundTripTime(lastRoundTripTime)).build();

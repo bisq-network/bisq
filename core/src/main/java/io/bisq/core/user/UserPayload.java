@@ -62,7 +62,7 @@ public class UserPayload implements PersistableEnvelope {
     }
 
     @Override
-    public PB.DiscEnvelope toProtoMessage() {
+    public PB.PersistableEnvelope toProtoMessage() {
         PB.UserPayload.Builder builder = PB.UserPayload.newBuilder()
                 .setAccountId(accountID)
                 .addAllPaymentAccounts(PersistableCollectionUtil.collectionToProto(paymentAccounts))
@@ -82,7 +82,7 @@ public class UserPayload implements PersistableEnvelope {
                 .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProtoMessage().getArbitrator()));
         Optional.ofNullable(registeredMediator)
                 .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProtoMessage().getAlert()));
-        return PB.DiscEnvelope.newBuilder().setUserPayload(builder).build();
+        return PB.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
     }
 
     public static UserPayload fromProto(PB.UserPayload user) {

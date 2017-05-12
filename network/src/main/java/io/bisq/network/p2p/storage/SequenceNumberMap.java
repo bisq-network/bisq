@@ -53,8 +53,8 @@ public class SequenceNumberMap implements PersistableEnvelope {
     }
 
     @Override
-    public PB.DiscEnvelope toProtoMessage() {
-        return PB.DiscEnvelope.newBuilder().setSequenceNumberMap(
+    public PB.PersistableEnvelope toProtoMessage() {
+        return PB.PersistableEnvelope.newBuilder().setSequenceNumberMap(
                 PB.SequenceNumberMap.newBuilder().addAllSequenceNumberEntries(
                         hashMap.entrySet().stream()
                                 .map(entry ->

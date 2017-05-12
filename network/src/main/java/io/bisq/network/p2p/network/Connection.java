@@ -193,7 +193,7 @@ public class Connection implements MessageListener {
                         Thread.sleep(50);
                     }
 
-                    PB.WireEnvelope envelope;
+                    PB.NetworkEnvelope envelope;
 
                     lastSendTimeStamp = now;
                     String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
@@ -762,11 +762,11 @@ public class Connection implements MessageListener {
                         }
 
                         // Reading the protobuffer message from the inputstream
-                        PB.WireEnvelope envelope;
+                        PB.NetworkEnvelope envelope;
                         try {
                             //TODO check
                             // if (protoInputStream.available() > 0) {
-                            envelope = PB.WireEnvelope.parseDelimitedFrom(protoInputStream);
+                            envelope = PB.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
                            /* } else {
                                 // we probably got a network issue so return here
                                // stop();

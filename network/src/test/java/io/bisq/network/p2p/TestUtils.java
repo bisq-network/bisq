@@ -176,7 +176,7 @@ public class TestUtils {
     public static NetworkProtoResolver getNetworkProtoResolver() {
         return new NetworkProtoResolver() {
             @Override
-            public Optional<NetworkEnvelope> fromProto(PB.WireEnvelope envelope) {
+            public Optional<NetworkEnvelope> fromProto(PB.NetworkEnvelope envelope) {
                 return Optional.empty();
             }
         };
@@ -185,7 +185,7 @@ public class TestUtils {
     public static PersistenceProtoResolver getPersistenceProtoResolver() {
         return new PersistenceProtoResolver() {
             @Override
-            public Optional<PersistableEnvelope> fromProto(PB.DiscEnvelope persistable) {
+            public Optional<PersistableEnvelope> fromProto(PB.PersistableEnvelope persistable) {
                 return null;
             }
         };

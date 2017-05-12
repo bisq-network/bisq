@@ -40,8 +40,8 @@ public final class RefreshOfferMsg extends BroadcastMsg {
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
-        PB.WireEnvelope.Builder builder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoMsg() {
+        PB.NetworkEnvelope.Builder builder = NetworkEnvelope.getMsgBuilder();
         return builder.setRefreshOfferMsg(builder.getRefreshOfferMsgBuilder()
                 .setHashOfDataAndSeqNr(ByteString.copyFrom(hashOfDataAndSeqNr))
                 .setHashOfPayload(ByteString.copyFrom(hashOfPayload))

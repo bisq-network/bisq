@@ -44,7 +44,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMsg, Extended
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoMsg() {
         PB.GetDataResponse.Builder builder = PB.GetDataResponse.newBuilder();
         builder.addAllDataSet(
                 dataSet.stream()

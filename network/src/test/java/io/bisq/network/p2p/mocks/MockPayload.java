@@ -21,7 +21,7 @@ public final class MockPayload implements NetworkEnvelope, ExpirablePayload {
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoMsg() {
         throw new NotImplementedException();
     }
 

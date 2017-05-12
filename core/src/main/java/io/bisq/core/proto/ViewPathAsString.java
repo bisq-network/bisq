@@ -38,8 +38,8 @@ public class ViewPathAsString implements PersistableEnvelope {
 
     @Override
     public Message toProtoMessage() {
-        return CollectionUtils.isEmpty(viewPath) ? PB.DiscEnvelope.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder()).build()
-                : PB.DiscEnvelope.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder().addAllViewPath(viewPath)).build();
+        return CollectionUtils.isEmpty(viewPath) ? PB.PersistableEnvelope.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder()).build()
+                : PB.PersistableEnvelope.newBuilder().setViewPathAsString(PB.ViewPathAsString.newBuilder().addAllViewPath(viewPath)).build();
     }
 
     public static PersistableEnvelope fromProto(PB.ViewPathAsString viewPathAsString) {

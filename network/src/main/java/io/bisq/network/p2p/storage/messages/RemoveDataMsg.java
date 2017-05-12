@@ -39,8 +39,8 @@ public final class RemoveDataMsg extends BroadcastMsg {
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
-        PB.WireEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoMsg() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
         return msgBuilder.setRemoveDataMessage(PB.RemoveDataMessage.newBuilder()
                 .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())).build();
 

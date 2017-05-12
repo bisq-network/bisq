@@ -135,8 +135,8 @@ public class EncryptionServiceTests {
         }
 
         @Override
-        public PB.WireEnvelope toProtoMsg() {
-            return PB.WireEnvelope.newBuilder().setPing(PB.Ping.newBuilder().setNonce(nonce)).build();
+        public PB.NetworkEnvelope toProtoMsg() {
+            return PB.NetworkEnvelope.newBuilder().setPing(PB.Ping.newBuilder().setNonce(nonce)).build();
         }
     }
 }
@@ -167,7 +167,7 @@ final class TestMsg implements MailboxMsg {
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoMsg() {
         throw new NotImplementedException();
     }
 }

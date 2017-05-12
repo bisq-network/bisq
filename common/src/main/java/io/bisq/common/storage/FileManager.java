@@ -111,7 +111,7 @@ public class FileManager<T extends PersistableEnvelope> {
         Optional<PersistableEnvelope> persistable = Optional.empty();
 
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
-            persistable = persistenceProtoResolver.fromProto(PB.DiscEnvelope.parseDelimitedFrom(fileInputStream));
+            persistable = persistenceProtoResolver.fromProto(PB.PersistableEnvelope.parseDelimitedFrom(fileInputStream));
         } catch (Throwable t) {
             log.error("Exception at proto read: " + t.getMessage() + " " + file.getName());
         }
@@ -197,9 +197,9 @@ public class FileManager<T extends PersistableEnvelope> {
 
         // is it a protobuffer thing?
 
-        PB.DiscEnvelope protoPersistable = null;
+        PB.PersistableEnvelope protoPersistable = null;
         try {
-            protoPersistable = (PB.DiscEnvelope) persistable.toProtoMessage();
+            protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
         } catch (Throwable e) {
             log.debug("Not protobufferable: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }

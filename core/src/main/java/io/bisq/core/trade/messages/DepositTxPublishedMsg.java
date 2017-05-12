@@ -56,8 +56,8 @@ public final class DepositTxPublishedMsg extends TradeMsg implements MailboxMsg 
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
-        PB.WireEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoMsg() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
         return msgBuilder.setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
                 .setMessageVersion(getMsgVersion())
                 .setTradeId(tradeId)

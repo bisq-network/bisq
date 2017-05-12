@@ -49,7 +49,7 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMsg, GetDa
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoMsg() {
         return NetworkEnvelope.getMsgBuilder().setGetUpdatedDataRequest(
                 PB.GetUpdatedDataRequest.newBuilder()
                         .setMessageVersion(messageVersion)

@@ -46,8 +46,8 @@ public final class PeerOpenedDisputeMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
-        PB.WireEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoMsg() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
         return msgBuilder.setPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage.newBuilder()
                 .setDispute(dispute.toProtoMessage())
                 .setMyNodeAddress(myNodeAddress.toProtoMessage())

@@ -62,7 +62,7 @@ public final class OfferAvailabilityRequest extends OfferMsg implements Supporte
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoMsg() {
         return NetworkEnvelope.getMsgBuilder()
                 .setOfferAvailabilityRequest(PB.OfferAvailabilityRequest.newBuilder()
                         .setOfferId(offerId)

@@ -75,7 +75,7 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
     }
 
     @Override
-    public Optional<PersistableEnvelope> fromProto(PB.DiscEnvelope persistable) {
+    public Optional<PersistableEnvelope> fromProto(PB.PersistableEnvelope persistable) {
         if (Objects.isNull(persistable)) {
             log.warn("fromProtoBuf called with empty disk persistable.");
             return Optional.empty();
@@ -132,7 +132,7 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
                 .collect(Collectors.toList()));
     }
 
-    private Preferences fillPreferences(PB.DiscEnvelope envelope, Preferences preferences) {
+    private Preferences fillPreferences(PB.PersistableEnvelope envelope, Preferences preferences) {
         final PB.Preferences env = envelope.getPreferences();
         preferences.setUserLanguage(env.getUserLanguage());
         PB.Country userCountry = env.getUserCountry();
@@ -188,7 +188,7 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
         return new Locale(locale.getLanguage(), locale.getCountry(), locale.getVariant());
     }
 
-    private AddressEntryList fillAddressEntryList(PB.DiscEnvelope envelope, AddressEntryList addressEntryList) {
+    private AddressEntryList fillAddressEntryList(PB.PersistableEnvelope envelope, AddressEntryList addressEntryList) {
         envelope.getAddressEntryList().getAddressEntryList().stream().forEach(addressEntry -> {
             final AddressEntry entry = new AddressEntry(addressEntry.getPubKey().toByteArray(),
                     addressEntry.getPubKeyHash().toByteArray(),

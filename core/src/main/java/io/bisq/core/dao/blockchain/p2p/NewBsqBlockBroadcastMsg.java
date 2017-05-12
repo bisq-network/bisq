@@ -19,7 +19,7 @@ public final class NewBsqBlockBroadcastMsg extends BroadcastMsg {
     }
 
     @Override
-    public PB.WireEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoMsg() {
         final PB.NewBsqBlockBroadcastMsg.Builder builder = PB.NewBsqBlockBroadcastMsg.newBuilder()
                 .setBsqBlockBytes(ByteString.copyFrom(bsqBlockBytes));
         return NetworkEnvelope.getMsgBuilder().setNewBsqBlockBroadcastMsg(builder).build();
@@ -30,7 +30,7 @@ public final class NewBsqBlockBroadcastMsg extends BroadcastMsg {
         return toProtoMsg().getNewBsqBlockBroadcastMsg();
     }
 
-    public static NetworkEnvelope fromProto(PB.WireEnvelope envelope) {
+    public static NetworkEnvelope fromProto(PB.NetworkEnvelope envelope) {
         PB.NewBsqBlockBroadcastMsg msg = envelope.getNewBsqBlockBroadcastMsg();
         return new NewBsqBlockBroadcastMsg(msg.getBsqBlockBytes().toByteArray());
     }

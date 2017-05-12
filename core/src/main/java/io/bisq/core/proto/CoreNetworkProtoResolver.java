@@ -54,7 +54,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.bisq.generated.protobuffer.PB.WireEnvelope.MessageCase.*;
+import static io.bisq.generated.protobuffer.PB.NetworkEnvelope.MessageCase.*;
 
 /**
  * If the Messages class is giving errors in IntelliJ, you should change the IntelliJ IDEA Platform Properties file,
@@ -80,7 +80,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Optional<NetworkEnvelope> fromProto(PB.WireEnvelope msg) {
+    public Optional<NetworkEnvelope> fromProto(PB.NetworkEnvelope msg) {
         if (Objects.isNull(msg)) {
             log.warn("fromProtoBuf called with empty msg.");
             return Optional.empty();
@@ -195,7 +195,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     // Msg
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static NetworkEnvelope getOfferAvailabilityRequest(PB.WireEnvelope envelope) {
+    private static NetworkEnvelope getOfferAvailabilityRequest(PB.NetworkEnvelope envelope) {
         PB.OfferAvailabilityRequest msg = envelope.getOfferAvailabilityRequest();
         return new OfferAvailabilityRequest(msg.getOfferId(), PubKeyRing.fromProto(msg.getPubKeyRing()), msg.getTakersTradePrice());
     }
@@ -213,7 +213,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 payoutTxPublishedMessage.getUid());
     }
 
-    private static NetworkEnvelope getOfferAvailabilityResponse(PB.WireEnvelope envelope) {
+    private static NetworkEnvelope getOfferAvailabilityResponse(PB.NetworkEnvelope envelope) {
         PB.OfferAvailabilityResponse msg = envelope.getOfferAvailabilityResponse();
         return new OfferAvailabilityResponse(msg.getOfferId(),
                 AvailabilityResult.valueOf(
@@ -222,7 +222,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
 
 
     @NotNull
-    private static NetworkEnvelope getPrefixedSealedAndSignedMessage(PB.WireEnvelope envelope) {
+    private static NetworkEnvelope getPrefixedSealedAndSignedMessage(PB.NetworkEnvelope envelope) {
         return getPrefixedSealedAndSignedMessage(envelope.getPrefixedSealedAndSignedMessage());
     }
 
@@ -352,11 +352,11 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
         return new RemoveMailboxDataMsg(getProtectedMailBoxStorageEntry(msg.getProtectedStorageEntry()));
     }
 
-    public static NetworkEnvelope getAddDataMessage(PB.WireEnvelope envelope) {
+    public static NetworkEnvelope getAddDataMessage(PB.NetworkEnvelope envelope) {
         return new AddDataMsg(getProtectedOrMailboxStorageEntry(envelope.getAddDataMessage().getEntry()));
     }
 
-    private static NetworkEnvelope getRemoveDataMessage(PB.WireEnvelope envelope) {
+    private static NetworkEnvelope getRemoveDataMessage(PB.NetworkEnvelope envelope) {
         return new RemoveDataMsg(getProtectedStorageEntry(envelope.getRemoveDataMessage().getProtectedStorageEntry()));
     }
 
@@ -371,7 +371,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static NetworkEnvelope getGetDataResponse(PB.WireEnvelope envelope) {
+    private static NetworkEnvelope getGetDataResponse(PB.NetworkEnvelope envelope) {
         HashSet<ProtectedStorageEntry> set = new HashSet<>(
                 envelope.getGetDataResponse().getDataSetList()
                         .stream()
@@ -382,7 +382,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static NetworkEnvelope getGetPeersResponse(PB.WireEnvelope envelope) {
+    private static NetworkEnvelope getGetPeersResponse(PB.NetworkEnvelope envelope) {
         NetworkEnvelope result;
         PB.GetPeersResponse msg = envelope.getGetPeersResponse();
         HashSet<Peer> set = new HashSet<>(
@@ -396,7 +396,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static NetworkEnvelope getGetPeersRequest(PB.WireEnvelope envelope) {
+    private static NetworkEnvelope getGetPeersRequest(PB.NetworkEnvelope envelope) {
         NodeAddress nodeAddress;
         NetworkEnvelope result;
         PB.GetPeersRequest msg = envelope.getGetPeersRequest();
@@ -412,7 +412,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static NetworkEnvelope getGetUpdatedDataRequest(PB.WireEnvelope envelope) {
+    private static NetworkEnvelope getGetUpdatedDataRequest(PB.NetworkEnvelope envelope) {
         NodeAddress nodeAddress;
         NetworkEnvelope result;
         PB.GetUpdatedDataRequest msg = envelope.getGetUpdatedDataRequest();
@@ -423,7 +423,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static NetworkEnvelope getPreliminaryGetDataRequest(PB.WireEnvelope envelope) {
+    private static NetworkEnvelope getPreliminaryGetDataRequest(PB.NetworkEnvelope envelope) {
         NetworkEnvelope result;
         result = new PreliminaryGetDataRequest(envelope.getPreliminaryGetDataRequest().getNonce(),
                 ProtoUtil.getByteSet(envelope.getPreliminaryGetDataRequest().getExcludedKeysList()));
@@ -431,12 +431,12 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static NetworkEnvelope getCloseConnectionMessage(PB.WireEnvelope msg) {
+    private static NetworkEnvelope getCloseConnectionMessage(PB.NetworkEnvelope msg) {
         return new CloseConnectionMsg(msg.getCloseConnectionMessage().getReason());
     }
 
     @NotNull
-    private static NetworkEnvelope getRefreshTTLMessage(PB.WireEnvelope msg) {
+    private static NetworkEnvelope getRefreshTTLMessage(PB.NetworkEnvelope msg) {
         PB.RefreshOfferMsg refreshOfferMsg = msg.getRefreshOfferMsg();
         return new RefreshOfferMsg(refreshOfferMsg.getHashOfDataAndSeqNr().toByteArray(),
                 refreshOfferMsg.getSignature().toByteArray(),
@@ -445,14 +445,14 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     }
 
     @NotNull
-    private static NetworkEnvelope getPong(PB.WireEnvelope envelope) {
+    private static NetworkEnvelope getPong(PB.NetworkEnvelope envelope) {
         NetworkEnvelope result;
         result = new Pong(envelope.getPong().getRequestNonce());
         return result;
     }
 
     @NotNull
-    private static NetworkEnvelope getPing(PB.WireEnvelope envelope) {
+    private static NetworkEnvelope getPing(PB.NetworkEnvelope envelope) {
         NetworkEnvelope result;
         result = new Ping(envelope.getPing().getNonce(), envelope.getPing().getLastRoundTripTime());
         return result;

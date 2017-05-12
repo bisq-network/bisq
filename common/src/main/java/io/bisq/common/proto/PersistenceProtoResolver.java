@@ -23,5 +23,5 @@ import io.bisq.generated.protobuffer.PB;
 import java.util.Optional;
 
 public interface PersistenceProtoResolver {
-    Optional<PersistableEnvelope> fromProto(PB.DiscEnvelope persistable);
+    Optional<PersistableEnvelope> fromProto(PB.PersistableEnvelope persistable);
 }
