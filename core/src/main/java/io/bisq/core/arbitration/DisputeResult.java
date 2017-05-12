@@ -20,7 +20,7 @@ package io.bisq.core.arbitration;
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkPayload;
-import io.bisq.core.arbitration.messages.DisputeCommunicationMsg;
+import io.bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import io.bisq.generated.protobuffer.PB;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -67,7 +67,7 @@ public final class DisputeResult implements NetworkPayload {
     private boolean idVerification;
     private boolean screenCast;
     private String summaryNotes;
-    private DisputeCommunicationMsg disputeCommunicationMessage;
+    private DisputeCommunicationMessage disputeCommunicationMessage;
     private byte[] arbitratorSignature;
     private long buyerPayoutAmount;
     private long sellerPayoutAmount;
@@ -89,7 +89,7 @@ public final class DisputeResult implements NetworkPayload {
 
     public DisputeResult(String tradeId, int traderId, Winner winner,
                          int reasonOrdinal, boolean tamperProofEvidence, boolean idVerification, boolean screenCast,
-                         String summaryNotes, DisputeCommunicationMsg disputeCommunicationMessage,
+                         String summaryNotes, DisputeCommunicationMessage disputeCommunicationMessage,
                          byte[] arbitratorSignature, long buyerPayoutAmount, long sellerPayoutAmount,
                          byte[] arbitratorPubKey,
                          long closeDate, boolean isLoserPublisher) {
@@ -171,11 +171,11 @@ public final class DisputeResult implements NetworkPayload {
         return summaryNotesProperty;
     }
 
-    public void setDisputeCommunicationMessage(DisputeCommunicationMsg disputeCommunicationMessage) {
+    public void setDisputeCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
         this.disputeCommunicationMessage = disputeCommunicationMessage;
     }
 
-    public DisputeCommunicationMsg getDisputeCommunicationMessage() {
+    public DisputeCommunicationMessage getDisputeCommunicationMessage() {
         return disputeCommunicationMessage;
     }
 
@@ -246,7 +246,7 @@ public final class DisputeResult implements NetworkPayload {
                 .setIdVerification(idVerification)
                 .setScreenCast(screenCast)
                 .setSummaryNotes(summaryNotes)
-                .setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoMsg().getDisputeCommunicationMessage())
+                .setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
                 .setArbitratorSignature(ByteString.copyFrom(arbitratorSignature))
                 .setBuyerPayoutAmount(buyerPayoutAmount)
                 .setSellerPayoutAmount(sellerPayoutAmount)

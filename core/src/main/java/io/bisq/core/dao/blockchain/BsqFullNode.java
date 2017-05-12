@@ -29,7 +29,7 @@ import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksResponse;
-import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMsg;
+import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMessage;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.parse.BsqFullNodeExecutor;
 import io.bisq.core.dao.blockchain.parse.BsqParser;
@@ -198,7 +198,7 @@ public class BsqFullNode extends BsqNode {
 
     private void publishNewBlock(BsqBlock bsqBlock) {
         byte[] bsqBlockBytes = Utilities.<BsqBlock>serialize(bsqBlock);
-        final NewBsqBlockBroadcastMsg newBsqBlockBroadcastMsg = new NewBsqBlockBroadcastMsg(bsqBlockBytes);
-        p2PService.getBroadcaster().broadcast(newBsqBlockBroadcastMsg, p2PService.getNetworkNode().getNodeAddress(), null, true);
+        final NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage = new NewBsqBlockBroadcastMessage(bsqBlockBytes);
+        p2PService.getBroadcaster().broadcast(newBsqBlockBroadcastMessage, p2PService.getNetworkNode().getNodeAddress(), null, true);
     }
 }

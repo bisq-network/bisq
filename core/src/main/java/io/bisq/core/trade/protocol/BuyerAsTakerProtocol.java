@@ -23,9 +23,9 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.core.trade.BuyerAsTakerTrade;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.messages.PayoutTxPublishedMsg;
+import io.bisq.core.trade.messages.PayoutTxPublishedMessage;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
-import io.bisq.core.trade.messages.TradeMsg;
+import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendFiatTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
@@ -33,7 +33,7 @@ import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx
 import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositTxInputs;
 import io.bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndPublishDepositTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
-import io.bisq.network.p2p.MailboxMsg;
+import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,11 +75,11 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     @Override
     public void doApplyMailboxMessage(NetworkEnvelope wireEnvelope, Trade trade) {
         this.trade = trade;
-        final NodeAddress senderNodeAddress = ((MailboxMsg) wireEnvelope).getSenderNodeAddress();
+        final NodeAddress senderNodeAddress = ((MailboxMessage) wireEnvelope).getSenderNodeAddress();
         if (wireEnvelope instanceof PublishDepositTxRequest)
             handle((PublishDepositTxRequest) wireEnvelope, senderNodeAddress);
-        else if (wireEnvelope instanceof PayoutTxPublishedMsg) {
-            handle((PayoutTxPublishedMsg) wireEnvelope, senderNodeAddress);
+        else if (wireEnvelope instanceof PayoutTxPublishedMessage) {
+            handle((PayoutTxPublishedMessage) wireEnvelope, senderNodeAddress);
         } else
             log.error("We received an unhandled MailboxMessage" + wireEnvelope.toString());
     }
@@ -171,7 +171,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(PayoutTxPublishedMsg tradeMessage, NodeAddress peerNodeAddress) {
+    private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
         log.debug("handle PayoutTxPublishedMessage called");
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
@@ -194,11 +194,11 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMsg tradeMessage, NodeAddress sender) {
+    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
         if (tradeMessage instanceof PublishDepositTxRequest) {
             handle((PublishDepositTxRequest) tradeMessage, sender);
-        } else if (tradeMessage instanceof PayoutTxPublishedMsg) {
-            handle((PayoutTxPublishedMsg) tradeMessage, sender);
+        } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
+            handle((PayoutTxPublishedMessage) tradeMessage, sender);
         } else {
             log.error("Incoming message not supported. " + tradeMessage);
         }

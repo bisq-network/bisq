@@ -7,22 +7,22 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
-public final class AddDataMsg extends BroadcastMsg {
+public final class AddDataMessage extends BroadcastMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
     public final ProtectedStorageEntry protectedStorageEntry;
 
-    public AddDataMsg(ProtectedStorageEntry protectedStorageEntry) {
+    public AddDataMessage(ProtectedStorageEntry protectedStorageEntry) {
         this.protectedStorageEntry = protectedStorageEntry;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AddDataMsg)) return false;
+        if (!(o instanceof AddDataMessage)) return false;
 
-        AddDataMsg that = (AddDataMsg) o;
+        AddDataMessage that = (AddDataMessage) o;
 
         return !(protectedStorageEntry != null ? !protectedStorageEntry.equals(that.protectedStorageEntry) : that.protectedStorageEntry != null);
     }
@@ -40,8 +40,8 @@ public final class AddDataMsg extends BroadcastMsg {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         PB.AddDataMessage.Builder builder;
         PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder choiceBuilder;
         choiceBuilder = PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.newBuilder();
@@ -58,6 +58,6 @@ public final class AddDataMsg extends BroadcastMsg {
 
     @Override
     public Message toProtoMessage() {
-        return toProtoMsg().getAddDataMessage();
+        return toProtoNetworkEnvelope().getAddDataMessage();
     }
 }

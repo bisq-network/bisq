@@ -556,10 +556,10 @@ public class NetworkStressTest {
             final NodeAddress srcPeerAddress = srcPeer.getAddress();
 
             // Make the peer ready for receiving direct network_messages.
-            srcPeer.addDecryptedDirectMessageListener((decryptedMsgWithPubKey, peerNodeAddress) -> {
-                if (!(decryptedMsgWithPubKey.wireEnvelope instanceof StressTestDirectMsg))
+            srcPeer.addDecryptedDirectMessageListener((decryptedDirectMessageListener, peerNodeAddress) -> {
+                if (!(decryptedDirectMessageListener.wireEnvelope instanceof StressTestDirectMessage))
                     return;
-                StressTestDirectMsg directMessage = (StressTestDirectMsg) (decryptedMsgWithPubKey.wireEnvelope);
+                StressTestDirectMessage directMessage = (StressTestDirectMessage) (decryptedDirectMessageListener.wireEnvelope);
                 if ((directMessage.getData().equals("test/" + srcPeerAddress)))
                     receivedDirectLatch.countDown();
             });
@@ -584,7 +584,7 @@ public class NetworkStressTest {
                             final long sendMillis = System.currentTimeMillis();
                             srcPeer.sendEncryptedDirectMessage(
                                     dstPeerAddress, peerPKRings.get(dstPeerIdx),
-                                    new StressTestDirectMsg("test/" + dstPeerAddress),
+                                    new StressTestDirectMessage("test/" + dstPeerAddress),
                                     new SendDirectMessageListener() {
                                         @Override
                                         public void onArrived() {
@@ -683,7 +683,7 @@ public class NetworkStressTest {
                 final NodeAddress dstPeerAddress = peerAddr;
                 // ...and send a message to it.
                 onlinePeer.sendEncryptedMailboxMessage(dstPeerAddress, peerPKRings.get(dstPeerIdx),
-                        new StressTestMailboxMsg(onlinePeerAddress, "test/" + dstPeerAddress),
+                        new StressTestMailboxMessage(onlinePeerAddress, "test/" + dstPeerAddress),
                         new SendMailboxMessageListener() {  // checked in receiver
                             @Override
                             public void onArrived() {
@@ -740,24 +740,24 @@ public class NetworkStressTest {
      */
     private void addMailboxListeners(P2PService peer, CountDownLatch receivedMailboxLatch) {
         class MailboxMessageListener implements DecryptedDirectMessageListener, DecryptedMailboxListener {
-            private void handle(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
-                if (!(decryptedMsgWithPubKey.wireEnvelope instanceof StressTestMailboxMsg))
+            private void handle(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+                if (!(decryptedMessageWithPubKey.wireEnvelope instanceof StressTestMailboxMessage))
                     return;
-                StressTestMailboxMsg msg = (StressTestMailboxMsg) (decryptedMsgWithPubKey.wireEnvelope);
+                StressTestMailboxMessage msg = (StressTestMailboxMessage) (decryptedMessageWithPubKey.wireEnvelope);
                 if ((msg.getData().equals("test/" + peer.getAddress())))
                     countDownAndPrint(receivedMailboxLatch, 'm');
             }
 
             @Override
             public void onDirectMessage(
-                    DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress srcNodeAddress) {
-                handle(decryptedMsgWithPubKey);
+                    DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress srcNodeAddress) {
+                handle(decryptedMessageWithPubKey);
             }
 
             @Override
             public void onMailboxMessageAdded(
-                    DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress srcNodeAddress) {
-                handle(decryptedMsgWithPubKey);
+                    DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress srcNodeAddress) {
+                handle(decryptedMessageWithPubKey);
             }
         }
 
@@ -807,23 +807,23 @@ public class NetworkStressTest {
 
 // # MESSAGE CLASSES
 
-final class StressTestDirectMsg implements DirectMsg {
+final class StressTestDirectMessage implements DirectMessage {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private final int messageVersion = Version.getP2PMessageVersion();
 
     private final String data;
 
-    StressTestDirectMsg(String data) {
+    StressTestDirectMessage(String data) {
         this.data = data;
     }
 
     @Override
-    public int getMsgVersion() {
+    public int getMessageVersion() {
         return messageVersion;
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         throw new NotImplementedException();
     }
 
@@ -832,7 +832,7 @@ final class StressTestDirectMsg implements DirectMsg {
     }
 }
 
-final class StressTestMailboxMsg implements MailboxMsg {
+final class StressTestMailboxMessage implements MailboxMessage {
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private final int messageVersion = Version.getP2PMessageVersion();
 
@@ -840,18 +840,18 @@ final class StressTestMailboxMsg implements MailboxMsg {
     private final NodeAddress senderNodeAddress;
     private final String data;
 
-    StressTestMailboxMsg(NodeAddress sender, String data) {
+    StressTestMailboxMessage(NodeAddress sender, String data) {
         this.senderNodeAddress = sender;
         this.data = data;
     }
 
     @Override
-    public int getMsgVersion() {
+    public int getMessageVersion() {
         return messageVersion;
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         throw new NotImplementedException();
     }
 

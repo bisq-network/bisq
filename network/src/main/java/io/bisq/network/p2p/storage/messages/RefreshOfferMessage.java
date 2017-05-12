@@ -8,7 +8,7 @@ import io.bisq.generated.protobuffer.PB;
 
 import java.util.Arrays;
 
-public final class RefreshOfferMsg extends BroadcastMsg {
+public final class RefreshOfferMessage extends BroadcastMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -19,10 +19,10 @@ public final class RefreshOfferMsg extends BroadcastMsg {
     public final byte[] hashOfPayload;          // 32 bytes
     public final int sequenceNumber;            // 4 bytes
 
-    public RefreshOfferMsg(byte[] hashOfDataAndSeqNr,
-                           byte[] signature,
-                           byte[] hashOfPayload,
-                           int sequenceNumber) {
+    public RefreshOfferMessage(byte[] hashOfDataAndSeqNr,
+                               byte[] signature,
+                               byte[] hashOfPayload,
+                               int sequenceNumber) {
         this.hashOfDataAndSeqNr = hashOfDataAndSeqNr;
         this.signature = signature;
         this.hashOfPayload = hashOfPayload;
@@ -40,9 +40,9 @@ public final class RefreshOfferMsg extends BroadcastMsg {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
-        PB.NetworkEnvelope.Builder builder = NetworkEnvelope.getMsgBuilder();
-        return builder.setRefreshOfferMsg(builder.getRefreshOfferMsgBuilder()
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        PB.NetworkEnvelope.Builder builder = NetworkEnvelope.getDefaultBuilder();
+        return builder.setRefreshOfferMessage(builder.getRefreshOfferMessageBuilder()
                 .setHashOfDataAndSeqNr(ByteString.copyFrom(hashOfDataAndSeqNr))
                 .setHashOfPayload(ByteString.copyFrom(hashOfPayload))
                 .setSequenceNumber(sequenceNumber)
@@ -51,6 +51,6 @@ public final class RefreshOfferMsg extends BroadcastMsg {
 
     @Override
     public Message toProtoMessage() {
-        return toProtoMsg().getRefreshOfferMsg();
+        return toProtoNetworkEnvelope().getRefreshOfferMessage();
     }
 }

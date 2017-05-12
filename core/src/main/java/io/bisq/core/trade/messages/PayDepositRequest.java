@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 @EqualsAndHashCode(callSuper = true)
 @Immutable
-public final class PayDepositRequest extends TradeMsg {
+public final class PayDepositRequest extends TradeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -105,8 +105,8 @@ public final class PayDepositRequest extends TradeMsg {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         PB.PayDepositRequest.Builder builderForValue = PB.PayDepositRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setTradeAmount(tradeAmount)

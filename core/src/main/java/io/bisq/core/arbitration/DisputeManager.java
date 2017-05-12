@@ -72,8 +72,8 @@ public class DisputeManager {
     private final Storage<DisputeList> disputeStorage;
     private final DisputeList disputes;
     private final String disputeInfo;
-    private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
-    private final CopyOnWriteArraySet<DecryptedMsgWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final Map<String, Dispute> openDisputes;
     private final Map<String, Dispute> closedDisputes;
     private final Map<String, Timer> delayMsgMap = new HashMap<>();
@@ -171,33 +171,33 @@ public class DisputeManager {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
             log.debug("decryptedDirectMessageWithPubKeys.message " + wireEnvelope);
-            if (wireEnvelope instanceof DisputeMsg)
-                dispatchMessage((DisputeMsg) wireEnvelope);
+            if (wireEnvelope instanceof DisputeMessage)
+                dispatchMessage((DisputeMessage) wireEnvelope);
         });
         decryptedDirectMessageWithPubKeys.clear();
 
         decryptedMailboxMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
             log.debug("decryptedMessageWithPubKey.message " + wireEnvelope);
-            if (wireEnvelope instanceof DisputeMsg) {
-                dispatchMessage((DisputeMsg) wireEnvelope);
+            if (wireEnvelope instanceof DisputeMessage) {
+                dispatchMessage((DisputeMessage) wireEnvelope);
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
             }
         });
         decryptedMailboxMessageWithPubKeys.clear();
     }
 
-    private void dispatchMessage(DisputeMsg message) {
-        if (message instanceof OpenNewDisputeMsg)
-            onOpenNewDisputeMessage((OpenNewDisputeMsg) message);
-        else if (message instanceof PeerOpenedDisputeMsg)
-            onPeerOpenedDisputeMessage((PeerOpenedDisputeMsg) message);
-        else if (message instanceof DisputeCommunicationMsg)
-            onDisputeDirectMessage((DisputeCommunicationMsg) message);
-        else if (message instanceof DisputeResultMsg)
-            onDisputeResultMessage((DisputeResultMsg) message);
-        else if (message instanceof PeerPublishedPayoutTxMsg)
-            onDisputedPayoutTxMessage((PeerPublishedPayoutTxMsg) message);
+    private void dispatchMessage(DisputeMessage message) {
+        if (message instanceof OpenNewDisputeMessage)
+            onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
+        else if (message instanceof PeerOpenedDisputeMessage)
+            onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
+        else if (message instanceof DisputeCommunicationMessage)
+            onDisputeDirectMessage((DisputeCommunicationMessage) message);
+        else if (message instanceof DisputeResultMessage)
+            onDisputeResultMessage((DisputeResultMessage) message);
+        else if (message instanceof PeerPublishedPayoutTxMessage)
+            onDisputedPayoutTxMessage((PeerPublishedPayoutTxMessage) message);
         else
             log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
     }
@@ -210,7 +210,7 @@ public class DisputeManager {
                         Res.get("support.youOpenedTicket")
                         : Res.get("support.youOpenedDispute", disputeInfo);
 
-                DisputeCommunicationMsg disputeCommunicationMessage = new DisputeCommunicationMsg(
+                DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                         dispute.getTradeId(),
                         keyRing.getPubKeyRing().hashCode(),
                         false,
@@ -230,7 +230,7 @@ public class DisputeManager {
 
                 p2PService.sendEncryptedMailboxMessage(dispute.getContract().arbitratorNodeAddress,
                         dispute.getArbitratorPubKeyRing(),
-                        new OpenNewDisputeMsg(dispute, p2PService.getAddress(),
+                        new OpenNewDisputeMessage(dispute, p2PService.getAddress(),
                                 UUID.randomUUID().toString()),
                         new SendMailboxMessageListener() {
                             @Override
@@ -294,7 +294,7 @@ public class DisputeManager {
             String sysMsg = dispute.isSupportTicket() ?
                     Res.get("support.peerOpenedTicket")
                     : Res.get("support.peerOpenedDispute", disputeInfo);
-            DisputeCommunicationMsg disputeCommunicationMessage = new DisputeCommunicationMsg(
+            DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                     dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     false,
@@ -317,7 +317,7 @@ public class DisputeManager {
             log.trace("sendPeerOpenedDisputeMessage to peerAddress " + peerNodeAddress);
             p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
                     peersPubKeyRing,
-                    new PeerOpenedDisputeMsg(dispute,
+                    new PeerOpenedDisputeMessage(dispute,
                             p2PService.getAddress(),
                             UUID.randomUUID().toString()),
                     new SendMailboxMessageListener() {
@@ -344,8 +344,8 @@ public class DisputeManager {
     }
 
     // traders send msg to the arbitrator or arbitrator to 1 trader (trader to trader is not allowed)
-    public DisputeCommunicationMsg sendDisputeDirectMessage(Dispute dispute, String text, ArrayList<Attachment> attachments) {
-        DisputeCommunicationMsg disputeCommunicationMessage = new DisputeCommunicationMsg(
+    public DisputeCommunicationMessage sendDisputeDirectMessage(Dispute dispute, String text, ArrayList<Attachment> attachments) {
+        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                 dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 isTrader(dispute),
@@ -406,7 +406,7 @@ public class DisputeManager {
 
     // arbitrator send result to trader
     public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
-        DisputeCommunicationMsg disputeCommunicationMessage = new DisputeCommunicationMsg(
+        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                 dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
@@ -430,7 +430,7 @@ public class DisputeManager {
             peerNodeAddress = contract.getSellerNodeAddress();
         p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
                 dispute.getTraderPubKeyRing(),
-                new DisputeResultMsg(disputeResult, p2PService.getAddress(),
+                new DisputeResultMessage(disputeResult, p2PService.getAddress(),
                         UUID.randomUUID().toString()),
                 new SendMailboxMessageListener() {
                     @Override
@@ -458,7 +458,7 @@ public class DisputeManager {
         log.trace("sendPeerPublishedPayoutTxMessage to peerAddress " + peerNodeAddress);
         p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
                 peersPubKeyRing,
-                new PeerPublishedPayoutTxMsg(transaction.bitcoinSerialize(),
+                new PeerPublishedPayoutTxMessage(transaction.bitcoinSerialize(),
                         dispute.getTradeId(),
                         p2PService.getAddress(),
                         UUID.randomUUID().toString()),
@@ -487,7 +487,7 @@ public class DisputeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // arbitrator receives that from trader who opens dispute
-    private void onOpenNewDisputeMessage(OpenNewDisputeMsg openNewDisputeMessage) {
+    private void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
         Dispute dispute = openNewDisputeMessage.dispute;
         if (isArbitrator(dispute)) {
             if (!disputes.contains(dispute)) {
@@ -509,7 +509,7 @@ public class DisputeManager {
     }
 
     // not dispute requester receives that from arbitrator
-    private void onPeerOpenedDisputeMessage(PeerOpenedDisputeMsg peerOpenedDisputeMessage) {
+    private void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         Dispute dispute = peerOpenedDisputeMessage.dispute;
         if (!isArbitrator(dispute)) {
             if (!disputes.contains(dispute)) {
@@ -534,7 +534,7 @@ public class DisputeManager {
     }
 
     // a trader can receive a msg from the arbitrator or the arbitrator form a trader. Trader to trader is not allowed.
-    private void onDisputeDirectMessage(DisputeCommunicationMsg disputeCommunicationMessage) {
+    private void onDisputeDirectMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
         Log.traceCall("disputeCommunicationMessage " + disputeCommunicationMessage);
         final String tradeId = disputeCommunicationMessage.getTradeId();
         Optional<Dispute> disputeOptional = findDispute(tradeId, disputeCommunicationMessage.getTraderId());
@@ -559,7 +559,7 @@ public class DisputeManager {
     }
 
     // We get that message at both peers. The dispute object is in context of the trader
-    private void onDisputeResultMessage(DisputeResultMsg disputeResultMessage) {
+    private void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
         DisputeResult disputeResult = disputeResultMessage.disputeResult;
         if (!isArbitrator(disputeResult)) {
             final String tradeId = disputeResult.tradeId;
@@ -570,7 +570,7 @@ public class DisputeManager {
 
                 Dispute dispute = disputeOptional.get();
 
-                DisputeCommunicationMsg disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
+                DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
                 if (!dispute.getDisputeCommunicationMessagesAsObservableList().contains(disputeCommunicationMessage))
                     dispute.addDisputeMessage(disputeCommunicationMessage);
                 else
@@ -703,7 +703,7 @@ public class DisputeManager {
     }
 
     // losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
-    private void onDisputedPayoutTxMessage(PeerPublishedPayoutTxMsg peerPublishedPayoutTxMessage) {
+    private void onDisputedPayoutTxMessage(PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
         final String uid = peerPublishedPayoutTxMessage.getUID();
         final String tradeId = peerPublishedPayoutTxMessage.tradeId;
         Optional<Dispute> disputeOptional = findOwnDispute(tradeId);

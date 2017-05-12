@@ -23,7 +23,7 @@ import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.network.NetworkPayload;
 import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.DecryptedMsgWithPubKey;
+import io.bisq.network.p2p.DecryptedMessageWithPubKey;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.crypto.SecretKey;
@@ -74,15 +74,15 @@ public class EncryptionService {
 
     }
 
-    public DecryptedMsgWithPubKey decryptAndVerify(SealedAndSigned sealedAndSigned) throws CryptoException {
+    public DecryptedMessageWithPubKey decryptAndVerify(SealedAndSigned sealedAndSigned) throws CryptoException {
         DecryptedDataTuple decryptedDataTuple = decryptHybridWithSignature(sealedAndSigned,
                 keyRing.getEncryptionKeyPair().getPrivate());
-        return new DecryptedMsgWithPubKey(decryptedDataTuple.payload,
+        return new DecryptedMessageWithPubKey(decryptedDataTuple.payload,
                 decryptedDataTuple.sigPublicKey);
     }
 
     private static byte[] encryptPayloadWithHmac(NetworkEnvelope wireEnvelope, SecretKey secretKey) throws CryptoException {
-        return Encryption.encryptPayloadWithHmac(wireEnvelope.toProtoMsg().toByteArray(), secretKey);
+        return Encryption.encryptPayloadWithHmac(wireEnvelope.toProtoNetworkEnvelope().toByteArray(), secretKey);
     }
 
     /**

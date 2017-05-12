@@ -23,14 +23,14 @@ import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.SupportedCapabilitiesMsg;
+import io.bisq.network.p2p.SupportedCapabilitiesMessage;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 
 // We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
-public final class OfferAvailabilityResponse extends OfferMsg implements SupportedCapabilitiesMsg {
+public final class OfferAvailabilityResponse extends OfferMessage implements SupportedCapabilitiesMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -58,9 +58,9 @@ public final class OfferAvailabilityResponse extends OfferMsg implements Support
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
-        return msgBuilder.setOfferAvailabilityResponse(PB.OfferAvailabilityResponse.newBuilder().setMessageVersion(getMsgVersion())
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
+        return msgBuilder.setOfferAvailabilityResponse(PB.OfferAvailabilityResponse.newBuilder().setMessageVersion(getMessageVersion())
                 .setOfferId(offerId)
                 .setAvailabilityResult(PB.AvailabilityResult.valueOf(availabilityResult.name()))
                 .addAllSupportedCapabilities(supportedCapabilities)).build();

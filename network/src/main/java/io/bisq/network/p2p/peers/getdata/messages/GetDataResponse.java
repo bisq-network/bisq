@@ -5,7 +5,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.ExtendedDataSizePermission;
-import io.bisq.network.p2p.SupportedCapabilitiesMsg;
+import io.bisq.network.p2p.SupportedCapabilitiesMessage;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 
-public final class GetDataResponse implements SupportedCapabilitiesMsg, ExtendedDataSizePermission {
+public final class GetDataResponse implements SupportedCapabilitiesMessage, ExtendedDataSizePermission {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
     private final int messageVersion = Version.getP2PMessageVersion();
@@ -39,12 +39,12 @@ public final class GetDataResponse implements SupportedCapabilitiesMsg, Extended
     }
 
     @Override
-    public int getMsgVersion() {
+    public int getMessageVersion() {
         return messageVersion;
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         PB.GetDataResponse.Builder builder = PB.GetDataResponse.newBuilder();
         builder.addAllDataSet(
                 dataSet.stream()
@@ -61,7 +61,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMsg, Extended
                         .collect(Collectors.toList()))
                 .setRequestNonce(requestNonce)
                 .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
-        return NetworkEnvelope.getMsgBuilder().setGetDataResponse(builder).build();
+        return NetworkEnvelope.getDefaultBuilder().setGetDataResponse(builder).build();
     }
 
 

@@ -24,7 +24,7 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.core.app.AppOptionKeys;
-import io.bisq.network.p2p.DecryptedMsgWithPubKey;
+import io.bisq.network.p2p.DecryptedMessageWithPubKey;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.SendMailboxMessageListener;
@@ -55,7 +55,7 @@ public class PrivateNotificationManager {
             "02ba7c5de295adfe57b60029f3637a2c6b1d0e969a8aaefb9e0ddc3a7963f26925";
 
     private ECKey privateNotificationSigningKey;
-    private DecryptedMsgWithPubKey decryptedMsgWithPubKey;
+    private DecryptedMessageWithPubKey decryptedMessageWithPubKey;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,11 +73,11 @@ public class PrivateNotificationManager {
         }
     }
 
-    private void handleMessage(DecryptedMsgWithPubKey decryptedMsgWithPubKey, NodeAddress senderNodeAddress) {
-        this.decryptedMsgWithPubKey = decryptedMsgWithPubKey;
-        NetworkEnvelope wireEnvelope = decryptedMsgWithPubKey.wireEnvelope;
-        if (wireEnvelope instanceof PrivateNotificationMsg) {
-            PrivateNotificationMsg privateNotificationMessage = (PrivateNotificationMsg) wireEnvelope;
+    private void handleMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress) {
+        this.decryptedMessageWithPubKey = decryptedMessageWithPubKey;
+        NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
+        if (wireEnvelope instanceof PrivateNotificationMessage) {
+            PrivateNotificationMessage privateNotificationMessage = (PrivateNotificationMessage) wireEnvelope;
             log.trace("Received privateNotificationMessage: " + privateNotificationMessage);
             if (privateNotificationMessage.getSenderNodeAddress().equals(senderNodeAddress)) {
                 final PrivateNotificationPayload privateNotification = privateNotificationMessage.privateNotificationPayload;
@@ -105,7 +105,7 @@ public class PrivateNotificationManager {
             signAndAddSignatureToPrivateNotificationMessage(privateNotification);
             p2PService.sendEncryptedMailboxMessage(nodeAddress,
                     pubKeyRing,
-                    new PrivateNotificationMsg(privateNotification,
+                    new PrivateNotificationMessage(privateNotification,
                             p2PService.getNetworkNode().getNodeAddress(),
                             UUID.randomUUID().toString()),
                     sendMailboxMessageListener);
@@ -115,7 +115,7 @@ public class PrivateNotificationManager {
     }
 
     public void removePrivateNotification() {
-        p2PService.removeEntryFromMailbox(decryptedMsgWithPubKey);
+        p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
     }
 
     private boolean isKeyValid(String privKeyString) {

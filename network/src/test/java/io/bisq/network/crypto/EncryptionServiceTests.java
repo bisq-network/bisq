@@ -26,7 +26,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.MailboxMsg;
+import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.After;
@@ -122,31 +122,31 @@ public class EncryptionServiceTests {
         log.trace("took " + (System.currentTimeMillis() - ts) + " ms.");
     }*/
 
-    private static class MockMsg implements NetworkEnvelope {
+    private static class MockMessage implements NetworkEnvelope {
         public final int nonce;
 
-        public MockMsg(int nonce) {
+        public MockMessage(int nonce) {
             this.nonce = nonce;
         }
 
         @Override
-        public int getMsgVersion() {
+        public int getMessageVersion() {
             return 0;
         }
 
         @Override
-        public PB.NetworkEnvelope toProtoMsg() {
+        public PB.NetworkEnvelope toProtoNetworkEnvelope() {
             return PB.NetworkEnvelope.newBuilder().setPing(PB.Ping.newBuilder().setNonce(nonce)).build();
         }
     }
 }
 
-final class TestMsg implements MailboxMsg {
+final class TestMessage implements MailboxMessage {
     public String data = "test";
     private final int messageVersion = Version.getP2PMessageVersion();
     private final String uid;
 
-    public TestMsg(String data) {
+    public TestMessage(String data) {
         this.data = data;
         uid = UUID.randomUUID().toString();
     }
@@ -162,12 +162,12 @@ final class TestMsg implements MailboxMsg {
     }
 
     @Override
-    public int getMsgVersion() {
+    public int getMessageVersion() {
         return messageVersion;
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         throw new NotImplementedException();
     }
 }

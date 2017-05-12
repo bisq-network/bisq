@@ -23,7 +23,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.network.NetworkPayload;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.arbitration.messages.DisputeCommunicationMsg;
+import io.bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import io.bisq.core.trade.Contract;
 import io.bisq.generated.protobuffer.PB;
 import javafx.beans.property.*;
@@ -78,7 +78,7 @@ public final class Dispute implements NetworkPayload {
     private final PubKeyRing arbitratorPubKeyRing;
     private final boolean isSupportTicket;
 
-    private final ArrayList<DisputeCommunicationMsg> disputeCommunicationMessages = new ArrayList<>();
+    private final ArrayList<DisputeCommunicationMessage> disputeCommunicationMessages = new ArrayList<>();
 
     private boolean isClosed;
     @Nullable
@@ -89,7 +89,7 @@ public final class Dispute implements NetworkPayload {
 
     // Domain
     transient private Storage<DisputeList> storage;
-    transient private ObservableList<DisputeCommunicationMsg> observableList = FXCollections.observableArrayList(
+    transient private ObservableList<DisputeCommunicationMessage> observableList = FXCollections.observableArrayList(
             disputeCommunicationMessages);
     transient private BooleanProperty isClosedProperty = new SimpleBooleanProperty(isClosed);
     transient private ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
@@ -192,7 +192,7 @@ public final class Dispute implements NetworkPayload {
         disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
     }
 
-    public void addDisputeMessage(DisputeCommunicationMsg disputeCommunicationMessage) {
+    public void addDisputeMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
         if (!disputeCommunicationMessages.contains(disputeCommunicationMessage)) {
             disputeCommunicationMessages.add(disputeCommunicationMessage);
             observableList.add(disputeCommunicationMessage);
@@ -310,7 +310,7 @@ public final class Dispute implements NetworkPayload {
         return takerContractSignature;
     }
 
-    public ObservableList<DisputeCommunicationMsg> getDisputeCommunicationMessagesAsObservableList() {
+    public ObservableList<DisputeCommunicationMessage> getDisputeCommunicationMessagesAsObservableList() {
         return observableList;
     }
 
@@ -397,7 +397,7 @@ public final class Dispute implements NetworkPayload {
                 .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage())
                 .setIsSupportTicket(isSupportTicket)
                 .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream().map(
-                        disputeCommunicationMessage -> disputeCommunicationMessage.toProtoMsg().getDisputeCommunicationMessage()).collect(Collectors.toList()))
+                        disputeCommunicationMessage -> disputeCommunicationMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage()).collect(Collectors.toList()))
                 .setIsClosed(isClosed);
 
         Optional.ofNullable(depositTxSerialized).ifPresent(tx -> builder.setDepositTxSerialized(ByteString.copyFrom(tx)));

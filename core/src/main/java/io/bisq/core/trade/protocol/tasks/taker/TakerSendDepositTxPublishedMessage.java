@@ -19,7 +19,7 @@ package io.bisq.core.trade.protocol.tasks.taker;
 
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.messages.DepositTxPublishedMsg;
+import io.bisq.core.trade.messages.DepositTxPublishedMessage;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.network.p2p.SendMailboxMessageListener;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class TakerSendDepositTxPublishedMessage extends TradeTask {
             runInterceptHook();
             if (trade.getDepositTx() != null) {
                 final String id = processModel.getOfferId();
-                DepositTxPublishedMsg message = new DepositTxPublishedMsg(processModel.getOfferId(),
+                DepositTxPublishedMessage message = new DepositTxPublishedMessage(processModel.getOfferId(),
                         trade.getDepositTx().bitcoinSerialize(),
                         processModel.getMyNodeAddress(),
                         UUID.randomUUID().toString());

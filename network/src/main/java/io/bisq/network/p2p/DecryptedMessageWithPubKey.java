@@ -24,14 +24,14 @@ import lombok.EqualsAndHashCode;
 import java.security.PublicKey;
 
 @EqualsAndHashCode
-public final class DecryptedMsgWithPubKey {
+public final class DecryptedMessageWithPubKey {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 
     public final NetworkEnvelope wireEnvelope;
     public final PublicKey signaturePubKey;
 
-    public DecryptedMsgWithPubKey(NetworkEnvelope wireEnvelope, PublicKey signaturePubKey) {
+    public DecryptedMessageWithPubKey(NetworkEnvelope wireEnvelope, PublicKey signaturePubKey) {
         this.wireEnvelope = wireEnvelope;
         this.signaturePubKey = signaturePubKey;
     }

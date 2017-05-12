@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @ToString
 @Getter
 @Slf4j
-public final class DisputeCommunicationMsg extends DisputeMsg {
+public final class DisputeCommunicationMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -63,16 +63,16 @@ public final class DisputeCommunicationMsg extends DisputeMsg {
     transient private BooleanProperty arrivedProperty = new SimpleBooleanProperty();
     transient private BooleanProperty storedInMailboxProperty = new SimpleBooleanProperty();
 
-    public DisputeCommunicationMsg(String tradeId,
-                                   int traderId,
-                                   boolean senderIsTrader,
-                                   String message,
-                                   @Nullable List<Attachment> attachments,
-                                   NodeAddress myNodeAddress,
-                                   long date,
-                                   boolean arrived,
-                                   boolean storedInMailbox,
-                                   String uid) {
+    public DisputeCommunicationMessage(String tradeId,
+                                       int traderId,
+                                       boolean senderIsTrader,
+                                       String message,
+                                       @Nullable List<Attachment> attachments,
+                                       NodeAddress myNodeAddress,
+                                       long date,
+                                       boolean arrived,
+                                       boolean storedInMailbox,
+                                       String uid) {
         super(uid);
         this.tradeId = tradeId;
         this.traderId = traderId;
@@ -132,8 +132,8 @@ public final class DisputeCommunicationMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         return msgBuilder.setDisputeCommunicationMessage(PB.DisputeCommunicationMessage.newBuilder()
                 .setDate(date)
                 .setTradeId(tradeId)

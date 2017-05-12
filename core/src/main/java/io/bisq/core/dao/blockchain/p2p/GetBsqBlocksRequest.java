@@ -3,11 +3,11 @@ package io.bisq.core.dao.blockchain.p2p;
 import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.DirectMsg;
+import io.bisq.network.p2p.DirectMessage;
 import lombok.Getter;
 
 @Getter
-public final class GetBsqBlocksRequest implements DirectMsg {
+public final class GetBsqBlocksRequest implements DirectMessage {
     private final int messageVersion = Version.getP2PMessageVersion();
     private final int fromBlockHeight;
 
@@ -16,16 +16,10 @@ public final class GetBsqBlocksRequest implements DirectMsg {
     }
 
     @Override
-    public int getMsgVersion() {
-        return messageVersion;
-    }
-
-
-    @Override
-    public PB.NetworkEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         final PB.GetBsqBlocksRequest.Builder builder = PB.GetBsqBlocksRequest.newBuilder()
                 .setFromBlockHeight(fromBlockHeight);
-        return NetworkEnvelope.getMsgBuilder().setGetBsqBlocksRequest(builder).build();
+        return NetworkEnvelope.getDefaultBuilder().setGetBsqBlocksRequest(builder).build();
     }
 
     public static NetworkEnvelope fromProto(PB.NetworkEnvelope msg) {

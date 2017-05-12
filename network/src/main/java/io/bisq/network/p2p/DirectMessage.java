@@ -15,31 +15,9 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.arbitration.messages;
+package io.bisq.network.p2p;
 
-import io.bisq.common.app.Version;
-import io.bisq.network.p2p.MailboxMsg;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import io.bisq.common.network.NetworkEnvelope;
 
-@EqualsAndHashCode
-@ToString
-public abstract class DisputeMsg implements MailboxMsg {
-    //TODO add serialVersionUID also in superclasses as changes would break compatibility
-    private final int messageVersion = Version.getP2PMessageVersion();
-    private final String uid;
-
-    public DisputeMsg(String uid) {
-        this.uid = uid;
-    }
-
-    @Override
-    public int getMsgVersion() {
-        return messageVersion;
-    }
-
-    @Override
-    public String getUID() {
-        return uid;
-    }
+public interface DirectMessage extends NetworkEnvelope {
 }

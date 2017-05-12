@@ -16,12 +16,12 @@ public final class MockPayload implements NetworkEnvelope, ExpirablePayload {
     }
 
     @Override
-    public int getMsgVersion() {
+    public int getMessageVersion() {
         return messageVersion;
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         throw new NotImplementedException();
     }
 

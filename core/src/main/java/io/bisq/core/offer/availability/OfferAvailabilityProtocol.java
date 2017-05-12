@@ -27,7 +27,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import io.bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
 import io.bisq.core.offer.messages.OfferAvailabilityResponse;
-import io.bisq.core.offer.messages.OfferMsg;
+import io.bisq.core.offer.messages.OfferMessage;
 import io.bisq.core.util.Validator;
 import io.bisq.network.p2p.DecryptedDirectMessageListener;
 import org.slf4j.Logger;
@@ -58,8 +58,8 @@ public class OfferAvailabilityProtocol {
 
         decryptedDirectMessageListener = (decryptedMessageWithPubKey, peersNodeAddress) -> {
             NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.wireEnvelope;
-            if (wireEnvelope instanceof OfferMsg) {
-                OfferMsg offerMessage = (OfferMsg) wireEnvelope;
+            if (wireEnvelope instanceof OfferMessage) {
+                OfferMessage offerMessage = (OfferMessage) wireEnvelope;
                 Validator.nonEmptyStringOf(offerMessage.offerId);
                 if (wireEnvelope instanceof OfferAvailabilityResponse
                         && model.offer.getId().equals(offerMessage.offerId)) {

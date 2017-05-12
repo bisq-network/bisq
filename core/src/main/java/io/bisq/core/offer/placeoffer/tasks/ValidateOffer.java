@@ -24,7 +24,7 @@ import io.bisq.core.btc.Restrictions;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.placeoffer.PlaceOfferModel;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.core.trade.messages.TradeMsg;
+import io.bisq.core.trade.messages.TradeMessage;
 import org.bitcoinj.core.Coin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,7 +141,7 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
         return value;
     }
 
-    public static void checkTradeId(String tradeId, TradeMsg tradeMessage) {
+    public static void checkTradeId(String tradeId, TradeMessage tradeMessage) {
         checkArgument(tradeId.equals(tradeMessage.tradeId));
     }
 }

@@ -2,14 +2,14 @@ package io.bisq.network.p2p.mocks;
 
 import io.bisq.common.app.Version;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.MailboxMsg;
+import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.ExpirablePayload;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.UUID;
 
-public final class MockMailboxPayload implements MailboxMsg, ExpirablePayload {
+public final class MockMailboxPayload implements MailboxMessage, ExpirablePayload {
     private final int messageVersion = Version.getP2PMessageVersion();
     public final String msg;
     public final NodeAddress senderNodeAddress;
@@ -23,12 +23,12 @@ public final class MockMailboxPayload implements MailboxMsg, ExpirablePayload {
     }
 
     @Override
-    public int getMsgVersion() {
+    public int getMessageVersion() {
         return messageVersion;
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         throw new NotImplementedException();
     }
 

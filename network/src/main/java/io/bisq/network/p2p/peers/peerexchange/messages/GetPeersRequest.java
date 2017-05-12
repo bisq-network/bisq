@@ -5,8 +5,8 @@ import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
-import io.bisq.network.p2p.SendersNodeAddressMsg;
-import io.bisq.network.p2p.SupportedCapabilitiesMsg;
+import io.bisq.network.p2p.SendersNodeAddressMessage;
+import io.bisq.network.p2p.SupportedCapabilitiesMessage;
 import io.bisq.network.p2p.peers.peerexchange.Peer;
 
 import javax.annotation.Nullable;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class GetPeersRequest extends PeerExchangeMsg implements SendersNodeAddressMsg, SupportedCapabilitiesMsg {
+public final class GetPeersRequest extends PeerExchangeMessage implements SendersNodeAddressMessage, SupportedCapabilitiesMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -55,8 +55,8 @@ public final class GetPeersRequest extends PeerExchangeMsg implements SendersNod
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
-        PB.NetworkEnvelope.Builder envelopeBuilder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        PB.NetworkEnvelope.Builder envelopeBuilder = NetworkEnvelope.getDefaultBuilder();
         PB.GetPeersRequest.Builder msgBuilder = envelopeBuilder.getGetPeersRequestBuilder();
         msgBuilder
                 .setNonce(nonce)

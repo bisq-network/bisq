@@ -5,7 +5,7 @@ import io.bisq.common.network.NetworkEnvelope;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 
-public interface SupportedCapabilitiesMsg extends NetworkEnvelope {
+public interface SupportedCapabilitiesMessage extends NetworkEnvelope {
     @Nullable
     ArrayList<Integer> getSupportedCapabilities();
 }

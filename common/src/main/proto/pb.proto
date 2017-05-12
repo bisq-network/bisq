@@ -13,8 +13,9 @@ option java_outer_classname = "PB";
 // P2P network messages
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// Those are messages sent over wire
 message NetworkEnvelope {
-    int32 msg_version = 1;
+    int32 message_version = 1;
     oneof message {
         PreliminaryGetDataRequest preliminary_get_data_request = 2;
         GetDataResponse get_data_response = 3;
@@ -27,7 +28,7 @@ message NetworkEnvelope {
        
         OfferAvailabilityRequest offer_availability_request = 9;
         OfferAvailabilityResponse offer_availability_response = 10;
-        RefreshOfferMsg refresh_offer_msg = 11;
+        RefreshOfferMessage refresh_offer_message = 11;
          
         AddDataMessage add_data_message = 12;
         RemoveDataMessage remove_data_message = 13;
@@ -53,7 +54,7 @@ message NetworkEnvelope {
       
         GetBsqBlocksRequest get_bsq_blocks_request = 29;
         GetBsqBlocksResponse get_bsq_blocks_response = 30;
-        NewBsqBlockBroadcastMsg new_bsq_block_broadcast_msg = 31;
+        NewBsqBlockBroadcastMessage new_bsq_block_broadcast_message = 31;
     }
 }
 
@@ -131,7 +132,7 @@ message OfferAvailabilityResponse {
     repeated int32 supported_capabilities = 4;
 }
 
-message RefreshOfferMsg {
+message RefreshOfferMessage {
     bytes hash_of_data_and_seq_nr = 1; // 32 bytes
     bytes signature = 2; // 46 bytes
     bytes hash_of_payload = 3; // 32 bytes
@@ -305,7 +306,7 @@ message GetBsqBlocksResponse {
     bytes bsq_blocks_bytes = 1;
 }
 
-message NewBsqBlockBroadcastMsg {
+message NewBsqBlockBroadcastMessage {
     bytes bsq_block_bytes = 1;
 }
 
@@ -793,6 +794,7 @@ message PrivateNotificationPayload {
 // PersistableEnvelope
 ///////////////////////////////////////////////////////////////////////////////////////////
 
+// Those are persisted to disc
 message PersistableEnvelope {
     oneof message {
         AddressEntryList address_entry_list = 1;
@@ -1260,12 +1262,12 @@ message Region {
 
 message MockMailboxPayload {
     int32 message_version = 1;
-    string msg = 2;
+    string message = 2;
     NodeAddress sender_node_address = 3;
     string uid = 4;
 }
 
 message MockPayload {
     string message_version = 1;
-    string msg = 2;
+    string message = 2;
 }

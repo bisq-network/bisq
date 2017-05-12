@@ -21,7 +21,7 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.MailboxMsg;
+import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 
@@ -29,23 +29,18 @@ import javax.annotation.concurrent.Immutable;
 
 @EqualsAndHashCode(callSuper = true)
 @Immutable
-public final class FiatTransferStartedMsg extends TradeMsg implements MailboxMsg {
+public final class PayoutTxPublishedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public final String buyerPayoutAddress;
+    public final byte[] payoutTx;
     private final NodeAddress senderNodeAddress;
     private final String uid;
-    public final byte[] buyerSignature;
 
-    public FiatTransferStartedMsg(String tradeId, String buyerPayoutAddress,
-                                  NodeAddress senderNodeAddress,
-                                  byte[] buyerSignature,
-                                  String uid) {
+    public PayoutTxPublishedMessage(String tradeId, byte[] payoutTx, NodeAddress senderNodeAddress, String uid) {
         super(tradeId);
-        this.buyerPayoutAddress = buyerPayoutAddress;
+        this.payoutTx = payoutTx;
         this.senderNodeAddress = senderNodeAddress;
-        this.buyerSignature = buyerSignature;
         this.uid = uid;
     }
 
@@ -60,23 +55,21 @@ public final class FiatTransferStartedMsg extends TradeMsg implements MailboxMsg
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
-        return msgBuilder.setFiatTransferStartedMessage(msgBuilder.getFiatTransferStartedMessageBuilder()
-                .setMessageVersion(getMsgVersion())
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
+        return msgBuilder.setPayoutTxPublishedMessage(msgBuilder.getPayoutTxPublishedMessageBuilder()
+                .setUid(uid)
+                .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)
-                .setBuyerSignature(ByteString.copyFrom(buyerSignature))
-                .setBuyerPayoutAddress(buyerPayoutAddress)
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                .setUid(uid)).build();
+                .setPayoutTx(ByteString.copyFrom(payoutTx))
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())).build();
     }
 
-    // buyerSignature not printed for privacy reasons...
+    // payoutTx not printed for privacy reasons
     @Override
     public String toString() {
-        return "FiatTransferStartedMessage{" +
-                "buyerSignature not printed for privacy reasons..." +
-                ", buyerPayoutAddress='" + buyerPayoutAddress + '\'' +
+        return "PayoutTxPublishedMessage{" +
+                "payoutTx not printed for privacy reasons..." +
                 ", senderNodeAddress=" + senderNodeAddress +
                 ", uid='" + uid + '\'' +
                 "} " + super.toString();

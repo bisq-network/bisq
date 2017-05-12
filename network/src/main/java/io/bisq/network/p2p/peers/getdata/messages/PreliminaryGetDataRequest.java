@@ -6,15 +6,15 @@ import io.bisq.common.app.Capabilities;
 import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.AnonymousMsg;
-import io.bisq.network.p2p.SupportedCapabilitiesMsg;
+import io.bisq.network.p2p.AnonymousMessage;
+import io.bisq.network.p2p.SupportedCapabilitiesMessage;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public final class PreliminaryGetDataRequest implements AnonymousMsg, GetDataRequest, SupportedCapabilitiesMsg {
+public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDataRequest, SupportedCapabilitiesMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -46,7 +46,7 @@ public final class PreliminaryGetDataRequest implements AnonymousMsg, GetDataReq
     }
 
     @Override
-    public int getMsgVersion() {
+    public int getMessageVersion() {
         return messageVersion;
     }
 
@@ -60,8 +60,8 @@ public final class PreliminaryGetDataRequest implements AnonymousMsg, GetDataReq
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
-        PB.NetworkEnvelope.Builder envelopeBuilder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        PB.NetworkEnvelope.Builder envelopeBuilder = NetworkEnvelope.getDefaultBuilder();
         PB.PreliminaryGetDataRequest.Builder msgBuilder = envelopeBuilder.getPreliminaryGetDataRequestBuilder()
                 .setMessageVersion(messageVersion)
                 .setNonce(nonce);
@@ -72,6 +72,6 @@ public final class PreliminaryGetDataRequest implements AnonymousMsg, GetDataReq
 
     @Override
     public Message toProtoMessage() {
-        return toProtoMsg().getPreliminaryGetDataRequest();
+        return toProtoNetworkEnvelope().getPreliminaryGetDataRequest();
     }
 }

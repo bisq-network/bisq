@@ -176,13 +176,13 @@ class PeerExchangeHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @SuppressWarnings("UnusedParameters")
-    private void handleFault(String errorMessage, CloseConnectionReason sendMsgFailure, NodeAddress nodeAddress) {
+    private void handleFault(String errorMessage, CloseConnectionReason closeConnectionReason, NodeAddress nodeAddress) {
         Log.traceCall();
         cleanup();
        /* if (connection == null)
-            peerManager.shutDownConnection(nodeAddress, sendMsgFailure);
+            peerManager.shutDownConnection(nodeAddress, closeConnectionReason);
         else
-            peerManager.shutDownConnection(connection, sendMsgFailure);*/
+            peerManager.shutDownConnection(connection, closeConnectionReason);*/
 
         peerManager.handleConnectionFault(nodeAddress, connection);
         listener.onFault(errorMessage, connection);

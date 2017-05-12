@@ -21,7 +21,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
-import io.bisq.core.trade.messages.TradeMsg;
+import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.BuyerAsMakerProtocol;
 import io.bisq.core.trade.protocol.MakerProtocol;
 import io.bisq.generated.protobuffer.PB;
@@ -60,7 +60,7 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMsg message, NodeAddress taker) {
+    public void handleTakeOfferRequest(TradeMessage message, NodeAddress taker) {
         ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(message, taker);
     }
 

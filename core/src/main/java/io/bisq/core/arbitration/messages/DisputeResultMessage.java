@@ -19,7 +19,7 @@ package io.bisq.core.arbitration.messages;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
-import io.bisq.core.arbitration.Dispute;
+import io.bisq.core.arbitration.DisputeResult;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
@@ -27,16 +27,16 @@ import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
-public final class PeerOpenedDisputeMsg extends DisputeMsg {
+public final class DisputeResultMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public final Dispute dispute;
+    public final DisputeResult disputeResult;
     private final NodeAddress myNodeAddress;
 
-    public PeerOpenedDisputeMsg(Dispute dispute, NodeAddress myNodeAddress, String uid) {
+    public DisputeResultMessage(DisputeResult disputeResult, NodeAddress myNodeAddress, String uid) {
         super(uid);
-        this.dispute = dispute;
+        this.disputeResult = disputeResult;
         this.myNodeAddress = myNodeAddress;
     }
 
@@ -46,11 +46,12 @@ public final class PeerOpenedDisputeMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
-        return msgBuilder.setPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage.newBuilder()
-                .setDispute(dispute.toProtoMessage())
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
+        return msgBuilder.setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
+                .setDisputeResult(disputeResult.toProtoMessage())
                 .setMyNodeAddress(myNodeAddress.toProtoMessage())
-                .setUid(getUID())).build();
+                .setUid(getUID()))
+                .build();
     }
 }

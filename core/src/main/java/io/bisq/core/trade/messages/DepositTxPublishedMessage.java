@@ -21,7 +21,7 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.MailboxMsg;
+import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import org.bouncycastle.util.encoders.Hex;
@@ -30,7 +30,7 @@ import javax.annotation.concurrent.Immutable;
 
 @EqualsAndHashCode(callSuper = true)
 @Immutable
-public final class DepositTxPublishedMsg extends TradeMsg implements MailboxMsg {
+public final class DepositTxPublishedMessage extends TradeMessage implements MailboxMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -38,7 +38,7 @@ public final class DepositTxPublishedMsg extends TradeMsg implements MailboxMsg 
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
-    public DepositTxPublishedMsg(String tradeId, byte[] depositTx, NodeAddress senderNodeAddress, String uid) {
+    public DepositTxPublishedMessage(String tradeId, byte[] depositTx, NodeAddress senderNodeAddress, String uid) {
         super(tradeId);
         this.depositTx = depositTx;
         this.senderNodeAddress = senderNodeAddress;
@@ -56,10 +56,10 @@ public final class DepositTxPublishedMsg extends TradeMsg implements MailboxMsg 
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
         return msgBuilder.setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
-                .setMessageVersion(getMsgVersion())
+                .setMessageVersion(getMessageVersion())
                 .setTradeId(tradeId)
                 .setDepositTx(ByteString.copyFrom(depositTx))
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())

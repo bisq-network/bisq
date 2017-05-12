@@ -28,7 +28,7 @@ import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksResponse;
-import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMsg;
+import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMessage;
 import io.bisq.core.dao.blockchain.parse.BsqChainState;
 import io.bisq.core.dao.blockchain.parse.BsqLiteNodeExecutor;
 import io.bisq.core.dao.blockchain.parse.BsqParser;
@@ -163,9 +163,9 @@ public class BsqLiteNode extends BsqNode {
                             throwable.printStackTrace();
                         }
                     });
-        } else if (parseBlockchainComplete && wireEnvelope instanceof NewBsqBlockBroadcastMsg) {
-            NewBsqBlockBroadcastMsg newBsqBlockBroadcastMsg = (NewBsqBlockBroadcastMsg) wireEnvelope;
-            byte[] bsqBlockBytes = newBsqBlockBroadcastMsg.getBsqBlockBytes();
+        } else if (parseBlockchainComplete && wireEnvelope instanceof NewBsqBlockBroadcastMessage) {
+            NewBsqBlockBroadcastMessage newBsqBlockBroadcastMessage = (NewBsqBlockBroadcastMessage) wireEnvelope;
+            byte[] bsqBlockBytes = newBsqBlockBroadcastMessage.getBsqBlockBytes();
             BsqBlock bsqBlock = Utilities.<BsqBlock>deserialize(bsqBlockBytes);
             // Be safe and reset all mutable data in case the provider would not have done it
             bsqBlock.reset();

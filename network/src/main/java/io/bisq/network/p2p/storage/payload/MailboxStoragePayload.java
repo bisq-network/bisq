@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.PrefixedSealedAndSignedMsg;
+import io.bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public final class MailboxStoragePayload implements StoragePayload {
     /**
      * The encrypted and signed payload message
      */
-    public final PrefixedSealedAndSignedMsg prefixedSealedAndSignedMessage;
+    public final PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage;
 
     /**
      * Used for check if the add operation is permitted.
@@ -63,7 +63,7 @@ public final class MailboxStoragePayload implements StoragePayload {
     private Map<String, String> extraDataMap;
 
     // Called from domain
-    public MailboxStoragePayload(PrefixedSealedAndSignedMsg prefixedSealedAndSignedMessage,
+    public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
                                  PublicKey senderPubKeyForAddOperation,
                                  PublicKey receiverPubKeyForRemoveOperation) {
         this(prefixedSealedAndSignedMessage,
@@ -73,7 +73,7 @@ public final class MailboxStoragePayload implements StoragePayload {
     }
 
     // Called from PB
-    public MailboxStoragePayload(PrefixedSealedAndSignedMsg prefixedSealedAndSignedMessage,
+    public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
                                  byte[] senderPubKeyForAddOperationBytes,
                                  byte[] receiverPubKeyForRemoveOperationBytes,
                                  @Nullable Map<String, String> extraDataMap) {
@@ -116,7 +116,7 @@ public final class MailboxStoragePayload implements StoragePayload {
     @Override
     public PB.StoragePayload toProtoMessage() {
         final PB.MailboxStoragePayload.Builder builder = PB.MailboxStoragePayload.newBuilder()
-                .setPrefixedSealedAndSignedMessage(prefixedSealedAndSignedMessage.toProtoMsg().getPrefixedSealedAndSignedMessage())
+                .setPrefixedSealedAndSignedMessage(prefixedSealedAndSignedMessage.toProtoNetworkEnvelope().getPrefixedSealedAndSignedMessage())
                 .setSenderPubKeyForAddOperationBytes(ByteString.copyFrom(senderPubKeyForAddOperationBytes))
                 .setReceiverPubKeyForRemoveOperationBytes(ByteString.copyFrom(receiverPubKeyForRemoveOperationBytes));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);

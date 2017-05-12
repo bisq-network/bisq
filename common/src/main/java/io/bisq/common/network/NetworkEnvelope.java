@@ -9,15 +9,15 @@ import io.bisq.generated.protobuffer.PB;
  * Interface for the outside envelope object sent over the network.
  */
 public interface NetworkEnvelope extends Envelope {
-    static PB.NetworkEnvelope.Builder getMsgBuilder() {
-        return PB.NetworkEnvelope.newBuilder().setMsgVersion(Version.getP2PMessageVersion());
+    static PB.NetworkEnvelope.Builder getDefaultBuilder() {
+        return PB.NetworkEnvelope.newBuilder().setMessageVersion(Version.getP2PMessageVersion());
     }
 
     default Message toProtoMessage() {
-        return toProtoMsg();
+        return toProtoNetworkEnvelope();
     }
 
-    int getMsgVersion();
+    int getMessageVersion();
 
-    PB.NetworkEnvelope toProtoMsg();
+    PB.NetworkEnvelope toProtoNetworkEnvelope();
 }

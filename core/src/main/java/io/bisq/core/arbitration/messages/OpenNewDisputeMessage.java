@@ -17,26 +17,26 @@
 
 package io.bisq.core.arbitration.messages;
 
-import com.google.protobuf.ByteString;
 import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.core.arbitration.Dispute;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
-public final class PeerPublishedPayoutTxMsg extends DisputeMsg {
+@ToString
+public final class OpenNewDisputeMessage extends DisputeMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
-    public final byte[] transaction;
-    public final String tradeId;
+    public final Dispute dispute;
     private final NodeAddress myNodeAddress;
 
-    public PeerPublishedPayoutTxMsg(byte[] transaction, String tradeId, NodeAddress myNodeAddress, String uid) {
+    public OpenNewDisputeMessage(Dispute dispute, NodeAddress myNodeAddress, String uid) {
         super(uid);
-        this.transaction = transaction;
-        this.tradeId = tradeId;
+        this.dispute = dispute;
         this.myNodeAddress = myNodeAddress;
     }
 
@@ -46,21 +46,9 @@ public final class PeerPublishedPayoutTxMsg extends DisputeMsg {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getMsgBuilder();
-        return msgBuilder.setPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage.newBuilder()
-                .setTransaction(ByteString.copyFrom(transaction))
-                .setTradeId(tradeId)
-                .setMyNodeAddress(myNodeAddress.toProtoMessage())).build();
-    }
-
-    // transaction not displayed for privacy reasons...
-    @Override
-    public String toString() {
-        return "PeerPublishedPayoutTxMessage{" +
-                "transaction not displayed for privacy reasons..." +
-                ", tradeId='" + tradeId + '\'' +
-                ", myNodeAddress=" + myNodeAddress +
-                "} " + super.toString();
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
+        return msgBuilder.setOpenNewDisputeMessage(PB.OpenNewDisputeMessage.newBuilder()
+                .setDispute(dispute.toProtoMessage()).setMyNodeAddress(myNodeAddress.toProtoMessage()).setUid(getUID())).build();
     }
 }

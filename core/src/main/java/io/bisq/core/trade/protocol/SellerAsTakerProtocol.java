@@ -23,9 +23,9 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.core.trade.SellerAsTakerTrade;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.messages.FiatTransferStartedMsg;
+import io.bisq.core.trade.messages.FiatTransferStartedMessage;
 import io.bisq.core.trade.messages.PublishDepositTxRequest;
-import io.bisq.core.trade.messages.TradeMsg;
+import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller.SellerProcessFiatTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
@@ -33,7 +33,7 @@ import io.bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
 import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
 import io.bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
 import io.bisq.core.trade.protocol.tasks.taker.*;
-import io.bisq.network.p2p.MailboxMsg;
+import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,12 +63,12 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     public void doApplyMailboxMessage(NetworkEnvelope wireEnvelope, Trade trade) {
         this.trade = trade;
 
-        if (wireEnvelope instanceof MailboxMsg) {
-            NodeAddress peerNodeAddress = ((MailboxMsg) wireEnvelope).getSenderNodeAddress();
+        if (wireEnvelope instanceof MailboxMessage) {
+            NodeAddress peerNodeAddress = ((MailboxMessage) wireEnvelope).getSenderNodeAddress();
             if (wireEnvelope instanceof PublishDepositTxRequest)
                 handle((PublishDepositTxRequest) wireEnvelope, peerNodeAddress);
-            else if (wireEnvelope instanceof FiatTransferStartedMsg)
-                handle((FiatTransferStartedMsg) wireEnvelope, peerNodeAddress);
+            else if (wireEnvelope instanceof FiatTransferStartedMessage)
+                handle((FiatTransferStartedMessage) wireEnvelope, peerNodeAddress);
             else
                 log.error("We received an unhandled MailboxMessage" + wireEnvelope.toString());
         }
@@ -130,7 +130,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // After peer has started Fiat tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(FiatTransferStartedMsg tradeMessage, NodeAddress sender) {
+    private void handle(FiatTransferStartedMessage tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -185,11 +185,11 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMsg tradeMessage, NodeAddress sender) {
+    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
         if (tradeMessage instanceof PublishDepositTxRequest) {
             handle((PublishDepositTxRequest) tradeMessage, sender);
-        } else if (tradeMessage instanceof FiatTransferStartedMsg) {
-            handle((FiatTransferStartedMsg) tradeMessage, sender);
+        } else if (tradeMessage instanceof FiatTransferStartedMessage) {
+            handle((FiatTransferStartedMessage) tradeMessage, sender);
         } else {
             log.error("Incoming message not supported. " + tradeMessage);
         }

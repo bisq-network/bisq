@@ -22,10 +22,10 @@ import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.core.trade.BuyerAsMakerTrade;
 import io.bisq.core.trade.Trade;
-import io.bisq.core.trade.messages.DepositTxPublishedMsg;
+import io.bisq.core.trade.messages.DepositTxPublishedMessage;
 import io.bisq.core.trade.messages.PayDepositRequest;
-import io.bisq.core.trade.messages.PayoutTxPublishedMsg;
-import io.bisq.core.trade.messages.TradeMsg;
+import io.bisq.core.trade.messages.PayoutTxPublishedMessage;
+import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSendFiatTransferStartedMessage;
 import io.bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
@@ -33,7 +33,7 @@ import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSi
 import io.bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx;
 import io.bisq.core.trade.protocol.tasks.maker.*;
 import io.bisq.core.util.Validator;
-import io.bisq.network.p2p.MailboxMsg;
+import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
@@ -86,13 +86,13 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     public void doApplyMailboxMessage(NetworkEnvelope wireEnvelope, Trade trade) {
         this.trade = trade;
 
-        if (wireEnvelope instanceof MailboxMsg) {
-            MailboxMsg mailboxMessage = (MailboxMsg) wireEnvelope;
+        if (wireEnvelope instanceof MailboxMessage) {
+            MailboxMessage mailboxMessage = (MailboxMessage) wireEnvelope;
             NodeAddress peerNodeAddress = mailboxMessage.getSenderNodeAddress();
-            if (wireEnvelope instanceof DepositTxPublishedMsg)
-                handle((DepositTxPublishedMsg) wireEnvelope, peerNodeAddress);
-            else if (wireEnvelope instanceof PayoutTxPublishedMsg)
-                handle((PayoutTxPublishedMsg) wireEnvelope, peerNodeAddress);
+            if (wireEnvelope instanceof DepositTxPublishedMessage)
+                handle((DepositTxPublishedMessage) wireEnvelope, peerNodeAddress);
+            else if (wireEnvelope instanceof PayoutTxPublishedMessage)
+                handle((PayoutTxPublishedMessage) wireEnvelope, peerNodeAddress);
             else
                 log.error("We received an unhandled MailboxMessage" + wireEnvelope.toString());
         }
@@ -104,7 +104,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMsg message, NodeAddress peerNodeAddress) {
+    public void handleTakeOfferRequest(TradeMessage message, NodeAddress peerNodeAddress) {
         Validator.checkTradeId(processModel.getOfferId(), message);
         checkArgument(message instanceof PayDepositRequest);
         processModel.setTradeMessage(message);
@@ -134,7 +134,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(DepositTxPublishedMsg tradeMessage, NodeAddress peerNodeAddress) {
+    private void handle(DepositTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
         stopTimeout();
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
@@ -186,7 +186,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(PayoutTxPublishedMsg tradeMessage, NodeAddress peerNodeAddress) {
+    private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
         log.debug("handle PayoutTxPublishedMessage called");
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
@@ -210,11 +210,11 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void doHandleDecryptedMessage(TradeMsg tradeMessage, NodeAddress peerNodeAddress) {
-        if (tradeMessage instanceof DepositTxPublishedMsg) {
-            handle((DepositTxPublishedMsg) tradeMessage, peerNodeAddress);
-        } else if (tradeMessage instanceof PayoutTxPublishedMsg) {
-            handle((PayoutTxPublishedMsg) tradeMessage, peerNodeAddress);
+    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress) {
+        if (tradeMessage instanceof DepositTxPublishedMessage) {
+            handle((DepositTxPublishedMessage) tradeMessage, peerNodeAddress);
+        } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
+            handle((PayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
         } else //noinspection StatementWithEmptyBody
             if (tradeMessage instanceof PayDepositRequest) {
                 // do nothing as we get called the handleTakeOfferRequest method from outside

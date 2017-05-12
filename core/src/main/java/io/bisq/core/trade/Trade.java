@@ -43,7 +43,7 @@ import io.bisq.core.trade.protocol.ProcessModel;
 import io.bisq.core.trade.protocol.TradeProtocol;
 import io.bisq.core.user.User;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.DecryptedMsgWithPubKey;
+import io.bisq.network.p2p.DecryptedMessageWithPubKey;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.P2PService;
 import javafx.beans.property.*;
@@ -238,7 +238,7 @@ public abstract class Trade implements Tradable, Model {
     transient private StringProperty errorMessageProperty;
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Volume> tradeVolumeProperty;
-    transient private Set<DecryptedMsgWithPubKey> decryptedMsgWithPubKeySet = new HashSet<>();
+    transient private Set<DecryptedMessageWithPubKey> decryptedMessageWithPubKeySet = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -320,8 +320,8 @@ public abstract class Trade implements Tradable, Model {
         // if we have already received a msg we apply it. 
         // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context 
         // or async calls there.
-        log.trace("init: getMailboxMessageSet() = " + getDecryptedMsgWithPubKeySet());
-        getDecryptedMsgWithPubKeySet().stream()
+        log.trace("init: getMailboxMessageSet() = " + getDecryptedMessageWithPubKeySet());
+        getDecryptedMessageWithPubKeySet().stream()
                 .forEach(msg -> tradeProtocol.applyMailboxMessage(msg, this));
     }
 
@@ -354,23 +354,23 @@ public abstract class Trade implements Tradable, Model {
     // We don't need to persist the msg as if we dont apply it it will not be removed from the P2P network and we 
     // will received it again at next startup. Such might happen in edge cases when the user shuts down after we 
     // received the msb but before the init is called.
-    public void addDecryptedMsgWithPubKey(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
-        log.trace("setDecryptedMsgWithPubKey decryptedMsgWithPubKey=" + decryptedMsgWithPubKey);
-        if (!getDecryptedMsgWithPubKeySet().contains(decryptedMsgWithPubKey)) {
-            getDecryptedMsgWithPubKeySet().add(decryptedMsgWithPubKey);
+    public void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+        log.trace("addDecryptedMessageWithPubKey decryptedMessageWithPubKey=" + decryptedMessageWithPubKey);
+        if (!getDecryptedMessageWithPubKeySet().contains(decryptedMessageWithPubKey)) {
+            getDecryptedMessageWithPubKeySet().add(decryptedMessageWithPubKey);
 
             // If we have already initialized we apply. 
             // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context 
             // or async calls there.
             if (tradeProtocol != null)
-                tradeProtocol.applyMailboxMessage(decryptedMsgWithPubKey, this);
+                tradeProtocol.applyMailboxMessage(decryptedMessageWithPubKey, this);
         }
     }
 
-    public void removeDecryptedMsgWithPubKey(DecryptedMsgWithPubKey decryptedMsgWithPubKey) {
-        log.trace("removeDecryptedMsgWithPubKey decryptedMsgWithPubKey=" + decryptedMsgWithPubKey);
-        if (getDecryptedMsgWithPubKeySet().contains(decryptedMsgWithPubKey))
-            getDecryptedMsgWithPubKeySet().remove(decryptedMsgWithPubKey);
+    public void removeDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+        log.trace("removeDecryptedMessageWithPubKey decryptedMessageWithPubKey=" + decryptedMessageWithPubKey);
+        if (getDecryptedMessageWithPubKeySet().contains(decryptedMessageWithPubKey))
+            getDecryptedMessageWithPubKeySet().remove(decryptedMessageWithPubKey);
     }
 
 
@@ -474,10 +474,10 @@ public abstract class Trade implements Tradable, Model {
     }
 
     //TODO can be removed after PB is applied. mailboxMessageSet can be used then instead of getMailboxMessageSet().
-    private Set<DecryptedMsgWithPubKey> getDecryptedMsgWithPubKeySet() {
-        if (decryptedMsgWithPubKeySet == null)
-            decryptedMsgWithPubKeySet = new HashSet<>();
-        return decryptedMsgWithPubKeySet;
+    private Set<DecryptedMessageWithPubKey> getDecryptedMessageWithPubKeySet() {
+        if (decryptedMessageWithPubKeySet == null)
+            decryptedMessageWithPubKeySet = new HashSet<>();
+        return decryptedMessageWithPubKeySet;
     }
 
     public ObjectProperty<Coin> getTradeAmountProperty() {
@@ -879,7 +879,7 @@ public abstract class Trade implements Tradable, Model {
                 "\n\ttradeVolume=" + getTradeVolumeProperty().get() +
                 "\n\toffer=" + offer +
                 "\n\tprocessModel=" + processModel +
-                "\n\tdecryptedMsgWithPubKeySet=" + getDecryptedMsgWithPubKeySet() +
+                "\n\tdecryptedMsgWithPubKeySet=" + getDecryptedMessageWithPubKeySet() +
                 "\n\ttakeOfferDate=" + getTakeOfferDate() +
                 "\n\tstate=" + getState() +
                 "\n\tdisputeState=" + getDisputeState() +

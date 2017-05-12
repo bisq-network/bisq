@@ -11,7 +11,7 @@ import org.bouncycastle.util.encoders.Hex;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode
-public final class PrefixedSealedAndSignedMsg implements MailboxMsg, SendersNodeAddressMsg {
+public final class PrefixedSealedAndSignedMessage implements MailboxMessage, SendersNodeAddressMessage {
     // That object is sent over the wire, so we need to take care of version compatibility.
     private static final long serialVersionUID = Version.P2P_NETWORK_VERSION;
 
@@ -21,8 +21,8 @@ public final class PrefixedSealedAndSignedMsg implements MailboxMsg, SendersNode
     public final byte[] addressPrefixHash;
     private final String uid;
 
-    public PrefixedSealedAndSignedMsg(NodeAddress senderNodeAddress, SealedAndSigned sealedAndSigned,
-                                      byte[] addressPrefixHash, String uid) {
+    public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress, SealedAndSigned sealedAndSigned,
+                                          byte[] addressPrefixHash, String uid) {
         checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at PrefixedSealedAndSignedMessage");
         this.senderNodeAddress = senderNodeAddress;
         this.sealedAndSigned = sealedAndSigned;
@@ -41,13 +41,13 @@ public final class PrefixedSealedAndSignedMsg implements MailboxMsg, SendersNode
     }
 
     @Override
-    public int getMsgVersion() {
+    public int getMessageVersion() {
         return messageVersion;
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoMsg() {
-        return NetworkEnvelope.getMsgBuilder().setPrefixedSealedAndSignedMessage(
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        return NetworkEnvelope.getDefaultBuilder().setPrefixedSealedAndSignedMessage(
                 PB.PrefixedSealedAndSignedMessage.newBuilder()
                         .setMessageVersion(messageVersion).setNodeAddress(senderNodeAddress.toProtoMessage())
                         .setSealedAndSigned(sealedAndSigned.toProtoMessage())
