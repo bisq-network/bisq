@@ -17,6 +17,7 @@
 
 package io.bisq.core.arbitration;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.storage.Storage;
@@ -102,5 +103,11 @@ public final class DisputeList implements Persistable {
 
     public Stream<Dispute> stream() {
         return disputeList.stream();
+    }
+
+    // TODO not impl yet
+    @Override
+    public Message toProtoMessage() {
+        return null;
     }
 }

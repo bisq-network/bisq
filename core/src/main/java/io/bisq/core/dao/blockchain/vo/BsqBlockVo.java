@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import lombok.Value;
@@ -32,4 +33,9 @@ public class BsqBlockVo implements Persistable {
     private final String hash;
     private String previousBlockHash;
 
+    // TODO not impl yet
+    @Override
+    public Message toProtoMessage() {
+        return null;
+    }
 }

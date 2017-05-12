@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import lombok.Value;
@@ -33,5 +34,10 @@ public class TxInputVo implements Persistable {
 
     public TxIdIndexTuple getTxIdIndexTuple() {
         return new TxIdIndexTuple(txId, txOutputIndex);
+    } // TODO not impl yet
+
+    @Override
+    public Message toProtoMessage() {
+        return null;
     }
 }

@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.vote;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.core.dao.compensation.CompensationRequest;
@@ -71,5 +72,11 @@ public final class CompensationRequestVoteItem implements Persistable {
                 ", acceptedVote=" + acceptedVote +
                 ", hasVoted=" + hasVoted +
                 '}';
+    }
+
+    // TODO not impl yet
+    @Override
+    public Message toProtoMessage() {
+        return null;
     }
 }

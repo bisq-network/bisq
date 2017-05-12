@@ -18,6 +18,7 @@
 package io.bisq.core.dao.blockchain.parse;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.proto.PersistenceProtoResolver;
@@ -477,6 +478,12 @@ public class BsqChainState implements Persistable {
                 compensationRequestFees.size(),
                 votingFees.size(),
                 Utilities.serialize(blocks.toArray()).length / 1000d);
+    }
+
+    // TODO not impl yet
+    @Override
+    public Message toProtoMessage() {
+        return null;
     }
 }
 

@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.compensation;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import lombok.Getter;
@@ -51,5 +52,11 @@ public final class CompensationRequest implements Persistable {
 
     public CompensationRequest(CompensationRequestPayload compensationRequestPayload) {
         this.compensationRequestPayload = compensationRequestPayload;
+    }
+
+    // TODO not impl yet
+    @Override
+    public Message toProtoMessage() {
+        return null;
     }
 }

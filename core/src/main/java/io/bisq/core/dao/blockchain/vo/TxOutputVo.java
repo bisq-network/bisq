@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import io.bisq.common.util.JsonExclude;
@@ -50,5 +51,11 @@ public class TxOutputVo implements Persistable {
 
     public TxIdIndexTuple getTxIdIndexTuple() {
         return new TxIdIndexTuple(txId, index);
+    }
+
+    // TODO not impl yet
+    @Override
+    public Message toProtoMessage() {
+        return null;
     }
 }

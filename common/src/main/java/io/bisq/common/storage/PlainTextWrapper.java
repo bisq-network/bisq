@@ -1,5 +1,6 @@
 package io.bisq.common.storage;
 
+import com.google.protobuf.Message;
 import io.bisq.common.persistence.Persistable;
 
 /**
@@ -16,5 +17,10 @@ public class PlainTextWrapper implements Persistable {
 
     public PlainTextWrapper(String plainText) {
         this.plainText = plainText;
+    }
+
+    @Override
+    public Message toProtoMessage() {
+        return null;
     }
 }

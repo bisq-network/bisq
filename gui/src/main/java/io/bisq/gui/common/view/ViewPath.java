@@ -18,14 +18,13 @@
 package io.bisq.gui.common.view;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.persistence.Persistable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-public final class ViewPath extends ArrayList<Class<? extends View>> implements Persistable {
+public final class ViewPath extends ArrayList<Class<? extends View>> {
     // That object is saved to disc. We need to take care of changes to not break deserialization.
     private static final long serialVersionUID = Version.LOCAL_DB_VERSION;
 

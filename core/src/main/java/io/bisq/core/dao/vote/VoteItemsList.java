@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.vote;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import lombok.Getter;
@@ -105,5 +106,11 @@ public final class VoteItemsList implements Persistable {
 
     public Optional<VoteItem> getVoteItemByVotingType(VotingType votingType) {
         return allVoteItemList.stream().filter(e -> e.votingType == votingType).findAny();
+    }
+
+    // TODO not impl yet
+    @Override
+    public Message toProtoMessage() {
+        return null;
     }
 }

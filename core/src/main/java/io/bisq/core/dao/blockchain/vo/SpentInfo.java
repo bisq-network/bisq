@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
+import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
 import io.bisq.common.persistence.Persistable;
 import lombok.Value;
@@ -30,5 +31,10 @@ public class SpentInfo implements Persistable {
 
     private final long blockHeight;
     private final String txId;
-    private final int inputIndex;
+    private final int inputIndex; // TODO not impl yet
+
+    @Override
+    public Message toProtoMessage() {
+        return null;
+    }
 }
