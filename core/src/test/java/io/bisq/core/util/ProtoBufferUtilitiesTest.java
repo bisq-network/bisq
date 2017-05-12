@@ -15,7 +15,16 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.network.p2p.network;
+package io.bisq.core.util;
+
+import io.bisq.core.offer.AvailabilityResult;
+import io.bisq.core.offer.OpenOffer;
+import io.bisq.generated.protobuffer.PB;
+import io.bisq.generated.protobuffer.PB.OfferPayload;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class ProtoBufferUtilitiesTest {
 
@@ -23,16 +32,27 @@ public class ProtoBufferUtilitiesTest {
 // We should refactor it so that the classes themselves know how to deserialize 
 // so we don't get dependencies from core objects here
 
-  /*  @Test
+    @Test
     public void testEnum() {
-        PB.OfferPayload.Direction direction = PB.OfferPayload.Direction.SELL;
-        PB.OfferPayload.Direction direction2 = PB.OfferPayload.Direction.BUY;
+        OfferPayload.Direction direction = OfferPayload.Direction.SELL;
+        OfferPayload.Direction direction2 = OfferPayload.Direction.BUY;
         OfferPayload.Direction realDirection = getDirection(direction);
         OfferPayload.Direction realDirection2 = getDirection(direction2);
         assertEquals("SELL", realDirection.name());
         assertEquals("BUY", realDirection2.name());
     }
-    public static OfferPayload.Direction getDirection(PB.OfferPayload.Direction direction) {
+
+    @Test
+    public void testUnknownEnum() {
+        PB.OpenOffer.State result = PB.OpenOffer.State.UNKNOWN_FAILURE;
+        try {
+            OpenOffer.State finalResult = OpenOffer.State.valueOf(result.name());
+            fail();
+        } catch(IllegalArgumentException e) {
+        }
+    }
+
+    public static OfferPayload.Direction getDirection(OfferPayload.Direction direction) {
         return OfferPayload.Direction.valueOf(direction.name());
-    }*/
+    }
 }
