@@ -80,7 +80,7 @@ public class PrivateNotificationManager {
             PrivateNotificationMessage privateNotificationMessage = (PrivateNotificationMessage) wireEnvelope;
             log.trace("Received privateNotificationMessage: " + privateNotificationMessage);
             if (privateNotificationMessage.getSenderNodeAddress().equals(senderNodeAddress)) {
-                final PrivateNotificationPayload privateNotification = privateNotificationMessage.privateNotificationPayload;
+                final PrivateNotificationPayload privateNotification = privateNotificationMessage.getPrivateNotificationPayload();
                 if (verifySignature(privateNotification))
                     privateNotificationMessageProperty.set(privateNotification);
             } else {
@@ -128,13 +128,13 @@ public class PrivateNotificationManager {
     }
 
     private void signAndAddSignatureToPrivateNotificationMessage(PrivateNotificationPayload privateNotification) {
-        String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.message.getBytes());
+        String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.getMessage().getBytes());
         String signatureAsBase64 = privateNotificationSigningKey.signMessage(privateNotificationMessageAsHex);
         privateNotification.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
     }
 
     private boolean verifySignature(PrivateNotificationPayload privateNotification) {
-        String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.message.getBytes());
+        String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.getMessage().getBytes());
         try {
             ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex)).verifyMessage(privateNotificationMessageAsHex, privateNotification.getSignatureAsBase64());
             return true;

@@ -17,16 +17,8 @@
 
 package io.bisq.common.crypto;
 
-public class CryptoException extends Exception {
-    public CryptoException(String message) {
-        super(message);
-    }
-
-    public CryptoException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public CryptoException(Throwable cause) {
+public class KeyConversionException extends RuntimeException {
+    public KeyConversionException(Throwable cause) {
         super(cause);
     }
 }

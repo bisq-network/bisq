@@ -5,16 +5,14 @@ import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-@EqualsAndHashCode
-@ToString
+@Value
 @Slf4j
 public class PrivateNotificationMessage implements MailboxMessage {
     private final NodeAddress myNodeAddress;
-    public final PrivateNotificationPayload privateNotificationPayload;
+    private final PrivateNotificationPayload privateNotificationPayload;
     private final String uid;
     private final int messageVersion = Version.getP2PMessageVersion();
 
@@ -25,6 +23,27 @@ public class PrivateNotificationMessage implements MailboxMessage {
         this.privateNotificationPayload = privateNotificationPayload;
         this.uid = uid;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static NetworkEnvelope fromProto(PB.PrivateNotificationMessage proto) {
+        return new PrivateNotificationMessage(PrivateNotificationPayload.fromProto(proto.getPrivateNotificationPayload()),
+                NodeAddress.fromProto(proto.getMyNodeAddress()),
+                proto.getUid());
+    }
+
+    @Override
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
+        return msgBuilder.setPrivateNotificationMessage(msgBuilder.getPrivateNotificationMessageBuilder()
+                .setMessageVersion(messageVersion)
+                .setUid(uid)
+                .setMyNodeAddress(myNodeAddress.toProtoMessage())
+                .setPrivateNotificationPayload(privateNotificationPayload.toProtoMessage())).build();
+    }
+
 
     @Override
     public NodeAddress getSenderNodeAddress() {
@@ -41,13 +60,7 @@ public class PrivateNotificationMessage implements MailboxMessage {
         return messageVersion;
     }
 
-    @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setPrivateNotificationMessage(msgBuilder.getPrivateNotificationMessageBuilder()
-                .setMessageVersion(messageVersion)
-                .setUid(uid)
-                .setMyNodeAddress(myNodeAddress.toProtoMessage())
-                .setPrivateNotificationPayload(privateNotificationPayload.toProtoMessage())).build();
+    public PrivateNotificationPayload getPrivateNotificationPayload() {
+        return privateNotificationPayload;
     }
 }

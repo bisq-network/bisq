@@ -19,10 +19,13 @@ package io.bisq.common.crypto;
 
 import com.google.common.base.Charsets;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 
 /**
  * StorageSignatureKeyPair/STORAGE_SIGN_KEY_ALGO: That is used for signing the data to be stored to the P2P network (by flooding).
@@ -121,6 +124,20 @@ public class Sig {
      */
     public static boolean verify(PublicKey publicKey, String message, String signature) throws CryptoException {
         return verify(publicKey, message.getBytes(Charsets.UTF_8), Base64.decode(signature));
+    }
+
+    /**
+     * @param sigPublicKeyBytes
+     * @return
+     */
+    public static PublicKey getSigPublicKeyFromBytes(byte[] sigPublicKeyBytes) {
+        try {
+            return KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            log.error("Error creating sigPublicKey from bytes. sigPublicKeyBytes as hex={}, error={}", Hex.toHexString(sigPublicKeyBytes), e);
+            e.printStackTrace();
+            throw new KeyConversionException(e);
+        }
     }
 }
 

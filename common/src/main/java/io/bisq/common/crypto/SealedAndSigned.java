@@ -20,27 +20,20 @@ package io.bisq.common.crypto;
 import com.google.protobuf.ByteString;
 import io.bisq.common.network.NetworkPayload;
 import io.bisq.generated.protobuffer.PB;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 
 @Slf4j
+@EqualsAndHashCode
 public final class SealedAndSigned implements NetworkPayload {
-    // Payload
     public final byte[] encryptedSecretKey;
     public final byte[] encryptedPayloadWithHmac;
     public final byte[] signature;
     private final byte[] sigPublicKeyBytes;
-
-    // Domain
-    public transient PublicKey sigPublicKey;
+    public PublicKey sigPublicKey;
 
     public SealedAndSigned(byte[] encryptedSecretKey, byte[] encryptedPayloadWithHmac, byte[] signature, PublicKey sigPublicKey) {
         this.encryptedSecretKey = encryptedSecretKey;
@@ -50,34 +43,13 @@ public final class SealedAndSigned implements NetworkPayload {
         this.sigPublicKeyBytes = new X509EncodedKeySpec(this.sigPublicKey.getEncoded()).getEncoded();
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public SealedAndSigned(byte[] encryptedSecretKey, byte[] encryptedPayloadWithHmac, byte[] signature, byte[] sigPublicKeyBytes) {
-        this(encryptedSecretKey, encryptedPayloadWithHmac, signature, SealedAndSigned.init(sigPublicKeyBytes));
+        this(encryptedSecretKey, encryptedPayloadWithHmac, signature, Sig.getSigPublicKeyFromBytes(sigPublicKeyBytes));
     }
-
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            sigPublicKey = init(sigPublicKeyBytes);
-        } catch (Throwable t) {
-            log.warn("Exception at readObject: " + t.getMessage());
-        }
-    }
-
-    /**
-     * We have the bytes, now recreate the sigPublicKey. This happens when receiving this class over the wire,
-     * because the public key is transient.
-     */
-    static PublicKey init(byte[] sigPublicKeyBytes) {
-        PublicKey publicKey = null;
-        try {
-            publicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC")
-                    .generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
-            log.error("Error creating sigPublicKey", e);
-        }
-        return publicKey;
-    }
-
 
     public PB.SealedAndSigned toProtoMessage() {
         return PB.SealedAndSigned.newBuilder().setEncryptedSecretKey(ByteString.copyFrom(encryptedSecretKey))
@@ -85,29 +57,4 @@ public final class SealedAndSigned implements NetworkPayload {
                 .setSignature(ByteString.copyFrom(signature)).setSigPublicKeyBytes(ByteString.copyFrom(sigPublicKeyBytes))
                 .build();
     }
-
-    @SuppressWarnings("SimplifiableIfStatement")
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SealedAndSigned)) return false;
-
-        SealedAndSigned that = (SealedAndSigned) o;
-
-        if (!Arrays.equals(encryptedSecretKey, that.encryptedSecretKey)) return false;
-        if (!Arrays.equals(encryptedPayloadWithHmac, that.encryptedPayloadWithHmac)) return false;
-        if (!Arrays.equals(signature, that.signature)) return false;
-        return !(sigPublicKey != null ? !sigPublicKey.equals(that.sigPublicKey) : that.sigPublicKey != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = encryptedSecretKey != null ? Arrays.hashCode(encryptedSecretKey) : 0;
-        result = 31 * result + (encryptedPayloadWithHmac != null ? Arrays.hashCode(encryptedPayloadWithHmac) : 0);
-        result = 31 * result + (signature != null ? Arrays.hashCode(signature) : 0);
-        result = 31 * result + (sigPublicKey != null ? sigPublicKey.hashCode() : 0);
-        return result;
-    }
-
 }

@@ -22,72 +22,69 @@ import io.bisq.common.crypto.Sig;
 import io.bisq.common.network.NetworkPayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 
-import java.io.IOException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
+import javax.annotation.Nullable;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
 
 @EqualsAndHashCode
 @Slf4j
+@Getter
 public final class PrivateNotificationPayload implements NetworkPayload {
-    // Payload
-    public final String message;
+    private final String message;
+    @Nullable
     private String signatureAsBase64;
-    private byte[] publicKeyBytes;
-
-    // Domain
-    private transient PublicKey publicKey;
+    @Nullable
+    private byte[] sigPublicKeyBytes;
+    @Nullable
+    private PublicKey publicKey;
 
     public PrivateNotificationPayload(String message) {
         this.message = message;
     }
 
-    public PrivateNotificationPayload(String message, String signatureAsBase64, byte[] publicKeyBytes) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private PrivateNotificationPayload(String message, String signatureAsBase64, byte[] sigPublicKeyBytes) {
         this(message);
         this.signatureAsBase64 = signatureAsBase64;
-        this.publicKeyBytes = publicKeyBytes;
-        init();
+        this.sigPublicKeyBytes = sigPublicKeyBytes;
+        publicKey = Sig.getSigPublicKeyFromBytes(sigPublicKeyBytes);
     }
 
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            init();
-        } catch (Throwable t) {
-            log.warn("Exception at readObject: " + t.getMessage());
-        }
-    }
-
-    private void init() {
-        try {
-            publicKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(publicKeyBytes));
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
-            log.error("Could not create public key from bytes", e);
-        }
-    }
-
-    public void setSigAndPubKey(String signatureAsBase64, PublicKey storagePublicKey) {
-        this.signatureAsBase64 = signatureAsBase64;
-        this.publicKey = storagePublicKey;
-        this.publicKeyBytes = new X509EncodedKeySpec(this.publicKey.getEncoded()).getEncoded();
-    }
-
-    public String getSignatureAsBase64() {
-        return signatureAsBase64;
+    public static PrivateNotificationPayload fromProto(PB.PrivateNotificationPayload proto) {
+        return new PrivateNotificationPayload(proto.getMessage(),
+                proto.getSignatureAsBase64(),
+                proto.getSignatureAsBase64Bytes().toByteArray());
     }
 
     @Override
     public PB.PrivateNotificationPayload toProtoMessage() {
+        checkNotNull(sigPublicKeyBytes, "sigPublicKeyBytes must nto be null");
         return PB.PrivateNotificationPayload.newBuilder()
                 .setMessage(message)
                 .setSignatureAsBase64(signatureAsBase64)
-                .setPublicKeyBytes(ByteString.copyFrom(publicKeyBytes)).build();
+                .setSigPublicKeyBytes(ByteString.copyFrom(sigPublicKeyBytes)).build();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void setSigAndPubKey(String signatureAsBase64, PublicKey storagePublicKey) {
+        this.signatureAsBase64 = signatureAsBase64;
+        this.publicKey = storagePublicKey;
+        this.sigPublicKeyBytes = new X509EncodedKeySpec(this.publicKey.getEncoded()).getEncoded();
     }
 
     // Hex
@@ -96,7 +93,7 @@ public final class PrivateNotificationPayload implements NetworkPayload {
         return "PrivateNotification{" +
                 "message='" + message + '\'' +
                 ", signatureAsBase64='" + signatureAsBase64 + '\'' +
-                ", publicKeyBytes=" + Hex.toHexString(publicKeyBytes) +
+                ", publicKeyBytes=" + Hex.toHexString(sigPublicKeyBytes) +
                 '}';
     }
 }

@@ -785,7 +785,7 @@ message USPostalMoneyOrderAccountPayload {
 message PrivateNotificationPayload {
     string message = 1;
     string signature_as_base64 = 2;
-    bytes public_key_bytes = 3;
+    bytes sig_public_key_bytes = 3;
 }
 
 

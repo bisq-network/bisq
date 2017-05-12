@@ -183,7 +183,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 result = getPayoutTxPublishedMessage(msg.getPayoutTxPublishedMessage());
                 break;
             case PRIVATE_NOTIFICATION_MESSAGE:
-                result = getPrivateNotificationMessage(msg.getPrivateNotificationMessage());
+                result = PrivateNotificationMessage.fromProto(msg.getPrivateNotificationMessage());
                 break;
             default:
                 log.warn("Unknown message case:{}:{}", msg.getMessageCase());
@@ -200,11 +200,6 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
         return new OfferAvailabilityRequest(msg.getOfferId(), PubKeyRing.fromProto(msg.getPubKeyRing()), msg.getTakersTradePrice());
     }
 
-    private static NetworkEnvelope getPrivateNotificationMessage(PB.PrivateNotificationMessage privateNotificationMessage) {
-        return new PrivateNotificationMessage(getPrivateNotification(privateNotificationMessage.getPrivateNotificationPayload()),
-                NodeAddress.fromProto(privateNotificationMessage.getMyNodeAddress()),
-                privateNotificationMessage.getUid());
-    }
 
     private static NetworkEnvelope getPayoutTxPublishedMessage(PB.PayoutTxPublishedMessage payoutTxPublishedMessage) {
         return new PayoutTxPublishedMessage(payoutTxPublishedMessage.getTradeId(),
