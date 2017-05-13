@@ -19,6 +19,7 @@ package io.bisq.gui;
 
 import com.google.inject.Inject;
 import io.bisq.common.proto.persistable.PersistableViewPath;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.gui.common.view.View;
 import io.bisq.gui.common.view.ViewPath;
@@ -27,7 +28,6 @@ import io.bisq.gui.main.market.MarketView;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 @Slf4j
-public final class Navigation {
+public final class Navigation implements PersistedDataHost {
     private static final ViewPath DEFAULT_VIEW_PATH = ViewPath.to(MainView.class, MarketView.class);
 
     public interface Listener {
@@ -56,36 +56,34 @@ public final class Navigation {
     // Persisted fields
     @Getter
     @Setter
-    private ViewPath previousPath;
+    private ViewPath previousPath = DEFAULT_VIEW_PATH;
 
 
     @Inject
     public Navigation(Storage<PersistableViewPath> storage) {
         this.storage = storage;
         storage.setNumMaxBackupFiles(3);
-
-        PersistableViewPath result = storage.initAndGetPersisted(persistableViewPath);
-        if (result != null && !CollectionUtils.isEmpty(result.getViewPath())) {
-            ViewPath persisted = fromViewPathAsString(result);
-            previousPath = persisted;
-        } else
-            previousPath = DEFAULT_VIEW_PATH;
-
-        // need to be null initially and not DEFAULT_VIEW_PATH to navigate through all items
-        currentPath = null;
     }
 
-    /** used for deserialisation/fromProto */
-    private ViewPath fromViewPathAsString(PersistableViewPath persistableViewPath) {
-        List<Class<? extends View>> classStream = persistableViewPath.getViewPath().stream().map(s -> {
-            try {
-                return ((Class<? extends View>) Class.forName(s));
-            } catch (ClassNotFoundException e) {
-                log.warn("Could not find the Viewpath class {}; exception: {}", s, e);
-            }
-            return null;
-        }).collect(Collectors.toList());
-        return new ViewPath(classStream);
+    @Override
+    public void readPersisted() {
+        PersistableViewPath persisted = storage.initAndGetPersisted(persistableViewPath, "Navigation");
+        if (persisted != null) {
+            List<Class<? extends View>> viewClasses = persisted.getViewPath().stream()
+                    .map(className -> {
+                        try {
+                            return ((Class<? extends View>) Class.forName(className));
+                        } catch (ClassNotFoundException e) {
+                            log.warn("Could not find the Viewpath class {}; exception: {}", className, e);
+                        }
+                        return null;
+                    })
+                    .filter(e -> e != null)
+                    .collect(Collectors.toList());
+
+            if (!viewClasses.isEmpty())
+                previousPath = new ViewPath(viewClasses);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -124,7 +122,7 @@ public final class Navigation {
     }
 
     private void queueUpForSave() {
-        if(currentPath.tip() != null) {
+        if (currentPath.tip() != null) {
             persistableViewPath.setViewPath(currentPath.stream().map(aClass -> aClass.getName()).collect(Collectors.toList()));
         }
         storage.queueUpForSave(persistableViewPath, 1000);

@@ -20,6 +20,7 @@ package io.bisq.core.btc;
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
@@ -38,15 +39,23 @@ import java.util.stream.Stream;
  */
 @ToString
 @Slf4j
-public final class AddressEntryList implements PersistableEnvelope {
+public final class AddressEntryList implements PersistableEnvelope, PersistedDataHost {
     transient private Storage<AddressEntryList> storage;
     transient private Wallet wallet;
     @Getter
     private List<AddressEntry> list = new ArrayList<>();
+    private List<AddressEntry> persistedList;
 
     @Inject
     public AddressEntryList(Storage<AddressEntryList> storage) {
         this.storage = storage;
+    }
+
+    @Override
+    public void readPersisted() {
+        AddressEntryList persisted = storage.initAndGetPersisted(this);
+        if (persisted != null)
+            persistedList = persisted.getList();
     }
 
 
@@ -54,13 +63,24 @@ public final class AddressEntryList implements PersistableEnvelope {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private AddressEntryList(List<AddressEntry> list) {
+    public AddressEntryList(List<AddressEntry> list) {
         this.list = list;
     }
 
     public static AddressEntryList fromProto(PB.AddressEntryList proto) {
         return new AddressEntryList(proto.getAddressEntryList().stream().map(AddressEntry::fromProto).collect(Collectors.toList()));
     }
+
+    @Override
+    public Message toProtoMessage() {
+        return PB.PersistableEnvelope.newBuilder()
+                .setAddressEntryList(PB.AddressEntryList.newBuilder()
+                        .addAllAddressEntry(list.stream()
+                                .map(AddressEntry::toProtoMessage)
+                                .collect(Collectors.toList())))
+                .build();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -69,16 +89,15 @@ public final class AddressEntryList implements PersistableEnvelope {
     public void onWalletReady(Wallet wallet) {
         this.wallet = wallet;
 
-        AddressEntryList persisted = storage.initAndGetPersisted(this);
-        if (persisted != null) {
-            for (AddressEntry addressEntry : persisted.getList()) {
+        if (persistedList != null) {
+            persistedList.stream().forEach(addressEntry -> {
                 DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash());
                 if (keyFromPubHash != null) {
                     addressEntry.setDeterministicKey(keyFromPubHash);
                 } else {
                     log.warn("Key from addressEntry not found in that wallet " + addressEntry.toString());
                 }
-            }
+            });
         } else {
             add(new AddressEntry(wallet.freshReceiveKey(), AddressEntry.Context.ARBITRATOR));
             persist();
@@ -118,22 +137,11 @@ public final class AddressEntryList implements PersistableEnvelope {
             persist();
     }
 
-    public Stream<AddressEntry> stream() {
-        return list.stream();
-    }
-
     public void persist() {
         storage.queueUpForSave(50);
     }
 
-    @Override
-    public Message toProtoMessage() {
-        final PB.PersistableEnvelope build = PB.PersistableEnvelope.newBuilder().setAddressEntryList(PB.AddressEntryList.newBuilder()
-                .addAllAddressEntry(stream()
-                        .map(addressEntry -> ((PB.AddressEntry) addressEntry.toProtoMessage()))
-                        .collect(Collectors.toList())))
-                .build();
-        return build;
+    public Stream<AddressEntry> stream() {
+        return list.stream();
     }
-
 }

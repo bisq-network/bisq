@@ -29,6 +29,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.Res;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Profiler;
 import io.bisq.common.util.Utilities;
@@ -36,6 +37,7 @@ import io.bisq.core.alert.AlertManager;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorManager;
+import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.wallet.*;
 import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
 import io.bisq.core.filter.FilterManager;
@@ -43,6 +45,7 @@ import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.TradeManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
+import io.bisq.gui.Navigation;
 import io.bisq.gui.SystemTray;
 import io.bisq.gui.common.UITimer;
 import io.bisq.gui.common.view.CachingViewLoader;
@@ -173,6 +176,13 @@ public class BisqApp extends Application {
             User user = injector.getInstance(User.class);
             user.init();
 
+            ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
+            persistedDataHosts.add(injector.getInstance(Navigation.class));
+            persistedDataHosts.add(injector.getInstance(AddressEntryList.class));
+            // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
+            persistedDataHosts.stream().forEach(PersistedDataHost::readPersisted);
+            
+
             Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
             Version.printVersion();
 
@@ -223,31 +233,31 @@ public class BisqApp extends Application {
                     showEmptyWalletPopup(injector.getInstance(BtcWalletService.class));
                 } else //noinspection ConstantConditions,ConstantConditions
                     if (DevEnv.DEV_MODE && new KeyCodeCombination(KeyCode.B, KeyCombination.SHORTCUT_DOWN).match(keyEvent) || new KeyCodeCombination(KeyCode.E, KeyCombination.CONTROL_DOWN).match(keyEvent)) {
-                    // BSQ empty wallet not public yet
-                    showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
-                } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    showSendAlertMessagePopup();
-                } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    showFilterPopup();
-                } else if (new KeyCodeCombination(KeyCode.P, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    showFPSWindow();
-                } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
-                    if (walletsManager.areWalletsAvailable())
-                        new ShowWalletDataWindow(walletsManager).show();
-                    else
-                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
-                } else if (new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
-                    TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
-                    BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
-                    if (walletService.isWalletReady())
-                        new SpendFromDepositTxWindow(tradeWalletService).show();
-                    else
-                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                        // BSQ empty wallet not public yet
+                        showEmptyWalletPopup(injector.getInstance(BsqWalletService.class));
+                    } else if (new KeyCodeCombination(KeyCode.M, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                        showSendAlertMessagePopup();
+                    } else if (new KeyCodeCombination(KeyCode.F, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                        showFilterPopup();
+                    } else if (new KeyCodeCombination(KeyCode.P, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                        showFPSWindow();
+                    } else if (new KeyCodeCombination(KeyCode.J, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                        WalletsManager walletsManager = injector.getInstance(WalletsManager.class);
+                        if (walletsManager.areWalletsAvailable())
+                            new ShowWalletDataWindow(walletsManager).show();
+                        else
+                            new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                    } else if (new KeyCodeCombination(KeyCode.G, KeyCombination.ALT_DOWN).match(keyEvent)) {
+                        TradeWalletService tradeWalletService = injector.getInstance(TradeWalletService.class);
+                        BtcWalletService walletService = injector.getInstance(BtcWalletService.class);
+                        if (walletService.isWalletReady())
+                            new SpendFromDepositTxWindow(tradeWalletService).show();
+                        else
+                            new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                     } else //noinspection ConstantConditions,ConstantConditions
                         if (DevEnv.DEV_MODE && new KeyCodeCombination(KeyCode.D, KeyCombination.SHORTCUT_DOWN).match(keyEvent)) {
-                    showDebugWindow();
-                }
+                            showDebugWindow();
+                        }
             });
 
             // configure the primary stage
