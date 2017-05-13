@@ -19,6 +19,7 @@ package io.bisq.core.payment.payload;
 
 import io.bisq.common.locale.BankUtil;
 import io.bisq.common.locale.CountryUtil;
+import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,32 +27,66 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 
-@Setter
 @EqualsAndHashCode(callSuper = true)
+@Setter
+@Getter
 @ToString
 @Slf4j
 public abstract class BankAccountPayload extends CountryBasedPaymentAccountPayload {
-
-    @Getter
     protected String holderName;
-    @Getter
     protected String bankName;
-    @Getter
     protected String branchId;
-    @Getter
     protected String accountNr;
-    @Getter
     protected String accountType;
     @Nullable
-    @Getter
     protected String holderTaxId;
-    // Custom getter
     protected String bankId;
 
     public BankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected BankAccountPayload(String paymentMethodName,
+                                 String id,
+                                 long maxTradePeriod,
+                                 String countryCode,
+                                 String holderName,
+                                 String bankName,
+                                 String branchId,
+                                 String accountNr,
+                                 String accountType,
+                                 String holderTaxId,
+                                 String bankId) {
+        super(paymentMethodName, id, maxTradePeriod, countryCode);
+        this.holderName = holderName;
+        this.bankName = bankName;
+        this.branchId = branchId;
+        this.accountNr = accountNr;
+        this.accountType = accountType;
+        this.holderTaxId = holderTaxId;
+        this.bankId = bankId;
+    }
+
+    public PB.BankAccountPayload.Builder getBankAccountPayloadBuilder() {
+        PB.BankAccountPayload.Builder builder =
+                PB.BankAccountPayload.newBuilder()
+                        .setHolderName(holderName)
+                        .setBankName(bankName)
+                        .setBranchId(branchId)
+                        .setAccountNr(accountNr)
+                        .setAccountType(accountType)
+                        .setBankId(bankId);
+        Optional.ofNullable(holderTaxId).ifPresent(builder::setHolderTaxId);
+        return getCountryBasedPaymentAccountPayloadBuilder().setBankAccountPayload(builder)
+                .getBankAccountPayload().toBuilder();
+    }
+
 
     @Override
     public String getPaymentDetails() {

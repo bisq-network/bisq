@@ -18,6 +18,7 @@
 package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
+import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -90,7 +91,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 .build();
     }
 
-    public static PublishDepositTxRequest fromProto(PB.PublishDepositTxRequest proto) {
+    public static PublishDepositTxRequest fromProto(PB.PublishDepositTxRequest proto, ProtoResolver protoResolver) {
         List<RawTransactionInput> makerInputs = proto.getMakerInputsList().stream()
                 .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
                         rawTransactionInput.getParentTransaction().toByteArray(),
@@ -98,7 +99,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 .collect(Collectors.toList());
 
         return new PublishDepositTxRequest(proto.getTradeId(),
-                PaymentAccountPayload.fromProto(proto.getMakerPaymentAccountPayload()),
+                (PaymentAccountPayload) protoResolver.fromProto(proto.getMakerPaymentAccountPayload()),
                 proto.getMakerAccountId(),
                 proto.getMakerMultiSigPubKey().toByteArray(),
                 proto.getMakerContractAsJson(),

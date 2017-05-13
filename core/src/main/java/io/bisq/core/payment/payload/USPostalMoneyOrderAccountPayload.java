@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayload {
-
     private String postalAddress;
     private String holderName;
 
@@ -38,12 +38,42 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public USPostalMoneyOrderAccountPayload(String paymentMethodName, String id, long maxTradePeriod,
-                                            String postalAddress, String holderName) {
-        super(paymentMethodName, id, maxTradePeriod);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private USPostalMoneyOrderAccountPayload(String paymentMethod, String id,
+                                             long maxTradePeriod,
+                                             String postalAddress,
+                                             String holderName) {
+        this(paymentMethod, id, maxTradePeriod);
+
         this.postalAddress = postalAddress;
         this.holderName = holderName;
     }
+
+    @Override
+    public Message toProtoMessage() {
+        return getPaymentAccountPayloadBuilder()
+                .setUSPostalMoneyOrderAccountPayload(PB.USPostalMoneyOrderAccountPayload.newBuilder()
+                        .setPostalAddress(postalAddress)
+                        .setHolderName(holderName))
+                .build();
+    }
+
+    public static USPostalMoneyOrderAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new USPostalMoneyOrderAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                proto.getUSPostalMoneyOrderAccountPayload().getPostalAddress(),
+                proto.getUSPostalMoneyOrderAccountPayload().getHolderName());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getPaymentDetails() {
@@ -55,20 +85,5 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
                 "Postal address: " + postalAddress;
-    }
-
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.USPostalMoneyOrderAccountPayload.Builder thisClass =
-                PB.USPostalMoneyOrderAccountPayload.newBuilder()
-                        .setPostalAddress(postalAddress)
-                        .setHolderName(holderName);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setUSPostalMoneyOrderAccountPayload(thisClass);
-        return paymentAccountPayload.build();
     }
 }

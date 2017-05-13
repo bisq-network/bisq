@@ -19,6 +19,7 @@ package io.bisq.core.user;
 
 import com.google.protobuf.Message;
 import io.bisq.common.proto.ProtoCollectionUtil;
+import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.arbitration.Arbitrator;
@@ -85,10 +86,10 @@ public class UserPayload implements PersistableEnvelope {
         return PB.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
     }
 
-    public static UserPayload fromProto(PB.UserPayload proto) {
+    public static UserPayload fromProto(PB.UserPayload proto, ProtoResolver resolver) {
         return new UserPayload(proto.getAccountId(),
-                proto.getPaymentAccountsList().stream().map(PaymentAccount::fromProto).collect(Collectors.toSet()),
-                proto.hasCurrentPaymentAccount() ? PaymentAccount.fromProto(proto.getCurrentPaymentAccount()) : null,
+                proto.getPaymentAccountsList().stream().map(e -> PaymentAccount.fromProto(e, resolver)).collect(Collectors.toSet()),
+                proto.hasCurrentPaymentAccount() ? PaymentAccount.fromProto(proto.getCurrentPaymentAccount(), resolver) : null,
                 proto.getAcceptedLanguageLocaleCodesList(),
                 proto.hasDevelopersAlert() ? Alert.fromProto(proto.getDevelopersAlert()) : null,
                 proto.hasDisplayedAlert() ? Alert.fromProto(proto.getDisplayedAlert()) : null,

@@ -20,6 +20,7 @@ package io.bisq.core.trade;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.monetary.Price;
+import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.core.offer.OfferPayload;
@@ -110,7 +111,7 @@ public final class Contract implements NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Contract fromProto(PB.Contract contract) {
+    public static Contract fromProto(PB.Contract contract, ProtoResolver protoResolver) {
         return new Contract(OfferPayload.fromProto(contract.getOfferPayload()),
                 contract.getTradeAmount(),
                 contract.getTradePrice(),
@@ -122,8 +123,8 @@ public final class Contract implements NetworkPayload {
                 contract.getIsBuyerMakerAndSellerTaker(),
                 contract.getMakerAccountId(),
                 contract.getTakerAccountId(),
-                PaymentAccountPayload.fromProto(contract.getMakerPaymentAccountPayload()),
-                PaymentAccountPayload.fromProto(contract.getTakerPaymentAccountPayload()),
+                (PaymentAccountPayload) protoResolver.fromProto(contract.getMakerPaymentAccountPayload()),
+                (PaymentAccountPayload) protoResolver.fromProto(contract.getTakerPaymentAccountPayload()),
                 PubKeyRing.fromProto(contract.getMakerPubKeyRing()),
                 PubKeyRing.fromProto(contract.getTakerPubKeyRing()),
                 contract.getMakerPayoutAddressString(),

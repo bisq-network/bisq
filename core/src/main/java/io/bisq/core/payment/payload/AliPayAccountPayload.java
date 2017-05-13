@@ -17,28 +17,62 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+@EqualsAndHashCode(callSuper = true)
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = true)
 @ToString
 public final class AliPayAccountPayload extends PaymentAccountPayload {
-
     private String accountNr;
 
-    public AliPayAccountPayload(String paymentMethod, String id, long maxTradePeriod, String accountNr) {
-        this(paymentMethod, id, maxTradePeriod);
-        setAccountNr(accountNr);
+    public AliPayAccountPayload(String paymentMethod,
+                                String id,
+                                long maxTradePeriod) {
+        super(paymentMethod,
+                id,
+                maxTradePeriod);
     }
 
-    public AliPayAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public AliPayAccountPayload(String paymentMethod,
+                                String id,
+                                long maxTradePeriod,
+                                String accountNr) {
+        this(paymentMethod,
+                id,
+                maxTradePeriod);
+
+        this.accountNr = accountNr;
     }
+
+    @Override
+    public Message toProtoMessage() {
+        return getPaymentAccountPayloadBuilder().setAliPayAccountPayload(PB.AliPayAccountPayload.newBuilder()
+                .setAccountNr(accountNr))
+                .build();
+    }
+
+    public static AliPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new AliPayAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                proto.getAliPayAccountPayload().getAccountNr());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getPaymentDetails() {
@@ -48,18 +82,5 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
-    }
-
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.AliPayAccountPayload.Builder thisClass =
-                PB.AliPayAccountPayload.newBuilder().setAccountNr(accountNr);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setAliPayAccountPayload(thisClass);
-        return paymentAccountPayload.build();
     }
 }

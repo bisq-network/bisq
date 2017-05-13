@@ -202,7 +202,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
             //TODO
             if (voteItemsList.isMyVote()) {
                 new Popup<>().warning(Res.get("dao.voting.votedAlready")).show();
-            } else if (!voteItemsList.getAllVoteItemList().stream().filter(VoteItem::hasVoted).findAny().isPresent() &&
+            } else if (!voteItemsList.getAllVoteItemList().stream().filter(VoteItem::isHasVoted).findAny().isPresent() &&
                     !voteItemsList.getAllVoteItemList().stream().filter(e -> e instanceof CompensationRequestVoteItemCollection)
                             .filter(e -> ((CompensationRequestVoteItemCollection) e).hasVotedOnAnyItem()).findAny().isPresent()) {
                 new Popup<>().warning(Res.get("dao.voting.notVotedOnAnyEntry")).show();

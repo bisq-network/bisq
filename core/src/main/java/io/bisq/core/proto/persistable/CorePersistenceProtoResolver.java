@@ -13,6 +13,7 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.*;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.core.user.BlockChainExplorer;
@@ -33,7 +34,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class CorePersistenceProtoResolver implements PersistenceProtoResolver {
+public class CorePersistenceProtoResolver extends CoreProtoResolver implements PersistenceProtoResolver {
     private final Provider<AddressEntryList> addressEntryListProvider;
     private final Provider<Preferences> preferencesProvider;
     private final Storage<TradableList<OpenOffer>> openOfferStorage;
@@ -90,7 +91,7 @@ public class CorePersistenceProtoResolver implements PersistenceProtoResolver {
                 result = fillPreferences(proto, preferencesProvider.get());
                 break;
             case USER_PAYLOAD:
-                result = UserPayload.fromProto(proto.getUserPayload());
+                result = UserPayload.fromProto(proto.getUserPayload(), this);
                 break;
             case SEQUENCE_NUMBER_MAP:
                 result = SequenceNumberMap.fromProto(proto.getSequenceNumberMap());
@@ -102,6 +103,18 @@ public class CorePersistenceProtoResolver implements PersistenceProtoResolver {
         }
         return Optional.ofNullable(result);
     }
+
+/*
+
+    @NotNull
+    static OKPayAccountPayload getOkPayAccountPayload(PB.PaymentAccountPayload protoEntry) {
+        OKPayAccountPayload okPayAccountPayload = new OKPayAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
+                protoEntry.getMaxTradePeriod(), protoEntry.getOKPayAccountPayload().getAccountNr());
+        okPayAccountPayload.setAccountNr(protoEntry.getOKPayAccountPayload().getAccountNr());
+        return okPayAccountPayload;
+    }
+*/
+
 
     private PersistableEnvelope getTradableList(PB.TradableList tradableList) {
         return TradableList.fromProto(tradableList, openOfferStorage, buyerAsMakerTradeStorage, buyerAsTakerTradeStorage, sellerAsMakerTradeStorage, sellerAsTakerTradeStorage, btcWalletService.get());
@@ -159,11 +172,17 @@ public class CorePersistenceProtoResolver implements PersistenceProtoResolver {
 
         // optional
         preferences.setBackupDirectory(env.getBackupDirectory().isEmpty() ? null : env.getBackupDirectory());
-        preferences.setOfferBookChartScreenCurrencyCode(env.getOfferBookChartScreenCurrencyCode().isEmpty() ? null : env.getOfferBookChartScreenCurrencyCode());
-        preferences.setTradeChartsScreenCurrencyCode(env.getTradeChartsScreenCurrencyCode().isEmpty() ? null : env.getTradeChartsScreenCurrencyCode());
+        preferences.setOfferBookChartScreenCurrencyCode(env.getOfferBookChartScreenCurrencyCode().isEmpty() ?
+                null :
+                env.getOfferBookChartScreenCurrencyCode());
+        preferences.setTradeChartsScreenCurrencyCode(env.getTradeChartsScreenCurrencyCode().isEmpty() ?
+                null :
+                env.getTradeChartsScreenCurrencyCode());
         preferences.setBuyScreenCurrencyCode(env.getBuyScreenCurrencyCode().isEmpty() ? null : env.getBuyScreenCurrencyCode());
         preferences.setSellScreenCurrencyCode(env.getSellScreenCurrencyCode().isEmpty() ? null : env.getSellScreenCurrencyCode());
-        preferences.setSelectedPaymentAccountForCreateOffer(env.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod() ? PaymentAccount.fromProto(env.getSelectedPaymentAccountForCreateOffer()) : null);
+        preferences.setSelectedPaymentAccountForCreateOffer(env.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod() ?
+                PaymentAccount.fromProto(env.getSelectedPaymentAccountForCreateOffer(), this) :
+                null);
 
         preferences.setDoPersist(true);
         return preferences;

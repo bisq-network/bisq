@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,17 +31,44 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
-
     private String accountNr;
 
     public PerfectMoneyAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public PerfectMoneyAccountPayload(String paymentMethodName, String id, long maxTradePeriod, String accountNr) {
-        super(paymentMethodName, id, maxTradePeriod);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private PerfectMoneyAccountPayload(String paymentMethod, String id,
+                                       long maxTradePeriod,
+                                       String accountNr) {
+        this(paymentMethod, id, maxTradePeriod);
+
         this.accountNr = accountNr;
     }
+
+    @Override
+    public Message toProtoMessage() {
+        return getPaymentAccountPayloadBuilder()
+                .setPerfectMoneyAccountPayload(PB.PerfectMoneyAccountPayload.newBuilder()
+                        .setAccountNr(accountNr))
+                .build();
+    }
+
+    public static PerfectMoneyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new PerfectMoneyAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                proto.getPerfectMoneyAccountPayload().getAccountNr());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getPaymentDetails() {
@@ -50,18 +78,5 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
-    }
-
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.PerfectMoneyAccountPayload.Builder thisClass =
-                PB.PerfectMoneyAccountPayload.newBuilder().setAccountNr(accountNr);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setPerfectMoneyAccountPayload(thisClass);
-        return paymentAccountPayload.build();
     }
 }

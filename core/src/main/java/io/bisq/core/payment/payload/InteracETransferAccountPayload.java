@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class InteracETransferAccountPayload extends PaymentAccountPayload {
-
     private String email;
     private String holderName;
     private String question;
@@ -40,14 +40,51 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public InteracETransferAccountPayload(String paymentMethodName, String id, long maxTradePeriod,
-                                          String email, String holderName, String question, String answer) {
-        super(paymentMethodName, id, maxTradePeriod);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private InteracETransferAccountPayload(String paymentMethod,
+                                           String id,
+                                           long maxTradePeriod,
+                                           String email,
+                                           String holderName,
+                                           String question,
+                                           String answer) {
+        this(paymentMethod, id, maxTradePeriod);
+
         this.email = email;
         this.holderName = holderName;
         this.question = question;
         this.answer = answer;
     }
+
+    @Override
+    public Message toProtoMessage() {
+        return getPaymentAccountPayloadBuilder()
+                .setInteracETransferAccountPayload(PB.InteracETransferAccountPayload.newBuilder()
+                        .setEmail(email)
+                        .setHolderName(holderName)
+                        .setQuestion(question)
+                        .setAnswer(answer))
+                .build();
+    }
+
+    public static InteracETransferAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new InteracETransferAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                proto.getInteracETransferAccountPayload().getEmail(),
+                proto.getInteracETransferAccountPayload().getHolderName(),
+                proto.getInteracETransferAccountPayload().getQuestion(),
+                proto.getInteracETransferAccountPayload().getAnswer());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getPaymentDetails() {
@@ -60,22 +97,5 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                 "Email: " + email + "\n" +
                 "Secret question: " + question + "\n" +
                 "Answer: " + answer;
-    }
-
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.InteracETransferAccountPayload.Builder interacETransferAccountPayload =
-                PB.InteracETransferAccountPayload.newBuilder()
-                        .setEmail(email)
-                        .setHolderName(holderName)
-                        .setQuestion(question)
-                        .setAnswer(answer);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setInteracETransferAccountPayload(interacETransferAccountPayload);
-        return paymentAccountPayload.build();
     }
 }

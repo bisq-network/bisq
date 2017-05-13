@@ -5,6 +5,7 @@ import io.bisq.core.alert.Alert;
 import io.bisq.core.arbitration.ArbitratorTest;
 import io.bisq.core.arbitration.MediatorTest;
 import io.bisq.core.filter.Filter;
+import io.bisq.core.proto.CoreProtoResolver;
 import org.junit.Test;
 
 /*
@@ -31,7 +32,7 @@ public class UserPayloadModelVOTest {
         UserPayload vo = new UserPayload();
         vo.setAccountID("accountId");
 
-        UserPayload newVo = UserPayload.fromProto(vo.toProtoMessage().getUserPayload());
+        UserPayload newVo = UserPayload.fromProto(vo.toProtoMessage().getUserPayload(), new CoreProtoResolver());
     }
 
     @Test
@@ -44,6 +45,6 @@ public class UserPayloadModelVOTest {
         vo.setRegisteredMediator(MediatorTest.getMediatorMock());
         vo.setAcceptedArbitrators(Lists.newArrayList(ArbitratorTest.getArbitratorMock()));
         vo.setAcceptedMediators(Lists.newArrayList(MediatorTest.getMediatorMock()));
-        UserPayload newVo = UserPayload.fromProto(vo.toProtoMessage().getUserPayload());
+        UserPayload newVo = UserPayload.fromProto(vo.toProtoMessage().getUserPayload(), new CoreProtoResolver());
     }
 }

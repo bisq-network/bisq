@@ -19,6 +19,7 @@ package io.bisq.core.payment;
 
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.proto.ProtoCollectionUtil;
+import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
@@ -81,12 +82,12 @@ public abstract class PaymentAccount implements PersistablePayload {
         return builder.build();
     }
 
-    public static PaymentAccount fromProto(PB.PaymentAccount proto) {
+    public static PaymentAccount fromProto(PB.PaymentAccount proto, ProtoResolver protoResolver) {
         PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(proto.getPaymentMethod().getId()));
         paymentAccount.setAccountName(proto.getAccountName());
         paymentAccount.getTradeCurrencies().addAll(proto.getTradeCurrenciesList().stream().map(TradeCurrency::fromProto).collect(Collectors.toList()));
         paymentAccount.setSelectedTradeCurrency(paymentAccount.getSelectedTradeCurrency());
-        paymentAccount.setPaymentAccountPayload(PaymentAccountPayload.fromProto(proto.getPaymentAccountPayload()));
+        paymentAccount.setPaymentAccountPayload((PaymentAccountPayload) protoResolver.fromProto(proto.getPaymentAccountPayload()));
         return paymentAccount;
     }
 

@@ -27,41 +27,69 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class SameBankAccountPayload extends BankAccountPayload {
 
-
     public SameBankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    @Override
-    public String getPaymentDetails() {
-        return "Transfer with same Bank - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private SameBankAccountPayload(String paymentMethodName,
+                                   String id,
+                                   long maxTradePeriod,
+                                   String countryCode,
+                                   String holderName,
+                                   String bankName,
+                                   String branchId,
+                                   String accountNr,
+                                   String accountType,
+                                   String holderTaxId,
+                                   String bankId) {
+        super(paymentMethodName,
+                id,
+                maxTradePeriod,
+                countryCode,
+                holderName,
+                bankName,
+                branchId,
+                accountNr,
+                accountType,
+                holderTaxId,
+                bankId);
     }
 
     @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.SameBankAccountPayload sameBankAccountPayload =
-                PB.SameBankAccountPayload.getDefaultInstance();
-        PB.BankAccountPayload.Builder bankAccountPayload =
-                PB.BankAccountPayload.newBuilder()
-                        .setHolderName(holderName)
-                        .setBankName(bankName)
-                        .setBankId(bankId)
-                        .setBranchId(branchId)
-                        .setAccountNr(accountNr)
-                        .setAccountType(accountType)
-                        .setHolderTaxId(holderTaxId)
-                        .setSameBankAccontPayload(sameBankAccountPayload);
-        PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload =
-                PB.CountryBasedPaymentAccountPayload.newBuilder()
-                        .setCountryCode(countryCode)
-                        .setBankAccountPayload(bankAccountPayload);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayload);
+    public PB.SameBankAccountPayload toProtoMessage() {
+        return getBankAccountPayloadBuilder()
+                .setSameBankAccontPayload(PB.SameBankAccountPayload.newBuilder())
+                .build()
+                .getSameBankAccontPayload();
+    }
 
-        return paymentAccountPayload.build();
+    public static SameBankAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
+        PB.BankAccountPayload bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
+        return new SameBankAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                countryBasedPaymentAccountPayload.getCountryCode(),
+                bankAccountPayload.getHolderName(),
+                bankAccountPayload.getBankName(),
+                bankAccountPayload.getBranchId(),
+                bankAccountPayload.getAccountNr(),
+                bankAccountPayload.getAccountType(),
+                bankAccountPayload.getHolderTaxId(),
+                bankAccountPayload.getBankId());
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public String getPaymentDetails() {
+        return "Transfer with same Bank - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 }

@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,17 +31,45 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
-
     private String address;
 
     public CryptoCurrencyAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public CryptoCurrencyAccountPayload(String paymentMethod, String id, long maxTradePeriod, String address) {
-        super(paymentMethod, id, maxTradePeriod);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public CryptoCurrencyAccountPayload(String paymentMethod,
+                                        String id,
+                                        long maxTradePeriod,
+                                        String address) {
+        this(paymentMethod,
+                id,
+                maxTradePeriod);
         this.address = address;
     }
+
+    @Override
+    public Message toProtoMessage() {
+        return getPaymentAccountPayloadBuilder().setCryptoCurrencyAccountPayload(PB.CryptoCurrencyAccountPayload.newBuilder()
+                .setAddress(address))
+                .build();
+    }
+
+    public static CryptoCurrencyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new CryptoCurrencyAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                proto.getCryptoCurrencyAccountPayload().getAddress());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getPaymentDetails() {
@@ -50,18 +79,5 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
-    }
-
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.CryptoCurrencyAccountPayload.Builder cryptoCurrencyAccountPayload =
-                PB.CryptoCurrencyAccountPayload.newBuilder().setAddress(address);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setCryptoCurrencyAccountPayload(cryptoCurrencyAccountPayload);
-        return paymentAccountPayload.build();
     }
 }

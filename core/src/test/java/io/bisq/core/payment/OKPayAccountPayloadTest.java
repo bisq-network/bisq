@@ -17,17 +17,8 @@
 
 package io.bisq.core.payment;
 
-import com.google.protobuf.util.JsonFormat;
-import io.bisq.core.payment.payload.OKPayAccountPayload;
-import io.bisq.generated.protobuffer.PB;
-import org.junit.Test;
-
-import java.io.IOException;
-
-import static org.junit.Assert.fail;
-
 public class OKPayAccountPayloadTest {
-    @Test
+   /* @Test
     public void toProtoBuf() throws Exception {
         OKPayAccountPayload accountPayload = new OKPayAccountPayload("method", "id", 100);
         accountPayload.setAccountNr("AccNr");
@@ -42,6 +33,5 @@ public class OKPayAccountPayloadTest {
             fail();
         }
 
-    }
-
+    }*/
 }

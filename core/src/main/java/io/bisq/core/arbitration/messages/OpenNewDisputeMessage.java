@@ -17,6 +17,7 @@
 
 package io.bisq.core.arbitration.messages;
 
+import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.generated.protobuffer.PB;
@@ -48,8 +49,8 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
                 .build();
     }
 
-    public static OpenNewDisputeMessage fromProto(PB.OpenNewDisputeMessage proto) {
-        return new OpenNewDisputeMessage(Dispute.fromProto(proto.getDispute()),
+    public static OpenNewDisputeMessage fromProto(PB.OpenNewDisputeMessage proto, ProtoResolver protoResolver) {
+        return new OpenNewDisputeMessage(Dispute.fromProto(proto.getDispute(), protoResolver),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid());
     }

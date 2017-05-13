@@ -258,7 +258,7 @@ public class VotingManager {
             int freeSpace = 80 - outputStream.size();
             Set<VoteItem> items = voteItemsList.getAllVoteItemList().stream()
                     .filter(e -> !(e instanceof CompensationRequestVoteItemCollection))
-                    .filter(VoteItem::hasVoted)
+                    .filter(VoteItem::isHasVoted)
                     .collect(Collectors.toSet());
             checkArgument(items.size() <= freeSpace,
                     "Size of parameter items must not exceed free space.");

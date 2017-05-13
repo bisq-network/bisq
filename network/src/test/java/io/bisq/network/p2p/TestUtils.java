@@ -1,6 +1,7 @@
 package io.bisq.network.p2p;
 
 import io.bisq.common.Clock;
+import io.bisq.common.Payload;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.network.NetworkPayload;
@@ -177,6 +178,11 @@ public class TestUtils {
     public static NetworkProtoResolver getNetworkProtoResolver() {
         return new NetworkProtoResolver() {
             @Override
+            public Payload fromProto(PB.PaymentAccountPayload proto) {
+                return null;
+            }
+
+            @Override
             public NetworkEnvelope fromProto(PB.NetworkEnvelope envelope) {
                 return null;
             }
@@ -195,6 +201,11 @@ public class TestUtils {
 
     public static PersistenceProtoResolver getPersistenceProtoResolver() {
         return new PersistenceProtoResolver() {
+            @Override
+            public Payload fromProto(PB.PaymentAccountPayload proto) {
+                return null;
+            }
+
             @Override
             public Optional<PersistableEnvelope> fromProto(PB.PersistableEnvelope persistable) {
                 return null;

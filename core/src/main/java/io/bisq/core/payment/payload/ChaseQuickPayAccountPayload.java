@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,20 +31,51 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
-
     private String email;
     private String holderName;
 
-    public ChaseQuickPayAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
+    public ChaseQuickPayAccountPayload(String paymentMethod,
+                                       String id,
+                                       long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public ChaseQuickPayAccountPayload(String paymentMethod, String id, long maxTradePeriod, String email,
-                                       String holderName) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private ChaseQuickPayAccountPayload(String paymentMethod, String id,
+                                        long maxTradePeriod,
+                                        String email,
+                                        String holderName) {
         this(paymentMethod, id, maxTradePeriod);
-        setEmail(email);
-        setHolderName(holderName);
+
+        this.email = email;
+        this.holderName = holderName;
     }
+
+    @Override
+    public Message toProtoMessage() {
+        return getPaymentAccountPayloadBuilder()
+                .setChaseQuickPayAccountPayload(PB.ChaseQuickPayAccountPayload.newBuilder()
+                        .setEmail(email)
+                        .setHolderName(holderName))
+                .build();
+    }
+
+    public static ChaseQuickPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new ChaseQuickPayAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                proto.getChaseQuickPayAccountPayload().getEmail(),
+                proto.getChaseQuickPayAccountPayload().getHolderName());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getPaymentDetails() {
@@ -54,20 +86,5 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
                 "Email: " + email;
-    }
-
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.ChaseQuickPayAccountPayload.Builder chaseQuickPayAccountPayload =
-                PB.ChaseQuickPayAccountPayload.newBuilder()
-                        .setEmail(email)
-                        .setHolderName(holderName);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setChaseQuickPayAccountPayload(chaseQuickPayAccountPayload);
-        return paymentAccountPayload.build();
     }
 }

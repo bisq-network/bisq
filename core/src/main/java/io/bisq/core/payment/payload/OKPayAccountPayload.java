@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,17 +31,44 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class OKPayAccountPayload extends PaymentAccountPayload {
-
     private String accountNr;
 
     public OKPayAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public OKPayAccountPayload(String paymentMethodName, String id, long maxTradePeriod, String accountNr) {
-        super(paymentMethodName, id, maxTradePeriod);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private OKPayAccountPayload(String paymentMethod, String id,
+                                long maxTradePeriod,
+                                String accountNr) {
+        this(paymentMethod, id, maxTradePeriod);
+
         this.accountNr = accountNr;
     }
+
+    @Override
+    public Message toProtoMessage() {
+        return getPaymentAccountPayloadBuilder()
+                .setOKPayAccountPayload(PB.OKPayAccountPayload.newBuilder()
+                        .setAccountNr(accountNr))
+                .build();
+    }
+
+    public static OKPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new OKPayAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                proto.getOKPayAccountPayload().getAccountNr());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getPaymentDetails() {
@@ -50,19 +78,5 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return getPaymentDetails();
-    }
-
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.OKPayAccountPayload.Builder builder = PB.OKPayAccountPayload.newBuilder()
-                .setAccountNr(accountNr);
-
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setOKPayAccountPayload(builder);
-        return paymentAccountPayload.build();
     }
 }

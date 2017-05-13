@@ -93,7 +93,7 @@ public final class VoteItemsList implements PersistablePayload {
 
     public boolean hasVotedOnAnyItem() {
         return allVoteItemList.stream()
-                .filter(VoteItem::hasVoted)
+                .filter(VoteItem::isHasVoted)
                 .findAny()
                 .isPresent() || compensationRequest.hasVotedOnAnyItem();
     }

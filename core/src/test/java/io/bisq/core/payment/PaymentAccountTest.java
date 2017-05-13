@@ -1,5 +1,6 @@
 package io.bisq.core.payment;
 
+import io.bisq.core.proto.CoreProtoResolver;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -30,7 +31,7 @@ public class PaymentAccountTest {
         String nr = "nr";
         account.setAccountNr(nr);
 
-        OKPayAccount newVo = (OKPayAccount) PaymentAccount.fromProto(account.toProtoMessage());
+        OKPayAccount newVo = (OKPayAccount) PaymentAccount.fromProto(account.toProtoMessage(), new CoreProtoResolver());
         assertEquals(name, newVo.getAccountName());
         assertEquals(nr, newVo.getAccountNr());
 

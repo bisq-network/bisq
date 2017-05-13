@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,12 +30,28 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPayload {
-
-    protected String countryCode = "";
+    protected String countryCode;
 
     CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod) {
         super(paymentMethodName, id, maxTradePeriod);
+
     }
+
+    CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod, String countryCode) {
+        this(paymentMethodName, id, maxTradePeriod);
+
+        this.countryCode = countryCode;
+    }
+
+    protected PB.CountryBasedPaymentAccountPayload.Builder getCountryBasedPaymentAccountPayloadBuilder() {
+        PB.CountryBasedPaymentAccountPayload.Builder builder =
+                PB.CountryBasedPaymentAccountPayload.newBuilder()
+                        .setCountryCode(countryCode);
+        return getPaymentAccountPayloadBuilder()
+                .setCountryBasedPaymentAccountPayload(builder)
+                .getCountryBasedPaymentAccountPayloadBuilder();
+    }
+
 
     abstract public String getPaymentDetails();
 

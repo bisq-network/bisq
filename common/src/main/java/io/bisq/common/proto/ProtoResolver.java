@@ -15,15 +15,11 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.proto.network;
+package io.bisq.common.proto;
 
-import io.bisq.common.proto.ProtoResolver;
+import io.bisq.common.Payload;
 import io.bisq.generated.protobuffer.PB;
 
-public interface NetworkProtoResolver extends ProtoResolver {
-    NetworkEnvelope fromProto(PB.NetworkEnvelope proto);
-
-    NetworkPayload fromProto(PB.StoragePayload proto);
-
-    NetworkPayload fromProto(PB.StorageEntryWrapper proto);
+public interface ProtoResolver {
+    Payload fromProto(PB.PaymentAccountPayload proto);
 }

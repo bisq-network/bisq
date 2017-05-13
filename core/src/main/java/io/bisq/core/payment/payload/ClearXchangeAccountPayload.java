@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,44 +31,59 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
-
-    private String holderName;
     private String emailOrMobileNr;
+    private String holderName;
 
     public ClearXchangeAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public ClearXchangeAccountPayload(String paymentMethod, String id, long maxTradePeriod, String holderName,
-                                      String emailOrMobileNr) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private ClearXchangeAccountPayload(String paymentMethod,
+                                       String id,
+                                       long maxTradePeriod,
+                                       String emailOrMobileNr,
+                                       String holderName) {
         this(paymentMethod, id, maxTradePeriod);
-        setHolderName(holderName);
-        setEmailOrMobileNr(emailOrMobileNr);
+
+        this.emailOrMobileNr = emailOrMobileNr;
+        this.holderName = holderName;
     }
 
     @Override
+    public Message toProtoMessage() {
+        return getPaymentAccountPayloadBuilder()
+                .setClearXchangeAccountPayload(PB.ClearXchangeAccountPayload.newBuilder()
+                        .setEmailOrMobileNr(emailOrMobileNr)
+                        .setHolderName(holderName))
+                .build();
+    }
+
+    public static ClearXchangeAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new ClearXchangeAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                proto.getClearXchangeAccountPayload().getEmailOrMobileNr(),
+                proto.getClearXchangeAccountPayload().getHolderName());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
     public String getPaymentDetails() {
-        return "ClearXchange - Holder name: " + holderName + ", email or mobile no.: " + emailOrMobileNr;
+        return "ClearXchange - Holder name: " + holderName + ", emailOrMobileNr or mobile no.: " + emailOrMobileNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
                 "Email or mobile no.: " + emailOrMobileNr;
-    }
-
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.ClearXchangeAccountPayload.Builder thisClass =
-                PB.ClearXchangeAccountPayload.newBuilder()
-                        .setHolderName(holderName)
-                        .setEmailOrMobileNr(emailOrMobileNr);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setClearXchangeAccountPayload(thisClass);
-        return paymentAccountPayload.build();
     }
 }

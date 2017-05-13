@@ -27,37 +27,100 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 
-@Setter
 @EqualsAndHashCode(callSuper = true)
 @ToString
+@Setter
+@Getter
 @Slf4j
 public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload {
-
-    @Getter
-    protected String holderName;
-    @Getter
-    protected String holderEmail;
-    @Getter
-    protected String bankName;
-    @Getter
-    protected String branchId;
-    @Getter
-    protected String accountNr;
-    @Getter
-    protected String accountType;
+    private String holderName;
+    private String holderEmail;
+    private String bankName;
+    private String branchId;
+    private String accountNr;
+    private String accountType;
     @Nullable
-    @Getter
-    protected String requirements;
+    private String requirements;
     @Nullable
-    @Getter
-    protected String holderTaxId;
-    // Custom getter
-    protected String bankId;
+    private String holderTaxId;
+    private String bankId;
 
     public CashDepositAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private CashDepositAccountPayload(String paymentMethodName,
+                                      String id,
+                                      long maxTradePeriod,
+                                      String countryCode,
+                                      String holderName,
+                                      String holderEmail,
+                                      String bankName,
+                                      String branchId,
+                                      String accountNr,
+                                      String accountType,
+                                      String requirements,
+                                      String holderTaxId,
+                                      String bankId) {
+        super(paymentMethodName, id, maxTradePeriod, countryCode);
+        this.holderName = holderName;
+        this.holderEmail = holderEmail;
+        this.bankName = bankName;
+        this.branchId = branchId;
+        this.accountNr = accountNr;
+        this.accountType = accountType;
+        this.requirements = requirements;
+        this.holderTaxId = holderTaxId;
+        this.bankId = bankId;
+    }
+
+    @Override
+    public PB.CashDepositAccountPayload toProtoMessage() {
+        PB.CashDepositAccountPayload.Builder builder =
+                PB.CashDepositAccountPayload.newBuilder()
+                        .setHolderName(holderName)
+                        .setHolderEmail(holderEmail)
+                        .setBankName(bankName)
+                        .setBranchId(branchId)
+                        .setAccountNr(accountNr)
+                        .setAccountType(accountType)
+                        .setBankId(bankId);
+        Optional.ofNullable(holderTaxId).ifPresent(builder::setHolderTaxId);
+        Optional.ofNullable(requirements).ifPresent(builder::setRequirements);
+        return getCountryBasedPaymentAccountPayloadBuilder().setCashDepositAccountPayload(builder)
+                .build()
+                .getCashDepositAccountPayload();
+    }
+
+    public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
+        PB.CashDepositAccountPayload cashDepositAccountPayload = countryBasedPaymentAccountPayload.getCashDepositAccountPayload();
+        return new CashDepositAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                countryBasedPaymentAccountPayload.getCountryCode(),
+                cashDepositAccountPayload.getHolderName(),
+                cashDepositAccountPayload.getHolderEmail(),
+                cashDepositAccountPayload.getBankName(),
+                cashDepositAccountPayload.getBranchId(),
+                cashDepositAccountPayload.getAccountNr(),
+                cashDepositAccountPayload.getAccountType(),
+                cashDepositAccountPayload.getRequirements(),
+                cashDepositAccountPayload.getHolderTaxId(),
+                cashDepositAccountPayload.getBankId());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getPaymentDetails() {
@@ -93,33 +156,7 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 "Country of bank: " + CountryUtil.getNameByCode(countryCode);
     }
 
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.CashDepositAccountPayload.Builder cashDepositAccountPayload =
-                PB.CashDepositAccountPayload.newBuilder()
-                        .setHolderName(holderName)
-                        .setHolderEmail(holderEmail)
-                        .setBankName(bankName)
-                        .setBankId(bankId)
-                        .setBranchId(branchId)
-                        .setAccountNr(accountNr)
-                        .setRequirements(requirements)
-                        .setHolderTaxId(holderTaxId);
-        PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload =
-                PB.CountryBasedPaymentAccountPayload.newBuilder()
-                        .setCountryCode(countryCode)
-                        .setCashDepositAccountPayload(cashDepositAccountPayload);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayload);
-        return paymentAccountPayload.build();
-    }
-
-
-    protected String getHolderIdLabel() {
+    public String getHolderIdLabel() {
         return BankUtil.getHolderIdLabel(countryCode);
     }
 
@@ -127,6 +164,4 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
     public String getBankId() {
         return BankUtil.isBankIdRequired(countryCode) ? bankId : bankName;
     }
-
-
 }

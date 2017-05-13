@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class SwishAccountPayload extends PaymentAccountPayload {
-
     private String mobileNr;
     private String holderName;
 
@@ -38,12 +38,42 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public SwishAccountPayload(String paymentMethodName, String id, long maxTradePeriod,
-                               String mobileNr, String holderName) {
-        super(paymentMethodName, id, maxTradePeriod);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private SwishAccountPayload(String paymentMethod, String id,
+                                long maxTradePeriod,
+                                String mobileNr,
+                                String holderName) {
+        this(paymentMethod, id, maxTradePeriod);
+
         this.mobileNr = mobileNr;
         this.holderName = holderName;
     }
+
+    @Override
+    public Message toProtoMessage() {
+        return getPaymentAccountPayloadBuilder()
+                .setSwishAccountPayload(PB.SwishAccountPayload.newBuilder()
+                        .setMobileNr(mobileNr)
+                        .setHolderName(holderName))
+                .build();
+    }
+
+    public static SwishAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new SwishAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                proto.getSwishAccountPayload().getMobileNr(),
+                proto.getSwishAccountPayload().getHolderName());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getPaymentDetails() {
@@ -54,20 +84,5 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     public String getPaymentDetailsForTradePopup() {
         return "Holder name: " + holderName + "\n" +
                 "Mobile no.: " + mobileNr;
-    }
-
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.SwishAccountPayload.Builder thisClass =
-                PB.SwishAccountPayload.newBuilder()
-                        .setMobileNr(mobileNr)
-                        .setHolderName(holderName);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setSwishAccountPayload(thisClass);
-        return paymentAccountPayload.build();
     }
 }

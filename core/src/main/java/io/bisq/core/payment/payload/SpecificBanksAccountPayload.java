@@ -18,6 +18,7 @@
 package io.bisq.core.payment.payload;
 
 import com.google.common.base.Joiner;
+import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,14 +32,77 @@ import java.util.ArrayList;
 @Getter
 @Slf4j
 public final class SpecificBanksAccountPayload extends BankAccountPayload {
-
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
-    private ArrayList<String> acceptedBanks;
+    private ArrayList<String> acceptedBanks = new ArrayList<>();
 
     public SpecificBanksAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
         super(paymentMethod, id, maxTradePeriod);
-        acceptedBanks = new ArrayList<>();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private SpecificBanksAccountPayload(String paymentMethodName,
+                                        String id,
+                                        long maxTradePeriod,
+                                        String countryCode,
+                                        String holderName,
+                                        String bankName,
+                                        String branchId,
+                                        String accountNr,
+                                        String accountType,
+                                        String holderTaxId,
+                                        String bankId,
+                                        ArrayList<String> acceptedBanks) {
+        super(paymentMethodName,
+                id,
+                maxTradePeriod,
+                countryCode,
+                holderName,
+                bankName,
+                branchId,
+                accountNr,
+                accountType,
+                holderTaxId,
+                bankId);
+        this.acceptedBanks = acceptedBanks;
+    }
+
+    @Override
+    public Message toProtoMessage() {
+        final PB.SpecificBanksAccountPayload.Builder builder = PB.SpecificBanksAccountPayload.newBuilder()
+                .addAllAcceptedBanks(acceptedBanks);
+        return getBankAccountPayloadBuilder()
+                .setSpecificBanksAccountPayload(builder)
+                .build()
+                .getSpecificBanksAccountPayload();
+    }
+
+    public static SpecificBanksAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
+        PB.BankAccountPayload bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
+        PB.SpecificBanksAccountPayload specificBanksAccountPayload = bankAccountPayload.getSpecificBanksAccountPayload();
+        return new SpecificBanksAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                countryBasedPaymentAccountPayload.getCountryCode(),
+                bankAccountPayload.getHolderName(),
+                bankAccountPayload.getBankName(),
+                bankAccountPayload.getBranchId(),
+                bankAccountPayload.getAccountNr(),
+                bankAccountPayload.getAccountType(),
+                bankAccountPayload.getHolderTaxId(),
+                bankAccountPayload.getBankId(),
+                new ArrayList<>(specificBanksAccountPayload.getAcceptedBanksList())
+        );
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void clearAcceptedBanks() {
         acceptedBanks = new ArrayList<>();
@@ -58,33 +122,5 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
     public String getPaymentDetailsForTradePopup() {
         return super.getPaymentDetailsForTradePopup() + "\n" +
                 "Accepted banks: " + Joiner.on(", ").join(acceptedBanks);
-    }
-
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.SpecificBanksAccountPayload.Builder specificBanksAccountPayload =
-                PB.SpecificBanksAccountPayload.newBuilder().addAllAcceptedBanks(acceptedBanks);
-        PB.BankAccountPayload.Builder bankAccountPayload =
-                PB.BankAccountPayload.newBuilder()
-                        .setHolderName(holderName)
-                        .setBankName(bankName)
-                        .setBankId(bankId)
-                        .setBranchId(branchId)
-                        .setAccountNr(accountNr)
-                        .setAccountType(accountType)
-                        .setHolderTaxId(holderTaxId)
-                        .setSpecificBanksAccountPayload(specificBanksAccountPayload);
-        PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload =
-                PB.CountryBasedPaymentAccountPayload.newBuilder()
-                        .setCountryCode(countryCode)
-                        .setBankAccountPayload(bankAccountPayload);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayload);
-
-        return paymentAccountPayload.build();
     }
 }

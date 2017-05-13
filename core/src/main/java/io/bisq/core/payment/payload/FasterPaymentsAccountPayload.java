@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
-
     private String sortCode;
     private String accountNr;
 
@@ -38,12 +38,43 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
         super(paymentMethod, id, maxTradePeriod);
     }
 
-    public FasterPaymentsAccountPayload(String paymentMethod, String id, long maxTradePeriod,
-                                        String sortCode, String accountNr) {
-        super(paymentMethod, id, maxTradePeriod);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private FasterPaymentsAccountPayload(String paymentMethod,
+                                         String id,
+                                         long maxTradePeriod,
+                                         String sortCode,
+                                         String accountNr) {
+        this(paymentMethod, id, maxTradePeriod);
+
         this.sortCode = sortCode;
         this.accountNr = accountNr;
     }
+
+    @Override
+    public Message toProtoMessage() {
+        return getPaymentAccountPayloadBuilder()
+                .setFasterPaymentsAccountPayload(PB.FasterPaymentsAccountPayload.newBuilder()
+                        .setSortCode(sortCode)
+                        .setAccountNr(accountNr))
+                .build();
+    }
+
+    public static FasterPaymentsAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new FasterPaymentsAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                proto.getFasterPaymentsAccountPayload().getSortCode(),
+                proto.getFasterPaymentsAccountPayload().getAccountNr());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getPaymentDetails() {
@@ -54,20 +85,5 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
     public String getPaymentDetailsForTradePopup() {
         return "UK Sort code: " + sortCode + "\n" +
                 "Account number: " + accountNr;
-    }
-
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.FasterPaymentsAccountPayload.Builder thisClass =
-                PB.FasterPaymentsAccountPayload.newBuilder()
-                        .setSortCode(sortCode)
-                        .setAccountNr(accountNr);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setFasterPaymentsAccountPayload(thisClass);
-        return paymentAccountPayload.build();
     }
 }

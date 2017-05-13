@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 @Getter
 @Slf4j
 public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload {
-
     @Setter
     private String holderName;
     @Setter
@@ -53,6 +52,56 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
         acceptedCountryCodes = new ArrayList<>(acceptedCountryCodesAsSet);
         acceptedCountryCodes.sort(String::compareTo);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private SepaAccountPayload(String paymentMethodName,
+                               String id,
+                               long maxTradePeriod,
+                               String countryCode,
+                               String holderName,
+                               String iban,
+                               String bic,
+                               List<String> acceptedCountryCodes) {
+        super(paymentMethodName, id, maxTradePeriod, countryCode);
+        this.holderName = holderName;
+        this.iban = iban;
+        this.bic = bic;
+        this.acceptedCountryCodes = acceptedCountryCodes;
+    }
+
+    @Override
+    public PB.SepaAccountPayload toProtoMessage() {
+        PB.SepaAccountPayload.Builder builder =
+                PB.SepaAccountPayload.newBuilder()
+                        .setHolderName(holderName)
+                        .setIban(iban)
+                        .setBic(bic);
+        return getCountryBasedPaymentAccountPayloadBuilder().setSepaAccountPayload(builder)
+                .build()
+                .getSepaAccountPayload();
+    }
+
+    public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
+        PB.SepaAccountPayload sepaAccountPayload = countryBasedPaymentAccountPayload.getSepaAccountPayload();
+        return new SepaAccountPayload(proto.getPaymentMethodId(),
+                proto.getId(),
+                proto.getMaxTradePeriod(),
+                countryBasedPaymentAccountPayload.getCountryCode(),
+                sepaAccountPayload.getHolderName(),
+                sepaAccountPayload.getIban(),
+                sepaAccountPayload.getBic(),
+                new ArrayList<>(sepaAccountPayload.getAcceptedCountryCodesList()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addAcceptedCountry(String countryCode) {
         if (!acceptedCountryCodes.contains(countryCode))
@@ -75,27 +124,5 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                 "IBAN: " + iban + "\n" +
                 "BIC: " + bic + "\n" +
                 "Country of bank: " + CountryUtil.getNameByCode(countryCode);
-    }
-
-    @Override
-    public PB.PaymentAccountPayload toProtoMessage() {
-        PB.SepaAccountPayload.Builder sepaAccountPayload =
-                PB.SepaAccountPayload.newBuilder()
-                        .setHolderName(holderName)
-                        .setIban(iban)
-                        .setBic(bic)
-                        .addAllAcceptedCountryCodes(acceptedCountryCodes);
-        PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload =
-                PB.CountryBasedPaymentAccountPayload.newBuilder()
-                        .setCountryCode(countryCode)
-                        .setSepaAccountPayload(sepaAccountPayload);
-        PB.PaymentAccountPayload.Builder paymentAccountPayload =
-                PB.PaymentAccountPayload.newBuilder()
-                        .setId(id)
-                        .setPaymentMethodId(paymentMethodId)
-                        .setMaxTradePeriod(maxTradePeriod)
-                        .setCountryBasedPaymentAccountPayload(countryBasedPaymentAccountPayload);
-
-        return paymentAccountPayload.build();
     }
 }

@@ -17,6 +17,7 @@ import io.bisq.core.filter.Filter;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.messages.OfferAvailabilityRequest;
 import io.bisq.core.offer.messages.OfferAvailabilityResponse;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.messages.*;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.generated.protobuffer.PB;
@@ -41,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.inject.Inject;
 
 @Slf4j
-public class CoreNetworkProtoResolver implements NetworkProtoResolver {
+public class CoreNetworkProtoResolver extends CoreProtoResolver implements NetworkProtoResolver {
 
     @Inject
     public CoreNetworkProtoResolver() {
@@ -86,11 +87,11 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 return PrefixedSealedAndSignedMessage.fromProto(proto.getPrefixedSealedAndSignedMessage());
 
             case PAY_DEPOSIT_REQUEST:
-                return PayDepositRequest.fromProto(proto.getPayDepositRequest());
+                return PayDepositRequest.fromProto(proto.getPayDepositRequest(), this);
             case DEPOSIT_TX_PUBLISHED_MESSAGE:
                 return DepositTxPublishedMessage.fromProto(proto.getDepositTxPublishedMessage());
             case PUBLISH_DEPOSIT_TX_REQUEST:
-                return PublishDepositTxRequest.fromProto(proto.getPublishDepositTxRequest());
+                return PublishDepositTxRequest.fromProto(proto.getPublishDepositTxRequest(), this);
             case FIAT_TRANSFER_STARTED_MESSAGE:
                 return FiatTransferStartedMessage.fromProto(proto.getFiatTransferStartedMessage());
             case FINALIZE_PAYOUT_TX_REQUEST:
@@ -99,9 +100,9 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
                 return PayoutTxPublishedMessage.fromProto(proto.getPayoutTxPublishedMessage());
 
             case OPEN_NEW_DISPUTE_MESSAGE:
-                return OpenNewDisputeMessage.fromProto(proto.getOpenNewDisputeMessage());
+                return OpenNewDisputeMessage.fromProto(proto.getOpenNewDisputeMessage(), this);
             case PEER_OPENED_DISPUTE_MESSAGE:
-                return PeerOpenedDisputeMessage.fromProto(proto.getPeerOpenedDisputeMessage());
+                return PeerOpenedDisputeMessage.fromProto(proto.getPeerOpenedDisputeMessage(), this);
             case DISPUTE_COMMUNICATION_MESSAGE:
                 return DisputeCommunicationMessage.fromProto(proto.getDisputeCommunicationMessage());
             case DISPUTE_RESULT_MESSAGE:
