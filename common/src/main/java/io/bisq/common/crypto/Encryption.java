@@ -28,6 +28,8 @@ import javax.crypto.SecretKey;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
 // TODO is Hmac needed/make sense?
@@ -210,6 +212,24 @@ public class Encryption {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new RuntimeException("Couldn't generate key");
+        }
+    }
+
+    public static byte[] getEncryptionPublicKeyBytes(PublicKey encryptionPubKey) {
+        return new X509EncodedKeySpec(encryptionPubKey.getEncoded()).getEncoded();
+    }
+
+    /**
+     * @param encryptionPubKeyBytes
+     * @return
+     */
+    public static PublicKey getEncryptionPublicKeyFromBytes(byte[] encryptionPubKeyBytes) {
+        try {
+            return KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
+            log.error("Error creating sigPublicKey from bytes. sigPublicKeyBytes as hex={}, error={}", org.bouncycastle.util.encoders.Hex.toHexString(encryptionPubKeyBytes), e);
+            e.printStackTrace();
+            throw new KeyConversionException(e);
         }
     }
 }

@@ -17,14 +17,27 @@
 
 package io.bisq.common.proto;
 
-import io.bisq.common.network.NetworkEnvelope;
-import io.bisq.common.network.NetworkPayload;
+import com.google.protobuf.ByteString;
+import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.generated.protobuffer.PB;
 
-public interface NetworkProtoResolver {
-    NetworkEnvelope fromProto(PB.NetworkEnvelope msg);
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-    NetworkPayload fromStoragePayloadProto(PB.StoragePayload storagePayload);
+public class ProtoCommonUtil {
 
-    NetworkPayload mapToProtectedStorageEntry(PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry protectedStorageEntry);
+    public static Set<byte[]> getByteSet(List<ByteString> byteStringList) {
+        return byteStringList.stream().map(ByteString::toByteArray).collect(Collectors.toSet());
+    }
+
+    public static String getCurrencyCode(PB.OfferPayload pbOffer) {
+        String currencyCode;
+        if (CurrencyUtil.isCryptoCurrency(pbOffer.getBaseCurrencyCode()))
+            currencyCode = pbOffer.getBaseCurrencyCode();
+        else
+            currencyCode = pbOffer.getCounterCurrencyCode();
+        return currencyCode;
+    }
+
 }

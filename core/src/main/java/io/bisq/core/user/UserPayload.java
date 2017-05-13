@@ -18,8 +18,8 @@
 package io.bisq.core.user;
 
 import com.google.protobuf.Message;
-import io.bisq.common.persistable.PersistableCollectionUtil;
 import io.bisq.common.persistable.PersistableEnvelope;
+import io.bisq.common.proto.ProtoCollectionUtil;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.Mediator;
@@ -65,10 +65,10 @@ public class UserPayload implements PersistableEnvelope {
     public PB.PersistableEnvelope toProtoMessage() {
         PB.UserPayload.Builder builder = PB.UserPayload.newBuilder()
                 .setAccountId(accountID)
-                .addAllPaymentAccounts(PersistableCollectionUtil.collectionToProto(paymentAccounts))
+                .addAllPaymentAccounts(ProtoCollectionUtil.collectionToProto(paymentAccounts))
                 .addAllAcceptedLanguageLocaleCodes(acceptedLanguageLocaleCodes)
-                .addAllAcceptedArbitrators(PersistableCollectionUtil.collectionToProto(acceptedArbitrators, (Message storage) -> ((PB.StoragePayload) storage).getArbitrator()))
-                .addAllAcceptedMediators(PersistableCollectionUtil.collectionToProto(acceptedMediators, (Message storage) -> ((PB.StoragePayload) storage).getMediator()));
+                .addAllAcceptedArbitrators(ProtoCollectionUtil.collectionToProto(acceptedArbitrators, (Message storage) -> ((PB.StoragePayload) storage).getArbitrator()))
+                .addAllAcceptedMediators(ProtoCollectionUtil.collectionToProto(acceptedMediators, (Message storage) -> ((PB.StoragePayload) storage).getMediator()));
 
         Optional.ofNullable(currentPaymentAccount)
                 .ifPresent(paymentAccount -> builder.setCurrentPaymentAccount(paymentAccount.toProtoMessage()));

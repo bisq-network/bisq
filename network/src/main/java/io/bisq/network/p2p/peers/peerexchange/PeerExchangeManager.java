@@ -316,7 +316,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
     private List<NodeAddress> getNodeAddresses(Collection<Peer> collection) {
         return collection.stream()
-                .map(e -> e.nodeAddress)
+                .map(e -> e.getNodeAddress())
                 .collect(Collectors.toList());
     }
 

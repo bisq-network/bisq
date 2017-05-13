@@ -223,7 +223,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         dateColumn.setComparator((o1, o2) -> o1.getOpeningDate().compareTo(o2.getOpeningDate()));
         buyerOnionAddressColumn.setComparator((o1, o2) -> getBuyerOnionAddressColumnLabel(o1).compareTo(getBuyerOnionAddressColumnLabel(o2)));
         sellerOnionAddressColumn.setComparator((o1, o2) -> getSellerOnionAddressColumnLabel(o1).compareTo(getSellerOnionAddressColumnLabel(o2)));
-        marketColumn.setComparator((o1, o2) -> formatter.getCurrencyPair(o1.getContract().offerPayload.getCurrencyCode()).compareTo(o2.getContract().offerPayload.getCurrencyCode()));
+        marketColumn.setComparator((o1, o2) -> formatter.getCurrencyPair(o1.getContract().getOfferPayload().getCurrencyCode()).compareTo(o2.getContract().getOfferPayload().getCurrencyCode()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -478,7 +478,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private void onCloseDispute(Dispute dispute) {
-        long protocolVersion = dispute.getContract().offerPayload.getProtocolVersion();
+        long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
         if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
             disputeSummaryWindow.onFinalizeDispute(() -> messagesAnchorPane.getChildren().remove(messagesInputBox))
                     .show(dispute);
@@ -1162,7 +1162,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.getCurrencyPair(item.getContract().offerPayload.getCurrencyCode()));
+                                    setText(formatter.getCurrencyPair(item.getContract().getOfferPayload().getCurrencyCode()));
                                 else
                                     setText("");
                             }

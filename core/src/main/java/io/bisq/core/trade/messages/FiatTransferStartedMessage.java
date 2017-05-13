@@ -33,7 +33,8 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
     private final String uid;
     private final byte[] buyerSignature;
 
-    public FiatTransferStartedMessage(String tradeId, String buyerPayoutAddress,
+    public FiatTransferStartedMessage(String tradeId,
+                                      String buyerPayoutAddress,
                                       NodeAddress senderNodeAddress,
                                       byte[] buyerSignature,
                                       String uid) {
@@ -46,13 +47,22 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setFiatTransferStartedMessage(msgBuilder.getFiatTransferStartedMessageBuilder()
-                .setMessageVersion(getMessageVersion())
-                .setTradeId(getTradeId())
-                .setBuyerSignature(ByteString.copyFrom(buyerSignature))
-                .setBuyerPayoutAddress(buyerPayoutAddress)
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                .setUid(uid)).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setFiatTransferStartedMessage(PB.FiatTransferStartedMessage.newBuilder()
+                        .setTradeId(getTradeId())
+                        .setBuyerPayoutAddress(buyerPayoutAddress)
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setBuyerSignature(ByteString.copyFrom(buyerSignature))
+                        .setUid(uid))
+                .build();
+    }
+
+    public static FiatTransferStartedMessage fromProto(PB.FiatTransferStartedMessage proto) {
+        return new FiatTransferStartedMessage(proto.getTradeId(),
+                proto.getBuyerPayoutAddress(),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getBuyerSignature().toByteArray(),
+                proto.getUid()
+        );
     }
 }

@@ -5,12 +5,12 @@ import com.google.protobuf.Message;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.network.NetworkPayload;
 import io.bisq.common.persistable.PersistablePayload;
+import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
 
 @Getter
 @EqualsAndHashCode
@@ -23,13 +23,17 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     private byte[] signature;
     private long creationTimeStamp;
 
-    public ProtectedStorageEntry(StoragePayload storagePayload, PublicKey ownerPubKey, int sequenceNumber, byte[] signature) {
+    public ProtectedStorageEntry(StoragePayload storagePayload,
+                                 PublicKey ownerPubKey,
+                                 int sequenceNumber,
+                                 byte[] signature) {
         this.storagePayload = storagePayload;
+        ownerPubKeyBytes = Sig.getSigPublicKeyBytes(ownerPubKey);
         this.ownerPubKey = ownerPubKey;
+
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
         this.creationTimeStamp = System.currentTimeMillis();
-        this.ownerPubKeyBytes = new X509EncodedKeySpec(this.ownerPubKey.getEncoded()).getEncoded();
     }
 
 
@@ -37,14 +41,19 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ProtectedStorageEntry(long creationTimeStamp, StoragePayload storagePayload, byte[] ownerPubKeyBytes,
-                                 int sequenceNumber, byte[] signature) {
+    public ProtectedStorageEntry(long creationTimeStamp,
+                                 StoragePayload storagePayload,
+                                 byte[] ownerPubKeyBytes,
+                                 int sequenceNumber,
+                                 byte[] signature) {
         this.storagePayload = storagePayload;
+        this.ownerPubKeyBytes = ownerPubKeyBytes;
+        ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
+
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
-        this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.creationTimeStamp = creationTimeStamp;
-        ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
+
         checkCreationTimeStamp();
     }
 
@@ -57,6 +66,14 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                 .setCreationTimeStamp(creationTimeStamp).build();
     }
 
+    public static ProtectedStorageEntry fromProto(PB.ProtectedStorageEntry proto,
+                                                  NetworkProtoResolver resolver) {
+        return new ProtectedStorageEntry(proto.getCreationTimeStamp(),
+                StoragePayload.fromProto(proto.getStoragePayload(), resolver),
+                proto.getOwnerPubKeyBytes().toByteArray(),
+                proto.getSequenceNumber(),
+                proto.getSignature().toByteArray());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -87,4 +104,6 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     public boolean isExpired() {
         return (System.currentTimeMillis() - creationTimeStamp) > storagePayload.getTTL();
     }
+
+
 }

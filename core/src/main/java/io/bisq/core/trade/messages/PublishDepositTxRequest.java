@@ -19,7 +19,6 @@ package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.network.NetworkEnvelope;
-import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.generated.protobuffer.PB;
@@ -27,9 +26,7 @@ import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,7 +36,6 @@ import java.util.stream.Collectors;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-@Slf4j
 public final class PublishDepositTxRequest extends TradeMessage implements MailboxMessage {
     private final PaymentAccountPayload makerPaymentAccountPayload;
     private final String makerAccountId;
@@ -74,28 +70,43 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
         this.makerInputs = makerInputs;
         this.senderNodeAddress = senderNodeAddress;
         this.uid = uid;
-
-        log.trace("makerPaymentAccount size " + Utilities.serialize(makerPaymentAccountPayload).length);
-        log.trace("makerTradeWalletPubKey size " + makerMultiSigPubKey.length);
-        log.trace("preparedDepositTx size " + preparedDepositTx.length);
-        log.trace("makerInputs size " + Utilities.serialize(new ArrayList<>(makerInputs)).length);
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setPublishDepositTxRequest(msgBuilder.getPublishDepositTxRequestBuilder()
-                .setMessageVersion(getMessageVersion())
-                .setTradeId(getTradeId())
-                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
-                .setMakerAccountId(makerAccountId)
-                .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
-                .setMakerContractAsJson(makerContractAsJson)
-                .setMakerContractSignature(makerContractSignature)
-                .setMakerPayoutAddressString(makerPayoutAddressString)
-                .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                .setUid(uid)
-                .addAllMakerInputs(makerInputs.stream().map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setPublishDepositTxRequest(PB.PublishDepositTxRequest.newBuilder()
+                        .setTradeId(getTradeId())
+                        .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
+                        .setMakerAccountId(makerAccountId)
+                        .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
+                        .setMakerContractAsJson(makerContractAsJson)
+                        .setMakerContractSignature(makerContractSignature)
+                        .setMakerPayoutAddressString(makerPayoutAddressString)
+                        .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
+                        .addAllMakerInputs(makerInputs.stream().map(RawTransactionInput::toProtoMessage).collect(Collectors.toList()))
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setUid(uid))
+                .build();
+    }
+
+    public static PublishDepositTxRequest fromProto(PB.PublishDepositTxRequest proto) {
+        List<RawTransactionInput> makerInputs = proto.getMakerInputsList().stream()
+                .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
+                        rawTransactionInput.getParentTransaction().toByteArray(),
+                        rawTransactionInput.getValue()))
+                .collect(Collectors.toList());
+
+        return new PublishDepositTxRequest(proto.getTradeId(),
+                PaymentAccountPayload.fromProto(proto.getMakerPaymentAccountPayload()),
+                proto.getMakerAccountId(),
+                proto.getMakerMultiSigPubKey().toByteArray(),
+                proto.getMakerContractAsJson(),
+                proto.getMakerContractSignature(),
+                proto.getMakerPayoutAddressString(),
+                proto.getPreparedDepositTx().toByteArray(),
+                makerInputs,
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getUid());
     }
 }

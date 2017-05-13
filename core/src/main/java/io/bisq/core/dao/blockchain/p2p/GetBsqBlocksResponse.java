@@ -20,12 +20,13 @@ public final class GetBsqBlocksResponse implements DirectMessage, ExtendedDataSi
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.GetBsqBlocksResponse.Builder builder = PB.GetBsqBlocksResponse.newBuilder()
-                .setBsqBlocksBytes(ByteString.copyFrom(bsqBlocksBytes));
-        return NetworkEnvelope.getDefaultBuilder().setGetBsqBlocksResponse(builder).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setGetBsqBlocksResponse(PB.GetBsqBlocksResponse.newBuilder()
+                        .setBsqBlocksBytes(ByteString.copyFrom(bsqBlocksBytes)))
+                .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.NetworkEnvelope msg) {
-        return new GetBsqBlocksResponse(msg.getGetBsqBlocksResponse().getBsqBlocksBytes().toByteArray());
+    public static NetworkEnvelope fromProto(PB.GetBsqBlocksResponse proto) {
+        return new GetBsqBlocksResponse(proto.getBsqBlocksBytes().toByteArray());
     }
 }

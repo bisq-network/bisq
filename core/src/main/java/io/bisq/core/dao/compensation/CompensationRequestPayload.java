@@ -25,9 +25,7 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
 import io.bisq.network.p2p.storage.payload.PersistedStoragePayload;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
@@ -35,28 +33,18 @@ import org.bouncycastle.util.encoders.Hex;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-@EqualsAndHashCode
 @Slf4j
-@Getter
-@Setter
+@Data
 // TODO There will be another object for PersistableEnvelope
 public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload, PersistableEnvelope {
     public static final long TTL = TimeUnit.DAYS.toMillis(30);
 
-    // Payload
     private final byte version;
     private final long creationDate;
     private final String uid;
@@ -90,7 +78,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
 
     // Domain
     @JsonExclude
-    private transient PublicKey p2pStorageSignaturePubKey;
+    private transient PublicKey ownerPubKey;
 
     // Called from domain
     public CompensationRequestPayload(String uid,
@@ -116,7 +104,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                 requestedBtc,
                 btcAddress,
                 nodeAddress.getFullAddress(),
-                new X509EncodedKeySpec(p2pStorageSignaturePubKey.getEncoded()).getEncoded(),
+                Sig.getSigPublicKeyBytes(p2pStorageSignaturePubKey),
                 null);
     }
 
@@ -152,36 +140,14 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
         this.p2pStorageSignaturePubKeyBytes = p2pStorageSignaturePubKeyBytes;
 
         this.extraDataMap = extraDataMap;
-        init();
-    }
 
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            init();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
-    }
-
-    private void init() {
-        try {
-            p2pStorageSignaturePubKey = KeyFactory.getInstance(Sig.KEY_ALGO, "BC")
-                    .generatePublic(new X509EncodedKeySpec(p2pStorageSignaturePubKeyBytes));
-            this.p2pStorageSignaturePubKeyAsHex = Utils.HEX.encode(p2pStorageSignaturePubKey.getEncoded());
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
-            log.error("Couldn't create the p2p storage public key", e);
-        }
+        ownerPubKey = Sig.getSigPublicKeyFromBytes(p2pStorageSignaturePubKeyBytes);
+        p2pStorageSignaturePubKeyAsHex = Utils.HEX.encode(ownerPubKey.getEncoded());
     }
 
     @Override
     public long getTTL() {
         return TTL;
-    }
-
-    @Override
-    public PublicKey getOwnerPubKey() {
-        return p2pStorageSignaturePubKey;
     }
 
     public Date getStartDate() {

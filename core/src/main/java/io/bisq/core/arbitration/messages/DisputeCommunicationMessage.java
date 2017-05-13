@@ -22,16 +22,14 @@ import io.bisq.core.arbitration.Attachment;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -40,25 +38,22 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Getter
-@Slf4j
 public final class DisputeCommunicationMessage extends DisputeMessage {
-
     private final long date;
     private final String tradeId;
     private final int traderId;
     private final boolean senderIsTrader;
     private final String message;
     private final NodeAddress senderNodeAddress;
-    @Nullable
     private final ArrayList<Attachment> attachments = new ArrayList<>();
+
     private boolean arrived;
     private boolean storedInMailbox;
     @Setter
     private boolean isSystemMessage;
 
-    // domain
-    transient private BooleanProperty arrivedProperty = new SimpleBooleanProperty();
-    transient private BooleanProperty storedInMailboxProperty = new SimpleBooleanProperty();
+    transient private final BooleanProperty arrivedProperty;
+    transient private final BooleanProperty storedInMailboxProperty;
 
     public DisputeCommunicationMessage(String tradeId,
                                        int traderId,
@@ -75,36 +70,50 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
         this.message = message;
+        Optional.ofNullable(attachments).ifPresent(e -> addAllAttachments(attachments));
         this.senderNodeAddress = senderNodeAddress;
         this.date = date;
         this.arrived = arrived;
         this.storedInMailbox = storedInMailbox;
-        Optional.ofNullable(attachments).ifPresent(e -> addAllAttachments(attachments));
-        updateBooleanProperties();
-    }
 
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            updateBooleanProperties();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
-    }
-
-    private void updateBooleanProperties() {
         arrivedProperty = new SimpleBooleanProperty(arrived);
         storedInMailboxProperty = new SimpleBooleanProperty(storedInMailbox);
     }
 
     @Override
-    public NodeAddress getSenderNodeAddress() {
-        return senderNodeAddress;
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        return NetworkEnvelope.getDefaultBuilder()
+                .setDisputeCommunicationMessage(PB.DisputeCommunicationMessage.newBuilder()
+                                .setUid(uid)
+                                .setTradeId(tradeId)
+                                .setTraderId(traderId)
+                                .setSenderIsTrader(senderIsTrader)
+                                .setMessage(message)
+                                .addAllAttachments(attachments.stream().map(Attachment::toProtoMessage).collect(Collectors.toList()))
+                                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                                .setDate(date)
+                                .setArrived(arrived)
+                                .setStoredInMailbox(storedInMailbox)
+                                .setIsSystemMessage(isSystemMessage)
+                )
+                .build();
     }
 
-    public void addAttachment(Attachment attachment) {
-        attachments.add(attachment);
+    public static DisputeCommunicationMessage fromProto(PB.DisputeCommunicationMessage proto) {
+        final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(proto.getTradeId(),
+                proto.getTraderId(),
+                proto.getSenderIsTrader(),
+                proto.getMessage(),
+                proto.getAttachmentsList().stream().map(Attachment::fromProto).collect(Collectors.toList()),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getDate(),
+                proto.getArrived(),
+                proto.getStoredInMailbox(),
+                proto.getUid());
+        disputeCommunicationMessage.setSystemMessage(proto.getIsSystemMessage());
+        return disputeCommunicationMessage;
     }
+
 
     public void addAllAttachments(List<Attachment> attachments) {
         this.attachments.addAll(attachments);
@@ -120,27 +129,13 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         this.storedInMailboxProperty.set(storedInMailbox);
     }
 
-    public BooleanProperty arrivedProperty() {
+    public ReadOnlyBooleanProperty arrivedProperty() {
         return arrivedProperty;
     }
 
-    public BooleanProperty storedInMailboxProperty() {
+    public ReadOnlyBooleanProperty storedInMailboxProperty() {
         return storedInMailboxProperty;
     }
 
-    @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setDisputeCommunicationMessage(PB.DisputeCommunicationMessage.newBuilder()
-                .setDate(date)
-                .setTradeId(tradeId)
-                .setTraderId(traderId)
-                .setSenderIsTrader(senderIsTrader)
-                .setMessage(message)
-                .addAllAttachments(attachments.stream().map(attachment -> attachment.toProtoMessage()).collect(Collectors.toList()))
-                .setArrived(arrived)
-                .setStoredInMailbox(storedInMailbox)
-                .setIsSystemMessage(isSystemMessage)
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())).build();
-    }
+
 }

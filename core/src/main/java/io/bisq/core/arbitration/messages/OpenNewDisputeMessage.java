@@ -22,30 +22,35 @@ import io.bisq.core.arbitration.Dispute;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
-@ToString
+@Value
 public final class OpenNewDisputeMessage extends DisputeMessage {
-
-    public final Dispute dispute;
+    private final Dispute dispute;
     private final NodeAddress senderNodeAddress;
 
-    public OpenNewDisputeMessage(Dispute dispute, NodeAddress senderNodeAddress, String uid) {
+    public OpenNewDisputeMessage(Dispute dispute,
+                                 NodeAddress senderNodeAddress,
+                                 String uid) {
         super(uid);
         this.dispute = dispute;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
-    public NodeAddress getSenderNodeAddress() {
-        return senderNodeAddress;
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        return NetworkEnvelope.getDefaultBuilder()
+                .setOpenNewDisputeMessage(PB.OpenNewDisputeMessage.newBuilder()
+                        .setUid(getUid())
+                        .setDispute(dispute.toProtoMessage())
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
+                .build();
     }
 
-    @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setOpenNewDisputeMessage(PB.OpenNewDisputeMessage.newBuilder()
-                .setDispute(dispute.toProtoMessage()).setSenderNodeAddress(senderNodeAddress.toProtoMessage()).setUid(getUid())).build();
+    public static OpenNewDisputeMessage fromProto(PB.OpenNewDisputeMessage proto) {
+        return new OpenNewDisputeMessage(Dispute.fromProto(proto.getDispute()),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getUid());
     }
 }

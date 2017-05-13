@@ -17,7 +17,6 @@
 
 package io.bisq.core.trade;
 
-import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.monetary.Price;
@@ -27,26 +26,22 @@ import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Value;
 import org.bitcoinj.core.Coin;
 import org.bouncycastle.util.encoders.Hex;
 
-import javax.annotation.concurrent.Immutable;
+import static com.google.common.base.Preconditions.checkArgument;
 
-@EqualsAndHashCode
-@Slf4j
-@SuppressWarnings("WeakerAccess")
-@Immutable
+@Value
 public final class Contract implements NetworkPayload {
-    // Payload
-    public final OfferPayload offerPayload;
+    private final OfferPayload offerPayload;
     private final long tradeAmount;
     private final long tradePrice;
-    public final String takerFeeTxID;
-    public final NodeAddress arbitratorNodeAddress;
-    public final NodeAddress mediatorNodeAddress;
+    private final String takerFeeTxID;
+    private final NodeAddress buyerNodeAddress;
+    private final NodeAddress sellerNodeAddress;
+    private final NodeAddress arbitratorNodeAddress;
+    private final NodeAddress mediatorNodeAddress;
     private final boolean isBuyerMakerAndSellerTaker;
     private final String makerAccountId;
     private final String takerAccountId;
@@ -56,10 +51,6 @@ public final class Contract implements NetworkPayload {
     private final PubKeyRing makerPubKeyRing;
     @JsonExclude
     private final PubKeyRing takerPubKeyRing;
-    @Getter
-    private final NodeAddress buyerNodeAddress;
-    @Getter
-    private final NodeAddress sellerNodeAddress;
     private final String makerPayoutAddressString;
     private final String takerPayoutAddressString;
     @JsonExclude
@@ -68,8 +59,8 @@ public final class Contract implements NetworkPayload {
     private final byte[] takerMultiSigPubKey;
 
     public Contract(OfferPayload offerPayload,
-                    Coin tradeAmount,
-                    Price tradePrice,
+                    long tradeAmount,
+                    long tradePrice,
                     String takerFeeTxID,
                     NodeAddress buyerNodeAddress,
                     NodeAddress sellerNodeAddress,
@@ -87,11 +78,11 @@ public final class Contract implements NetworkPayload {
                     byte[] makerMultiSigPubKey,
                     byte[] takerMultiSigPubKey) {
         this.offerPayload = offerPayload;
-        this.tradePrice = tradePrice.getValue();
+        this.tradeAmount = tradeAmount;
+        this.tradePrice = tradePrice;
+        this.takerFeeTxID = takerFeeTxID;
         this.buyerNodeAddress = buyerNodeAddress;
         this.sellerNodeAddress = sellerNodeAddress;
-        this.tradeAmount = tradeAmount.value;
-        this.takerFeeTxID = takerFeeTxID;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
         this.isBuyerMakerAndSellerTaker = isBuyerMakerAndSellerTaker;
@@ -107,24 +98,69 @@ public final class Contract implements NetworkPayload {
         this.takerMultiSigPubKey = takerMultiSigPubKey;
 
         // PaymentMethod need to be the same
-        Preconditions.checkArgument(makerPaymentAccountPayload.getPaymentMethodId()
+        checkArgument(makerPaymentAccountPayload.getPaymentMethodId()
                         .equals(takerPaymentAccountPayload.getPaymentMethodId()),
                 "payment methods of maker and taker must be the same.\n" +
                         "makerPaymentMethodId=" + makerPaymentAccountPayload.getPaymentMethodId() + "\n" +
                         "takerPaymentMethodId=" + takerPaymentAccountPayload.getPaymentMethodId());
     }
 
-    public boolean isBuyerMakerAndSellerTaker() {
-        return isBuyerMakerAndSellerTaker;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Contract fromProto(PB.Contract contract) {
+        return new Contract(OfferPayload.fromProto(contract.getOfferPayload()),
+                contract.getTradeAmount(),
+                contract.getTradePrice(),
+                contract.getTakerFeeTxId(),
+                NodeAddress.fromProto(contract.getBuyerNodeAddress()),
+                NodeAddress.fromProto(contract.getSellerNodeAddress()),
+                NodeAddress.fromProto(contract.getArbitratorNodeAddress()),
+                NodeAddress.fromProto(contract.getMediatorNodeAddress()),
+                contract.getIsBuyerMakerAndSellerTaker(),
+                contract.getMakerAccountId(),
+                contract.getTakerAccountId(),
+                PaymentAccountPayload.fromProto(contract.getMakerPaymentAccountPayload()),
+                PaymentAccountPayload.fromProto(contract.getTakerPaymentAccountPayload()),
+                PubKeyRing.fromProto(contract.getMakerPubKeyRing()),
+                PubKeyRing.fromProto(contract.getTakerPubKeyRing()),
+                contract.getMakerPayoutAddressString(),
+                contract.getTakerPayoutAddressString(),
+                contract.getMakerMultiSigPubKey().toByteArray(),
+                contract.getTakerMultiSigPubKey().toByteArray());
     }
 
-    public String getBuyerAccountId() {
-        return isBuyerMakerAndSellerTaker ? makerAccountId : takerAccountId;
+    @Override
+    public PB.Contract toProtoMessage() {
+        return PB.Contract.newBuilder()
+                .setOfferPayload(offerPayload.toProtoMessage().getOfferPayload())
+                .setTradeAmount(tradeAmount)
+                .setTradePrice(tradePrice)
+                .setTakerFeeTxId(takerFeeTxID)
+                .setBuyerNodeAddress(buyerNodeAddress.toProtoMessage())
+                .setSellerNodeAddress(sellerNodeAddress.toProtoMessage())
+                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
+                .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
+                .setIsBuyerMakerAndSellerTaker(isBuyerMakerAndSellerTaker)
+                .setMakerAccountId(makerAccountId)
+                .setTakerAccountId(takerAccountId)
+                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
+                .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
+                .setMakerPubKeyRing(makerPubKeyRing.toProtoMessage())
+                .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
+                .setMakerPayoutAddressString(makerPayoutAddressString)
+                .setTakerPayoutAddressString(takerPayoutAddressString)
+                .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
+                .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
+                .build();
     }
 
-    public String getSellerAccountId() {
-        return isBuyerMakerAndSellerTaker ? takerAccountId : makerAccountId;
-    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getBuyerPayoutAddressString() {
         return isBuyerMakerAndSellerTaker ? makerPayoutAddressString : takerPayoutAddressString;
@@ -168,31 +204,6 @@ public final class Contract implements NetworkPayload {
 
     public Price getTradePrice() {
         return Price.valueOf(offerPayload.getCurrencyCode(), tradePrice);
-    }
-
-
-    @Override
-    public PB.Contract toProtoMessage() {
-        return PB.Contract.newBuilder()
-                .setOfferPayload(offerPayload.toProtoMessage().getOfferPayload())
-                .setTradeAmount(tradeAmount)
-                .setTradePrice(tradePrice)
-                .setTakerFeeTxId(takerFeeTxID)
-                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
-                .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
-                .setIsBuyerMakerAndSellerTaker(isBuyerMakerAndSellerTaker)
-                .setMakerAccountId(makerAccountId)
-                .setTakerAccountId(takerAccountId)
-                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
-                .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
-                .setMakerPubKeyRing(makerPubKeyRing.toProtoMessage())
-                .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
-                .setBuyerNodeAddress(buyerNodeAddress.toProtoMessage())
-                .setSellerNodeAddress(sellerNodeAddress.toProtoMessage())
-                .setMakerPayoutAddressString(makerPayoutAddressString)
-                .setTakerPayoutAddressString(takerPayoutAddressString)
-                .setMakerBtcPubKey(ByteString.copyFrom(makerMultiSigPubKey))
-                .setTakerBtcPubKey(ByteString.copyFrom(takerMultiSigPubKey)).build();
     }
 
     @Override

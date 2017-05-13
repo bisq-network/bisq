@@ -67,8 +67,8 @@ public class MakerCreateAndSignContract extends TradeTask {
             byte[] makerMultiSigPubKey = makerAddressEntry.getPubKey();
             Contract contract = new Contract(
                     processModel.getOffer().getOfferPayload(),
-                    trade.getTradeAmount(),
-                    trade.getTradePrice(),
+                    trade.getTradeAmount().value,
+                    trade.getTradePrice().getValue(),
                     trade.getTakerFeeTxId(),
                     buyerNodeAddress,
                     sellerNodeAddress,

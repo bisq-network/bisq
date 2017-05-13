@@ -43,13 +43,13 @@ message NetworkEnvelope {
         FiatTransferStartedMessage fiat_transfer_started_message = 20;
         FinalizePayoutTxRequest finalize_payout_tx_request = 21;
         PayoutTxPublishedMessage payout_tx_published_message = 22;
-        PeerPublishedPayoutTxMessage peer_published_payout_tx_message = 23;
-       
+        
         OpenNewDisputeMessage open_new_dispute_message = 24;
         PeerOpenedDisputeMessage peer_opened_dispute_message = 25;
         DisputeCommunicationMessage dispute_communication_message = 26;
         DisputeResultMessage dispute_result_message = 27;
-      
+        PeerPublishedPayoutTxMessage peer_published_payout_tx_message = 23;
+             
         PrivateNotificationMessage private_notification_message = 28;
       
         GetBsqBlocksRequest get_bsq_blocks_request = 29;
@@ -430,7 +430,7 @@ message Filter {
     repeated string banned_offer_ids = 2;
     repeated PaymentAccountFilter banned_payment_accounts = 3;
     string signature_as_base64 = 4;
-    bytes public_key_bytes = 5;
+    bytes owner_pub_key_bytes = 5;
     map<string, string> extra_data_map = 6;
 }
 
@@ -628,8 +628,8 @@ message Contract {
     NodeAddress seller_node_address = 14;
     string maker_payout_address_string = 15;
     string taker_payout_address_string = 16;
-    bytes maker_btc_pub_key = 17;
-    bytes taker_btc_pub_key = 18;
+    bytes maker_multi_sig_pub_key = 17;
+    bytes taker_multi_sig_pub_key = 18;
     NodeAddress mediator_node_address = 19;
 }
 

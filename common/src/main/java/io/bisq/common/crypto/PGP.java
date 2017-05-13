@@ -43,8 +43,7 @@ public class PGP {
     // TODO not tested yet, remove Nullable once impl.
     // PEM encoding
     @Nullable
-    public static PGPPublicKey getPubKeyFromPEM(@Nullable String pem)
-            throws IOException, PGPException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public static PGPPublicKey getPubKeyFromPEM(@Nullable String pem) {
         if (pem != null) {
             InputStream inputStream = new ByteArrayInputStream(pem.getBytes());
             try {
@@ -84,15 +83,15 @@ public class PGP {
                     }
                     return null;
                 } catch (PGPException | InvalidKeySpecException | NoSuchAlgorithmException e) {
-                    log.error(e.toString());
+                    log.error("Error creating publicKey from pem. pem={}, error={}", pem, e);
                     e.printStackTrace();
-                    throw e;
+                    throw new KeyConversionException(e);
                 }
 
             } catch (IOException e) {
-                log.error(e.toString());
+                log.error("Error creating publicKey from pem. pem={}, error={}", pem, e);
                 e.printStackTrace();
-                throw e;
+                throw new KeyConversionException(e);
             } finally {
                 try {
                     inputStream.close();
@@ -100,6 +99,7 @@ public class PGP {
                 }
             }
         } else {
+            log.warn("Error creating publicKey from pem. pem=null");
             return null;
         }
     }

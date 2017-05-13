@@ -22,40 +22,24 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.SupportedCapabilitiesMessage;
+import lombok.Value;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 
 // We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
+@Value
 public final class OfferAvailabilityRequest extends OfferMessage implements SupportedCapabilitiesMessage {
-
     private final PubKeyRing pubKeyRing;
-    public final long takersTradePrice;
-    @Nullable
+    private final long takersTradePrice;
     private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
-    public OfferAvailabilityRequest(String offerId, PubKeyRing pubKeyRing, long takersTradePrice) {
+    public OfferAvailabilityRequest(String offerId,
+                                    PubKeyRing pubKeyRing,
+                                    long takersTradePrice) {
         super(offerId);
         this.pubKeyRing = pubKeyRing;
         this.takersTradePrice = takersTradePrice;
-    }
-
-    @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
-
-    public PubKeyRing getPubKeyRing() {
-        return pubKeyRing;
-    }
-
-    @Override
-    public String toString() {
-        return "OfferAvailabilityRequest{" +
-                "pubKeyRing=" + pubKeyRing +
-                "} " + super.toString();
     }
 
     @Override
@@ -66,5 +50,11 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
                         .setPubKeyRing(pubKeyRing.toProtoMessage())
                         .setTakersTradePrice(takersTradePrice)
                         .addAllSupportedCapabilities(supportedCapabilities)).build();
+    }
+
+    public static OfferAvailabilityRequest fromProto(PB.OfferAvailabilityRequest proto) {
+        return new OfferAvailabilityRequest(proto.getOfferId(),
+                PubKeyRing.fromProto(proto.getPubKeyRing()),
+                proto.getTakersTradePrice());
     }
 }

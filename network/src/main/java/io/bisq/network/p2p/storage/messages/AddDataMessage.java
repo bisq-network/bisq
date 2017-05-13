@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.storage.messages;
 
-import com.google.protobuf.Message;
 import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -17,23 +17,19 @@ public final class AddDataMessage extends BroadcastMessage {
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        PB.AddDataMessage.Builder builder;
-        PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder choiceBuilder;
-        choiceBuilder = PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.newBuilder();
+        final PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder builder = PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.newBuilder();
+        PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder entry;
+        if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
+            entry = builder.setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage());
+        else
+            entry = builder.setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage());
 
-        if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
-            builder = PB.AddDataMessage.newBuilder().setEntry(
-                    choiceBuilder.setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage()));
-        } else {
-            builder = PB.AddDataMessage.newBuilder().setEntry(
-                    choiceBuilder.setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage()));
-        }
-        return msgBuilder.setAddDataMessage(builder).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setAddDataMessage(PB.AddDataMessage.newBuilder().setEntry(entry))
+                .build();
     }
 
-    @Override
-    public Message toProtoMessage() {
-        return toProtoNetworkEnvelope().getAddDataMessage();
+    public static AddDataMessage fromProto(PB.AddDataMessage proto, NetworkProtoResolver resolver) {
+        return new AddDataMessage((ProtectedStorageEntry) resolver.mapToProtectedStorageEntry(proto.getEntry()));
     }
 }

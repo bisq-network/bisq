@@ -40,11 +40,11 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
             OfferAvailabilityResponse offerAvailabilityResponse = model.getMessage();
 
             if (model.offer.getState() != Offer.State.REMOVED) {
-                if (offerAvailabilityResponse.availabilityResult == AvailabilityResult.AVAILABLE) {
+                if (offerAvailabilityResponse.getAvailabilityResult() == AvailabilityResult.AVAILABLE) {
                     model.offer.setState(Offer.State.AVAILABLE);
                 } else {
                     model.offer.setState(Offer.State.NOT_AVAILABLE);
-                    failed("Take offer attempt rejected because of: " + offerAvailabilityResponse.availabilityResult);
+                    failed("Take offer attempt rejected because of: " + offerAvailabilityResponse.getAvailabilityResult());
                 }
             }
 

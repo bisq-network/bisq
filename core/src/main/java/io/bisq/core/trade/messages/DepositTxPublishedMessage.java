@@ -32,7 +32,10 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
-    public DepositTxPublishedMessage(String tradeId, byte[] depositTx, NodeAddress senderNodeAddress, String uid) {
+    public DepositTxPublishedMessage(String tradeId,
+                                     byte[] depositTx,
+                                     NodeAddress senderNodeAddress,
+                                     String uid) {
         super(tradeId);
         this.depositTx = depositTx;
         this.senderNodeAddress = senderNodeAddress;
@@ -41,12 +44,19 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
-                .setMessageVersion(getMessageVersion())
-                .setTradeId(getTradeId())
-                .setDepositTx(ByteString.copyFrom(depositTx))
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                .setUid(uid)).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
+                        .setTradeId(getTradeId())
+                        .setDepositTx(ByteString.copyFrom(depositTx))
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setUid(uid))
+                .build();
+    }
+
+    public static DepositTxPublishedMessage fromProto(PB.DepositTxPublishedMessage proto) {
+        return new DepositTxPublishedMessage(proto.getTradeId(),
+                proto.getDepositTx().toByteArray(),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getUid());
     }
 }

@@ -2,15 +2,16 @@ package io.bisq.network.p2p.storage.payload;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
+import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -47,9 +48,8 @@ public final class MailboxStoragePayload implements StoragePayload {
         this.senderPubKeyForAddOperation = senderPubKeyForAddOperation;
         this.ownerPubKey = ownerPubKey;
 
-        this.senderPubKeyForAddOperationBytes = new X509EncodedKeySpec(senderPubKeyForAddOperation.getEncoded()).getEncoded();
-        this.ownerPubKeyBytes = new X509EncodedKeySpec(ownerPubKey.getEncoded()).getEncoded();
-
+        senderPubKeyForAddOperationBytes = Sig.getSigPublicKeyBytes(senderPubKeyForAddOperation);
+        ownerPubKeyBytes = Sig.getSigPublicKeyBytes(ownerPubKey);
         this.extraDataMap = null;
     }
 
@@ -74,5 +74,15 @@ public final class MailboxStoragePayload implements StoragePayload {
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
         return PB.StoragePayload.newBuilder().setMailboxStoragePayload(builder).build();
+    }
+
+    public static MailboxStoragePayload fromProto(PB.MailboxStoragePayload proto, NetworkProtoResolver networkProtoResolver) {
+        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMapMap()) ?
+                null : proto.getExtraDataMapMap();
+        return new MailboxStoragePayload(
+                PrefixedSealedAndSignedMessage.fromProto(proto.getPrefixedSealedAndSignedMessage()),
+                proto.getSenderPubKeyForAddOperationBytes().toByteArray(),
+                proto.getOwnerPubKeyBytes().toByteArray(),
+                extraDataMapMap);
     }
 }

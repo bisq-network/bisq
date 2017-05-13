@@ -139,5 +139,9 @@ public class Sig {
             throw new KeyConversionException(e);
         }
     }
+
+    public static byte[] getSigPublicKeyBytes(PublicKey sigPublicKey) {
+        return new X509EncodedKeySpec(sigPublicKey.getEncoded()).getEncoded();
+    }
 }
 

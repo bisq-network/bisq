@@ -2,6 +2,7 @@ package io.bisq.network.p2p.peers.getdata.messages;
 
 import io.bisq.common.app.Capabilities;
 import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.ExtendedDataSizePermission;
 import io.bisq.network.p2p.SupportedCapabilitiesMessage;
@@ -28,22 +29,32 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage, Exte
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.GetDataResponse.Builder builder = PB.GetDataResponse.newBuilder();
-        builder.addAllDataSet(
-                dataSet.stream()
-                        .map(protectedStorageEntry -> {
-                            PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder builder1 =
-                                    PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.newBuilder();
-                            if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
-                                builder1.setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage());
-                            } else {
-                                builder1.setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage());
-                            }
-                            return builder1.build();
-                        })
-                        .collect(Collectors.toList()))
-                .setRequestNonce(requestNonce)
-                .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse);
-        return NetworkEnvelope.getDefaultBuilder().setGetDataResponse(builder).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setGetDataResponse(PB.GetDataResponse.newBuilder()
+                        .addAllDataSet(dataSet.stream()
+                                .map(protectedStorageEntry -> {
+                                    PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder builder =
+                                            PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.newBuilder();
+                                    if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
+                                        return builder.setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage()).build();
+                                    } else {
+                                        return builder.setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage()).build();
+                                    }
+                                })
+                                .collect(Collectors.toList()))
+                        .setRequestNonce(requestNonce)
+                        .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse)
+                        .addAllSupportedCapabilities(supportedCapabilities))
+                .build();
+    }
+
+    public static GetDataResponse fromProto(PB.GetDataResponse getDataResponse, NetworkProtoResolver resolver) {
+        HashSet<ProtectedStorageEntry> dataSet = new HashSet<>(
+                getDataResponse.getDataSetList().stream()
+                        .map(entry -> (ProtectedStorageEntry) resolver.mapToProtectedStorageEntry(entry))
+                        .collect(Collectors.toSet()));
+        return new GetDataResponse(dataSet,
+                getDataResponse.getRequestNonce(),
+                getDataResponse.getIsGetUpdatedDataResponse());
     }
 }

@@ -22,15 +22,19 @@ import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 
+@Value
 @EqualsAndHashCode(callSuper = true)
 public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
-
-    public final byte[] transaction;
-    public final String tradeId;
+    private final byte[] transaction;
+    private final String tradeId;
     private final NodeAddress senderNodeAddress;
 
-    public PeerPublishedPayoutTxMessage(byte[] transaction, String tradeId, NodeAddress senderNodeAddress, String uid) {
+    public PeerPublishedPayoutTxMessage(byte[] transaction,
+                                        String tradeId,
+                                        NodeAddress senderNodeAddress,
+                                        String uid) {
         super(uid);
         this.transaction = transaction;
         this.tradeId = tradeId;
@@ -38,26 +42,20 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
     }
 
     @Override
-    public NodeAddress getSenderNodeAddress() {
-        return senderNodeAddress;
-    }
-
-    @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage.newBuilder()
-                .setTransaction(ByteString.copyFrom(transaction))
-                .setTradeId(tradeId)
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage.newBuilder()
+                        .setTransaction(ByteString.copyFrom(transaction))
+                        .setTradeId(tradeId)
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setUid(uid))
+                .build();
     }
 
-    // transaction not displayed for privacy reasons...
-    @Override
-    public String toString() {
-        return "PeerPublishedPayoutTxMessage{" +
-                "transaction not displayed for privacy reasons..." +
-                ", tradeId='" + tradeId + '\'' +
-                ", senderNodeAddress=" + senderNodeAddress +
-                "} " + super.toString();
+    public static PeerPublishedPayoutTxMessage fromProto(PB.PeerPublishedPayoutTxMessage proto) {
+        return new PeerPublishedPayoutTxMessage(proto.getTransaction().toByteArray(),
+                proto.getTradeId(),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getUid());
     }
 }

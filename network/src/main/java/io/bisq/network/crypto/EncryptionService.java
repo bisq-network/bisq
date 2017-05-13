@@ -56,18 +56,18 @@ public class EncryptionService {
      * @throws CryptoException
      */
     public DecryptedDataTuple decryptHybridWithSignature(SealedAndSigned sealedAndSigned, PrivateKey privateKey) throws CryptoException {
-        SecretKey secretKey = decryptSecretKey(sealedAndSigned.encryptedSecretKey, privateKey);
-        boolean isValid = Sig.verify(sealedAndSigned.sigPublicKey,
-                Hash.getHash(sealedAndSigned.encryptedPayloadWithHmac),
-                sealedAndSigned.signature);
+        SecretKey secretKey = decryptSecretKey(sealedAndSigned.getEncryptedSecretKey(), privateKey);
+        boolean isValid = Sig.verify(sealedAndSigned.getSigPublicKey(),
+                Hash.getHash(sealedAndSigned.getEncryptedPayloadWithHmac()),
+                sealedAndSigned.getSignature());
         if (!isValid)
             throw new CryptoException("Signature verification failed.");
 
         try {
-            final byte[] bytes = Encryption.decryptPayloadWithHmac(sealedAndSigned.encryptedPayloadWithHmac, secretKey);
+            final byte[] bytes = Encryption.decryptPayloadWithHmac(sealedAndSigned.getEncryptedPayloadWithHmac(), secretKey);
             final PB.NetworkEnvelope envelope = PB.NetworkEnvelope.parseFrom(bytes);
-            NetworkEnvelope decryptedPayload = networkProtoResolver.fromProto(envelope).get();
-            return new DecryptedDataTuple(decryptedPayload, sealedAndSigned.sigPublicKey);
+            NetworkEnvelope decryptedPayload = networkProtoResolver.fromProto(envelope);
+            return new DecryptedDataTuple(decryptedPayload, sealedAndSigned.getSigPublicKey());
         } catch (InvalidProtocolBufferException e) {
             throw new CryptoException("Unable to parse protobuffer message.", e);
         }

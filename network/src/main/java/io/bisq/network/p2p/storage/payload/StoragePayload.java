@@ -1,5 +1,8 @@
 package io.bisq.network.p2p.storage.payload;
 
+import io.bisq.common.proto.NetworkProtoResolver;
+import io.bisq.generated.protobuffer.PB;
+
 import javax.annotation.Nullable;
 import java.security.PublicKey;
 import java.util.Map;
@@ -27,4 +30,8 @@ public interface StoragePayload extends ExpirablePayload {
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     Map<String, String> getExtraDataMap();
+
+    static StoragePayload fromProto(PB.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
+        return (StoragePayload) networkProtoResolver.fromStoragePayloadProto(storagePayload);
+    }
 }

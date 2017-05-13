@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Value
-public final class GetPeersRequest extends PeerExchangeMessage implements SendersNodeAddressMessage, SupportedCapabilitiesMessage {
+public final class GetPeersRequest implements PeerExchangeMessage, SendersNodeAddressMessage, SupportedCapabilitiesMessage {
     private final NodeAddress senderNodeAddress;
     private final int nonce;
     private final HashSet<Peer> reportedPeers;
@@ -31,21 +31,21 @@ public final class GetPeersRequest extends PeerExchangeMessage implements Sender
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder envelopeBuilder = NetworkEnvelope.getDefaultBuilder();
-        PB.GetPeersRequest.Builder msgBuilder = envelopeBuilder.getGetPeersRequestBuilder();
-        msgBuilder.setNonce(nonce)
-                .setSenderNodeAddress(
-                        msgBuilder.getSenderNodeAddressBuilder()
-                                .setHostName(senderNodeAddress.getHostName())
-                                .setPort(senderNodeAddress.getPort()));
-        msgBuilder.addAllSupportedCapabilities(supportedCapabilities);
-        msgBuilder.addAllReportedPeers(reportedPeers.stream()
-                .map(peer -> PB.Peer.newBuilder()
-                        .setDate(peer.date.getTime())
-                        .setNodeAddress(PB.NodeAddress.newBuilder()
-                                .setHostName(peer.nodeAddress.getHostName())
-                                .setPort(peer.nodeAddress.getPort())).build())
-                .collect(Collectors.toList()));
-        return envelopeBuilder.setGetPeersRequest(msgBuilder).build();
+        PB.GetPeersRequest.Builder builder = PB.GetPeersRequest.newBuilder()
+                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                .setNonce(nonce)
+                .addAllReportedPeers(reportedPeers.stream()
+                        .map(Peer::toProtoMessage)
+                        .collect(Collectors.toList()))
+                .addAllSupportedCapabilities(supportedCapabilities);
+        return NetworkEnvelope.getDefaultBuilder().setGetPeersRequest(builder).build();
+    }
+
+    public static GetPeersRequest fromProto(PB.GetPeersRequest proto) {
+        return new GetPeersRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getNonce(),
+                new HashSet<>(proto.getReportedPeersList().stream()
+                        .map(Peer::fromProto)
+                        .collect(Collectors.toSet())));
     }
 }

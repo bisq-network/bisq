@@ -339,7 +339,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
         Contract contract = dispute.getContract();
         Coin tradeAmount = contract.getTradeAmount();
-        Offer offer = new Offer(contract.offerPayload);
+        Offer offer = new Offer(contract.getOfferPayload());
         Coin available = tradeAmount
                 .add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());
@@ -351,7 +351,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Contract contract = dispute.getContract();
         Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
         Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
-        Offer offer = new Offer(contract.offerPayload);
+        Offer offer = new Offer(contract.getOfferPayload());
         Coin available = contract.getTradeAmount().
                 add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());
@@ -588,7 +588,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void applyPayoutAmountsToDisputeResult(Toggle selectedTradeAmountToggle) {
         Contract contract = dispute.getContract();
-        Offer offer = new Offer(contract.offerPayload);
+        Offer offer = new Offer(contract.getOfferPayload());
         Coin buyerSecurityDeposit = offer.getBuyerSecurityDeposit();
         Coin sellerSecurityDeposit = offer.getSellerSecurityDeposit();
         Coin tradeAmount = contract.getTradeAmount();
@@ -620,7 +620,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void applyTradeAmountRadioButtonStates() {
         Contract contract = dispute.getContract();
-        Offer offer = new Offer(contract.offerPayload);
+        Offer offer = new Offer(contract.getOfferPayload());
         Coin buyerSecurityDeposit = offer.getBuyerSecurityDeposit();
         Coin sellerSecurityDeposit = offer.getSellerSecurityDeposit();
         Coin tradeAmount = contract.getTradeAmount();

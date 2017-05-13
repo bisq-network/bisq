@@ -20,41 +20,53 @@ package io.bisq.common.crypto;
 import com.google.protobuf.ByteString;
 import io.bisq.common.network.NetworkPayload;
 import io.bisq.generated.protobuffer.PB;
-import lombok.EqualsAndHashCode;
-import lombok.extern.slf4j.Slf4j;
+import lombok.Value;
 
 import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
 
-@Slf4j
-@EqualsAndHashCode
+@Value
 public final class SealedAndSigned implements NetworkPayload {
-    public final byte[] encryptedSecretKey;
-    public final byte[] encryptedPayloadWithHmac;
-    public final byte[] signature;
+    private final byte[] encryptedSecretKey;
+    private final byte[] encryptedPayloadWithHmac;
+    private final byte[] signature;
     private final byte[] sigPublicKeyBytes;
-    public PublicKey sigPublicKey;
+    private final PublicKey sigPublicKey;
 
-    public SealedAndSigned(byte[] encryptedSecretKey, byte[] encryptedPayloadWithHmac, byte[] signature, PublicKey sigPublicKey) {
+    public SealedAndSigned(byte[] encryptedSecretKey,
+                           byte[] encryptedPayloadWithHmac,
+                           byte[] signature,
+                           PublicKey sigPublicKey) {
         this.encryptedSecretKey = encryptedSecretKey;
         this.encryptedPayloadWithHmac = encryptedPayloadWithHmac;
         this.signature = signature;
+        sigPublicKeyBytes = Sig.getSigPublicKeyBytes(sigPublicKey);
         this.sigPublicKey = sigPublicKey;
-        this.sigPublicKeyBytes = new X509EncodedKeySpec(this.sigPublicKey.getEncoded()).getEncoded();
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public SealedAndSigned(byte[] encryptedSecretKey, byte[] encryptedPayloadWithHmac, byte[] signature, byte[] sigPublicKeyBytes) {
-        this(encryptedSecretKey, encryptedPayloadWithHmac, signature, Sig.getSigPublicKeyFromBytes(sigPublicKeyBytes));
+    public SealedAndSigned(byte[] encryptedSecretKey,
+                           byte[] encryptedPayloadWithHmac,
+                           byte[] signature,
+                           byte[] sigPublicKeyBytes) {
+        this.encryptedSecretKey = encryptedSecretKey;
+        this.encryptedPayloadWithHmac = encryptedPayloadWithHmac;
+        this.signature = signature;
+        this.sigPublicKeyBytes = sigPublicKeyBytes;
+        this.sigPublicKey = Sig.getSigPublicKeyFromBytes(sigPublicKeyBytes);
     }
 
     public PB.SealedAndSigned toProtoMessage() {
-        return PB.SealedAndSigned.newBuilder().setEncryptedSecretKey(ByteString.copyFrom(encryptedSecretKey))
+        return PB.SealedAndSigned.newBuilder()
+                .setEncryptedSecretKey(ByteString.copyFrom(encryptedSecretKey))
                 .setEncryptedPayloadWithHmac(ByteString.copyFrom(encryptedPayloadWithHmac))
-                .setSignature(ByteString.copyFrom(signature)).setSigPublicKeyBytes(ByteString.copyFrom(sigPublicKeyBytes))
+                .setSignature(ByteString.copyFrom(signature))
+                .setSigPublicKeyBytes(ByteString.copyFrom(sigPublicKeyBytes))
                 .build();
+    }
+
+    public static SealedAndSigned fromProto(PB.SealedAndSigned proto) {
+        return new SealedAndSigned(proto.getEncryptedSecretKey().toByteArray(),
+                proto.getEncryptedPayloadWithHmac().toByteArray(),
+                proto.getSignature().toByteArray(),
+                proto.getSigPublicKeyBytes().toByteArray());
     }
 }

@@ -1,40 +1,31 @@
 package io.bisq.core.proto;
 
-import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.crypto.SealedAndSigned;
 import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.network.NetworkPayload;
 import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.alert.PrivateNotificationMessage;
-import io.bisq.core.alert.PrivateNotificationPayload;
 import io.bisq.core.arbitration.Arbitrator;
-import io.bisq.core.arbitration.Attachment;
-import io.bisq.core.arbitration.DisputeResult;
 import io.bisq.core.arbitration.Mediator;
 import io.bisq.core.arbitration.messages.*;
-import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksResponse;
 import io.bisq.core.dao.blockchain.p2p.NewBsqBlockBroadcastMessage;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.filter.Filter;
-import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.messages.OfferAvailabilityRequest;
 import io.bisq.core.offer.messages.OfferAvailabilityResponse;
-import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.trade.messages.*;
 import io.bisq.core.trade.statistics.TradeStatistics;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.CloseConnectionMessage;
-import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import io.bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import io.bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import io.bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import io.bisq.network.p2p.peers.keepalive.messages.Ping;
 import io.bisq.network.p2p.peers.keepalive.messages.Pong;
-import io.bisq.network.p2p.peers.peerexchange.Peer;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersRequest;
 import io.bisq.network.p2p.peers.peerexchange.messages.GetPeersResponse;
 import io.bisq.network.p2p.storage.messages.AddDataMessage;
@@ -44,15 +35,9 @@ import io.bisq.network.p2p.storage.messages.RemoveMailboxDataMessage;
 import io.bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import io.bisq.network.p2p.storage.payload.StoragePayload;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.springframework.util.CollectionUtils;
 
 import javax.inject.Inject;
-import java.util.*;
-import java.util.stream.Collectors;
 
 import static io.bisq.generated.protobuffer.PB.NetworkEnvelope.MessageCase.*;
 
@@ -80,475 +65,125 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Optional<NetworkEnvelope> fromProto(PB.NetworkEnvelope msg) {
-        if (Objects.isNull(msg)) {
-            log.warn("fromProtoBuf called with empty msg.");
-            return Optional.empty();
-        }
-        if (msg.getMessageCase() != PING && msg.getMessageCase() != PONG &&
-                msg.getMessageCase() != REFRESH_OFFER_MESSAGE) {
-            log.debug("Convert protobuffer msg: {}, {}", msg.getMessageCase(), msg.toString());
+    public NetworkEnvelope fromProto(PB.NetworkEnvelope networkEnvelope) {
+        final PB.NetworkEnvelope.MessageCase messageCase = networkEnvelope.getMessageCase();
+        if (messageCase != PING && messageCase != PONG &&
+                messageCase != REFRESH_OFFER_MESSAGE) {
+            log.debug("Convert protobuffer networkEnvelope: {}, {}", messageCase, networkEnvelope.toString());
         } else {
-            log.debug("Convert protobuffer msg: {}", msg.getMessageCase());
-            log.trace("Convert protobuffer msg: {}", msg.toString());
+            log.debug("Convert protobuffer networkEnvelope: {}", messageCase);
+            log.trace("Convert protobuffer networkEnvelope: {}", networkEnvelope.toString());
         }
 
-        NetworkEnvelope result = null;
-        switch (msg.getMessageCase()) {
-            case PING:
-                result = getPing(msg);
-                break;
-            case PONG:
-                result = getPong(msg);
-                break;
-            case REFRESH_OFFER_MESSAGE:
-                result = getRefreshTTLMessage(msg);
-                break;
-            case CLOSE_CONNECTION_MESSAGE:
-                result = getCloseConnectionMessage(msg);
-                break;
+        switch (messageCase) {
             case PRELIMINARY_GET_DATA_REQUEST:
-                result = getPreliminaryGetDataRequest(msg);
-                break;
-            case GET_UPDATED_DATA_REQUEST:
-                result = getGetUpdatedDataRequest(msg);
-                break;
-            case GET_PEERS_REQUEST:
-                result = getGetPeersRequest(msg);
-                break;
-            case GET_PEERS_RESPONSE:
-                result = getGetPeersResponse(msg);
-                break;
+                return PreliminaryGetDataRequest.fromProto(networkEnvelope.getPreliminaryGetDataRequest());
             case GET_DATA_RESPONSE:
-                result = getGetDataResponse(msg);
-                break;
-            case PREFIXED_SEALED_AND_SIGNED_MESSAGE:
-                result = getPrefixedSealedAndSignedMessage(msg);
-                break;
-            case OFFER_AVAILABILITY_RESPONSE:
-                result = getOfferAvailabilityResponse(msg);
-                break;
+                return GetDataResponse.fromProto(networkEnvelope.getGetDataResponse(), this);
+            case GET_UPDATED_DATA_REQUEST:
+                return GetUpdatedDataRequest.fromProto(networkEnvelope.getGetUpdatedDataRequest());
+
+            case GET_PEERS_REQUEST:
+                return GetPeersRequest.fromProto(networkEnvelope.getGetPeersRequest());
+            case GET_PEERS_RESPONSE:
+                return GetPeersResponse.fromProto(networkEnvelope.getGetPeersResponse());
+            case PING:
+                return Ping.fromProto(networkEnvelope.getPing());
+            case PONG:
+                return Pong.fromProto(networkEnvelope.getPong());
+
             case OFFER_AVAILABILITY_REQUEST:
-                result = getOfferAvailabilityRequest(msg);
-                break;
-            case GET_BSQ_BLOCKS_REQUEST:
-                result = GetBsqBlocksRequest.fromProto(msg);
-                break;
-            case GET_BSQ_BLOCKS_RESPONSE:
-                result = GetBsqBlocksResponse.fromProto(msg);
-                break;
-            case NEW_BSQ_BLOCK_BROADCAST_MESSAGE:
-                result = NewBsqBlockBroadcastMessage.fromProto(msg);
-                break;
-            case REMOVE_DATA_MESSAGE:
-                result = getRemoveDataMessage(msg);
-                break;
+                return OfferAvailabilityRequest.fromProto(networkEnvelope.getOfferAvailabilityRequest());
+            case OFFER_AVAILABILITY_RESPONSE:
+                return OfferAvailabilityResponse.fromProto(networkEnvelope.getOfferAvailabilityResponse());
+            case REFRESH_OFFER_MESSAGE:
+                return RefreshOfferMessage.fromProto(networkEnvelope.getRefreshOfferMessage());
+
             case ADD_DATA_MESSAGE:
-                result = getAddDataMessage(msg);
-                break;
+                return AddDataMessage.fromProto(networkEnvelope.getAddDataMessage(), this);
+            case REMOVE_DATA_MESSAGE:
+                return RemoveDataMessage.fromProto(networkEnvelope.getRemoveDataMessage(), this);
             case REMOVE_MAILBOX_DATA_MESSAGE:
-                result = getRemoveMailBoxDataMessage(msg.getRemoveMailboxDataMessage());
-                break;
-            case DEPOSIT_TX_PUBLISHED_MESSAGE:
-                result = getDepositTxPublishedMessage(msg.getDepositTxPublishedMessage());
-                break;
-            case FINALIZE_PAYOUT_TX_REQUEST:
-                result = getFinalizePayoutTxRequest(msg.getFinalizePayoutTxRequest());
-                break;
-            case DISPUTE_COMMUNICATION_MESSAGE:
-                result = getDisputeCommunicationMessage(msg.getDisputeCommunicationMessage());
-                break;
-            case OPEN_NEW_DISPUTE_MESSAGE:
-                result = getOpenNewDisputeMessage(msg.getOpenNewDisputeMessage());
-                break;
-            case PEER_OPENED_DISPUTE_MESSAGE:
-                result = getPeerOpenedDisputeMessage(msg.getPeerOpenedDisputeMessage());
-                break;
-            case DISPUTE_RESULT_MESSAGE:
-                result = getDisputeResultMessage(msg.getDisputeResultMessage());
-                break;
-            case PEER_PUBLISHED_PAYOUT_TX_MESSAGE:
-                result = getPeerPublishedPayoutTxMessage(msg.getPeerPublishedPayoutTxMessage());
-                break;
+                return RemoveMailboxDataMessage.fromProto(networkEnvelope.getRemoveMailboxDataMessage(), this);
+
+            case CLOSE_CONNECTION_MESSAGE:
+                return CloseConnectionMessage.fromProto(networkEnvelope.getCloseConnectionMessage());
+            case PREFIXED_SEALED_AND_SIGNED_MESSAGE:
+                return PrefixedSealedAndSignedMessage.fromProto(networkEnvelope.getPrefixedSealedAndSignedMessage());
+
             case PAY_DEPOSIT_REQUEST:
-                result = getPayDepositRequest(msg.getPayDepositRequest());
-                break;
+                return PayDepositRequest.fromProto(networkEnvelope.getPayDepositRequest());
+            case DEPOSIT_TX_PUBLISHED_MESSAGE:
+                return DepositTxPublishedMessage.fromProto(networkEnvelope.getDepositTxPublishedMessage());
             case PUBLISH_DEPOSIT_TX_REQUEST:
-                result = getPublishDepositTxRequest(msg.getPublishDepositTxRequest());
-                break;
+                return PublishDepositTxRequest.fromProto(networkEnvelope.getPublishDepositTxRequest());
             case FIAT_TRANSFER_STARTED_MESSAGE:
-                result = getFiatTransferStartedMessage(msg.getFiatTransferStartedMessage());
-                break;
+                return FiatTransferStartedMessage.fromProto(networkEnvelope.getFiatTransferStartedMessage());
+            case FINALIZE_PAYOUT_TX_REQUEST:
+                return FinalizePayoutTxRequest.fromProto(networkEnvelope.getFinalizePayoutTxRequest());
             case PAYOUT_TX_PUBLISHED_MESSAGE:
-                result = getPayoutTxPublishedMessage(msg.getPayoutTxPublishedMessage());
-                break;
+                return PayoutTxPublishedMessage.fromProto(networkEnvelope.getPayoutTxPublishedMessage());
+
+            case OPEN_NEW_DISPUTE_MESSAGE:
+                return OpenNewDisputeMessage.fromProto(networkEnvelope.getOpenNewDisputeMessage());
+            case PEER_OPENED_DISPUTE_MESSAGE:
+                return PeerOpenedDisputeMessage.fromProto(networkEnvelope.getPeerOpenedDisputeMessage());
+            case DISPUTE_COMMUNICATION_MESSAGE:
+                return DisputeCommunicationMessage.fromProto(networkEnvelope.getDisputeCommunicationMessage());
+            case DISPUTE_RESULT_MESSAGE:
+                return DisputeResultMessage.fromProto(networkEnvelope.getDisputeResultMessage());
+            case PEER_PUBLISHED_PAYOUT_TX_MESSAGE:
+                return PeerPublishedPayoutTxMessage.fromProto(networkEnvelope.getPeerPublishedPayoutTxMessage());
+
             case PRIVATE_NOTIFICATION_MESSAGE:
-                result = PrivateNotificationMessage.fromProto(msg.getPrivateNotificationMessage());
-                break;
+                return PrivateNotificationMessage.fromProto(networkEnvelope.getPrivateNotificationMessage());
+
+            case GET_BSQ_BLOCKS_REQUEST:
+                return GetBsqBlocksRequest.fromProto(networkEnvelope.getGetBsqBlocksRequest());
+            case GET_BSQ_BLOCKS_RESPONSE:
+                return GetBsqBlocksResponse.fromProto(networkEnvelope.getGetBsqBlocksResponse());
+            case NEW_BSQ_BLOCK_BROADCAST_MESSAGE:
+                return NewBsqBlockBroadcastMessage.fromProto(networkEnvelope.getNewBsqBlockBroadcastMessage());
+
             default:
-                log.warn("Unknown message case:{}:{}", msg.getMessageCase());
+                log.error("Unknown message case: {}", messageCase);
+                throw new RuntimeException("Unknown proto message case. messageCase=" + messageCase);
         }
-        return Optional.ofNullable(result);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Msg
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private static NetworkEnvelope getOfferAvailabilityRequest(PB.NetworkEnvelope envelope) {
-        PB.OfferAvailabilityRequest msg = envelope.getOfferAvailabilityRequest();
-        return new OfferAvailabilityRequest(msg.getOfferId(), PubKeyRing.fromProto(msg.getPubKeyRing()), msg.getTakersTradePrice());
+    public NetworkPayload mapToProtectedStorageEntry(PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry proto) {
+        switch (proto.getMessageCase()) {
+            case PROTECTED_MAILBOX_STORAGE_ENTRY:
+                return ProtectedMailboxStorageEntry.fromProto(proto.getProtectedMailboxStorageEntry(), this);
+            case PROTECTED_STORAGE_ENTRY:
+                return ProtectedStorageEntry.fromProto(proto.getProtectedStorageEntry(), this);
+            default:
+                log.error("Unknown message case: {}", proto.getMessageCase());
+                throw new RuntimeException("Unknown proto message case. messageCase=" + proto.getMessageCase());
+        }
     }
 
-
-    private static NetworkEnvelope getPayoutTxPublishedMessage(PB.PayoutTxPublishedMessage payoutTxPublishedMessage) {
-        return new PayoutTxPublishedMessage(payoutTxPublishedMessage.getTradeId(),
-                payoutTxPublishedMessage.getPayoutTx().toByteArray(),
-                NodeAddress.fromProto(payoutTxPublishedMessage.getSenderNodeAddress()),
-                payoutTxPublishedMessage.getUid());
-    }
-
-    private static NetworkEnvelope getOfferAvailabilityResponse(PB.NetworkEnvelope envelope) {
-        PB.OfferAvailabilityResponse msg = envelope.getOfferAvailabilityResponse();
-        return new OfferAvailabilityResponse(msg.getOfferId(),
-                AvailabilityResult.valueOf(
-                        PB.AvailabilityResult.forNumber(msg.getAvailabilityResult().getNumber()).name()));
-    }
-
-
-    @NotNull
-    private static NetworkEnvelope getPrefixedSealedAndSignedMessage(PB.NetworkEnvelope envelope) {
-        return getPrefixedSealedAndSignedMessage(envelope.getPrefixedSealedAndSignedMessage());
-    }
-
-    private static NetworkEnvelope getFiatTransferStartedMessage(PB.FiatTransferStartedMessage fiatTransferStartedMessage) {
-        return new FiatTransferStartedMessage(fiatTransferStartedMessage.getTradeId(),
-                fiatTransferStartedMessage.getBuyerPayoutAddress(),
-                NodeAddress.fromProto(fiatTransferStartedMessage.getSenderNodeAddress()),
-                fiatTransferStartedMessage.getBuyerSignature().toByteArray(),
-                fiatTransferStartedMessage.getUid()
-        );
-    }
-
-    private static NetworkEnvelope getPublishDepositTxRequest(PB.PublishDepositTxRequest publishDepositTxRequest) {
-        List<RawTransactionInput> rawTransactionInputs = publishDepositTxRequest.getMakerInputsList().stream()
-                .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
-                        rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
-                .collect(Collectors.toList());
-
-        return new PublishDepositTxRequest(publishDepositTxRequest.getTradeId(),
-                PaymentAccountPayload.fromProto(publishDepositTxRequest.getMakerPaymentAccountPayload()),
-                publishDepositTxRequest.getMakerAccountId(),
-                publishDepositTxRequest.getMakerMultiSigPubKey().toByteArray(),
-                publishDepositTxRequest.getMakerContractAsJson(),
-                publishDepositTxRequest.getMakerContractSignature(),
-                publishDepositTxRequest.getMakerPayoutAddressString(),
-                publishDepositTxRequest.getPreparedDepositTx().toByteArray(),
-                rawTransactionInputs,
-                NodeAddress.fromProto(publishDepositTxRequest.getSenderNodeAddress()),
-                publishDepositTxRequest.getUid());
-    }
-
-    private static NetworkEnvelope getPayDepositRequest(PB.PayDepositRequest payDepositRequest) {
-        List<RawTransactionInput> rawTransactionInputs = payDepositRequest.getRawTransactionInputsList().stream()
-                .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
-                        rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
-                .collect(Collectors.toList());
-        List<NodeAddress> arbitratorNodeAddresses = payDepositRequest.getAcceptedArbitratorNodeAddressesList().stream()
-                .map(NodeAddress::fromProto).collect(Collectors.toList());
-        List<NodeAddress> mediatorNodeAddresses = payDepositRequest.getAcceptedMediatorNodeAddressesList().stream()
-                .map(NodeAddress::fromProto).collect(Collectors.toList());
-        return new PayDepositRequest(NodeAddress.fromProto(payDepositRequest.getSenderNodeAddress()),
-                payDepositRequest.getTradeId(),
-                payDepositRequest.getTradeAmount(),
-                payDepositRequest.getTradePrice(),
-                payDepositRequest.getTxFee(),
-                payDepositRequest.getTakerFee(),
-                payDepositRequest.getIsCurrencyForTakerFeeBtc(),
-                rawTransactionInputs, payDepositRequest.getChangeOutputValue(),
-                payDepositRequest.getChangeOutputAddress(),
-                payDepositRequest.getTakerMultiSigPubKey().toByteArray(),
-                payDepositRequest.getTakerPayoutAddressString(),
-                PubKeyRing.fromProto(payDepositRequest.getTakerPubKeyRing()),
-                PaymentAccountPayload.fromProto(payDepositRequest.getTakerPaymentAccountPayload()),
-                payDepositRequest.getTakerAccountId(),
-                payDepositRequest.getTakerFeeTxId(),
-                arbitratorNodeAddresses,
-                mediatorNodeAddresses,
-                NodeAddress.fromProto(payDepositRequest.getArbitratorNodeAddress()),
-                NodeAddress.fromProto(payDepositRequest.getMediatorNodeAddress()));
-    }
-
-    private static NetworkEnvelope getPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
-        return new PeerPublishedPayoutTxMessage(peerPublishedPayoutTxMessage.getTransaction().toByteArray(),
-                peerPublishedPayoutTxMessage.getTradeId(),
-                NodeAddress.fromProto(peerPublishedPayoutTxMessage.getSenderNodeAddress()),
-                peerPublishedPayoutTxMessage.getUid());
-    }
-
-    private static NetworkEnvelope getDisputeResultMessage(PB.DisputeResultMessage disputeResultMessage) {
-
-        PB.DisputeResult disputeResultproto = disputeResultMessage.getDisputeResult();
-        DisputeResult disputeResult = new DisputeResult(disputeResultproto.getTradeId(),
-                disputeResultproto.getTraderId(),
-                DisputeResult.Winner.valueOf(disputeResultproto.getWinner().name()), disputeResultproto.getReasonOrdinal(),
-                disputeResultproto.getTamperProofEvidence(), disputeResultproto.getIdVerification(), disputeResultproto.getScreenCast(),
-                disputeResultproto.getSummaryNotes(),
-                (DisputeCommunicationMessage) getDisputeCommunicationMessage(disputeResultproto.getDisputeCommunicationMessage()),
-                disputeResultproto.getArbitratorSignature().toByteArray(), disputeResultproto.getBuyerPayoutAmount(),
-                disputeResultproto.getSellerPayoutAmount(),
-                disputeResultproto.getArbitratorPubKey().toByteArray(), disputeResultproto.getCloseDate(),
-                disputeResultproto.getIsLoserPublisher());
-        return new DisputeResultMessage(disputeResult,
-                NodeAddress.fromProto(disputeResultMessage.getSenderNodeAddress()),
-                disputeResultMessage.getUid());
-    }
-
-    private static NetworkEnvelope getPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
-        return new PeerOpenedDisputeMessage(ProtoUtil.getDispute(peerOpenedDisputeMessage.getDispute()),
-                NodeAddress.fromProto(peerOpenedDisputeMessage.getSenderNodeAddress()), peerOpenedDisputeMessage.getUid());
-    }
-
-    private static NetworkEnvelope getOpenNewDisputeMessage(PB.OpenNewDisputeMessage openNewDisputeMessage) {
-        return new OpenNewDisputeMessage(ProtoUtil.getDispute(openNewDisputeMessage.getDispute()),
-                NodeAddress.fromProto(openNewDisputeMessage.getSenderNodeAddress()), openNewDisputeMessage.getUid());
-    }
-
-    private static NetworkEnvelope getDisputeCommunicationMessage(PB.DisputeCommunicationMessage disputeCommunicationMessage) {
-        return new DisputeCommunicationMessage(disputeCommunicationMessage.getTradeId(),
-                disputeCommunicationMessage.getTraderId(),
-                disputeCommunicationMessage.getSenderIsTrader(),
-                disputeCommunicationMessage.getMessage(),
-                disputeCommunicationMessage.getAttachmentsList().stream()
-                        .map(attachment -> new Attachment(attachment.getFileName(), attachment.getBytes().toByteArray()))
-                        .collect(Collectors.toList()),
-                NodeAddress.fromProto(disputeCommunicationMessage.getSenderNodeAddress()),
-                disputeCommunicationMessage.getDate(),
-                disputeCommunicationMessage.getArrived(),
-                disputeCommunicationMessage.getStoredInMailbox(),
-                disputeCommunicationMessage.getUid());
-    }
-
-    private static NetworkEnvelope getFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest finalizePayoutTxRequest) {
-        return new FinalizePayoutTxRequest(finalizePayoutTxRequest.getTradeId(),
-                finalizePayoutTxRequest.getSellerSignature().toByteArray(),
-                finalizePayoutTxRequest.getSellerPayoutAddress(),
-                NodeAddress.fromProto(finalizePayoutTxRequest.getSenderNodeAddress()),
-                finalizePayoutTxRequest.getUid());
-    }
-
-    private static NetworkEnvelope getDepositTxPublishedMessage(PB.DepositTxPublishedMessage depositTxPublishedMessage) {
-        return new DepositTxPublishedMessage(depositTxPublishedMessage.getTradeId(),
-                depositTxPublishedMessage.getDepositTx().toByteArray(),
-                NodeAddress.fromProto(depositTxPublishedMessage.getSenderNodeAddress()), depositTxPublishedMessage.getUid());
-    }
-
-    private static NetworkEnvelope getRemoveMailBoxDataMessage(PB.RemoveMailboxDataMessage msg) {
-        return new RemoveMailboxDataMessage(getProtectedMailBoxStorageEntry(msg.getProtectedStorageEntry()));
-    }
-
-    public static NetworkEnvelope getAddDataMessage(PB.NetworkEnvelope envelope) {
-        return new AddDataMessage(getProtectedOrMailboxStorageEntry(envelope.getAddDataMessage().getEntry()));
-    }
-
-    private static NetworkEnvelope getRemoveDataMessage(PB.NetworkEnvelope envelope) {
-        return new RemoveDataMessage(getProtectedStorageEntry(envelope.getRemoveDataMessage().getProtectedStorageEntry()));
-    }
-
-    @NotNull
-    private static PrefixedSealedAndSignedMessage getPrefixedSealedAndSignedMessage(PB.PrefixedSealedAndSignedMessage msg) {
-        NodeAddress nodeAddress;
-        nodeAddress = new NodeAddress(msg.getNodeAddress().getHostName(), msg.getNodeAddress().getPort());
-        SealedAndSigned sealedAndSigned = new SealedAndSigned(msg.getSealedAndSigned().getEncryptedSecretKey().toByteArray(),
-                msg.getSealedAndSigned().getEncryptedPayloadWithHmac().toByteArray(),
-                msg.getSealedAndSigned().getSignature().toByteArray(), msg.getSealedAndSigned().getSigPublicKeyBytes().toByteArray());
-        return new PrefixedSealedAndSignedMessage(nodeAddress, sealedAndSigned, msg.getAddressPrefixHash().toByteArray(), msg.getUid());
-    }
-
-    @NotNull
-    private static NetworkEnvelope getGetDataResponse(PB.NetworkEnvelope envelope) {
-        HashSet<ProtectedStorageEntry> set = new HashSet<>(
-                envelope.getGetDataResponse().getDataSetList()
-                        .stream()
-                        .map(protectedStorageEntry ->
-                                getProtectedOrMailboxStorageEntry(protectedStorageEntry)).collect(Collectors.toList()));
-        return new GetDataResponse(set, envelope.getGetDataResponse().getRequestNonce(),
-                envelope.getGetDataResponse().getIsGetUpdatedDataResponse());
-    }
-
-    @NotNull
-    private static NetworkEnvelope getGetPeersResponse(PB.NetworkEnvelope envelope) {
-        NetworkEnvelope result;
-        PB.GetPeersResponse msg = envelope.getGetPeersResponse();
-        HashSet<Peer> set = new HashSet<>(
-                msg.getReportedPeersList()
-                        .stream()
-                        .map(peer ->
-                                new Peer(new NodeAddress(peer.getNodeAddress().getHostName(),
-                                        peer.getNodeAddress().getPort()))).collect(Collectors.toList()));
-        result = new GetPeersResponse(msg.getRequestNonce(), set);
-        return result;
-    }
-
-    @NotNull
-    private static NetworkEnvelope getGetPeersRequest(PB.NetworkEnvelope envelope) {
-        NodeAddress nodeAddress;
-        NetworkEnvelope result;
-        PB.GetPeersRequest msg = envelope.getGetPeersRequest();
-        nodeAddress = new NodeAddress(msg.getSenderNodeAddress().getHostName(), msg.getSenderNodeAddress().getPort());
-        HashSet<Peer> set = new HashSet<>(
-                msg.getReportedPeersList()
-                        .stream()
-                        .map(peer ->
-                                new Peer(new NodeAddress(peer.getNodeAddress().getHostName(),
-                                        peer.getNodeAddress().getPort()))).collect(Collectors.toList()));
-        result = new GetPeersRequest(nodeAddress, msg.getNonce(), set);
-        return result;
-    }
-
-    @NotNull
-    private static NetworkEnvelope getGetUpdatedDataRequest(PB.NetworkEnvelope envelope) {
-        NodeAddress nodeAddress;
-        NetworkEnvelope result;
-        PB.GetUpdatedDataRequest msg = envelope.getGetUpdatedDataRequest();
-        nodeAddress = new NodeAddress(msg.getSenderNodeAddress().getHostName(), msg.getSenderNodeAddress().getPort());
-        Set<byte[]> updatedDataRequestSet = ProtoUtil.getByteSet(msg.getExcludedKeysList());
-        result = new GetUpdatedDataRequest(nodeAddress, msg.getNonce(), updatedDataRequestSet);
-        return result;
-    }
-
-    @NotNull
-    private static NetworkEnvelope getPreliminaryGetDataRequest(PB.NetworkEnvelope envelope) {
-        NetworkEnvelope result;
-        result = new PreliminaryGetDataRequest(envelope.getPreliminaryGetDataRequest().getNonce(),
-                ProtoUtil.getByteSet(envelope.getPreliminaryGetDataRequest().getExcludedKeysList()));
-        return result;
-    }
-
-    @NotNull
-    private static NetworkEnvelope getCloseConnectionMessage(PB.NetworkEnvelope msg) {
-        return new CloseConnectionMessage(msg.getCloseConnectionMessage().getReason());
-    }
-
-    @NotNull
-    private static NetworkEnvelope getRefreshTTLMessage(PB.NetworkEnvelope msg) {
-        PB.RefreshOfferMessage refreshOfferMessage = msg.getRefreshOfferMessage();
-        return new RefreshOfferMessage(refreshOfferMessage.getHashOfDataAndSeqNr().toByteArray(),
-                refreshOfferMessage.getSignature().toByteArray(),
-                refreshOfferMessage.getHashOfPayload().toByteArray(),
-                refreshOfferMessage.getSequenceNumber());
-    }
-
-    @NotNull
-    private static NetworkEnvelope getPong(PB.NetworkEnvelope envelope) {
-        NetworkEnvelope result;
-        result = new Pong(envelope.getPong().getRequestNonce());
-        return result;
-    }
-
-    @NotNull
-    private static NetworkEnvelope getPing(PB.NetworkEnvelope envelope) {
-        NetworkEnvelope result;
-        result = new Ping(envelope.getPing().getNonce(), envelope.getPing().getLastRoundTripTime());
-        return result;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Handle by StoragePayload.MessageCase
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Nullable
-    private static StoragePayload getStoragePayload(PB.StoragePayload protoEntry) {
-        StoragePayload storagePayload = null;
-        Map<String, String> extraDataMapMap;
-        switch (protoEntry.getMessageCase()) {
+    public NetworkPayload fromStoragePayloadProto(PB.StoragePayload storagePayloadProto) {
+        switch (storagePayloadProto.getMessageCase()) {
             case ALERT:
-                storagePayload = Alert.fromProto(protoEntry.getAlert());
-                break;
+                return Alert.fromProto(storagePayloadProto.getAlert());
             case ARBITRATOR:
-                storagePayload = Arbitrator.fromProto(protoEntry.getArbitrator());
-                break;
+                return Arbitrator.fromProto(storagePayloadProto.getArbitrator());
             case MEDIATOR:
-                storagePayload = Mediator.fromProto(protoEntry.getMediator());
-                break;
+                return Mediator.fromProto(storagePayloadProto.getMediator());
             case FILTER:
-                storagePayload = Filter.fromProto(protoEntry.getFilter());
-                break;
+                return Filter.fromProto(storagePayloadProto.getFilter());
             case COMPENSATION_REQUEST_PAYLOAD:
-                storagePayload = CompensationRequestPayload.fromProto(protoEntry.getCompensationRequestPayload());
-                break;
+                return CompensationRequestPayload.fromProto(storagePayloadProto.getCompensationRequestPayload());
             case TRADE_STATISTICS:
-                storagePayload = TradeStatistics.fromProto(protoEntry.getTradeStatistics());
-                break;
+                return TradeStatistics.fromProto(storagePayloadProto.getTradeStatistics());
             case MAILBOX_STORAGE_PAYLOAD:
-                PB.MailboxStoragePayload payload = protoEntry.getMailboxStoragePayload();
-                extraDataMapMap = CollectionUtils.isEmpty(payload.getExtraDataMapMap()) ?
-                        null : payload.getExtraDataMapMap();
-                storagePayload = new MailboxStoragePayload(
-                        getPrefixedSealedAndSignedMessage(payload.getPrefixedSealedAndSignedMessage()),
-                        payload.getSenderPubKeyForAddOperationBytes().toByteArray(),
-                        payload.getOwnerPubKeyBytes().toByteArray(),
-                        extraDataMapMap);
-                break;
+                return MailboxStoragePayload.fromProto(storagePayloadProto.getMailboxStoragePayload(), this);
             case OFFER_PAYLOAD:
-                storagePayload = OfferPayload.fromProto(protoEntry.getOfferPayload());
-                break;
+                return OfferPayload.fromProto(storagePayloadProto.getOfferPayload());
             default:
-                log.error("Unknown storagepayload:{}", protoEntry.getMessageCase());
+                log.error("Unknown StoragePayload:{}", storagePayloadProto.getMessageCase());
+                throw new RuntimeException("Unknown proto message case. messageCase=" + storagePayloadProto.getMessageCase());
         }
-        return storagePayload;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Payload
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    private static PrivateNotificationPayload getPrivateNotification(PB.PrivateNotificationPayload privateNotification) {
-        return new PrivateNotificationPayload(privateNotification.getMessage());
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Handle by PaymentAccountPayload.MessageCase
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Handle by ProtectedStorageEntryOrProtectedMailboxStorageEntry.MessageCase
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static ProtectedStorageEntry getProtectedOrMailboxStorageEntry(PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry entry) {
-        if (entry.getMessageCase() == PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.MessageCase.PROTECTED_MAILBOX_STORAGE_ENTRY) {
-            return getProtectedMailBoxStorageEntry(entry.getProtectedMailboxStorageEntry());
-        } else {
-            return getProtectedStorageEntry(entry.getProtectedStorageEntry());
-        }
-    }
-
-    public static ProtectedStorageEntry getProtectedStorageEntry(PB.ProtectedStorageEntry protoEntry) {
-        StoragePayload storagePayload = getStoragePayload(protoEntry.getStoragePayload());
-        ProtectedStorageEntry storageEntry = new ProtectedStorageEntry(protoEntry.getCreationTimeStamp(), storagePayload,
-                protoEntry.getOwnerPubKeyBytes().toByteArray(), protoEntry.getSequenceNumber(),
-                protoEntry.getSignature().toByteArray());
-        return storageEntry;
-    }
-
-    private static ProtectedMailboxStorageEntry getProtectedMailBoxStorageEntry(PB.ProtectedMailboxStorageEntry protoEntry) {
-        ProtectedStorageEntry entry = getProtectedStorageEntry(protoEntry.getEntry());
-
-        if (!(entry.getStoragePayload() instanceof MailboxStoragePayload)) {
-            log.error("Trying to extract MailboxStoragePayload from a ProtectedMailboxStorageEntry," +
-                    " but it's the wrong type {}", entry.getStoragePayload().toString());
-            return null;
-        }
-
-        ProtectedMailboxStorageEntry storageEntry = new ProtectedMailboxStorageEntry(
-                entry.getCreationTimeStamp(),
-                (MailboxStoragePayload) entry.getStoragePayload(),
-                entry.getOwnerPubKey().getEncoded(), entry.getSequenceNumber(),
-                entry.getSignature(), protoEntry.getReceiversPubKeyBytes().toByteArray());
-        return storageEntry;
     }
 }

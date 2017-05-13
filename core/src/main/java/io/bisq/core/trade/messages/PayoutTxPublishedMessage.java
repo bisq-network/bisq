@@ -32,7 +32,10 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
-    public PayoutTxPublishedMessage(String tradeId, byte[] payoutTx, NodeAddress senderNodeAddress, String uid) {
+    public PayoutTxPublishedMessage(String tradeId,
+                                    byte[] payoutTx,
+                                    NodeAddress senderNodeAddress,
+                                    String uid) {
         super(tradeId);
         this.payoutTx = payoutTx;
         this.senderNodeAddress = senderNodeAddress;
@@ -41,12 +44,19 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setPayoutTxPublishedMessage(msgBuilder.getPayoutTxPublishedMessageBuilder()
-                .setUid(uid)
-                .setMessageVersion(getMessageVersion())
-                .setTradeId(getTradeId())
-                .setPayoutTx(ByteString.copyFrom(payoutTx))
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setPayoutTxPublishedMessage(PB.PayoutTxPublishedMessage.newBuilder()
+                        .setTradeId(getTradeId())
+                        .setPayoutTx(ByteString.copyFrom(payoutTx))
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setUid(uid))
+                .build();
+    }
+
+    public static NetworkEnvelope fromProto(PB.PayoutTxPublishedMessage proto) {
+        return new PayoutTxPublishedMessage(proto.getTradeId(),
+                proto.getPayoutTx().toByteArray(),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getUid());
     }
 }

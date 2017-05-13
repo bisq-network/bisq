@@ -22,33 +22,35 @@ import io.bisq.core.arbitration.DisputeResult;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.Value;
 
+@Value
 @EqualsAndHashCode(callSuper = true)
-@ToString
 public final class DisputeResultMessage extends DisputeMessage {
-
-    public final DisputeResult disputeResult;
+    private final DisputeResult disputeResult;
     private final NodeAddress senderNodeAddress;
 
-    public DisputeResultMessage(DisputeResult disputeResult, NodeAddress senderNodeAddress, String uid) {
+    public DisputeResultMessage(DisputeResult disputeResult,
+                                NodeAddress senderNodeAddress,
+                                String uid) {
         super(uid);
         this.disputeResult = disputeResult;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
-    public NodeAddress getSenderNodeAddress() {
-        return senderNodeAddress;
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        return NetworkEnvelope.getDefaultBuilder()
+                .setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
+                        .setUid(getUid())
+                        .setDisputeResult(disputeResult.toProtoMessage())
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
+                .build();
     }
 
-    @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
-                .setDisputeResult(disputeResult.toProtoMessage())
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                .setUid(getUid()))
-                .build();
+    public static DisputeResultMessage fromProto(PB.DisputeResultMessage proto) {
+        return new DisputeResultMessage(DisputeResult.fromProto(proto.getDisputeResult()),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getUid());
     }
 }

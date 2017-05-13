@@ -5,9 +5,9 @@ import io.bisq.common.Clock;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.persistable.PersistableCollectionUtil;
 import io.bisq.common.persistable.PersistableList;
 import io.bisq.common.proto.PersistenceProtoResolver;
+import io.bisq.common.proto.ProtoCollectionUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
@@ -360,7 +360,7 @@ public class PeerManager implements ConnectionListener {
     private Peer removeReportedPeer(NodeAddress nodeAddress) {
         List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
         Optional<Peer> reportedPeerOptional = reportedPeersClone.stream()
-                .filter(e -> e.nodeAddress.equals(nodeAddress)).findAny();
+                .filter(e -> e.getNodeAddress().equals(nodeAddress)).findAny();
         if (reportedPeerOptional.isPresent()) {
             Peer reportedPeer = reportedPeerOptional.get();
             removeReportedPeer(reportedPeer);
@@ -374,7 +374,7 @@ public class PeerManager implements ConnectionListener {
         Log.traceCall();
         List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
         Set<Peer> reportedPeersToRemove = reportedPeersClone.stream()
-                .filter(reportedPeer -> new Date().getTime() - reportedPeer.date.getTime() > MAX_AGE)
+                .filter(reportedPeer -> new Date().getTime() - reportedPeer.getDate().getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         reportedPeersToRemove.forEach(this::removeReportedPeer);
     }
@@ -478,13 +478,13 @@ public class PeerManager implements ConnectionListener {
 
     private Optional<Peer> getPersistedPeerOptional(NodeAddress nodeAddress) {
         return persistedPeers.stream()
-                .filter(e -> e.nodeAddress.equals(nodeAddress)).findAny();
+                .filter(e -> e.getNodeAddress().equals(nodeAddress)).findAny();
     }
 
     private void removeTooOldPersistedPeers() {
         Log.traceCall();
         Set<Peer> persistedPeersToRemove = persistedPeers.stream()
-                .filter(reportedPeer -> new Date().getTime() - reportedPeer.date.getTime() > MAX_AGE)
+                .filter(reportedPeer -> new Date().getTime() - reportedPeer.getDate().getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
         persistedPeersToRemove.forEach(this::removePersistedPeer);
     }
@@ -522,7 +522,7 @@ public class PeerManager implements ConnectionListener {
     }
 
     public boolean isSeedNode(Peer reportedPeer) {
-        return seedNodeAddresses.contains(reportedPeer.nodeAddress);
+        return seedNodeAddresses.contains(reportedPeer.getNodeAddress());
     }
 
     public boolean isSeedNode(NodeAddress nodeAddress) {
@@ -534,7 +534,7 @@ public class PeerManager implements ConnectionListener {
     }
 
     public boolean isSelf(Peer reportedPeer) {
-        return isSelf(reportedPeer.nodeAddress);
+        return isSelf(reportedPeer.getNodeAddress());
     }
 
     public boolean isSelf(NodeAddress nodeAddress) {
@@ -542,7 +542,7 @@ public class PeerManager implements ConnectionListener {
     }
 
     public boolean isConfirmed(Peer reportedPeer) {
-        return isConfirmed(reportedPeer.nodeAddress);
+        return isConfirmed(reportedPeer.getNodeAddress());
     }
 
     // Checks if that connection has the peers node address
@@ -592,7 +592,7 @@ public class PeerManager implements ConnectionListener {
 
     public HashSet<Peer> getConnectedNonSeedNodeReportedPeers(NodeAddress excludedNodeAddress) {
         return new HashSet<>(getConnectedNonSeedNodeReportedPeers().stream()
-                .filter(e -> !e.nodeAddress.equals(excludedNodeAddress))
+                .filter(e -> !e.getNodeAddress().equals(excludedNodeAddress))
                 .collect(Collectors.toSet()));
     }
 
@@ -634,7 +634,7 @@ public class PeerManager implements ConnectionListener {
 
     private Function<List<Peer>, Message> getListToProto() {
         return (List<Peer> list) -> {
-            return PB.PersistableEnvelope.newBuilder().setPeersList(PB.PeersList.newBuilder().addAllPeers(PersistableCollectionUtil.collectionToProto(list))).build();
+            return PB.PersistableEnvelope.newBuilder().setPeersList(PB.PeersList.newBuilder().addAllPeers(ProtoCollectionUtil.collectionToProto(list))).build();
         };
     }
 }

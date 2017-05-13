@@ -47,13 +47,20 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest.newBuilder()
-                .setMessageVersion(getMessageVersion())
-                .setTradeId(getTradeId())
-                .setSellerSignature(ByteString.copyFrom(sellerSignature))
-                .setSellerPayoutAddress(sellerPayoutAddress)
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                .setUid(uid)).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest.newBuilder()
+                        .setTradeId(getTradeId())
+                        .setSellerSignature(ByteString.copyFrom(sellerSignature))
+                        .setSellerPayoutAddress(sellerPayoutAddress)
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setUid(uid)).build();
+    }
+
+    public static FinalizePayoutTxRequest fromProto(PB.FinalizePayoutTxRequest proto) {
+        return new FinalizePayoutTxRequest(proto.getTradeId(),
+                proto.getSellerSignature().toByteArray(),
+                proto.getSellerPayoutAddress(),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getUid());
     }
 }

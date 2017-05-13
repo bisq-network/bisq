@@ -411,7 +411,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade.getOffer().getDirection() == OfferPayload.Direction.BUY ? isMaker : !isMaker,
                     isMaker,
                     keyRing.getPubKeyRing(),
-                    trade.getDate(),
+                    trade.getDate().getTime(),
                     trade.getContract(),
                     trade.getContractHash(),
                     depositTxSerialized,

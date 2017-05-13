@@ -1,6 +1,7 @@
 package io.bisq.network.p2p.storage.messages;
 
 import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import lombok.Value;
@@ -15,9 +16,13 @@ public final class RemoveDataMessage extends BroadcastMessage {
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setRemoveDataMessage(PB.RemoveDataMessage.newBuilder()
-                .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setRemoveDataMessage(PB.RemoveDataMessage.newBuilder()
+                        .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage()))
+                .build();
+    }
 
+    public static RemoveDataMessage fromProto(PB.RemoveDataMessage proto, NetworkProtoResolver resolver) {
+        return new RemoveDataMessage(ProtectedStorageEntry.fromProto(proto.getProtectedStorageEntry(), resolver));
     }
 }

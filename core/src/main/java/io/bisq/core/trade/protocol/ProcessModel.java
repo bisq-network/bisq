@@ -21,8 +21,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.persistable.PersistableCollectionUtil;
 import io.bisq.common.persistable.PersistablePayload;
+import io.bisq.common.proto.ProtoCollectionUtil;
 import io.bisq.common.taskrunner.Model;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -222,10 +222,10 @@ public class ProcessModel implements Model, PersistablePayload {
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
                 .setTakeOfferFeeTxId(takeOfferFeeTxId)
                 .setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature))
-                .addAllTakerAcceptedArbitratorNodeAddresses(PersistableCollectionUtil.collectionToProto(takerAcceptedArbitratorNodeAddresses))
-                .addAllTakerAcceptedMediatorNodeAddresses(PersistableCollectionUtil.collectionToProto(takerAcceptedMediatorNodeAddresses))
+                .addAllTakerAcceptedArbitratorNodeAddresses(ProtoCollectionUtil.collectionToProto(takerAcceptedArbitratorNodeAddresses))
+                .addAllTakerAcceptedMediatorNodeAddresses(ProtoCollectionUtil.collectionToProto(takerAcceptedMediatorNodeAddresses))
                 .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
-                .addAllRawTransactionInputs(PersistableCollectionUtil.collectionToProto(rawTransactionInputs))
+                .addAllRawTransactionInputs(ProtoCollectionUtil.collectionToProto(rawTransactionInputs))
                 .setChangeOutputValue(changeOutputValue)
                 .setChangeOutputAddress(changeOutputAddress)
                 .setUseSavingsWallet(useSavingsWallet)

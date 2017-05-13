@@ -27,7 +27,6 @@ import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -82,7 +81,7 @@ public final class PrivateNotificationPayload implements NetworkPayload {
     public void setSigAndPubKey(String signatureAsBase64, PublicKey storagePublicKey) {
         this.signatureAsBase64 = signatureAsBase64;
         this.publicKey = storagePublicKey;
-        this.sigPublicKeyBytes = new X509EncodedKeySpec(this.publicKey.getEncoded()).getEncoded();
+        sigPublicKeyBytes = Sig.getSigPublicKeyBytes(publicKey);
     }
 
     // Hex

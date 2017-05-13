@@ -5,7 +5,7 @@ import io.bisq.generated.protobuffer.PB;
 import lombok.Value;
 
 @Value
-public final class Pong extends KeepAliveMessage {
+public final class Pong implements KeepAliveMessage {
     private final int requestNonce;
 
     public Pong(int requestNonce) {
@@ -14,7 +14,13 @@ public final class Pong extends KeepAliveMessage {
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setPong(PB.Pong.newBuilder().setRequestNonce(requestNonce)).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setPong(PB.Pong.newBuilder()
+                        .setRequestNonce(requestNonce))
+                .build();
+    }
+
+    public static Pong fromProto(PB.Pong proto) {
+        return new Pong(proto.getRequestNonce());
     }
 }

@@ -1,7 +1,6 @@
 package io.bisq.network.p2p.storage.messages;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Value;
@@ -25,16 +24,19 @@ public final class RefreshOfferMessage extends BroadcastMessage {
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder builder = NetworkEnvelope.getDefaultBuilder();
-        return builder.setRefreshOfferMessage(builder.getRefreshOfferMessageBuilder()
-                .setHashOfDataAndSeqNr(ByteString.copyFrom(hashOfDataAndSeqNr))
-                .setHashOfPayload(ByteString.copyFrom(hashOfPayload))
-                .setSequenceNumber(sequenceNumber)
-                .setSignature(ByteString.copyFrom(signature))).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setRefreshOfferMessage(PB.RefreshOfferMessage.newBuilder()
+                        .setHashOfDataAndSeqNr(ByteString.copyFrom(hashOfDataAndSeqNr))
+                        .setSignature(ByteString.copyFrom(signature))
+                        .setHashOfPayload(ByteString.copyFrom(hashOfPayload))
+                        .setSequenceNumber(sequenceNumber))
+                .build();
     }
 
-    @Override
-    public Message toProtoMessage() {
-        return toProtoNetworkEnvelope().getRefreshOfferMessage();
+    public static RefreshOfferMessage fromProto(PB.RefreshOfferMessage proto) {
+        return new RefreshOfferMessage(proto.getHashOfDataAndSeqNr().toByteArray(),
+                proto.getSignature().toByteArray(),
+                proto.getHashOfPayload().toByteArray(),
+                proto.getSequenceNumber());
     }
 }

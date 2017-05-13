@@ -15,25 +15,26 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.persistable;
+package io.bisq.common.proto;
 
 import com.google.protobuf.Message;
+import io.bisq.common.Payload;
 
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class PersistableCollectionUtil {
+public class ProtoCollectionUtil {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Convenience
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Iterable collectionToProto(Collection<? extends PersistablePayload> collection) {
+    public static Iterable collectionToProto(Collection<? extends Payload> collection) {
         return collection.stream().map(e -> e.toProtoMessage()).collect(Collectors.toList());
     }
 
-    public static <T> Iterable<T> collectionToProto(Collection<? extends PersistablePayload> collection, Function<? super Message, T> extra) {
+    public static <T> Iterable<T> collectionToProto(Collection<? extends Payload> collection, Function<? super Message, T> extra) {
         return collection.stream().map(o -> {
             return extra.apply(o.toProtoMessage());
         }).collect(Collectors.toList());

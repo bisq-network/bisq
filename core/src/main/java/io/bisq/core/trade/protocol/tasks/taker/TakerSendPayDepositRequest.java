@@ -54,8 +54,8 @@ public class TakerSendPayDepositRequest extends TradeTask {
             byte[] takerMultiSigPubKey = addressEntry.getPubKey();
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
             PayDepositRequest message = new PayDepositRequest(
-                    processModel.getMyNodeAddress(),
                     processModel.getOfferId(),
+                    processModel.getMyNodeAddress(),
                     trade.getTradeAmount().value,
                     trade.getTradePrice().getValue(),
                     trade.getTxFee().getValue(),

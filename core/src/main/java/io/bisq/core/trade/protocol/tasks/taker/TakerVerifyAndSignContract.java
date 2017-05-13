@@ -30,6 +30,7 @@ import io.bisq.core.trade.protocol.TradingPeer;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
+import org.bitcoinj.core.Coin;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -74,10 +75,12 @@ public class TakerVerifyAndSignContract extends TradeTask {
                             takerMultiSigAddressEntry.getPubKey()),
                     "takerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
+            final Coin tradeAmount = trade.getTradeAmount();
+            checkNotNull(tradeAmount, "tradeAmount must not be null");
             Contract contract = new Contract(
                     processModel.getOffer().getOfferPayload(),
-                    trade.getTradeAmount(),
-                    trade.getTradePrice(),
+                    tradeAmount.value,
+                    trade.getTradePrice().getValue(),
                     trade.getTakerFeeTxId(),
                     buyerNodeAddress,
                     sellerNodeAddress,

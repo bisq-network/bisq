@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.bisq.common.locale.CurrencyTuple;
 import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.common.persistable.PersistableCollectionUtil;
 import io.bisq.common.persistable.PersistableList;
+import io.bisq.common.proto.ProtoCollectionUtil;
 import io.bisq.common.storage.PlainTextWrapper;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -108,7 +108,7 @@ public class TradeStatisticsManager {
                     PersistableList<TradeStatistics> serializable = new PersistableList<>(tradeStatisticsSet);
                     serializable.setToProto((list) -> PB.PersistableEnvelope.newBuilder()
                             .setTradeStatisticsList(PB.TradeStatisticsList.newBuilder()
-                                    .addAllTradeStatistics(PersistableCollectionUtil.collectionToProto(list))).build());
+                                    .addAllTradeStatistics(ProtoCollectionUtil.collectionToProto(list))).build());
                     statisticsStorage.queueUpForSave(serializable, 2000);
                 }
 

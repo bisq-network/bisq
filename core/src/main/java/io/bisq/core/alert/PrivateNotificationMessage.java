@@ -1,6 +1,5 @@
 package io.bisq.core.alert;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMessage;
@@ -12,7 +11,6 @@ public class PrivateNotificationMessage implements MailboxMessage {
     private final NodeAddress senderNodeAddress;
     private final PrivateNotificationPayload privateNotificationPayload;
     private final String uid;
-    private final int messageVersion = Version.getP2PMessageVersion();
 
     public PrivateNotificationMessage(PrivateNotificationPayload privateNotificationPayload,
                                       NodeAddress senderNodeAddress,
@@ -22,23 +20,19 @@ public class PrivateNotificationMessage implements MailboxMessage {
         this.uid = uid;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    @Override
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        return NetworkEnvelope.getDefaultBuilder()
+                .setPrivateNotificationMessage(PB.PrivateNotificationMessage.newBuilder()
+                        .setPrivateNotificationPayload(privateNotificationPayload.toProtoMessage())
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setUid(uid))
+                .build();
+    }
 
-    public static NetworkEnvelope fromProto(PB.PrivateNotificationMessage proto) {
+    public static PrivateNotificationMessage fromProto(PB.PrivateNotificationMessage proto) {
         return new PrivateNotificationMessage(PrivateNotificationPayload.fromProto(proto.getPrivateNotificationPayload()),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid());
-    }
-
-    @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setPrivateNotificationMessage(msgBuilder.getPrivateNotificationMessageBuilder()
-                .setMessageVersion(messageVersion)
-                .setUid(uid)
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                .setPrivateNotificationPayload(privateNotificationPayload.toProtoMessage())).build();
     }
 }

@@ -23,17 +23,15 @@ import io.bisq.common.network.NetworkEnvelope;
 import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.SupportedCapabilitiesMessage;
+import lombok.Value;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 
 // We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
+@Value
 public final class OfferAvailabilityResponse extends OfferMessage implements SupportedCapabilitiesMessage {
-
-    public final AvailabilityResult availabilityResult;
-
-    @Nullable
+    private final AvailabilityResult availabilityResult;
     private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult) {
@@ -42,24 +40,16 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     }
 
     @Override
-    @Nullable
-    public ArrayList<Integer> getSupportedCapabilities() {
-        return supportedCapabilities;
-    }
-
-    @Override
-    public String toString() {
-        return "OfferAvailabilityResponse{" +
-                "availabilityResult=" + availabilityResult +
-                "} " + super.toString();
-    }
-
-    @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setOfferAvailabilityResponse(PB.OfferAvailabilityResponse.newBuilder().setMessageVersion(getMessageVersion())
-                .setOfferId(offerId)
-                .setAvailabilityResult(PB.AvailabilityResult.valueOf(availabilityResult.name()))
-                .addAllSupportedCapabilities(supportedCapabilities)).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setOfferAvailabilityResponse(PB.OfferAvailabilityResponse.newBuilder()
+                        .setOfferId(offerId)
+                        .setAvailabilityResult(PB.AvailabilityResult.valueOf(availabilityResult.name()))
+                        .addAllSupportedCapabilities(supportedCapabilities)).build();
+    }
+
+    public static OfferAvailabilityResponse fromProto(PB.OfferAvailabilityResponse proto) {
+        return new OfferAvailabilityResponse(proto.getOfferId(),
+                AvailabilityResult.valueOf(proto.getAvailabilityResult().name()));
     }
 }

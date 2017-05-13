@@ -21,4 +21,8 @@ public class KeyConversionException extends RuntimeException {
     public KeyConversionException(Throwable cause) {
         super(cause);
     }
+
+    public KeyConversionException(String msg) {
+        super(msg);
+    }
 }

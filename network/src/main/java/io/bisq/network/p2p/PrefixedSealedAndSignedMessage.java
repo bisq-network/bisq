@@ -17,8 +17,10 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
     private final byte[] addressPrefixHash;
     private final String uid;
 
-    public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress, SealedAndSigned sealedAndSigned,
-                                          byte[] addressPrefixHash, String uid) {
+    public PrefixedSealedAndSignedMessage(NodeAddress senderNodeAddress,
+                                          SealedAndSigned sealedAndSigned,
+                                          byte[] addressPrefixHash,
+                                          String uid) {
         checkNotNull(senderNodeAddress, "senderNodeAddress must not be null at PrefixedSealedAndSignedMessage");
         this.senderNodeAddress = senderNodeAddress;
         this.sealedAndSigned = sealedAndSigned;
@@ -34,5 +36,13 @@ public final class PrefixedSealedAndSignedMessage implements MailboxMessage, Sen
                         .setSealedAndSigned(sealedAndSigned.toProtoMessage())
                         .setAddressPrefixHash(ByteString.copyFrom(addressPrefixHash))
                         .setUid(uid)).build();
+    }
+
+    public static PrefixedSealedAndSignedMessage fromProto(PB.PrefixedSealedAndSignedMessage proto) {
+        return new PrefixedSealedAndSignedMessage(NodeAddress.fromProto(proto.getNodeAddress()),
+                SealedAndSigned.fromProto(proto.getSealedAndSigned()),
+                proto.getAddressPrefixHash().toByteArray(),
+                proto.getUid());
+
     }
 }

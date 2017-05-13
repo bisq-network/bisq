@@ -29,12 +29,12 @@ import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
@@ -42,19 +42,15 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @EqualsAndHashCode
+@ToString
+@Getter
 public final class Dispute implements NetworkPayload {
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Fields
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // Payload
     private final String tradeId;
     private final String id;
     private final int traderId;
     private final boolean disputeOpenerIsBuyer;
     private final boolean disputeOpenerIsMaker;
-    private final long openingDate;
+    private long openingDate;
     private final PubKeyRing traderPubKeyRing;
     private final long tradeDate;
     private final Contract contract;
@@ -74,7 +70,6 @@ public final class Dispute implements NetworkPayload {
     private final String takerContractSignature;
     private final PubKeyRing arbitratorPubKeyRing;
     private final boolean isSupportTicket;
-
     private final ArrayList<DisputeCommunicationMessage> disputeCommunicationMessages = new ArrayList<>();
 
     private boolean isClosed;
@@ -83,13 +78,10 @@ public final class Dispute implements NetworkPayload {
     @Nullable
     private String disputePayoutTxId;
 
-
-    // Domain
     transient private Storage<DisputeList> storage;
-    transient private ObservableList<DisputeCommunicationMessage> observableList = FXCollections.observableArrayList(
-            disputeCommunicationMessages);
-    transient private BooleanProperty isClosedProperty = new SimpleBooleanProperty(isClosed);
-    transient private ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
+    transient private ObservableList<DisputeCommunicationMessage> observableList;
+    transient private BooleanProperty isClosedProperty;
+    transient private ObjectProperty<DisputeResult> disputeResultProperty;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +94,7 @@ public final class Dispute implements NetworkPayload {
                    boolean disputeOpenerIsBuyer,
                    boolean disputeOpenerIsMaker,
                    PubKeyRing traderPubKeyRing,
-                   Date tradeDate,
+                   long tradeDate,
                    Contract contract,
                    byte[] contractHash,
                    @Nullable byte[] depositTxSerialized,
@@ -131,15 +123,22 @@ public final class Dispute implements NetworkPayload {
                 takerContractSignature,
                 arbitratorPubKeyRing,
                 isSupportTicket);
+
+        openingDate = new Date().getTime();
         this.storage = storage;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Dispute(String tradeId,
                    int traderId,
                    boolean disputeOpenerIsBuyer,
                    boolean disputeOpenerIsMaker,
                    PubKeyRing traderPubKeyRing,
-                   Date tradeDate,
+                   long tradeDate,
                    Contract contract,
                    byte[] contractHash,
                    @Nullable byte[] depositTxSerialized,
@@ -156,7 +155,7 @@ public final class Dispute implements NetworkPayload {
         this.disputeOpenerIsBuyer = disputeOpenerIsBuyer;
         this.disputeOpenerIsMaker = disputeOpenerIsMaker;
         this.traderPubKeyRing = traderPubKeyRing;
-        this.tradeDate = tradeDate.getTime();
+        this.tradeDate = tradeDate;
         this.contract = contract;
         this.contractHash = contractHash;
         this.depositTxSerialized = depositTxSerialized;
@@ -168,22 +167,81 @@ public final class Dispute implements NetworkPayload {
         this.takerContractSignature = takerContractSignature;
         this.arbitratorPubKeyRing = arbitratorPubKeyRing;
         this.isSupportTicket = isSupportTicket;
-        this.openingDate = new Date().getTime();
 
         id = tradeId + "_" + traderId;
-        fillInTransients();
+
+        init();
     }
 
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            fillInTransients();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
+    @Override
+    public PB.Dispute toProtoMessage() {
+        PB.Dispute.Builder builder = PB.Dispute.newBuilder()
+                .setTradeId(tradeId)
+                .setTraderId(traderId)
+                .setDisputeOpenerIsBuyer(disputeOpenerIsBuyer)
+                .setDisputeOpenerIsMaker(disputeOpenerIsMaker)
+                .setTraderPubKeyRing(traderPubKeyRing.toProtoMessage())
+                .setTradeDate(tradeDate)
+                .setContract(contract.toProtoMessage())
+                .setContractHash(ByteString.copyFrom(contractHash))
+                .setContractAsJson(contractAsJson)
+                .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage())
+                .setIsSupportTicket(isSupportTicket)
+                .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream()
+                        .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
+                        .collect(Collectors.toList()))
+                .setIsClosed(isClosed)
+                .setOpeningDate(openingDate)
+                .setId(id);
+
+        Optional.ofNullable(depositTxSerialized).ifPresent(tx -> builder.setDepositTxSerialized(ByteString.copyFrom(tx)));
+        Optional.ofNullable(payoutTxSerialized).ifPresent(tx -> builder.setPayoutTxSerialized(ByteString.copyFrom(tx)));
+        Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
+        Optional.ofNullable(payoutTxId).ifPresent(builder::setPayoutTxId);
+        Optional.ofNullable(disputePayoutTxId).ifPresent(builder::setDisputePayoutTxId);
+        Optional.ofNullable(makerContractSignature).ifPresent(builder::setMakerContractSignature);
+        Optional.ofNullable(takerContractSignature).ifPresent(builder::setTakerContractSignature);
+        Optional.ofNullable(disputeResult).ifPresent(result -> builder.setDisputeResult(disputeResult.toProtoMessage()));
+        return builder.build();
     }
 
-    private void fillInTransients() {
+    public static Dispute fromProto(PB.Dispute proto) {
+        final Dispute dispute = new Dispute(proto.getTradeId(),
+                proto.getTraderId(),
+                proto.getDisputeOpenerIsBuyer(),
+                proto.getDisputeOpenerIsMaker(),
+                PubKeyRing.fromProto(proto.getTraderPubKeyRing()),
+                proto.getTradeDate(),
+                Contract.fromProto(proto.getContract()),
+                proto.getContractHash().toByteArray(),
+                proto.getDepositTxSerialized().toByteArray(),
+                proto.getPayoutTxSerialized().toByteArray(),
+                proto.getDepositTxId(),
+                proto.getPayoutTxId(),
+                proto.getContractAsJson(),
+                proto.getMakerContractSignature(),
+                proto.getTakerContractSignature(),
+                PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()),
+                proto.getIsSupportTicket());
+
+        dispute.disputeCommunicationMessages.addAll(proto.getDisputeCommunicationMessagesList().stream()
+                .map(DisputeCommunicationMessage::fromProto)
+                .collect(Collectors.toList()));
+
+        dispute.openingDate = proto.getOpeningDate();
+        dispute.isClosed = proto.getIsClosed();
+        dispute.disputeResult = DisputeResult.fromProto(proto.getDisputeResult());
+        dispute.disputePayoutTxId = proto.getDisputePayoutTxId();
+
+        return dispute;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void init() {
         observableList = FXCollections.observableArrayList(disputeCommunicationMessages);
         isClosedProperty = new SimpleBooleanProperty(isClosed);
         disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
@@ -237,114 +295,30 @@ public final class Dispute implements NetworkPayload {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getId() {
-        return id;
-    }
-
-    public String getTradeId() {
-        return tradeId;
-    }
-
     public String getShortTradeId() {
         return Utilities.getShortId(tradeId);
-    }
-
-    public int getTraderId() {
-        return traderId;
-    }
-
-    public boolean isDisputeOpenerIsBuyer() {
-        return disputeOpenerIsBuyer;
-    }
-
-    public boolean isDisputeOpenerIsMaker() {
-        return disputeOpenerIsMaker;
-    }
-
-    public Date getOpeningDate() {
-        return new Date(openingDate);
-    }
-
-    public PubKeyRing getTraderPubKeyRing() {
-        return traderPubKeyRing;
-    }
-
-    public Contract getContract() {
-        return contract;
-    }
-
-    @Nullable
-    public byte[] getDepositTxSerialized() {
-        return depositTxSerialized;
-    }
-
-    @Nullable
-    public byte[] getPayoutTxSerialized() {
-        return payoutTxSerialized;
-    }
-
-    @Nullable
-    public String getDepositTxId() {
-        return depositTxId;
-    }
-
-    @Nullable
-    public String getPayoutTxId() {
-        return payoutTxId;
-    }
-
-    public String getContractAsJson() {
-        return contractAsJson;
-    }
-
-    @Nullable
-    public String getMakerContractSignature() {
-        return makerContractSignature;
-    }
-
-    @Nullable
-    public String getTakerContractSignature() {
-        return takerContractSignature;
     }
 
     public ObservableList<DisputeCommunicationMessage> getDisputeCommunicationMessagesAsObservableList() {
         return observableList;
     }
 
-    public boolean isClosed() {
-        return isClosedProperty.get();
-    }
-
     public ReadOnlyBooleanProperty isClosedProperty() {
         return isClosedProperty;
-    }
-
-    public PubKeyRing getArbitratorPubKeyRing() {
-        return arbitratorPubKeyRing;
     }
 
     public ObjectProperty<DisputeResult> disputeResultProperty() {
         return disputeResultProperty;
     }
 
-    public boolean isSupportTicket() {
-        return isSupportTicket;
-    }
-
-    public byte[] getContractHash() {
-        return contractHash;
-    }
-
     public Date getTradeDate() {
         return new Date(tradeDate);
     }
 
-    @org.jetbrains.annotations.Nullable
-    public String getDisputePayoutTxId() {
-        return disputePayoutTxId;
+    public Date getOpeningDate() {
+        return new Date(openingDate);
     }
 
-    //payoutTxSerialized not displayed for privacy reasons...
     @Override
     public String toString() {
         return "Dispute{" +
@@ -375,36 +349,5 @@ public final class Dispute implements NetworkPayload {
                 ", isClosedProperty=" + isClosedProperty +
                 ", disputeResultProperty=" + disputeResultProperty +
                 '}';
-    }
-
-    @Override
-    public PB.Dispute toProtoMessage() {
-        PB.Dispute.Builder builder = PB.Dispute.newBuilder()
-                .setTradeId(tradeId)
-                .setId(id)
-                .setTraderId(traderId)
-                .setDisputeOpenerIsBuyer(disputeOpenerIsBuyer)
-                .setDisputeOpenerIsMaker(disputeOpenerIsMaker)
-                .setOpeningDate(openingDate)
-                .setTraderPubKeyRing(traderPubKeyRing.toProtoMessage())
-                .setTradeDate(tradeDate)
-                .setContract(contract.toProtoMessage())
-                .setContractHash(ByteString.copyFrom(contractHash))
-                .setContractAsJson(contractAsJson)
-                .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage())
-                .setIsSupportTicket(isSupportTicket)
-                .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream().map(
-                        disputeCommunicationMessage -> disputeCommunicationMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage()).collect(Collectors.toList()))
-                .setIsClosed(isClosed);
-
-        Optional.ofNullable(depositTxSerialized).ifPresent(tx -> builder.setDepositTxSerialized(ByteString.copyFrom(tx)));
-        Optional.ofNullable(payoutTxSerialized).ifPresent(tx -> builder.setPayoutTxSerialized(ByteString.copyFrom(tx)));
-        Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
-        Optional.ofNullable(payoutTxId).ifPresent(builder::setPayoutTxId);
-        Optional.ofNullable(disputePayoutTxId).ifPresent(builder::setDisputePayoutTxId);
-        Optional.ofNullable(takerContractSignature).ifPresent(builder::setTakerContractSignature);
-        Optional.ofNullable(makerContractSignature).ifPresent(builder::setMakerContractSignature);
-        Optional.ofNullable(disputeResult).ifPresent(result -> builder.setDisputeResult(disputeResult.toProtoMessage()));
-        return builder.build();
     }
 }

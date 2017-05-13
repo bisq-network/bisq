@@ -22,31 +22,35 @@ import io.bisq.core.arbitration.Dispute;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.Value;
 
+@Value
 @EqualsAndHashCode(callSuper = true)
-@ToString
 public final class PeerOpenedDisputeMessage extends DisputeMessage {
-    public final Dispute dispute;
+    private final Dispute dispute;
     private final NodeAddress senderNodeAddress;
 
-    public PeerOpenedDisputeMessage(Dispute dispute, NodeAddress senderNodeAddress, String uid) {
+    public PeerOpenedDisputeMessage(Dispute dispute,
+                                    NodeAddress senderNodeAddress,
+                                    String uid) {
         super(uid);
         this.dispute = dispute;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
-    public NodeAddress getSenderNodeAddress() {
-        return senderNodeAddress;
+    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+        return NetworkEnvelope.getDefaultBuilder()
+                .setPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage.newBuilder()
+                        .setUid(uid)
+                        .setDispute(dispute.toProtoMessage())
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
+                .build();
     }
 
-    @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage.newBuilder()
-                .setDispute(dispute.toProtoMessage())
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                .setUid(getUid())).build();
+    public static PeerOpenedDisputeMessage fromProto(PB.PeerOpenedDisputeMessage proto) {
+        return new PeerOpenedDisputeMessage(Dispute.fromProto(proto.getDispute()),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getUid());
     }
 }

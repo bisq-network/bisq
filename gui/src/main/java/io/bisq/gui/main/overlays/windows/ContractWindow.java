@@ -93,7 +93,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
     private void addContent() {
         Contract contract = dispute.getContract();
-        Offer offer = new Offer(contract.offerPayload);
+        Offer offer = new Offer(contract.getOfferPayload());
 
         List<String> acceptedBanks = offer.getAcceptedBankIds();
         boolean showAcceptedBanks = acceptedBanks != null && !acceptedBanks.isEmpty();
@@ -147,7 +147,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
                 sellerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
 
-        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"), contract.arbitratorNodeAddress.getFullAddress());
+        addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"), contract.getArbitratorNodeAddress().getFullAddress());
 
         if (showAcceptedCountryCodes) {
             String countries;
@@ -175,7 +175,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         }
 
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
-        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), contract.takerFeeTxID);
+        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), contract.getTakerFeeTxID());
         if (dispute.getDepositTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.getWithCol("shared.depositTransactionId"), dispute.getDepositTxId());
         if (dispute.getPayoutTxSerialized() != null)

@@ -20,8 +20,8 @@ package io.bisq.core.dao.vote;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistable.PersistableCollectionUtil;
 import io.bisq.common.persistable.PersistableList;
+import io.bisq.common.proto.ProtoCollectionUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -314,7 +314,7 @@ public class VotingManager {
             PersistableList<VoteItemsList> serializable = new PersistableList<>(voteItemsLists);
             serializable.setToProto((list) -> PB.PersistableEnvelope.newBuilder()
                     .setVoteItemsList(PB.VoteItemsList.newBuilder()
-                            .addAllVoteItem(PersistableCollectionUtil.collectionToProto(voteItemsList.getAllVoteItemList()))).build());
+                            .addAllVoteItem(ProtoCollectionUtil.collectionToProto(voteItemsList.getAllVoteItemList()))).build());
             voteItemCollectionsStorage.queueUpForSave(serializable, 500);
         }
     }

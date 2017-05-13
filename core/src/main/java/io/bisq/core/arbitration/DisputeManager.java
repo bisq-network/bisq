@@ -228,7 +228,7 @@ public class DisputeManager {
                     disputes.add(dispute);
                 }
 
-                p2PService.sendEncryptedMailboxMessage(dispute.getContract().arbitratorNodeAddress,
+                p2PService.sendEncryptedMailboxMessage(dispute.getContract().getArbitratorNodeAddress(),
                         dispute.getArbitratorPubKeyRing(),
                         new OpenNewDisputeMessage(dispute, p2PService.getAddress(),
                                 UUID.randomUUID().toString()),
@@ -276,7 +276,7 @@ public class DisputeManager {
                 !disputeFromOpener.isDisputeOpenerIsBuyer(),
                 !disputeFromOpener.isDisputeOpenerIsMaker(),
                 pubKeyRing,
-                disputeFromOpener.getTradeDate(),
+                disputeFromOpener.getTradeDate().getTime(),
                 contractFromOpener,
                 disputeFromOpener.getContractHash(),
                 disputeFromOpener.getDepositTxSerialized(),
@@ -364,7 +364,7 @@ public class DisputeManager {
         if (isTrader(dispute)) {
             dispute.addDisputeMessage(disputeCommunicationMessage);
             receiverPubKeyRing = dispute.getArbitratorPubKeyRing();
-            peerNodeAddress = dispute.getContract().arbitratorNodeAddress;
+            peerNodeAddress = dispute.getContract().getArbitratorNodeAddress();
         } else if (isArbitrator(dispute)) {
             if (!disputeCommunicationMessage.isSystemMessage())
                 dispute.addDisputeMessage(disputeCommunicationMessage);
@@ -488,7 +488,7 @@ public class DisputeManager {
 
     // arbitrator receives that from trader who opens dispute
     private void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
-        Dispute dispute = openNewDisputeMessage.dispute;
+        Dispute dispute = openNewDisputeMessage.getDispute();
         if (isArbitrator(dispute)) {
             if (!disputes.contains(dispute)) {
                 final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
@@ -510,7 +510,7 @@ public class DisputeManager {
 
     // not dispute requester receives that from arbitrator
     private void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
-        Dispute dispute = peerOpenedDisputeMessage.dispute;
+        Dispute dispute = peerOpenedDisputeMessage.getDispute();
         if (!isArbitrator(dispute)) {
             if (!disputes.contains(dispute)) {
                 final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
@@ -560,10 +560,10 @@ public class DisputeManager {
 
     // We get that message at both peers. The dispute object is in context of the trader
     private void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
-        DisputeResult disputeResult = disputeResultMessage.disputeResult;
+        DisputeResult disputeResult = disputeResultMessage.getDisputeResult();
         if (!isArbitrator(disputeResult)) {
-            final String tradeId = disputeResult.tradeId;
-            Optional<Dispute> disputeOptional = findDispute(tradeId, disputeResult.traderId);
+            final String tradeId = disputeResult.getTradeId();
+            Optional<Dispute> disputeOptional = findDispute(tradeId, disputeResult.getTraderId());
             final String uid = disputeResultMessage.getUid();
             if (disputeOptional.isPresent()) {
                 cleanupRetryMap(uid);
@@ -705,12 +705,12 @@ public class DisputeManager {
     // losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
     private void onDisputedPayoutTxMessage(PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
         final String uid = peerPublishedPayoutTxMessage.getUid();
-        final String tradeId = peerPublishedPayoutTxMessage.tradeId;
+        final String tradeId = peerPublishedPayoutTxMessage.getTradeId();
         Optional<Dispute> disputeOptional = findOwnDispute(tradeId);
         if (disputeOptional.isPresent()) {
             cleanupRetryMap(uid);
 
-            Transaction walletTx = tradeWalletService.addTxToWallet(peerPublishedPayoutTxMessage.transaction);
+            Transaction walletTx = tradeWalletService.addTxToWallet(peerPublishedPayoutTxMessage.getTransaction());
             disputeOptional.get().setDisputePayoutTxId(walletTx.getHashAsString());
             BtcWalletService.printTx("Disputed payoutTx received from peer", walletTx);
             tradeManager.closeDisputedTrade(tradeId);

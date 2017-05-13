@@ -26,25 +26,23 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.Date;
 
 @EqualsAndHashCode
+@Getter
+@ToString
+@Slf4j
 public final class DisputeResult implements NetworkPayload {
-    private static final Logger log = LoggerFactory.getLogger(DisputeResult.class);
-
     public enum Winner {
         BUYER,
         SELLER
     }
 
-    // only append new values as we use the ordinal value
-    // bank problems, no reply, buyer not sent
     public enum Reason {
         OTHER,
         BUG,
@@ -55,9 +53,8 @@ public final class DisputeResult implements NetworkPayload {
         BANK_PROBLEMS
     }
 
-    // Payload
-    public final String tradeId;
-    public final int traderId;
+    private final String tradeId;
+    private final int traderId;
     private Winner winner;
     private int reasonOrdinal = Reason.OTHER.ordinal();
     private boolean tamperProofEvidence;
@@ -72,24 +69,33 @@ public final class DisputeResult implements NetworkPayload {
     private long closeDate;
     private boolean isLoserPublisher;
 
-    // Domain
-    transient private BooleanProperty tamperProofEvidenceProperty = new SimpleBooleanProperty();
-    transient private BooleanProperty idVerificationProperty = new SimpleBooleanProperty();
-    transient private BooleanProperty screenCastProperty = new SimpleBooleanProperty();
-    transient private StringProperty summaryNotesProperty = new SimpleStringProperty();
+    transient private BooleanProperty tamperProofEvidenceProperty;
+    transient private BooleanProperty idVerificationProperty;
+    transient private BooleanProperty screenCastProperty;
+    transient private StringProperty summaryNotesProperty;
 
     public DisputeResult(String tradeId, int traderId) {
         this.tradeId = tradeId;
         this.traderId = traderId;
+
         init();
     }
 
-    public DisputeResult(String tradeId, int traderId, Winner winner,
-                         int reasonOrdinal, boolean tamperProofEvidence, boolean idVerification, boolean screenCast,
-                         String summaryNotes, DisputeCommunicationMessage disputeCommunicationMessage,
-                         byte[] arbitratorSignature, long buyerPayoutAmount, long sellerPayoutAmount,
+    public DisputeResult(String tradeId,
+                         int traderId,
+                         Winner winner,
+                         int reasonOrdinal,
+                         boolean tamperProofEvidence,
+                         boolean idVerification,
+                         boolean screenCast,
+                         String summaryNotes,
+                         DisputeCommunicationMessage disputeCommunicationMessage,
+                         byte[] arbitratorSignature,
+                         long buyerPayoutAmount,
+                         long sellerPayoutAmount,
                          byte[] arbitratorPubKey,
-                         long closeDate, boolean isLoserPublisher) {
+                         long closeDate,
+                         boolean isLoserPublisher) {
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.winner = winner;
@@ -105,17 +111,37 @@ public final class DisputeResult implements NetworkPayload {
         this.arbitratorPubKey = arbitratorPubKey;
         this.closeDate = closeDate;
         this.isLoserPublisher = isLoserPublisher;
+
         init();
     }
 
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            init();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static DisputeResult fromProto(PB.DisputeResult proto) {
+        return new DisputeResult(proto.getTradeId(),
+                proto.getTraderId(),
+                DisputeResult.Winner.valueOf(proto.getWinner().name()),
+                proto.getReasonOrdinal(),
+                proto.getTamperProofEvidence(),
+                proto.getIdVerification(),
+                proto.getScreenCast(),
+                proto.getSummaryNotes(),
+                DisputeCommunicationMessage.fromProto(proto.getDisputeCommunicationMessage()),
+                proto.getArbitratorSignature().toByteArray(),
+                proto.getBuyerPayoutAmount(),
+                proto.getSellerPayoutAmount(),
+                proto.getArbitratorPubKey().toByteArray(),
+                proto.getCloseDate(),
+                proto.getIsLoserPublisher());
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void init() {
         tamperProofEvidenceProperty = new SimpleBooleanProperty(tamperProofEvidence);

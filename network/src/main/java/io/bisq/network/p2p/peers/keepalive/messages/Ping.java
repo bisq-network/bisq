@@ -5,7 +5,7 @@ import io.bisq.generated.protobuffer.PB;
 import lombok.Value;
 
 @Value
-public final class Ping extends KeepAliveMessage {
+public final class Ping implements KeepAliveMessage {
     private final int nonce;
     private final int lastRoundTripTime;
 
@@ -16,9 +16,14 @@ public final class Ping extends KeepAliveMessage {
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.NetworkEnvelope.Builder msgBuilder = NetworkEnvelope.getDefaultBuilder();
-        return msgBuilder.setPing(msgBuilder.getPingBuilder()
-                .setNonce(nonce)
-                .setLastRoundTripTime(lastRoundTripTime)).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setPing(PB.Ping.newBuilder()
+                        .setNonce(nonce)
+                        .setLastRoundTripTime(lastRoundTripTime))
+                .build();
+    }
+
+    public static Ping fromProto(PB.Ping proto) {
+        return new Ping(proto.getNonce(), proto.getLastRoundTripTime());
     }
 }
