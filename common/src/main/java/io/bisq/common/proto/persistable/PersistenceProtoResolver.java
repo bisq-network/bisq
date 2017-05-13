@@ -20,8 +20,6 @@ package io.bisq.common.proto.persistable;
 import io.bisq.common.proto.ProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 
-import java.util.Optional;
-
 public interface PersistenceProtoResolver extends ProtoResolver {
-    Optional<PersistableEnvelope> fromProto(PB.PersistableEnvelope persistable);
+    PersistableEnvelope fromProto(PB.PersistableEnvelope persistable);
 }

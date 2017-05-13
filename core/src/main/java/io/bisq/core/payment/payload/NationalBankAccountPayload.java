@@ -80,7 +80,7 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
                 bankAccountPayload.getBranchId(),
                 bankAccountPayload.getAccountNr(),
                 bankAccountPayload.getAccountType(),
-                bankAccountPayload.getHolderTaxId(),
+                bankAccountPayload.getHolderTaxId().isEmpty() ? null : bankAccountPayload.getHolderTaxId(),
                 bankAccountPayload.getBankId());
     }
     

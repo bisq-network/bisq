@@ -79,7 +79,8 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                 PB.SepaAccountPayload.newBuilder()
                         .setHolderName(holderName)
                         .setIban(iban)
-                        .setBic(bic);
+                        .setBic(bic)
+                        .addAllAcceptedCountryCodes(acceptedCountryCodes);
         return getCountryBasedPaymentAccountPayloadBuilder().setSepaAccountPayload(builder)
                 .build()
                 .getSepaAccountPayload();

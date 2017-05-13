@@ -112,8 +112,8 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 cashDepositAccountPayload.getBranchId(),
                 cashDepositAccountPayload.getAccountNr(),
                 cashDepositAccountPayload.getAccountType(),
-                cashDepositAccountPayload.getRequirements(),
-                cashDepositAccountPayload.getHolderTaxId(),
+                cashDepositAccountPayload.getRequirements().isEmpty() ? null : cashDepositAccountPayload.getRequirements(),
+                cashDepositAccountPayload.getHolderTaxId().isEmpty() ? null : cashDepositAccountPayload.getHolderTaxId(),
                 cashDepositAccountPayload.getBankId());
     }
 

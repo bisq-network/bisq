@@ -2,6 +2,7 @@ package io.bisq.core.proto.persistable;
 
 import com.google.inject.Provider;
 import io.bisq.common.locale.*;
+import io.bisq.common.proto.ProtobufferException;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.common.proto.persistable.PersistableViewPath;
@@ -29,8 +30,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.util.HashMap;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -61,59 +60,33 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
     }
 
     @Override
-    public Optional<PersistableEnvelope> fromProto(PB.PersistableEnvelope proto) {
-        if (Objects.isNull(proto)) {
-            log.warn("fromProtoBuf called with empty disk proto.");
-            return Optional.empty();
-        }
-
+    public PersistableEnvelope fromProto(PB.PersistableEnvelope proto) {
         log.debug("Convert protobuffer disk proto: {}", proto.getMessageCase());
 
-        PersistableEnvelope result = null;
         switch (proto.getMessageCase()) {
             case ADDRESS_ENTRY_LIST:
-                result = fillAddressEntryList(proto, addressEntryListProvider.get());
-                break;
+                return fillAddressEntryList(proto, addressEntryListProvider.get());
             case VIEW_PATH_AS_STRING:
-                result = PersistableViewPath.fromProto(proto.getViewPathAsString());
-                break;
+                return PersistableViewPath.fromProto(proto.getViewPathAsString());
             case TRADABLE_LIST:
-                result = getTradableList(proto.getTradableList());
-                break;
+                return getTradableList(proto.getTradableList());
             case PEERS_LIST:
-                result = getPeersList(proto.getPeersList());
-                break;
+                return getPeersList(proto.getPeersList());
             case COMPENSATION_REQUEST_PAYLOAD:
                 // TODO There will be another object for PersistableEnvelope
-                result = CompensationRequestPayload.fromProto(proto.getCompensationRequestPayload());
-                break;
+                return CompensationRequestPayload.fromProto(proto.getCompensationRequestPayload());
             case PREFERENCES:
-                result = fillPreferences(proto, preferencesProvider.get());
-                break;
+                return fillPreferences(proto, preferencesProvider.get());
             case USER_PAYLOAD:
-                result = UserPayload.fromProto(proto.getUserPayload(), this);
-                break;
+                return UserPayload.fromProto(proto.getUserPayload(), this);
             case SEQUENCE_NUMBER_MAP:
-                result = SequenceNumberMap.fromProto(proto.getSequenceNumberMap());
-                break;
+                return SequenceNumberMap.fromProto(proto.getSequenceNumberMap());
             case TRADE_STATISTICS_LIST:
-                result = getTradeStatisticsList(proto.getTradeStatisticsList());
+                return getTradeStatisticsList(proto.getTradeStatisticsList());
             default:
-                log.warn("Unknown message case:{}:{}", proto.getMessageCase());
+                throw new ProtobufferException("Unknown proto message case. messageCase=" + proto.getMessageCase());
         }
-        return Optional.ofNullable(result);
     }
-
-/*
-
-    @NotNull
-    static OKPayAccountPayload getOkPayAccountPayload(PB.PaymentAccountPayload protoEntry) {
-        OKPayAccountPayload okPayAccountPayload = new OKPayAccountPayload(protoEntry.getPaymentMethodId(), protoEntry.getId(),
-                protoEntry.getMaxTradePeriod(), protoEntry.getOKPayAccountPayload().getAccountNr());
-        okPayAccountPayload.setAccountNr(protoEntry.getOKPayAccountPayload().getAccountNr());
-        return okPayAccountPayload;
-    }
-*/
 
 
     private PersistableEnvelope getTradableList(PB.TradableList tradableList) {
