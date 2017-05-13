@@ -20,13 +20,44 @@ package io.bisq.common.app;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public class Version {
     private static final Logger log = LoggerFactory.getLogger(Version.class);
 
     // The application versions
-    // VERSION = 0.5.0.0 introduces proto buffer for the P2P network and local DB and is a not backward compatible update
+    // VERSION = 0.5.0 introduces proto buffer for the P2P network and local DB and is a not backward compatible update
     // Therefore all sub versions start again with 1
-    public static final String VERSION = "0.5.0.0";
+    // We use semantic versioning with major, minor and patch 
+    public static final String VERSION = "0.5.0";
+
+    public static int getMajorVersion(String version) {
+        return getSubVersion(version, 0);
+    }
+
+    public static int getMinorVersion(String version) {
+        return getSubVersion(version, 1);
+    }
+
+    public static int getPatchVersion(String version) {
+        return getSubVersion(version, 2);
+    }
+
+    public static boolean isNewVersion(String newVersion) {
+        return isNewVersion(newVersion, VERSION);
+    }
+
+    static boolean isNewVersion(String newVersion, String currentVersion) {
+        return getMajorVersion(newVersion) > getMajorVersion(currentVersion) ||
+                getMinorVersion(newVersion) > getMinorVersion(currentVersion) ||
+                getPatchVersion(newVersion) > getPatchVersion(currentVersion);
+    }
+
+    static int getSubVersion(String version, int index) {
+        final String[] split = version.split("\\.");
+        checkArgument(split.length == 3, "Version number must be in semantic version format (contain 2 '.'). version=" + version);
+        return Integer.parseInt(split[index]);
+    }
 
     // The version no. for the objects sent over the network. A change will break the serialization of old objects.
     // If objects are used for both network and database the network version is applied.
