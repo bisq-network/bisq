@@ -18,7 +18,7 @@
 package io.bisq.core.payment.payload;
 
 import io.bisq.common.locale.CountryUtil;
-import io.bisq.common.network.NetworkPayload;
+import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.core.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;

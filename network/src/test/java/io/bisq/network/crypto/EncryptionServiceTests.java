@@ -22,7 +22,7 @@ import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.generated.protobuffer.PB;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;

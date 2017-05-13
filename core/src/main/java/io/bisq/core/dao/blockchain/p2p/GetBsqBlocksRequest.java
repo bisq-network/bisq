@@ -1,7 +1,7 @@
 package io.bisq.core.dao.blockchain.p2p;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.DirectMessage;
 import lombok.Getter;

@@ -19,7 +19,7 @@ package io.bisq.core.dao.blockchain.vo;
 
 import com.google.protobuf.Message;
 import io.bisq.common.app.Version;
-import io.bisq.common.persistable.PersistablePayload;
+import io.bisq.common.proto.persistable.PersistablePayload;
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;

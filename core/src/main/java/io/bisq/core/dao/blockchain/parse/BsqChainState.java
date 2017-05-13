@@ -19,8 +19,8 @@ package io.bisq.core.dao.blockchain.parse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.Message;
-import io.bisq.common.persistable.PersistableEnvelope;
-import io.bisq.common.proto.PersistenceProtoResolver;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
+import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.FunctionalReadWriteLock;
 import io.bisq.common.util.Tuple2;

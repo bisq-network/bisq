@@ -19,7 +19,7 @@ package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.generated.protobuffer.PB;

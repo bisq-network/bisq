@@ -15,16 +15,12 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.proto;
+package io.bisq.common.proto.persistable;
 
-import io.bisq.common.network.NetworkEnvelope;
-import io.bisq.common.network.NetworkPayload;
-import io.bisq.generated.protobuffer.PB;
+import io.bisq.common.Payload;
 
-public interface NetworkProtoResolver {
-    NetworkEnvelope fromProto(PB.NetworkEnvelope proto);
-
-    NetworkPayload fromProto(PB.StoragePayload proto);
-
-    NetworkPayload fromProto(PB.StorageEntryWrapper proto);
+/**
+ * Interface for objects used inside Envelope or other Payloads.
+ */
+public interface PersistablePayload extends Payload {
 }

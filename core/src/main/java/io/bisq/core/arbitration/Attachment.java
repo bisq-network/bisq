@@ -1,7 +1,7 @@
 package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.network.NetworkPayload;
+import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Value;
 

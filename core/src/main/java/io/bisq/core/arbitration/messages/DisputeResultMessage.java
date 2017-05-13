@@ -17,7 +17,7 @@
 
 package io.bisq.core.arbitration.messages;
 
-import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.core.arbitration.DisputeResult;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;

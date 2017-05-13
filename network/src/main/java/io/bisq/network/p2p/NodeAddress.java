@@ -1,8 +1,8 @@
 package io.bisq.network.p2p;
 
 import io.bisq.common.crypto.Hash;
-import io.bisq.common.network.NetworkPayload;
-import io.bisq.common.persistable.PersistablePayload;
+import io.bisq.common.proto.network.NetworkPayload;
+import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -18,7 +18,7 @@
 package io.bisq.core.dao.blockchain.vo;
 
 import com.google.protobuf.Message;
-import io.bisq.common.persistable.PersistablePayload;
+import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.core.dao.blockchain.btcd.PubKeyScript;
 import lombok.Value;

@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.persistable;
+package io.bisq.common.proto.persistable;
 
 import com.google.protobuf.Message;
 import lombok.Getter;
@@ -44,11 +44,16 @@ public class PersistableList<T extends PersistablePayload> implements Persistabl
         this.toProto = toProto;
     }
 
-    /** convenience ctor */
+    /**
+     * convenience ctor
+     */
     public PersistableList(HashSet<T> set) {
         this(set.stream().collect(Collectors.toList()));
     }
-    /** convenience ctor */
+
+    /**
+     * convenience ctor
+     */
     public PersistableList(HashSet<T> set, Function<List<T>, Message> toProto) {
         this(set);
         this.toProto = toProto;
@@ -56,7 +61,7 @@ public class PersistableList<T extends PersistablePayload> implements Persistabl
 
     @Override
     public Message toProtoMessage() {
-        if(Objects.isNull(toProto)) {
+        if (Objects.isNull(toProto)) {
             throw new NotImplementedException();
         }
         return toProto.apply(list);

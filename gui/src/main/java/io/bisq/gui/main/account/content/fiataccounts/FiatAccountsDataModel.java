@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import io.bisq.common.locale.CryptoCurrency;
 import io.bisq.common.locale.FiatCurrency;
 import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.proto.PersistenceProtoResolver;
+import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.CryptoCurrencyAccount;
 import io.bisq.core.payment.PaymentAccount;

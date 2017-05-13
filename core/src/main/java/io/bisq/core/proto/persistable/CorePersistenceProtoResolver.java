@@ -1,10 +1,11 @@
-package io.bisq.core.proto;
+package io.bisq.core.proto.persistable;
 
 import com.google.inject.Provider;
 import io.bisq.common.locale.*;
-import io.bisq.common.persistable.PersistableEnvelope;
-import io.bisq.common.persistable.PersistableList;
-import io.bisq.common.proto.PersistenceProtoResolver;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
+import io.bisq.common.proto.persistable.PersistableList;
+import io.bisq.common.proto.persistable.PersistableViewPath;
+import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryList;
@@ -27,42 +28,26 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * If the Messages class is giving errors in IntelliJ, you should change the IntelliJ IDEA Platform Properties file,
- * idea.properties, to something bigger like 12500:
- * <p>
- * #---------------------------------------------------------------------
- * # Maximum file size (kilobytes) IDE should provide code assistance for.
- * # The larger file is the slower its editor works and higher overall system memory requirements are
- * # if code assistance is enabled. Remove this property or set to very large number if you need
- * # code assistance for any files available regardless their size.
- * #---------------------------------------------------------------------
- * idea.max.intellisense.filesize=2500
- */
 @Slf4j
-public class CoreDiskProtoResolver implements PersistenceProtoResolver {
-
-    private Provider<AddressEntryList> addressEntryListProvider;
-    private Provider<Preferences> preferencesProvider;
-
-    private Storage<TradableList<OpenOffer>> openOfferStorage;
-    private Storage<TradableList<BuyerAsMakerTrade>> buyerAsMakerTradeStorage;
-    private Storage<TradableList<BuyerAsTakerTrade>> buyerAsTakerTradeStorage;
-    private Storage<TradableList<SellerAsMakerTrade>> sellerAsMakerTradeStorage;
-    private Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage;
-    private Provider<BtcWalletService> btcWalletService;
+public class CorePersistenceProtoResolver implements PersistenceProtoResolver {
+    private final Provider<AddressEntryList> addressEntryListProvider;
+    private final Provider<Preferences> preferencesProvider;
+    private final Storage<TradableList<OpenOffer>> openOfferStorage;
+    private final Storage<TradableList<BuyerAsMakerTrade>> buyerAsMakerTradeStorage;
+    private final Storage<TradableList<BuyerAsTakerTrade>> buyerAsTakerTradeStorage;
+    private final Storage<TradableList<SellerAsMakerTrade>> sellerAsMakerTradeStorage;
+    private final Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage;
+    private final Provider<BtcWalletService> btcWalletService;
 
     @Inject
-    public CoreDiskProtoResolver(Provider<Preferences> preferencesProvider,
-                                 Provider<AddressEntryList> addressEntryListProvider,
-                                 Provider<BtcWalletService> btcWalletService,
-                                 @Named(Storage.STORAGE_DIR) File storageDir
-    ) {
+    public CorePersistenceProtoResolver(Provider<Preferences> preferencesProvider,
+                                        Provider<AddressEntryList> addressEntryListProvider,
+                                        Provider<BtcWalletService> btcWalletService,
+                                        @Named(Storage.STORAGE_DIR) File storageDir) {
         this.preferencesProvider = preferencesProvider;
         this.addressEntryListProvider = addressEntryListProvider;
         this.btcWalletService = btcWalletService;
@@ -75,45 +60,45 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
     }
 
     @Override
-    public Optional<PersistableEnvelope> fromProto(PB.PersistableEnvelope persistable) {
-        if (Objects.isNull(persistable)) {
-            log.warn("fromProtoBuf called with empty disk persistable.");
+    public Optional<PersistableEnvelope> fromProto(PB.PersistableEnvelope proto) {
+        if (Objects.isNull(proto)) {
+            log.warn("fromProtoBuf called with empty disk proto.");
             return Optional.empty();
         }
 
-        log.debug("Convert protobuffer disk persistable: {}", persistable.getMessageCase());
+        log.debug("Convert protobuffer disk proto: {}", proto.getMessageCase());
 
         PersistableEnvelope result = null;
-        switch (persistable.getMessageCase()) {
+        switch (proto.getMessageCase()) {
             case ADDRESS_ENTRY_LIST:
-                result = fillAddressEntryList(persistable, addressEntryListProvider.get());
+                result = fillAddressEntryList(proto, addressEntryListProvider.get());
                 break;
             case VIEW_PATH_AS_STRING:
-                result = ViewPathAsString.fromProto(persistable.getViewPathAsString());
+                result = PersistableViewPath.fromProto(proto.getViewPathAsString());
                 break;
             case TRADABLE_LIST:
-                result = getTradableList(persistable.getTradableList());
+                result = getTradableList(proto.getTradableList());
                 break;
             case PEERS_LIST:
-                result = getPeersList(persistable.getPeersList());
+                result = getPeersList(proto.getPeersList());
                 break;
             case COMPENSATION_REQUEST_PAYLOAD:
                 // TODO There will be another object for PersistableEnvelope
-                result = CompensationRequestPayload.fromProto(persistable.getCompensationRequestPayload());
+                result = CompensationRequestPayload.fromProto(proto.getCompensationRequestPayload());
                 break;
             case PREFERENCES:
-                result = fillPreferences(persistable, preferencesProvider.get());
+                result = fillPreferences(proto, preferencesProvider.get());
                 break;
             case USER_PAYLOAD:
-                result = UserPayload.fromProto(persistable.getUserPayload());
+                result = UserPayload.fromProto(proto.getUserPayload());
                 break;
             case SEQUENCE_NUMBER_MAP:
-                result = SequenceNumberMap.fromProto(persistable.getSequenceNumberMap());
+                result = SequenceNumberMap.fromProto(proto.getSequenceNumberMap());
                 break;
             case TRADE_STATISTICS_LIST:
-                result = getTradeStatisticsList(persistable.getTradeStatisticsList());
+                result = getTradeStatisticsList(proto.getTradeStatisticsList());
             default:
-                log.warn("Unknown message case:{}:{}", persistable.getMessageCase());
+                log.warn("Unknown message case:{}:{}", proto.getMessageCase());
         }
         return Optional.ofNullable(result);
     }
@@ -182,10 +167,6 @@ public class CoreDiskProtoResolver implements PersistenceProtoResolver {
 
         preferences.setDoPersist(true);
         return preferences;
-    }
-
-    private Locale getLocale(PB.Locale locale) {
-        return new Locale(locale.getLanguage(), locale.getCountry(), locale.getVariant());
     }
 
     private AddressEntryList fillAddressEntryList(PB.PersistableEnvelope envelope, AddressEntryList addressEntryList) {

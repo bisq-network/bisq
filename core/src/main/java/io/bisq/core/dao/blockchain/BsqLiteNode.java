@@ -23,7 +23,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
-import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.p2p.GetBsqBlocksRequest;

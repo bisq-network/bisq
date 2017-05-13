@@ -4,7 +4,7 @@ import com.google.protobuf.Message;
 import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.*;
-import io.bisq.common.persistable.PersistableEnvelope;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.BitcoinNetwork;

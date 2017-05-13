@@ -19,7 +19,7 @@ package io.bisq.core.btc;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import io.bisq.common.persistable.PersistablePayload;
+import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.generated.protobuffer.PB;

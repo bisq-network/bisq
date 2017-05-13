@@ -17,7 +17,7 @@
 
 package io.bisq.core.trade;
 
-import io.bisq.common.persistable.PersistablePayload;
+import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.core.offer.Offer;
 
 import java.util.Date;

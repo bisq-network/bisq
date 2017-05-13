@@ -15,10 +15,14 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.proto;
+package io.bisq.common.proto.network;
 
-public class ProtobufferException extends RuntimeException {
-    public ProtobufferException(String message) {
-        super(message);
-    }
+import io.bisq.generated.protobuffer.PB;
+
+public interface NetworkProtoResolver {
+    NetworkEnvelope fromProto(PB.NetworkEnvelope proto);
+
+    NetworkPayload fromProto(PB.StoragePayload proto);
+
+    NetworkPayload fromProto(PB.StorageEntryWrapper proto);
 }

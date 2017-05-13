@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.persistable;
+package io.bisq.common.proto.persistable;
 
 import com.google.protobuf.Message;
 import lombok.Getter;
@@ -45,7 +45,7 @@ public class PersistableHashMap<K extends PersistablePayload, V extends Persista
 
     @Override
     public Message toProtoMessage() {
-        if(Objects.isNull(toProto)) {
+        if (Objects.isNull(toProto)) {
             throw new NotImplementedException();
         }
         return toProto.apply(hashMap);

@@ -20,7 +20,7 @@ package io.bisq.core.trade.protocol;
 
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.core.trade.BuyerAsTakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.PayoutTxPublishedMessage;

@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.peers.peerexchange;
 
-import io.bisq.common.network.NetworkPayload;
-import io.bisq.common.persistable.PersistablePayload;
+import io.bisq.common.proto.network.NetworkPayload;
+import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.Getter;

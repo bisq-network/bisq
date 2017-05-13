@@ -17,7 +17,7 @@
 
 package io.bisq.core.dao.vote;
 
-import io.bisq.common.persistable.PersistablePayload;
+import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
 

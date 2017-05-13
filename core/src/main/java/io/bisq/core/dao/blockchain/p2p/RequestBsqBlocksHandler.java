@@ -6,7 +6,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.dao.blockchain.vo.BsqBlock;
 import io.bisq.network.p2p.NodeAddress;

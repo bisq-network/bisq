@@ -18,7 +18,7 @@
 package io.bisq.core.arbitration;
 
 import com.google.protobuf.Message;
-import io.bisq.common.persistable.PersistableEnvelope;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.storage.Storage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
