@@ -86,6 +86,21 @@ public class Offer implements NetworkPayload, PersistablePayload {
         this.offerPayload = offerPayload;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public PB.Offer toProtoMessage() {
+        return PB.Offer.newBuilder().setOfferPayload(offerPayload.toProtoMessage().getOfferPayload()).build();
+    }
+
+    public static Offer fromProto(PB.Offer proto) {
+        return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Availability
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -364,7 +379,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public NodeAddress getMakerNodeAddress() {
-        return offerPayload.getMakerNodeAddress();
+        return offerPayload.getOwnerNodeAddress();
     }
 
     public PubKeyRing getPubKeyRing() {
@@ -458,14 +473,5 @@ public class Offer implements NetworkPayload, PersistablePayload {
                 ", state=" + state +
                 ", offerPayload=" + offerPayload +
                 '}';
-    }
-
-    @Override
-    public PB.Offer toProtoMessage() {
-        return PB.Offer.newBuilder().setOfferPayload(offerPayload.toProtoMessage().getOfferPayload()).build();
-    }
-
-    public static Offer fromProto(PB.Offer proto) {
-        return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
     }
 }

@@ -41,6 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @ToString
 @Slf4j
 public final class Alert implements StoragePayload {
+    private final long TTL = TimeUnit.DAYS.toMillis(30);
     private final String message;
     private final String version;
     private final boolean isUpdateInfo;
@@ -92,23 +93,23 @@ public final class Alert implements StoragePayload {
         checkNotNull(ownerPubKeyBytes, "storagePublicKeyBytes must not be null");
         checkNotNull(signatureAsBase64, "signatureAsBase64 must not be null");
         final PB.Alert.Builder builder = PB.Alert.newBuilder()
-                .setMessage(getMessage())
-                .setIsUpdateInfo(isUpdateInfo())
-                .setVersion(getVersion())
+                .setMessage(message)
+                .setIsUpdateInfo(isUpdateInfo)
+                .setVersion(version)
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
-                .setSignatureAsBase64(getSignatureAsBase64());
+                .setSignatureAsBase64(signatureAsBase64);
         Optional.ofNullable(getExtraDataMap()).ifPresent(builder::putAllExtraData);
         return PB.StoragePayload.newBuilder().setAlert(builder).build();
     }
 
-    public static Alert fromProto(PB.Alert alert) {
-        return new Alert(alert.getMessage(),
-                alert.getIsUpdateInfo(),
-                alert.getVersion(),
-                alert.getOwnerPubKeyBytes().toByteArray(),
-                alert.getSignatureAsBase64(),
-                CollectionUtils.isEmpty(alert.getExtraDataMap()) ?
-                        null : alert.getExtraDataMap());
+    public static Alert fromProto(PB.Alert proto) {
+        return new Alert(proto.getMessage(),
+                proto.getIsUpdateInfo(),
+                proto.getVersion(),
+                proto.getOwnerPubKeyBytes().toByteArray(),
+                proto.getSignatureAsBase64(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : proto.getExtraDataMap());
     }
 
 
@@ -119,15 +120,11 @@ public final class Alert implements StoragePayload {
     public void setSigAndPubKey(String signatureAsBase64, PublicKey ownerPubKey) {
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKey = ownerPubKey;
+
         ownerPubKeyBytes = Sig.getSigPublicKeyBytes(ownerPubKey);
     }
 
     public boolean isNewVersion() {
         return Version.isNewVersion(version);
-    }
-
-    @Override
-    public long getTTL() {
-        return TimeUnit.DAYS.toMillis(30);
     }
 }

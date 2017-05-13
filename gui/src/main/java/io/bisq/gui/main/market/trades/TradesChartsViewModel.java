@@ -248,7 +248,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         final long dateAsTime = new Date().getTime();
         tradeStatisticsByCurrency.stream().forEach(e -> {
             Set<TradeStatistics> set;
-            final long time = getTickFromTime(e.tradeDate, tickUnit);
+            final long time = getTickFromTime(e.getTradeDate().getTime(), tickUnit);
             final long now = getTickFromTime(dateAsTime, tickUnit);
             long index = maxTicks - (now - time);
             if (itemsPerInterval.containsKey(index)) {
@@ -289,7 +289,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long numTrades = set.size();
 
         for (TradeStatistics item : set) {
-            long tradePriceAsLong = item.tradePrice;
+            long tradePriceAsLong = item.getTradePrice().getValue();
             if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
                 low = (low != 0) ? Math.max(low, tradePriceAsLong) : tradePriceAsLong;
                 high = (high != 0) ? Math.min(high, tradePriceAsLong) : tradePriceAsLong;
@@ -299,14 +299,14 @@ class TradesChartsViewModel extends ActivatableViewModel {
             }
 
             accumulatedVolume += (item.getTradeVolume() != null) ? item.getTradeVolume().getValue() : 0;
-            accumulatedAmount += item.tradeAmount;
+            accumulatedAmount += item.getTradeAmount().getValue();
         }
 
         List<TradeStatistics> list = new ArrayList<>(set);
-        list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? -1 : (o1.tradeDate == o2.tradeDate ? 0 : 1)));
+        list.sort((o1, o2) -> (o1.getTradeDate().getTime() < o2.getTradeDate().getTime() ? -1 : (o1.getTradeDate().getTime() == o2.getTradeDate().getTime() ? 0 : 1)));
         if (list.size() > 0) {
-            open = list.get(0).tradePrice;
-            close = list.get(list.size() - 1).tradePrice;
+            open = list.get(0).getTradePrice().getValue();
+            close = list.get(list.size() - 1).getTradePrice().getValue();
         }
 
         long averagePrice;

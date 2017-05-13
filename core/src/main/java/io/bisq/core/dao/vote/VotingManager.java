@@ -266,7 +266,7 @@ public class VotingManager {
             items.stream().forEach(paramItem -> {
                 checkArgument(outputStream.size() % 2 == 0,
                         "Position of writing code must be at even index.");
-                outputStream.write(paramItem.votingType.code);
+                outputStream.write(paramItem.getVotingType().code);
                 byte value = paramItem.getValue();
                 outputStream.write(value);
             });

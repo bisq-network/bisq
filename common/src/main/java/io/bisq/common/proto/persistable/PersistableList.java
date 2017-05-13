@@ -20,11 +20,9 @@ package io.bisq.common.proto.persistable;
 import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.Setter;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -61,9 +59,6 @@ public class PersistableList<T extends PersistablePayload> implements Persistabl
 
     @Override
     public Message toProtoMessage() {
-        if (Objects.isNull(toProto)) {
-            throw new NotImplementedException();
-        }
         return toProto.apply(list);
     }
 

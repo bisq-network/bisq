@@ -162,10 +162,10 @@ public class FilterManager {
     }
 
     private String getHexFromData(Filter filter) {
-        PB.Filter.Builder builder = PB.Filter.newBuilder().addAllBannedNodeAddress(filter.bannedNodeAddress)
-                .addAllBannedOfferIds(filter.bannedOfferIds)
-                .addAllBannedPaymentAccounts(filter.bannedPaymentAccounts.stream()
-                        .map(PaymentAccountFilter::toProtoBuf)
+        PB.Filter.Builder builder = PB.Filter.newBuilder().addAllBannedNodeAddress(filter.getBannedNodeAddress())
+                .addAllBannedOfferIds(filter.getBannedOfferIds())
+                .addAllBannedPaymentAccounts(filter.getBannedPaymentAccounts().stream()
+                        .map(PaymentAccountFilter::toProtoMessage)
                         .collect(Collectors.toList()));
         return Utils.HEX.encode(builder.build().toByteArray());
     }

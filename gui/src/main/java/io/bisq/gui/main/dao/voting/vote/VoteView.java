@@ -141,7 +141,7 @@ public class VoteView extends ActivatableView<GridPane, Void> {
         parametersComboBox.setConverter(new StringConverter<VoteItem>() {
             @Override
             public String toString(VoteItem item) {
-                return item.name;
+                return item.getName();
             }
 
             @Override

@@ -43,7 +43,7 @@ public class ArbitratorTest {
                 new Date(),
                 getBytes(100),
                 "registrationSignature",
-                "string", null);
+                null, null, null);
     }
 
     // TODO move to common if used often

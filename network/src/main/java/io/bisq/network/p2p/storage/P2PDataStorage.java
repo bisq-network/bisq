@@ -28,6 +28,7 @@ import io.bisq.network.p2p.storage.messages.*;
 import io.bisq.network.p2p.storage.payload.*;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -668,7 +669,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             Map<String, PB.ProtectedStorageEntry> protoResult =
                     map.entrySet().stream()
                             .collect(Collectors.toMap(
-                                    e -> e.getKey().toString(),
+                                            e -> e.getKey().toString(),
                                             e -> (PB.ProtectedStorageEntry) e.getValue().toProtoMessage())
                             );
             return PB.PersistableEnvelope.newBuilder().setPersistedEntryMap(PB.PersistedEntryMap.newBuilder().putAllPersistedEntryMap(protoResult)).build();
@@ -731,8 +732,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
             return PB.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes)).build();
         }
 
-        public static ByteArray fromProto(PB.ByteArray byteArray) {
-            return new ByteArray(byteArray.getBytes().toByteArray());
+        public static ByteArray fromProto(PB.ByteArray proto) {
+            return new ByteArray(proto.getBytes().toByteArray());
         }
     }
 
@@ -740,6 +741,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
      * Used as value in map
      */
     @EqualsAndHashCode
+    @ToString
     public static final class MapValue implements PersistablePayload {
         // That object is saved to disc. We need to take care of changes to not break deserialization.
         final public int sequenceNr;
@@ -751,20 +753,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
 
         @Override
-        public String toString() {
-            return "MapValue{" +
-                    "sequenceNr=" + sequenceNr +
-                    ", timeStamp=" + timeStamp +
-                    '}';
-        }
-
-        @Override
         public PB.MapValue toProtoMessage() {
             return PB.MapValue.newBuilder().setSequenceNr(sequenceNr).setTimeStamp(timeStamp).build();
         }
 
-        public static MapValue fromProto(PB.MapValue value) {
-            return new MapValue(value.getSequenceNr(), value.getTimeStamp());
+        public static MapValue fromProto(PB.MapValue proto) {
+            return new MapValue(proto.getSequenceNr(), proto.getTimeStamp());
         }
     }
 }

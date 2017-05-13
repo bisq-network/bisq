@@ -17,6 +17,7 @@
 
 package io.bisq.common.locale;
 
+import io.bisq.common.proto.ProtobufferException;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
@@ -47,6 +48,29 @@ public abstract class TradeCurrency implements PersistablePayload, Comparable<Tr
         this.symbol = symbol;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static TradeCurrency fromProto(PB.TradeCurrency proto) {
+        switch (proto.getMessageCase()) {
+            case FIAT_CURRENCY:
+                return new FiatCurrency(proto.getCode());
+            case CRYPTO_CURRENCY:
+                return new CryptoCurrency(proto.getCode(),
+                        proto.getName(),
+                        proto.getSymbol(),
+                        proto.getCryptoCurrency().getIsAsset());
+            default:
+                throw new ProtobufferException("Unknown message case: " + proto.getMessageCase());
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public String getDisplayPrefix() {
         return "";
     }
@@ -64,16 +88,4 @@ public abstract class TradeCurrency implements PersistablePayload, Comparable<Tr
         return this.code.compareTo(other.code);
     }
 
-    public static TradeCurrency fromProto(PB.TradeCurrency tradeCurrency) {
-        switch (tradeCurrency.getMessageCase()) {
-            case FIAT_CURRENCY:
-                return new FiatCurrency(tradeCurrency.getCode());
-            case CRYPTO_CURRENCY:
-                return new CryptoCurrency(tradeCurrency.getCode(), tradeCurrency.getName(), tradeCurrency.getSymbol(),
-                        tradeCurrency.getCryptoCurrency().getIsAsset());
-            default:
-                log.warn("Unknown tradecurrency: {}", tradeCurrency.getMessageCase());
-                return null;
-        }
-    }
 }

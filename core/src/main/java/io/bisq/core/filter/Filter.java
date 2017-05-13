@@ -17,17 +17,14 @@
 
 package io.bisq.core.filter;
 
-import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
-import io.bisq.core.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.util.encoders.Hex;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
@@ -38,17 +35,18 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Getter
 @EqualsAndHashCode
 @ToString
 public final class Filter implements StoragePayload {
-    private static final long TTL = TimeUnit.DAYS.toMillis(21);
+    private final long TTL = TimeUnit.DAYS.toMillis(21);
+    private final List<String> bannedOfferIds;
+    private final List<String> bannedNodeAddress;
+    private final List<PaymentAccountFilter> bannedPaymentAccounts;
 
-    public final List<String> bannedNodeAddress;
-    public final List<String> bannedOfferIds;
-    public final List<PaymentAccountFilter> bannedPaymentAccounts;
     private String signatureAsBase64;
     private byte[] ownerPubKeyBytes;
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility 
@@ -64,8 +62,12 @@ public final class Filter implements StoragePayload {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
-        this.extraDataMap = Maps.newHashMap();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Filter(List<String> bannedOfferIds,
                   List<String> bannedNodeAddress,
@@ -73,7 +75,9 @@ public final class Filter implements StoragePayload {
                   String signatureAsBase64,
                   byte[] ownerPubKeyBytes,
                   @Nullable Map<String, String> extraDataMap) {
-        this(bannedOfferIds, bannedNodeAddress, bannedPaymentAccounts);
+        this(bannedOfferIds,
+                bannedNodeAddress,
+                bannedPaymentAccounts);
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = extraDataMap;
@@ -81,55 +85,44 @@ public final class Filter implements StoragePayload {
         ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
     }
 
+    @Override
+    public PB.StoragePayload toProtoMessage() {
+        checkNotNull(signatureAsBase64, "signatureAsBase64 must nto be null");
+        checkNotNull(ownerPubKeyBytes, "ownerPubKeyBytes must nto be null");
+        List<PB.PaymentAccountFilter> paymentAccountFilterList = bannedPaymentAccounts.stream()
+                .map(PaymentAccountFilter::toProtoMessage)
+                .collect(Collectors.toList());
+        final PB.Filter.Builder builder = PB.Filter.newBuilder()
+                .addAllBannedOfferIds(bannedOfferIds)
+                .addAllBannedNodeAddress(bannedNodeAddress)
+                .addAllBannedPaymentAccounts(paymentAccountFilterList)
+                .setSignatureAsBase64(signatureAsBase64)
+                .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes));
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        return PB.StoragePayload.newBuilder().setFilter(builder).build();
+    }
+
+    public static Filter fromProto(PB.Filter proto) {
+        return new Filter(proto.getBannedOfferIdsList().stream().collect(Collectors.toList()),
+                proto.getBannedNodeAddressList().stream().collect(Collectors.toList()),
+                proto.getBannedPaymentAccountsList()
+                        .stream()
+                        .map(PaymentAccountFilter::fromProto)
+                        .collect(Collectors.toList()),
+                proto.getSignatureAsBase64(),
+                proto.getOwnerPubKeyBytes().toByteArray(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setSigAndPubKey(String signatureAsBase64, PublicKey ownerPubKey) {
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKey = ownerPubKey;
+
         ownerPubKeyBytes = Sig.getSigPublicKeyBytes(this.ownerPubKey);
-    }
-
-    @Override
-    public long getTTL() {
-        return TTL;
-    }
-
-    @Override
-    public PB.StoragePayload toProtoMessage() {
-        List<PB.PaymentAccountFilter> paymentAccountFilterList;
-        paymentAccountFilterList = bannedPaymentAccounts.stream()
-                .map(PaymentAccountFilter::toProtoBuf).collect(Collectors.toList());
-        final PB.Filter.Builder builder = PB.Filter.newBuilder()
-                .addAllBannedNodeAddress(bannedNodeAddress)
-                .addAllBannedOfferIds(bannedOfferIds)
-                .addAllBannedPaymentAccounts(paymentAccountFilterList)
-                .setSignatureAsBase64(signatureAsBase64)
-                .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes));
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
-        return PB.StoragePayload.newBuilder().setFilter(builder).build();
-    }
-
-    public static Filter fromProto(PB.Filter filter) {
-        List<PaymentAccountFilter> paymentAccountFilters = filter.getBannedPaymentAccountsList()
-                .stream().map(accountFilter -> ProtoUtil.getPaymentAccountFilter(accountFilter)).collect(Collectors.toList());
-        return new Filter(filter.getBannedOfferIdsList().stream().collect(Collectors.toList()),
-                filter.getBannedNodeAddressList().stream().collect(Collectors.toList()),
-                paymentAccountFilters,
-                filter.getSignatureAsBase64(),
-                filter.getOwnerPubKeyBytes().toByteArray(),
-                CollectionUtils.isEmpty(filter.getExtraDataMapMap()) ?
-                        null : filter.getExtraDataMapMap());
-    }
-
-
-    @Override
-    public String toString() {
-        return "Filter{" +
-                "bannedNodeAddress=" + bannedNodeAddress +
-                ", bannedOfferIds=" + bannedOfferIds +
-                ", bannedPaymentAccounts=" + bannedPaymentAccounts +
-                ", signatureAsBase64='" + signatureAsBase64 + '\'' +
-                ", publicKey=" + Hex.toHexString(ownerPubKey.getEncoded()) +
-                ", extraDataMap=" + extraDataMap +
-                '}';
     }
 }

@@ -18,17 +18,12 @@
 package io.bisq.core.proto;
 
 import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.core.filter.PaymentAccountFilter;
 import io.bisq.core.payment.payload.BankAccountPayload;
 import io.bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
 import io.bisq.generated.protobuffer.PB;
 
-public class ProtoUtil {
+public class ProtoCoreUtil {
 
-    public static PaymentAccountFilter getPaymentAccountFilter(PB.PaymentAccountFilter accountFilter) {
-        return new PaymentAccountFilter(accountFilter.getPaymentMethodId(), accountFilter.getGetMethodName(),
-                accountFilter.getValue());
-    }
 
     public static String getCurrencyCode(PB.OfferPayload pbOffer) {
         return CurrencyUtil.isCryptoCurrency(pbOffer.getBaseCurrencyCode()) ? pbOffer.getBaseCurrencyCode() : pbOffer.getCounterCurrencyCode();

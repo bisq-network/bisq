@@ -43,25 +43,22 @@ import java.util.concurrent.TimeUnit;
 @Data
 // TODO There will be another object for PersistableEnvelope
 public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload, PersistableEnvelope {
-    public static final long TTL = TimeUnit.DAYS.toMillis(30);
-
-    private final byte version;
-    private final long creationDate;
+    private final long TTL = TimeUnit.DAYS.toMillis(30);
     private final String uid;
     private final String name;
     private final String title;
     private final String category;
     private final String description;
     private final String link;
-    public final long startDate;
-    public final long endDate;
+    private final long startDate;
+    private final long endDate;
     private final long requestedBtc;
     private final String btcAddress;
     private final String nodeAddress;
     @JsonExclude
-    private final byte[] p2pStorageSignaturePubKeyBytes;
+    private final byte[] ownerPubKeyBytes;
     // used for json
-    private String p2pStorageSignaturePubKeyAsHex;
+    private String ownerPubPubKeyAsHex;
     // Signature of the JSON data of this object excluding the signature and feeTxId fields using the standard Bitcoin
     // messaging signing format as a base64 encoded string.
     @JsonExclude
@@ -75,12 +72,12 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     @Nullable
     private Map<String, String> extraDataMap;
 
+    private final byte version;
+    private final long creationDate;
 
-    // Domain
     @JsonExclude
     private transient PublicKey ownerPubKey;
 
-    // Called from domain
     public CompensationRequestPayload(String uid,
                                       String name,
                                       String title,
@@ -92,7 +89,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                                       Coin requestedBtc,
                                       String btcAddress,
                                       NodeAddress nodeAddress,
-                                      PublicKey p2pStorageSignaturePubKey) {
+                                      PublicKey ownerPubKey) {
         this(uid,
                 name,
                 title,
@@ -104,28 +101,28 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                 requestedBtc,
                 btcAddress,
                 nodeAddress.getFullAddress(),
-                Sig.getSigPublicKeyBytes(p2pStorageSignaturePubKey),
+                Sig.getSigPublicKeyBytes(ownerPubKey),
                 null);
     }
 
-    // Called from PB
-    public CompensationRequestPayload(String uid,
-                                      String name,
-                                      String title,
-                                      String category,
-                                      String description,
-                                      String link,
-                                      Date startDate,
-                                      Date endDate,
-                                      Coin requestedBtc,
-                                      String btcAddress,
-                                      String nodeAddress,
-                                      byte[] p2pStorageSignaturePubKeyBytes,
-                                      @Nullable Map<String, String> extraDataMap) {
 
-        version = Version.COMPENSATION_REQUEST_VERSION;
-        creationDate = new Date().getTime();
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private CompensationRequestPayload(String uid,
+                                       String name,
+                                       String title,
+                                       String category,
+                                       String description,
+                                       String link,
+                                       Date startDate,
+                                       Date endDate,
+                                       Coin requestedBtc,
+                                       String btcAddress,
+                                       String nodeAddress,
+                                       byte[] ownerPubKeyBytes,
+                                       @Nullable Map<String, String> extraDataMap) {
         this.uid = uid;
         this.name = name;
         this.title = title;
@@ -137,18 +134,56 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
         this.requestedBtc = requestedBtc.value;
         this.btcAddress = btcAddress;
         this.nodeAddress = nodeAddress;
-        this.p2pStorageSignaturePubKeyBytes = p2pStorageSignaturePubKeyBytes;
-
+        this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = extraDataMap;
 
-        ownerPubKey = Sig.getSigPublicKeyFromBytes(p2pStorageSignaturePubKeyBytes);
-        p2pStorageSignaturePubKeyAsHex = Utils.HEX.encode(ownerPubKey.getEncoded());
+        version = Version.COMPENSATION_REQUEST_VERSION;
+        creationDate = new Date().getTime();
+        this.ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
+        ownerPubPubKeyAsHex = Utils.HEX.encode(this.ownerPubKey.getEncoded());
     }
 
     @Override
-    public long getTTL() {
-        return TTL;
+    public PB.StoragePayload toProtoMessage() {
+        final PB.CompensationRequestPayload.Builder builder = PB.CompensationRequestPayload.newBuilder()
+                .setUid(uid)
+                .setName(name)
+                .setTitle(title)
+                .setCategory(category)
+                .setDescription(description)
+                .setLink(link)
+                .setStartDate(startDate)
+                .setEndDate(endDate)
+                .setRequestedBtc(requestedBtc)
+                .setBtcAddress(btcAddress)
+                .setNodeAddress(nodeAddress)
+                .setOwnerPubKeyAsHex(ownerPubPubKeyAsHex)
+                .setSignature(signature)
+                .setFeeTxId(feeTxId)
+                .setVersion(version)
+                .setCreationDate(creationDate);
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        return PB.StoragePayload.newBuilder().setCompensationRequestPayload(builder).build();
     }
+
+    public static CompensationRequestPayload fromProto(PB.CompensationRequestPayload proto) {
+        return new CompensationRequestPayload(proto.getUid(),
+                proto.getName(),
+                proto.getTitle(),
+                proto.getCategory(),
+                proto.getDescription(), proto.getLink(),
+                new Date(proto.getStartDate()),
+                new Date(proto.getEndDate()),
+                Coin.valueOf(proto.getRequestedBtc()),
+                proto.getBtcAddress(),
+                proto.getNodeAddress(), proto.getOwnerPubKeyBytes().toByteArray(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Date getStartDate() {
         return new Date(startDate);
@@ -175,37 +210,6 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     }
 
     @Override
-    public PB.StoragePayload toProtoMessage() {
-        final PB.CompensationRequestPayload.Builder builder = PB.CompensationRequestPayload.newBuilder()
-                .setVersion(version)
-                .setCreationDate(creationDate)
-                .setUid(uid)
-                .setName(name)
-                .setTitle(title)
-                .setCategory(category)
-                .setDescription(description)
-                .setLink(link)
-                .setStartDate(startDate)
-                .setEndDate(endDate)
-                .setRequestedBtc(requestedBtc)
-                .setBtcAddress(btcAddress)
-                .setNodeAddress(nodeAddress)
-                .setP2PStorageSignaturePubKeyAsHex(p2pStorageSignaturePubKeyAsHex)
-                .setSignature(signature)
-                .setFeeTxId(feeTxId);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
-        return PB.StoragePayload.newBuilder().setCompensationRequestPayload(builder).build();
-    }
-
-    public static CompensationRequestPayload fromProto(PB.CompensationRequestPayload proto) {
-        return new CompensationRequestPayload(proto.getUid(), proto.getName(), proto.getTitle(), proto.getCategory(),
-                proto.getDescription(), proto.getLink(), new Date(proto.getStartDate()), new Date(proto.getEndDate()),
-                Coin.valueOf(proto.getRequestedBtc()), proto.getBtcAddress(),
-                proto.getNodeAddress(), proto.getP2PStorageSignaturePubKeyBytes().toByteArray(),
-                CollectionUtils.isEmpty(proto.getExtraDataMapMap()) ? null : proto.getExtraDataMapMap());
-    }
-
-    @Override
     public String toString() {
         return "CompensationRequestPayload{" +
                 "version=" + version +
@@ -221,8 +225,8 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                 ", requestedBtc=" + requestedBtc +
                 ", btcAddress='" + btcAddress + '\'' +
                 ", nodeAddress='" + getNodeAddress() + '\'' +
-                ", p2pStorageSignaturePubKeyBytes=" + Hex.toHexString(p2pStorageSignaturePubKeyBytes) +
-                ", p2pStorageSignaturePubKeyAsHex='" + p2pStorageSignaturePubKeyAsHex + '\'' +
+                ", p2pStorageSignaturePubKeyBytes=" + Hex.toHexString(ownerPubKeyBytes) +
+                ", p2pStorageSignaturePubKeyAsHex='" + ownerPubPubKeyAsHex + '\'' +
                 ", signature='" + signature + '\'' +
                 ", feeTxId='" + feeTxId + '\'' +
                 ", extraDataMap=" + extraDataMap +

@@ -150,7 +150,7 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
             case TRADE_STATISTICS:
                 return TradeStatistics.fromProto(proto.getTradeStatistics());
             case MAILBOX_STORAGE_PAYLOAD:
-                return MailboxStoragePayload.fromProto(proto.getMailboxStoragePayload(), this);
+                return MailboxStoragePayload.fromProto(proto.getMailboxStoragePayload());
             case OFFER_PAYLOAD:
                 return OfferPayload.fromProto(proto.getOfferPayload());
             default:

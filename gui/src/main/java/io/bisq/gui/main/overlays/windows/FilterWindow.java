@@ -119,17 +119,17 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
         final Filter filter = filterManager.getDevelopersFilter();
         if (filter != null) {
-            offerIdsInputTextField.setText(filter.bannedOfferIds.stream().collect(Collectors.joining(", ")));
-            nodesInputTextField.setText(filter.bannedNodeAddress.stream().collect(Collectors.joining(", ")));
-            if (filter.bannedPaymentAccounts != null) {
+            offerIdsInputTextField.setText(filter.getBannedOfferIds().stream().collect(Collectors.joining(", ")));
+            nodesInputTextField.setText(filter.getBannedNodeAddress().stream().collect(Collectors.joining(", ")));
+            if (filter.getBannedPaymentAccounts() != null) {
                 StringBuilder sb = new StringBuilder();
-                filter.bannedPaymentAccounts.stream().forEach(e -> {
-                    if (e != null && e.paymentMethodId != null) {
-                        sb.append(e.paymentMethodId)
+                filter.getBannedPaymentAccounts().stream().forEach(e -> {
+                    if (e != null && e.getPaymentMethodId() != null) {
+                        sb.append(e.getPaymentMethodId())
                                 .append("|")
-                                .append(e.getMethodName)
+                                .append(e.getGetMethodName())
                                 .append("|")
-                                .append(e.value)
+                                .append(e.getValue())
                                 .append(", ");
                     }
                 });

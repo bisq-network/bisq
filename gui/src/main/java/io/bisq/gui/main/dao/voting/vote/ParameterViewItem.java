@@ -63,7 +63,7 @@ public class ParameterViewItem {
     }
 
     public static boolean contains(VoteItem selectedItem) {
-        return instances.stream().filter(e -> e.voteItem.votingType == selectedItem.votingType).findAny().isPresent();
+        return instances.stream().filter(e -> e.voteItem.getVotingType() == selectedItem.getVotingType()).findAny().isPresent();
     }
 
     public static boolean isEmpty() {
@@ -72,12 +72,12 @@ public class ParameterViewItem {
 
     private ParameterViewItem(VoteItem voteItem, VBox vBox, DoubleProperty labelWidth, VotingDefaultValues votingDefaultValues, Runnable removeHandler) {
         this.voteItem = voteItem;
-        originalValue = votingDefaultValues.getValueByVotingType(voteItem.votingType);
+        originalValue = votingDefaultValues.getValueByVotingType(voteItem.getVotingType());
         HBox hBox = new HBox();
         hBox.setSpacing(5);
         vBox.getChildren().add(hBox);
 
-        label = new Label(voteItem.name + ":");
+        label = new Label(voteItem.getName() + ":");
         HBox.setMargin(label, new Insets(4, 0, 0, 0));
         numberChangeListener = (observable, oldValue, newValue) -> {
             if ((double) newValue > 0) {

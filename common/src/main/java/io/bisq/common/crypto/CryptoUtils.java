@@ -18,13 +18,8 @@
 package io.bisq.common.crypto;
 
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
@@ -33,11 +28,6 @@ public class CryptoUtils {
     public static String pubKeyToString(PublicKey publicKey) {
         final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
         return Base64.getEncoder().encodeToString(x509EncodedKeySpec.getEncoded());
-    }
-
-    public static PublicKey getPubKeyFromBytes(@NotNull byte[] publicKeyBytes)
-            throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
-        return KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(publicKeyBytes));
     }
 }
 

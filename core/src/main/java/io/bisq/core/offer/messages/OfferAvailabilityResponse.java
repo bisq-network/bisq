@@ -23,12 +23,14 @@ import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.SupportedCapabilitiesMessage;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 import java.util.ArrayList;
 
 // We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
+@EqualsAndHashCode(callSuper = true)
 @Value
 public final class OfferAvailabilityResponse extends OfferMessage implements SupportedCapabilitiesMessage {
     private final AvailabilityResult availabilityResult;

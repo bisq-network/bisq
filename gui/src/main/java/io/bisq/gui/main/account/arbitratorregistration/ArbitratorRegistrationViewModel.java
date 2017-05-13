@@ -157,6 +157,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                     registrationKey.getPubKey(),
                     registrationSignature,
                     emailAddress,
+                    null,
                     null
             );
 

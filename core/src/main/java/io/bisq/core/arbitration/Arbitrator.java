@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
-import java.nio.charset.Charset;
 import java.security.PublicKey;
 import java.util.Date;
 import java.util.List;
@@ -44,18 +43,18 @@ import java.util.stream.Collectors;
 @Getter
 public final class Arbitrator implements StoragePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
-
-    // Payload
-    private final byte[] btcPubKey;
-    private final PubKeyRing pubKeyRing;
     private final NodeAddress nodeAddress;
-    private final List<String> languageCodes;
+    private final byte[] btcPubKey;
     private final String btcAddress;
+    private final PubKeyRing pubKeyRing;
+    private final List<String> languageCodes;
     private final long registrationDate;
-    private final String registrationSignature;
     private final byte[] registrationPubKey;
+    private final String registrationSignature;
     @Nullable
     private final String emailAddress;
+    @Nullable
+    private final String info;
 
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
@@ -63,7 +62,6 @@ public final class Arbitrator implements StoragePayload {
     @Nullable
     private Map<String, String> extraDataMap;
 
-    // Called from domain and PB
     public Arbitrator(NodeAddress nodeAddress,
                       byte[] btcPubKey,
                       String btcAddress,
@@ -73,22 +71,54 @@ public final class Arbitrator implements StoragePayload {
                       byte[] registrationPubKey,
                       String registrationSignature,
                       @Nullable String emailAddress,
+                      @Nullable String info,
                       @Nullable Map<String, String> extraDataMap) {
         this.nodeAddress = nodeAddress;
         this.btcPubKey = btcPubKey;
         this.btcAddress = btcAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;
-        this.emailAddress = emailAddress;
         this.registrationDate = registrationDate.getTime();
         this.registrationPubKey = registrationPubKey;
         this.registrationSignature = registrationSignature;
+        this.emailAddress = emailAddress;
+        this.info = info;
         this.extraDataMap = extraDataMap;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
-    public long getTTL() {
-        return TTL;
+    public PB.StoragePayload toProtoMessage() {
+        final PB.Arbitrator.Builder builder = PB.Arbitrator.newBuilder()
+                .setNodeAddress(nodeAddress.toProtoMessage())
+                .setBtcPubKey(ByteString.copyFrom(btcPubKey))
+                .setBtcAddress(btcAddress)
+                .setPubKeyRing(pubKeyRing.toProtoMessage())
+                .addAllLanguageCodes(languageCodes)
+                .setRegistrationDate(registrationDate)
+                .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey))
+                .setRegistrationSignature(registrationSignature);
+        Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
+        Optional.ofNullable(info).ifPresent(builder::setInfo);
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        return PB.StoragePayload.newBuilder().setArbitrator(builder).build();
+    }
+
+    public static Arbitrator fromProto(PB.Arbitrator proto) {
+        return new Arbitrator(NodeAddress.fromProto(proto.getNodeAddress()),
+                proto.getBtcPubKey().toByteArray(),
+                proto.getBtcAddress(),
+                PubKeyRing.fromProto(proto.getPubKeyRing()),
+                proto.getLanguageCodesList().stream().collect(Collectors.toList()),
+                new Date(proto.getRegistrationDate()),
+                proto.getRegistrationPubKey().toByteArray(),
+                proto.getRegistrationSignature(),
+                proto.getEmailAddress().isEmpty() ? null : proto.getEmailAddress(),
+                proto.getInfo().isEmpty() ? null : proto.getInfo(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 
     @Override
@@ -97,36 +127,7 @@ public final class Arbitrator implements StoragePayload {
     }
 
     @Override
-    public PB.StoragePayload toProtoMessage() {
-        final PB.Arbitrator.Builder builder = PB.Arbitrator.newBuilder()
-                .setBtcPubKey(ByteString.copyFrom(btcPubKey))
-                .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .setNodeAddress(nodeAddress.toProtoMessage())
-                .addAllLanguageCodes(languageCodes)
-                .setBtcAddress(btcAddress)
-                .setRegistrationDate(registrationDate)
-                .setRegistrationSignature(ByteString.copyFrom(registrationSignature.getBytes())) // string does not conform to UTF-8 !
-                .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey));
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
-        Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
-        return PB.StoragePayload.newBuilder().setArbitrator(builder).build();
+    public long getTTL() {
+        return TTL;
     }
-
-    public static Arbitrator fromProto(PB.Arbitrator arbitrator) {
-        List<String> strings = arbitrator.getLanguageCodesList().stream().collect(Collectors.toList());
-        Date date = new Date(arbitrator.getRegistrationDate());
-        String emailAddress = arbitrator.getEmailAddress().isEmpty() ? null : arbitrator.getEmailAddress();
-        return new Arbitrator(NodeAddress.fromProto(arbitrator.getNodeAddress()),
-                arbitrator.getBtcPubKey().toByteArray(),
-                arbitrator.getBtcAddress(),
-                PubKeyRing.fromProto(arbitrator.getPubKeyRing()),
-                strings,
-                date,
-                arbitrator.getRegistrationPubKey().toByteArray(),
-                arbitrator.getRegistrationSignature().toString(Charset.forName("UTF-8")), // convert back to String
-                emailAddress,
-                CollectionUtils.isEmpty(arbitrator.getExtraDataMapMap()) ?
-                        null : arbitrator.getExtraDataMapMap());
-    }
-
 }

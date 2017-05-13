@@ -648,12 +648,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @NotNull
     private String getDirectionLabel(TradeStatistics item) {
-        return formatter.getDirectionWithCode(OfferPayload.Direction.valueOf(item.direction.name()), item.getCurrencyCode());
+        return formatter.getDirectionWithCode(OfferPayload.Direction.valueOf(item.getDirection().name()), item.getCurrencyCode());
     }
 
     @NotNull
     private String getPaymentMethodLabel(TradeStatistics item) {
-        return Res.get(item.paymentMethodId);
+        return Res.get(item.getOfferPaymentMethod());
     }
 
     private void layout() {

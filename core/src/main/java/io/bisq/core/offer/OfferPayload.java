@@ -17,7 +17,6 @@
 
 package io.bisq.core.offer;
 
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.CurrencyUtil;
@@ -42,23 +41,22 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @ToString
 @EqualsAndHashCode
 @Getter
 @Slf4j
 public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnlinePayload {
-
-    public static final long TTL = TimeUnit.MINUTES.toMillis(DevEnv.STRESS_TEST_MODE ? 6 : 6);
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Enums
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     public enum Direction {
         BUY, SELL;
 
         public static OfferPayload.Direction fromProto(PB.OfferPayload.Direction direction) {
             return OfferPayload.Direction.valueOf(direction.name());
+        }
+
+        public static PB.OfferPayload.Direction toProtoMessage(Direction direction) {
+            return PB.OfferPayload.Direction.valueOf(direction.name());
         }
     }
 
@@ -66,6 +64,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private final long TTL = TimeUnit.MINUTES.toMillis(6);
     private final Direction direction;
     private final String baseCurrencyCode;
     private final String counterCurrencyCode;
@@ -82,7 +81,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final List<NodeAddress> mediatorNodeAddresses;
     private final String id;
     private final long date;
-    private final long protocolVersion;
 
     // We use 2 type of prices: fixed price or price based on distance from market price
     private final boolean useMarketBasedPrice;
@@ -97,7 +95,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final double marketPriceMargin;
     private final long amount;
     private final long minAmount;
-    private final NodeAddress makerNodeAddress;
+    private final NodeAddress ownerNodeAddress;
     @JsonExclude
     private final PubKeyRing pubKeyRing;
     private final String makerPaymentAccountId;
@@ -136,7 +134,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
-    private Map<String, String> extraDataMap;
+    private final Map<String, String> extraDataMap;
+    private final long protocolVersion;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +144,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
     public OfferPayload(String id,
                         long date,
-                        NodeAddress makerNodeAddress,
+                        NodeAddress ownerNodeAddress,
                         PubKeyRing pubKeyRing,
                         Direction direction,
                         long price,
@@ -183,7 +182,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
         this.id = id;
         this.date = date;
-        this.makerNodeAddress = makerNodeAddress;
+        this.ownerNodeAddress = ownerNodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.direction = direction;
         this.price = price;
@@ -219,38 +218,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.hashOfChallenge = hashOfChallenge;
         this.extraDataMap = extraDataMap;
 
-        this.protocolVersion = Version.TRADE_PROTOCOL_VERSION;
-    }
-
-
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Overridden Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public NodeAddress getOwnerNodeAddress() {
-        return makerNodeAddress;
-    }
-
-    @Override
-    public PublicKey getOwnerPubKey() {
-        return pubKeyRing.getSignaturePubKey();
-    }
-
-    @Override
-    public long getTTL() {
-        return TTL;
-    }
-
-
-    //TODO remove
-    public String getCurrencyCode() {
-        if (CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()))
-            return getBaseCurrencyCode();
-        else
-            return getCounterCurrencyCode();
+        protocolVersion = Version.TRADE_PROTOCOL_VERSION;
     }
 
 
@@ -260,29 +228,26 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
     @Override
     public PB.StoragePayload toProtoMessage() {
-        List<PB.NodeAddress> arbitratorNodeAddresses = this.arbitratorNodeAddresses.stream()
-                .map(NodeAddress::toProtoMessage)
-                .collect(Collectors.toList());
-        List<PB.NodeAddress> mediatorNodeAddresses = this.mediatorNodeAddresses.stream()
-                .map(NodeAddress::toProtoMessage)
-                .collect(Collectors.toList());
-        PB.OfferPayload.Builder offerBuilder = PB.OfferPayload.newBuilder()
-                .setDirection(PB.OfferPayload.Direction.valueOf(direction.name()))
-                .setBaseCurrencyCode(baseCurrencyCode)
-                .setCounterCurrencyCode(counterCurrencyCode)
-                .setPaymentMethodId(paymentMethodId)
-                .addAllArbitratorNodeAddresses(arbitratorNodeAddresses)
-                .addAllMediatorNodeAddresses(mediatorNodeAddresses)
+        PB.OfferPayload.Builder builder = PB.OfferPayload.newBuilder()
                 .setId(id)
                 .setDate(date)
-                .setProtocolVersion(protocolVersion)
-                .setUseMarketBasedPrice(useMarketBasedPrice)
+                .setOwnerNodeAddress(ownerNodeAddress.toProtoMessage())
+                .setPubKeyRing(pubKeyRing.toProtoMessage())
+                .setDirection(Direction.toProtoMessage(direction))
                 .setPrice(price)
                 .setMarketPriceMargin(marketPriceMargin)
+                .setUseMarketBasedPrice(useMarketBasedPrice)
                 .setAmount(amount)
                 .setMinAmount(minAmount)
-                .setMakerNodeAddress(makerNodeAddress.toProtoMessage())
-                .setPubKeyRing(pubKeyRing.toProtoMessage())
+                .setBaseCurrencyCode(baseCurrencyCode)
+                .setCounterCurrencyCode(counterCurrencyCode)
+                .addAllArbitratorNodeAddresses(arbitratorNodeAddresses.stream()
+                        .map(NodeAddress::toProtoMessage)
+                        .collect(Collectors.toList()))
+                .addAllMediatorNodeAddresses(mediatorNodeAddresses.stream()
+                        .map(NodeAddress::toProtoMessage)
+                        .collect(Collectors.toList()))
+                .setPaymentMethodId(paymentMethodId)
                 .setMakerPaymentAccountId(makerPaymentAccountId)
                 .setVersionNr(versionNr)
                 .setBlockHeightAtOfferCreation(blockHeightAtOfferCreation)
@@ -297,49 +262,39 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setUseReOpenAfterAutoClose(useReOpenAfterAutoClose)
                 .setLowerClosePrice(lowerClosePrice)
                 .setUpperClosePrice(upperClosePrice)
-                .setIsPrivateOffer(isPrivateOffer);
+                .setIsPrivateOffer(isPrivateOffer)
+                .setProtocolVersion(protocolVersion);
 
         if (Objects.nonNull(offerFeePaymentTxId)) {
-            offerBuilder.setOfferFeePaymentTxId(offerFeePaymentTxId);
+            builder.setOfferFeePaymentTxId(offerFeePaymentTxId);
         } else {
             throw new RuntimeException("OfferPayload is in invalid state: offerFeePaymentTxID is not set when adding to P2P network.");
         }
 
-        Optional.ofNullable(countryCode).ifPresent(offerBuilder::setCountryCode);
-        Optional.ofNullable(bankId).ifPresent(offerBuilder::setBankId);
-        Optional.ofNullable(acceptedBankIds).ifPresent(offerBuilder::addAllAcceptedBankIds);
-        Optional.ofNullable(hashOfChallenge).ifPresent(offerBuilder::setHashOfChallenge);
-        Optional.ofNullable(acceptedCountryCodes).ifPresent(offerBuilder::addAllAcceptedCountryCodes);
-        Optional.ofNullable(extraDataMap).ifPresent(offerBuilder::putAllExtraDataMap);
+        Optional.ofNullable(countryCode).ifPresent(builder::setCountryCode);
+        Optional.ofNullable(bankId).ifPresent(builder::setBankId);
+        Optional.ofNullable(acceptedBankIds).ifPresent(builder::addAllAcceptedBankIds);
+        Optional.ofNullable(acceptedCountryCodes).ifPresent(builder::addAllAcceptedCountryCodes);
+        Optional.ofNullable(hashOfChallenge).ifPresent(builder::setHashOfChallenge);
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
 
-        return PB.StoragePayload.newBuilder().setOfferPayload(offerBuilder).build();
+        return PB.StoragePayload.newBuilder().setOfferPayload(builder).build();
     }
 
     public static OfferPayload fromProto(PB.OfferPayload proto) {
-        List<NodeAddress> arbitratorNodeAddresses = proto.getArbitratorNodeAddressesList().stream()
-                .map(NodeAddress::fromProto).collect(Collectors.toList());
-        List<NodeAddress> mediatorNodeAddresses = proto.getMediatorNodeAddressesList().stream()
-                .map(NodeAddress::fromProto).collect(Collectors.toList());
-
-        // Nullable object need to be checked against the default values in PB (not nice... ;-( )
-
-        // convert these lists because otherwise when they're empty they are lazyStringArrayList objects and NOT serializable,
-        // which is needed for the P2PStorage getHash() operation
-        List<String> acceptedCountryCodes = proto.getAcceptedCountryCodesList().isEmpty() ?
-                null : proto.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
+        checkArgument(proto.getOfferFeePaymentTxId().isEmpty(), "OfferFeePaymentTxId must be set in PB.OfferPayload");
+        String countryCode = proto.getCountryCode().isEmpty() ? null : proto.getCountryCode();
+        String bankId = proto.getBankId().isEmpty() ? null : proto.getBankId();
         List<String> acceptedBankIds = proto.getAcceptedBankIdsList().isEmpty() ?
                 null : proto.getAcceptedBankIdsList().stream().collect(Collectors.toList());
-        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMapMap()) ?
-                null : proto.getExtraDataMapMap();
-        final String countryCode1 = proto.getCountryCode();
-        String countryCode = countryCode1.isEmpty() ? null : countryCode1;
-        String bankId = proto.getBankId().isEmpty() ? null : proto.getBankId();
-        String offerFeePaymentTxId = proto.getOfferFeePaymentTxId().isEmpty() ? null : proto.getOfferFeePaymentTxId();
+        List<String> acceptedCountryCodes = proto.getAcceptedCountryCodesList().isEmpty() ?
+                null : proto.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
         String hashOfChallenge = proto.getHashOfChallenge().isEmpty() ? null : proto.getHashOfChallenge();
-
+        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                null : proto.getExtraDataMap();
         return new OfferPayload(proto.getId(),
                 proto.getDate(),
-                NodeAddress.fromProto(proto.getMakerNodeAddress()),
+                NodeAddress.fromProto(proto.getOwnerNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 OfferPayload.Direction.fromProto(proto.getDirection()),
                 proto.getPrice(),
@@ -349,11 +304,15 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 proto.getMinAmount(),
                 proto.getBaseCurrencyCode(),
                 proto.getCounterCurrencyCode(),
-                arbitratorNodeAddresses,
-                mediatorNodeAddresses,
+                proto.getArbitratorNodeAddressesList().stream()
+                        .map(NodeAddress::fromProto)
+                        .collect(Collectors.toList()),
+                proto.getMediatorNodeAddressesList().stream()
+                        .map(NodeAddress::fromProto)
+                        .collect(Collectors.toList()),
                 proto.getPaymentMethodId(),
                 proto.getMakerPaymentAccountId(),
-                offerFeePaymentTxId,
+                proto.getOfferFeePaymentTxId(),
                 countryCode,
                 acceptedCountryCodes,
                 bankId,
@@ -375,4 +334,27 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 hashOfChallenge,
                 extraDataMapMap);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public PublicKey getOwnerPubKey() {
+        return pubKeyRing.getSignaturePubKey();
+    }
+
+    // In the offer we support base and counter currency
+    // Fiat offers have base currency BTC and counterCurrency Fiat
+    // Altcoins have base currency Altcoin and counterCurrency BTC
+    // The rest of the app does not support yet that concept of base currency and counter currencies 
+    // so we map here for convenience
+    public String getCurrencyCode() {
+        if (CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()))
+            return getBaseCurrencyCode();
+        else
+            return getCounterCurrencyCode();
+    }
+
 }

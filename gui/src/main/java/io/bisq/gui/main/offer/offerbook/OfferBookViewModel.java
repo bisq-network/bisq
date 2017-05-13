@@ -451,7 +451,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     boolean isOfferBanned(Offer offer) {
         return filterManager.getFilter() != null &&
-                filterManager.getFilter().bannedOfferIds.stream()
+                filterManager.getFilter().getBannedOfferIds().stream()
                         .filter(e -> e.equals(offer.getId()))
                         .findAny()
                         .isPresent();
@@ -459,7 +459,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     boolean isNodeBanned(Offer offer) {
         return filterManager.getFilter() != null &&
-                filterManager.getFilter().bannedNodeAddress.stream()
+                filterManager.getFilter().getBannedNodeAddress().stream()
                         .filter(e -> e.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix()))
                         .findAny()
                         .isPresent();

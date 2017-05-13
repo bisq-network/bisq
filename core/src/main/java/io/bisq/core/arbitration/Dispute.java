@@ -30,7 +30,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.encoders.Hex;
 
@@ -42,7 +41,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @EqualsAndHashCode
-@ToString
 @Getter
 public final class Dispute implements NetworkPayload {
     private final String tradeId;
@@ -50,7 +48,6 @@ public final class Dispute implements NetworkPayload {
     private final int traderId;
     private final boolean disputeOpenerIsBuyer;
     private final boolean disputeOpenerIsMaker;
-    private long openingDate;
     private final PubKeyRing traderPubKeyRing;
     private final long tradeDate;
     private final Contract contract;
@@ -78,6 +75,8 @@ public final class Dispute implements NetworkPayload {
     @Nullable
     private String disputePayoutTxId;
 
+    private long openingDate;
+    
     transient private Storage<DisputeList> storage;
     transient private ObservableList<DisputeCommunicationMessage> observableList;
     transient private BooleanProperty isClosedProperty;
@@ -125,6 +124,7 @@ public final class Dispute implements NetworkPayload {
                 isSupportTicket);
 
         openingDate = new Date().getTime();
+
         this.storage = storage;
     }
 

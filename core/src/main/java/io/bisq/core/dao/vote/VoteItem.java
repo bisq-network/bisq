@@ -19,6 +19,9 @@ package io.bisq.core.dao.vote;
 
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -28,60 +31,32 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 //TODO if sent over wire make final
 @Slf4j
+@Getter
+@ToString
+@EqualsAndHashCode
 public class VoteItem implements PersistablePayload {
-    //  public final String version;
-    public final VotingType votingType;
+    private final VotingType votingType;
     @Nullable
-    public final String name;
-    public final long defaultValue;
-    protected boolean hasVoted;
-
-    public byte getValue() {
-        return value;
-    }
+    private final String name;
+    private final long defaultValue;
 
     private byte value;
-
-    public VoteItem(VotingType votingType, @Nullable String name, byte value, @Nullable VotingDefaultValues votingDefaultValues) {
-        this.votingType = votingType;
-        this.name = name;
-        this.value = value;
-        this.defaultValue = votingDefaultValues != null ? votingDefaultValues.getValueByVotingType(votingType) : 0;
-    }
+    private boolean hasVoted;
 
     public VoteItem(VotingType votingType, String name, VotingDefaultValues votingDefaultValues) {
         this(votingType, name, (byte) 0x00, votingDefaultValues);
     }
 
-    public long getAdjustedValue(long originalValue, int change) {
-        checkArgument(change < 255 && change > -1,
-                "Range for change can be 0 to 254. 255 is not supported as we want a 0 value in the middle");
-        double fact = (change - 127) / 127d;
-        return (long) (originalValue * Math.pow(10, fact));
-    }
 
-    // We return the change parameter (0-254)
-    public int getChange(long originalValue, long newValue) {
-        return (int) Math.round(Math.log10((double) newValue / (double) originalValue) * 127 + 127);
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public void setValue(byte value) {
+    private VoteItem(VotingType votingType, @Nullable String name, byte value, @Nullable VotingDefaultValues votingDefaultValues) {
+        this.votingType = votingType;
+        this.name = name;
         this.value = value;
-        this.hasVoted = true;
-    }
-
-    public boolean hasVoted() {
-        return hasVoted;
-    }
-
-    @Override
-    public String toString() {
-        return "VoteItem{" +
-                "code=" + votingType +
-                ", name='" + name + '\'' +
-                ", value=" + value +
-                '}';
+        this.defaultValue = votingDefaultValues != null ? votingDefaultValues.getValueByVotingType(votingType) : 0;
     }
 
     @Override
@@ -99,6 +74,31 @@ public class VoteItem implements PersistablePayload {
         VotingDefaultValues defaultValues = new VotingDefaultValues();
         VotingType votingType = VotingType.valueOf(voteItem.getVotingType().name());
         defaultValues.setValueByVotingType(votingType, voteItem.getValue());
-        return new VoteItem(votingType, voteItem.getName(), (byte) voteItem.getValue(), defaultValues);
+        return new VoteItem(votingType,
+                voteItem.getName(),
+                (byte) voteItem.getValue(),
+                defaultValues);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public long getAdjustedValue(long originalValue, int change) {
+        checkArgument(change < 255 && change > -1,
+                "Range for change can be 0 to 254. 255 is not supported as we want a 0 value in the middle");
+        double fact = (change - 127) / 127d;
+        return (long) (originalValue * Math.pow(10, fact));
+    }
+
+    // We return the change parameter (0-254)
+    public int getChange(long originalValue, long newValue) {
+        return (int) Math.round(Math.log10((double) newValue / (double) originalValue) * 127 + 127);
+    }
+
+    public void setValue(byte value) {
+        this.value = value;
+        this.hasVoted = true;
     }
 }

@@ -176,16 +176,16 @@ public class ProcessModel implements Model, PersistablePayload {
     public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,
                                                       PaymentAccountFilter[] appliedPaymentAccountFilter) {
         return filterManager.getFilter() != null &&
-                filterManager.getFilter().bannedPaymentAccounts.stream()
+                filterManager.getFilter().getBannedPaymentAccounts().stream()
                         .filter(paymentAccountFilter -> {
-                            final boolean samePaymentMethodId = paymentAccountFilter.paymentMethodId.equals(
+                            final boolean samePaymentMethodId = paymentAccountFilter.getPaymentMethodId().equals(
                                     paymentAccountPayload.getPaymentMethodId());
                             if (samePaymentMethodId) {
                                 try {
-                                    Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getMethodName);
+                                    Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
                                     String result = (String) method.invoke(paymentAccountPayload);
                                     appliedPaymentAccountFilter[0] = paymentAccountFilter;
-                                    return result.equals(paymentAccountFilter.value);
+                                    return result.equals(paymentAccountFilter.getValue());
                                 } catch (Throwable e) {
                                     log.error(e.getMessage());
                                     return false;

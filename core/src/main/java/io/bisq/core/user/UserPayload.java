@@ -85,20 +85,18 @@ public class UserPayload implements PersistableEnvelope {
         return PB.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
     }
 
-    public static UserPayload fromProto(PB.UserPayload user) {
-        Set<PaymentAccount> collect = user.getPaymentAccountsList().stream().map(paymentAccount -> PaymentAccount.fromProto(paymentAccount)).collect(Collectors.toSet());
-        UserPayload vo = new UserPayload(user.getAccountId(),
-                collect,
-                user.hasCurrentPaymentAccount() ? PaymentAccount.fromProto(user.getCurrentPaymentAccount()) : null,
-                user.getAcceptedLanguageLocaleCodesList(),
-                user.hasDevelopersAlert() ? Alert.fromProto(user.getDevelopersAlert()) : null,
-                user.hasDisplayedAlert() ? Alert.fromProto(user.getDisplayedAlert()) : null,
-                user.hasDevelopersFilter() ? Filter.fromProto(user.getDevelopersFilter()) : null,
-                user.hasRegisteredArbitrator() ? Arbitrator.fromProto(user.getRegisteredArbitrator()) : null,
-                user.hasRegisteredMediator() ? Mediator.fromProto(user.getRegisteredMediator()) : null,
-                user.getAcceptedArbitratorsList().stream().map(Arbitrator::fromProto).collect(Collectors.toList()),
-                user.getAcceptedMediatorsList().stream().map(Mediator::fromProto).collect(Collectors.toList())
+    public static UserPayload fromProto(PB.UserPayload proto) {
+        return new UserPayload(proto.getAccountId(),
+                proto.getPaymentAccountsList().stream().map(PaymentAccount::fromProto).collect(Collectors.toSet()),
+                proto.hasCurrentPaymentAccount() ? PaymentAccount.fromProto(proto.getCurrentPaymentAccount()) : null,
+                proto.getAcceptedLanguageLocaleCodesList(),
+                proto.hasDevelopersAlert() ? Alert.fromProto(proto.getDevelopersAlert()) : null,
+                proto.hasDisplayedAlert() ? Alert.fromProto(proto.getDisplayedAlert()) : null,
+                proto.hasDevelopersFilter() ? Filter.fromProto(proto.getDevelopersFilter()) : null,
+                proto.hasRegisteredArbitrator() ? Arbitrator.fromProto(proto.getRegisteredArbitrator()) : null,
+                proto.hasRegisteredMediator() ? Mediator.fromProto(proto.getRegisteredMediator()) : null,
+                proto.getAcceptedArbitratorsList().stream().map(Arbitrator::fromProto).collect(Collectors.toList()),
+                proto.getAcceptedMediatorsList().stream().map(Mediator::fromProto).collect(Collectors.toList())
         );
-        return vo;
     }
 }

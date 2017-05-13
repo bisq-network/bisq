@@ -99,7 +99,7 @@ public final class VoteItemsList implements PersistablePayload {
     }
 
     public Optional<VoteItem> getVoteItemByVotingType(VotingType votingType) {
-        return allVoteItemList.stream().filter(e -> e.votingType == votingType).findAny();
+        return allVoteItemList.stream().filter(e -> e.getVotingType() == votingType).findAny();
     }
 
     // TODO not impl yet

@@ -396,21 +396,22 @@ message Alert {
     string version = 2;
     bool is_update_info = 3;
     string signature_as_base64 = 4;
-    bytes storage_public_key_bytes = 5;
-    map<string, string> extra_data_map = 6;
+    bytes owner_pub_key_bytes = 5;
+    map<string, string> extra_data = 6;
 }
 
 message Arbitrator {
     NodeAddress node_address = 1;
     repeated string language_codes = 2;
     int64 registration_date = 3;
-    bytes registration_signature = 4;
+    string registration_signature = 4;
     bytes registration_pub_key = 5;
     PubKeyRing pub_key_ring = 6;
     bytes btc_pub_key = 7;
     string btc_address = 8;
     string email_address = 9;
-    map<string, string> extra_data_map = 10;
+    string info = 10;
+    map<string, string> extra_data = 11;
 }
 
 message Mediator {
@@ -422,7 +423,7 @@ message Mediator {
     PubKeyRing pub_key_ring = 6;
     string email_address = 7;
     string info = 8;
-    map<string, string> extra_data_map = 9;
+    map<string, string> extra_data = 9;
 }
 
 message Filter {
@@ -431,7 +432,7 @@ message Filter {
     repeated PaymentAccountFilter banned_payment_accounts = 3;
     string signature_as_base64 = 4;
     bytes owner_pub_key_bytes = 5;
-    map<string, string> extra_data_map = 6;
+    map<string, string> extra_data = 6;
 }
 
 message PaymentAccountFilter {
@@ -454,11 +455,11 @@ message CompensationRequestPayload {
     int64 requested_btc = 11;
     string btc_address = 12;
     string node_address = 13;
-    bytes p2p_storage_signature_pub_key_bytes = 14;
-    string p2p_storage_signature_pub_key_as_hex = 15;
+    bytes owner_pub_key_bytes = 14;
+    string owner_pub_key_as_hex = 15;
     string signature = 16;
     string fee_tx_id = 17;
-    map<string, string> extra_data_map = 18;
+    map<string, string> extra_data = 18;
 }
 
 message TradeStatistics {
@@ -470,14 +471,14 @@ message TradeStatistics {
     int64 trade_date = 6;
     string payment_method_id = 7;
     int64 offer_date = 8;
-    bool use_market_based_price = 9;
-    double market_price_margin = 10;
+    bool offer_use_market_based_price = 9;
+    double offer_market_price_margin = 10;
     int64 offer_amount = 11;
     int64 offer_min_amount = 12;
     string offer_id = 13;
     string deposit_tx_id = 14;
     PubKeyRing pub_key_ring = 15;
-    map<string, string> extra_data_map = 16;
+    map<string, string> extra_data = 16;
 }
 
 
@@ -485,7 +486,7 @@ message MailboxStoragePayload {
     PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 1;
     bytes sender_pub_key_for_add_operation_bytes = 2;
     bytes owner_pub_key_bytes = 3;
-    map<string, string> extra_data_map = 4;
+    map<string, string> extra_data = 4;
 }
 
 message OfferPayload {
@@ -512,7 +513,7 @@ message OfferPayload {
     double market_price_margin = 16;
     int64 amount = 17;
     int64 min_amount = 18;
-    NodeAddress maker_node_address = 19;
+    NodeAddress owner_node_address = 19;
     PubKeyRing pub_key_ring = 20;
     string maker_payment_account_id = 21;
     string offer_fee_payment_tx_id = 22;
@@ -530,7 +531,7 @@ message OfferPayload {
     int64 upper_close_price = 34;
     bool is_private_offer = 35;
     string hash_of_challenge = 36;
-    map<string, string> extra_data_map = 37;
+    map<string, string> extra_data = 37;
     bool is_currency_for_maker_fee_btc = 38;
 }
 

@@ -22,12 +22,14 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.SupportedCapabilitiesMessage;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 import java.util.ArrayList;
 
 // We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
+@EqualsAndHashCode(callSuper = true)
 @Value
 public final class OfferAvailabilityRequest extends OfferMessage implements SupportedCapabilitiesMessage {
     private final PubKeyRing pubKeyRing;

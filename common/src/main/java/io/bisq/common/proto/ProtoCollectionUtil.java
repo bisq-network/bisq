@@ -30,8 +30,8 @@ public class ProtoCollectionUtil {
     // Convenience
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Iterable collectionToProto(Collection<? extends Payload> collection) {
-        return collection.stream().map(e -> e.toProtoMessage()).collect(Collectors.toList());
+    public static <T extends Message> Iterable<T> collectionToProto(Collection<? extends Payload> collection) {
+        return collection.stream().map(e -> (T) e.toProtoMessage()).collect(Collectors.toList());
     }
 
     public static <T> Iterable<T> collectionToProto(Collection<? extends Payload> collection, Function<? super Message, T> extra) {

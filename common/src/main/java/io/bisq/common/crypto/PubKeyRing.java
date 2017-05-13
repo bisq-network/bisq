@@ -39,14 +39,13 @@ import java.security.PublicKey;
 public final class PubKeyRing implements NetworkPayload {
     private final byte[] signaturePubKeyBytes;
     private final byte[] encryptionPubKeyBytes;
-    private String pgpPubKeyAsPem;
-
-    transient private PublicKey signaturePubKey;
-    transient private PublicKey encryptionPubKey;
-
     @Nullable
-    // TODO  remove Nullable once impl.
-    transient private PGPPublicKey pgpPubKey;
+    private final String pgpPubKeyAsPem;
+
+    private PublicKey signaturePubKey;
+    private PublicKey encryptionPubKey;
+    @Nullable
+    private PGPPublicKey pgpPubKey;
 
     public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey, @Nullable PGPPublicKey pgpPubKey) {
         this.signaturePubKeyBytes = Sig.getSigPublicKeyBytes(signaturePubKey);

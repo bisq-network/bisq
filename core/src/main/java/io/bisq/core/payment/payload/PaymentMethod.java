@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,11 +34,16 @@ import java.util.Optional;
 
 // Don't use Enum as it breaks serialisation when changing entries and we want to stay flexible here
 
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
 @Getter
 @ToString
 @Slf4j
 public final class PaymentMethod implements PersistablePayload, Comparable {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     // time in blocks (average 10 min for one block confirmation
     private static final long HOUR = 3600_000;
     private static final long DAY = HOUR * 24;
@@ -111,9 +115,19 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, Coin.parseCoin("1"))
     ));
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Instance fields
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private final String id;
     private long maxTradePeriod;
     private long maxTradeLimit;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * @param id             against charge back risk. If Bank do the charge back quickly the Arbitrator and the seller can push another
@@ -128,22 +142,33 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
         this.maxTradeLimit = maxTradeLimit.value;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public PB.PaymentMethod toProtoMessage() {
+        return PB.PaymentMethod.newBuilder()
+                .setId(id)
+                .setMaxTradePeriod(maxTradePeriod)
+                .setMaxTradeLimit(maxTradeLimit).build();
+    }
+
+    public static PaymentMethod fromProto(PB.PaymentMethod proto) {
+        return new PaymentMethod(proto.getId(),
+                proto.getMaxTradePeriod(),
+                Coin.valueOf(proto.getMaxTradeLimit()));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     // Used for dummy entries in payment methods list (SHOW_ALL)
     public PaymentMethod(String id) {
         this(id, 0, Coin.ZERO);
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-
-            // In case we update those values we want that the persisted accounts get updated as well
-            PaymentMethod paymentMethod = PaymentMethod.getPaymentMethodById(id);
-            this.maxTradePeriod = paymentMethod.getMaxTradePeriod();
-            this.maxTradeLimit = paymentMethod.getMaxTradeLimit();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
     }
 
     public static PaymentMethod getPaymentMethodById(String id) {
@@ -151,7 +176,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
         if (paymentMethodOptional.isPresent())
             return paymentMethodOptional.get();
         else
-            return new PaymentMethod(Res.get("shared.na"), DAY, Coin.parseCoin("0"));
+            return new PaymentMethod(Res.get("shared.na"));
     }
 
     public Coin getMaxTradeLimitAsCoin() {
@@ -164,18 +189,5 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             return this.id.compareTo(((PaymentMethod) other).id);
         else
             return 0;
-    }
-
-    @Override
-    public PB.PaymentMethod toProtoMessage() {
-        return PB.PaymentMethod.newBuilder()
-                .setId(id)
-                .setMaxTradePeriod(maxTradePeriod)
-                .setMaxTradeLimit(maxTradeLimit).build();
-    }
-
-    public static PaymentMethod fromProto(PB.PaymentMethod paymentMethod) {
-        return new PaymentMethod(paymentMethod.getId(), paymentMethod.getMaxTradePeriod(),
-                Coin.valueOf(paymentMethod.getMaxTradeLimit()));
     }
 }

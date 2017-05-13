@@ -42,10 +42,7 @@ import java.util.stream.Collectors;
 @ToString
 @Getter
 public final class Mediator implements StoragePayload {
-
-    public static final long TTL = TimeUnit.DAYS.toMillis(10);
-
-    // Payload
+    private final long TTL = TimeUnit.DAYS.toMillis(10);
     private final PubKeyRing pubKeyRing;
     private final NodeAddress nodeAddress;
     private final List<String> languageCodes;
@@ -76,54 +73,44 @@ public final class Mediator implements StoragePayload {
         this.nodeAddress = nodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;
-        this.emailAddress = emailAddress;
-        this.info = info;
         this.registrationDate = registrationDate.getTime();
         this.registrationPubKey = registrationPubKey;
         this.registrationSignature = registrationSignature;
+        this.emailAddress = emailAddress;
+        this.info = info;
         this.extraDataMap = extraDataMap;
     }
 
     @Override
-    public long getTTL() {
-        return TTL;
+    public PB.StoragePayload toProtoMessage() {
+        final PB.Mediator.Builder builder = PB.Mediator.newBuilder()
+                .setNodeAddress(nodeAddress.toProtoMessage())
+                .setPubKeyRing(pubKeyRing.toProtoMessage())
+                .addAllLanguageCodes(languageCodes)
+                .setRegistrationDate(registrationDate)
+                .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey))
+                .setRegistrationSignature(registrationSignature);
+        Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
+        Optional.ofNullable(info).ifPresent(builder::setInfo);
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        return PB.StoragePayload.newBuilder().setMediator(builder).build();
+    }
+
+    public static Mediator fromProto(PB.Mediator proto) {
+        return new Mediator(NodeAddress.fromProto(proto.getNodeAddress()),
+                PubKeyRing.fromProto(proto.getPubKeyRing()),
+                proto.getLanguageCodesList().stream().collect(Collectors.toList()),
+                new Date(proto.getRegistrationDate()),
+                proto.getRegistrationPubKey().toByteArray(),
+                proto.getRegistrationSignature(),
+                proto.getEmailAddress().isEmpty() ? null : proto.getEmailAddress(),
+                proto.getInfo().isEmpty() ? null : proto.getInfo(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+
     }
 
     @Override
     public PublicKey getOwnerPubKey() {
         return pubKeyRing.getSignaturePubKey();
     }
-
-    @Override
-    public PB.StoragePayload toProtoMessage() {
-        final PB.Mediator.Builder builder = PB.Mediator.newBuilder()
-                .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .setNodeAddress(nodeAddress.toProtoMessage())
-                .addAllLanguageCodes(languageCodes)
-                .setRegistrationDate(registrationDate)
-                .setRegistrationSignature(registrationSignature)
-                .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey));
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
-        Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
-        Optional.ofNullable(info).ifPresent(builder::setInfo);
-        return PB.StoragePayload.newBuilder().setMediator(builder).build();
-    }
-
-    public static Mediator fromProto(PB.Mediator mediator) {
-        List<String> langCodes = mediator.getLanguageCodesList().stream().collect(Collectors.toList());
-        Date date = new Date(mediator.getRegistrationDate());
-        String emailAddress = mediator.getEmailAddress().isEmpty() ? null : mediator.getEmailAddress();
-        return new Mediator(NodeAddress.fromProto(mediator.getNodeAddress()),
-                PubKeyRing.fromProto(mediator.getPubKeyRing()),
-                langCodes,
-                date,
-                mediator.getRegistrationPubKey().toByteArray(),
-                mediator.getRegistrationSignature(),
-                emailAddress,
-                mediator.getInfo(),
-                CollectionUtils.isEmpty(mediator.getExtraDataMapMap()) ?
-                        null : mediator.getExtraDataMapMap());
-
-    }
-
 }

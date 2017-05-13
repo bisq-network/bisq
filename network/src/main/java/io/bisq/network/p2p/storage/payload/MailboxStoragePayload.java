@@ -2,7 +2,6 @@ package io.bisq.network.p2p.storage.payload;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import lombok.EqualsAndHashCode;
@@ -29,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public final class MailboxStoragePayload implements StoragePayload {
     private final long TTL = TimeUnit.DAYS.toMillis(10);
-
     private final PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage;
     private PublicKey senderPubKeyForAddOperation;
     private final byte[] senderPubKeyForAddOperationBytes;
@@ -50,13 +48,12 @@ public final class MailboxStoragePayload implements StoragePayload {
 
         senderPubKeyForAddOperationBytes = Sig.getSigPublicKeyBytes(senderPubKeyForAddOperation);
         ownerPubKeyBytes = Sig.getSigPublicKeyBytes(ownerPubKey);
-        this.extraDataMap = null;
     }
 
-    public MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
-                                 byte[] senderPubKeyForAddOperationBytes,
-                                 byte[] ownerPubKeyBytes,
-                                 @Nullable Map<String, String> extraDataMap) {
+    private MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
+                                  byte[] senderPubKeyForAddOperationBytes,
+                                  byte[] ownerPubKeyBytes,
+                                  @Nullable Map<String, String> extraDataMap) {
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
         this.senderPubKeyForAddOperationBytes = senderPubKeyForAddOperationBytes;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
@@ -72,17 +69,15 @@ public final class MailboxStoragePayload implements StoragePayload {
                 .setPrefixedSealedAndSignedMessage(prefixedSealedAndSignedMessage.toProtoNetworkEnvelope().getPrefixedSealedAndSignedMessage())
                 .setSenderPubKeyForAddOperationBytes(ByteString.copyFrom(senderPubKeyForAddOperationBytes))
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes));
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraDataMap);
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return PB.StoragePayload.newBuilder().setMailboxStoragePayload(builder).build();
     }
 
-    public static MailboxStoragePayload fromProto(PB.MailboxStoragePayload proto, NetworkProtoResolver networkProtoResolver) {
-        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMapMap()) ?
-                null : proto.getExtraDataMapMap();
+    public static MailboxStoragePayload fromProto(PB.MailboxStoragePayload proto) {
         return new MailboxStoragePayload(
                 PrefixedSealedAndSignedMessage.fromProto(proto.getPrefixedSealedAndSignedMessage()),
                 proto.getSenderPubKeyForAddOperationBytes().toByteArray(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
-                extraDataMapMap);
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 }

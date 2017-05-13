@@ -35,25 +35,22 @@ import java.util.stream.Collectors;
 
 @EqualsAndHashCode
 @ToString
+@Getter
 @Slf4j
 public abstract class PaymentAccount implements PersistablePayload {
-    @Getter
-    protected final String id;
-
-    protected final long creationDate;
-    @Getter
     protected final PaymentMethod paymentMethod;
-    @Getter
-    @Setter
-    protected String accountName;
-    @Getter
-    final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
-    @Getter
-    @Setter
-    protected TradeCurrency selectedTradeCurrency;
-    @Getter
+    protected final String id;
+    protected final long creationDate;
+
     @Setter
     public PaymentAccountPayload paymentAccountPayload;
+
+    @Setter
+    protected String accountName;
+    protected final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
+    @Setter
+    protected TradeCurrency selectedTradeCurrency;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -64,6 +61,33 @@ public abstract class PaymentAccount implements PersistablePayload {
         id = UUID.randomUUID().toString();
         creationDate = new Date().getTime();
         paymentAccountPayload = getPayload();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public PB.PaymentAccount toProtoMessage() {
+        PB.PaymentAccount.Builder builder = PB.PaymentAccount.newBuilder()
+                .setPaymentMethod(paymentMethod.toProtoMessage())
+                .setId(paymentMethod.getId())
+                .setCreationDate(creationDate)
+                .setPaymentAccountPayload((PB.PaymentAccountPayload) paymentAccountPayload.toProtoMessage())
+                .setAccountName(accountName)
+                .addAllTradeCurrencies(ProtoCollectionUtil.<PB.TradeCurrency>collectionToProto(tradeCurrencies));
+        Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((PB.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
+        return builder.build();
+    }
+
+    public static PaymentAccount fromProto(PB.PaymentAccount proto) {
+        PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(proto.getPaymentMethod().getId()));
+        paymentAccount.setAccountName(proto.getAccountName());
+        paymentAccount.getTradeCurrencies().addAll(proto.getTradeCurrenciesList().stream().map(TradeCurrency::fromProto).collect(Collectors.toList()));
+        paymentAccount.setSelectedTradeCurrency(paymentAccount.getSelectedTradeCurrency());
+        paymentAccount.setPaymentAccountPayload(PaymentAccountPayload.fromProto(proto.getPaymentAccountPayload()));
+        return paymentAccount;
     }
 
 
@@ -109,28 +133,4 @@ public abstract class PaymentAccount implements PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected abstract PaymentAccountPayload getPayload();
-
-    @Override
-    public PB.PaymentAccount toProtoMessage() {
-        PB.PaymentAccount.Builder builder = PB.PaymentAccount.newBuilder()
-                .setId(paymentMethod.getId())
-                .setCreationDate(creationDate)
-                .setPaymentMethod(paymentMethod.toProtoMessage())
-                .setAccountName(accountName)
-                .addAllTradeCurrencies(ProtoCollectionUtil.collectionToProto(tradeCurrencies))
-                .setPaymentAccountPayload((PB.PaymentAccountPayload) paymentAccountPayload.toProtoMessage());
-        Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((PB.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
-        return builder.build();
-    }
-
-    // complicated: uses a factory to get the specific type, which then calls the ctor which does getPayload for id etc
-    public static PaymentAccount fromProto(PB.PaymentAccount account) {
-        PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(account.getPaymentMethod().getId()));
-        paymentAccount.setAccountName(account.getAccountName());
-        paymentAccount.getTradeCurrencies().addAll(account.getTradeCurrenciesList().stream().map(tradeCurrency -> TradeCurrency.fromProto(tradeCurrency)).collect(Collectors.toList()));
-        paymentAccount.setSelectedTradeCurrency(paymentAccount.getSelectedTradeCurrency());
-        paymentAccount.setPaymentAccountPayload(PaymentAccountPayload.fromProto(account.getPaymentAccountPayload()));
-        return paymentAccount;
-    }
-
 }
