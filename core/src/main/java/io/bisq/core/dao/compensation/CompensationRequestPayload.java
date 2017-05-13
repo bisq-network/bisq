@@ -19,7 +19,7 @@ package io.bisq.core.dao.compensation;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.persistable.PersistableEnvelope;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;

@@ -20,7 +20,7 @@ package io.bisq.core.trade;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.monetary.Price;
-import io.bisq.common.network.NetworkPayload;
+import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;

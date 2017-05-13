@@ -3,7 +3,7 @@ package io.bisq.network.p2p.peers.getdata;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
-import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.PeerManager;

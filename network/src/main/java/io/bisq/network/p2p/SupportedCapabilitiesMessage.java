@@ -1,6 +1,6 @@
 package io.bisq.network.p2p;
 
-import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkEnvelope;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;

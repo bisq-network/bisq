@@ -17,7 +17,7 @@
 
 package io.bisq.core.dao.blockchain.vo;
 
-import io.bisq.common.persistable.PersistablePayload;
+import io.bisq.common.proto.persistable.PersistablePayload;
 import lombok.Data;
 import lombok.experimental.Delegate;
 

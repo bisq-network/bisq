@@ -15,32 +15,43 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.persistable;
+package io.bisq.common.proto.persistable;
 
 import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.Delegate;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
-public class PersistableHashMap<K extends PersistablePayload, V extends PersistablePayload> implements PersistableEnvelope {
-    @Delegate
+public class PersistableList<T extends PersistablePayload> implements PersistableEnvelope {
     @Getter
-    private HashMap<K, V> hashMap = new HashMap<>();
     @Setter
-    private Function<HashMap<K, V>, Message> toProto;
+    private List<T> list;
+    @Setter
+    private Function<List<T>, Message> toProto;
 
-    public PersistableHashMap(HashMap<K, V> hashMap) {
-        this.hashMap = hashMap;
+    public PersistableList(List<T> list) {
+        this.list = list;
     }
 
-    public PersistableHashMap(HashMap<K, V> hashMap, Function<HashMap<K, V>, Message> toProto) {
-        this(hashMap);
-        setToProto(toProto);
+    public PersistableList(List<T> list, Function<List<T>, Message> toProto) {
+        this(list);
+        this.toProto = toProto;
+    }
+
+    /** convenience ctor */
+    public PersistableList(HashSet<T> set) {
+        this(set.stream().collect(Collectors.toList()));
+    }
+    /** convenience ctor */
+    public PersistableList(HashSet<T> set, Function<List<T>, Message> toProto) {
+        this(set);
+        this.toProto = toProto;
     }
 
     @Override
@@ -48,7 +59,7 @@ public class PersistableHashMap<K extends PersistablePayload, V extends Persista
         if(Objects.isNull(toProto)) {
             throw new NotImplementedException();
         }
-        return toProto.apply(hashMap);
+        return toProto.apply(list);
     }
 
 }

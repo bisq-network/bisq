@@ -19,7 +19,7 @@ package io.bisq.core.dao.compensation;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
-import io.bisq.common.persistable.PersistableList;
+import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;

@@ -19,7 +19,7 @@ package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.network.NetworkPayload;
+import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.arbitration.messages.DisputeCommunicationMessage;

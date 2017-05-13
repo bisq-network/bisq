@@ -1,4 +1,4 @@
-package io.bisq.common.persistable;
+package io.bisq.common.proto.persistable;
 
 import io.bisq.common.Envelope;
 

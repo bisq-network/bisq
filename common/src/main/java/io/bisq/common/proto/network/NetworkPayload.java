@@ -1,4 +1,4 @@
-package io.bisq.common.network;
+package io.bisq.common.proto.network;
 
 import io.bisq.common.Payload;
 

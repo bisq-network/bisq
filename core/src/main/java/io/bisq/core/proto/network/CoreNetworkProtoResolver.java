@@ -1,8 +1,9 @@
-package io.bisq.core.proto;
+package io.bisq.core.proto.network;
 
-import io.bisq.common.network.NetworkEnvelope;
-import io.bisq.common.network.NetworkPayload;
-import io.bisq.common.proto.NetworkProtoResolver;
+import io.bisq.common.proto.ProtobufferException;
+import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkPayload;
+import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.alert.PrivateNotificationMessage;
 import io.bisq.core.arbitration.Arbitrator;

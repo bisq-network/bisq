@@ -18,8 +18,8 @@
 package io.bisq.core.user;
 
 import com.google.protobuf.Message;
-import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.common.proto.ProtoCollectionUtil;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.Mediator;

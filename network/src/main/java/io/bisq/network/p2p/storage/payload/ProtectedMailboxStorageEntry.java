@@ -2,7 +2,7 @@ package io.bisq.network.p2p.storage.payload;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.proto.NetworkProtoResolver;
+import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;

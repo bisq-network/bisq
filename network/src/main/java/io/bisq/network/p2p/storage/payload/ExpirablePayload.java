@@ -1,8 +1,8 @@
 package io.bisq.network.p2p.storage.payload;
 
 
-import io.bisq.common.network.NetworkPayload;
-import io.bisq.common.persistable.PersistablePayload;
+import io.bisq.common.proto.network.NetworkPayload;
+import io.bisq.common.proto.persistable.PersistablePayload;
 
 /**
  * Messages which support a time to live

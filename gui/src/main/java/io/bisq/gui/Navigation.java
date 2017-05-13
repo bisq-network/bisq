@@ -18,8 +18,8 @@
 package io.bisq.gui;
 
 import com.google.inject.Inject;
+import io.bisq.common.proto.persistable.PersistableViewPath;
 import io.bisq.common.storage.Storage;
-import io.bisq.core.proto.ViewPathAsString;
 import io.bisq.gui.common.view.View;
 import io.bisq.gui.common.view.ViewPath;
 import io.bisq.gui.main.MainView;
@@ -45,13 +45,13 @@ public final class Navigation {
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to
     // prevent invalid array modification
     transient private final CopyOnWriteArraySet<Listener> listeners = new CopyOnWriteArraySet<>();
-    transient private final Storage<ViewPathAsString> storage;
+    transient private final Storage<PersistableViewPath> storage;
     transient private ViewPath currentPath;
     // Used for returning to the last important view. After setup is done we want to
     // return to the last opened view (e.g. sell/buy)
     transient private ViewPath returnPath;
     // this string is updated just before saving to disk so it reflects the latest currentPath situation.
-    transient private ViewPathAsString viewPathAsString = new ViewPathAsString();
+    transient private PersistableViewPath persistableViewPath = new PersistableViewPath();
 
     // Persisted fields
     @Getter
@@ -60,11 +60,11 @@ public final class Navigation {
 
 
     @Inject
-    public Navigation(Storage<ViewPathAsString> storage) {
+    public Navigation(Storage<PersistableViewPath> storage) {
         this.storage = storage;
         storage.setNumMaxBackupFiles(3);
 
-        ViewPathAsString result = storage.initAndGetPersisted(viewPathAsString);
+        PersistableViewPath result = storage.initAndGetPersisted(persistableViewPath);
         if (result != null && !CollectionUtils.isEmpty(result.getViewPath())) {
             ViewPath persisted = fromViewPathAsString(result);
             previousPath = persisted;
@@ -76,8 +76,8 @@ public final class Navigation {
     }
 
     /** used for deserialisation/fromProto */
-    private ViewPath fromViewPathAsString(ViewPathAsString viewPathAsString) {
-        List<Class<? extends View>> classStream = viewPathAsString.getViewPath().stream().map(s -> {
+    private ViewPath fromViewPathAsString(PersistableViewPath persistableViewPath) {
+        List<Class<? extends View>> classStream = persistableViewPath.getViewPath().stream().map(s -> {
             try {
                 return ((Class<? extends View>) Class.forName(s));
             } catch (ClassNotFoundException e) {
@@ -125,9 +125,9 @@ public final class Navigation {
 
     private void queueUpForSave() {
         if(currentPath.tip() != null) {
-            viewPathAsString.setViewPath(currentPath.stream().map(aClass -> aClass.getName()).collect(Collectors.toList()));
+            persistableViewPath.setViewPath(currentPath.stream().map(aClass -> aClass.getName()).collect(Collectors.toList()));
         }
-        storage.queueUpForSave(viewPathAsString, 1000);
+        storage.queueUpForSave(persistableViewPath, 1000);
     }
 
     public void navigateToPreviousVisitedView() {

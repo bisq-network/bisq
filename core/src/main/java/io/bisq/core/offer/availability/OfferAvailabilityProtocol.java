@@ -21,7 +21,7 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;

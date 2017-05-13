@@ -18,8 +18,8 @@
 package io.bisq.common.storage;
 
 import com.google.inject.Inject;
-import io.bisq.common.persistable.PersistableEnvelope;
-import io.bisq.common.proto.PersistenceProtoResolver;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
+import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

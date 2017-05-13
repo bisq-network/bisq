@@ -1,7 +1,7 @@
 package io.bisq.network.p2p.mocks;
 
 import io.bisq.common.app.Version;
-import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.ExpirablePayload;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;

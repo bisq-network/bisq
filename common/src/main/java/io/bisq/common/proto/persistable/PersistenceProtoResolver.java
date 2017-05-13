@@ -15,12 +15,12 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.persistable;
+package io.bisq.common.proto.persistable;
 
-import io.bisq.common.Payload;
+import io.bisq.generated.protobuffer.PB;
 
-/**
- * Interface for objects used inside Envelope or other Payloads.
- */
-public interface PersistablePayload extends Payload {
+import java.util.Optional;
+
+public interface PersistenceProtoResolver {
+    Optional<PersistableEnvelope> fromProto(PB.PersistableEnvelope persistable);
 }

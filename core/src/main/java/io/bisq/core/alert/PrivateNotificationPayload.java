@@ -19,7 +19,7 @@ package io.bisq.core.alert;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
-import io.bisq.common.network.NetworkPayload;
+import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

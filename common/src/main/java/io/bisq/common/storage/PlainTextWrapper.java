@@ -1,7 +1,7 @@
 package io.bisq.common.storage;
 
 import com.google.protobuf.Message;
-import io.bisq.common.persistable.PersistableEnvelope;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
 
 /**
  * Used to wrap a plaintext string to distinguish at file storage and safe it as plain text instead of a serialized java object.

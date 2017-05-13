@@ -17,7 +17,7 @@
 
 package io.bisq.network.p2p.storage;
 
-import io.bisq.common.persistable.PersistableEnvelope;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
 import lombok.Setter;

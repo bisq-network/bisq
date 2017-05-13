@@ -17,11 +17,8 @@
 
 package io.bisq.common.proto;
 
-import io.bisq.common.persistable.PersistableEnvelope;
-import io.bisq.generated.protobuffer.PB;
-
-import java.util.Optional;
-
-public interface PersistenceProtoResolver {
-    Optional<PersistableEnvelope> fromProto(PB.PersistableEnvelope persistable);
+public class ProtobufferException extends RuntimeException {
+    public ProtobufferException(String message) {
+        super(message);
+    }
 }

@@ -18,8 +18,8 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.persistable.PersistablePayload;
 import io.bisq.common.proto.ProtoCollectionUtil;
+import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.generated.protobuffer.PB;

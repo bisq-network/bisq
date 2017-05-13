@@ -1,6 +1,6 @@
 package io.bisq.network.p2p.peers.keepalive.messages;
 
-import io.bisq.common.network.NetworkEnvelope;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Value;
 

@@ -18,8 +18,8 @@
 package io.bisq.core.trade;
 
 import com.google.protobuf.Message;
-import io.bisq.common.persistable.PersistableEnvelope;
 import io.bisq.common.proto.ProtoCollectionUtil;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.OpenOffer;
