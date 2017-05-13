@@ -33,12 +33,14 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage, Exte
                 .setGetDataResponse(PB.GetDataResponse.newBuilder()
                         .addAllDataSet(dataSet.stream()
                                 .map(protectedStorageEntry -> {
-                                    PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder builder =
-                                            PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.newBuilder();
                                     if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
-                                        return builder.setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage()).build();
+                                        return PB.StorageEntryWrapper.newBuilder()
+                                                .setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage())
+                                                .build();
                                     } else {
-                                        return builder.setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage()).build();
+                                        return PB.StorageEntryWrapper.newBuilder()
+                                                .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())
+                                                .build();
                                     }
                                 })
                                 .collect(Collectors.toList()))
@@ -51,7 +53,7 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage, Exte
     public static GetDataResponse fromProto(PB.GetDataResponse getDataResponse, NetworkProtoResolver resolver) {
         HashSet<ProtectedStorageEntry> dataSet = new HashSet<>(
                 getDataResponse.getDataSetList().stream()
-                        .map(entry -> (ProtectedStorageEntry) resolver.mapToProtectedStorageEntry(entry))
+                        .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry))
                         .collect(Collectors.toSet()));
         return new GetDataResponse(dataSet,
                 getDataResponse.getRequestNonce(),

@@ -182,12 +182,12 @@ public class TestUtils {
             }
 
             @Override
-            public NetworkPayload fromStoragePayloadProto(PB.StoragePayload storagePayload) {
+            public NetworkPayload fromProto(PB.StoragePayload storagePayload) {
                 return null;
             }
 
             @Override
-            public NetworkPayload mapToProtectedStorageEntry(PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry protectedStorageEntry) {
+            public NetworkPayload fromProto(PB.StorageEntryWrapper proto) {
                 return null;
             }
         };

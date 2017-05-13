@@ -26,7 +26,6 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         receiversPubKeyBytes = Sig.getSigPublicKeyBytes(receiversPubKey);
     }
 
-
     public ProtectedMailboxStorageEntry(long creationTimeStamp,
                                         MailboxStoragePayload mailboxStoragePayload,
                                         byte[] ownerPubKey,
@@ -38,7 +37,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
                 ownerPubKey,
                 sequenceNumber,
                 signature);
-        
+
         this.receiversPubKeyBytes = receiversPubKeyBytes;
         receiversPubKey = Sig.getSigPublicKeyFromBytes(receiversPubKeyBytes);
 
@@ -46,8 +45,10 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     }
 
     public PB.ProtectedMailboxStorageEntry toProtoMessage() {
-        return PB.ProtectedMailboxStorageEntry.newBuilder().setEntry((PB.ProtectedStorageEntry) super.toProtoMessage())
-                .setReceiversPubKeyBytes(ByteString.copyFrom(receiversPubKeyBytes)).build();
+        return PB.ProtectedMailboxStorageEntry.newBuilder()
+                .setEntry((PB.ProtectedStorageEntry) super.toProtoMessage())
+                .setReceiversPubKeyBytes(ByteString.copyFrom(receiversPubKeyBytes))
+                .build();
     }
 
     public static ProtectedMailboxStorageEntry fromProto(PB.ProtectedMailboxStorageEntry proto,

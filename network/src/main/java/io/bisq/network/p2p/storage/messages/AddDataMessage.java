@@ -17,19 +17,20 @@ public final class AddDataMessage extends BroadcastMessage {
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder builder = PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.newBuilder();
-        PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry.Builder entry;
+        PB.StorageEntryWrapper.Builder builder;
         if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-            entry = builder.setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage());
+            builder = PB.StorageEntryWrapper.newBuilder()
+                    .setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage());
         else
-            entry = builder.setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage());
+            builder = PB.StorageEntryWrapper.newBuilder()
+                    .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage());
 
         return NetworkEnvelope.getDefaultBuilder()
-                .setAddDataMessage(PB.AddDataMessage.newBuilder().setEntry(entry))
+                .setAddDataMessage(PB.AddDataMessage.newBuilder().setEntry(builder))
                 .build();
     }
 
     public static AddDataMessage fromProto(PB.AddDataMessage proto, NetworkProtoResolver resolver) {
-        return new AddDataMessage((ProtectedStorageEntry) resolver.mapToProtectedStorageEntry(proto.getEntry()));
+        return new AddDataMessage((ProtectedStorageEntry) resolver.fromProto(proto.getEntry()));
     }
 }

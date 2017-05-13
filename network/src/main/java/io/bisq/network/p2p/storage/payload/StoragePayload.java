@@ -32,6 +32,6 @@ public interface StoragePayload extends ExpirablePayload {
     Map<String, String> getExtraDataMap();
 
     static StoragePayload fromProto(PB.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
-        return (StoragePayload) networkProtoResolver.fromStoragePayloadProto(storagePayload);
+        return (StoragePayload) networkProtoResolver.fromProto(storagePayload);
     }
 }

@@ -76,7 +76,7 @@ message GetDataResponse {
     int32 message_version = 1;
     int32 request_nonce = 2;
     bool is_get_updated_data_response = 3;
-    repeated ProtectedStorageEntryOrProtectedMailboxStorageEntry data_set = 4;
+    repeated StorageEntryWrapper data_set = 4;
     repeated int32 supported_capabilities = 5;
 }
 
@@ -143,7 +143,7 @@ message RefreshOfferMessage {
 // storage
 
 message AddDataMessage {
-    ProtectedStorageEntryOrProtectedMailboxStorageEntry entry = 1;
+    StorageEntryWrapper entry = 1;
 }
 
 message RemoveDataMessage {
@@ -369,7 +369,7 @@ message ProtectedStorageEntry {
 
 // mailbox
 
-message ProtectedStorageEntryOrProtectedMailboxStorageEntry {
+message StorageEntryWrapper {
     oneof message {
         ProtectedStorageEntry protected_storage_entry = 1;
         ProtectedMailboxStorageEntry protected_mailbox_storage_entry = 2;

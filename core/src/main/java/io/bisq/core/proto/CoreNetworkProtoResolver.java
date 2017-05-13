@@ -39,20 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
 
-import static io.bisq.generated.protobuffer.PB.NetworkEnvelope.MessageCase.*;
-
-/**
- * If the Messages class is giving errors in IntelliJ, you should change the IntelliJ IDEA Platform Properties file,
- * idea.properties, to something bigger like 12500:
- * <p>
- * #---------------------------------------------------------------------
- * # Maximum file size (kilobytes) IDE should provide code assistance for.
- * # The larger file is the slower its editor works and higher overall system memory requirements are
- * # if code assistance is enabled. Remove this property or set to very large number if you need
- * # code assistance for any files available regardless their size.
- * #---------------------------------------------------------------------
- * idea.max.intellisense.filesize=2500
- */
 @Slf4j
 public class CoreNetworkProtoResolver implements NetworkProtoResolver {
 
@@ -60,130 +46,114 @@ public class CoreNetworkProtoResolver implements NetworkProtoResolver {
     public CoreNetworkProtoResolver() {
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Handle by Msg.MessagesCase
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
-    public NetworkEnvelope fromProto(PB.NetworkEnvelope networkEnvelope) {
-        final PB.NetworkEnvelope.MessageCase messageCase = networkEnvelope.getMessageCase();
-        if (messageCase != PING && messageCase != PONG &&
-                messageCase != REFRESH_OFFER_MESSAGE) {
-            log.debug("Convert protobuffer networkEnvelope: {}, {}", messageCase, networkEnvelope.toString());
-        } else {
-            log.debug("Convert protobuffer networkEnvelope: {}", messageCase);
-            log.trace("Convert protobuffer networkEnvelope: {}", networkEnvelope.toString());
-        }
-
-        switch (messageCase) {
+    public NetworkEnvelope fromProto(PB.NetworkEnvelope proto) {
+        switch (proto.getMessageCase()) {
             case PRELIMINARY_GET_DATA_REQUEST:
-                return PreliminaryGetDataRequest.fromProto(networkEnvelope.getPreliminaryGetDataRequest());
+                return PreliminaryGetDataRequest.fromProto(proto.getPreliminaryGetDataRequest());
             case GET_DATA_RESPONSE:
-                return GetDataResponse.fromProto(networkEnvelope.getGetDataResponse(), this);
+                return GetDataResponse.fromProto(proto.getGetDataResponse(), this);
             case GET_UPDATED_DATA_REQUEST:
-                return GetUpdatedDataRequest.fromProto(networkEnvelope.getGetUpdatedDataRequest());
+                return GetUpdatedDataRequest.fromProto(proto.getGetUpdatedDataRequest());
 
             case GET_PEERS_REQUEST:
-                return GetPeersRequest.fromProto(networkEnvelope.getGetPeersRequest());
+                return GetPeersRequest.fromProto(proto.getGetPeersRequest());
             case GET_PEERS_RESPONSE:
-                return GetPeersResponse.fromProto(networkEnvelope.getGetPeersResponse());
+                return GetPeersResponse.fromProto(proto.getGetPeersResponse());
             case PING:
-                return Ping.fromProto(networkEnvelope.getPing());
+                return Ping.fromProto(proto.getPing());
             case PONG:
-                return Pong.fromProto(networkEnvelope.getPong());
+                return Pong.fromProto(proto.getPong());
 
             case OFFER_AVAILABILITY_REQUEST:
-                return OfferAvailabilityRequest.fromProto(networkEnvelope.getOfferAvailabilityRequest());
+                return OfferAvailabilityRequest.fromProto(proto.getOfferAvailabilityRequest());
             case OFFER_AVAILABILITY_RESPONSE:
-                return OfferAvailabilityResponse.fromProto(networkEnvelope.getOfferAvailabilityResponse());
+                return OfferAvailabilityResponse.fromProto(proto.getOfferAvailabilityResponse());
             case REFRESH_OFFER_MESSAGE:
-                return RefreshOfferMessage.fromProto(networkEnvelope.getRefreshOfferMessage());
+                return RefreshOfferMessage.fromProto(proto.getRefreshOfferMessage());
 
             case ADD_DATA_MESSAGE:
-                return AddDataMessage.fromProto(networkEnvelope.getAddDataMessage(), this);
+                return AddDataMessage.fromProto(proto.getAddDataMessage(), this);
             case REMOVE_DATA_MESSAGE:
-                return RemoveDataMessage.fromProto(networkEnvelope.getRemoveDataMessage(), this);
+                return RemoveDataMessage.fromProto(proto.getRemoveDataMessage(), this);
             case REMOVE_MAILBOX_DATA_MESSAGE:
-                return RemoveMailboxDataMessage.fromProto(networkEnvelope.getRemoveMailboxDataMessage(), this);
+                return RemoveMailboxDataMessage.fromProto(proto.getRemoveMailboxDataMessage(), this);
 
             case CLOSE_CONNECTION_MESSAGE:
-                return CloseConnectionMessage.fromProto(networkEnvelope.getCloseConnectionMessage());
+                return CloseConnectionMessage.fromProto(proto.getCloseConnectionMessage());
             case PREFIXED_SEALED_AND_SIGNED_MESSAGE:
-                return PrefixedSealedAndSignedMessage.fromProto(networkEnvelope.getPrefixedSealedAndSignedMessage());
+                return PrefixedSealedAndSignedMessage.fromProto(proto.getPrefixedSealedAndSignedMessage());
 
             case PAY_DEPOSIT_REQUEST:
-                return PayDepositRequest.fromProto(networkEnvelope.getPayDepositRequest());
+                return PayDepositRequest.fromProto(proto.getPayDepositRequest());
             case DEPOSIT_TX_PUBLISHED_MESSAGE:
-                return DepositTxPublishedMessage.fromProto(networkEnvelope.getDepositTxPublishedMessage());
+                return DepositTxPublishedMessage.fromProto(proto.getDepositTxPublishedMessage());
             case PUBLISH_DEPOSIT_TX_REQUEST:
-                return PublishDepositTxRequest.fromProto(networkEnvelope.getPublishDepositTxRequest());
+                return PublishDepositTxRequest.fromProto(proto.getPublishDepositTxRequest());
             case FIAT_TRANSFER_STARTED_MESSAGE:
-                return FiatTransferStartedMessage.fromProto(networkEnvelope.getFiatTransferStartedMessage());
+                return FiatTransferStartedMessage.fromProto(proto.getFiatTransferStartedMessage());
             case FINALIZE_PAYOUT_TX_REQUEST:
-                return FinalizePayoutTxRequest.fromProto(networkEnvelope.getFinalizePayoutTxRequest());
+                return FinalizePayoutTxRequest.fromProto(proto.getFinalizePayoutTxRequest());
             case PAYOUT_TX_PUBLISHED_MESSAGE:
-                return PayoutTxPublishedMessage.fromProto(networkEnvelope.getPayoutTxPublishedMessage());
+                return PayoutTxPublishedMessage.fromProto(proto.getPayoutTxPublishedMessage());
 
             case OPEN_NEW_DISPUTE_MESSAGE:
-                return OpenNewDisputeMessage.fromProto(networkEnvelope.getOpenNewDisputeMessage());
+                return OpenNewDisputeMessage.fromProto(proto.getOpenNewDisputeMessage());
             case PEER_OPENED_DISPUTE_MESSAGE:
-                return PeerOpenedDisputeMessage.fromProto(networkEnvelope.getPeerOpenedDisputeMessage());
+                return PeerOpenedDisputeMessage.fromProto(proto.getPeerOpenedDisputeMessage());
             case DISPUTE_COMMUNICATION_MESSAGE:
-                return DisputeCommunicationMessage.fromProto(networkEnvelope.getDisputeCommunicationMessage());
+                return DisputeCommunicationMessage.fromProto(proto.getDisputeCommunicationMessage());
             case DISPUTE_RESULT_MESSAGE:
-                return DisputeResultMessage.fromProto(networkEnvelope.getDisputeResultMessage());
+                return DisputeResultMessage.fromProto(proto.getDisputeResultMessage());
             case PEER_PUBLISHED_PAYOUT_TX_MESSAGE:
-                return PeerPublishedPayoutTxMessage.fromProto(networkEnvelope.getPeerPublishedPayoutTxMessage());
+                return PeerPublishedPayoutTxMessage.fromProto(proto.getPeerPublishedPayoutTxMessage());
 
             case PRIVATE_NOTIFICATION_MESSAGE:
-                return PrivateNotificationMessage.fromProto(networkEnvelope.getPrivateNotificationMessage());
+                return PrivateNotificationMessage.fromProto(proto.getPrivateNotificationMessage());
 
             case GET_BSQ_BLOCKS_REQUEST:
-                return GetBsqBlocksRequest.fromProto(networkEnvelope.getGetBsqBlocksRequest());
+                return GetBsqBlocksRequest.fromProto(proto.getGetBsqBlocksRequest());
             case GET_BSQ_BLOCKS_RESPONSE:
-                return GetBsqBlocksResponse.fromProto(networkEnvelope.getGetBsqBlocksResponse());
+                return GetBsqBlocksResponse.fromProto(proto.getGetBsqBlocksResponse());
             case NEW_BSQ_BLOCK_BROADCAST_MESSAGE:
-                return NewBsqBlockBroadcastMessage.fromProto(networkEnvelope.getNewBsqBlockBroadcastMessage());
+                return NewBsqBlockBroadcastMessage.fromProto(proto.getNewBsqBlockBroadcastMessage());
 
             default:
-                log.error("Unknown message case: {}", messageCase);
-                throw new RuntimeException("Unknown proto message case. messageCase=" + messageCase);
+                throw new ProtobufferException("Unknown proto message case. messageCase=" + proto.getMessageCase());
         }
     }
 
-    public NetworkPayload mapToProtectedStorageEntry(PB.ProtectedStorageEntryOrProtectedMailboxStorageEntry proto) {
+    public NetworkPayload fromProto(PB.StorageEntryWrapper proto) {
         switch (proto.getMessageCase()) {
             case PROTECTED_MAILBOX_STORAGE_ENTRY:
                 return ProtectedMailboxStorageEntry.fromProto(proto.getProtectedMailboxStorageEntry(), this);
             case PROTECTED_STORAGE_ENTRY:
                 return ProtectedStorageEntry.fromProto(proto.getProtectedStorageEntry(), this);
             default:
-                log.error("Unknown message case: {}", proto.getMessageCase());
-                throw new RuntimeException("Unknown proto message case. messageCase=" + proto.getMessageCase());
+                throw new ProtobufferException("Unknown proto message case. messageCase=" + proto.getMessageCase());
         }
     }
 
-    public NetworkPayload fromStoragePayloadProto(PB.StoragePayload storagePayloadProto) {
-        switch (storagePayloadProto.getMessageCase()) {
+    public NetworkPayload fromProto(PB.StoragePayload proto) {
+        switch (proto.getMessageCase()) {
             case ALERT:
-                return Alert.fromProto(storagePayloadProto.getAlert());
+                return Alert.fromProto(proto.getAlert());
             case ARBITRATOR:
-                return Arbitrator.fromProto(storagePayloadProto.getArbitrator());
+                return Arbitrator.fromProto(proto.getArbitrator());
             case MEDIATOR:
-                return Mediator.fromProto(storagePayloadProto.getMediator());
+                return Mediator.fromProto(proto.getMediator());
             case FILTER:
-                return Filter.fromProto(storagePayloadProto.getFilter());
+                return Filter.fromProto(proto.getFilter());
             case COMPENSATION_REQUEST_PAYLOAD:
-                return CompensationRequestPayload.fromProto(storagePayloadProto.getCompensationRequestPayload());
+                return CompensationRequestPayload.fromProto(proto.getCompensationRequestPayload());
             case TRADE_STATISTICS:
-                return TradeStatistics.fromProto(storagePayloadProto.getTradeStatistics());
+                return TradeStatistics.fromProto(proto.getTradeStatistics());
             case MAILBOX_STORAGE_PAYLOAD:
-                return MailboxStoragePayload.fromProto(storagePayloadProto.getMailboxStoragePayload(), this);
+                return MailboxStoragePayload.fromProto(proto.getMailboxStoragePayload(), this);
             case OFFER_PAYLOAD:
-                return OfferPayload.fromProto(storagePayloadProto.getOfferPayload());
+                return OfferPayload.fromProto(proto.getOfferPayload());
             default:
-                log.error("Unknown StoragePayload:{}", storagePayloadProto.getMessageCase());
-                throw new RuntimeException("Unknown proto message case. messageCase=" + storagePayloadProto.getMessageCase());
+                throw new ProtobufferException("Unknown proto message case. messageCase=" + proto.getMessageCase());
         }
     }
 }
