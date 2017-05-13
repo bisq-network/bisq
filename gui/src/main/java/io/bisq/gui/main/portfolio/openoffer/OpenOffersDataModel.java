@@ -52,14 +52,14 @@ class OpenOffersDataModel extends ActivatableDataModel {
 
     @Override
     protected void activate() {
-        openOfferManager.getOpenOfferList().addListener(tradesListChangeListener);
+        openOfferManager.getObservableList().addListener(tradesListChangeListener);
         priceFeedService.currenciesUpdateFlagProperty().addListener(currenciesUpdateFlagPropertyListener);
         applyList();
     }
 
     @Override
     protected void deactivate() {
-        openOfferManager.getOpenOfferList().removeListener(tradesListChangeListener);
+        openOfferManager.getObservableList().removeListener(tradesListChangeListener);
         priceFeedService.currenciesUpdateFlagProperty().removeListener(currenciesUpdateFlagPropertyListener);
     }
 
@@ -79,7 +79,7 @@ class OpenOffersDataModel extends ActivatableDataModel {
     private void applyList() {
         list.clear();
 
-        list.addAll(openOfferManager.getOpenOfferList().stream().map(OpenOfferListItem::new).collect(Collectors.toList()));
+        list.addAll(openOfferManager.getObservableList().stream().map(OpenOfferListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getOffer().getDate().compareTo(o1.getOffer().getDate()));

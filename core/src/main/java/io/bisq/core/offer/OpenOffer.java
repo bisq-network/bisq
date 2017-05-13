@@ -17,12 +17,10 @@
 
 package io.bisq.core.offer;
 
-import com.google.protobuf.Message;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.trade.Tradable;
-import io.bisq.core.trade.TradableList;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -49,9 +47,9 @@ public final class OpenOffer implements Tradable {
     @Getter
     private State state = State.AVAILABLE;
 
-    transient private Storage<TradableList<OpenOffer>> storage;
+    transient private Storage<OpenOfferList> storage;
 
-    public OpenOffer(Offer offer, Storage<TradableList<OpenOffer>> storage) {
+    public OpenOffer(Offer offer, Storage<OpenOfferList> storage) {
         this.offer = offer;
         this.storage = storage;
     }
@@ -60,16 +58,21 @@ public final class OpenOffer implements Tradable {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private OpenOffer(Offer offer) {
+        this.offer = offer;
+    }
+
+
     @Override
-    public Message toProtoMessage() {
+    public PB.OpenOffer toProtoMessage() {
         return PB.OpenOffer.newBuilder()
                 .setOffer(offer.toProtoMessage())
                 .setState(PB.OpenOffer.State.valueOf(state.name()))
                 .build();
     }
 
-    public static Tradable fromProto(PB.OpenOffer proto, Storage<TradableList<OpenOffer>> storage) {
-        OpenOffer openOffer = new OpenOffer(Offer.fromProto(proto.getOffer()), storage);
+    public static OpenOffer fromProto(PB.OpenOffer proto) {
+        OpenOffer openOffer = new OpenOffer(Offer.fromProto(proto.getOffer()));
         // If we have a reserved state from the local db we reset it
         if (openOffer.getState() == State.RESERVED)
             openOffer.setState(State.AVAILABLE);
@@ -95,7 +98,7 @@ public final class OpenOffer implements Tradable {
         return offer.getShortId();
     }
 
-    public void setStorage(Storage<TradableList<OpenOffer>> storage) {
+    public void setStorage(Storage<OpenOfferList> storage) {
         this.storage = storage;
     }
 

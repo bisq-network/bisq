@@ -181,6 +181,7 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(Navigation.class));
             persistedDataHosts.add(injector.getInstance(AddressEntryList.class));
             persistedDataHosts.add(injector.getInstance(TradeStatisticsManager.class));
+            persistedDataHosts.add(injector.getInstance(OpenOfferManager.class));
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.stream().forEach(PersistedDataHost::readPersisted);
             

@@ -149,7 +149,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     }
 
     private void doEmptyWallet(KeyParameter aesKey) {
-        if (!openOfferManager.getOpenOfferList().isEmpty()) {
+        if (!openOfferManager.getObservableList().isEmpty()) {
             UserThread.runAfter(() ->
                     new Popup<>().warning(Res.get("emptyWalletWindow.openOffers.warn"))
                             .actionButtonText(Res.get("emptyWalletWindow.openOffers.yes"))

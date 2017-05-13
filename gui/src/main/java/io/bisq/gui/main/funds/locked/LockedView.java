@@ -127,7 +127,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
-        openOfferManager.getOpenOfferList().addListener(openOfferListChangeListener);
+        openOfferManager.getObservableList().addListener(openOfferListChangeListener);
         tradeManager.getTrades().addListener(tradeListChangeListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
@@ -138,7 +138,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
-        openOfferManager.getOpenOfferList().removeListener(openOfferListChangeListener);
+        openOfferManager.getObservableList().removeListener(openOfferListChangeListener);
         tradeManager.getTrades().removeListener(tradeListChangeListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(LockedListItem::cleanup);

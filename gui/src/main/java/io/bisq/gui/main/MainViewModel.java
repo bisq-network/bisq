@@ -543,7 +543,7 @@ public class MainViewModel implements ViewModel {
             }
         });
 
-        openOfferManager.getOpenOfferList().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
+        openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
         tradeManager.getTrades().addListener((ListChangeListener<Trade>) c -> updateBalance());
         openOfferManager.onAllServicesInitialized();
         arbitratorManager.onAllServicesInitialized();
@@ -656,7 +656,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void checkIfOpenOffersMatchTradeProtocolVersion() {
-        List<OpenOffer> outDatedOffers = openOfferManager.getOpenOfferList()
+        List<OpenOffer> outDatedOffers = openOfferManager.getObservableList()
                 .stream()
                 .filter(e -> e.getOffer().getProtocolVersion() != Version.TRADE_PROTOCOL_VERSION)
                 .collect(Collectors.toList());
@@ -958,7 +958,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateReservedBalance() {
-        Coin sum = Coin.valueOf(openOfferManager.getOpenOfferList().stream()
+        Coin sum = Coin.valueOf(openOfferManager.getObservableList().stream()
                 .map(openOffer -> {
                     Address address = btcWalletService.getOrCreateAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
                     return btcWalletService.getBalanceForAddress(address);

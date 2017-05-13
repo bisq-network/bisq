@@ -11,6 +11,7 @@ import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.offer.OpenOffer;
+import io.bisq.core.offer.OpenOfferList;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.*;
@@ -61,6 +62,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                 return AddressEntryList.fromProto(proto.getAddressEntryList());
             case VIEW_PATH_AS_STRING:
                 return PersistableViewPath.fromProto(proto.getViewPathAsString());
+            case OPEN_OFFER_LIST:
+                return OpenOfferList.fromProto(proto.getOpenOfferList());
             case TRADABLE_LIST:
                 return getTradableList(proto.getTradableList());
             case PEER_LIST:

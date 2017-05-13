@@ -82,8 +82,8 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                                          BtcWalletService btcWalletService) {
         List list = proto.getTradableList().stream().map(tradable -> {
             switch (tradable.getMessageCase()) {
-                case OPEN_OFFER:
-                    return OpenOffer.fromProto(tradable.getOpenOffer(), openOfferStorage);
+               /* case OPEN_OFFER:
+                    return OpenOffer.fromProto(tradable.getOpenOffer(), openOfferStorage);*/
                 case BUYER_AS_MAKER_TRADE:
                     return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), buyerAsMakerTradeStorage, btcWalletService);
                 case BUYER_AS_TAKER_TRADE:
