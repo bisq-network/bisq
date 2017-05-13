@@ -800,7 +800,7 @@ message PersistableEnvelope {
     oneof message {
         AddressEntryList address_entry_list = 1;
         ViewPathAsString view_path_as_string = 2;
-        PeersList peers_list = 3;
+        PeerList peer_list = 3;
         Preferences preferences = 4;
         UserPayload user_payload = 5;
         CompensationRequestPayload compensation_request_payload = 6;
@@ -1155,8 +1155,8 @@ message Transaction {
    bytes hash = 1;
 }
 
-message PeersList {
-    repeated Peer peers = 1;
+message PeerList {
+    repeated Peer peer = 1;
 }
 
 message PersistedEntryMap {

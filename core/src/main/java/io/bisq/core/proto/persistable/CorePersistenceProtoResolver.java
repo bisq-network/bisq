@@ -8,7 +8,6 @@ import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.common.proto.persistable.PersistableViewPath;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
-import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
@@ -21,10 +20,9 @@ import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.UserPayload;
 import io.bisq.generated.protobuffer.PB;
-import io.bisq.network.p2p.peers.peerexchange.Peer;
+import io.bisq.network.p2p.peers.peerexchange.PeerList;
 import io.bisq.network.p2p.storage.SequenceNumberMap;
 import lombok.extern.slf4j.Slf4j;
-import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -34,7 +32,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class CorePersistenceProtoResolver extends CoreProtoResolver implements PersistenceProtoResolver {
-    private final Provider<AddressEntryList> addressEntryListProvider;
     private final Provider<Preferences> preferencesProvider;
     private final Storage<TradableList<OpenOffer>> openOfferStorage;
     private final Storage<TradableList<BuyerAsMakerTrade>> buyerAsMakerTradeStorage;
@@ -45,11 +42,9 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
 
     @Inject
     public CorePersistenceProtoResolver(Provider<Preferences> preferencesProvider,
-                                        Provider<AddressEntryList> addressEntryListProvider,
                                         Provider<BtcWalletService> btcWalletService,
                                         @Named(Storage.STORAGE_DIR) File storageDir) {
         this.preferencesProvider = preferencesProvider;
-        this.addressEntryListProvider = addressEntryListProvider;
         this.btcWalletService = btcWalletService;
 
         openOfferStorage = new Storage<>(storageDir, this);
@@ -65,13 +60,13 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
 
         switch (proto.getMessageCase()) {
             case ADDRESS_ENTRY_LIST:
-                return fillAddressEntryList(proto, addressEntryListProvider.get());
+                return AddressEntryList.fromProto(proto.getAddressEntryList());
             case VIEW_PATH_AS_STRING:
                 return PersistableViewPath.fromProto(proto.getViewPathAsString());
             case TRADABLE_LIST:
                 return getTradableList(proto.getTradableList());
-            case PEERS_LIST:
-                return getPeersList(proto.getPeersList());
+            case PEER_LIST:
+                return PeerList.fromProto(proto.getPeerList());
             case COMPENSATION_REQUEST_PAYLOAD:
                 // TODO There will be another object for PersistableEnvelope
                 return CompensationRequestPayload.fromProto(proto.getCompensationRequestPayload());
@@ -96,11 +91,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
     private PersistableEnvelope getTradeStatisticsList(PB.TradeStatisticsList tradeStatisticsList) {
         return new PersistableList<>(tradeStatisticsList.getTradeStatisticsList().stream()
                 .map(TradeStatistics::fromProto).collect(Collectors.toList()));
-    }
-
-    private PersistableEnvelope getPeersList(PB.PeersList envelope) {
-        return new PersistableList<>(envelope.getPeersList().stream().map(Peer::fromProto)
-                .collect(Collectors.toList()));
     }
 
     private Preferences fillPreferences(PB.PersistableEnvelope envelope, Preferences preferences) {
@@ -159,18 +149,5 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
 
         preferences.setDoPersist(true);
         return preferences;
-    }
-
-    private AddressEntryList fillAddressEntryList(PB.PersistableEnvelope envelope, AddressEntryList addressEntryList) {
-        envelope.getAddressEntryList().getAddressEntryList().stream().forEach(addressEntry -> {
-            final AddressEntry entry = new AddressEntry(addressEntry.getPubKey().toByteArray(),
-                    addressEntry.getPubKeyHash().toByteArray(),
-                    AddressEntry.Context.valueOf(addressEntry.getContext().name()),
-                    addressEntry.getOfferId(),
-                    Coin.valueOf(addressEntry.getCoinLockedInMultiSig()));
-            addressEntryList.addAddressEntry(entry);
-        });
-        addressEntryList.setDoPersist(true);
-        return addressEntryList;
     }
 }

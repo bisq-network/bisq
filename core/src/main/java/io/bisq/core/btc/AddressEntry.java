@@ -67,7 +67,6 @@ public final class AddressEntry implements PersistablePayload {
     @Getter
     private final byte[] pubKeyHash;
 
-    @Nullable
     private long coinLockedInMultiSig;
 
     @Nullable
@@ -96,18 +95,46 @@ public final class AddressEntry implements PersistablePayload {
         pubKeyHash = keyPair.getPubKeyHash();
     }
 
-    // called from Resolver
-    public AddressEntry(byte[] pubKey,
-                        byte[] pubKeyHash,
-                        Context context,
-                        @Nullable String offerId,
-                        @Nullable Coin coinLockedInMultiSig) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private AddressEntry(byte[] pubKey,
+                         byte[] pubKeyHash,
+                         Context context,
+                         @Nullable String offerId,
+                         Coin coinLockedInMultiSig) {
         this.pubKey = pubKey;
         this.pubKeyHash = pubKeyHash;
         this.context = context;
         this.offerId = offerId;
         this.coinLockedInMultiSig = coinLockedInMultiSig.value;
     }
+
+    public static AddressEntry fromProto(PB.AddressEntry proto) {
+        return new AddressEntry(proto.getPubKey().toByteArray(),
+                proto.getPubKeyHash().toByteArray(),
+                AddressEntry.Context.valueOf(proto.getContext().name()),
+                proto.getOfferId().isEmpty() ? null : proto.getOfferId(),
+                Coin.valueOf(proto.getCoinLockedInMultiSig()));
+    }
+
+    @Override
+    public Message toProtoMessage() {
+        PB.AddressEntry.Builder builder = PB.AddressEntry.newBuilder()
+                .setPubKey(ByteString.copyFrom(pubKey))
+                .setPubKeyHash(ByteString.copyFrom(pubKeyHash))
+                .setContext(PB.AddressEntry.Context.valueOf(context.name()))
+                .setCoinLockedInMultiSig(coinLockedInMultiSig);
+        Optional.ofNullable(offerId).ifPresent(builder::setOfferId);
+        return builder.build();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Set after wallet is ready
     public void setDeterministicKey(DeterministicKey deterministicKey) {
@@ -126,11 +153,6 @@ public final class AddressEntry implements PersistablePayload {
     public void setCoinLockedInMultiSig(@NotNull Coin coinLockedInMultiSig) {
         this.coinLockedInMultiSig = coinLockedInMultiSig.value;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     // For display we usually only display the first 8 characters.
     @Nullable
@@ -175,16 +197,5 @@ public final class AddressEntry implements PersistablePayload {
                 ", context=" + context +
                 ", address=" + getAddressString() +
                 '}';
-    }
-
-    @Override
-    public Message toProtoMessage() {
-        PB.AddressEntry.Builder builder = PB.AddressEntry.newBuilder()
-                .setContext(PB.AddressEntry.Context.valueOf(context.name()))
-                .setPubKey(ByteString.copyFrom(pubKey))
-                .setCoinLockedInMultiSig(coinLockedInMultiSig)
-                .setPubKeyHash(ByteString.copyFrom(pubKeyHash));
-        Optional.ofNullable(offerId).ifPresent(builder::setOfferId);
-        return builder.build();
     }
 }

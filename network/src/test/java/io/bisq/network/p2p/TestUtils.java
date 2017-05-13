@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.security.*;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
@@ -207,7 +206,7 @@ public class TestUtils {
             }
 
             @Override
-            public Optional<PersistableEnvelope> fromProto(PB.PersistableEnvelope persistable) {
+            public PersistableEnvelope fromProto(PB.PersistableEnvelope persistable) {
                 return null;
             }
         };

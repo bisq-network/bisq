@@ -61,5 +61,4 @@ public class PersistableList<T extends PersistablePayload> implements Persistabl
     public Message toProtoMessage() {
         return toProto.apply(list);
     }
-
 }

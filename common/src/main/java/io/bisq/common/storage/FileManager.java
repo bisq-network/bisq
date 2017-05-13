@@ -19,7 +19,6 @@ package io.bisq.common.storage;
 
 import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import io.bisq.common.UserThread;
-import io.bisq.common.io.LookAheadObjectInputStream;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.util.Utilities;
@@ -28,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -44,7 +42,7 @@ public class FileManager<T extends PersistableEnvelope> {
     private final AtomicBoolean savePending;
     private final long delay;
     private final Callable<Void> saveFileTask;
-    private T serializable;
+    private T persistable;
     private final PersistenceProtoResolver persistenceProtoResolver;
     private final ReentrantLock writeLock = CycleDetectingLockFactory.newInstance(CycleDetectingLockFactory.Policies.THROW).newReentrantLock("writeLock");
 
@@ -70,7 +68,7 @@ public class FileManager<T extends PersistableEnvelope> {
                 // Some other scheduled request already beat us to it.
                 return null;
             }
-            saveNowInternal(serializable);
+            saveNowInternal(persistable);
             return null;
         };
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -86,19 +84,19 @@ public class FileManager<T extends PersistableEnvelope> {
     /**
      * Actually write the wallet file to disk, using an atomic rename when possible. Runs on the current thread.
      */
-    public void saveNow(T serializable) {
-        saveNowInternal(serializable);
+    public void saveNow(T persistable) {
+        saveNowInternal(persistable);
     }
 
     /**
      * Queues up a save in the background. Useful for not very important wallet changes.
      */
-    public void saveLater(T serializable) {
-        saveLater(serializable, delay);
+    public void saveLater(T persistable) {
+        saveLater(persistable, delay);
     }
 
-    public void saveLater(T serializable, long delayInMilli) {
-        this.serializable = serializable;
+    public void saveLater(T persistable, long delayInMilli) {
+        this.persistable = persistable;
 
         if (savePending.getAndSet(true))
             return;   // Already pending.
@@ -108,21 +106,17 @@ public class FileManager<T extends PersistableEnvelope> {
 
     public synchronized T read(File file) throws IOException, ClassNotFoundException {
         log.debug("read" + file);
-        Optional<PersistableEnvelope> persistable = Optional.empty();
 
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
-            persistable = persistenceProtoResolver.fromProto(PB.PersistableEnvelope.parseDelimitedFrom(fileInputStream));
+            return (T) persistenceProtoResolver.fromProto(PB.PersistableEnvelope.parseDelimitedFrom(fileInputStream));
         } catch (Throwable t) {
             log.error("Exception at proto read: " + t.getMessage() + " " + file.getName());
+            //if(DevEnv.DEV_MODE)
+            throw new RuntimeException("Exception at proto read: " + t.getMessage() + " " + file.getName());
         }
 
-        if (persistable.isPresent()) {
-            log.info("Reading DiscEnvelope: {}", persistable.get().getClass());
-            //noinspection unchecked
-            return (T) persistable.get();
-        }
 
-        try (final FileInputStream fileInputStream = new FileInputStream(file);
+        /*try (final FileInputStream fileInputStream = new FileInputStream(file);
              final ObjectInputStream objectInputStream = new LookAheadObjectInputStream(fileInputStream, false)) {
             //noinspection unchecked
             log.warn("Still using Serializable storing for file: {}", file);
@@ -130,7 +124,7 @@ public class FileManager<T extends PersistableEnvelope> {
         } catch (Throwable t) {
             log.error("Exception at read: " + t.getMessage());
             throw t;
-        }
+        }*/
     }
 
     public synchronized void removeFile(String fileName) {
@@ -195,11 +189,12 @@ public class FileManager<T extends PersistableEnvelope> {
         ObjectOutputStream objectOutputStream = null;
         PrintWriter printWriter = null;
 
-        // is it a protobuffer thing?
-
+        log.error("persistable.class " + persistable.getClass().getSimpleName());
+        log.error("persistable " + persistable);
         PB.PersistableEnvelope protoPersistable = null;
         try {
             protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
+            log.error("protoPersistable " + protoPersistable);
         } catch (Throwable e) {
             log.debug("Not protobufferable: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }

@@ -23,7 +23,6 @@ import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.storage.Storage;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.crypto.DeterministicKey;
@@ -40,17 +39,32 @@ import java.util.stream.Stream;
 @ToString
 @Slf4j
 public final class AddressEntryList implements PersistableEnvelope {
-    final transient private Storage<AddressEntryList> storage;
+    transient private Storage<AddressEntryList> storage;
     transient private Wallet wallet;
     @Getter
     private List<AddressEntry> list = new ArrayList<>();
-    @Setter
-    private boolean doPersist;
 
     @Inject
     public AddressEntryList(Storage<AddressEntryList> storage) {
         this.storage = storage;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private AddressEntryList(List<AddressEntry> list) {
+        this.list = list;
+    }
+
+    public static AddressEntryList fromProto(PB.AddressEntryList proto) {
+        return new AddressEntryList(proto.getAddressEntryList().stream().map(AddressEntry::fromProto).collect(Collectors.toList()));
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onWalletReady(Wallet wallet) {
         this.wallet = wallet;
@@ -66,7 +80,6 @@ public final class AddressEntryList implements PersistableEnvelope {
                 }
             }
         } else {
-            doPersist = true;
             add(new AddressEntry(wallet.freshReceiveKey(), AddressEntry.Context.ARBITRATOR));
             persist();
         }
@@ -110,8 +123,7 @@ public final class AddressEntryList implements PersistableEnvelope {
     }
 
     public void persist() {
-        if (doPersist)
-            storage.queueUpForSave(50);
+        storage.queueUpForSave(50);
     }
 
     @Override
@@ -123,4 +135,5 @@ public final class AddressEntryList implements PersistableEnvelope {
                 .build();
         return build;
     }
+
 }

@@ -64,7 +64,7 @@ public class Storage<T extends PersistableEnvelope> {
     private final File dir;
     private FileManager<T> fileManager;
     private File storageFile;
-    private T serializable;
+    private T persistable;
     private String fileName;
     private int numMaxBackupFiles = 10;
     private final PersistenceProtoResolver persistenceProtoResolver;
@@ -102,13 +102,13 @@ public class Storage<T extends PersistableEnvelope> {
     }
 
     @Nullable
-    public T initAndGetPersisted(T serializable) {
-        return initAndGetPersisted(serializable, serializable.getClass().getSimpleName());
+    public T initAndGetPersisted(T persistable) {
+        return initAndGetPersisted(persistable, persistable.getClass().getSimpleName());
     }
 
     @Nullable
-    public T initAndGetPersisted(T serializable, String fileName) {
-        this.serializable = serializable;
+    public T initAndGetPersisted(T persistable, String fileName) {
+        this.persistable = persistable;
         this.fileName = fileName;
         storageFile = new File(dir, fileName);
         fileManager = new FileManager<>(dir, storageFile, 600, persistenceProtoResolver);
@@ -117,11 +117,11 @@ public class Storage<T extends PersistableEnvelope> {
     }
 
     public void queueUpForSave() {
-        queueUpForSave(serializable);
+        queueUpForSave(persistable);
     }
 
     public void queueUpForSave(long delayInMilli) {
-        queueUpForSave(serializable, delayInMilli);
+        queueUpForSave(persistable, delayInMilli);
     }
 
     public void setNumMaxBackupFiles(int numMaxBackupFiles) {
@@ -129,25 +129,25 @@ public class Storage<T extends PersistableEnvelope> {
     }
 
     // Save delayed and on a background thread
-    public void queueUpForSave(T serializable) {
-        if (serializable != null) {
+    public void queueUpForSave(T persistable) {
+        if (persistable != null) {
             log.trace("save " + fileName);
             checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
 
-            fileManager.saveLater(serializable);
+            fileManager.saveLater(persistable);
         } else {
-            log.trace("queueUpForSave called but no serializable set");
+            log.trace("queueUpForSave called but no persistable set");
         }
     }
 
-    public void queueUpForSave(T serializable, long delayInMilli) {
-        if (serializable != null) {
+    public void queueUpForSave(T persistable, long delayInMilli) {
+        if (persistable != null) {
             log.trace("save " + fileName);
             checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
 
-            fileManager.saveLater(serializable, delayInMilli);
+            fileManager.saveLater(persistable, delayInMilli);
         } else {
-            log.trace("queueUpForSave called but no serializable set");
+            log.trace("queueUpForSave called but no persistable set");
         }
     }
 

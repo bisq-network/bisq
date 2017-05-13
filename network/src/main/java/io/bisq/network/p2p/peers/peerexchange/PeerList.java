@@ -15,33 +15,32 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.common.proto.persistable;
+package io.bisq.network.p2p.peers.peerexchange;
 
-import com.google.common.collect.Lists;
 import com.google.protobuf.Message;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
+import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.generated.protobuffer.PB;
-import lombok.*;
-import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-@EqualsAndHashCode
-@AllArgsConstructor
-@NoArgsConstructor
-@Getter
-@Setter
-public class PersistableViewPath implements PersistableEnvelope {
-    private List<String> viewPath = Lists.newArrayList();
+public class PeerList extends PersistableList<Peer> {
+
+    public PeerList(List<Peer> list) {
+        super(list);
+    }
 
     @Override
     public Message toProtoMessage() {
-        final PB.ViewPathAsString.Builder builder = PB.ViewPathAsString.newBuilder();
-        if (!CollectionUtils.isEmpty(viewPath))
-            builder.addAllViewPath(viewPath);
-        return PB.PersistableEnvelope.newBuilder().setViewPathAsString(builder).build();
+        return PB.PersistableEnvelope.newBuilder()
+                .setPeerList(PB.PeerList.newBuilder()
+                        .addAllPeer(getList().stream().map(Peer::toProtoMessage).collect(Collectors.toList())))
+                .build();
     }
 
-    public static PersistableEnvelope fromProto(PB.ViewPathAsString proto) {
-        return new PersistableViewPath(proto.getViewPathList());
+    public static PersistableEnvelope fromProto(PB.PeerList proto) {
+        return new PeerList(proto.getPeerList().stream().map(Peer::fromProto)
+                .collect(Collectors.toList()));
     }
 }
