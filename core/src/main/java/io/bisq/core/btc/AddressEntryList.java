@@ -43,8 +43,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     transient private Storage<AddressEntryList> storage;
     transient private Wallet wallet;
     @Getter
-    private List<AddressEntry> list = new ArrayList<>();
-    private List<AddressEntry> persistedList;
+    private List<AddressEntry> list;
 
     @Inject
     public AddressEntryList(Storage<AddressEntryList> storage) {
@@ -55,7 +54,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     public void readPersisted() {
         AddressEntryList persisted = storage.initAndGetPersisted(this);
         if (persisted != null)
-            persistedList = persisted.getList();
+            list = persisted.getList();
     }
 
 
@@ -89,8 +88,8 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     public void onWalletReady(Wallet wallet) {
         this.wallet = wallet;
 
-        if (persistedList != null) {
-            persistedList.stream().forEach(addressEntry -> {
+        if (list != null) {
+            list.stream().forEach(addressEntry -> {
                 DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash());
                 if (keyFromPubHash != null) {
                     addressEntry.setDeterministicKey(keyFromPubHash);
@@ -99,6 +98,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
                 }
             });
         } else {
+            list = new ArrayList<>();
             add(new AddressEntry(wallet.freshReceiveKey(), AddressEntry.Context.ARBITRATOR));
             persist();
         }

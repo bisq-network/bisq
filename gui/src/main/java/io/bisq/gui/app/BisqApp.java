@@ -43,6 +43,7 @@ import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
 import io.bisq.gui.Navigation;
@@ -179,6 +180,7 @@ public class BisqApp extends Application {
             ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
             persistedDataHosts.add(injector.getInstance(Navigation.class));
             persistedDataHosts.add(injector.getInstance(AddressEntryList.class));
+            persistedDataHosts.add(injector.getInstance(TradeStatisticsManager.class));
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.stream().forEach(PersistedDataHost::readPersisted);
             

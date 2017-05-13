@@ -282,7 +282,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     }
 
     public static OfferPayload fromProto(PB.OfferPayload proto) {
-        checkArgument(proto.getOfferFeePaymentTxId().isEmpty(), "OfferFeePaymentTxId must be set in PB.OfferPayload");
+        checkArgument(!proto.getOfferFeePaymentTxId().isEmpty(), "OfferFeePaymentTxId must be set in PB.OfferPayload");
         String countryCode = proto.getCountryCode().isEmpty() ? null : proto.getCountryCode();
         String bankId = proto.getBankId().isEmpty() ? null : proto.getBankId();
         List<String> acceptedBankIds = proto.getAcceptedBankIdsList().isEmpty() ?

@@ -4,7 +4,6 @@ import com.google.inject.Provider;
 import io.bisq.common.locale.*;
 import io.bisq.common.proto.ProtobufferException;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
-import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.common.proto.persistable.PersistableViewPath;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
@@ -15,7 +14,7 @@ import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.*;
-import io.bisq.core.trade.statistics.TradeStatistics;
+import io.bisq.core.trade.statistics.TradeStatisticsList;
 import io.bisq.core.user.BlockChainExplorer;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.UserPayload;
@@ -28,7 +27,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class CorePersistenceProtoResolver extends CoreProtoResolver implements PersistenceProtoResolver {
@@ -56,7 +54,7 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
 
     @Override
     public PersistableEnvelope fromProto(PB.PersistableEnvelope proto) {
-        log.debug("Convert protobuffer disk proto: {}", proto.getMessageCase());
+        log.error("Convert protobuffer disk proto: {}", proto.getMessageCase());
 
         switch (proto.getMessageCase()) {
             case ADDRESS_ENTRY_LIST:
@@ -77,7 +75,7 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
             case SEQUENCE_NUMBER_MAP:
                 return SequenceNumberMap.fromProto(proto.getSequenceNumberMap());
             case TRADE_STATISTICS_LIST:
-                return getTradeStatisticsList(proto.getTradeStatisticsList());
+                return TradeStatisticsList.fromProto(proto.getTradeStatisticsList());
             default:
                 throw new ProtobufferException("Unknown proto message case. messageCase=" + proto.getMessageCase());
         }
@@ -86,11 +84,6 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
 
     private PersistableEnvelope getTradableList(PB.TradableList tradableList) {
         return TradableList.fromProto(tradableList, openOfferStorage, buyerAsMakerTradeStorage, buyerAsTakerTradeStorage, sellerAsMakerTradeStorage, sellerAsTakerTradeStorage, btcWalletService.get());
-    }
-
-    private PersistableEnvelope getTradeStatisticsList(PB.TradeStatisticsList tradeStatisticsList) {
-        return new PersistableList<>(tradeStatisticsList.getTradeStatisticsList().stream()
-                .map(TradeStatistics::fromProto).collect(Collectors.toList()));
     }
 
     private Preferences fillPreferences(PB.PersistableEnvelope envelope, Preferences preferences) {

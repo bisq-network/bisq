@@ -56,6 +56,7 @@ import io.bisq.core.provider.price.MarketPrice;
 import io.bisq.core.provider.price.PriceFeedService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.DontShowAgainLookup;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
@@ -117,6 +118,7 @@ public class MainViewModel implements ViewModel {
     @SuppressWarnings("unused")
     private final FilterManager filterManager;
     private final WalletPasswordWindow walletPasswordWindow;
+    private final TradeStatisticsManager tradeStatisticsManager;
     private final NotificationCenter notificationCenter;
     private final TacWindow tacWindow;
     private final Clock clock;
@@ -185,7 +187,7 @@ public class MainViewModel implements ViewModel {
                          ArbitratorManager arbitratorManager, P2PService p2PService, TradeManager tradeManager,
                          OpenOfferManager openOfferManager, DisputeManager disputeManager, Preferences preferences,
                          User user, AlertManager alertManager, PrivateNotificationManager privateNotificationManager,
-                         FilterManager filterManager, WalletPasswordWindow walletPasswordWindow,
+                         FilterManager filterManager, WalletPasswordWindow walletPasswordWindow, TradeStatisticsManager tradeStatisticsManager,
                          NotificationCenter notificationCenter, TacWindow tacWindow, Clock clock, FeeService feeService,
                          DaoManager daoManager, EncryptionService encryptionService,
                          KeyRing keyRing,
@@ -205,6 +207,7 @@ public class MainViewModel implements ViewModel {
         this.privateNotificationManager = privateNotificationManager;
         this.filterManager = filterManager; // Reference so it's initialized and eventListener gets registered
         this.walletPasswordWindow = walletPasswordWindow;
+        this.tradeStatisticsManager = tradeStatisticsManager;
         this.notificationCenter = notificationCenter;
         this.tacWindow = tacWindow;
         this.clock = clock;
@@ -553,6 +556,8 @@ public class MainViewModel implements ViewModel {
         feeService.onAllServicesInitialized();
 
         daoManager.onAllServicesInitialized(errorMessage -> new Popup<>().error(errorMessage).show());
+
+        tradeStatisticsManager.onAllServicesInitialized();
 
         priceFeedService.onAllServicesInitialized();
 

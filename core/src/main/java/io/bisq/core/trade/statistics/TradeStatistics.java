@@ -143,6 +143,10 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Persi
         return PB.StoragePayload.newBuilder().setTradeStatistics(builder).build();
     }
 
+    public PB.TradeStatistics toProtoTradeStatistics() {
+        return toProtoMessage().getTradeStatistics();
+    }
+
     public static TradeStatistics fromProto(PB.TradeStatistics proto) {
         return new TradeStatistics(
                 OfferPayload.Direction.fromProto(proto.getDirection()),
