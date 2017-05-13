@@ -19,6 +19,7 @@ package io.bisq.core.trade.closed;
 
 import com.google.inject.Inject;
 import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -35,7 +36,7 @@ import javax.inject.Named;
 import java.io.File;
 import java.util.Optional;
 
-public class ClosedTradableManager {
+public class ClosedTradableManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(ClosedTradableManager.class);
     private final TradableList<Tradable> closedTrades;
     private final KeyRing keyRing;
@@ -57,6 +58,10 @@ public class ClosedTradableManager {
                 trade.setTransientFields(tradableListStorage, btcWalletService);
             }
         });
+    }
+
+    @Override
+    public void readPersisted() {
     }
 
     public void add(Tradable tradable) {

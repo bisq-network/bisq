@@ -21,6 +21,7 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.trade.Tradable;
+import io.bisq.core.trade.TradableList;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -47,9 +48,9 @@ public final class OpenOffer implements Tradable {
     @Getter
     private State state = State.AVAILABLE;
 
-    transient private Storage<OpenOfferList> storage;
+    transient private Storage<TradableList<OpenOffer>> storage;
 
-    public OpenOffer(Offer offer, Storage<OpenOfferList> storage) {
+    public OpenOffer(Offer offer, Storage<TradableList<OpenOffer>> storage) {
         this.offer = offer;
         this.storage = storage;
     }
@@ -98,7 +99,7 @@ public final class OpenOffer implements Tradable {
         return offer.getShortId();
     }
 
-    public void setStorage(Storage<OpenOfferList> storage) {
+    public void setStorage(Storage<TradableList<OpenOffer>> storage) {
         this.storage = storage;
     }
 

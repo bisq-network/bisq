@@ -43,6 +43,8 @@ import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.TradeManager;
+import io.bisq.core.trade.closed.ClosedTradableManager;
+import io.bisq.core.trade.failed.FailedTradesManager;
 import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.core.user.Preferences;
 import io.bisq.core.user.User;
@@ -177,14 +179,19 @@ public class BisqApp extends Application {
             User user = injector.getInstance(User.class);
             user.init();
 
+            // All classes which are persisting objects need to be added here
             ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
             persistedDataHosts.add(injector.getInstance(Navigation.class));
             persistedDataHosts.add(injector.getInstance(AddressEntryList.class));
             persistedDataHosts.add(injector.getInstance(TradeStatisticsManager.class));
             persistedDataHosts.add(injector.getInstance(OpenOfferManager.class));
+            persistedDataHosts.add(injector.getInstance(TradeManager.class));
+            persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));
+            persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
+            
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.stream().forEach(PersistedDataHost::readPersisted);
-            
+
 
             Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
             Version.printVersion();

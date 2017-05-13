@@ -18,7 +18,6 @@
 package io.bisq.core.trade.protocol;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.proto.ProtoCollectionUtil;
@@ -214,7 +213,7 @@ public class ProcessModel implements Model, PersistablePayload {
     }
 
     @Override
-    public Message toProtoMessage() {
+    public PB.ProcessModel toProtoMessage() {
         return PB.ProcessModel.newBuilder()
                 .setTradingPeer((PB.TradingPeer) tradingPeer.toProtoMessage())
                 .setOfferId(offerId)

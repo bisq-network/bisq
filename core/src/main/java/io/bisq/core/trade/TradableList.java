@@ -23,6 +23,7 @@ import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.OpenOffer;
+import io.bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -51,10 +52,10 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
     public TradableList(Storage<TradableList<T>> storage, String fileName) {
         this.storage = storage;
 
-        // TradableList<T> persisted = storage.initAndGetPersisted(this, fileName);
-        TradableList<T> persisted = storage.initAndGetPersistedWithFileName(fileName);
+        TradableList<T> persisted = storage.initAndGetPersisted(this, fileName);
+        log.error("persisted " + persisted);
         if (persisted != null)
-            list.addAll(persisted.getList());
+            list = persisted.getList();
     }
 
 
@@ -69,21 +70,25 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
 
     @Override
     public Message toProtoMessage() {
+        log.error("toProtoMessage list=" + list);
         return PB.PersistableEnvelope.newBuilder().setTradableList(PB.TradableList.newBuilder()
                 .addAllTradable(ProtoCollectionUtil.collectionToProto(list))).build();
     }
 
     public static TradableList fromProto(PB.TradableList proto,
+                                         CorePersistenceProtoResolver corePersistenceProtoResolver,
                                          Storage<TradableList<OpenOffer>> openOfferStorage,
                                          Storage<TradableList<BuyerAsMakerTrade>> buyerAsMakerTradeStorage,
                                          Storage<TradableList<BuyerAsTakerTrade>> buyerAsTakerTradeStorage,
                                          Storage<TradableList<SellerAsMakerTrade>> sellerAsMakerTradeStorage,
                                          Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage,
                                          BtcWalletService btcWalletService) {
+        log.error("fromProto " + proto);
         List list = proto.getTradableList().stream().map(tradable -> {
+            // corePersistenceProtoResolver.fromProto(tradable, st)
             switch (tradable.getMessageCase()) {
-               /* case OPEN_OFFER:
-                    return OpenOffer.fromProto(tradable.getOpenOffer(), openOfferStorage);*/
+                case OPEN_OFFER:
+                    return OpenOffer.fromProto(tradable.getOpenOffer());
                 case BUYER_AS_MAKER_TRADE:
                     return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), buyerAsMakerTradeStorage, btcWalletService);
                 case BUYER_AS_TAKER_TRADE:

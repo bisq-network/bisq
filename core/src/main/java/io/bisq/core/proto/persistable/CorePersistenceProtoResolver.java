@@ -11,7 +11,6 @@ import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.offer.OpenOffer;
-import io.bisq.core.offer.OpenOfferList;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.*;
@@ -62,10 +61,15 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                 return AddressEntryList.fromProto(proto.getAddressEntryList());
             case VIEW_PATH_AS_STRING:
                 return PersistableViewPath.fromProto(proto.getViewPathAsString());
-            case OPEN_OFFER_LIST:
-                return OpenOfferList.fromProto(proto.getOpenOfferList());
             case TRADABLE_LIST:
-                return getTradableList(proto.getTradableList());
+                return TradableList.fromProto(proto.getTradableList(),
+                        this,
+                        openOfferStorage,
+                        buyerAsMakerTradeStorage,
+                        buyerAsTakerTradeStorage,
+                        sellerAsMakerTradeStorage,
+                        sellerAsTakerTradeStorage,
+                        btcWalletService.get());
             case PEER_LIST:
                 return PeerList.fromProto(proto.getPeerList());
             case COMPENSATION_REQUEST_PAYLOAD:
@@ -84,10 +88,26 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
         }
     }
 
+    // @Override
+    public Tradable fromProto(PB.Tradable proto, Storage<TradableList<SellerAsMakerTrade>> storage) {
+        log.error("Convert protobuffer disk proto: {}", proto.getMessageCase());
 
-    private PersistableEnvelope getTradableList(PB.TradableList tradableList) {
-        return TradableList.fromProto(tradableList, openOfferStorage, buyerAsMakerTradeStorage, buyerAsTakerTradeStorage, sellerAsMakerTradeStorage, sellerAsTakerTradeStorage, btcWalletService.get());
+        switch (proto.getMessageCase()) {
+            case OPEN_OFFER:
+                return OpenOffer.fromProto(proto.getOpenOffer());
+            case BUYER_AS_MAKER_TRADE:
+                return BuyerAsMakerTrade.fromProto(proto.getBuyerAsMakerTrade(), storage, btcWalletService.get());
+            case BUYER_AS_TAKER_TRADE:
+                return BuyerAsTakerTrade.fromProto(proto.getBuyerAsTakerTrade(), storage, btcWalletService.get());
+            case SELLER_AS_MAKER_TRADE:
+                return SellerAsMakerTrade.fromProto(proto.getSellerAsMakerTrade(), storage, btcWalletService.get());
+            case SELLER_AS_TAKER_TRADE:
+                return SellerAsTakerTrade.fromProto(proto.getSellerAsTakerTrade(), storage, btcWalletService.get());
+            default:
+                throw new ProtobufferException("Unknown proto message case. messageCase=" + proto.getMessageCase());
+        }
     }
+
 
     private Preferences fillPreferences(PB.PersistableEnvelope envelope, Preferences preferences) {
         final PB.Preferences env = envelope.getPreferences();

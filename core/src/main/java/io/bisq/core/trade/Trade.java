@@ -281,6 +281,54 @@ public abstract class Trade implements Tradable, Model {
         this.setTakeOfferDate(new Date());
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+   /* private Trade(Offer offer) {
+        this.offer = offer;
+    }*/
+
+
+    @Override
+    public Message toProtoMessage() {
+        return PB.Trade.newBuilder()
+                .setOffer(offer.toProtoMessage())
+                .setProcessModel(processModel.toProtoMessage())
+                .setTakerFeeTxId(takerFeeTxId)
+                .setDepositTxId(depositTxId)
+                .setPayoutTxId(payoutTxId)
+                .setTradeAmountAsLong(tradeAmountAsLong)
+                .setTxFeeAsLong(txFeeAsLong)
+                .setTakerFeeAsLong(takerFeeAsLong)
+                .setTakeOfferDate(takeOfferDate)
+                .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
+                .setTradePrice(tradePrice)
+                .setTradingPeerNodeAddress(tradingPeerNodeAddress.toProtoMessage())
+                .setState(PB.Trade.State.valueOf(state.name()))
+                .setDisputeState(PB.Trade.DisputeState.valueOf(disputeState.name()))
+                .setTradePeriodState(PB.Trade.TradePeriodState.valueOf(tradePeriodState.name()))
+                .setContract(contract.toProtoMessage())
+                .setContractAsJson(contractAsJson)
+                .setContractHash(ByteString.copyFrom(contractHash))
+                .setTakerContractSignature(takerContractSignature)
+                .setMakerContractSignature(makerContractSignature)
+                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
+                .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
+                .setArbitratorBtcPubKey(ByteString.copyFrom(arbitratorBtcPubKey))
+                .setTakerPaymentAccountId(takerPaymentAccountId)
+                .setErrorMessage(errorMessage)
+                .build();
+    }
+
+   /* public static Trade fromProto(PB.Trade proto) {
+        Trade openOffer = new Trade(Offer.fromProto(proto.getOffer()));
+        // If we have a reserved state from the local db we reset it
+        if (openOffer.getState() == State.RESERVED)
+            openOffer.setState(State.AVAILABLE);
+        return openOffer;
+    }*/
+
     public void setTransientFields(Storage<? extends TradableList> storage, BtcWalletService btcWalletService) {
         this.storage = storage;
         this.btcWalletService = btcWalletService;
@@ -834,37 +882,6 @@ public abstract class Trade implements Tradable, Model {
         // we only apply the state if we are not already further in the process
         if (!isDepositConfirmed())
             setState(State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
-    }
-
-    @Override
-    public Message toProtoMessage() {
-        return PB.Trade.newBuilder()
-                .setOffer(offer.toProtoMessage())
-                .setProcessModel((PB.ProcessModel) processModel.toProtoMessage())
-                .setTakerFeeTxId(takerFeeTxId)
-                .setDepositTxId(depositTxId)
-                .setPayoutTxId(payoutTxId)
-                .setTradeAmountAsLong(tradeAmountAsLong)
-                .setTxFeeAsLong(txFeeAsLong)
-                .setTakerFeeAsLong(takerFeeAsLong)
-                .setTakeOfferDate(takeOfferDate)
-                .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
-                .setTradePrice(tradePrice)
-                .setTradingPeerNodeAddress(tradingPeerNodeAddress.toProtoMessage())
-                .setState(PB.Trade.State.valueOf(state.name()))
-                .setDisputeState(PB.Trade.DisputeState.valueOf(disputeState.name()))
-                .setTradePeriodState(PB.Trade.TradePeriodState.valueOf(tradePeriodState.name()))
-                .setContract(contract.toProtoMessage())
-                .setContractAsJson(contractAsJson)
-                .setContractHash(ByteString.copyFrom(contractHash))
-                .setTakerContractSignature(takerContractSignature)
-                .setMakerContractSignature(makerContractSignature)
-                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
-                .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
-                .setArbitratorBtcPubKey(ByteString.copyFrom(arbitratorBtcPubKey))
-                .setTakerPaymentAccountId(takerPaymentAccountId)
-                .setErrorMessage(errorMessage)
-                .build();
     }
 
     @Override

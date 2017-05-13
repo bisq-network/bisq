@@ -808,13 +808,14 @@ message PersistableEnvelope {
         PersistedEntryMap persisted_entry_map = 8;
         TradeStatisticsList trade_statistics_list = 9;
         VoteItemsList vote_items_list = 10;
-        OpenOfferList open_offer_list = 11;
+        TradableList tradable_list = 11;
+         
+         //TODO
         PendingTradeList pending_trade_list = 12;
         ClosedTradeList closed_trade_list = 13;
         FailedTradeList failed_trade_list = 14;
+        
         BsqChainState bsq_chain_state = 15; 
-        // TODO remove
-        TradableList tradable_list = 16;
     }
 }
 
@@ -1089,20 +1090,16 @@ message TradeStatisticsList {
     repeated TradeStatistics trade_statistics = 1;
 }
 
-message OpenOfferList {
-    repeated OpenOffer open_offer = 1;
-}
-
 message PendingTradeList {
-    repeated PendingTradeList trade = 1;
+    repeated Trade trade = 1;
 }
 
 message ClosedTradeList {
-    repeated ClosedTradeList trade = 1;
+    repeated Trade trade = 1;
 }
 
 message FailedTradeList {
-    repeated FailedTradeList trade = 1;
+    repeated Trade trade = 1;
 }
 
 
