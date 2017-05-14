@@ -45,7 +45,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public enum State {
-        UNDEFINED,
+        UNKNOWN,
         OFFER_FEE_PAID,
         AVAILABLE,
         NOT_AVAILABLE,
@@ -60,9 +60,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     @Getter
     private final OfferPayload offerPayload;
     @JsonExclude
-    transient private Offer.State state = Offer.State.UNDEFINED;
-    // Those state properties are transient and only used at runtime!
-    // don't access directly as it might be null; use getStateProperty() which creates an object if not instantiated
+    transient private Offer.State state = Offer.State.UNKNOWN;
     @JsonExclude
     @Getter
     transient private ObjectProperty<Offer.State> stateProperty = new SimpleObjectProperty<>(state);
@@ -73,8 +71,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     @Getter
     transient private StringProperty errorMessageProperty = new SimpleStringProperty();
     @JsonExclude
-    @Setter
-    @Nullable
+    @Nullable @Setter
     transient private PriceFeedService priceFeedService;
 
 
@@ -205,7 +202,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public void resetState() {
-        setState(Offer.State.UNDEFINED);
+        setState(Offer.State.UNKNOWN);
     }
 
 

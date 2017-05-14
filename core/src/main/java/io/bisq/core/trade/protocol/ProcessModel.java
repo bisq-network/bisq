@@ -18,7 +18,6 @@
 package io.bisq.core.trade.protocol;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.proto.ProtoUtil;
@@ -47,6 +46,7 @@ import io.bisq.network.p2p.P2PService;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
@@ -55,32 +55,22 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 @Slf4j
 public class ProcessModel implements Model, PersistablePayload {
-    // Transient/Immutable
-    @Getter
+    // Transient/Immutable (net set in constructor so they are not final, but at init)
     transient private TradeManager tradeManager;
-    @Getter
     transient private OpenOfferManager openOfferManager;
     transient private BtcWalletService btcWalletService;
     transient private BsqWalletService bsqWalletService;
     transient private TradeWalletService tradeWalletService;
     transient private Offer offer;
-    @Getter
     transient private User user;
     transient private FilterManager filterManager;
-    @Getter
     transient private KeyRing keyRing;
-    @Getter
     transient private P2PService p2PService;
-
-    // Immutable
-    private final TradingPeer tradingPeer = new TradingPeer();
-    private String offerId;
-    private String accountId;
-    private PubKeyRing pubKeyRing;
 
     // Transient/Mutable
     transient private Transaction takeOfferFeeTx;
@@ -89,37 +79,75 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     transient private DecryptedMessageWithPubKey decryptedMessageWithPubKey;
 
-    // Mutable
+
+    // Persistable Immutable
+    private final TradingPeer tradingPeer = new TradingPeer();
+    private String offerId;
+    private String accountId;
+    private PubKeyRing pubKeyRing;
+
+    // Persistable Mutable
+    @Nullable
     private String takeOfferFeeTxId;
-    @Setter
+    @Nullable @Setter
     private byte[] payoutTxSignature;
-    @Setter
+    @Nullable @Setter
     private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
-    @Setter
+    @Nullable @Setter
     private List<NodeAddress> takerAcceptedMediatorNodeAddresses;
-    @Setter
+    @Nullable @Setter
     private byte[] preparedDepositTx;
-    @Setter
+    @Nullable @Setter
     private ArrayList<RawTransactionInput> rawTransactionInputs;
     @Setter
     private long changeOutputValue;
-    @Nullable
-    @Setter
+    @Nullable @Setter
     private String changeOutputAddress;
     @Setter
     private boolean useSavingsWallet;
     @Setter
     private long fundsNeededForTradeAsLong;
-    @Setter
+    @Nullable @Setter
     private byte[] myMultiSigPubKey;
     // that is used to store temp. the peers address when we get an incoming message before the message is verified.
     // After successful verified we copy that over to the trade.tradingPeerAddress
-    @Setter
+    @Nullable @Setter
     private NodeAddress tempTradingPeerNodeAddress;
-
 
     public ProcessModel() {
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public PB.ProcessModel toProtoMessage() {
+        final PB.ProcessModel.Builder builder = PB.ProcessModel.newBuilder()
+                .setTradingPeer((PB.TradingPeer) tradingPeer.toProtoMessage())
+                .setOfferId(offerId)
+                .setAccountId(accountId)
+                .setPubKeyRing(pubKeyRing.toProtoMessage())
+                .setChangeOutputValue(changeOutputValue)
+                .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong)
+                .setUseSavingsWallet(useSavingsWallet);
+        Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
+        Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
+        Optional.ofNullable(takerAcceptedArbitratorNodeAddresses).ifPresent(e -> builder.addAllTakerAcceptedArbitratorNodeAddresses(ProtoUtil.collectionToProto(takerAcceptedArbitratorNodeAddresses)));
+        Optional.ofNullable(takerAcceptedMediatorNodeAddresses).ifPresent(e -> builder.addAllTakerAcceptedMediatorNodeAddresses(ProtoUtil.collectionToProto(takerAcceptedMediatorNodeAddresses)));
+        Optional.ofNullable(preparedDepositTx).ifPresent(e -> builder.setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx)));
+        Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoUtil.collectionToProto(rawTransactionInputs)));
+        Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
+        Optional.ofNullable(myMultiSigPubKey).ifPresent(e -> builder.setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey)));
+        Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
+        return builder.build();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized(Offer offer,
                                          TradeManager tradeManager,
@@ -144,23 +172,36 @@ public class ProcessModel implements Model, PersistablePayload {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;
+
         fundsNeededForTradeAsLong = fundsNeededForTrade.value;
         offerId = offer.getId();
         accountId = user.getAccountId();
         pubKeyRing = keyRing.getPubKeyRing();
     }
 
-    // TODO need lazy access?
-    public NodeAddress getMyNodeAddress() {
-        return p2PService.getAddress();
+    public void removeMailboxMessageAfterProcessing(Trade trade) {
+        if (tradeMessage instanceof MailboxMessage &&
+                decryptedMessageWithPubKey != null &&
+                decryptedMessageWithPubKey.getWireEnvelope().equals(tradeMessage)) {
+            log.debug("Remove decryptedMsgWithPubKey from P2P network. decryptedMsgWithPubKey = " + decryptedMessageWithPubKey);
+            p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
+            trade.removeDecryptedMessageWithPubKey(decryptedMessageWithPubKey);
+        }
     }
 
     @Override
     public void persist() {
+        throw new NotImplementedException("persist is not implemented in that class");
     }
 
     @Override
     public void onComplete() {
+        throw new NotImplementedException("persist is not implemented in that class");
+    }
+
+    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
+        this.takeOfferFeeTx = takeOfferFeeTx;
+        takeOfferFeeTxId = takeOfferFeeTx.getHashAsString();
     }
 
     @Nullable
@@ -208,41 +249,7 @@ public class ProcessModel implements Model, PersistablePayload {
         return takeOfferFeeTx;
     }
 
-    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
-        this.takeOfferFeeTx = takeOfferFeeTx;
-        takeOfferFeeTxId = takeOfferFeeTx.getHashAsString();
-    }
-
-    @Override
-    public Message toProtoMessage() {
-        return PB.ProcessModel.newBuilder()
-                .setTradingPeer((PB.TradingPeer) tradingPeer.toProtoMessage())
-                .setOfferId(offerId)
-                .setAccountId(accountId)
-                .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .setTakeOfferFeeTxId(takeOfferFeeTxId)
-                .setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature))
-                .addAllTakerAcceptedArbitratorNodeAddresses(ProtoUtil.collectionToProto(takerAcceptedArbitratorNodeAddresses))
-                .addAllTakerAcceptedMediatorNodeAddresses(ProtoUtil.collectionToProto(takerAcceptedMediatorNodeAddresses))
-                .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
-                .addAllRawTransactionInputs(ProtoUtil.collectionToProto(rawTransactionInputs))
-                .setChangeOutputValue(changeOutputValue)
-                .setChangeOutputAddress(changeOutputAddress)
-                .setUseSavingsWallet(useSavingsWallet)
-                .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong)
-                .setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey))
-                .setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage())
-                .build();
-    }
-
-
-    public void removeMailboxMessageAfterProcessing(Trade trade) {
-        if (tradeMessage instanceof MailboxMessage &&
-                decryptedMessageWithPubKey != null &&
-                decryptedMessageWithPubKey.getWireEnvelope().equals(tradeMessage)) {
-            log.debug("Remove decryptedMsgWithPubKey from P2P network. decryptedMsgWithPubKey = " + decryptedMessageWithPubKey);
-            p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
-            trade.removeDecryptedMessageWithPubKey(decryptedMessageWithPubKey);
-        }
+    public NodeAddress getMyNodeAddress() {
+        return p2PService.getAddress();
     }
 }

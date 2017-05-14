@@ -17,8 +17,10 @@
 
 package io.bisq.core.trade.protocol;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -29,21 +31,29 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Getter
 @Setter
 public final class TradingPeer implements PersistablePayload {
+    @Nullable
     private String accountId;
+    @Nullable
     private PaymentAccountPayload paymentAccountPayload;
-    // private Coin payoutAmount;
+    @Nullable
     private String payoutAddressString;
-    // private byte[] signature;
+    @Nullable
     private String contractAsJson;
+    @Nullable
     private String contractSignature;
+    @Nullable
     private byte[] signature;
+    @Nullable
     private PubKeyRing pubKeyRing;
+    @Nullable
     private byte[] multiSigPubKey;
+    @Nullable
     private List<RawTransactionInput> rawTransactionInputs;
     private long changeOutputValue;
     @Nullable
@@ -54,25 +64,18 @@ public final class TradingPeer implements PersistablePayload {
 
     @Override
     public Message toProtoMessage() {
-        // TODO
-        // nullable
-        // changeOutputAddress
-        //  .setRawTransactionInputs(rawTransactionInputs)
-        // .setPaymentAccountPayload(paymentAccountPayload.toProto())
-        // .setSignature(signature)
-        // .setMultiSigPubKey(multiSigPubKey)
-        return PB.TradingPeer.newBuilder()
-                .setAccountId(accountId)
-               /* .setPaymentAccountPayload(paymentAccountPayload.toProto())*/
-                .setPayoutAddressString(payoutAddressString)
-                .setContractAsJson(contractAsJson)
-                .setContractSignature(contractSignature)
-              /*  .setSignature(signature)*/
-                .setPubKeyRing(pubKeyRing.toProtoMessage())
-              /*  .setMultiSigPubKey(multiSigPubKey)*/
-                /*.setRawTransactionInputs(rawTransactionInputs)*/
-                .setChangeOutputValue(changeOutputValue)
-               /* .setChangeOutputAddress(changeOutputAddress)*/
-                .build();
+        final PB.TradingPeer.Builder builder = PB.TradingPeer.newBuilder()
+                .setChangeOutputValue(changeOutputValue);
+        Optional.ofNullable(accountId).ifPresent(builder::setAccountId);
+        Optional.ofNullable(paymentAccountPayload).ifPresent(e -> builder.setPaymentAccountPayload((PB.PaymentAccountPayload) paymentAccountPayload.toProtoMessage()));
+        Optional.ofNullable(payoutAddressString).ifPresent(builder::setPayoutAddressString);
+        Optional.ofNullable(contractAsJson).ifPresent(builder::setContractAsJson);
+        Optional.ofNullable(contractSignature).ifPresent(builder::setContractSignature);
+        Optional.ofNullable(signature).ifPresent(e -> builder.setSignature(ByteString.copyFrom(signature)));
+        Optional.ofNullable(pubKeyRing).ifPresent(e -> builder.setPubKeyRing(pubKeyRing.toProtoMessage()));
+        Optional.ofNullable(multiSigPubKey).ifPresent(e -> builder.setMultiSigPubKey(ByteString.copyFrom(multiSigPubKey)));
+        Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoUtil.collectionToProto(rawTransactionInputs)));
+        Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
+        return builder.build();
     }
 }

@@ -207,30 +207,29 @@ public final class Contract implements NetworkPayload {
         return Price.valueOf(offerPayload.getCurrencyCode(), tradePrice);
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return "Contract{" +
-                "\n\toffer=" + offerPayload +
-                "\n\ttradeAmount=" + tradeAmount +
-                "\n\ttradePrice=" + tradePrice +
-                "\n\ttakerFeeTxID='" + takerFeeTxID + '\'' +
-                "\n\tarbitratorAddress=" + arbitratorNodeAddress +
-                "\n\tmediatorNodeAddress=" + mediatorNodeAddress +
-                "\n\tisBuyerMakerAndSellerTaker=" + isBuyerMakerAndSellerTaker +
-                "\n\tmakerAccountId='" + makerAccountId + '\'' +
-                "\n\ttakerAccountId='" + takerAccountId + '\'' +
-                "\n\tmakerPaymentAccountPayload=" + makerPaymentAccountPayload +
-                "\n\ttakerPaymentAccountPayload=" + takerPaymentAccountPayload +
-                "\n\tmakerPubKeyRing=" + makerPubKeyRing +
-                "\n\ttakerPubKeyRing=" + takerPubKeyRing +
-                "\n\tbuyerAddress=" + buyerNodeAddress +
-                "\n\tsellerAddress=" + sellerNodeAddress +
-                "\n\tmakerPayoutAddressString='" + makerPayoutAddressString + '\'' +
-                "\n\ttakerPayoutAddressString='" + takerPayoutAddressString + '\'' +
-                "\n\tmakerMultiSigPubKey=" + Hex.toHexString(makerMultiSigPubKey) +
-                "\n\ttakerMultiSigPubKey=" + Hex.toHexString(takerMultiSigPubKey) +
-                "\n\tBuyerMultiSigPubKey=" + Hex.toHexString(getBuyerMultiSigPubKey()) +
-                "\n\tSellerMultiSigPubKey=" + Hex.toHexString(getSellerMultiSigPubKey()) +
-                '}';
+                "\n     offerPayload=" + offerPayload +
+                ",\n     tradeAmount=" + tradeAmount +
+                ",\n     tradePrice=" + tradePrice +
+                ",\n     takerFeeTxID='" + takerFeeTxID + '\'' +
+                ",\n     buyerNodeAddress=" + buyerNodeAddress +
+                ",\n     sellerNodeAddress=" + sellerNodeAddress +
+                ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
+                ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
+                ",\n     isBuyerMakerAndSellerTaker=" + isBuyerMakerAndSellerTaker +
+                ",\n     makerAccountId='" + makerAccountId + '\'' +
+                ",\n     takerAccountId='" + takerAccountId + '\'' +
+                ",\n     makerPaymentAccountPayload=" + makerPaymentAccountPayload +
+                ",\n     takerPaymentAccountPayload=" + takerPaymentAccountPayload +
+                ",\n     makerPubKeyRing=" + makerPubKeyRing +
+                ",\n     takerPubKeyRing=" + takerPubKeyRing +
+                ",\n     makerPayoutAddressString='" + makerPayoutAddressString + '\'' +
+                ",\n     takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
+                ",\n     makerMultiSigPubKey=" + Hex.toHexString(makerMultiSigPubKey) +
+                ",\n     takerMultiSigPubKey=" + Hex.toHexString(takerMultiSigPubKey) +
+                ",\n     BuyerMultiSigPubKey=" + Hex.toHexString(getBuyerMultiSigPubKey()) +
+                ",\n     SellerMultiSigPubKey=" + Hex.toHexString(getSellerMultiSigPubKey()) +
+                "\n}";
     }
 }

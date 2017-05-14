@@ -193,7 +193,7 @@ public class FileManager<T extends PersistableEnvelope> {
         try {
             protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
         } catch (Throwable e) {
-            log.warn("Not protobufferable: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
+            log.error("Not protobufferable: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }
 
         try {

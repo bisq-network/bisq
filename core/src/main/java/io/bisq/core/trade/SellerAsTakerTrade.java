@@ -56,15 +56,8 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void takeAvailableOffer() {
-        checkArgument(tradeProtocol instanceof TakerProtocol, "tradeProtocol NOT instanceof TakerProtocol");
-        ((TakerProtocol) tradeProtocol).takeAvailableOffer();
-    }
-
 
     @Override
     public PB.Tradable toProtoMessage() {
@@ -79,5 +72,16 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                 Coin.valueOf(trade.getTxFeeAsLong()), Coin.valueOf(trade.getTakerFeeAsLong()),
                 trade.getIsCurrencyForTakerFeeBtc(), trade.getTradePrice(),
                 NodeAddress.fromProto(trade.getTradingPeerNodeAddress()), storage, btcWalletService);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void takeAvailableOffer() {
+        checkArgument(tradeProtocol instanceof TakerProtocol, "tradeProtocol NOT instanceof TakerProtocol");
+        ((TakerProtocol) tradeProtocol).takeAvailableOffer();
     }
 }

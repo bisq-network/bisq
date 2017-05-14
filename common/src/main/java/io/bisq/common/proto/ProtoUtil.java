@@ -17,29 +17,28 @@
 
 package io.bisq.common.proto;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.Payload;
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class ProtoUtil {
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Convenience
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static <T extends Message> Iterable<T> collectionToProto(Collection<? extends Payload> collection) {
-        return collection.stream().map(e -> (T) e.toProtoMessage()).collect(Collectors.toList());
+    public static Set<byte[]> getByteSet(List<ByteString> byteStringList) {
+        return byteStringList.stream().map(ByteString::toByteArray).collect(Collectors.toSet());
     }
 
-    public static <T> Iterable<T> collectionToProto(Collection<? extends Payload> collection, Function<? super Message, T> extra) {
-        return collection.stream().map(o -> {
-            return extra.apply(o.toProtoMessage());
-        }).collect(Collectors.toList());
+    public static String getCurrencyCode(PB.OfferPayload pbOffer) {
+        return CurrencyUtil.isCryptoCurrency(pbOffer.getBaseCurrencyCode()) ? pbOffer.getBaseCurrencyCode() : pbOffer.getCounterCurrencyCode();
     }
 
     public static <E extends Enum<E>> E enumFromProto(Class<E> e, String id) {
@@ -51,5 +50,25 @@ public class ProtoUtil {
         }
 
         return result;
+    }
+
+    public static <T extends Message> Iterable<T> collectionToProto(Collection<? extends Payload> collection) {
+        return collection.stream()
+                .map(e -> {
+                    final Message message = e.toProtoMessage();
+                    try {
+                        //noinspection unchecked
+                        return (T) message;
+                    } catch (Throwable t) {
+                        log.error("message could not be casted. message=" + message);
+                        return null;
+                    }
+                })
+                .filter(e -> e != null)
+                .collect(Collectors.toList());
+    }
+
+    public static <T> Iterable<T> collectionToProto(Collection<? extends Payload> collection, Function<? super Message, T> extra) {
+        return collection.stream().map(o -> extra.apply(o.toProtoMessage())).collect(Collectors.toList());
     }
 }

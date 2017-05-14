@@ -2,7 +2,7 @@ package io.bisq.network.p2p.peers.getdata.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.app.Capabilities;
-import io.bisq.common.proto.ProtoCommonUtil;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.AnonymousMessage;
@@ -38,6 +38,6 @@ public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDat
 
     public static PreliminaryGetDataRequest fromProto(PB.PreliminaryGetDataRequest proto) {
         return new PreliminaryGetDataRequest(proto.getNonce(),
-                ProtoCommonUtil.getByteSet(proto.getExcludedKeysList()));
+                ProtoUtil.getByteSet(proto.getExcludedKeysList()));
     }
 }

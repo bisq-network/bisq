@@ -19,6 +19,7 @@ package io.bisq.core.trade.failed;
 
 import com.google.inject.Inject;
 import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -34,7 +35,7 @@ import javax.inject.Named;
 import java.io.File;
 import java.util.Optional;
 
-public class FailedTradesManager {
+public class FailedTradesManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(FailedTradesManager.class);
     private final TradableList<Trade> failedTrades;
     private final KeyRing keyRing;
@@ -54,6 +55,9 @@ public class FailedTradesManager {
         });
     }
 
+    @Override
+    public void readPersisted() {
+    }
     public void add(Trade trade) {
         if (!failedTrades.contains(trade))
             failedTrades.add(trade);

@@ -721,13 +721,13 @@ public class MainViewModel implements ViewModel {
                     if (now.after(maxTradePeriodDate))
                         trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
                     else if (now.after(halfTradePeriodDate))
-                        trade.setTradePeriodState(Trade.TradePeriodState.HALF_REACHED);
+                        trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
 
                     String key;
                     switch (trade.getTradePeriodState()) {
-                        case NORMAL:
+                        case FIRST_HALF:
                             break;
-                        case HALF_REACHED:
+                        case SECOND_HALF:
                             key = "displayHalfTradePeriodOver" + trade.getId();
                             if (DontShowAgainLookup.showAgain(key)) {
                                 DontShowAgainLookup.dontShowAgain(key, true);

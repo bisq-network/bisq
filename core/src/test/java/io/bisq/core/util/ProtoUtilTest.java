@@ -44,7 +44,7 @@ public class ProtoUtilTest {
 
     @Test
     public void testUnknownEnum() {
-        PB.OpenOffer.State result = PB.OpenOffer.State.UNKNOWN_FAILURE;
+        PB.OpenOffer.State result = PB.OpenOffer.State.PB_ERROR;
         try {
             OpenOffer.State finalResult = OpenOffer.State.valueOf(result.name());
             fail();
@@ -54,7 +54,7 @@ public class ProtoUtilTest {
 
     @Test
     public void testUnknownEnumFix() {
-        PB.OpenOffer.State result = PB.OpenOffer.State.UNKNOWN_FAILURE;
+        PB.OpenOffer.State result = PB.OpenOffer.State.PB_ERROR;
         try {
             OpenOffer.State finalResult = ProtoUtil.enumFromProto(OpenOffer.State.class, result.name());
             assertEquals(OpenOffer.State.AVAILABLE, ProtoUtil.enumFromProto(OpenOffer.State.class, "AVAILABLE"));

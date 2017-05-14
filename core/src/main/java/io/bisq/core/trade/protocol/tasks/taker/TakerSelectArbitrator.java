@@ -35,7 +35,7 @@ public class TakerSelectArbitrator extends TradeTask {
         try {
             runInterceptHook();
 
-            trade.applyArbitratorNodeAddress(ArbitratorSelectionRule.select(processModel.getUser().getAcceptedArbitratorAddresses(), processModel.getOffer()));
+            trade.setArbitratorNodeAddress(ArbitratorSelectionRule.select(processModel.getUser().getAcceptedArbitratorAddresses(), processModel.getOffer()));
 
             complete();
         } catch (Throwable t) {

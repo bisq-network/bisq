@@ -25,6 +25,7 @@ import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.AddressEntry;
@@ -75,7 +76,7 @@ import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class TradeManager {
+public class TradeManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
     private final User user;
@@ -165,6 +166,16 @@ public class TradeManager {
                 }
             }
         });
+    }
+
+    @Override
+    public void readPersisted() {
+       /* OpenOfferList persisted = openOffersStorage.initAndGetPersisted(openOfferList);
+        if (persisted != null)
+            openOfferList.addAll(persisted.getList());
+
+        observableList = FXCollections.observableArrayList(openOfferList.getList());
+        observableList.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));*/
     }
 
 
