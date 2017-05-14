@@ -491,8 +491,9 @@ message MailboxStoragePayload {
 
 message OfferPayload {
     enum Direction {
-        BUY = 0;
-        SELL = 1;
+        PB_ERROR = 0;
+        BUY = 1;
+        SELL = 2;
     }
 
     Direction direction = 1;
@@ -574,19 +575,20 @@ message Attachment {
 
 message DisputeResult {
     enum Winner {
-        BUYER = 0;
-        SELLER = 1;
+        PB_ERROR_WINNER = 0;
+        BUYER = 1;
+        SELLER = 2;
     }
-
-    // only append new values as we use the ordinal value
+    
     enum Reason {
-        OTHER = 0;
-        BUG = 1;
-        USABILITY = 2;
-        SCAM = 3;
-        PROTOCOL_VIOLATION = 4;
-        NO_REPLY = 5;
-        BANK_PROBLEMS = 6;
+        PB_ERROR_REASON = 0;
+        OTHER = 1;
+        BUG = 2;
+        USABILITY = 3;
+        SCAM = 4;
+        PROTOCOL_VIOLATION = 5;
+        NO_REPLY = 6;
+        BANK_PROBLEMS = 7;
     }
 
     string trade_id = 1;
@@ -641,14 +643,15 @@ message RawTransactionInput {
 }
 
 enum AvailabilityResult {
-    UNKNOWN_FAILURE = 0; // 0 is the default value when something goes wrong, map it to failure
-    AVAILABLE = 1;
-    OFFER_TAKEN = 2;
-    PRICE_OUT_OF_TOLERANCE = 3;
-    MARKET_PRICE_NOT_AVAILABLE = 4;
-    NO_ARBITRATORS = 5;
-    NO_MEDIATORS = 6;
-    USER_IGNORED = 7;
+    PB_ERROR = 0;
+    UNKNOWN_FAILURE = 1;
+    AVAILABLE = 2;
+    OFFER_TAKEN = 3;
+    PRICE_OUT_OF_TOLERANCE = 4;
+    MARKET_PRICE_NOT_AVAILABLE = 5;
+    NO_ARBITRATORS = 6;
+    NO_MEDIATORS = 7;
+    USER_IGNORED = 8;
 }
 
 
@@ -809,7 +812,10 @@ message PersistableEnvelope {
         TradeStatisticsList trade_statistics_list = 9;
         VoteItemsList vote_items_list = 10;
         TradableList tradable_list = 11;
-         
+        
+        TradeList trade_list = 16;
+        OpenOfferList open_offer_list = 17;
+                                         
          //TODO
         PendingTradeList pending_trade_list = 12;
         ClosedTradeList closed_trade_list = 13;
@@ -887,12 +893,13 @@ message UserPayload {
 
 message AddressEntry {
     enum Context {
-        ARBITRATOR = 0;
-        AVAILABLE = 1;
-        OFFER_FUNDING = 2;
-        RESERVED_FOR_TRADE = 3;
-        MULTI_SIG = 4;
-        TRADE_PAYOUT = 5;
+        PB_ERROR = 0;
+        ARBITRATOR = 1;
+        AVAILABLE = 2;
+        OFFER_FUNDING = 3;
+        RESERVED_FOR_TRADE = 4;
+        MULTI_SIG = 5;
+        TRADE_PAYOUT = 6;
     }
 
     string offer_id = 7;
@@ -913,12 +920,13 @@ message AddressEntryList {
 
 message Offer {
     enum State {
-       UNDEFINED = 0;
-       OFFER_FEE_PAID = 1;
-       AVAILABLE = 2;
-       NOT_AVAILABLE = 3;
-       REMOVED = 4;
-       MAKER_OFFLINE = 5;
+        PB_ERROR = 0;
+        UNKNOWN = 1;
+        OFFER_FEE_PAID = 2;
+        AVAILABLE = 3;
+        NOT_AVAILABLE = 4;
+        REMOVED = 5;
+        MAKER_OFFLINE = 6;
     }
 
     OfferPayload offer_payload = 1;
@@ -926,7 +934,7 @@ message Offer {
 
 message OpenOffer {
     enum State {
-        UNKNOWN_FAILURE = 0;
+        PB_ERROR = 0;
         AVAILABLE = 1;
         RESERVED = 2;
         CLOSED = 3;
@@ -951,61 +959,76 @@ message TradableList {
     repeated Tradable tradable = 1;
 }
 
+message OpenOfferList {
+    repeated OpenOffer open_offer = 1;
+}
+
+message TradeList {
+    repeated Trade trade = 1;
+}
+
 message Trade {
     enum State {
-        UNKNOWN_FAILURE = 0;
+        PB_ERROR_STATE = 0;
         PREPARATION = 1;
-        TAKER_FEE_PAID = 2;
-        OFFERER_SENT_PUBLISH_DEPOSIT_TX_REQUEST = 3;
-        TAKER_PUBLISHED_DEPOSIT_TX = 4;
-        DEPOSIT_SEEN_IN_NETWORK = 5;
-        TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG = 6;
-        OFFERER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG = 7;
-        DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN = 8;
-
-        BUYER_CONFIRMED_FIAT_PAYMENT_INITIATED = 9;
-        BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG = 10;
-        SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG = 11;
-
-        SELLER_CONFIRMED_FIAT_PAYMENT_RECEIPT = 12;
-        SELLER_SENT_FIAT_PAYMENT_RECEIPT_MSG = 13;
-        BUYER_RECEIVED_FIAT_PAYMENT_RECEIPT_MSG = 14;
-
-        BUYER_COMMITTED_PAYOUT_TX = 15;
-        BUYER_STARTED_SEND_PAYOUT_TX = 16;
-        SELLER_RECEIVED_AND_COMMITTED_PAYOUT_TX = 17;
-        PAYOUT_BROAD_CASTED = 18;
-        WITHDRAW_COMPLETED = 19;
+        TAKER_PUBLISHED_TAKER_FEE_TX = 2;
+        MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST = 3;
+        MAKER_SAW_ARRIVED_PUBLISH_DEPOSIT_TX_REQUEST = 4;
+        MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST = 5;
+        MAKER_SEND_FAILED_PUBLISH_DEPOSIT_TX_REQUEST = 6;
+        TAKER_RECEIVED_PUBLISH_DEPOSIT_TX_REQUEST = 7;
+        TAKER_PUBLISHED_DEPOSIT_TX = 8;
+        TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG = 9;
+        TAKER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG = 10;
+        TAKER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG = 11;
+        TAKER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG = 12;
+        MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG = 13;
+        MAKER_SAW_DEPOSIT_TX_IN_NETWORK = 14;
+        DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN = 15;
+        BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED = 16;
+        BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG = 17;
+        BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG = 18;
+        BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG = 19;
+        BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG = 20;
+        SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG = 21;
+        SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT = 22;
+        SELLER_PUBLISHED_PAYOUT_TX = 23;
+        SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG = 24;
+        SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG = 25;
+        SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG = 26;
+        SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG = 27;
+        BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG = 28;
+        BUYER_SAW_PAYOUT_TX_IN_NETWORK = 29;
+        WITHDRAW_COMPLETED = 30;
     }
 
     enum Phase {
-        PHASE_UNKNOWN_FAILURE = 0;
-        PHASE_PREPARATION = 1;
-        PHASE_TAKER_FEE_PAID = 2;
-        DEPOSIT_REQUESTED = 3;
-        DEPOSIT_PAID = 4;
+        PB_ERROR_PHASE = 0;
+        INIT = 1;
+        TAKER_FEE_PUBLISHED = 2;
+        DEPOSIT_PUBLISHED = 3;
+        DEPOSIT_CONFIRMED = 4;
         FIAT_SENT = 5;
         FIAT_RECEIVED = 6;
-        PAYOUT_PAID = 7;
+        PAYOUT_PUBLISHED = 7;
         WITHDRAWN = 8;
-        DISPUT = 9;
     }
-
+    
     enum DisputeState {
-        TRADED_DISPUTE_STATE_UNKNOWN_FAILURE = 0;
-        NONE = 1;
+        PB_ERROR_DISPUTE_STATE = 0;
+        NO_DISPUTE = 1;
         DISPUTE_REQUESTED = 2;
         DISPUTE_STARTED_BY_PEER = 3;
-        DISPUTE_CLOSE = 4;
+        DISPUTE_CLOSED = 4;
     }
-
+    
     enum TradePeriodState {
-        TRADE_PERIOD_STATE_UNKNOWN_FAILURE = 0;
-        NORMAL = 1;
-        HALF_REACHED = 2;
+        PB_ERROR_TRADE_PERIOD_STATE = 0;
+        FIRST_HALF = 1;
+        SECOND_HALF = 2;
         TRADE_PERIOD_OVER = 3;
     }
-
+    
     Offer offer = 1;
     ProcessModel process_model = 2;
     string taker_fee_tx_id = 3;
@@ -1113,11 +1136,11 @@ message BsqChainState {
 
 message VoteItem {
     enum VotingType {
-        UNKNOWN_FAILURE = 0;
-        CREATE_OFFER_FEE_IN_BTC = 1;
-        TAKE_OFFER_FEE_IN_BTC = 2;
-        CREATE_OFFER_FEE_IN_BSQ = 3;
-        TAKE_OFFER_FEE_IN_BSQ = 4;
+        PB_ERROR = 0;
+        MAKER_FEE_IN_BTC = 1;
+        TAKER_FEE_IN_BTC = 2;
+        MAKER_FEE_IN_BSQ = 3;
+        TAKER_FEE_IN_BSQ = 4;
         CREATE_COMPENSATION_REQUEST_FEE_IN_BSQ = 5;
         VOTING_FEE_IN_BSQ = 6;
         COMPENSATION_REQUEST_PERIOD_IN_BLOCKS = 7;

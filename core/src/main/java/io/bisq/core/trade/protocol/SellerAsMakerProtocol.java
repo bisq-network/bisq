@@ -59,7 +59,6 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
                         handleTaskRunnerSuccess("MakerSetupDepositTxListener");
-                        processModel.onComplete();
                     },
                     this::handleTaskRunnerFault);
 

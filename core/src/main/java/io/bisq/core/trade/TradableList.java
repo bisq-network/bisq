@@ -18,7 +18,6 @@
 package io.bisq.core.trade;
 
 import com.google.protobuf.Message;
-import io.bisq.common.proto.ProtoCollectionUtil;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -53,7 +52,6 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
         this.storage = storage;
 
         TradableList<T> persisted = storage.initAndGetPersisted(this, fileName);
-        log.error("persisted " + persisted);
         if (persisted != null)
             list = persisted.getList();
     }
@@ -70,9 +68,27 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
 
     @Override
     public Message toProtoMessage() {
-        log.error("toProtoMessage list=" + list);
-        return PB.PersistableEnvelope.newBuilder().setTradableList(PB.TradableList.newBuilder()
-                .addAllTradable(ProtoCollectionUtil.collectionToProto(list))).build();
+        if (!list.isEmpty()) {
+            if (list.get(0) instanceof OpenOffer) {
+                return PB.PersistableEnvelope.newBuilder()
+                        .setOpenOfferList(PB.OpenOfferList.newBuilder()
+                                .addAllOpenOffer(list.stream()
+                                        .map(e -> (PB.OpenOffer) e.toProtoMessage())
+                                        .collect(Collectors.toList())))
+                        .build();
+            } else {
+                return PB.PersistableEnvelope.newBuilder()
+                        .setTradeList(PB.TradeList.newBuilder()
+                                .addAllTrade(list.stream()
+                                        .map(e -> (PB.Trade) e.toProtoMessage())
+                                        .collect(Collectors.toList())))
+                        .build();
+            }
+        } else {
+            return PB.PersistableEnvelope.newBuilder()
+                    .setTradeList(PB.TradeList.newBuilder())
+                    .build();
+        }
     }
 
     public static TradableList fromProto(PB.TradableList proto,
@@ -85,7 +101,7 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                                          BtcWalletService btcWalletService) {
         log.error("fromProto " + proto);
         List list = proto.getTradableList().stream().map(tradable -> {
-            // corePersistenceProtoResolver.fromProto(tradable, st)
+            log.error("tradable.getMessageCase() " + tradable.getMessageCase());
             switch (tradable.getMessageCase()) {
                 case OPEN_OFFER:
                     return OpenOffer.fromProto(tradable.getOpenOffer());
@@ -115,6 +131,58 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
         }
 
         return null;
+    }
+
+   /* public static TradableList fromProto(PB.TradeList proto,
+                                         CorePersistenceProtoResolver corePersistenceProtoResolver,
+                                         Storage<TradableList<BuyerAsMakerTrade>> buyerAsMakerTradeStorage,
+                                         Storage<TradableList<BuyerAsTakerTrade>> buyerAsTakerTradeStorage,
+                                         Storage<TradableList<SellerAsMakerTrade>> sellerAsMakerTradeStorage,
+                                         Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage,
+                                         BtcWalletService btcWalletService) {
+        log.error("fromProto " + proto);
+        List list = proto.getTradeList().stream().map(trade -> {
+            // corePersistenceProtoResolver.fromProto(trade, st)
+            
+           
+            switch (trade.getMessageCase()) {
+                case OPEN_OFFER:
+                    return OpenOffer.fromProto(trade.getOpenOffer());
+                case BUYER_AS_MAKER_TRADE:
+                    return BuyerAsMakerTrade.fromProto(trade.getBuyerAsMakerTrade(), buyerAsMakerTradeStorage, btcWalletService);
+                case BUYER_AS_TAKER_TRADE:
+                    return BuyerAsTakerTrade.fromProto(trade.getBuyerAsTakerTrade(), buyerAsTakerTradeStorage, btcWalletService);
+                case SELLER_AS_MAKER_TRADE:
+                    return SellerAsMakerTrade.fromProto(trade.getSellerAsMakerTrade(), sellerAsMakerTradeStorage, btcWalletService);
+                case SELLER_AS_TAKER_TRADE:
+                    return SellerAsTakerTrade.fromProto(trade.getSellerAsTakerTrade(), sellerAsTakerTradeStorage, btcWalletService);
+            }
+            return null;
+        }).collect(Collectors.toList());
+
+        switch (list.get(0).getClass().getSimpleName()) {
+            case "OpenOffer":
+                return new TradableList<OpenOffer>(openOfferStorage, list);
+            case "BuyerAsMakerTrade":
+                return new TradableList<BuyerAsMakerTrade>(buyerAsMakerTradeStorage, list);
+            case "BuyerAsTakerTrade":
+                return new TradableList<BuyerAsTakerTrade>(buyerAsTakerTradeStorage, list);
+            case "SellerAsMakerTrade":
+                return new TradableList<SellerAsMakerTrade>(sellerAsMakerTradeStorage, list);
+            case "SellerAsTakerTrade":
+                return new TradableList<SellerAsTakerTrade>(sellerAsTakerTradeStorage, list);
+        }
+
+        return null;
+    }*/
+
+    public static TradableList fromProto(PB.OpenOfferList proto,
+                                         Storage<TradableList<OpenOffer>> openOfferStorage) {
+        return new TradableList<>(openOfferStorage,
+                proto.getOpenOfferList().stream()
+                        .map(OpenOffer::fromProto)
+                        .collect(Collectors.toList())
+        );
     }
 
 

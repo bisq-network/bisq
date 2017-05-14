@@ -17,7 +17,6 @@
 
 package io.bisq.core.util;
 
-import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.generated.protobuffer.PB.OfferPayload;
@@ -44,7 +43,7 @@ public class ProtoBufferUtilitiesTest {
 
     @Test
     public void testUnknownEnum() {
-        PB.OpenOffer.State result = PB.OpenOffer.State.UNKNOWN_FAILURE;
+        PB.OpenOffer.State result = PB.OpenOffer.State.PB_ERROR;
         try {
             OpenOffer.State finalResult = OpenOffer.State.valueOf(result.name());
             fail();

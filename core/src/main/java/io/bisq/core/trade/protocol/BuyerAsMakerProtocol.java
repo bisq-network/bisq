@@ -58,7 +58,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
                         handleTaskRunnerSuccess("MakerSetupDepositTxListener");
-                        processModel.onComplete();
                     },
                     this::handleTaskRunnerFault);
 
@@ -68,7 +67,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
                         handleTaskRunnerSuccess("BuyerSetupPayoutTxListener");
-                        processModel.onComplete();
                     },
                     this::handleTaskRunnerFault);
 
@@ -194,7 +192,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
                 () -> {
                     handleTaskRunnerSuccess("handle PayoutTxPublishedMessage");
-                    processModel.onComplete();
                 },
                 this::handleTaskRunnerFault);
 

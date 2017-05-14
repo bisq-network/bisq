@@ -38,8 +38,7 @@ public class KeyRing {
 
     // We generate by default a PGP keypair but the user can set his own if he prefers.
     // Not impl. yet but prepared in data structure
-    @Setter
-    @Nullable
+    @Nullable @Setter
     // TODO  remove Nullable once impl.
     private PGPKeyPair pgpKeyPair;
 

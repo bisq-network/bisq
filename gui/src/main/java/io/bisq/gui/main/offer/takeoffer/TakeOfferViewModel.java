@@ -293,7 +293,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         // 2. Before actually taking the offer in the take offer screen, we check again the availability as some time might have passed in the meantime
         // So we use the takeOfferRequested flag to display different network_messages depending on the context.
         switch (state) {
-            case UNDEFINED:
+            case UNKNOWN:
                 break;
             case OFFER_FEE_PAID:
                 // irrelevant for taker
@@ -336,7 +336,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         if (errorMessage != null) {
             String appendMsg = "";
             switch (trade.getState().getPhase()) {
-                case PREPARATION:
+                case INIT:
                     appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;
                 case TAKER_FEE_PUBLISHED:

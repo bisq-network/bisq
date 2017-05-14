@@ -188,10 +188,9 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(TradeManager.class));
             persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));
             persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
-            
+
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.stream().forEach(PersistedDataHost::readPersisted);
-
 
             Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
             Version.printVersion();

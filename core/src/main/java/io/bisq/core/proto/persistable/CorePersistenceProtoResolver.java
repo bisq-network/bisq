@@ -61,6 +61,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                 return AddressEntryList.fromProto(proto.getAddressEntryList());
             case VIEW_PATH_AS_STRING:
                 return PersistableViewPath.fromProto(proto.getViewPathAsString());
+            case OPEN_OFFER_LIST:
+                return TradableList.fromProto(proto.getOpenOfferList(), openOfferStorage);
             case TRADABLE_LIST:
                 return TradableList.fromProto(proto.getTradableList(),
                         this,

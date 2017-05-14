@@ -181,7 +181,7 @@ class TransactionsListItem {
                     } else if (trade.getPayoutTx() != null &&
                             trade.getPayoutTx().getHashAsString().equals(txId)) {
                         details = Res.get("funds.tx.multiSigPayout", id);
-                    } else if (trade.getDisputeState() != Trade.DisputeState.NONE) {
+                    } else if (trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE) {
                         if (valueSentToMe.isPositive()) {
                             details = Res.get("funds.tx.disputePayout", id);
                         } else {

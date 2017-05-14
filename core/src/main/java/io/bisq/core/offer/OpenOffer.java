@@ -85,6 +85,7 @@ public final class OpenOffer implements Tradable {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public Date getDate() {
         return offer.getDate();
     }

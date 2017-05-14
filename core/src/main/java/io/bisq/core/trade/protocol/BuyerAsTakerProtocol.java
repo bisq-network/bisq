@@ -58,7 +58,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> {
                         handleTaskRunnerSuccess("BuyerSetupPayoutTxListener");
-                        processModel.onComplete();
                     },
                     this::handleTaskRunnerFault);
 
@@ -179,7 +178,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
                 () -> {
                     handleTaskRunnerSuccess("handle PayoutTxPublishedMessage");
-                    processModel.onComplete();
                 },
                 this::handleTaskRunnerFault);
 
