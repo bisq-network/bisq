@@ -18,7 +18,6 @@
 package io.bisq.core.util;
 
 import io.bisq.common.proto.ProtoUtil;
-import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.generated.protobuffer.PB.OfferPayload;
@@ -27,7 +26,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-public class ProtoBufferUtilitiesTest {
+public class ProtoUtilTest {
 
 //TODO CoreProtobufferResolver is not accessible here
 // We should refactor it so that the classes themselves know how to deserialize 
@@ -57,8 +56,8 @@ public class ProtoBufferUtilitiesTest {
     public void testUnknownEnumFix() {
         PB.OpenOffer.State result = PB.OpenOffer.State.UNKNOWN_FAILURE;
         try {
-            OpenOffer.State finalResult = ProtoUtil.enumLookup(OpenOffer.State.class, result.name());
-            assertEquals(OpenOffer.State.AVAILABLE, ProtoUtil.enumLookup(OpenOffer.State.class, "AVAILABLE"));
+            OpenOffer.State finalResult = ProtoUtil.enumFromProto(OpenOffer.State.class, result.name());
+            assertEquals(OpenOffer.State.AVAILABLE, ProtoUtil.enumFromProto(OpenOffer.State.class, "AVAILABLE"));
         } catch (IllegalArgumentException e) {
             fail();
         }

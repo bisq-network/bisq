@@ -20,6 +20,7 @@ package io.bisq.core.offer;
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.util.JsonExclude;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
@@ -52,7 +53,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         BUY, SELL;
 
         public static OfferPayload.Direction fromProto(PB.OfferPayload.Direction direction) {
-            return OfferPayload.Direction.valueOf(direction.name());
+            return ProtoUtil.enumFromProto(OfferPayload.Direction.class, direction.name());
         }
 
         public static PB.OfferPayload.Direction toProtoMessage(Direction direction) {

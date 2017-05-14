@@ -17,6 +17,7 @@
 
 package io.bisq.core.dao.vote;
 
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
@@ -72,7 +73,7 @@ public class VoteItem implements PersistablePayload {
 
     public static VoteItem fromProto(PB.VoteItem voteItem) {
         VotingDefaultValues defaultValues = new VotingDefaultValues();
-        VotingType votingType = VotingType.valueOf(voteItem.getVotingType().name());
+        VotingType votingType = ProtoUtil.enumFromProto(VotingType.class, voteItem.getVotingType().name());
         defaultValues.setValueByVotingType(votingType, voteItem.getValue());
         return new VoteItem(votingType,
                 voteItem.getName(),

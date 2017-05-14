@@ -18,6 +18,7 @@
 package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import io.bisq.generated.protobuffer.PB;
@@ -123,7 +124,7 @@ public final class DisputeResult implements NetworkPayload {
     public static DisputeResult fromProto(PB.DisputeResult proto) {
         return new DisputeResult(proto.getTradeId(),
                 proto.getTraderId(),
-                DisputeResult.Winner.valueOf(proto.getWinner().name()),
+                ProtoUtil.enumFromProto(DisputeResult.Winner.class, proto.getWinner().name()),
                 proto.getReasonOrdinal(),
                 proto.getTamperProofEvidence(),
                 proto.getIdVerification(),

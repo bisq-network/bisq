@@ -55,7 +55,7 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
 
     @Override
     public PersistableEnvelope fromProto(PB.PersistableEnvelope proto) {
-        log.error("Convert protobuffer disk proto: {}", proto.getMessageCase());
+        log.info("Convert protobuffer disk proto: {}", proto.getMessageCase());
 
         switch (proto.getMessageCase()) {
             case ADDRESS_ENTRY_LIST:

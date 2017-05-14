@@ -42,7 +42,7 @@ public class ProtoUtil {
         }).collect(Collectors.toList());
     }
 
-    public static <E extends Enum<E>> E enumLookup(Class<E> e, String id) {
+    public static <E extends Enum<E>> E enumFromProto(Class<E> e, String id) {
         E result = null;
         try {
             result = Enum.valueOf(e, id);

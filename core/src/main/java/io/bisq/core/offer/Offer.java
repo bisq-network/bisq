@@ -325,7 +325,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public OfferPayload.Direction getDirection() {
-        return OfferPayload.Direction.valueOf(offerPayload.getDirection().name());
+        return offerPayload.getDirection();
     }
 
     public String getId() {

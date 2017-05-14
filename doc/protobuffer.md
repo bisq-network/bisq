@@ -42,9 +42,9 @@ For Java -> Protobuffer, you should extract the name from the Java enum:
 
     .setContext(PB.AddressEntry.Context.valueOf(context.name()))
 
-For Protobuffer -> Java, do the opposite:
+For Protobuffer -> Java, use the ProtoUtil helper method 'enumFromProto' to avoid crashes:
 
-    OfferPayload.Direction.valueOf(direction.name());
+    ProtoUtil.enumFromProto(OfferPayload.Direction.class, direction.name());
 
 ## How to handle Date 
  

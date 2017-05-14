@@ -18,6 +18,7 @@
 package io.bisq.core.btc;
 
 import com.google.protobuf.ByteString;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.WalletUtils;
@@ -114,7 +115,7 @@ public final class AddressEntry implements PersistablePayload {
     public static AddressEntry fromProto(PB.AddressEntry proto) {
         return new AddressEntry(proto.getPubKey().toByteArray(),
                 proto.getPubKeyHash().toByteArray(),
-                AddressEntry.Context.valueOf(proto.getContext().name()),
+                ProtoUtil.enumFromProto(AddressEntry.Context.class, proto.getContext().name()),
                 proto.getOfferId().isEmpty() ? null : proto.getOfferId(),
                 Coin.valueOf(proto.getCoinLockedInMultiSig()));
     }

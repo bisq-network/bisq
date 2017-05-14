@@ -189,14 +189,11 @@ public class FileManager<T extends PersistableEnvelope> {
         ObjectOutputStream objectOutputStream = null;
         PrintWriter printWriter = null;
 
-        log.error("persistable.class " + persistable.getClass().getSimpleName());
-        // log.error("persistable " + persistable);
         PB.PersistableEnvelope protoPersistable = null;
         try {
             protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
-            //log.error("protoPersistable " + protoPersistable);
         } catch (Throwable e) {
-            log.debug("Not protobufferable: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
+            log.warn("Not protobufferable: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }
 
         try {
@@ -227,7 +224,7 @@ public class FileManager<T extends PersistableEnvelope> {
                 // when rename temp file
                 fileOutputStream.close();
             } else {
-                log.warn("persistable write: {},{}", persistable.getClass(), persistable.toString());
+                log.warn("Could not persist: {},{}", persistable.getClass(), persistable.toString());
                 /*
                 // Don't use auto closeable resources in try() as we would need too many try/catch clauses (for tempFile)
                 // and we need to close it

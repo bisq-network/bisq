@@ -19,6 +19,7 @@ package io.bisq.core.offer.messages;
 
 
 import io.bisq.common.app.Capabilities;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.generated.protobuffer.PB;
@@ -52,6 +53,6 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
 
     public static OfferAvailabilityResponse fromProto(PB.OfferAvailabilityResponse proto) {
         return new OfferAvailabilityResponse(proto.getOfferId(),
-                AvailabilityResult.valueOf(proto.getAvailabilityResult().name()));
+                ProtoUtil.enumFromProto(AvailabilityResult.class, proto.getAvailabilityResult().name()));
     }
 }
