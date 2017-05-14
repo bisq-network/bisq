@@ -52,13 +52,8 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void handleTakeOfferRequest(TradeMessage message, NodeAddress taker) {
-        ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(message, taker);
-    }
 
     @Override
     public PB.Tradable toProtoMessage() {
@@ -72,5 +67,15 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                 Coin.valueOf(proto.getTrade().getTxFeeAsLong()),
                 Coin.valueOf(proto.getTrade().getTakerFeeAsLong()),
                 proto.getTrade().getIsCurrencyForTakerFeeBtc(), storage, btcWalletService);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void handleTakeOfferRequest(TradeMessage message, NodeAddress taker) {
+        ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(message, taker);
     }
 }

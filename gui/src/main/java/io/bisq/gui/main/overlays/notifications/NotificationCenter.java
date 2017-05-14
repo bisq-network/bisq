@@ -202,7 +202,7 @@ public class NotificationCenter {
                     Res.get("shared.supportTicket") :
                     Res.get("shared.dispute");
             switch (disputeState) {
-                case NONE:
+                case NO_DISPUTE:
                     break;
                 case DISPUTE_REQUESTED:
                     break;

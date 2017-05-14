@@ -18,10 +18,20 @@
 package io.bisq.core.proto;
 
 import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.core.arbitration.DisputeResult;
+import io.bisq.core.btc.AddressEntry;
+import io.bisq.core.dao.vote.VotingType;
+import io.bisq.core.offer.AvailabilityResult;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
+import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.payment.payload.BankAccountPayload;
 import io.bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
+import io.bisq.core.trade.Trade;
 import io.bisq.generated.protobuffer.PB;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ProtoCoreUtil {
 
 
@@ -47,5 +57,154 @@ public class ProtoCoreUtil {
     public static void fillInCountryBasedPaymentAccountPayload(PB.PaymentAccountPayload protoEntry,
                                                                CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload) {
         countryBasedPaymentAccountPayload.setCountryCode(protoEntry.getCountryBasedPaymentAccountPayload().getCountryCode());
+    }
+
+    // Util for auto generating enum values used in pb definition
+    public static void printAllEnumsForPB() {
+        StringBuilder sb = new StringBuilder("\n    enum State {\n");
+        sb.append("        PB_ERROR = 0;\n");
+        for (int i = 0; i < Trade.State.values().length; i++) {
+            Trade.State s = Trade.State.values()[i];
+            sb.append("        ");
+            sb.append(s.toString());
+            sb.append(" = ");
+            sb.append(s.ordinal() + 1);
+            sb.append(";\n");
+        }
+        sb.append("    }\n\n");
+
+        sb.append("    enum Phase {\n");
+        sb.append("        PB_ERROR = 0;\n");
+        for (int i = 0; i < Trade.Phase.values().length; i++) {
+            Trade.Phase s = Trade.Phase.values()[i];
+            sb.append("        ");
+            sb.append(s.toString());
+            sb.append(" = ");
+            sb.append(s.ordinal() + 1);
+            sb.append(";\n");
+        }
+        sb.append("    }\n\n\n");
+
+        sb.append("    enum DisputeState {\n");
+        sb.append("        PB_ERROR = 0;\n");
+        for (int i = 0; i < Trade.DisputeState.values().length; i++) {
+            Trade.DisputeState s = Trade.DisputeState.values()[i];
+            sb.append("        ");
+            sb.append(s.toString());
+            sb.append(" = ");
+            sb.append(s.ordinal() + 1);
+            sb.append(";\n");
+        }
+        sb.append("    }\n\n\n");
+
+        sb.append("    enum TradePeriodState {\n");
+        sb.append("        PB_ERROR = 0;\n");
+        for (int i = 0; i < Trade.TradePeriodState.values().length; i++) {
+            Trade.TradePeriodState s = Trade.TradePeriodState.values()[i];
+            sb.append("        ");
+            sb.append(s.toString());
+            sb.append(" = ");
+            sb.append(s.ordinal() + 1);
+            sb.append(";\n");
+        }
+        sb.append("    }\n\n\n");
+
+        sb.append("    enum VotingType {\n");
+        sb.append("        PB_ERROR = 0;\n");
+        for (int i = 0; i < VotingType.values().length; i++) {
+            VotingType s = VotingType.values()[i];
+            sb.append("        ");
+            sb.append(s.toString());
+            sb.append(" = ");
+            sb.append(s.ordinal() + 1);
+            sb.append(";\n");
+        }
+        sb.append("    }\n\n\n");
+
+        sb.append("    enum Direction {\n");
+        sb.append("        PB_ERROR = 0;\n");
+        for (int i = 0; i < OfferPayload.Direction.values().length; i++) {
+            OfferPayload.Direction s = OfferPayload.Direction.values()[i];
+            sb.append("        ");
+            sb.append(s.toString());
+            sb.append(" = ");
+            sb.append(s.ordinal() + 1);
+            sb.append(";\n");
+        }
+        sb.append("    }\n\n\n");
+
+        sb.append("    enum Winner {\n");
+        sb.append("        PB_ERROR = 0;\n");
+        for (int i = 0; i < DisputeResult.Winner.values().length; i++) {
+            DisputeResult.Winner s = DisputeResult.Winner.values()[i];
+            sb.append("        ");
+            sb.append(s.toString());
+            sb.append(" = ");
+            sb.append(s.ordinal() + 1);
+            sb.append(";\n");
+        }
+        sb.append("    }\n\n\n");
+
+        sb.append("    enum Reason {\n");
+        sb.append("        PB_ERROR = 0;\n");
+        for (int i = 0; i < DisputeResult.Reason.values().length; i++) {
+            DisputeResult.Reason s = DisputeResult.Reason.values()[i];
+            sb.append("        ");
+            sb.append(s.toString());
+            sb.append(" = ");
+            sb.append(s.ordinal() + 1);
+            sb.append(";\n");
+        }
+        sb.append("    }\n\n\n");
+
+        sb.append("    enum AvailabilityResult {\n");
+        sb.append("        PB_ERROR = 0;\n");
+        for (int i = 0; i < AvailabilityResult.values().length; i++) {
+            AvailabilityResult s = AvailabilityResult.values()[i];
+            sb.append("        ");
+            sb.append(s.toString());
+            sb.append(" = ");
+            sb.append(s.ordinal() + 1);
+            sb.append(";\n");
+        }
+        sb.append("    }\n\n\n");
+
+        sb.append("    enum Context {\n");
+        sb.append("        PB_ERROR = 0;\n");
+        for (int i = 0; i < AddressEntry.Context.values().length; i++) {
+            AddressEntry.Context s = AddressEntry.Context.values()[i];
+            sb.append("        ");
+            sb.append(s.toString());
+            sb.append(" = ");
+            sb.append(s.ordinal() + 1);
+            sb.append(";\n");
+        }
+        sb.append("    }\n\n\n");
+
+        sb.append("    enum State {\n");
+        sb.append("        PB_ERROR = 0;\n");
+        for (int i = 0; i < Offer.State.values().length; i++) {
+            Offer.State s = Offer.State.values()[i];
+            sb.append("        ");
+            sb.append(s.toString());
+            sb.append(" = ");
+            sb.append(s.ordinal() + 1);
+            sb.append(";\n");
+        }
+        sb.append("    }\n\n\n");
+
+        sb.append("    enum State {\n");
+        sb.append("        PB_ERROR = 0;\n");
+        for (int i = 0; i < OpenOffer.State.values().length; i++) {
+            OpenOffer.State s = OpenOffer.State.values()[i];
+            sb.append("        ");
+            sb.append(s.toString());
+            sb.append(" = ");
+            sb.append(s.ordinal() + 1);
+            sb.append(";\n");
+        }
+        sb.append("    }\n\n\n");
+
+        log.info(sb.toString());
     }
 }

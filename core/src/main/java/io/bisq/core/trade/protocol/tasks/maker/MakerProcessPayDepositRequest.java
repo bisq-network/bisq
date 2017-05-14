@@ -74,8 +74,8 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             processModel.setTakerAcceptedMediatorNodeAddresses(checkNotNull(payDepositRequest.getAcceptedMediatorNodeAddresses()));
             if (payDepositRequest.getAcceptedArbitratorNodeAddresses().isEmpty())
                 failed("acceptedArbitratorNames must not be empty");
-            trade.applyArbitratorNodeAddress(checkNotNull(payDepositRequest.getArbitratorNodeAddress()));
-            trade.applyMediatorNodeAddress(checkNotNull(payDepositRequest.getMediatorNodeAddress()));
+            trade.setArbitratorNodeAddress(checkNotNull(payDepositRequest.getArbitratorNodeAddress()));
+            trade.setMediatorNodeAddress(checkNotNull(payDepositRequest.getMediatorNodeAddress()));
 
             try {
                 long takersTradePrice = payDepositRequest.getTradePrice();

@@ -45,7 +45,7 @@ public class ProtoBufferUtilitiesTest {
 
     @Test
     public void testUnknownEnum() {
-        PB.OpenOffer.State result = PB.OpenOffer.State.UNKNOWN_FAILURE;
+        PB.OpenOffer.State result = PB.OpenOffer.State.PB_ERROR;
         try {
             OpenOffer.State finalResult = OpenOffer.State.valueOf(result.name());
             fail();

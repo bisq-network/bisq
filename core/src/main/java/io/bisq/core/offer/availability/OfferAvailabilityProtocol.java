@@ -82,7 +82,7 @@ public class OfferAvailabilityProtocol {
 
     public void sendOfferAvailabilityRequest() {
         // reset
-        model.offer.setState(Offer.State.UNDEFINED);
+        model.offer.setState(Offer.State.UNKNOWN);
 
         model.p2PService.addDecryptedDirectMessageListener(decryptedDirectMessageListener);
         model.setPeerNodeAddress(model.offer.getMakerNodeAddress());

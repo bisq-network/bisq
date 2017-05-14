@@ -361,7 +361,7 @@ public abstract class TradeStepView extends AnchorPane {
     private void updateDisputeState(Trade.DisputeState disputeState) {
         Optional<Dispute> ownDispute;
         switch (disputeState) {
-            case NONE:
+            case NO_DISPUTE:
                 break;
             case DISPUTE_REQUESTED:
                 onDisputeOpened();
@@ -405,9 +405,9 @@ public abstract class TradeStepView extends AnchorPane {
         if (trade.getDisputeState() != Trade.DisputeState.DISPUTE_REQUESTED &&
                 trade.getDisputeState() != Trade.DisputeState.DISPUTE_STARTED_BY_PEER) {
             switch (tradePeriodState) {
-                case NORMAL:
+                case FIRST_HALF:
                     break;
-                case HALF_REACHED:
+                case SECOND_HALF:
                     if (!trade.isFiatReceived())
                         showWarning();
                     else

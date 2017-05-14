@@ -120,7 +120,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
     @Override
     protected void activate() {
         // when leaving screen we reset state
-        offer.setState(Offer.State.UNDEFINED);
+        offer.setState(Offer.State.UNKNOWN);
 
         addBindings();
         addListeners();

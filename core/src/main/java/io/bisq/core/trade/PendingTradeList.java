@@ -15,40 +15,36 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bisq.core.offer;
+package io.bisq.core.trade;
 
-import com.google.protobuf.Message;
-import io.bisq.common.proto.persistable.PersistableEnvelope;
-import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class OpenOfferList implements PersistableEnvelope {
+public class PendingTradeList /*implements PersistableEnvelope */ {
     @Getter
     @Delegate
-    private List<OpenOffer> list = new ArrayList<>();
+    private List<Trade> list = new ArrayList<>();
 
-    public OpenOfferList() {
+    public PendingTradeList() {
     }
 
-    public OpenOfferList(List<OpenOffer> list) {
+    public PendingTradeList(List<Trade> list) {
         this.list = list;
     }
 
-    @Override
+   /* @Override
     public Message toProtoMessage() {
         return PB.PersistableEnvelope.newBuilder()
-                .setOpenOfferList(PB.OpenOfferList.newBuilder()
-                        .addAllOpenOffer(getList().stream().map(OpenOffer::toProtoMessage).collect(Collectors.toList())))
+                .setPendingTradeList(PB.PendingTradeList.newBuilder()
+                        .addAllTrade(getList().stream().map(Trade::toProtoMessage).collect(Collectors.toList())))
                 .build();
-    }
+    }*/
 
-    public static PersistableEnvelope fromProto(PB.OpenOfferList proto) {
-        return new OpenOfferList(proto.getOpenOfferList().stream().map(OpenOffer::fromProto)
+   /* public static PersistableEnvelope fromProto(PB.PendingTradeList proto) {
+        return new PendingTradeList(proto.getTradeList().stream().map(Trade::fromProto)
                 .collect(Collectors.toList()));
-    }
+    }*/
 }
