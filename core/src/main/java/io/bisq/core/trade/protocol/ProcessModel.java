@@ -20,7 +20,7 @@ package io.bisq.core.trade.protocol;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.proto.ProtoCollectionUtil;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.taskrunner.Model;
 import io.bisq.core.btc.data.RawTransactionInput;
@@ -134,10 +134,10 @@ public class ProcessModel implements Model, PersistablePayload {
                 .setUseSavingsWallet(useSavingsWallet);
         Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
         Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
-        Optional.ofNullable(takerAcceptedArbitratorNodeAddresses).ifPresent(e -> builder.addAllTakerAcceptedArbitratorNodeAddresses(ProtoCollectionUtil.collectionToProto(takerAcceptedArbitratorNodeAddresses)));
-        Optional.ofNullable(takerAcceptedMediatorNodeAddresses).ifPresent(e -> builder.addAllTakerAcceptedMediatorNodeAddresses(ProtoCollectionUtil.collectionToProto(takerAcceptedMediatorNodeAddresses)));
+        Optional.ofNullable(takerAcceptedArbitratorNodeAddresses).ifPresent(e -> builder.addAllTakerAcceptedArbitratorNodeAddresses(ProtoUtil.collectionToProto(takerAcceptedArbitratorNodeAddresses)));
+        Optional.ofNullable(takerAcceptedMediatorNodeAddresses).ifPresent(e -> builder.addAllTakerAcceptedMediatorNodeAddresses(ProtoUtil.collectionToProto(takerAcceptedMediatorNodeAddresses)));
         Optional.ofNullable(preparedDepositTx).ifPresent(e -> builder.setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx)));
-        Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoCollectionUtil.collectionToProto(rawTransactionInputs)));
+        Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoUtil.collectionToProto(rawTransactionInputs)));
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(myMultiSigPubKey).ifPresent(e -> builder.setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey)));
         Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
@@ -249,41 +249,7 @@ public class ProcessModel implements Model, PersistablePayload {
         return takeOfferFeeTx;
     }
 
-    public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
-        this.takeOfferFeeTx = takeOfferFeeTx;
-        takeOfferFeeTxId = takeOfferFeeTx.getHashAsString();
-    }
-
-    @Override
-    public Message toProtoMessage() {
-        return PB.ProcessModel.newBuilder()
-                .setTradingPeer((PB.TradingPeer) tradingPeer.toProtoMessage())
-                .setOfferId(offerId)
-                .setAccountId(accountId)
-                .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .setTakeOfferFeeTxId(takeOfferFeeTxId)
-                .setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature))
-                .addAllTakerAcceptedArbitratorNodeAddresses(ProtoCollectionUtil.collectionToProto(takerAcceptedArbitratorNodeAddresses))
-                .addAllTakerAcceptedMediatorNodeAddresses(ProtoCollectionUtil.collectionToProto(takerAcceptedMediatorNodeAddresses))
-                .setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx))
-                .addAllRawTransactionInputs(ProtoCollectionUtil.collectionToProto(rawTransactionInputs))
-                .setChangeOutputValue(changeOutputValue)
-                .setChangeOutputAddress(changeOutputAddress)
-                .setUseSavingsWallet(useSavingsWallet)
-                .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong)
-                .setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey))
-                .setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage())
-                .build();
-    }
-
-
-    public void removeMailboxMessageAfterProcessing(Trade trade) {
-        if (tradeMessage instanceof MailboxMessage &&
-                decryptedMessageWithPubKey != null &&
-                decryptedMessageWithPubKey.getWireEnvelope().equals(tradeMessage)) {
-            log.debug("Remove decryptedMsgWithPubKey from P2P network. decryptedMsgWithPubKey = " + decryptedMessageWithPubKey);
-            p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
-            trade.removeDecryptedMessageWithPubKey(decryptedMessageWithPubKey);
-        }
+    public NodeAddress getMyNodeAddress() {
+        return p2PService.getAddress();
     }
 }

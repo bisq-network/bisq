@@ -21,15 +21,12 @@ import com.google.protobuf.Message;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Delegate;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.function.Function;
 
 public class PersistableHashMap<K extends PersistablePayload, V extends PersistablePayload> implements PersistableEnvelope {
-    @Delegate
-    @Getter
+    @Delegate @Getter
     private HashMap<K, V> hashMap = new HashMap<>();
     @Setter
     private Function<HashMap<K, V>, Message> toProto;
@@ -40,15 +37,11 @@ public class PersistableHashMap<K extends PersistablePayload, V extends Persista
 
     public PersistableHashMap(HashMap<K, V> hashMap, Function<HashMap<K, V>, Message> toProto) {
         this(hashMap);
-        setToProto(toProto);
+        this.toProto = toProto;
     }
 
     @Override
     public Message toProtoMessage() {
-        if (Objects.isNull(toProto)) {
-            throw new NotImplementedException();
-        }
         return toProto.apply(hashMap);
     }
-
 }

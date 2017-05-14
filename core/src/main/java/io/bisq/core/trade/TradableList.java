@@ -18,7 +18,6 @@
 package io.bisq.core.trade;
 
 import com.google.protobuf.Message;
-import io.bisq.common.proto.ProtoCollectionUtil;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -69,8 +68,27 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
 
     @Override
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setTradableList(PB.TradableList.newBuilder()
-                .addAllTradable(ProtoCollectionUtil.collectionToProto(list))).build();
+        if (!list.isEmpty()) {
+            if (list.get(0) instanceof OpenOffer) {
+                return PB.PersistableEnvelope.newBuilder()
+                        .setOpenOfferList(PB.OpenOfferList.newBuilder()
+                                .addAllOpenOffer(list.stream()
+                                        .map(e -> (PB.OpenOffer) e.toProtoMessage())
+                                        .collect(Collectors.toList())))
+                        .build();
+            } else {
+                return PB.PersistableEnvelope.newBuilder()
+                        .setTradeList(PB.TradeList.newBuilder()
+                                .addAllTrade(list.stream()
+                                        .map(e -> (PB.Trade) e.toProtoMessage())
+                                        .collect(Collectors.toList())))
+                        .build();
+            }
+        } else {
+            return PB.PersistableEnvelope.newBuilder()
+                    .setTradeList(PB.TradeList.newBuilder())
+                    .build();
+        }
     }
 
     public static TradableList fromProto(PB.TradableList proto,

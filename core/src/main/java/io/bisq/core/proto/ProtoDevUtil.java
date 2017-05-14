@@ -17,7 +17,6 @@
 
 package io.bisq.core.proto;
 
-import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.core.arbitration.DisputeResult;
 import io.bisq.core.btc.AddressEntry;
 import io.bisq.core.dao.vote.VotingType;
@@ -25,40 +24,11 @@ import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.offer.OpenOffer;
-import io.bisq.core.payment.payload.BankAccountPayload;
-import io.bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
 import io.bisq.core.trade.Trade;
-import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ProtoCoreUtil {
-
-
-    public static String getCurrencyCode(PB.OfferPayload pbOffer) {
-        return CurrencyUtil.isCryptoCurrency(pbOffer.getBaseCurrencyCode()) ? pbOffer.getBaseCurrencyCode() : pbOffer.getCounterCurrencyCode();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PaymentAccountPayload Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static void fillInBankAccountPayload(PB.PaymentAccountPayload protoEntry, BankAccountPayload bankAccountPayload) {
-        PB.BankAccountPayload bankProto = protoEntry.getCountryBasedPaymentAccountPayload().getBankAccountPayload();
-        bankAccountPayload.setHolderName(bankProto.getHolderName());
-        bankAccountPayload.setBankName(bankProto.getBankName());
-        bankAccountPayload.setBankId(bankProto.getBankId());
-        bankAccountPayload.setBranchId(bankProto.getBranchId());
-        bankAccountPayload.setAccountNr(bankProto.getAccountNr());
-        bankAccountPayload.setAccountType(bankProto.getAccountType());
-    }
-
-    public static void fillInCountryBasedPaymentAccountPayload(PB.PaymentAccountPayload protoEntry,
-                                                               CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload) {
-        countryBasedPaymentAccountPayload.setCountryCode(protoEntry.getCountryBasedPaymentAccountPayload().getCountryCode());
-    }
-
+public class ProtoDevUtil {
     // Util for auto generating enum values used in pb definition
     public static void printAllEnumsForPB() {
         StringBuilder sb = new StringBuilder("\n    enum State {\n");
@@ -207,4 +177,5 @@ public class ProtoCoreUtil {
 
         log.info(sb.toString());
     }
+
 }

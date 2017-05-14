@@ -20,7 +20,7 @@ package io.bisq.core.trade.protocol;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.proto.ProtoCollectionUtil;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -74,7 +74,7 @@ public final class TradingPeer implements PersistablePayload {
         Optional.ofNullable(signature).ifPresent(e -> builder.setSignature(ByteString.copyFrom(signature)));
         Optional.ofNullable(pubKeyRing).ifPresent(e -> builder.setPubKeyRing(pubKeyRing.toProtoMessage()));
         Optional.ofNullable(multiSigPubKey).ifPresent(e -> builder.setMultiSigPubKey(ByteString.copyFrom(multiSigPubKey)));
-        Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoCollectionUtil.collectionToProto(rawTransactionInputs)));
+        Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoUtil.collectionToProto(rawTransactionInputs)));
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         return builder.build();
     }
