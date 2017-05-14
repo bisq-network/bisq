@@ -17,6 +17,7 @@
 
 package io.bisq.core.util;
 
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.core.offer.OpenOffer;
 import io.bisq.generated.protobuffer.PB;
@@ -48,7 +49,18 @@ public class ProtoBufferUtilitiesTest {
         try {
             OpenOffer.State finalResult = OpenOffer.State.valueOf(result.name());
             fail();
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
+        }
+    }
+
+    @Test
+    public void testUnknownEnumFix() {
+        PB.OpenOffer.State result = PB.OpenOffer.State.UNKNOWN_FAILURE;
+        try {
+            OpenOffer.State finalResult = ProtoUtil.enumLookup(OpenOffer.State.class, result.name());
+            assertEquals(OpenOffer.State.AVAILABLE, ProtoUtil.enumLookup(OpenOffer.State.class, "AVAILABLE"));
+        } catch (IllegalArgumentException e) {
+            fail();
         }
     }
 

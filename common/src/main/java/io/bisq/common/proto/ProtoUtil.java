@@ -19,12 +19,14 @@ package io.bisq.common.proto;
 
 import com.google.protobuf.Message;
 import io.bisq.common.Payload;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ProtoCollectionUtil {
+@Slf4j
+public class ProtoUtil {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Convenience
@@ -38,5 +40,16 @@ public class ProtoCollectionUtil {
         return collection.stream().map(o -> {
             return extra.apply(o.toProtoMessage());
         }).collect(Collectors.toList());
+    }
+
+    public static <E extends Enum<E>> E enumLookup(Class<E> e, String id) {
+        E result = null;
+        try {
+            result = Enum.valueOf(e, id);
+        } catch (IllegalArgumentException err) {
+            log.error("Invalid value for enum " + e.getSimpleName() + ": " + id, err);
+        }
+
+        return result;
     }
 }

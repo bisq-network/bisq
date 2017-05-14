@@ -18,7 +18,7 @@
 package io.bisq.core.payment;
 
 import io.bisq.common.locale.TradeCurrency;
-import io.bisq.common.proto.ProtoCollectionUtil;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -77,7 +77,7 @@ public abstract class PaymentAccount implements PersistablePayload {
                 .setCreationDate(creationDate)
                 .setPaymentAccountPayload((PB.PaymentAccountPayload) paymentAccountPayload.toProtoMessage())
                 .setAccountName(accountName)
-                .addAllTradeCurrencies(ProtoCollectionUtil.<PB.TradeCurrency>collectionToProto(tradeCurrencies));
+                .addAllTradeCurrencies(ProtoUtil.<PB.TradeCurrency>collectionToProto(tradeCurrencies));
         Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((PB.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
         return builder.build();
     }
