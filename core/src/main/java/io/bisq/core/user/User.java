@@ -20,6 +20,7 @@ package io.bisq.core.user;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.locale.LanguageUtil;
 import io.bisq.common.locale.TradeCurrency;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.arbitration.Arbitrator;
@@ -41,6 +42,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 
 /**
  * The User is persisted locally.
@@ -48,17 +51,15 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @AllArgsConstructor
-public final class User {
+public final class User implements PersistedDataHost {
+    final private Storage<UserPayload> storage;
+    final private KeyRing keyRing;
+
+    private ObservableSet<PaymentAccount> paymentAccountsAsObservable;
+    private ObjectProperty<PaymentAccount> currentPaymentAccountProperty;
+
     private UserPayload userPayload;
-
-    // Transient immutable fields
-    transient final private Storage<UserPayload> storage;
-    transient final private KeyRing keyRing;
-    transient private Set<TradeCurrency> tradeCurrenciesInPaymentAccounts;
-
-    // Observable wrappers
-    transient private ObservableSet<PaymentAccount> paymentAccountsAsObservable;
-    transient private ObjectProperty<PaymentAccount> currentPaymentAccountProperty;
+    private boolean initialReadDone;
 
     @Inject
     public User(Storage<UserPayload> storage, KeyRing keyRing) throws NoSuchAlgorithmException {
@@ -72,198 +73,55 @@ public final class User {
         keyRing = null;
     }
 
-    public void init() {
-        UserPayload persisted = storage.initAndGetPersistedWithFileName("UserVO");
+    @Override
+    public void readPersisted() {
+        UserPayload persisted = storage.initAndGetPersistedWithFileName("User");
         userPayload = persisted != null ? persisted : new UserPayload();
 
+        checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");
+        checkNotNull(userPayload.getAcceptedLanguageLocaleCodes(), "userPayload.getAcceptedLanguageLocaleCodes() must not be null");
         paymentAccountsAsObservable = FXCollections.observableSet(userPayload.getPaymentAccounts());
         currentPaymentAccountProperty = new SimpleObjectProperty<>(userPayload.getCurrentPaymentAccount());
-        userPayload.setAccountID(String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode())));
+        userPayload.setAccountId(String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode())));
+
         // language setup
         userPayload.getAcceptedLanguageLocaleCodes().add(LanguageUtil.getDefaultLanguageLocaleAsCode());
         String english = LanguageUtil.getEnglishLanguageLocaleCode();
         if (!userPayload.getAcceptedLanguageLocaleCodes().contains(english))
             userPayload.getAcceptedLanguageLocaleCodes().add(english);
 
-        storage.queueUpForSave();
 
         // Use that to guarantee update of the serializable field and to make a storage update in case of a change
         paymentAccountsAsObservable.addListener((SetChangeListener<PaymentAccount>) change -> {
             userPayload.setPaymentAccounts(new HashSet<>(paymentAccountsAsObservable));
-            tradeCurrenciesInPaymentAccounts = userPayload.getPaymentAccounts().stream().flatMap(e -> e.getTradeCurrencies().stream()).collect(Collectors.toSet());
-            storage.queueUpForSave();
+            persist();
         });
         currentPaymentAccountProperty.addListener((ov) -> {
             userPayload.setCurrentPaymentAccount(currentPaymentAccountProperty.get());
-            storage.queueUpForSave();
+            persist();
         });
 
-        tradeCurrenciesInPaymentAccounts = userPayload.getPaymentAccounts().stream().flatMap(e -> e.getTradeCurrencies().stream()).collect(Collectors.toSet());
+        //persist();
+        initialReadDone = true;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public Methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void addPaymentAccount(PaymentAccount paymentAccount) {
-        paymentAccountsAsObservable.add(paymentAccount);
-        setCurrentPaymentAccount(paymentAccount);
-    }
-
-    public void removePaymentAccount(PaymentAccount paymentAccount) {
-        paymentAccountsAsObservable.remove(paymentAccount);
-    }
-
-    public void setCurrentPaymentAccount(PaymentAccount paymentAccount) {
-        currentPaymentAccountProperty.set(paymentAccount);
-    }
-
-    public boolean addAcceptedLanguageLocale(String localeCode) {
-        if (!userPayload.getAcceptedLanguageLocaleCodes().contains(localeCode)) {
-            boolean changed = userPayload.getAcceptedLanguageLocaleCodes().add(localeCode);
-            if (changed)
-                storage.queueUpForSave();
-            return changed;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean removeAcceptedLanguageLocale(String languageLocaleCode) {
-        boolean changed = userPayload.getAcceptedLanguageLocaleCodes().remove(languageLocaleCode);
-        if (changed)
-            storage.queueUpForSave();
-        return changed;
-    }
-
-    public void addAcceptedArbitrator(Arbitrator arbitrator) {
-        if (!userPayload.getAcceptedArbitrators().contains(arbitrator) && !isMyOwnRegisteredArbitrator(arbitrator)) {
-            boolean changed = userPayload.getAcceptedArbitrators().add(arbitrator);
-            if (changed)
-                storage.queueUpForSave();
-        }
-    }
-
-    public void addAcceptedMediator(Mediator mediator) {
-        if (!userPayload.getAcceptedMediators().contains(mediator) && !isMyOwnRegisteredMediator(mediator)) {
-            boolean changed = userPayload.getAcceptedMediators().add(mediator);
-            if (changed)
-                storage.queueUpForSave();
-        }
-    }
-
-    public boolean isMyOwnRegisteredArbitrator(Arbitrator arbitrator) {
-        return arbitrator.equals(userPayload.getRegisteredArbitrator());
-    }
-
-    public boolean isMyOwnRegisteredMediator(Mediator mediator) {
-        return mediator.equals(userPayload.getRegisteredArbitrator());
-    }
-
-    public void removeAcceptedArbitrator(Arbitrator arbitrator) {
-        boolean changed = userPayload.getAcceptedArbitrators().remove(arbitrator);
-        if (changed)
-            storage.queueUpForSave();
-    }
-
-    public void clearAcceptedArbitrators() {
-        userPayload.getAcceptedArbitrators().clear();
-        storage.queueUpForSave();
-    }
-
-    public void removeAcceptedMediator(Mediator mediator) {
-        boolean changed = userPayload.getAcceptedMediators().remove(mediator);
-        if (changed)
-            storage.queueUpForSave();
-    }
-
-    public void clearAcceptedMediators() {
-        userPayload.getAcceptedMediators().clear();
-        storage.queueUpForSave();
-    }
-
-    public void setRegisteredArbitrator(@Nullable Arbitrator arbitrator) {
-        userPayload.setRegisteredArbitrator(arbitrator);
-        storage.queueUpForSave();
-    }
-
-    public void setRegisteredMediator(@Nullable Mediator mediator) {
-        userPayload.setRegisteredMediator(mediator);
-        storage.queueUpForSave();
-    }
-
-    public void setDevelopersFilter(@Nullable Filter developersFilter) {
-        userPayload.setDevelopersFilter(developersFilter);
-        storage.queueUpForSave();
+    private void persist() {
+        // TODO if we persist we get a blank screen (exception in view class contrs. or circ. dependency?)
+       /* if (initialReadDone)
+           storage.queueUpForSave(userPayload);*/
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
+    // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
-    public PaymentAccount getPaymentAccount(String paymentAccountId) {
-        Optional<PaymentAccount> optional = userPayload.getPaymentAccounts().stream().filter(e -> e.getId().equals(paymentAccountId)).findAny();
-        if (optional.isPresent())
-            return optional.get();
-        else
-            return null;
-    }
-
-    public String getAccountId() {
-        return userPayload.getAccountID();
-    }
-
-   /* public boolean isRegistered() {
-        return getAccountId() != null;
-    }*/
-
-    private PaymentAccount getCurrentPaymentAccount() {
-        return userPayload.getCurrentPaymentAccount();
-    }
-
-    public ObjectProperty<PaymentAccount> currentPaymentAccountProperty() {
-        return currentPaymentAccountProperty;
-    }
-
-    public Set<PaymentAccount> getPaymentAccounts() {
-        return userPayload.getPaymentAccounts();
-    }
-
-    public ObservableSet<PaymentAccount> getPaymentAccountsAsObservable() {
-        return paymentAccountsAsObservable;
-    }
-
-    @Nullable
-    public Arbitrator getRegisteredArbitrator() {
-        return userPayload.getRegisteredArbitrator();
-    }
-
-    @Nullable
-    public Mediator getRegisteredMediator() {
-        return userPayload.getRegisteredMediator();
-    }
-
-    public List<Arbitrator> getAcceptedArbitrators() {
-        return userPayload.getAcceptedArbitrators();
-    }
-
-    public List<NodeAddress> getAcceptedArbitratorAddresses() {
-        return userPayload.getAcceptedArbitrators().stream().map(Arbitrator::getNodeAddress).collect(Collectors.toList());
-    }
-
-    public List<Mediator> getAcceptedMediators() {
-        return userPayload.getAcceptedMediators();
-    }
-
-    public List<NodeAddress> getAcceptedMediatorAddresses() {
-        return userPayload.getAcceptedMediators().stream().map(Mediator::getNodeAddress).collect(Collectors.toList());
-    }
-
-    public List<String> getAcceptedLanguageLocaleCodes() {
-        return userPayload.getAcceptedLanguageLocaleCodes() != null ? userPayload.getAcceptedLanguageLocaleCodes() : new ArrayList<>();
-    }
+    /*  public Optional<TradeCurrency> getPaymentAccountForCurrency(TradeCurrency tradeCurrency) {
+          return getPaymentAccounts().stream()
+                  .flatMap(e -> e.getTradeCurrencies().stream())
+                  .filter(e -> e.equals(tradeCurrency))
+                  .findFirst();
+      }*/
 
     public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
         Optional<Arbitrator> arbitratorOptional = userPayload.getAcceptedArbitrators().stream()
@@ -284,23 +142,6 @@ public final class User {
         else
             return null;
     }
-
-    @Nullable
-    public Filter getDevelopersFilter() {
-        return userPayload.getDevelopersFilter();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-  /*  public Optional<TradeCurrency> getPaymentAccountForCurrency(TradeCurrency tradeCurrency) {
-        return getPaymentAccounts().stream()
-                .flatMap(e -> e.getTradeCurrencies().stream())
-                .filter(e -> e.equals(tradeCurrency))
-                .findFirst();
-    }*/
 
     @Nullable
     public PaymentAccount findFirstPaymentAccountWithCurrency(TradeCurrency tradeCurrency) {
@@ -329,9 +170,202 @@ public final class User {
         return findFirstPaymentAccountWithCurrency(tradeCurrency) != null;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Collection operations
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void addPaymentAccount(PaymentAccount paymentAccount) {
+        boolean changed = paymentAccountsAsObservable.add(paymentAccount);
+        setCurrentPaymentAccount(paymentAccount);
+        if (changed)
+            persist();
+    }
+
+    public void removePaymentAccount(PaymentAccount paymentAccount) {
+        boolean changed = paymentAccountsAsObservable.remove(paymentAccount);
+        if (changed)
+            persist();
+    }
+
+    public boolean addAcceptedLanguageLocale(String localeCode) {
+        boolean changed = userPayload.getAcceptedLanguageLocaleCodes() != null &&
+                !userPayload.getAcceptedLanguageLocaleCodes().contains(localeCode) &&
+                userPayload.getAcceptedLanguageLocaleCodes().add(localeCode);
+        if (changed)
+            persist();
+        return changed;
+    }
+
+    public boolean removeAcceptedLanguageLocale(String languageLocaleCode) {
+        boolean changed = userPayload.getAcceptedLanguageLocaleCodes() != null &&
+                userPayload.getAcceptedLanguageLocaleCodes().remove(languageLocaleCode);
+        if (changed)
+            persist();
+        return changed;
+    }
+
+    public void addAcceptedArbitrator(Arbitrator arbitrator) {
+        if (userPayload.getAcceptedArbitrators() != null &&
+                !userPayload.getAcceptedArbitrators().contains(arbitrator) &&
+                !isMyOwnRegisteredArbitrator(arbitrator)) {
+            boolean changed = userPayload.getAcceptedArbitrators().add(arbitrator);
+            if (changed)
+                persist();
+        }
+    }
+
+    public void addAcceptedMediator(Mediator mediator) {
+        if (userPayload.getAcceptedMediators() != null &&
+                !userPayload.getAcceptedMediators().contains(mediator) &&
+                !isMyOwnRegisteredMediator(mediator)) {
+            boolean changed = userPayload.getAcceptedMediators().add(mediator);
+            if (changed)
+                persist();
+        }
+    }
+
+
+    public void removeAcceptedArbitrator(Arbitrator arbitrator) {
+        if (userPayload.getAcceptedArbitrators() != null) {
+            boolean changed = userPayload.getAcceptedArbitrators().remove(arbitrator);
+            if (changed)
+                persist();
+        }
+    }
+
+    public void clearAcceptedArbitrators() {
+        if (userPayload.getAcceptedArbitrators() != null) {
+            userPayload.getAcceptedArbitrators().clear();
+            persist();
+        }
+    }
+
+    public void removeAcceptedMediator(Mediator mediator) {
+        if (userPayload.getAcceptedMediators() != null) {
+            boolean changed = userPayload.getAcceptedMediators().remove(mediator);
+            if (changed)
+                persist();
+        }
+    }
+
+    public void clearAcceptedMediators() {
+        if (userPayload.getAcceptedMediators() != null) {
+            userPayload.getAcceptedMediators().clear();
+            persist();
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Setters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public void setCurrentPaymentAccount(PaymentAccount paymentAccount) {
+        currentPaymentAccountProperty.set(paymentAccount);
+        persist();
+    }
+
+    public void setRegisteredArbitrator(@Nullable Arbitrator arbitrator) {
+        userPayload.setRegisteredArbitrator(arbitrator);
+        persist();
+    }
+
+    public void setRegisteredMediator(@Nullable Mediator mediator) {
+        userPayload.setRegisteredMediator(mediator);
+        persist();
+    }
+
+    public void setDevelopersFilter(@Nullable Filter developersFilter) {
+        userPayload.setDevelopersFilter(developersFilter);
+        persist();
+    }
+
     public void setDevelopersAlert(@Nullable Alert developersAlert) {
         userPayload.setDevelopersAlert(developersAlert);
-        storage.queueUpForSave();
+        persist();
+    }
+
+    public void setDisplayedAlert(@Nullable Alert displayedAlert) {
+        userPayload.setDisplayedAlert(displayedAlert);
+        persist();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Nullable
+    public PaymentAccount getPaymentAccount(String paymentAccountId) {
+        Optional<PaymentAccount> optional = userPayload.getPaymentAccounts().stream().filter(e -> e.getId().equals(paymentAccountId)).findAny();
+        if (optional.isPresent())
+            return optional.get();
+        else
+            return null;
+    }
+
+    public String getAccountId() {
+        return userPayload.getAccountId();
+    }
+
+   /* public boolean isRegistered() {
+        return getAccountId() != null;
+    }*/
+
+    private PaymentAccount getCurrentPaymentAccount() {
+        return userPayload.getCurrentPaymentAccount();
+    }
+
+    public ObjectProperty<PaymentAccount> currentPaymentAccountProperty() {
+        return currentPaymentAccountProperty;
+    }
+
+    @Nullable
+    public Set<PaymentAccount> getPaymentAccounts() {
+        return userPayload.getPaymentAccounts();
+    }
+
+    public ObservableSet<PaymentAccount> getPaymentAccountsAsObservable() {
+        return paymentAccountsAsObservable;
+    }
+
+    @Nullable
+    public Arbitrator getRegisteredArbitrator() {
+        return userPayload.getRegisteredArbitrator();
+    }
+
+    @Nullable
+    public Mediator getRegisteredMediator() {
+        return userPayload.getRegisteredMediator();
+    }
+
+    public List<Arbitrator> getAcceptedArbitrators() {
+        return userPayload.getAcceptedArbitrators();
+    }
+
+    @Nullable
+    public List<NodeAddress> getAcceptedArbitratorAddresses() {
+        return userPayload.getAcceptedArbitrators().stream().map(Arbitrator::getNodeAddress).collect(Collectors.toList());
+    }
+
+    public List<Mediator> getAcceptedMediators() {
+        return userPayload.getAcceptedMediators();
+    }
+
+    @Nullable
+    public List<NodeAddress> getAcceptedMediatorAddresses() {
+        return userPayload.getAcceptedMediators().stream().map(Mediator::getNodeAddress).collect(Collectors.toList());
+    }
+
+    public List<String> getAcceptedLanguageLocaleCodes() {
+        return userPayload.getAcceptedLanguageLocaleCodes() != null ? userPayload.getAcceptedLanguageLocaleCodes() : new ArrayList<>();
+    }
+
+    @Nullable
+    public Filter getDevelopersFilter() {
+        return userPayload.getDevelopersFilter();
     }
 
     @Nullable
@@ -339,13 +373,16 @@ public final class User {
         return userPayload.getDevelopersAlert();
     }
 
-    public void setDisplayedAlert(@Nullable Alert displayedAlert) {
-        userPayload.setDisplayedAlert(displayedAlert);
-        storage.queueUpForSave();
-    }
-
     @Nullable
     public Alert getDisplayedAlert() {
         return userPayload.getDisplayedAlert();
+    }
+
+    public boolean isMyOwnRegisteredArbitrator(Arbitrator arbitrator) {
+        return arbitrator.equals(userPayload.getRegisteredArbitrator());
+    }
+
+    public boolean isMyOwnRegisteredMediator(Mediator mediator) {
+        return mediator.equals(userPayload.getRegisteredMediator());
     }
 }

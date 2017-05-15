@@ -566,8 +566,7 @@ public class MainViewModel implements ViewModel {
         updateBalance();
         if (DevEnv.DEV_MODE) {
             preferences.setShowOwnOffersInOfferBook(true);
-            if (user.getPaymentAccounts().isEmpty())
-                setupDevDummyPaymentAccounts();
+            setupDevDummyPaymentAccounts();
         }
 
         setupMarketPriceFeed();
@@ -1021,16 +1020,18 @@ public class MainViewModel implements ViewModel {
     }
 
     private void setupDevDummyPaymentAccounts() {
-        OKPayAccount okPayAccount = new OKPayAccount();
-        okPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
-        okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
-        okPayAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
-        user.addPaymentAccount(okPayAccount);
+        if (user.getPaymentAccounts() != null && user.getPaymentAccounts().isEmpty()) {
+            OKPayAccount okPayAccount = new OKPayAccount();
+            okPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
+            okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
+            okPayAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
+            user.addPaymentAccount(okPayAccount);
 
-        CryptoCurrencyAccount cryptoCurrencyAccount = new CryptoCurrencyAccount();
-        cryptoCurrencyAccount.setAccountName("ETH dummy");// Don't translate only for dev
-        cryptoCurrencyAccount.setAddress("0x" + new Random().nextInt(1000000));
-        cryptoCurrencyAccount.setSingleTradeCurrency(CurrencyUtil.getCryptoCurrency("ETH").get());
-        user.addPaymentAccount(cryptoCurrencyAccount);
+            CryptoCurrencyAccount cryptoCurrencyAccount = new CryptoCurrencyAccount();
+            cryptoCurrencyAccount.setAccountName("ETH dummy");// Don't translate only for dev
+            cryptoCurrencyAccount.setAddress("0x" + new Random().nextInt(1000000));
+            cryptoCurrencyAccount.setSingleTradeCurrency(CurrencyUtil.getCryptoCurrency("ETH").get());
+            user.addPaymentAccount(cryptoCurrencyAccount);
+        }
     }
 }

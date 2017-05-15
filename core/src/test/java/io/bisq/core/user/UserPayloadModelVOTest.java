@@ -30,7 +30,7 @@ public class UserPayloadModelVOTest {
     @Test
     public void testRoundtrip() {
         UserPayload vo = new UserPayload();
-        vo.setAccountID("accountId");
+        vo.setAccountId("accountId");
 
         UserPayload newVo = UserPayload.fromProto(vo.toProtoMessage().getUserPayload(), new CoreProtoResolver());
     }
@@ -38,7 +38,7 @@ public class UserPayloadModelVOTest {
     @Test
     public void testRoundtripFull() {
         UserPayload vo = new UserPayload();
-        vo.setAccountID("accountId");
+        vo.setAccountId("accountId");
         vo.setDisplayedAlert(new Alert("message", true, "version", new byte[]{12,-64,12}, "string", null));
         vo.setDevelopersFilter(new Filter(Lists.newArrayList(), Lists.newArrayList(), Lists.newArrayList(), "string", new byte[]{10,0,0}, null));
         vo.setRegisteredArbitrator(ArbitratorTest.getArbitratorMock());

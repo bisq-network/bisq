@@ -19,11 +19,13 @@ package io.bisq.core.app;
 
 import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
-import io.bisq.core.user.Preferences;
+import io.bisq.common.proto.persistable.PersistedDataHost;
+import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.network.crypto.EncryptionService;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 
 @Slf4j
 public class AppSetup {
@@ -34,12 +36,19 @@ public class AppSetup {
     public AppSetup(BisqEnvironment bisqEnvironment,
                     EncryptionService encryptionService,
                     KeyRing keyRing,
-                    Preferences preferences) {
+                    TradeStatisticsManager tradeStatisticsManager) {
         // we need to reference it so the seed node stores tradeStatistics
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
 
-        preferences.init();
+
+        // All classes which are persisting objects need to be added here
+        // Maintain order!
+        ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
+        persistedDataHosts.add(tradeStatisticsManager);
+
+        // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
+        persistedDataHosts.stream().forEach(PersistedDataHost::readPersisted);
 
         Version.setBtcNetworkId(bisqEnvironment.getBitcoinNetwork().ordinal());
         Version.printVersion();

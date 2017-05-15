@@ -17,9 +17,8 @@
 
 package io.bisq.core.user;
 
-import com.google.protobuf.Message;
-import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.ProtoResolver;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.core.alert.Alert;
 import io.bisq.core.arbitration.Arbitrator;
@@ -39,11 +38,13 @@ import java.util.stream.Collectors;
 @Data
 @AllArgsConstructor
 public class UserPayload implements PersistableEnvelope {
-    // Persisted fields
-    private String accountID;
+    @Nullable
+    private String accountId;
+    @Nullable
     private Set<PaymentAccount> paymentAccounts = new HashSet<>();
     @Nullable
     private PaymentAccount currentPaymentAccount;
+    @Nullable
     private List<String> acceptedLanguageLocaleCodes = new ArrayList<>();
     @Nullable
     private Alert developersAlert;
@@ -55,8 +56,9 @@ public class UserPayload implements PersistableEnvelope {
     private Arbitrator registeredArbitrator;
     @Nullable
     private Mediator registeredMediator;
-
+    @Nullable
     private List<Arbitrator> acceptedArbitrators = new ArrayList<>();
+    @Nullable
     private List<Mediator> acceptedMediators = new ArrayList<>();
 
     public UserPayload() {
@@ -64,15 +66,14 @@ public class UserPayload implements PersistableEnvelope {
 
     @Override
     public PB.PersistableEnvelope toProtoMessage() {
-        PB.UserPayload.Builder builder = PB.UserPayload.newBuilder()
-                .setAccountId(accountID)
-                .addAllPaymentAccounts(ProtoUtil.collectionToProto(paymentAccounts))
-                .addAllAcceptedLanguageLocaleCodes(acceptedLanguageLocaleCodes)
-                .addAllAcceptedArbitrators(ProtoUtil.collectionToProto(acceptedArbitrators, (Message storage) -> ((PB.StoragePayload) storage).getArbitrator()))
-                .addAllAcceptedMediators(ProtoUtil.collectionToProto(acceptedMediators, (Message storage) -> ((PB.StoragePayload) storage).getMediator()));
-
+        PB.UserPayload.Builder builder = PB.UserPayload.newBuilder();
+        Optional.ofNullable(accountId).ifPresent(e -> builder.setAccountId(accountId));
+        Optional.ofNullable(paymentAccounts)
+                .ifPresent(e -> builder.addAllPaymentAccounts(ProtoUtil.collectionToProto(paymentAccounts)));
         Optional.ofNullable(currentPaymentAccount)
-                .ifPresent(paymentAccount -> builder.setCurrentPaymentAccount(paymentAccount.toProtoMessage()));
+                .ifPresent(e -> builder.setCurrentPaymentAccount(currentPaymentAccount.toProtoMessage()));
+        Optional.ofNullable(acceptedLanguageLocaleCodes)
+                .ifPresent(e -> builder.addAllAcceptedLanguageLocaleCodes(acceptedLanguageLocaleCodes));
         Optional.ofNullable(developersAlert)
                 .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProtoMessage().getAlert()));
         Optional.ofNullable(displayedAlert)
@@ -83,21 +84,50 @@ public class UserPayload implements PersistableEnvelope {
                 .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProtoMessage().getArbitrator()));
         Optional.ofNullable(registeredMediator)
                 .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProtoMessage().getAlert()));
+        Optional.ofNullable(acceptedArbitrators)
+                .ifPresent(e -> builder.addAllAcceptedArbitrators(ProtoUtil.collectionToProto(acceptedArbitrators,
+                        storage -> ((PB.StoragePayload) storage).getArbitrator())));
+        Optional.ofNullable(acceptedMediators)
+                .ifPresent(e -> builder.addAllAcceptedMediators(ProtoUtil.collectionToProto(acceptedMediators,
+                        storage -> ((PB.StoragePayload) storage).getMediator())));
         return PB.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
     }
 
     public static UserPayload fromProto(PB.UserPayload proto, ProtoResolver resolver) {
-        return new UserPayload(proto.getAccountId(),
-                proto.getPaymentAccountsList().stream().map(e -> PaymentAccount.fromProto(e, resolver)).collect(Collectors.toSet()),
+        return new UserPayload(
+                proto.getAccountId().isEmpty() ? null : proto.getAccountId(),
+                proto.getPaymentAccountsList().isEmpty() ? null : proto.getPaymentAccountsList().stream()
+                        .map(e -> PaymentAccount.fromProto(e, resolver))
+                        .collect(Collectors.toSet()),
                 proto.hasCurrentPaymentAccount() ? PaymentAccount.fromProto(proto.getCurrentPaymentAccount(), resolver) : null,
-                proto.getAcceptedLanguageLocaleCodesList(),
+                proto.getAcceptedLanguageLocaleCodesList().isEmpty() ? null : new ArrayList<>(proto.getAcceptedLanguageLocaleCodesList()),
                 proto.hasDevelopersAlert() ? Alert.fromProto(proto.getDevelopersAlert()) : null,
                 proto.hasDisplayedAlert() ? Alert.fromProto(proto.getDisplayedAlert()) : null,
                 proto.hasDevelopersFilter() ? Filter.fromProto(proto.getDevelopersFilter()) : null,
                 proto.hasRegisteredArbitrator() ? Arbitrator.fromProto(proto.getRegisteredArbitrator()) : null,
                 proto.hasRegisteredMediator() ? Mediator.fromProto(proto.getRegisteredMediator()) : null,
-                proto.getAcceptedArbitratorsList().stream().map(Arbitrator::fromProto).collect(Collectors.toList()),
-                proto.getAcceptedMediatorsList().stream().map(Mediator::fromProto).collect(Collectors.toList())
+                proto.getAcceptedArbitratorsList().isEmpty() ? null : proto.getAcceptedArbitratorsList().stream()
+                        .map(Arbitrator::fromProto)
+                        .collect(Collectors.toList()),
+                proto.getAcceptedMediatorsList().isEmpty() ? null : proto.getAcceptedMediatorsList().stream()
+                        .map(Mediator::fromProto)
+                        .collect(Collectors.toList())
         );
     }
+/*
+    public void apply(UserPayload persisted) {
+        if (persisted != null) {
+            accountId = persisted.getAccountId();
+            paymentAccounts = persisted.getPaymentAccounts();
+            currentPaymentAccount = persisted.getCurrentPaymentAccount();
+            acceptedLanguageLocaleCodes = persisted.getAcceptedLanguageLocaleCodes();
+            developersAlert = persisted.getDevelopersAlert();
+            displayedAlert = persisted.getDisplayedAlert();
+            developersFilter = persisted.getDevelopersFilter();
+            registeredArbitrator = persisted.getRegisteredArbitrator();
+            registeredMediator = persisted.getRegisteredMediator();
+            acceptedArbitrators = persisted.getAcceptedArbitrators();
+            acceptedMediators = persisted.getAcceptedMediators();
+        }
+    }*/
 }
