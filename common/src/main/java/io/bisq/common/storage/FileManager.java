@@ -189,14 +189,12 @@ public class FileManager<T extends PersistableEnvelope> {
         ObjectOutputStream objectOutputStream = null;
         PrintWriter printWriter = null;
 
-        log.error("persistable.class " + persistable.getClass().getSimpleName());
-        log.error("persistable " + persistable);
+        log.info("saveToFile persistable.class " + persistable.getClass().getSimpleName());
         PB.PersistableEnvelope protoPersistable = null;
         try {
             protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
-            log.error("protoPersistable " + protoPersistable);
         } catch (Throwable e) {
-            log.error("Not protobufferable: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
+            log.error("Error at saveToFile: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }
 
         try {

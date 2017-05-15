@@ -19,7 +19,7 @@ package io.bisq.core.app;
 
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.core.dao.blockchain.BsqBlockchainManager;
-import io.bisq.core.user.Preferences;
+import io.bisq.core.trade.statistics.TradeStatisticsManager;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.P2PService;
 import io.bisq.network.p2p.P2PServiceListener;
@@ -45,11 +45,11 @@ public class AppSetupWithP2PAndDAO extends AppSetup {
                                  KeyRing keyRing,
                                  P2PService p2PService,
                                  BsqBlockchainManager bsqBlockchainManager,
-                                 Preferences preferences) {
+                                 TradeStatisticsManager tradeStatisticsManager) {
         super(bisqEnvironment,
                 encryptionService,
                 keyRing,
-                preferences);
+                tradeStatisticsManager);
         this.p2PService = p2PService;
         this.bsqBlockchainManager = bsqBlockchainManager;
     }

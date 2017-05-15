@@ -293,6 +293,7 @@ public class Utilities {
         Object result = null;
         try {
             in = new LookAheadObjectInputStream(bis, true);
+            //in = new ObjectInputStream(bis);
             result = in.readObject();
             if (!(result instanceof Serializable))
                 throw new RuntimeException("Object not of type Serializable");

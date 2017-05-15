@@ -230,7 +230,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
     private void syncPriceFeedCurrency() {
         if (selectedTabIndex == TAB_INDEX)
-            priceFeedService.setCurrencyCode(selectedTradeCurrencyProperty.get().getCode());
+            priceFeedService.setCurrencyCode(getCurrencyCode());
     }
 
     private boolean isAnyPricePresent() {

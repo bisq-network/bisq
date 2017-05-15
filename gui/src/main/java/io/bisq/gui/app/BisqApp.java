@@ -174,13 +174,12 @@ public class BisqApp extends Application {
             grapher.setRankdir("TB");
             grapher.graph(injector);
 */
-            Preferences preferences = injector.getInstance(Preferences.class);
-            preferences.init();
-            User user = injector.getInstance(User.class);
-            user.init();
 
             // All classes which are persisting objects need to be added here
+            // Maintain order!
             ArrayList<PersistedDataHost> persistedDataHosts = new ArrayList<>();
+            persistedDataHosts.add(injector.getInstance(Preferences.class));
+            persistedDataHosts.add(injector.getInstance(User.class));
             persistedDataHosts.add(injector.getInstance(Navigation.class));
             persistedDataHosts.add(injector.getInstance(AddressEntryList.class));
             persistedDataHosts.add(injector.getInstance(TradeStatisticsManager.class));
@@ -190,7 +189,10 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
 
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
-            persistedDataHosts.stream().forEach(PersistedDataHost::readPersisted);
+            persistedDataHosts.stream().forEach(e -> {
+                log.info("call readPersisted at " + e.getClass().getSimpleName());
+                e.readPersisted();
+            });
 
             Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
             Version.printVersion();
