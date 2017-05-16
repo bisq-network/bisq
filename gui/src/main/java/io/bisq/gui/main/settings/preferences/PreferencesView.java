@@ -403,7 +403,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void activateGeneralOptions() {
-        boolean useCustomWithdrawalTxFee = preferences.getUseCustomWithdrawalTxFee();
+        boolean useCustomWithdrawalTxFee = preferences.isUseCustomWithdrawalTxFee();
         useCustomFeeCheckbox.setSelected(useCustomWithdrawalTxFee);
 
         transactionFeeInputTextField.setEditable(useCustomWithdrawalTxFee);
@@ -544,7 +544,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         showOwnOffersInOfferBook.setSelected(preferences.isShowOwnOffersInOfferBook());
         showOwnOffersInOfferBook.setOnAction(e -> preferences.setShowOwnOffersInOfferBook(showOwnOffersInOfferBook.isSelected()));
 
-        useAnimationsCheckBox.setSelected(preferences.getUseAnimations());
+        useAnimationsCheckBox.setSelected(preferences.isUseAnimations());
         useAnimationsCheckBox.setOnAction(e -> preferences.setUseAnimations(useAnimationsCheckBox.isSelected()));
 
         // useStickyMarketPriceCheckBox.setSelected(preferences.isUseStickyMarketPrice());
@@ -560,7 +560,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     }
 
     private String getNonTradeTxFeePerBytes() {
-        return preferences.getUseCustomWithdrawalTxFee() ?
+        return preferences.isUseCustomWithdrawalTxFee() ?
                 String.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
                 String.valueOf(feeService.getTxFeePerByte().value);
     }

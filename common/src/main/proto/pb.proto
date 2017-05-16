@@ -804,7 +804,7 @@ message PersistableEnvelope {
         AddressEntryList address_entry_list = 1;
         ViewPathAsString view_path_as_string = 2;
         PeerList peer_list = 3;
-        Preferences preferences = 4;
+        PreferencesPayload preferences_payload = 4;
         UserPayload user_payload = 5;
         CompensationRequestPayload compensation_request_payload = 6;
         SequenceNumberMap sequence_number_map = 7;
@@ -830,41 +830,41 @@ message PersistableEnvelope {
 // Preferences
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-message Preferences {
+message PreferencesPayload {
     string user_language = 1;
     Country user_country = 2;
-    repeated TradeCurrency fiat_currencies = 5;
-    repeated TradeCurrency crypto_currencies = 6;
-    BlockChainExplorer block_chain_explorer_main_net = 7;
-    BlockChainExplorer block_chain_explorer_test_net = 8;
-    string backup_directory = 9;
-    bool auto_select_arbitrators = 10;
-    map<string, bool> dont_show_again_map = 11;
-    bool tac_accepted = 12;
-    bool use_tor_for_bitcoin_j = 13;
-    bool show_own_offers_in_offer_book = 14;
-    BlockChainExplorer bsq_block_chain_explorer = 15;
-    TradeCurrency preferred_trade_currency = 16;
-    int64 withdrawal_tx_fee_in_bytes = 17;
-    bool use_custom_withdrawal_tx_fee = 18;
-    double max_price_distance_in_percent = 19;
-    string offer_book_chart_screen_currency_code = 20;
-    string trade_charts_screen_currency_code = 21;
-    string buy_screen_currency_code = 22;
-    string sell_screen_currency_code = 23;
-    int32 trade_statistics_tick_unit_index = 24;
-    bool resync_Spv_requested = 25;
-    bool sort_market_currencies_numerically = 26;
-    bool use_percentage_based_price = 27;
-    map<string, string> peer_tag_map = 28;
-    string bitcoin_nodes = 29;
-    repeated string ignore_traders_list = 30;
-    string directory_chooser_path = 31;
-    int64 buyer_security_deposit_as_long = 32;
-    string btc_denomination = 33;
-    bool use_animations = 34;
-    PaymentAccount selectedPayment_account_for_createOffer = 35;
-    bool pay_fee_in_Btc = 36;
+    repeated TradeCurrency fiat_currencies = 3;
+    repeated TradeCurrency crypto_currencies = 4;
+    BlockChainExplorer block_chain_explorer_main_net = 5;
+    BlockChainExplorer block_chain_explorer_test_net = 6;
+    BlockChainExplorer bsq_block_chain_explorer = 7;
+    string backup_directory = 8;
+    bool auto_select_arbitrators = 9;
+    map<string, bool> dont_show_again_map = 10;
+    bool tac_accepted = 11;
+    bool use_tor_for_bitcoin_j = 12;
+    bool show_own_offers_in_offer_book = 13;
+    TradeCurrency preferred_trade_currency = 14;
+    int64 withdrawal_tx_fee_in_bytes = 15;
+    bool use_custom_withdrawal_tx_fee = 16;
+    double max_price_distance_in_percent = 17;
+    string offer_book_chart_screen_currency_code = 18;
+    string trade_charts_screen_currency_code = 19;
+    string buy_screen_currency_code = 20;
+    string sell_screen_currency_code = 21;
+    int32 trade_statistics_tick_unit_index = 22;
+    bool resync_Spv_requested = 23;
+    bool sort_market_currencies_numerically = 24;
+    bool use_percentage_based_price = 25;
+    map<string, string> peer_tag_map = 26;
+    string bitcoin_nodes = 27;
+    repeated string ignore_traders_list = 28;
+    string directory_chooser_path = 29;
+    int64 buyer_security_deposit_as_long = 30;
+    string btc_denomination = 31;
+    bool use_animations = 32;
+    PaymentAccount selectedPayment_account_for_createOffer = 33;
+    bool pay_fee_in_Btc = 34;
 }
 
 

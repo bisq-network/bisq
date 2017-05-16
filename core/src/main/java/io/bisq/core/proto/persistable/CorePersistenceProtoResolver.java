@@ -14,6 +14,7 @@ import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.*;
 import io.bisq.core.trade.statistics.TradeStatisticsList;
 import io.bisq.core.user.Preferences;
+import io.bisq.core.user.PreferencesPayload;
 import io.bisq.core.user.UserPayload;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.peers.peerexchange.PeerList;
@@ -26,7 +27,6 @@ import java.io.File;
 
 @Slf4j
 public class CorePersistenceProtoResolver extends CoreProtoResolver implements PersistenceProtoResolver {
-    private final Provider<Preferences> preferencesProvider;
     private final Storage<TradableList<OpenOffer>> openOfferStorage;
     private final Storage<TradableList<BuyerAsMakerTrade>> buyerAsMakerTradeStorage;
     private final Storage<TradableList<BuyerAsTakerTrade>> buyerAsTakerTradeStorage;
@@ -35,10 +35,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
     private final Provider<BtcWalletService> btcWalletService;
 
     @Inject
-    public CorePersistenceProtoResolver(Provider<Preferences> preferencesProvider,
-                                        Provider<BtcWalletService> btcWalletService,
+    public CorePersistenceProtoResolver(Provider<BtcWalletService> btcWalletService,
                                         @Named(Storage.STORAGE_DIR) File storageDir) {
-        this.preferencesProvider = preferencesProvider;
         this.btcWalletService = btcWalletService;
 
         openOfferStorage = new Storage<>(storageDir, this);
@@ -73,8 +71,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
             case COMPENSATION_REQUEST_PAYLOAD:
                 // TODO There will be another object for PersistableEnvelope
                 return CompensationRequestPayload.fromProto(proto.getCompensationRequestPayload());
-            case PREFERENCES:
-                return Preferences.fromProto(proto.getPreferences(), preferencesProvider, this);
+            case PREFERENCES_PAYLOAD:
+                return PreferencesPayload.fromProto(proto.getPreferencesPayload(), this);
             case USER_PAYLOAD:
                 return UserPayload.fromProto(proto.getUserPayload(), this);
             case SEQUENCE_NUMBER_MAP:

@@ -1,12 +1,8 @@
 package io.bisq.core.user;
 
-import com.google.inject.Provider;
-import com.google.protobuf.Message;
 import io.bisq.common.GlobalSettings;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.*;
-import io.bisq.common.proto.ProtoResolver;
-import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -15,12 +11,15 @@ import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.generated.protobuffer.PB;
+import io.bisq.core.trade.Tradable;
+import io.bisq.core.trade.TradableList;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
@@ -30,18 +29,18 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public final class Preferences implements PersistableEnvelope, PersistedDataHost {
+public final class Preferences implements PersistedDataHost {
 
     // Deactivate mBit for now as most screens are not supporting it yet
     @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-    transient private static final List<String> BTC_DENOMINATIONS = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
+    static final List<String> BTC_DENOMINATIONS = Arrays.asList(MonetaryFormat.CODE_BTC/*, MonetaryFormat.CODE_MBTC*/);
 
-    transient static final private ArrayList<BlockChainExplorer> BLOCK_CHAIN_EXPLORERS_TEST_NET = new ArrayList<>(Arrays.asList(
+    private static final ArrayList<BlockChainExplorer> BLOCK_CHAIN_EXPLORERS_TEST_NET = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/tBTC/tx/", "https://www.blocktrail.com/tBTC/address/"),
             new BlockChainExplorer("Blockexplorer", "https://blockexplorer.com/testnet/tx/", "https://blockexplorer.com/testnet/address/"),
             new BlockChainExplorer("Blockr.io", "https://tbtc.blockr.io/tx/info/", "https://tbtc.blockr.io/address/info/"),
@@ -50,7 +49,7 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
             new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTCTEST/", "https://chain.so/address/BTCTEST/")
     ));
 
-    transient static final private ArrayList<BlockChainExplorer> BLOCK_CHAIN_EXPLORERS_MAIN_NET = new ArrayList<>(Arrays.asList(
+    private static final ArrayList<BlockChainExplorer> BLOCK_CHAIN_EXPLORERS_MAIN_NET = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Tradeblock.com", "https://tradeblock.com/bitcoin/tx/", "https://tradeblock.com/bitcoin/address/"),
             new BlockChainExplorer("Blocktrail", "https://www.blocktrail.com/BTC/tx/", "https://www.blocktrail.com/BTC/address/"),
             new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/"),
@@ -66,97 +65,32 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
     ));
 
 
-    // Persisted fields
-    @Getter
-    private String userLanguage;
-    @Getter
-    private Country userCountry;
-    // getter is for the property
-    private String btcDenomination = BTC_DENOMINATIONS.get(0);
-    // getter is for the property
-    private boolean useAnimations = DevEnv.STRESS_TEST_MODE ? false : true;
-    @Getter
-    private final ArrayList<FiatCurrency> fiatCurrencies = new ArrayList<>();
-    @Getter
-    private final ArrayList<CryptoCurrency> cryptoCurrencies = new ArrayList<>();
-    @Getter
-    private BlockChainExplorer blockChainExplorerMainNet;
-    @Getter
-    private BlockChainExplorer blockChainExplorerTestNet;
-    @Getter
-    private BlockChainExplorer bsqBlockChainExplorer = new BlockChainExplorer("bisq", "https://explorer.bisq.io/tx.html?tx=",
-            "https://explorer.bisq.io/Address.html?addr=");
-    @Getter
-    @Nullable
-    private String backupDirectory;
-    @Getter
-    private boolean autoSelectArbitrators = true;
-    @Getter
-    private Map<String, Boolean> dontShowAgainMap = new HashMap<>();
-    @Getter
-    private boolean tacAccepted;
-    private boolean useTorForBitcoinJ = true;
-    @Getter
-    private boolean showOwnOffersInOfferBook = true;
-    @Getter
-    @Nullable
-    private TradeCurrency preferredTradeCurrency;
-    private long withdrawalTxFeeInBytes = 100;
-    private boolean useCustomWithdrawalTxFee = false;
-    @Getter
-    private double maxPriceDistanceInPercent = 0.1;
-    @Getter
-    @Nullable
-    private String offerBookChartScreenCurrencyCode;
-    @Getter
-    @Nullable
-    private String tradeChartsScreenCurrencyCode;
-    @Getter
-    @Nullable
-    private String buyScreenCurrencyCode;
-    @Getter
-    @Nullable
-    private String sellScreenCurrencyCode;
-    @Getter
-    private int tradeStatisticsTickUnitIndex = 3;
-    // TODO can be removed (wait for PB merge)
-    private boolean useStickyMarketPrice = false;
-    @Getter
-    private boolean sortMarketCurrenciesNumerically = true;
-    @Getter
-    private boolean usePercentageBasedPrice = true;
-    @Getter
-    private Map<String, String> peerTagMap = new HashMap<>();
-    @Getter
-    private String bitcoinNodes = "";
-    @Getter
-    private List<String> ignoreTradersList = new ArrayList<>();
-    @Getter
-    private String directoryChooserPath;
-    private long buyerSecurityDepositAsLong = Restrictions.DEFAULT_BUYER_SECURITY_DEPOSIT.value;
-    @Nullable
-    private PaymentAccount selectedPaymentAccountForCreateOffer;
-    private boolean payFeeInBtc = true;
-    @Getter
-    private boolean resyncSpvRequested;
+    // payload is initialized so the default values are available for Property initialization.
+    @Setter
+    @Delegate(excludes = ExcludesDelegateMethods.class)
+    private PreferencesPayload prefPayload = new PreferencesPayload();
+    private AtomicBoolean initialReadDone = new AtomicBoolean(false);
 
     // Observable wrappers
     @Getter
-    transient private final StringProperty btcDenominationProperty = new SimpleStringProperty(btcDenomination);
+    private final StringProperty btcDenominationProperty = new SimpleStringProperty(prefPayload.getBtcDenomination());
     @Getter
-    transient private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(useAnimations);
+    private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(prefPayload.isUseAnimations());
     @Getter
-    transient private final BooleanProperty useCustomWithdrawalTxFeeProperty = new SimpleBooleanProperty(useCustomWithdrawalTxFee);
+    private final BooleanProperty useCustomWithdrawalTxFeeProperty = new SimpleBooleanProperty(prefPayload.isUseCustomWithdrawalTxFee());
     @Getter
-    transient private final LongProperty withdrawalTxFeeInBytesProperty = new SimpleLongProperty(withdrawalTxFeeInBytes);
+    private final LongProperty withdrawalTxFeeInBytesProperty = new SimpleLongProperty(prefPayload.getWithdrawalTxFeeInBytes());
 
-    transient private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
-    transient private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
-    transient private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
+    private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
+    private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
+    private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
 
-    transient private final Storage<Preferences> storage;
-    transient private final String btcNodesFromOptions;
-    transient private final String useTorFlagFromOptions;
+    private final Storage<PreferencesPayload> storage;
+    private final String btcNodesFromOptions;
+    private final String useTorFlagFromOptions;
+    private boolean autoSelectArbitrators;
+    private boolean resyncSpvRequested;
+    private boolean tacAccepted;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +100,7 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public Preferences(Storage<Preferences> storage,
+    public Preferences(Storage<PreferencesPayload> storage,
                        @Named(BtcOptionKeys.BTC_NODES) String btcNodesFromOptions,
                        @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
 
@@ -177,115 +111,85 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
 
     @Override
     public void readPersisted() {
-        // We don't want to pass Preferences to all popups where the dont show again checkbox is used, so we use
-        // that static lookup class to avoid static access to the Preferences directly.
-        DontShowAgainLookup.setPreferences(this);
+        PreferencesPayload persisted = storage.initAndGetPersistedWithFileName("Preferences");
 
-        btcDenominationProperty.addListener((ov) -> {
-            btcDenomination = btcDenominationProperty.get();
-            GlobalSettings.setBtcDenomination(btcDenomination);
-            persist();
-        });
-        useAnimationsProperty.addListener((ov) -> {
-            useAnimations = useAnimationsProperty.get();
-            GlobalSettings.setUseAnimations(useAnimations);
-            persist();
-        });
-        fiatCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
-            fiatCurrencies.clear();
-            fiatCurrencies.addAll(fiatCurrenciesAsObservable);
-            fiatCurrencies.sort(TradeCurrency::compareTo);
-            persist();
-        });
-        cryptoCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
-            cryptoCurrencies.clear();
-            cryptoCurrencies.addAll(cryptoCurrenciesAsObservable);
-            cryptoCurrencies.sort(TradeCurrency::compareTo);
-            persist();
-        });
-
-        useCustomWithdrawalTxFeeProperty.addListener((ov) -> {
-            useCustomWithdrawalTxFee = useCustomWithdrawalTxFeeProperty.get();
-            persist();
-        });
-
-        withdrawalTxFeeInBytesProperty.addListener((ov) -> {
-            withdrawalTxFeeInBytes = withdrawalTxFeeInBytesProperty.get();
-            persist();
-        });
-
-        TradeCurrency defaultTradeCurrency;
-        Preferences persisted = storage.initAndGetPersistedWithFileName("Preferences");
         if (persisted != null) {
-            userLanguage = persisted.userLanguage;
-            userCountry = persisted.userCountry;
-            GlobalSettings.setLocale(new Locale(userLanguage, userCountry.code));
-            GlobalSettings.setUseAnimations(persisted.useAnimations);
-            preferredTradeCurrency = persisted.preferredTradeCurrency;
-            checkNotNull(preferredTradeCurrency, "preferredTradeCurrency must not be null");
-            defaultTradeCurrency = preferredTradeCurrency;
-            setBtcDenomination(persisted.btcDenomination);
-            setUseAnimations(persisted.useAnimations);
-            setFiatCurrencies(persisted.fiatCurrencies);
-            setCryptoCurrencies(persisted.cryptoCurrencies);
-            setBlockChainExplorerTestNet(persisted.blockChainExplorerTestNet);
-            setBlockChainExplorerMainNet(persisted.blockChainExplorerMainNet);
-            setBsqBlockChainExplorer(persisted.bsqBlockChainExplorer);
-            setUseCustomWithdrawalTxFee(persisted.useCustomWithdrawalTxFee);
-            setWithdrawalTxFeeInBytes(persisted.withdrawalTxFeeInBytes);
-
-            backupDirectory = persisted.getBackupDirectory();
-            autoSelectArbitrators = persisted.isAutoSelectArbitrators();
-            dontShowAgainMap = persisted.getDontShowAgainMap();
-            tacAccepted = persisted.isTacAccepted();
-            useTorForBitcoinJ = persisted.getUseTorForBitcoinJ();
-            sortMarketCurrenciesNumerically = persisted.isSortMarketCurrenciesNumerically();
-            usePercentageBasedPrice = persisted.isUsePercentageBasedPrice();
-            showOwnOffersInOfferBook = persisted.isShowOwnOffersInOfferBook();
-            maxPriceDistanceInPercent = persisted.getMaxPriceDistanceInPercent();
-            bitcoinNodes = persisted.getBitcoinNodes();
-            peerTagMap = persisted.getPeerTagMap();
-            offerBookChartScreenCurrencyCode = persisted.getOfferBookChartScreenCurrencyCode();
-            buyScreenCurrencyCode = persisted.getBuyScreenCurrencyCode();
-            sellScreenCurrencyCode = persisted.getSellScreenCurrencyCode();
-            tradeChartsScreenCurrencyCode = persisted.getTradeChartsScreenCurrencyCode();
-            tradeStatisticsTickUnitIndex = persisted.getTradeStatisticsTickUnitIndex();
-            ignoreTradersList = persisted.getIgnoreTradersList();
-            directoryChooserPath = persisted.getDirectoryChooserPath();
-            selectedPaymentAccountForCreateOffer = persisted.getSelectedPaymentAccountForCreateOffer();
-            payFeeInBtc = persisted.getPayFeeInBtc();
-            setBuyerSecurityDepositAsLong(persisted.getBuyerSecurityDepositAsLong());
-            resyncSpvRequested = persisted.isResyncSpvRequested();
+            prefPayload = persisted;
+            GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
+            GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
+            checkNotNull(prefPayload.getPreferredTradeCurrency(), "preferredTradeCurrency must not be null"); // move to payload?
+            setBtcDenominationProperty(prefPayload.getBtcDenomination());
         } else {
-            userLanguage = GlobalSettings.getLocale().getLanguage();
-            userCountry = CountryUtil.getDefaultCountry();
-            GlobalSettings.setLocale(new Locale(userLanguage, userCountry.code));
-            defaultTradeCurrency = CurrencyUtil.getCurrencyByCountryCode(userCountry.code);
-            preferredTradeCurrency = defaultTradeCurrency;
+            prefPayload = new PreferencesPayload();
+            prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
+            prefPayload.setUserCountry(CountryUtil.getDefaultCountry());
+            GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
+            prefPayload.setPreferredTradeCurrency(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code));
 
             setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
             setBlockChainExplorerTestNet(BLOCK_CHAIN_EXPLORERS_TEST_NET.get(0));
             setBlockChainExplorerMainNet(BLOCK_CHAIN_EXPLORERS_MAIN_NET.get(0));
-            directoryChooserPath = Utilities.getSystemHomeDirectory();
-            dontShowAgainMap = new HashMap<>();
-
-            persist();
+            prefPayload.setDirectoryChooserPath(Utilities.getSystemHomeDirectory());
         }
-        GlobalSettings.setDefaultTradeCurrency(defaultTradeCurrency);
-        offerBookChartScreenCurrencyCode = defaultTradeCurrency.getCode();
-        tradeChartsScreenCurrencyCode = defaultTradeCurrency.getCode();
-        buyScreenCurrencyCode = defaultTradeCurrency.getCode();
-        sellScreenCurrencyCode = defaultTradeCurrency.getCode();
-        btcDenomination = MonetaryFormat.CODE_BTC;
 
-        btcDenominationProperty.set(btcDenomination);
-        useAnimationsProperty.set(useAnimations);
+
+        // We don't want to pass Preferences to all popups where the dont show again checkbox is used, so we use
+        // that static lookup class to avoid static access to the Preferences directly.
+        DontShowAgainLookup.setPreferences(this);
+
+        btcDenominationProperty.addListener((ov) -> {
+            prefPayload.setBtcDenomination(btcDenominationProperty.get());
+            GlobalSettings.setBtcDenomination(prefPayload.getBtcDenomination());
+            persist();
+        });
+        useAnimationsProperty.addListener((ov) -> {
+            prefPayload.setUseAnimations(useAnimationsProperty.get());
+            GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
+            persist();
+        });
+        fiatCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
+            prefPayload.getFiatCurrencies().clear();
+            prefPayload.getFiatCurrencies().addAll(fiatCurrenciesAsObservable);
+            prefPayload.getFiatCurrencies().sort(TradeCurrency::compareTo);
+            persist();
+        });
+        cryptoCurrenciesAsObservable.addListener((javafx.beans.Observable ov) -> {
+            prefPayload.getCryptoCurrencies().clear();
+            prefPayload.getCryptoCurrencies().addAll(cryptoCurrenciesAsObservable);
+            prefPayload.getCryptoCurrencies().sort(TradeCurrency::compareTo);
+            persist();
+        });
+
+        useCustomWithdrawalTxFeeProperty.addListener((ov) -> {
+            prefPayload.setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFeeProperty.get());
+            persist();
+        });
+
+        withdrawalTxFeeInBytesProperty.addListener((ov) -> {
+            prefPayload.setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytesProperty.get());
+            persist();
+        });
+
+        GlobalSettings.setDefaultTradeCurrency(prefPayload.getPreferredTradeCurrency());
+
+        // TODO why do we do this ???? Should this be in the null case instead?
+        prefPayload.setOfferBookChartScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
+        prefPayload.setTradeChartsScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
+        prefPayload.setBuyScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
+        prefPayload.setSellScreenCurrencyCode(prefPayload.getPreferredTradeCurrency().getCode());
+        prefPayload.setBtcDenomination(MonetaryFormat.CODE_BTC);
+
+        // set all properties
+        btcDenominationProperty.set(prefPayload.getBtcDenomination());
+        useAnimationsProperty.set(prefPayload.isUseAnimations());
+        useCustomWithdrawalTxFeeProperty.set(prefPayload.isUseCustomWithdrawalTxFee());
+        withdrawalTxFeeInBytesProperty.set(prefPayload.getWithdrawalTxFeeInBytes());
 
         fiatCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
         cryptoCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
-        tradeCurrenciesAsObservable.addAll(fiatCurrencies);
-        tradeCurrenciesAsObservable.addAll(cryptoCurrencies);
+        tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
+        tradeCurrenciesAsObservable.addAll(prefPayload.getCryptoCurrencies());
 
         // Override settings with options if set
         if (useTorFlagFromOptions != null && !useTorFlagFromOptions.isEmpty()) {
@@ -297,105 +201,8 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
 
         if (btcNodesFromOptions != null && !btcNodesFromOptions.isEmpty())
             setBitcoinNodes(btcNodesFromOptions);
-    }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public Message toProtoMessage() {
-        PB.Preferences.Builder builder = PB.Preferences.newBuilder()
-                .setUserLanguage(userLanguage)
-                .setUserCountry((PB.Country) userCountry.toProtoMessage())
-                .addAllFiatCurrencies(fiatCurrencies.stream().map(fiatCurrency -> ((PB.TradeCurrency) fiatCurrency.toProtoMessage())).collect(Collectors.toList()))
-                .addAllCryptoCurrencies(cryptoCurrencies.stream().map(cryptoCurrency -> ((PB.TradeCurrency) cryptoCurrency.toProtoMessage())).collect(Collectors.toList()))
-                .setBlockChainExplorerMainNet((PB.BlockChainExplorer) blockChainExplorerMainNet.toProtoMessage())
-                .setBlockChainExplorerTestNet((PB.BlockChainExplorer) blockChainExplorerTestNet.toProtoMessage())
-                .setBsqBlockChainExplorer((PB.BlockChainExplorer) bsqBlockChainExplorer.toProtoMessage())
-                .setAutoSelectArbitrators(autoSelectArbitrators)
-                .putAllDontShowAgainMap(dontShowAgainMap)
-                .setTacAccepted(tacAccepted)
-                .setUseAnimations(useAnimations)
-                .setUseTorForBitcoinJ(useTorForBitcoinJ)
-                .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
-                .setPreferredTradeCurrency((PB.TradeCurrency) preferredTradeCurrency.toProtoMessage())
-                .setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes)
-                .setMaxPriceDistanceInPercent(maxPriceDistanceInPercent)
-                .setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically)
-                .setUsePercentageBasedPrice(usePercentageBasedPrice)
-                .setPayFeeInBtc(payFeeInBtc)
-                .putAllPeerTagMap(peerTagMap)
-                .setBitcoinNodes(bitcoinNodes)
-                .addAllIgnoreTradersList(ignoreTradersList)
-                .setDirectoryChooserPath(directoryChooserPath)
-                .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong);
-
-        Optional.ofNullable(backupDirectory).ifPresent(backupDir -> builder.setBackupDirectory(backupDir));
-        Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(code -> builder.setOfferBookChartScreenCurrencyCode(code));
-        Optional.ofNullable(tradeChartsScreenCurrencyCode).ifPresent(code -> builder.setTradeChartsScreenCurrencyCode(code));
-        Optional.ofNullable(buyScreenCurrencyCode).ifPresent(code -> builder.setBuyScreenCurrencyCode(code));
-        Optional.ofNullable(sellScreenCurrencyCode).ifPresent(code -> builder.setSellScreenCurrencyCode(code));
-        Optional.ofNullable(selectedPaymentAccountForCreateOffer).ifPresent(
-                account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProtoMessage()));
-        return PB.PersistableEnvelope.newBuilder().setPreferences(builder).build();
-    }
-
-    public static PersistableEnvelope fromProto(PB.Preferences proto, Provider<Preferences> preferencesProvider, ProtoResolver protoResolver) {
-        Preferences preferences = preferencesProvider.get();
-        preferences.setUserLanguage(proto.getUserLanguage());
-        PB.Country userCountry = proto.getUserCountry();
-        preferences.setUserCountry(new Country(userCountry.getCode(), userCountry.getName(), new Region(userCountry.getRegion().getCode(), userCountry.getRegion().getName())));
-        proto.getFiatCurrenciesList().stream()
-                .forEach(tradeCurrency -> preferences.addFiatCurrency((FiatCurrency) TradeCurrency.fromProto(tradeCurrency)));
-        proto.getCryptoCurrenciesList().stream()
-                .forEach(tradeCurrency -> preferences.addCryptoCurrency((CryptoCurrency) TradeCurrency.fromProto(tradeCurrency)));
-        PB.BlockChainExplorer bceMain = proto.getBlockChainExplorerMainNet();
-        preferences.setBlockChainExplorerMainNet(new BlockChainExplorer(bceMain.getName(), bceMain.getTxUrl(), bceMain.getAddressUrl()));
-        PB.BlockChainExplorer bceTest = proto.getBlockChainExplorerTestNet();
-        preferences.setBlockChainExplorerTestNet(new BlockChainExplorer(bceTest.getName(), bceTest.getTxUrl(), bceTest.getAddressUrl()));
-
-        preferences.setAutoSelectArbitrators(proto.getAutoSelectArbitrators());
-        preferences.setDontShowAgainMap(new HashMap<>(proto.getDontShowAgainMapMap()));
-        preferences.setTacAccepted(proto.getTacAccepted());
-        preferences.setUseTorForBitcoinJ(proto.getUseTorForBitcoinJ());
-        preferences.setShowOwnOffersInOfferBook(proto.getShowOwnOffersInOfferBook());
-        PB.TradeCurrency preferredTradeCurrency = proto.getPreferredTradeCurrency();
-        preferences.setPreferredTradeCurrency(TradeCurrency.fromProto(preferredTradeCurrency));
-        preferences.setWithdrawalTxFeeInBytes(proto.getWithdrawalTxFeeInBytes());
-        preferences.setMaxPriceDistanceInPercent(proto.getMaxPriceDistanceInPercent());
-
-        preferences.setSortMarketCurrenciesNumerically(proto.getSortMarketCurrenciesNumerically());
-        preferences.setUsePercentageBasedPrice(proto.getUsePercentageBasedPrice());
-        preferences.setPeerTagMap(proto.getPeerTagMapMap());
-        preferences.setBitcoinNodes(proto.getBitcoinNodes());
-        preferences.setIgnoreTradersList(proto.getIgnoreTradersListList());
-        preferences.setDirectoryChooserPath(proto.getDirectoryChooserPath());
-        preferences.setBuyerSecurityDepositAsLong(proto.getBuyerSecurityDepositAsLong());
-
-        final PB.BlockChainExplorer bsqExPl = proto.getBsqBlockChainExplorer();
-        preferences.setBsqBlockChainExplorer(new BlockChainExplorer(bsqExPl.getName(), bsqExPl.getTxUrl(), bsqExPl.getAddressUrl()));
-
-        preferences.setBtcDenomination(proto.getBtcDenomination());
-        preferences.setUseAnimations(proto.getUseAnimations());
-        preferences.setPayFeeInBtc(proto.getPayFeeInBtc());
-        preferences.setResyncSpvRequested(proto.getResyncSpvRequested());
-
-        // optional
-        preferences.setBackupDirectory(proto.getBackupDirectory().isEmpty() ? null : proto.getBackupDirectory());
-        preferences.setOfferBookChartScreenCurrencyCode(proto.getOfferBookChartScreenCurrencyCode().isEmpty() ?
-                null :
-                proto.getOfferBookChartScreenCurrencyCode());
-        preferences.setTradeChartsScreenCurrencyCode(proto.getTradeChartsScreenCurrencyCode().isEmpty() ?
-                null :
-                proto.getTradeChartsScreenCurrencyCode());
-        preferences.setBuyScreenCurrencyCode(proto.getBuyScreenCurrencyCode().isEmpty() ? null : proto.getBuyScreenCurrencyCode());
-        preferences.setSellScreenCurrencyCode(proto.getSellScreenCurrencyCode().isEmpty() ? null : proto.getSellScreenCurrencyCode());
-        preferences.setSelectedPaymentAccountForCreateOffer(proto.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod() ?
-                PaymentAccount.fromProto(proto.getSelectedPaymentAccountForCreateOffer(), protoResolver) :
-                null);
-        return null;
+        initialReadDone.set(true);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -403,12 +210,12 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void dontShowAgain(String key, boolean dontShowAgain) {
-        dontShowAgainMap.put(key, dontShowAgain);
+        prefPayload.getDontShowAgainMap().put(key, dontShowAgain);
         persist();
     }
 
     public void resetDontShowAgain() {
-        dontShowAgainMap.clear();
+        prefPayload.getDontShowAgainMap().clear();
         persist();
     }
 
@@ -417,7 +224,7 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
     // Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setBtcDenomination(String btcDenomination) {
+    public void setBtcDenominationProperty(String btcDenomination) {
         this.btcDenominationProperty.set(btcDenomination);
     }
 
@@ -435,7 +242,7 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
             if (fiatCurrenciesAsObservable.contains(tradeCurrency))
                 fiatCurrenciesAsObservable.remove(tradeCurrency);
 
-            if (preferredTradeCurrency.equals(tradeCurrency))
+            if (prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
                 setPreferredTradeCurrency(tradeCurrenciesAsObservable.get(0));
         } else {
             log.error("you cannot remove the last currency");
@@ -452,7 +259,7 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
             if (cryptoCurrenciesAsObservable.contains(tradeCurrency))
                 cryptoCurrenciesAsObservable.remove(tradeCurrency);
 
-            if (preferredTradeCurrency.equals(tradeCurrency))
+            if (prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
                 setPreferredTradeCurrency(tradeCurrenciesAsObservable.get(0));
         } else {
             log.error("you cannot remove the last currency");
@@ -467,113 +274,114 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
     }
 
     public void setTacAccepted(boolean tacAccepted) {
-        this.tacAccepted = tacAccepted;
+        prefPayload.setTacAccepted(tacAccepted);
         persist();
     }
 
     private void persist() {
-        storage.queueUpForSave(this);
+        if (initialReadDone.get())
+            storage.queueUpForSave(prefPayload);
     }
 
     public void setUserLanguage(@NotNull String userLanguageCode) {
-        this.userLanguage = userLanguageCode;
-        if (userCountry != null && userLanguage != null)
-            GlobalSettings.setLocale(new Locale(userLanguage, userCountry.code));
+        prefPayload.setUserLanguage(userLanguageCode);
+        if (prefPayload.getUserCountry() != null && prefPayload.getUserLanguage() != null)
+            GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
         persist();
     }
 
     public void setUserCountry(@NotNull Country userCountry) {
-        this.userCountry = userCountry;
-        if (userLanguage != null)
-            GlobalSettings.setLocale(new Locale(userLanguage, userCountry.code));
+        prefPayload.setUserCountry(userCountry);
+        if (prefPayload.getUserLanguage() != null)
+            GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), userCountry.code));
         persist();
     }
 
     public void setPreferredTradeCurrency(TradeCurrency preferredTradeCurrency) {
         if (preferredTradeCurrency != null) {
-            this.preferredTradeCurrency = preferredTradeCurrency;
+            prefPayload.setPreferredTradeCurrency(preferredTradeCurrency);
             GlobalSettings.setDefaultTradeCurrency(preferredTradeCurrency);
             persist();
         }
     }
 
     public void setUseTorForBitcoinJ(boolean useTorForBitcoinJ) {
-        this.useTorForBitcoinJ = useTorForBitcoinJ;
+        prefPayload.setUseTorForBitcoinJ(useTorForBitcoinJ);
         persist();
     }
 
     public void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook) {
-        this.showOwnOffersInOfferBook = showOwnOffersInOfferBook;
+        prefPayload.setShowOwnOffersInOfferBook(showOwnOffersInOfferBook);
         persist();
     }
 
     public void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent) {
-        this.maxPriceDistanceInPercent = maxPriceDistanceInPercent;
+        prefPayload.setMaxPriceDistanceInPercent(maxPriceDistanceInPercent);
         persist();
     }
 
     public void setBackupDirectory(String backupDirectory) {
-        this.backupDirectory = backupDirectory;
+        prefPayload.setBackupDirectory(backupDirectory);
         persist();
     }
 
     public void setAutoSelectArbitrators(boolean autoSelectArbitrators) {
-        this.autoSelectArbitrators = autoSelectArbitrators;
+        prefPayload.setAutoSelectArbitrators(autoSelectArbitrators);
         persist();
     }
 
     public void setUsePercentageBasedPrice(boolean usePercentageBasedPrice) {
-        this.usePercentageBasedPrice = usePercentageBasedPrice;
+        prefPayload.setUsePercentageBasedPrice(usePercentageBasedPrice);
         persist();
     }
 
     public void setTagForPeer(String hostName, String tag) {
-        peerTagMap.put(hostName, tag);
+        prefPayload.getPeerTagMap().put(hostName, tag);
         persist();
     }
 
     public void setOfferBookChartScreenCurrencyCode(String offerBookChartScreenCurrencyCode) {
-        this.offerBookChartScreenCurrencyCode = offerBookChartScreenCurrencyCode;
+        prefPayload.setOfferBookChartScreenCurrencyCode(offerBookChartScreenCurrencyCode);
         persist();
     }
 
     public void setBuyScreenCurrencyCode(String buyScreenCurrencyCode) {
-        this.buyScreenCurrencyCode = buyScreenCurrencyCode;
+        prefPayload.setBuyScreenCurrencyCode(buyScreenCurrencyCode);
         persist();
     }
 
     public void setSellScreenCurrencyCode(String sellScreenCurrencyCode) {
-        this.sellScreenCurrencyCode = sellScreenCurrencyCode;
+        prefPayload.setSellScreenCurrencyCode(sellScreenCurrencyCode);
         persist();
     }
 
     public void setIgnoreTradersList(List<String> ignoreTradersList) {
-        this.ignoreTradersList = ignoreTradersList;
+        prefPayload.setIgnoreTradersList(ignoreTradersList);
         persist();
     }
 
     public void setDirectoryChooserPath(String directoryChooserPath) {
-        this.directoryChooserPath = directoryChooserPath;
+        prefPayload.setDirectoryChooserPath(directoryChooserPath);
         persist();
     }
 
     public void setTradeChartsScreenCurrencyCode(String tradeChartsScreenCurrencyCode) {
-        this.tradeChartsScreenCurrencyCode = tradeChartsScreenCurrencyCode;
+        prefPayload.setTradeChartsScreenCurrencyCode(tradeChartsScreenCurrencyCode);
         persist();
     }
 
     public void setTradeStatisticsTickUnitIndex(int tradeStatisticsTickUnitIndex) {
-        this.tradeStatisticsTickUnitIndex = tradeStatisticsTickUnitIndex;
+        prefPayload.setTradeStatisticsTickUnitIndex(tradeStatisticsTickUnitIndex);
         persist();
     }
 
     public void setSortMarketCurrenciesNumerically(boolean sortMarketCurrenciesNumerically) {
-        this.sortMarketCurrenciesNumerically = sortMarketCurrenciesNumerically;
+        prefPayload.setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically);
         persist();
     }
 
     public void setBitcoinNodes(String bitcoinNodes) {
-        this.bitcoinNodes = bitcoinNodes;
+        prefPayload.setBitcoinNodes(bitcoinNodes);
         persist();
     }
 
@@ -586,24 +394,24 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
     }
 
     public void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong) {
-        this.buyerSecurityDepositAsLong = Math.min(Restrictions.MAX_BUYER_SECURITY_DEPOSIT.value,
+        prefPayload.setBuyerSecurityDepositAsLong(Math.min(Restrictions.MAX_BUYER_SECURITY_DEPOSIT.value,
                 Math.max(Restrictions.MIN_BUYER_SECURITY_DEPOSIT.value,
-                        buyerSecurityDepositAsLong));
+                        buyerSecurityDepositAsLong)));
         persist();
     }
 
     public void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount) {
-        this.selectedPaymentAccountForCreateOffer = paymentAccount;
+        prefPayload.setSelectedPaymentAccountForCreateOffer(paymentAccount);
         persist();
     }
 
     public void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer) {
-        this.bsqBlockChainExplorer = bsqBlockChainExplorer;
+        prefPayload.setBsqBlockChainExplorer(bsqBlockChainExplorer);
         persist();
     }
 
     public void setPayFeeInBtc(boolean payFeeInBtc) {
-        this.payFeeInBtc = payFeeInBtc;
+        prefPayload.setPayFeeInBtc(payFeeInBtc);
         persist();
     }
 
@@ -616,30 +424,30 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
     }
 
     public void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet) {
-        this.blockChainExplorerTestNet = blockChainExplorerTestNet;
+        prefPayload.setBlockChainExplorerTestNet(blockChainExplorerTestNet);
         persist();
     }
 
     public void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet) {
-        this.blockChainExplorerMainNet = blockChainExplorerMainNet;
+        prefPayload.setBlockChainExplorerMainNet(blockChainExplorerMainNet);
         persist();
     }
 
     public void setResyncSpvRequested(boolean resyncSpvRequested) {
-        this.resyncSpvRequested = resyncSpvRequested;
+        prefPayload.setResyncSpvRequested(resyncSpvRequested);
         // We call that before shutdown so we dont want a delay here
-        storage.queueUpForSave(this, 1);
+        storage.queueUpForSave(prefPayload, 1);
     }
 
     // Only used from PB but keep it explicit as maybe it get used from the client and then we want to persist
     public void setDontShowAgainMap(Map<String, Boolean> dontShowAgainMap) {
-        this.dontShowAgainMap = dontShowAgainMap;
+        prefPayload.setDontShowAgainMap(dontShowAgainMap);
         persist();
     }
 
     // Only used from PB but keep it explicit as maybe it get used from the client and then we want to persist
     public void setPeerTagMap(Map<String, String> peerTagMap) {
-        this.peerTagMap = peerTagMap;
+        prefPayload.setPeerTagMap(peerTagMap);
         persist();
     }
 
@@ -648,16 +456,8 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getBtcDenomination() {
-        return btcDenominationProperty.get();
-    }
-
     public StringProperty btcDenominationProperty() {
         return btcDenominationProperty;
-    }
-
-    public boolean getUseAnimations() {
-        return useAnimationsProperty.get();
     }
 
     public BooleanProperty useAnimationsProperty() {
@@ -678,9 +478,9 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
 
     public BlockChainExplorer getBlockChainExplorer() {
         if (WalletUtils.getBitcoinNetwork() == BitcoinNetwork.MAINNET)
-            return blockChainExplorerMainNet;
+            return prefPayload.getBlockChainExplorerMainNet();
         else
-            return blockChainExplorerTestNet;
+            return prefPayload.getBlockChainExplorerTestNet();
     }
 
     public ArrayList<BlockChainExplorer> getBlockChainExplorers() {
@@ -691,23 +491,19 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
     }
 
     public boolean showAgain(String key) {
-        return !dontShowAgainMap.containsKey(key) || !dontShowAgainMap.get(key);
+        return !prefPayload.getDontShowAgainMap().containsKey(key) || !prefPayload.getDontShowAgainMap().get(key);
     }
 
     public boolean getUseTorForBitcoinJ() {
         // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
         // Atm we don't support onion addresses there
         // This check includes localhost, so we also override useTorForBitcoinJ
-        if (bitcoinNodes != null && !bitcoinNodes.isEmpty() || WalletUtils.getBitcoinNetwork() == BitcoinNetwork.REGTEST)
+        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty() || WalletUtils.getBitcoinNetwork() == BitcoinNetwork.REGTEST)
             return false;
         else
-            return useTorForBitcoinJ;
+            return prefPayload.isUseTorForBitcoinJ();
     }
 
-
-    public boolean getUseCustomWithdrawalTxFee() {
-        return useCustomWithdrawalTxFeeProperty.get();
-    }
 
     public BooleanProperty useCustomWithdrawalTxFeeProperty() {
         return useCustomWithdrawalTxFeeProperty;
@@ -717,25 +513,12 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
         return withdrawalTxFeeInBytesProperty;
     }
 
-    public long getWithdrawalTxFeeInBytes() {
-        return withdrawalTxFeeInBytesProperty.get();
-    }
-
-    public long getBuyerSecurityDepositAsLong() {
-        return buyerSecurityDepositAsLong;
-    }
-
     public Coin getBuyerSecurityDepositAsCoin() {
-        return Coin.valueOf(buyerSecurityDepositAsLong);
-    }
-
-    @Nullable
-    public PaymentAccount getSelectedPaymentAccountForCreateOffer() {
-        return selectedPaymentAccountForCreateOffer;
+        return Coin.valueOf(prefPayload.getBuyerSecurityDepositAsLong());
     }
 
     public boolean getPayFeeInBtc() {
-        return payFeeInBtc;
+        return prefPayload.isPayFeeInBtc();
     }
 
     public List<String> getBtcDenominations() {
@@ -753,5 +536,42 @@ public final class Preferences implements PersistableEnvelope, PersistedDataHost
             tradeCurrenciesAsObservable.add(change.getAddedSubList().get(0));
         else if (change.wasRemoved() && change.getRemovedSize() == 1)
             tradeCurrenciesAsObservable.remove(change.getRemoved().get(0));
+    }
+
+    private interface ExcludesDelegateMethods {
+        void setTacAccepted(boolean tacAccepted);
+        void setUseAnimations(boolean useAnimations);
+        void setUserLanguage(@NotNull String userLanguageCode);
+        void setUserCountry(@NotNull Country userCountry);
+        void setPreferredTradeCurrency(TradeCurrency preferredTradeCurrency);
+        void setUseTorForBitcoinJ(boolean useTorForBitcoinJ);
+        void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook);
+        void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent);
+        void setBackupDirectory(String backupDirectory);
+        void setAutoSelectArbitrators(boolean autoSelectArbitrators);
+        void setUsePercentageBasedPrice(boolean usePercentageBasedPrice);
+        void setTagForPeer(String hostName, String tag);
+        void setOfferBookChartScreenCurrencyCode(String offerBookChartScreenCurrencyCode);
+        void setBuyScreenCurrencyCode(String buyScreenCurrencyCode);
+        void setSellScreenCurrencyCode(String sellScreenCurrencyCode);
+        void setIgnoreTradersList(List<String> ignoreTradersList);
+        void setDirectoryChooserPath(String directoryChooserPath);
+        void setTradeChartsScreenCurrencyCode(String tradeChartsScreenCurrencyCode);
+        void setTradeStatisticsTickUnitIndex(int tradeStatisticsTickUnitIndex);
+        void setSortMarketCurrenciesNumerically(boolean sortMarketCurrenciesNumerically);
+        void setBitcoinNodes(String bitcoinNodes);
+        void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee);
+        void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes);
+        void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong);
+        void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount);
+        void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer);
+        void setPayFeeInBtc(boolean payFeeInBtc);
+        void setFiatCurrencies(List<FiatCurrency> currencies);
+        void setCryptoCurrencies(List<CryptoCurrency> currencies);
+        void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet);
+        void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet);
+        void setResyncSpvRequested(boolean resyncSpvRequested);
+        void setDontShowAgainMap(Map<String, Boolean> dontShowAgainMap);
+        void setPeerTagMap(Map<String, String> peerTagMap);
     }
 }

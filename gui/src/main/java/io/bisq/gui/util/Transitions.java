@@ -43,7 +43,7 @@ public class Transitions {
     }
 
     private int getDuration(int duration) {
-        return preferences.getUseAnimations() ? duration : 1;
+        return preferences.isUseAnimations() ? duration : 1;
     }
 
     // Fade

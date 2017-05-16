@@ -40,6 +40,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -59,7 +60,7 @@ public final class User implements PersistedDataHost {
     private ObjectProperty<PaymentAccount> currentPaymentAccountProperty;
 
     private UserPayload userPayload;
-    private boolean initialReadDone;
+    private AtomicBoolean initialReadDone = new AtomicBoolean(false);
 
     @Inject
     public User(Storage<UserPayload> storage, KeyRing keyRing) throws NoSuchAlgorithmException {
@@ -101,14 +102,13 @@ public final class User implements PersistedDataHost {
             persist();
         });
 
-        //persist();
-        initialReadDone = true;
+        initialReadDone.set(true);
     }
 
     private void persist() {
         // TODO if we persist we get a blank screen (exception in view class contrs. or circ. dependency?)
-       /* if (initialReadDone)
-           storage.queueUpForSave(userPayload);*/
+       if (initialReadDone.get())
+           storage.queueUpForSave(userPayload);
     }
 
 

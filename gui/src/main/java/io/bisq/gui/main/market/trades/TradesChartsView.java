@@ -212,8 +212,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        priceChart.setAnimated(model.preferences.getUseAnimations());
-        volumeChart.setAnimated(model.preferences.getUseAnimations());
+        priceChart.setAnimated(model.preferences.isUseAnimations());
+        volumeChart.setAnimated(model.preferences.isUseAnimations());
         priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 

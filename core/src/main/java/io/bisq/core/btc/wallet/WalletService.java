@@ -399,7 +399,7 @@ public abstract class WalletService {
     }
 
     Coin getTxFeeForWithdrawalPerByte() {
-        Coin fee = (preferences.getUseCustomWithdrawalTxFee()) ?
+        Coin fee = (preferences.isUseCustomWithdrawalTxFee()) ?
                 Coin.valueOf(preferences.getWithdrawalTxFeeInBytes()) :
                 feeService.getTxFeePerByte();
         log.info("tx fee = " + fee.toFriendlyString());

@@ -114,20 +114,4 @@ public class UserPayload implements PersistableEnvelope {
                         .collect(Collectors.toList())
         );
     }
-/*
-    public void apply(UserPayload persisted) {
-        if (persisted != null) {
-            accountId = persisted.getAccountId();
-            paymentAccounts = persisted.getPaymentAccounts();
-            currentPaymentAccount = persisted.getCurrentPaymentAccount();
-            acceptedLanguageLocaleCodes = persisted.getAcceptedLanguageLocaleCodes();
-            developersAlert = persisted.getDevelopersAlert();
-            displayedAlert = persisted.getDisplayedAlert();
-            developersFilter = persisted.getDevelopersFilter();
-            registeredArbitrator = persisted.getRegisteredArbitrator();
-            registeredMediator = persisted.getRegisteredMediator();
-            acceptedArbitrators = persisted.getAcceptedArbitrators();
-            acceptedMediators = persisted.getAcceptedMediators();
-        }
-    }*/
 }

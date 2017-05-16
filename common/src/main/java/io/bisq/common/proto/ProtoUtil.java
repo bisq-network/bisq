@@ -41,6 +41,14 @@ public class ProtoUtil {
         return CurrencyUtil.isCryptoCurrency(pbOffer.getBaseCurrencyCode()) ? pbOffer.getBaseCurrencyCode() : pbOffer.getCounterCurrencyCode();
     }
 
+    /**
+     * Returns the input String, except when it's the empty string: "", then null is returned.
+     * Note: "" is the default value for a protobuffer string, so this means it's not filled in.
+     */
+    public static String emptyStringToNull(String stringFromProto) {
+        return "".equals(stringFromProto) ? null : stringFromProto;
+    }
+
     public static <E extends Enum<E>> E enumFromProto(Class<E> e, String id) {
         E result = null;
         try {
