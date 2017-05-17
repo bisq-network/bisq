@@ -6,7 +6,7 @@
     <groupId>io.bitsquare</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.9.9.1</version>
+    <version>0.4.9.9.2</version>
     <description>Bitsquare - The decentralized bitcoin exchange</description>
     <url>https://bitsquare.io</url>
 
