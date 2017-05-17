@@ -69,7 +69,7 @@ public final class Preferences implements PersistedDataHost {
     @Setter
     @Delegate(excludes = ExcludesDelegateMethods.class)
     private PreferencesPayload prefPayload = new PreferencesPayload();
-    private AtomicBoolean initialReadDone = new AtomicBoolean(false);
+    private boolean initialReadDone = false;
 
     // Observable wrappers
     @Getter
@@ -202,7 +202,7 @@ public final class Preferences implements PersistedDataHost {
         if (btcNodesFromOptions != null && !btcNodesFromOptions.isEmpty())
             setBitcoinNodes(btcNodesFromOptions);
 
-        initialReadDone.set(true);
+        initialReadDone = true;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -279,7 +279,7 @@ public final class Preferences implements PersistedDataHost {
     }
 
     private void persist() {
-        if (initialReadDone.get())
+        if (initialReadDone)
             storage.queueUpForSave(prefPayload);
     }
 
