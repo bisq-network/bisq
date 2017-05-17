@@ -32,26 +32,39 @@ public class FeePolicy {
     // Average values are 10-100 satoshis/byte in january 2016
     // Average values are 60-140 satoshis/byte in february 2017
     // Average values are 100-250 satoshis/byte in March 22th 2017
+    // Average values are 200-450 satoshis/byte in May 18th 2017
     // 
     // Our trade transactions have a fixed set of inputs and outputs making the size very predictable 
     // (as long the user does not do multiple funding transactions)
     // 
-    // trade fee tx: 226 bytes          // 221 satoshi/byte
-    // deposit tx: 336 bytes            // 148 satoshi/byte
-    // payout tx: 371 bytes             // 134 satoshi/byte
-    // disputed payout tx: 408 bytes    // 122 satoshi/byte
+    // trade fee tx: 226 bytes          // 663 satoshi/byte
+    // deposit tx: 336 bytes            
+    // payout tx: 371 bytes             
+    // disputed payout tx: 408 bytes    // 367 satoshi/byte
 
     // We set a fixed fee to make the needed amounts in the trade predictable.
-    // We use 0.0005 BTC (0.5 EUR @ 1000 EUR/BTC) which is for our tx sizes about 120-220 satoshi/byte
+    // We use 0.0015 BTC (2.25 EUR @ 1500 EUR/BTC) which is for our tx sizes about 120-220 satoshi/byte
     // We cannot make that user defined as it need to be the same for both users, so we can only change that in 
     // software updates 
     // TODO version check can be removed after DAO version
     public static Coin getFixedTxFeeForTrades(Offer offer) {
-        return offer != null && offer.getProtocolVersion() == 1 ? Coin.valueOf(20_000) : getFixedTxFeeForTrades();
+        if (offer != null) {
+            switch ((int) offer.getProtocolVersion()) {
+                case 1:
+                    return Coin.valueOf(20_000);
+                case 2:
+                    return Coin.valueOf(50_000);
+                default:
+                    return getFixedTxFeeForTrades();
+
+            }
+        } else {
+            return getFixedTxFeeForTrades();
+        }
     }
 
     public static Coin getFixedTxFeeForTrades() {
-        return Coin.valueOf(50_000);
+        return Coin.valueOf(150_000);
     }
 
     // For non trade transactions (withdrawal) we use the default fee calculation 
