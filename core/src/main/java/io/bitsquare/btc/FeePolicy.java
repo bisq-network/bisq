@@ -87,12 +87,12 @@ public class FeePolicy {
     public static Coin getCreateOfferFee() {
         // We need to pay the quite high miner fee of 50_000 from the trading fee tx so 30_000 is what 
         // the arbitrator receives
-        return Coin.valueOf(80_000);
+        return Coin.valueOf(180_000);
     }
 
     // 0.001 BTC  0.1% of 1 BTC about 1 EUR @ 1000 EUR/BTC
     public static Coin getTakeOfferFee() {
-        return Coin.valueOf(100_000);
+        return Coin.valueOf(200_000);
     }
 
     // 0.03 BTC; about 30 EUR @ 1000 EUR/BTC
