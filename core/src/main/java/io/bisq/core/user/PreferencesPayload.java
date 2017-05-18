@@ -1,5 +1,6 @@
 package io.bisq.core.user;
 
+import com.google.common.collect.Maps;
 import com.google.protobuf.Message;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.*;
@@ -128,7 +129,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 new BlockChainExplorer(proto.getBsqBlockChainExplorer().getName(), proto.getBsqBlockChainExplorer().getTxUrl(), proto.getBsqBlockChainExplorer().getAddressUrl()),
                 ProtoUtil.emptyStringToNull(proto.getBackupDirectory()),
                 proto.getAutoSelectArbitrators(),
-                proto.getDontShowAgainMapMap(),
+                Maps.newHashMap(proto.getDontShowAgainMapMap()), // proto returs an unmodifiable map by default
                 proto.getTacAccepted(),
                 proto.getUseTorForBitcoinJ(),
                 proto.getShowOwnOffersInOfferBook(),

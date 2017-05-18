@@ -440,12 +440,6 @@ public final class Preferences implements PersistedDataHost {
     }
 
     // Only used from PB but keep it explicit as maybe it get used from the client and then we want to persist
-    public void setDontShowAgainMap(Map<String, Boolean> dontShowAgainMap) {
-        prefPayload.setDontShowAgainMap(dontShowAgainMap);
-        persist();
-    }
-
-    // Only used from PB but keep it explicit as maybe it get used from the client and then we want to persist
     public void setPeerTagMap(Map<String, String> peerTagMap) {
         prefPayload.setPeerTagMap(peerTagMap);
         persist();

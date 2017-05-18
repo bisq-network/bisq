@@ -198,7 +198,7 @@ public class FileManager<T extends PersistableEnvelope> {
         try {
             protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
         } catch (Throwable e) {
-            log.error("Error at saveToFile: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
+            log.error("Error in saveToFile toProtoMessage: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }
 
         try {
@@ -253,9 +253,7 @@ public class FileManager<T extends PersistableEnvelope> {
             }
             renameTempFileToFile(tempFile, storageFile);
         } catch (Throwable t) {
-            log.error("storageFile " + storageFile.toString());
-            t.printStackTrace();
-            log.error("Error at saveToFile: " + t.getMessage());
+            log.error("Error at saveToFile, storageFile=" + storageFile.toString(), t);
         } finally {
             if (writeLock.isLocked())
                 writeLock.unlock();
