@@ -83,6 +83,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -101,9 +102,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class MainViewModel implements ViewModel {
-    private static final Logger log = LoggerFactory.getLogger(MainViewModel.class);
-
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;
     private final BtcWalletService btcWalletService;

@@ -59,7 +59,7 @@ public final class User implements PersistedDataHost {
     private ObservableSet<PaymentAccount> paymentAccountsAsObservable;
     private ObjectProperty<PaymentAccount> currentPaymentAccountProperty;
 
-    private UserPayload userPayload;
+    private UserPayload userPayload = new UserPayload();
     private AtomicBoolean initialReadDone = new AtomicBoolean(false);
 
     @Inject

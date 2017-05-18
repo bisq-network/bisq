@@ -100,16 +100,16 @@ public class UserPayload implements PersistableEnvelope {
                         .map(e -> PaymentAccount.fromProto(e, resolver))
                         .collect(Collectors.toSet()),
                 proto.hasCurrentPaymentAccount() ? PaymentAccount.fromProto(proto.getCurrentPaymentAccount(), resolver) : null,
-                proto.getAcceptedLanguageLocaleCodesList().isEmpty() ? null : new ArrayList<>(proto.getAcceptedLanguageLocaleCodesList()),
+                proto.getAcceptedLanguageLocaleCodesList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedLanguageLocaleCodesList()),
                 proto.hasDevelopersAlert() ? Alert.fromProto(proto.getDevelopersAlert()) : null,
                 proto.hasDisplayedAlert() ? Alert.fromProto(proto.getDisplayedAlert()) : null,
                 proto.hasDevelopersFilter() ? Filter.fromProto(proto.getDevelopersFilter()) : null,
                 proto.hasRegisteredArbitrator() ? Arbitrator.fromProto(proto.getRegisteredArbitrator()) : null,
                 proto.hasRegisteredMediator() ? Mediator.fromProto(proto.getRegisteredMediator()) : null,
-                proto.getAcceptedArbitratorsList().isEmpty() ? null : proto.getAcceptedArbitratorsList().stream()
+                proto.getAcceptedArbitratorsList().isEmpty() ? new ArrayList<>() : proto.getAcceptedArbitratorsList().stream()
                         .map(Arbitrator::fromProto)
                         .collect(Collectors.toList()),
-                proto.getAcceptedMediatorsList().isEmpty() ? null : proto.getAcceptedMediatorsList().stream()
+                proto.getAcceptedMediatorsList().isEmpty() ? new ArrayList<>() : proto.getAcceptedMediatorsList().stream()
                         .map(Mediator::fromProto)
                         .collect(Collectors.toList())
         );

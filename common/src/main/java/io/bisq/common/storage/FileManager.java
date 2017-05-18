@@ -62,13 +62,17 @@ public class FileManager<T extends PersistableEnvelope> {
         this.delay = delay;
 
         saveFileTask = () -> {
-            Thread.currentThread().setName("Save-file-task-" + new Random().nextInt(10000));
-            // Runs in an auto save thread.
-            if (!savePending.getAndSet(false)) {
-                // Some other scheduled request already beat us to it.
-                return null;
+            try {
+                Thread.currentThread().setName("Save-file-task-" + new Random().nextInt(10000));
+                // Runs in an auto save thread.
+                if (!savePending.getAndSet(false)) {
+                    // Some other scheduled request already beat us to it.
+                    return null;
+                }
+                saveNowInternal(persistable);
+            } catch(Throwable e) {
+                log.error("Error during saveFileTask", e);
             }
-            saveNowInternal(persistable);
             return null;
         };
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

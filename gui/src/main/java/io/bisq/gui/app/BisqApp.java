@@ -82,6 +82,7 @@ import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.reactfx.EventStreams;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.core.env.Environment;
 
 import java.io.IOException;
@@ -190,8 +191,12 @@ public class BisqApp extends Application {
 
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.stream().forEach(e -> {
-                log.info("call readPersisted at " + e.getClass().getSimpleName());
-                e.readPersisted();
+                try {
+                    log.info("call readPersisted at " + e.getClass().getSimpleName());
+                    e.readPersisted();
+                } catch (Throwable e1) {
+                    log.error("readPersisted error", e1);
+                }
             });
 
             Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
