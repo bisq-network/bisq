@@ -310,6 +310,7 @@ public class BisqApp extends Application {
             }
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
         } catch (Throwable throwable) {
+            log.error("Error during app init", throwable);
             showErrorPopup(throwable, false);
         }
     }
