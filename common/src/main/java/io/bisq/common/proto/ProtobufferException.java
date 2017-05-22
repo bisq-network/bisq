@@ -21,4 +21,8 @@ public class ProtobufferException extends RuntimeException {
     public ProtobufferException(String message) {
         super(message);
     }
+
+    public ProtobufferException(String message, Throwable e) {
+        super(message, e);
+    }
 }

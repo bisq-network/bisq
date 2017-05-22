@@ -10,6 +10,8 @@ import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.network.NetworkPayload;
+import io.bisq.common.proto.network.NetworkProtoResolver;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistableHashMap;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
@@ -42,6 +44,7 @@ import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +52,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 // Run in UserThread
-public class P2PDataStorage implements MessageListener, ConnectionListener {
+public class P2PDataStorage implements MessageListener, ConnectionListener, PersistableEnvelope {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
     /**
@@ -68,6 +71,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     private final Storage<SequenceNumberMap> sequenceNumberMapStorage;
     private HashMap<ByteArray, ProtectedStorageEntry> persistedMap = new HashMap<>();
     private final Storage<PersistableHashMap<ByteArray, ProtectedStorageEntry>> persistedEntryMapStorage;
+    private final NetworkProtoResolver networkProtoResolver;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -75,8 +79,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public P2PDataStorage(Broadcaster broadcaster, NetworkNode networkNode, File storageDir,
-                          PersistenceProtoResolver persistenceProtoResolver) {
+                          PersistenceProtoResolver persistenceProtoResolver, NetworkProtoResolver networkProtoResolver) {
         this.broadcaster = broadcaster;
+        this.networkProtoResolver = networkProtoResolver;
 
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
@@ -279,7 +284,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
                 // If we get a PersistedStoragePayload we save to disc
                 if (storagePayload instanceof PersistedStoragePayload) {
                     persistedMap.put(hashOfPayload, protectedStorageEntry);
-                    persistedEntryMapStorage.queueUpForSave(new PersistableHashMap<>(persistedMap, getPersistedEntryMapToProtoMethod()), 5000);
+                    persistedEntryMapStorage.queueUpForSave(new PersistableHashMap<>(persistedMap, toProtoMessageFunction()), 5000);
                 }
 
                 hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry));
@@ -462,7 +467,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
     public Set<ProtectedStorageEntry> getFilteredValues(Set<ByteArray> excludedKeys) {
         return map.entrySet()
                 .stream().filter(e -> !excludedKeys.contains(e.getKey()))
-                .map(Map.Entry::getValue)
+                .map(Entry::getValue)
                 .collect(Collectors.toSet());
     }
 
@@ -662,23 +667,37 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
     }
 
-    @NotNull
+    public Message toProtoMessage() {
+          return toProtoMessageFunction().apply(persistedMap);
+    }
+
+        @NotNull
     /** convert hashmap to proto representation */
-    private Function<HashMap<ByteArray, ProtectedStorageEntry>, Message> getPersistedEntryMapToProtoMethod() {
+    static Function<HashMap<ByteArray, ProtectedStorageEntry>, Message> toProtoMessageFunction() {
         return (HashMap<ByteArray, ProtectedStorageEntry> map) -> {
             Map<String, PB.ProtectedStorageEntry> protoResult =
                     map.entrySet().stream()
                             .collect(Collectors.toMap(
-                                            e -> e.getKey().toString(),
-                                            e -> (PB.ProtectedStorageEntry) e.getValue().toProtoMessage())
+                                    e -> e.getKey().toString(),
+                                    e -> (PB.ProtectedStorageEntry) e.getValue().toProtoMessage())
                             );
             return PB.PersistableEnvelope.newBuilder().setPersistedEntryMap(PB.PersistedEntryMap.newBuilder().putAllPersistedEntryMap(protoResult)).build();
         };
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Static class
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public static PersistableEnvelope fromProto(Map<String, PB.ProtectedStorageEntry> protoResult,
+                                                   NetworkProtoResolver networkProtoResolver) {
+        Map<ByteArray, ProtectedStorageEntry> result = protoResult.entrySet().stream()
+                .collect(Collectors.<Entry<String, PB.ProtectedStorageEntry>, ByteArray, ProtectedStorageEntry>toMap(
+                        e -> new ByteArray(e.getKey().getBytes()),
+                        e -> ProtectedStorageEntry.fromProto(e.getValue(), networkProtoResolver)
+                ));
+        return new PersistableHashMap<>(new HashMap<>(result), P2PDataStorage.toProtoMessageFunction());
+    }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Static class
+///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Used as container for calculating cryptographic hash of data and sequenceNumber.
@@ -762,3 +781,4 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         }
     }
 }
+

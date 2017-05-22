@@ -68,7 +68,7 @@ public class P2PDataStorageTest {
         keyRing2 = new KeyRing(new KeyStorage(dir2));
         storageSignatureKeyPair2 = keyRing2.getSignatureKeyPair();
         encryptionService2 = new EncryptionService(keyRing2, TestUtils.getNetworkProtoResolver());
-        dataStorage1 = new P2PDataStorage(broadcaster, networkNode, dir1, persistenceProtoResolver);
+        dataStorage1 = new P2PDataStorage(broadcaster, networkNode, dir1, persistenceProtoResolver, networkProtoResolver);
     }
 
     @After

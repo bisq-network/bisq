@@ -39,7 +39,7 @@ public class PendingTradeList /*implements PersistableEnvelope */ {
     public Message toProtoMessage() {
         return PB.PersistableEnvelope.newBuilder()
                 .setPendingTradeList(PB.PendingTradeList.newBuilder()
-                        .addAllTrade(getList().stream().map(Trade::toProtoMessage).collect(Collectors.toList())))
+                        .addAllTrade(getTradableList().stream().map(Trade::toProtoMessage).collect(Collectors.toList())))
                 .build();
     }*/
 

@@ -172,9 +172,9 @@ public class TradeManager implements PersistedDataHost {
     public void readPersisted() {
        /* OpenOfferList persisted = openOffersStorage.initAndGetPersisted(openOfferList);
         if (persisted != null)
-            openOfferList.addAll(persisted.getList());
+            openOfferList.addAll(persisted.getTradableList());
 
-        observableList = FXCollections.observableArrayList(openOfferList.getList());
+        observableList = FXCollections.observableArrayList(openOfferList.getTradableList());
         observableList.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));*/
     }
 

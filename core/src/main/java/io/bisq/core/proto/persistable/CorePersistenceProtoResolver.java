@@ -2,6 +2,7 @@ package io.bisq.core.proto.persistable;
 
 import com.google.inject.Provider;
 import io.bisq.common.proto.ProtobufferException;
+import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistableViewPath;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
@@ -18,6 +19,7 @@ import io.bisq.core.user.PreferencesPayload;
 import io.bisq.core.user.UserPayload;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.peers.peerexchange.PeerList;
+import io.bisq.network.p2p.storage.P2PDataStorage;
 import io.bisq.network.p2p.storage.SequenceNumberMap;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,11 +35,14 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
     private final Storage<TradableList<SellerAsMakerTrade>> sellerAsMakerTradeStorage;
     private final Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage;
     private final Provider<BtcWalletService> btcWalletService;
+    private final NetworkProtoResolver networkProtoResolver;
 
     @Inject
     public CorePersistenceProtoResolver(Provider<BtcWalletService> btcWalletService,
+                                        NetworkProtoResolver networkProtoResolver,
                                         @Named(Storage.STORAGE_DIR) File storageDir) {
         this.btcWalletService = btcWalletService;
+        this.networkProtoResolver = networkProtoResolver;
 
         openOfferStorage = new Storage<>(storageDir, this);
         buyerAsMakerTradeStorage = new Storage<>(storageDir, this);
@@ -79,6 +84,9 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                 return SequenceNumberMap.fromProto(proto.getSequenceNumberMap());
             case TRADE_STATISTICS_LIST:
                 return TradeStatisticsList.fromProto(proto.getTradeStatisticsList());
+            case PERSISTED_ENTRY_MAP:
+                return P2PDataStorage.fromProto(proto.getPersistedEntryMap().getPersistedEntryMapMap(),
+                        networkProtoResolver);
             default:
                 throw new ProtobufferException("Unknown proto message case. messageCase=" + proto.getMessageCase());
         }

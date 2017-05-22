@@ -214,7 +214,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         broadcaster = new Broadcaster(networkNode, peerManager);
 
-        p2PDataStorage = new P2PDataStorage(broadcaster, networkNode, storageDir, persistenceProtoResolver);
+        p2PDataStorage = new P2PDataStorage(broadcaster, networkNode, storageDir, persistenceProtoResolver, networkProtoResolver);
         p2PDataStorage.addHashMapChangedListener(this);
 
         requestDataManager = new RequestDataManager(networkNode, p2PDataStorage, peerManager, seedNodeAddresses, this);
