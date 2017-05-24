@@ -65,14 +65,14 @@ public final class OpenOffer implements Tradable {
 
 
     @Override
-    public PB.OpenOffer toProtoMessage() {
-        return PB.OpenOffer.newBuilder()
+    public PB.Tradable toProtoMessage() {
+        return PB.Tradable.newBuilder().setOpenOffer(PB.OpenOffer.newBuilder()
                 .setOffer(offer.toProtoMessage())
-                .setState(PB.OpenOffer.State.valueOf(state.name()))
+                .setState(PB.OpenOffer.State.valueOf(state.name())))
                 .build();
     }
 
-    public static OpenOffer fromProto(PB.OpenOffer proto) {
+    public static Tradable fromProto(PB.OpenOffer proto) {
         OpenOffer openOffer = new OpenOffer(Offer.fromProto(proto.getOffer()));
         // If we have a reserved state from the local db we reset it
         if (openOffer.getState() == State.RESERVED)

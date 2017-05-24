@@ -82,7 +82,7 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                                          Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage,
                                          BtcWalletService btcWalletService) {
         log.debug("TradableList fromProto of {} ", proto);
-        List list = proto.getTradableList().stream().map(tradable -> {
+        List list = proto.getTradableList().stream().peek(tradable -> log.info(tradable.getClass().toString())).map(tradable -> {
             log.debug("tradable.getMessageCase(): {}", tradable.getMessageCase());
             switch (tradable.getMessageCase()) {
                 case OPEN_OFFER:
@@ -158,15 +158,6 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
 
         return null;
     }*/
-
-    public static TradableList fromProto(PB.OpenOfferList proto,
-                                         Storage<TradableList<OpenOffer>> openOfferStorage) {
-        return new TradableList<>(openOfferStorage,
-                proto.getOpenOfferList().stream()
-                        .map(OpenOffer::fromProto)
-                        .collect(Collectors.toList())
-        );
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

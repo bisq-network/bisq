@@ -30,6 +30,4 @@ public interface Tradable extends PersistablePayload {
     String getId();
 
     String getShortId();
-
-
 }

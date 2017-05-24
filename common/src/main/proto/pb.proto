@@ -814,8 +814,7 @@ message PersistableEnvelope {
         TradableList tradable_list = 11;
         
         TradeList trade_list = 16;
-        OpenOfferList open_offer_list = 17;
-                                         
+
          //TODO
         PendingTradeList pending_trade_list = 12;
         ClosedTradeList closed_trade_list = 13;

@@ -18,7 +18,9 @@
 package io.bisq.common.storage;
 
 import com.google.common.util.concurrent.CycleDetectingLockFactory;
+import com.google.protobuf.Message;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.util.Utilities;
@@ -109,26 +111,17 @@ public class FileManager<T extends PersistableEnvelope> {
     }
 
     public synchronized T read(File file) throws IOException, ClassNotFoundException {
-        log.debug("read" + file);
+        log.info("Reading file:{}", file.getAbsolutePath());
 
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
-            return (T) persistenceProtoResolver.fromProto(PB.PersistableEnvelope.parseDelimitedFrom(fileInputStream));
+            PB.PersistableEnvelope persistable = PB.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
+            return (T) persistenceProtoResolver.fromProto(persistable);
         } catch (Throwable t) {
-            log.error("Exception at proto read: " + t.getMessage() + " " + file.getName());
+            String errorMsg = "Exception at proto read: " + t.getMessage() + " file:" + file.getAbsolutePath();
+            log.error(errorMsg, t);
             //if(DevEnv.DEV_MODE)
-            throw new RuntimeException("Exception at proto read: " + t.getMessage() + " " + file.getName());
+            throw new RuntimeException(errorMsg);
         }
-
-
-        /*try (final FileInputStream fileInputStream = new FileInputStream(file);
-             final ObjectInputStream objectInputStream = new LookAheadObjectInputStream(fileInputStream, false)) {
-            //noinspection unchecked
-            log.warn("Still using Serializable storing for file: {}", file);
-            return (T) objectInputStream.readObject();
-        } catch (Throwable t) {
-            log.error("Exception at read: " + t.getMessage());
-            throw t;
-        }*/
     }
 
     public synchronized void removeFile(String fileName) {
@@ -201,6 +194,12 @@ public class FileManager<T extends PersistableEnvelope> {
             log.error("Error in saveToFile toProtoMessage: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
         }
 
+        // check if what we're saving can also be read in correctly
+        if(DevEnv.DEV_MODE) {
+            log.info("Reverting the protopersistable during saving");
+            persistenceProtoResolver.fromProto(protoPersistable);
+        }
+
         try {
             if (!dir.exists())
                 if (!dir.mkdir())
@@ -215,7 +214,7 @@ public class FileManager<T extends PersistableEnvelope> {
             } else if (protoPersistable != null) {
                 fileOutputStream = new FileOutputStream(tempFile);
 
-                log.info("Writing protobuffer to disc:{}", persistable.getClass());
+                log.info("Writing protobuffer class:{} to file:{}", persistable.getClass(), storageFile.getName());
                 writeLock.lock();
                 protoPersistable.writeDelimitedTo(fileOutputStream);
 

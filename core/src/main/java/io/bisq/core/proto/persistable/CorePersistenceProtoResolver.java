@@ -14,7 +14,6 @@ import io.bisq.core.offer.OpenOffer;
 import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.*;
 import io.bisq.core.trade.statistics.TradeStatisticsList;
-import io.bisq.core.user.Preferences;
 import io.bisq.core.user.PreferencesPayload;
 import io.bisq.core.user.UserPayload;
 import io.bisq.generated.protobuffer.PB;
@@ -54,14 +53,13 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
     @Override
     public PersistableEnvelope fromProto(PB.PersistableEnvelope proto) {
         log.info("Convert protobuffer disk proto: {}", proto.getMessageCase());
+        log.trace("Reading this proto: {}", proto.toString());
 
         switch (proto.getMessageCase()) {
             case ADDRESS_ENTRY_LIST:
                 return AddressEntryList.fromProto(proto.getAddressEntryList());
             case VIEW_PATH_AS_STRING:
                 return PersistableViewPath.fromProto(proto.getViewPathAsString());
-            case OPEN_OFFER_LIST:
-                return TradableList.fromProto(proto.getOpenOfferList(), openOfferStorage);
             case TRADABLE_LIST:
                 return TradableList.fromProto(proto.getTradableList(),
                         this,
