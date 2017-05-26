@@ -82,6 +82,10 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                                          Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage,
                                          BtcWalletService btcWalletService) {
         log.debug("TradableList fromProto of {} ", proto);
+        if(proto.getTradableList().size() == 0) {
+            return null;
+        }
+
         List list = proto.getTradableList().stream().peek(tradable -> log.info(tradable.getClass().toString())).map(tradable -> {
             log.debug("tradable.getMessageCase(): {}", tradable.getMessageCase());
             switch (tradable.getMessageCase()) {
