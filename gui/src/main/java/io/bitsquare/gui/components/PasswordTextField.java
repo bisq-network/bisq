@@ -17,6 +17,7 @@
 
 package io.bitsquare.gui.components;
 
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.validation.InputValidator;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -34,7 +35,7 @@ import org.controlsfx.control.PopOver;
 
 public class PasswordTextField extends PasswordField {
 
-    private final Effect invalidEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.RED, 4, 0.0, 0, 0);
+    private final Effect invalidEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.RED, MainView.scale(4), 0.0, MainView.scale(0), MainView.scale(0));
 
     private final ObjectProperty<InputValidator.ValidationResult> validationResult = new SimpleObjectProperty<>
             (new InputValidator.ValidationResult(true));
@@ -148,8 +149,8 @@ public class PasswordTextField extends PasswordField {
     private Point2D getErrorPopupPosition() {
         Window window = getScene().getWindow();
         Point2D point;
-        point = layoutReference.localToScene(0, 0);
-        double x = Math.floor(point.getX() + window.getX() + layoutReference.getWidth() + 20 - getPadding().getLeft() -
+        point = layoutReference.localToScene(MainView.scale(0), MainView.scale(0));
+        double x = Math.floor(point.getX() + window.getX() + layoutReference.getWidth() + MainView.scale(20) - getPadding().getLeft() -
                 getPadding().getRight());
         double y = Math.floor(point.getY() + window.getY() + getHeight() / 2 - getPadding().getTop() - getPadding()
                 .getBottom());
@@ -160,13 +161,13 @@ public class PasswordTextField extends PasswordField {
     private static void createErrorPopOver(String errorMessage) {
         Label errorLabel = new Label(errorMessage);
         errorLabel.setId("validation-error");
-        errorLabel.setPadding(new Insets(0, 10, 0, 10));
+        errorLabel.setPadding(new Insets(MainView.scale(0), MainView.scale(10), MainView.scale(0), MainView.scale(10)));
         errorLabel.setOnMouseClicked(e -> hideErrorMessageDisplay());
 
         errorMessageDisplay = new PopOver(errorLabel);
         errorMessageDisplay.setDetachable(true);
         errorMessageDisplay.setDetachedTitle("Close");
-        errorMessageDisplay.setArrowIndent(5);
+        errorMessageDisplay.setArrowIndent(MainView.scale(5));
     }
 
 }

@@ -22,6 +22,7 @@ import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Tuple4;
 import io.bitsquare.gui.components.*;
+import io.bitsquare.gui.main.MainView;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -45,12 +46,12 @@ public class FormBuilder {
 
     public static GridPane addGridPane(Pane parent) {
         GridPane gridPane = new GridPane();
-        AnchorPane.setLeftAnchor(gridPane, 10d);
-        AnchorPane.setRightAnchor(gridPane, 10d);
-        AnchorPane.setTopAnchor(gridPane, 10d);
-        AnchorPane.setBottomAnchor(gridPane, 10d);
-        gridPane.setHgap(Layout.GRID_GAP);
-        gridPane.setVgap(Layout.GRID_GAP);
+        AnchorPane.setLeftAnchor(gridPane, MainView.scale(10));
+        AnchorPane.setRightAnchor(gridPane, MainView.scale(10));
+        AnchorPane.setTopAnchor(gridPane, MainView.scale(10));
+        AnchorPane.setBottomAnchor(gridPane, MainView.scale(10));
+        gridPane.setHgap(MainView.scale(Layout.GRID_GAP));
+        gridPane.setVgap(MainView.scale(Layout.GRID_GAP));
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
         columnConstraints1.setHalignment(HPos.RIGHT);
         columnConstraints1.setHgrow(Priority.SOMETIMES);
@@ -70,7 +71,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static TitledGroupBg addTitledGroupBg(GridPane gridPane, int rowIndex, int rowSpan, String title) {
-        return addTitledGroupBg(gridPane, rowIndex, rowSpan, title, 0);
+        return addTitledGroupBg(gridPane, rowIndex, rowSpan, title, MainView.scale(0));
     }
 
     public static TitledGroupBg addTitledGroupBg(GridPane gridPane, int rowIndex, int rowSpan, String title, double top) {
@@ -80,7 +81,7 @@ public class FormBuilder {
         GridPane.setRowIndex(titledGroupBg, rowIndex);
         GridPane.setRowSpan(titledGroupBg, rowSpan);
         GridPane.setColumnSpan(titledGroupBg, 2);
-        GridPane.setMargin(titledGroupBg, new Insets(top, -10, -10, -10));
+        GridPane.setMargin(titledGroupBg, new Insets(top, MainView.scale(-10), MainView.scale(-10), MainView.scale(-10)));
         gridPane.getChildren().add(titledGroupBg);
         return titledGroupBg;
     }
@@ -91,13 +92,13 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Label addLabel(GridPane gridPane, int rowIndex, String title) {
-        return addLabel(gridPane, rowIndex, title, 0);
+        return addLabel(gridPane, rowIndex, title, MainView.scale(0));
     }
 
     public static Label addLabel(GridPane gridPane, int rowIndex, String title, double top) {
         Label label = new Label(title);
         GridPane.setRowIndex(label, rowIndex);
-        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(label, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(label);
         return label;
     }
@@ -108,11 +109,11 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Label addMultilineLabel(GridPane gridPane, int rowIndex) {
-        return addMultilineLabel(gridPane, rowIndex, 0);
+        return addMultilineLabel(gridPane, rowIndex, MainView.scale(0));
     }
 
     public static Label addMultilineLabel(GridPane gridPane, int rowIndex, String text) {
-        return addMultilineLabel(gridPane, rowIndex, text, 0);
+        return addMultilineLabel(gridPane, rowIndex, text, MainView.scale(0));
     }
 
     public static Label addMultilineLabel(GridPane gridPane, int rowIndex, double top) {
@@ -125,7 +126,7 @@ public class FormBuilder {
         GridPane.setHalignment(label, HPos.LEFT);
         GridPane.setRowIndex(label, rowIndex);
         GridPane.setColumnSpan(label, 2);
-        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(label, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(label);
         return label;
     }
@@ -136,11 +137,11 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, TextField> addLabelTextField(GridPane gridPane, int rowIndex, String title) {
-        return addLabelTextField(gridPane, rowIndex, title, "", 0);
+        return addLabelTextField(gridPane, rowIndex, title, "", MainView.scale(0));
     }
 
     public static Tuple2<Label, TextField> addLabelTextField(GridPane gridPane, int rowIndex, String title, String value) {
-        return addLabelTextField(gridPane, rowIndex, title, value, 0);
+        return addLabelTextField(gridPane, rowIndex, title, value, MainView.scale(0));
     }
 
     public static Tuple2<Label, TextField> addLabelTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
@@ -152,7 +153,7 @@ public class FormBuilder {
         textField.setFocusTraversable(false);
         GridPane.setRowIndex(textField, rowIndex);
         GridPane.setColumnIndex(textField, 1);
-        GridPane.setMargin(textField, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(textField, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(textField);
 
         return new Tuple2<>(label, textField);
@@ -172,7 +173,7 @@ public class FormBuilder {
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);
-        GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
+        GridPane.setMargin(hyperlinkWithIcon, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(-4)));
         gridPane.getChildren().add(hyperlinkWithIcon);
         return hyperlinkWithIcon;
     }
@@ -183,7 +184,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String labelTitle, String title, String url) {
-        return addLabelHyperlinkWithIcon(gridPane, rowIndex, labelTitle, title, url, 0);
+        return addLabelHyperlinkWithIcon(gridPane, rowIndex, labelTitle, title, url, MainView.scale(0));
     }
 
     public static Tuple2<Label, HyperlinkWithIcon> addLabelHyperlinkWithIcon(GridPane gridPane, int rowIndex, String labelTitle, String title, String url, double top) {
@@ -193,7 +194,7 @@ public class FormBuilder {
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 1);
-        GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
+        GridPane.setMargin(hyperlinkWithIcon, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(-4)));
         gridPane.getChildren().add(hyperlinkWithIcon);
         return new Tuple2<>(label, hyperlinkWithIcon);
     }
@@ -204,13 +205,13 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, TextArea> addLabelTextArea(GridPane gridPane, int rowIndex, String title, String prompt) {
-        return addLabelTextArea(gridPane, rowIndex, title, prompt, 0);
+        return addLabelTextArea(gridPane, rowIndex, title, prompt, MainView.scale(0));
     }
 
     public static Tuple2<Label, TextArea> addLabelTextArea(GridPane gridPane, int rowIndex, String title, String prompt, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
+        Label label = addLabel(gridPane, rowIndex, title, MainView.scale(0));
         label.setAlignment(Pos.TOP_RIGHT);
-        GridPane.setMargin(label, new Insets(top + 4, 0, 0, 0));
+        GridPane.setMargin(label, new Insets(top + MainView.scale(4), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setValignment(label, VPos.TOP);
 
         TextArea textArea = new TextArea();
@@ -218,7 +219,7 @@ public class FormBuilder {
         textArea.setWrapText(true);
         GridPane.setRowIndex(textArea, rowIndex);
         GridPane.setColumnIndex(textArea, 1);
-        GridPane.setMargin(textArea, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(textArea, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(textArea);
 
         return new Tuple2<>(label, textArea);
@@ -230,7 +231,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, DatePicker> addLabelDatePicker(GridPane gridPane, int rowIndex, String title) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
+        Label label = addLabel(gridPane, rowIndex, title, MainView.scale(0));
 
         DatePicker datePicker = new DatePicker();
         GridPane.setRowIndex(datePicker, rowIndex);
@@ -246,7 +247,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, TxIdTextField> addLabelTxIdTextField(GridPane gridPane, int rowIndex, String title, String value) {
-        return addLabelTxIdTextField(gridPane, rowIndex, title, value, 0);
+        return addLabelTxIdTextField(gridPane, rowIndex, title, value, MainView.scale(0));
     }
 
     public static Tuple2<Label, TxIdTextField> addLabelTxIdTextField(GridPane gridPane, int rowIndex, String title, String value, double top) {
@@ -267,7 +268,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, InputTextField> addLabelInputTextField(GridPane gridPane, int rowIndex, String title) {
-        return addLabelInputTextField(gridPane, rowIndex, title, 0);
+        return addLabelInputTextField(gridPane, rowIndex, title, MainView.scale(0));
     }
 
     public static Tuple2<Label, InputTextField> addLabelInputTextField(GridPane gridPane, int rowIndex, String title, double top) {
@@ -276,7 +277,7 @@ public class FormBuilder {
         InputTextField inputTextField = new InputTextField();
         GridPane.setRowIndex(inputTextField, rowIndex);
         GridPane.setColumnIndex(inputTextField, 1);
-        GridPane.setMargin(inputTextField, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(inputTextField, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(inputTextField);
 
         return new Tuple2<>(label, inputTextField);
@@ -288,7 +289,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, PasswordTextField> addLabelPasswordTextField(GridPane gridPane, int rowIndex, String title) {
-        return addLabelPasswordTextField(gridPane, rowIndex, title, 0);
+        return addLabelPasswordTextField(gridPane, rowIndex, title, MainView.scale(0));
     }
 
     public static Tuple2<Label, PasswordTextField> addLabelPasswordTextField(GridPane gridPane, int rowIndex, String title, double top) {
@@ -297,7 +298,7 @@ public class FormBuilder {
         PasswordTextField passwordField = new PasswordTextField();
         GridPane.setRowIndex(passwordField, rowIndex);
         GridPane.setColumnIndex(passwordField, 1);
-        GridPane.setMargin(passwordField, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(passwordField, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(passwordField);
 
         return new Tuple2<>(label, passwordField);
@@ -309,14 +310,14 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple3<Label, InputTextField, CheckBox> addLabelInputTextFieldCheckBox(GridPane gridPane, int rowIndex, String title, String checkBoxTitle) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
+        Label label = addLabel(gridPane, rowIndex, title, MainView.scale(0));
 
         InputTextField inputTextField = new InputTextField();
         CheckBox checkBox = new CheckBox(checkBoxTitle);
-        HBox.setMargin(checkBox, new Insets(4, 0, 0, 0));
+        HBox.setMargin(checkBox, new Insets(MainView.scale(4), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         hBox.getChildren().addAll(inputTextField, checkBox);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
@@ -331,14 +332,14 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple3<Label, InputTextField, Button> addLabelInputTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
+        Label label = addLabel(gridPane, rowIndex, title, MainView.scale(0));
 
         InputTextField inputTextField = new InputTextField();
         Button button = new Button(buttonTitle);
         button.setDefaultButton(true);
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         hBox.getChildren().addAll(inputTextField, button);
         HBox.setHgrow(inputTextField, Priority.ALWAYS);
         GridPane.setRowIndex(hBox, rowIndex);
@@ -354,7 +355,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple3<Label, TextField, Button> addLabelTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle) {
-        return addLabelTextFieldButton(gridPane, rowIndex, title, buttonTitle, 0);
+        return addLabelTextFieldButton(gridPane, rowIndex, title, buttonTitle, MainView.scale(0));
     }
 
     public static Tuple3<Label, TextField, Button> addLabelTextFieldButton(GridPane gridPane, int rowIndex, String title, String buttonTitle, double top) {
@@ -368,12 +369,12 @@ public class FormBuilder {
         button.setDefaultButton(true);
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         hBox.getChildren().addAll(textField, button);
         HBox.setHgrow(textField, Priority.ALWAYS);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(hBox, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(hBox);
 
         return new Tuple3<>(label, textField, button);
@@ -385,15 +386,15 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple4<Label, InputTextField, Label, InputTextField> addLabelInputTextFieldLabelInputTextField(GridPane gridPane, int rowIndex, String title1, String title2) {
-        Label label1 = addLabel(gridPane, rowIndex, title1, 0);
+        Label label1 = addLabel(gridPane, rowIndex, title1, MainView.scale(0));
 
         InputTextField inputTextField1 = new InputTextField();
         Label label2 = new Label(title2);
-        HBox.setMargin(label2, new Insets(5, 0, 0, 0));
+        HBox.setMargin(label2, new Insets(MainView.scale(5), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         InputTextField inputTextField2 = new InputTextField();
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         hBox.getChildren().addAll(inputTextField1, label2, inputTextField2);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
@@ -408,21 +409,21 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple4<Label, TextField, Label, TextField> addLabelTextFieldLabelTextField(GridPane gridPane, int rowIndex, String title1, String title2) {
-        Label label1 = addLabel(gridPane, rowIndex, title1, 0);
+        Label label1 = addLabel(gridPane, rowIndex, title1, MainView.scale(0));
 
         TextField textField1 = new TextField();
         textField1.setEditable(false);
         textField1.setMouseTransparent(true);
         textField1.setFocusTraversable(false);
         Label label2 = new Label(title2);
-        HBox.setMargin(label2, new Insets(5, 0, 0, 0));
+        HBox.setMargin(label2, new Insets(MainView.scale(5), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         TextField textField2 = new TextField();
         textField2.setEditable(false);
         textField2.setMouseTransparent(true);
         textField2.setFocusTraversable(false);
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         hBox.getChildren().addAll(textField1, label2, textField2);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
@@ -437,21 +438,21 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Button, CheckBox> addButtonCheckBox(GridPane gridPane, int rowIndex, String buttonTitle, String checkBoxTitle) {
-        return addButtonCheckBox(gridPane, rowIndex, buttonTitle, checkBoxTitle, 0);
+        return addButtonCheckBox(gridPane, rowIndex, buttonTitle, checkBoxTitle, MainView.scale(0));
     }
 
     public static Tuple2<Button, CheckBox> addButtonCheckBox(GridPane gridPane, int rowIndex, String buttonTitle, String checkBoxTitle, double top) {
         Button button = new Button(buttonTitle);
         button.setDefaultButton(true);
         CheckBox checkBox = new CheckBox(checkBoxTitle);
-        HBox.setMargin(checkBox, new Insets(6, 0, 0, 0));
+        HBox.setMargin(checkBox, new Insets(MainView.scale(6), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
 
         HBox hBox = new HBox();
-        hBox.setSpacing(20);
+        hBox.setSpacing(MainView.scale(20));
         hBox.getChildren().addAll(button, checkBox);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        hBox.setPadding(new Insets(top, 0, 0, 0));
+        hBox.setPadding(new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(hBox);
 
         return new Tuple2<>(button, checkBox);
@@ -462,12 +463,12 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static CheckBox addCheckBox(GridPane gridPane, int rowIndex, String checkBoxTitle) {
-        return addCheckBox(gridPane, rowIndex, checkBoxTitle, 0);
+        return addCheckBox(gridPane, rowIndex, checkBoxTitle, MainView.scale(0));
     }
 
     public static CheckBox addCheckBox(GridPane gridPane, int rowIndex, String checkBoxTitle, double top) {
         CheckBox checkBox = new CheckBox(checkBoxTitle);
-        GridPane.setMargin(checkBox, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(checkBox, new Insets(top, MainView.scale(0),MainView.scale(0), MainView.scale(0)));
         GridPane.setRowIndex(checkBox, rowIndex);
         GridPane.setColumnIndex(checkBox, 1);
         gridPane.getChildren().add(checkBox);
@@ -493,11 +494,11 @@ public class FormBuilder {
 
     public static Tuple2<Label, RadioButton> addLabelRadioButton(GridPane gridPane, int rowIndex, ToggleGroup toggleGroup, String title, String
             radioButtonTitle) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
+        Label label = addLabel(gridPane, rowIndex, title, MainView.scale(0));
 
         RadioButton radioButton = new RadioButton(radioButtonTitle);
         radioButton.setToggleGroup(toggleGroup);
-        radioButton.setPadding(new Insets(6, 0, 0, 0));
+        radioButton.setPadding(new Insets(MainView.scale(6), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setRowIndex(radioButton, rowIndex);
         GridPane.setColumnIndex(radioButton, 1);
         gridPane.getChildren().add(radioButton);
@@ -511,21 +512,21 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, CheckBox> addLabelCheckBox(GridPane gridPane, int rowIndex, String title) {
-        return addLabelCheckBox(gridPane, rowIndex, title, "", 0);
+        return addLabelCheckBox(gridPane, rowIndex, title, "", MainView.scale(0));
     }
 
     public static Tuple2<Label, CheckBox> addLabelCheckBox(GridPane gridPane, int rowIndex, String title, String checkBoxTitle) {
-        return addLabelCheckBox(gridPane, rowIndex, title, checkBoxTitle, 0);
+        return addLabelCheckBox(gridPane, rowIndex, title, checkBoxTitle, MainView.scale(0));
     }
 
     public static Tuple2<Label, CheckBox> addLabelCheckBox(GridPane gridPane, int rowIndex, String title, String checkBoxTitle, double top) {
-        Label label = addLabel(gridPane, rowIndex, title, -3);
-        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
+        Label label = addLabel(gridPane, rowIndex, title, MainView.scale(-3));
+        GridPane.setMargin(label, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
 
         CheckBox checkBox = new CheckBox(checkBoxTitle);
         GridPane.setRowIndex(checkBox, rowIndex);
         GridPane.setColumnIndex(checkBox, 1);
-        GridPane.setMargin(checkBox, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(checkBox, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(checkBox);
 
         return new Tuple2<>(label, checkBox);
@@ -536,11 +537,11 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, ComboBox> addLabelComboBox(GridPane gridPane, int rowIndex) {
-        return addLabelComboBox(gridPane, rowIndex, null, 0);
+        return addLabelComboBox(gridPane, rowIndex, null, MainView.scale(0));
     }
 
     public static Tuple2<Label, ComboBox> addLabelComboBox(GridPane gridPane, int rowIndex, String title) {
-        return addLabelComboBox(gridPane, rowIndex, title, 0);
+        return addLabelComboBox(gridPane, rowIndex, title, MainView.scale(0));
     }
 
     public static Tuple2<Label, ComboBox> addLabelComboBox(GridPane gridPane, int rowIndex, String title, double top) {
@@ -551,7 +552,7 @@ public class FormBuilder {
         ComboBox comboBox = new ComboBox();
         GridPane.setRowIndex(comboBox, rowIndex);
         GridPane.setColumnIndex(comboBox, 1);
-        GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(comboBox, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(comboBox);
 
         return new Tuple2<>(label, comboBox);
@@ -565,7 +566,7 @@ public class FormBuilder {
         SearchComboBox comboBox = new SearchComboBox();
         GridPane.setRowIndex(comboBox, rowIndex);
         GridPane.setColumnIndex(comboBox, 1);
-        GridPane.setMargin(comboBox, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(comboBox, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(comboBox);
 
         return new Tuple2<>(label, comboBox);
@@ -577,14 +578,14 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple3<Label, ComboBox, ComboBox> addLabelComboBoxComboBox(GridPane gridPane, int rowIndex, String title) {
-        return addLabelComboBoxComboBox(gridPane, rowIndex, title, 0);
+        return addLabelComboBoxComboBox(gridPane, rowIndex, title, MainView.scale(0));
     }
 
     public static Tuple3<Label, ComboBox, ComboBox> addLabelComboBoxComboBox(GridPane gridPane, int rowIndex, String title, double top) {
         Label label = addLabel(gridPane, rowIndex, title, top);
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
 
         ComboBox comboBox1 = new ComboBox();
         ComboBox comboBox2 = new ComboBox();
@@ -606,7 +607,7 @@ public class FormBuilder {
                                                                          int rowIndex,
                                                                          String title,
                                                                          String buttonTitle) {
-        return addLabelComboBoxButton(gridPane, rowIndex, title, buttonTitle, 0);
+        return addLabelComboBoxButton(gridPane, rowIndex, title, buttonTitle, MainView.scale(0));
     }
 
     public static Tuple3<Label, ComboBox, Button> addLabelComboBoxButton(GridPane gridPane,
@@ -617,7 +618,7 @@ public class FormBuilder {
         Label label = addLabel(gridPane, rowIndex, title, top);
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
 
         Button button = new Button(buttonTitle);
         button.setDefaultButton(true);
@@ -628,7 +629,7 @@ public class FormBuilder {
 
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(hBox, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(hBox);
 
         return new Tuple3<>(label, comboBox, button);
@@ -642,7 +643,7 @@ public class FormBuilder {
                                                                            int rowIndex,
                                                                            String title,
                                                                            String textFieldText) {
-        return addLabelComboBoxLabel(gridPane, rowIndex, title, textFieldText, 0);
+        return addLabelComboBoxLabel(gridPane, rowIndex, title, textFieldText, MainView.scale(0));
     }
 
     public static Tuple3<Label, ComboBox, TextField> addLabelComboBoxLabel(GridPane gridPane,
@@ -653,7 +654,7 @@ public class FormBuilder {
         Label label = addLabel(gridPane, rowIndex, title, top);
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
 
         ComboBox comboBox = new ComboBox();
         TextField textField = new TextField(textFieldText);
@@ -664,7 +665,7 @@ public class FormBuilder {
         hBox.getChildren().addAll(comboBox, textField);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(hBox, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(hBox);
 
         return new Tuple3<>(label, comboBox, textField);
@@ -676,7 +677,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, TxIdTextField> addLabelTxIdTextField(GridPane gridPane, int rowIndex, String title) {
-        return addLabelTxIdTextField(gridPane, rowIndex, title, 0);
+        return addLabelTxIdTextField(gridPane, rowIndex, title, MainView.scale(0));
     }
 
     public static Tuple2<Label, TxIdTextField> addLabelTxIdTextField(GridPane gridPane, int rowIndex, String title, double top) {
@@ -685,7 +686,7 @@ public class FormBuilder {
         TxIdTextField txIdTextField = new TxIdTextField();
         GridPane.setRowIndex(txIdTextField, rowIndex);
         GridPane.setColumnIndex(txIdTextField, 1);
-        GridPane.setMargin(txIdTextField, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(txIdTextField, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(txIdTextField);
 
         return new Tuple2<>(label, txIdTextField);
@@ -697,7 +698,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, TextFieldWithCopyIcon> addLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, String title, String value) {
-        return addLabelTextFieldWithCopyIcon(gridPane, rowIndex, title, value, 0);
+        return addLabelTextFieldWithCopyIcon(gridPane, rowIndex, title, value, MainView.scale(0));
     }
 
     public static Tuple2<Label, TextFieldWithCopyIcon> addLabelTextFieldWithCopyIcon(GridPane gridPane, int rowIndex, String title, String value, double top) {
@@ -707,7 +708,7 @@ public class FormBuilder {
         textFieldWithCopyIcon.setText(value);
         GridPane.setRowIndex(textFieldWithCopyIcon, rowIndex);
         GridPane.setColumnIndex(textFieldWithCopyIcon, 1);
-        GridPane.setMargin(textFieldWithCopyIcon, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(textFieldWithCopyIcon, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(textFieldWithCopyIcon);
 
         return new Tuple2<>(label, textFieldWithCopyIcon);
@@ -719,7 +720,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, AddressTextField> addLabelAddressTextField(GridPane gridPane, int rowIndex, String title) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
+        Label label = addLabel(gridPane, rowIndex, title, MainView.scale(0));
 
         AddressTextField addressTextField = new AddressTextField();
         GridPane.setRowIndex(addressTextField, rowIndex);
@@ -736,7 +737,7 @@ public class FormBuilder {
 
 
     public static Tuple2<Label, BalanceTextField> addLabelBalanceTextField(GridPane gridPane, int rowIndex, String title) {
-        Label label = addLabel(gridPane, rowIndex, title, 0);
+        Label label = addLabel(gridPane, rowIndex, title, MainView.scale(0));
 
         BalanceTextField balanceTextField = new BalanceTextField();
         GridPane.setRowIndex(balanceTextField, rowIndex);
@@ -752,7 +753,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, Button> addLabelButton(GridPane gridPane, int rowIndex, String labelText, String buttonTitle) {
-        return addLabelButton(gridPane, rowIndex, labelText, buttonTitle, 0);
+        return addLabelButton(gridPane, rowIndex, labelText, buttonTitle, MainView.scale(0));
     }
 
     public static Tuple2<Label, Button> addLabelButton(GridPane gridPane, int rowIndex, String labelText, String buttonTitle, double top) {
@@ -763,7 +764,7 @@ public class FormBuilder {
         GridPane.setRowIndex(button, rowIndex);
         GridPane.setColumnIndex(button, 1);
         gridPane.getChildren().add(button);
-        GridPane.setMargin(button, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(button, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         return new Tuple2<>(label, button);
     }
 
@@ -772,11 +773,11 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Button addButton(GridPane gridPane, int rowIndex, String title) {
-        return addButton(gridPane, rowIndex, title, 0);
+        return addButton(gridPane, rowIndex, title, MainView.scale(0));
     }
 
     public static Button addButtonAfterGroup(GridPane gridPane, int rowIndex, String title) {
-        return addButton(gridPane, rowIndex, title, 15);
+        return addButton(gridPane, rowIndex, title, MainView.scale(15));
     }
 
     public static Button addButton(GridPane gridPane, int rowIndex, String title, double top) {
@@ -785,7 +786,7 @@ public class FormBuilder {
         GridPane.setRowIndex(button, rowIndex);
         GridPane.setColumnIndex(button, 1);
         gridPane.getChildren().add(button);
-        GridPane.setMargin(button, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(button, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         return button;
     }
 
@@ -798,14 +799,14 @@ public class FormBuilder {
                                                      int rowIndex,
                                                      String title1,
                                                      String title2) {
-        return add2Buttons(gridPane, rowIndex, title1, title2, 0);
+        return add2Buttons(gridPane, rowIndex, title1, title2, MainView.scale(0));
     }
 
     public static Tuple2<Button, Button> add2ButtonsAfterGroup(GridPane gridPane,
                                                                int rowIndex,
                                                                String title1,
                                                                String title2) {
-        return add2Buttons(gridPane, rowIndex, title1, title2, 15);
+        return add2Buttons(gridPane, rowIndex, title1, title2, MainView.scale(15));
     }
 
     public static Tuple2<Button, Button> add2Buttons(GridPane gridPane,
@@ -814,14 +815,14 @@ public class FormBuilder {
                                                      String title2,
                                                      double top) {
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         Button button1 = new Button(title1);
         button1.setDefaultButton(true);
         Button button2 = new Button(title2);
         hBox.getChildren().addAll(button1, button2);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(top, 10, 0, 0));
+        GridPane.setMargin(hBox, new Insets(top, MainView.scale(10), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(hBox);
         return new Tuple2<>(button1, button2);
     }
@@ -835,7 +836,7 @@ public class FormBuilder {
                                                              String title1,
                                                              String title2,
                                                              String title3) {
-        return add3Buttons(gridPane, rowIndex, title1, title2, title3, 0);
+        return add3Buttons(gridPane, rowIndex, title1, title2, title3, MainView.scale(0));
     }
 
     public static Tuple3<Button, Button, Button> add3ButtonsAfterGroup(GridPane gridPane,
@@ -843,7 +844,7 @@ public class FormBuilder {
                                                                        String title1,
                                                                        String title2,
                                                                        String title3) {
-        return add3Buttons(gridPane, rowIndex, title1, title2, title3, 15);
+        return add3Buttons(gridPane, rowIndex, title1, title2, title3, MainView.scale(15));
     }
 
     public static Tuple3<Button, Button, Button> add3Buttons(GridPane gridPane,
@@ -853,7 +854,7 @@ public class FormBuilder {
                                                              String title3,
                                                              double top) {
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         Button button1 = new Button(title1);
         button1.setDefaultButton(true);
         Button button2 = new Button(title2);
@@ -861,7 +862,7 @@ public class FormBuilder {
         hBox.getChildren().addAll(button1, button2, button3);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(top, 10, 0, 0));
+        GridPane.setMargin(hBox, new Insets(top, MainView.scale(10), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(hBox);
         return new Tuple3<>(button1, button2, button3);
     }
@@ -874,7 +875,7 @@ public class FormBuilder {
     public static Tuple3<Button, BusyAnimation, Label> addButtonBusyAnimationLabelAfterGroup(GridPane gridPane,
                                                                                              int rowIndex,
                                                                                              String buttonTitle) {
-        return addButtonBusyAnimationLabel(gridPane, rowIndex, buttonTitle, 15);
+        return addButtonBusyAnimationLabel(gridPane, rowIndex, buttonTitle, MainView.scale(15));
     }
 
     public static Tuple3<Button, BusyAnimation, Label> addButtonBusyAnimationLabel(GridPane gridPane,
@@ -882,7 +883,7 @@ public class FormBuilder {
                                                                                    String buttonTitle,
                                                                                    double top) {
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
 
         Button button = new Button(buttonTitle);
         button.setDefaultButton(true);
@@ -895,7 +896,7 @@ public class FormBuilder {
 
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(hBox, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(hBox);
 
         return new Tuple3<>(button, busyAnimation, label);
@@ -912,7 +913,7 @@ public class FormBuilder {
 
     public static Tuple3<HBox, InputTextField, Label> getValueCurrencyBox(String promptText) {
         InputTextField input = new InputTextField();
-        input.setPrefWidth(170);
+        input.setPrefWidth(MainView.scale(170));
         input.setAlignment(Pos.CENTER_RIGHT);
         input.setId("text-input-with-currency-text-field");
         input.setPromptText(promptText);
@@ -936,10 +937,10 @@ public class FormBuilder {
     public static Tuple2<Label, VBox> getTradeInputBox(HBox amountValueBox, String descriptionText) {
         Label descriptionLabel = new Label(descriptionText);
         descriptionLabel.setId("input-description-label");
-        descriptionLabel.setPrefWidth(170);
+        descriptionLabel.setPrefWidth(MainView.scale(170));
 
         VBox box = new VBox();
-        box.setSpacing(4);
+        box.setSpacing(MainView.scale(4));
         box.getChildren().addAll(descriptionLabel, amountValueBox);
         return new Tuple2<>(descriptionLabel, box);
     }
@@ -950,7 +951,7 @@ public class FormBuilder {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tuple2<Label, ListView> addLabelListView(GridPane gridPane, int rowIndex, String title) {
-        return addLabelListView(gridPane, rowIndex, title, 0);
+        return addLabelListView(gridPane, rowIndex, title, MainView.scale(0));
     }
 
     public static Tuple2<Label, ListView> addLabelListView(GridPane gridPane, int rowIndex, String title, double top) {
@@ -959,7 +960,7 @@ public class FormBuilder {
         ListView listView = new ListView();
         GridPane.setRowIndex(listView, rowIndex);
         GridPane.setColumnIndex(listView, 1);
-        GridPane.setMargin(listView, new Insets(top, 0, 0, 0));
+        GridPane.setMargin(listView, new Insets(top, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(listView);
 
         return new Tuple2<>(label, listView);

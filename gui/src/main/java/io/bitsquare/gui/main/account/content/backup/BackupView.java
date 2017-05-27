@@ -23,6 +23,7 @@ import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.common.util.Utilities;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.main.account.content.ContentSettings;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.user.Preferences;
@@ -68,6 +69,8 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
+//        ContentSettings.setDefaultSettings(root, 140);
+
         addTitledGroupBg(root, gridRow, 2, "Backup wallet and data directory");
         Tuple3<Label, TextField, Button> tuple = addLabelTextFieldButton(root, gridRow, "Backup location:", "Select backup location", Layout.FIRST_ROW_DISTANCE);
 

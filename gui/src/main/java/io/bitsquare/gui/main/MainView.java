@@ -47,7 +47,10 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,12 +78,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     public static void blurLight() {
         if (!DevFlags.STRESS_TEST_MODE)
-            transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 5);
+            transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, scale(5));
     }
 
     public static void blurUltraLight() {
         if (!DevFlags.STRESS_TEST_MODE)
-            transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 2);
+            transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, scale(2));
     }
 
     public static void darken() {
@@ -110,6 +113,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private List<String> persistedFilesCorrupted;
     private Popup<?> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
     private static StackPane rootContainer;
+    public static double baseFontSize;
 
     @Inject
     public MainView(MainViewModel model, CachingViewLoader viewLoader, Navigation navigation, Transitions transitions,
@@ -124,6 +128,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     @Override
     protected void initialize() {
         MainView.rootContainer = this.root;
+        // dpi testing
+        double dpi = BitsquareApp.forceDPI > 0 ? BitsquareApp.forceDPI : Screen.getPrimary().getDpi();
+        baseFontSize = Font.getDefault().getSize() * dpi / 96;
+        //        baseFontSize *= BitsquareApp.forceDPI > 0 ? BitsquareApp.forceDPI / 96.0 : 1;
+        Screen s = Screen.getPrimary();
+        String s_log = " screen = " + s.toString();
+        log.info("dpi = " + dpi + s_log + " baseFontSize = " + baseFontSize);
+        String fontSize = "-fx-font-size: ";
+        fontSize += baseFontSize + ";";
+        root.setStyle(fontSize);
+        // end dpi testing
 
         ToggleButton marketButton = new NavButton(MarketView.class, "Market");
         ToggleButton buyButton = new NavButton(BuyOfferView.class, "Buy BTC");
@@ -137,10 +152,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Pane disputesButtonHolder = new Pane(disputesButton);
 
         HBox leftNavPane = new HBox(marketButton, buyButton, sellButton, portfolioButtonHolder, fundsButton, disputesButtonHolder) {{
-            setLeftAnchor(this, 10d);
-            setTopAnchor(this, 0d);
+            setLeftAnchor(this, scale(10));
+            setTopAnchor(this, scale(0));
         }};
-
 
         Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> marketPriceBox = getMarketPriceBox("Market price");
         ComboBox<PriceFeedComboBoxItem> priceComboBox = marketPriceBox.first;
@@ -162,7 +176,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                     return type != null ? "Market price (" + type.name + ")" : "";
                 },
                 model.marketPriceCurrencyCode, model.typeProperty));
-        HBox.setMargin(marketPriceBox.third, new Insets(0, 0, 0, 0));
+        HBox.setMargin(marketPriceBox.third, new Insets(scale(0), scale(0), scale(0), scale(0)));
 
 
         Tuple2<TextField, VBox> availableBalanceBox = getBalanceBox("Available balance");
@@ -176,24 +190,39 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         HBox rightNavPane = new HBox(marketPriceBox.third, availableBalanceBox.second, reservedBalanceBox.second, lockedBalanceBox.second,
                 settingsButton, accountButton) {{
-            setRightAnchor(this, 10d);
-            setTopAnchor(this, 0d);
+            setRightAnchor(this, scale(10));
+            setTopAnchor(this, scale(0));
         }};
 
         root.widthProperty().addListener((observable, oldValue, newValue) -> {
             double w = (double) newValue;
+            log.info("width="+w);
             if (w > 0) {
-                leftNavPane.setSpacing(w >= 1080 ? 10 : 5);
-                rightNavPane.setSpacing(w >= 1080 ? 10 : 5);
+                Stage stage = (Stage) root.getScene().getWindow();
+                if (stage != null) {
+                    stage.setMinWidth(scale(1031));
+                }
+                leftNavPane.setSpacing(w >= scale(1080) ? scale(10) : scale(5));
+                rightNavPane.setSpacing(w >= scale(1080) ? scale(10) : scale(5));
+            }
+        });
+        root.heightProperty().addListener((observable, oldValue, newValue) -> {
+            double h = (double) newValue;
+            log.info("height="+h);
+            if (h > 0) {
+                Stage stage = (Stage) root.getScene().getWindow();
+                if (stage != null) {
+                    stage.setMinHeight(scale(732));
+                }
             }
         });
 
         AnchorPane contentContainer = new AnchorPane() {{
             setId("content-pane");
-            setLeftAnchor(this, 0d);
-            setRightAnchor(this, 0d);
-            setTopAnchor(this, 60d);
-            setBottomAnchor(this, 10d);
+            setLeftAnchor(this, scale(0));
+            setRightAnchor(this, scale(0));
+            setTopAnchor(this, scale(55));
+            setBottomAnchor(this, scale(10));
         }};
 
         AnchorPane applicationContainer = new AnchorPane(leftNavPane, rightNavPane, contentContainer) {{
@@ -265,18 +294,18 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Tuple2<TextField, VBox> getBalanceBox(String text) {
         TextField textField = new TextField();
         textField.setEditable(false);
-        textField.setPrefWidth(110); //140
+        textField.setPrefWidth(scale(110)); //140
         textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
         textField.setStyle("-fx-alignment: center;  -fx-background-color: white;");
 
         Label label = new Label(text);
         label.setId("nav-balance-label");
-        label.setPadding(new Insets(0, 5, 0, 5));
+        label.setPadding(new Insets(scale(0), scale(5), scale(0), scale(5)));
         label.setPrefWidth(textField.getPrefWidth());
         VBox vBox = new VBox();
-        vBox.setSpacing(3);
-        vBox.setPadding(new Insets(11, 0, 0, 0));
+        vBox.setSpacing(scale(3));
+        vBox.setPadding(new Insets(scale(11), scale(0), scale(0), scale(0)));
         vBox.getChildren().addAll(textField, label);
         return new Tuple2<>(textField, vBox);
     }
@@ -299,8 +328,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private Tuple3<ComboBox<PriceFeedComboBoxItem>, Label, VBox> getMarketPriceBox(String text) {
         ComboBox<PriceFeedComboBoxItem> priceComboBox = new ComboBox<>();
         priceComboBox.setVisibleRowCount(20);
-        priceComboBox.setMaxWidth(220);
-        priceComboBox.setMinWidth(220);
+        priceComboBox.setMaxWidth(scale(220));
+        priceComboBox.setMinWidth(scale(220));
         priceComboBox.setFocusTraversable(false);
         priceComboBox.setId("price-feed-combo");
         priceComboBox.setCellFactory(p -> getPriceFeedComboBoxListCell());
@@ -310,15 +339,15 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         Label label = new Label(text);
         label.setId("nav-balance-label");
-        label.setPadding(new Insets(0, 0, 0, 2));
+        label.setPadding(new Insets(scale(0), scale(0), scale(0), scale(2)));
 
         final ImageView btcAverageIcon = new ImageView();
         btcAverageIcon.setId("btcaverage");
         final Button btcAverageIconButton = new Button("", btcAverageIcon);
-        btcAverageIconButton.setPadding(new Insets(-1, 0, -1, 0));
+        btcAverageIconButton.setPadding(new Insets(scale(-1), scale(0), scale(-1), scale(0)));
         btcAverageIconButton.setFocusTraversable(false);
         btcAverageIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(btcAverageIconButton, new Insets(0, 5, 0, 0));
+        HBox.setMargin(btcAverageIconButton, new Insets(scale(0), scale(5), scale(0), scale(0)));
         btcAverageIconButton.setOnAction(e -> GUIUtil.openWebPage("https://bitcoinaverage.com"));
         btcAverageIconButton.setVisible(model.isFiatCurrencyPriceFeedSelected.get());
         btcAverageIconButton.setManaged(model.isFiatCurrencyPriceFeedSelected.get());
@@ -332,10 +361,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         final ImageView poloniexIcon = new ImageView();
         poloniexIcon.setId("poloniex");
         final Button poloniexIconButton = new Button("", poloniexIcon);
-        poloniexIconButton.setPadding(new Insets(-3, 0, -3, 0));
+        poloniexIconButton.setPadding(new Insets(scale(-3), scale(0), scale(-3), scale(0)));
         poloniexIconButton.setFocusTraversable(false);
         poloniexIconButton.setStyle("-fx-background-color: transparent;");
-        HBox.setMargin(poloniexIconButton, new Insets(1, 3, 0, 0));
+        HBox.setMargin(poloniexIconButton, new Insets(scale(1), scale(3), scale(0), scale(0)));
         poloniexIconButton.setOnAction(e -> GUIUtil.openWebPage("https://poloniex.com"));
         poloniexIconButton.setVisible(model.isCryptoCurrencyPriceFeedSelected.get());
         poloniexIconButton.setManaged(model.isCryptoCurrencyPriceFeedSelected.get());
@@ -353,8 +382,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         hBox2.getChildren().setAll(label, spacer, btcAverageIconButton, poloniexIconButton);
 
         VBox vBox = new VBox();
-        vBox.setSpacing(3);
-        vBox.setPadding(new Insets(11, 0, 0, 0));
+        vBox.setSpacing(scale(3));
+        vBox.setPadding(new Insets(scale(11), scale(0), scale(0), scale(0)));
         vBox.getChildren().addAll(priceComboBox, hBox2);
         return new Tuple3<>(priceComboBox, label, vBox);
     }
@@ -366,7 +395,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private VBox createSplashScreen() {
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.CENTER);
-        vBox.setSpacing(0);
+        vBox.setSpacing(scale(0));
         vBox.setId("splash");
 
         ImageView logo = new ImageView();
@@ -382,7 +411,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.walletServiceErrorMsg.addListener(walletServiceErrorMsgListener);
 
         btcSyncIndicator = new ProgressBar();
-        btcSyncIndicator.setPrefWidth(120);
+        btcSyncIndicator.setPrefWidth(scale(120));
         btcSyncIndicator.progressProperty().bind(model.btcSyncProgress);
 
         ImageView btcSyncIcon = new ImageView();
@@ -401,17 +430,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
 
         HBox blockchainSyncBox = new HBox();
-        blockchainSyncBox.setSpacing(10);
+        blockchainSyncBox.setSpacing(scale(10));
         blockchainSyncBox.setAlignment(Pos.CENTER);
-        blockchainSyncBox.setPadding(new Insets(40, 0, 0, 0));
-        blockchainSyncBox.setPrefHeight(50);
+        blockchainSyncBox.setPadding(new Insets(scale(40), scale(0), scale(0), scale(0)));
+        blockchainSyncBox.setPrefHeight(scale(50));
         blockchainSyncBox.getChildren().addAll(btcSplashInfo, btcSyncIndicator, btcSyncIcon);
 
 
         // create P2PNetworkBox
         splashP2PNetworkLabel = new Label();
         splashP2PNetworkLabel.setWrapText(true);
-        splashP2PNetworkLabel.setMaxWidth(500);
+        splashP2PNetworkLabel.setMaxWidth(scale(500));
         splashP2PNetworkLabel.setTextAlignment(TextAlignment.CENTER);
         splashP2PNetworkLabel.textProperty().bind(model.p2PNetworkInfo);
 
@@ -432,7 +461,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         splashP2PNetworkIcon.setId("image-connection-tor");
         splashP2PNetworkIcon.setVisible(false);
         splashP2PNetworkIcon.setManaged(false);
-        HBox.setMargin(splashP2PNetworkIcon, new Insets(0, 0, 5, 0));
+        HBox.setMargin(splashP2PNetworkIcon, new Insets(scale(0), scale(0), scale(5), scale(0)));
 
         splashP2PNetworkIconIdListener = (ov, oldValue, newValue) -> {
             splashP2PNetworkIcon.setId(newValue);
@@ -445,9 +474,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         model.splashP2PNetworkAnimationVisible.addListener(splashP2PNetworkVisibleListener);
 
         HBox splashP2PNetworkBox = new HBox();
-        splashP2PNetworkBox.setSpacing(10);
+        splashP2PNetworkBox.setSpacing(scale(10));
         splashP2PNetworkBox.setAlignment(Pos.CENTER);
-        splashP2PNetworkBox.setPrefHeight(50);
+        splashP2PNetworkBox.setPrefHeight(scale(50));
         splashP2PNetworkBox.getChildren().addAll(splashP2PNetworkLabel, splashP2PNetworkBusyAnimation, splashP2PNetworkIcon);
 
         vBox.getChildren().addAll(logo, blockchainSyncBox, splashP2PNetworkBox);
@@ -476,9 +505,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Separator separator = new Separator();
         separator.setId("footer-pane-line");
         separator.setPrefHeight(1);
-        setLeftAnchor(separator, 0d);
-        setRightAnchor(separator, 0d);
-        setTopAnchor(separator, 0d);
+        setLeftAnchor(separator, scale(0));
+        setRightAnchor(separator, scale(0));
+        setTopAnchor(separator, scale(0));
 
         // BTC
         Label btcInfoLabel = new Label();
@@ -486,8 +515,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         btcInfoLabel.textProperty().bind(model.btcInfo);
 
         ProgressBar blockchainSyncIndicator = new ProgressBar(-1);
-        blockchainSyncIndicator.setPrefWidth(120);
-        blockchainSyncIndicator.setMaxHeight(10);
+        blockchainSyncIndicator.setPrefWidth(scale(120));
+        blockchainSyncIndicator.setMaxHeight(scale(10));
         blockchainSyncIndicator.progressProperty().bind(model.btcSyncProgress);
 
         model.walletServiceErrorMsg.addListener((ov, oldValue, newValue) -> {
@@ -512,11 +541,11 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         });
 
         HBox blockchainSyncBox = new HBox();
-        blockchainSyncBox.setSpacing(10);
+        blockchainSyncBox.setSpacing(scale(10));
         blockchainSyncBox.setAlignment(Pos.CENTER);
         blockchainSyncBox.getChildren().addAll(btcInfoLabel, blockchainSyncIndicator);
-        setLeftAnchor(blockchainSyncBox, 10d);
-        setBottomAnchor(blockchainSyncBox, 7d);
+        setLeftAnchor(blockchainSyncBox, scale(10));
+        setBottomAnchor(blockchainSyncBox, scale(7));
 
         // version
         Label versionLabel = new Label();
@@ -527,19 +556,19 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         root.widthProperty().addListener((ov, oldValue, newValue) -> {
             versionLabel.setLayoutX(((double) newValue - versionLabel.getWidth()) / 2);
         });
-        setBottomAnchor(versionLabel, 7d);
+        setBottomAnchor(versionLabel, scale(7));
 
 
         // P2P Network
         Label p2PNetworkLabel = new Label();
         p2PNetworkLabel.setId("footer-pane");
-        setRightAnchor(p2PNetworkLabel, 33d);
-        setBottomAnchor(p2PNetworkLabel, 7d);
+        setRightAnchor(p2PNetworkLabel, scale(33));
+        setBottomAnchor(p2PNetworkLabel, scale(7));
         p2PNetworkLabel.textProperty().bind(model.p2PNetworkInfo);
 
         ImageView p2PNetworkIcon = new ImageView();
-        setRightAnchor(p2PNetworkIcon, 10d);
-        setBottomAnchor(p2PNetworkIcon, 7d);
+        setRightAnchor(p2PNetworkIcon, scale(10));
+        setBottomAnchor(p2PNetworkIcon, scale(7));
         p2PNetworkIcon.setOpacity(0.4);
         p2PNetworkIcon.idProperty().bind(model.p2PNetworkIconId);
         p2PNetworkLabel.idProperty().bind(model.p2pNetworkLabelId);
@@ -558,25 +587,25 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         return new AnchorPane(separator, blockchainSyncBox, versionLabel, p2PNetworkLabel, p2PNetworkIcon) {{
             setId("footer-pane");
-            setMinHeight(30);
-            setMaxHeight(30);
+            setMinHeight(scale(30));
+            setMaxHeight(scale(30));
         }};
     }
 
     private void setupNotificationIcon(Pane buttonHolder) {
         Label label = new Label();
         label.textProperty().bind(model.numPendingTradesAsString);
-        label.relocate(5, 1);
+        label.relocate(scale(5), scale(1));
         label.setId("nav-alert-label");
 
         ImageView icon = new ImageView();
-        icon.setLayoutX(0.5);
+        icon.setLayoutX(scale(0.5));
         icon.setId("image-alert-round");
 
         Pane notification = new Pane();
-        notification.relocate(30, 9);
+        notification.relocate(scale(30), scale(9));
         notification.setMouseTransparent(true);
-        notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
+        notification.setEffect(new DropShadow(scale(4), scale(1), scale(2), Color.GREY));
         notification.getChildren().addAll(icon, label);
         notification.visibleProperty().bind(model.showPendingTradesNotification);
         buttonHolder.getChildren().add(notification);
@@ -585,17 +614,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private void setupDisputesIcon(Pane buttonHolder) {
         Label label = new Label();
         label.textProperty().bind(model.numOpenDisputesAsString);
-        label.relocate(5, 1);
+        label.relocate(scale(5), scale(1));
         label.setId("nav-alert-label");
 
         ImageView icon = new ImageView();
-        icon.setLayoutX(0.5);
+        icon.setLayoutX(scale(0.5));
         icon.setId("image-alert-round");
 
         Pane notification = new Pane();
-        notification.relocate(30, 9);
+        notification.relocate(scale(30), scale(9));
         notification.setMouseTransparent(true);
-        notification.setEffect(new DropShadow(4, 1, 2, Color.GREY));
+        notification.setEffect(new DropShadow(scale(4), scale(1), scale(2), Color.GREY));
         notification.getChildren().addAll(icon, label);
         notification.visibleProperty().bind(model.showOpenDisputesNotification);
         buttonHolder.getChildren().add(notification);
@@ -606,25 +635,29 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         private final Class<? extends View> viewClass;
 
         public NavButton(Class<? extends View> viewClass, String title) {
-            super(title, new ImageView() {{
-                setId("image-nav-" + viewId(viewClass));
-            }});
+            super(title);
+            ImageView image = new ImageView();
+            image.setId("image-nav-" + viewId(viewClass));
+            image.setPreserveRatio(true);
+            image.setFitHeight(scale(20));
+            image.setFitWidth(scale(20));
+            this.setGraphic(image);
 
             this.viewClass = viewClass;
 
             this.setToggleGroup(navButtons);
             this.setId("nav-button");
-            this.setPadding(new Insets(0, -10, -10, -10));
-            this.setMinSize(50, 50);
-            this.setMaxSize(50, 50);
+            this.setPadding(new Insets(scale(0), scale(-10), scale(-10), scale(-10)));
+            this.setMinSize(scale(50), scale(50));
+            this.setMaxSize(scale(50), scale(50));
             this.setContentDisplay(ContentDisplay.TOP);
-            this.setGraphicTextGap(0);
+            this.setGraphicTextGap(scale(0));
 
             this.selectedProperty().addListener((ov, oldValue, newValue) -> {
                 this.setMouseTransparent(newValue);
-                this.setMinSize(50, 50);
-                this.setMaxSize(50, 50);
-                this.setGraphicTextGap(newValue ? -1 : 0);
+                this.setMinSize(scale(50), scale(50));
+                this.setMaxSize(scale(50), scale(50));
+                this.setGraphicTextGap(newValue ? scale(-1) : scale(0));
                 if (newValue) {
                     this.getGraphic().setId("image-nav-" + viewId(viewClass) + "-active");
                 } else {
@@ -644,5 +677,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         if (suffixIdx != viewName.length() - suffix.length())
             throw new IllegalArgumentException("Cannot get ID for " + viewClass + ": class must end in " + suffix);
         return viewName.substring(0, suffixIdx).toLowerCase();
+    }
+
+    public static double scale(double fromPx) {
+        return fromPx * baseFontSize / 13;
     }
 }

@@ -22,6 +22,8 @@ import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TableGroupHeadline;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.account.content.ContentSettings;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.ImageUtil;
 import io.bitsquare.gui.util.Layout;
@@ -36,7 +38,9 @@ import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
@@ -71,6 +75,8 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
 
     @Override
     public void initialize() {
+//        ContentSettings.setDefaultSettings(root, 140);
+
         addLanguageGroup();
         addArbitratorsGroup();
         listChangeListener = c -> languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);

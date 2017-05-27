@@ -24,6 +24,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.main.account.content.ContentSettings;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
 import io.bitsquare.gui.util.Layout;
@@ -88,6 +89,8 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void initialize() {
+//        ContentSettings.setDefaultSettings(root, 140);
+
         addTitledGroupBg(root, gridRow, 2, "Backup your wallet seed words");
         displaySeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_DISTANCE).second;
         displaySeedWordsTextArea.setPrefHeight(60);

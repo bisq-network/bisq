@@ -27,6 +27,7 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.PasswordTextField;
 import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.gui.main.account.content.ContentSettings;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.InputValidator;
@@ -73,6 +74,8 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
+//        ContentSettings.setDefaultSettings(root, 140);
+
         headline = addTitledGroupBg(root, gridRow, 2, "");
         passwordField = addLabelPasswordTextField(root, gridRow, "Enter password:", Layout.FIRST_ROW_DISTANCE).second;
         passwordField.setValidator(passwordValidator);

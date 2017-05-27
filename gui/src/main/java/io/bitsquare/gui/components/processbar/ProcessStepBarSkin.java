@@ -20,6 +20,7 @@ package io.bitsquare.gui.components.processbar;
 import com.sun.javafx.scene.control.behavior.BehaviorBase;
 import com.sun.javafx.scene.control.behavior.KeyBinding;
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.Colors;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -110,13 +111,13 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
 
     @Override
     protected void layoutChildren(double x, double y, double width, double height) {
-        double distance = 10;
-        double padding = 50;
+        double distance = MainView.scale(10);
+        double padding = MainView.scale(50);
         for (int i = 0; i < getChildren().size(); i++) {
             Node node = getChildren().get(i);
 
             double newWidth = snapSize(node.prefWidth(height)) + padding;
-            double newHeight = snapSize(node.prefHeight(-1) + 10);
+            double newHeight = snapSize(node.prefHeight(-1) + MainView.scale(10));
 
             if (i > 0)
                 x = x - ((LabelWithBorder) node).getArrowWidth();
@@ -129,9 +130,9 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
     }
 
     public static class LabelWithBorder extends Label {
-        final double borderWidth = 1;
-        private final double arrowWidth = 10;
-        private final double arrowHeight = 30;
+        final double borderWidth = MainView.scale(1);
+        private final double arrowWidth = MainView.scale(10);
+        private final double arrowHeight = MainView.scale(30);
 
         private final ProcessStepItem processStepItem;
         private final boolean isFirst;
@@ -146,7 +147,7 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
             this.isLast = isLast;
 
             setAlignment(Pos.CENTER);
-            setStyle("-fx-font-size: 14");
+            setStyle("-fx-font-size: " + MainView.scale(14));
 
             this.setShape(createButtonShape());
 
@@ -192,7 +193,7 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
             Path path = new Path();
 
             // begin in the upper left corner
-            MoveTo e1 = new MoveTo(0, 0);
+            MoveTo e1 = new MoveTo(MainView.scale(0), MainView.scale(0));
             path.getElements().add(e1);
 
             // draw a horizontal line that defines the width of the shape
@@ -219,7 +220,7 @@ class ProcessStepBarSkin<T> extends BehaviorSkinBase<ProcessStepBar<T>, Behavior
             path.getElements().add(e4);
 
             // draw lower horizontal line
-            HLineTo e5 = new HLineTo(0);
+            HLineTo e5 = new HLineTo(MainView.scale(0));
             path.getElements().add(e5);
 
             if (!isFirst) {

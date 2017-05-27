@@ -1,3 +1,4 @@
+
 /*
  * This file is part of Bitsquare.
  *
@@ -35,6 +36,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
@@ -56,6 +58,8 @@ public class AccountSettingsView extends ActivatableViewAndModel {
     private VBox leftVBox;
     @FXML
     private AnchorPane content;
+    @FXML
+    private ScrollPane scrollPane;
 
     private Class<? extends View> selectedViewClass;
 
@@ -84,6 +88,29 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         backup = new MenuItem(navigation, toggleGroup, "Backup", BackupView.class, AwesomeIcon.CLOUD_DOWNLOAD);
 
         leftVBox.getChildren().addAll(paymentAccount, altCoinsAccountView, arbitratorSelection, password, seedWords, backup);
+        // leftVbox scaled settings
+        leftVBox.setPrefWidth(MainView.scale(240));
+        leftVBox.setSpacing(MainView.scale(5));
+        AnchorPane a = (AnchorPane)leftVBox.getParent();
+        a.setBottomAnchor(leftVBox, MainView.scale(20));
+        a.setLeftAnchor(leftVBox, MainView.scale(15));
+        a.setTopAnchor(leftVBox, MainView.scale(20));
+
+        // scrollPane scaled settings
+        a.setBottomAnchor(scrollPane, MainView.scale(0));
+        a.setLeftAnchor(scrollPane, MainView.scale(270));
+        a.setRightAnchor(scrollPane, MainView.scale(0));
+        a.setTopAnchor(scrollPane, MainView.scale(0));
+
+        // content scaled settings
+        a.setBottomAnchor(content, MainView.scale(0));
+        a.setLeftAnchor(content, MainView.scale(0));
+        a.setRightAnchor(content, MainView.scale(0));
+        a.setTopAnchor(content, MainView.scale(0));
+
+        // root scaled settings
+        a.setPrefHeight(MainView.scale(660));
+        a.setPrefWidth(MainView.scale(1000));
     }
 
     @Override
@@ -157,17 +184,17 @@ class MenuItem extends ToggleButton {
         setToggleGroup(toggleGroup);
         setText(title);
         setId("account-settings-item-background-active");
-        setPrefHeight(40);
-        setPrefWidth(240);
+        setPrefHeight(MainView.scale(40));
+        setPrefWidth(MainView.scale(240));
         setAlignment(Pos.CENTER_LEFT);
 
         Label icon = new Label();
         AwesomeDude.setIcon(icon, awesomeIcon);
         icon.setTextFill(Paint.valueOf("#333"));
-        icon.setPadding(new Insets(0, 5, 0, 0));
+        icon.setPadding(new Insets(MainView.scale(0), MainView.scale(5), MainView.scale(0), MainView.scale(0)));
         icon.setAlignment(Pos.CENTER);
-        icon.setMinWidth(25);
-        icon.setMaxWidth(25);
+        icon.setMinWidth(MainView.scale(25));
+        icon.setMaxWidth(MainView.scale(25));
         setGraphic(icon);
 
         selectedPropertyChangeListener = (ov, oldValue, newValue) -> {

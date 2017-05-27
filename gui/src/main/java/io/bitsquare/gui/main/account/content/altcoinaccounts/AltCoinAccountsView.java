@@ -25,6 +25,8 @@ import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.paymentmethods.CryptoCurrencyForm;
 import io.bitsquare.gui.components.paymentmethods.PaymentMethodForm;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.account.content.ContentSettings;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.FormBuilder;
@@ -37,6 +39,7 @@ import io.bitsquare.payment.PaymentAccount;
 import io.bitsquare.payment.PaymentAccountFactory;
 import io.bitsquare.payment.PaymentMethod;
 import javafx.beans.value.ChangeListener;
+import javafx.fxml.FXML;
 import javafx.geometry.VPos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -44,6 +47,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
 
@@ -73,6 +77,9 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private int gridRow = 0;
     private ChangeListener<PaymentAccount> paymentAccountChangeListener;
 
+    @FXML
+    private ColumnConstraints columnConstraints;
+
     @Inject
     public AltCoinAccountsView(AltCoinAccountsViewModel model,
                                IBANValidator ibanValidator,
@@ -99,6 +106,8 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
     @Override
     public void initialize() {
+//        ContentSettings.setDefaultSettings(root, 160);
+
         buildForm();
         paymentAccountChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
@@ -222,7 +231,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your altcoin accounts:", Layout.FIRST_ROW_DISTANCE);
         GridPane.setValignment(tuple.first, VPos.TOP);
         paymentAccountsListView = tuple.second;
-        paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
+        paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + MainView.scale(14));
         paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
             @Override
             public ListCell<PaymentAccount> call(ListView<PaymentAccount> list) {
@@ -233,9 +242,9 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
                     final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
-                        label.setLayoutY(5);
+                        label.setLayoutY(MainView.scale(5));
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, MainView.scale(0));
                     }
 
                     @Override

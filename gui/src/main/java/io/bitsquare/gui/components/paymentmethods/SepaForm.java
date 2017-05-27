@@ -18,6 +18,7 @@
 package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.BICValidator;
@@ -103,14 +104,14 @@ public class SepaForm extends PaymentMethodForm {
 
         addLabel(gridPane, ++gridRow, "Country of bank:");
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         ComboBox<Country> countryComboBox = new ComboBox<>();
         currencyComboBox = new ComboBox<>();
         currencyTextField = new TextField("");
         currencyTextField.setEditable(false);
         currencyTextField.setMouseTransparent(true);
         currencyTextField.setFocusTraversable(false);
-        currencyTextField.setMinWidth(300);
+        currencyTextField.setMinWidth(MainView.scale(300));
 
         currencyTextField.setVisible(false);
         currencyTextField.setManaged(false);
@@ -206,17 +207,17 @@ public class SepaForm extends PaymentMethodForm {
     }
 
     private void addCountriesGrid(boolean isEditable, String title, List<CheckBox> checkBoxList, List<Country> dataProvider) {
-        Label label = addLabel(gridPane, ++gridRow, title, 0);
+        Label label = addLabel(gridPane, ++gridRow, title, MainView.scale(0));
         label.setWrapText(true);
-        label.setMaxWidth(180);
+        label.setMaxWidth(MainView.scale(180));
         label.setTextAlignment(TextAlignment.RIGHT);
         GridPane.setHalignment(label, HPos.RIGHT);
         GridPane.setValignment(label, VPos.TOP);
         FlowPane flowPane = new FlowPane();
-        flowPane.setPadding(new Insets(10, 10, 10, 10));
-        flowPane.setVgap(10);
-        flowPane.setHgap(10);
-        flowPane.setMinHeight(55);
+        flowPane.setPadding(new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(10), MainView.scale(10)));
+        flowPane.setVgap(MainView.scale(10));
+        flowPane.setHgap(MainView.scale(10));
+        flowPane.setMinHeight(MainView.scale(55));
 
         if (isEditable)
             flowPane.setId("flow-pane-checkboxes-bg");
@@ -230,8 +231,8 @@ public class SepaForm extends PaymentMethodForm {
             checkBox.setUserData(countryCode);
             checkBoxList.add(checkBox);
             checkBox.setMouseTransparent(!isEditable);
-            checkBox.setMinWidth(45);
-            checkBox.setMaxWidth(45);
+            checkBox.setMinWidth(MainView.scale(45));
+            checkBox.setMaxWidth(MainView.scale(45));
             checkBox.setTooltip(new Tooltip(country.name));
             checkBox.setOnAction(event -> {
                 if (checkBox.isSelected())

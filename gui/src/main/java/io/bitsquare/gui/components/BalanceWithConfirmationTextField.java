@@ -21,6 +21,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.btc.listeners.AddressConfidenceListener;
 import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.components.indicator.TxConfidenceIndicator;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.BSFormatter;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -48,8 +49,8 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
     private final Tooltip progressIndicatorTooltip;
     private final TxConfidenceIndicator txConfidenceIndicator;
 
-    private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, 4, 0.0, 0, 0);
-    private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, 4, 0.0, 0, 0);
+    private final Effect fundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.GREEN, MainView.scale(4), 0, MainView.scale(0), MainView.scale(0));
+    private final Effect notFundedEffect = new DropShadow(BlurType.THREE_PASS_BOX, Color.ORANGERED, MainView.scale(4), 0, MainView.scale(0), MainView.scale(0));
     private BSFormatter formatter;
 
 
@@ -64,7 +65,7 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
 
         txConfidenceIndicator = new TxConfidenceIndicator();
         txConfidenceIndicator.setFocusTraversable(false);
-        txConfidenceIndicator.setPrefSize(24, 24);
+        txConfidenceIndicator.setPrefSize(MainView.scale(24), MainView.scale(24));
         txConfidenceIndicator.setId("funds-confidence");
         txConfidenceIndicator.setLayoutY(1);
         txConfidenceIndicator.setProgress(0);
@@ -73,9 +74,9 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
         progressIndicatorTooltip = new Tooltip("-");
         Tooltip.install(txConfidenceIndicator, progressIndicatorTooltip);
 
-        AnchorPane.setRightAnchor(txConfidenceIndicator, 0.0);
-        AnchorPane.setRightAnchor(textField, 55.0);
-        AnchorPane.setLeftAnchor(textField, 0.0);
+        AnchorPane.setRightAnchor(txConfidenceIndicator, MainView.scale(0));
+        AnchorPane.setRightAnchor(textField, MainView.scale(55));
+        AnchorPane.setLeftAnchor(textField, MainView.scale(0));
 
         getChildren().addAll(textField, txConfidenceIndicator);
     }
@@ -135,8 +136,8 @@ public class BalanceWithConfirmationTextField extends AnchorPane {
 
             if (txConfidenceIndicator.getProgress() != 0) {
                 txConfidenceIndicator.setVisible(true);
-                AnchorPane.setRightAnchor(txConfidenceIndicator, 0.0);
-                AnchorPane.setRightAnchor(textField, 35.0);
+                AnchorPane.setRightAnchor(txConfidenceIndicator, MainView.scale(0));
+                AnchorPane.setRightAnchor(textField, MainView.scale(35));
             }
         }
     }

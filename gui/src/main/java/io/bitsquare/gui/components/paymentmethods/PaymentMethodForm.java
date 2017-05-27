@@ -19,6 +19,7 @@ package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.validation.InputValidator;
 import io.bitsquare.locale.CurrencyUtil;
@@ -87,7 +88,7 @@ public abstract class PaymentMethodForm {
     protected void addAccountNameTextFieldWithAutoFillCheckBox() {
         Tuple3<Label, InputTextField, CheckBox> tuple = addLabelInputTextFieldCheckBox(gridPane, ++gridRow, "Account name:", "Use custom account name");
         accountNameTextField = tuple.second;
-        accountNameTextField.setPrefWidth(300);
+        accountNameTextField.setPrefWidth(MainView.scale(300));
         accountNameTextField.setEditable(false);
         accountNameTextField.setValidator(inputValidator);
         accountNameTextField.setFocusTraversable(false);

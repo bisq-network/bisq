@@ -104,6 +104,7 @@ public class BitsquareApp extends Application {
     public static void setEnvironment(Environment env) {
         BitsquareApp.env = env;
     }
+    public static int forceDPI = 0;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -115,6 +116,7 @@ public class BitsquareApp extends Application {
         Version.printVersion();
         Utilities.printSysInfo();
         Log.setLevel(Level.toLevel(env.getRequiredProperty(CommonOptionKeys.LOG_LEVEL_KEY)));
+        forceDPI = Integer.parseInt(env.getProperty(CommonOptionKeys.FORCE_DPI, "0"));
 
         UserThread.setExecutor(Platform::runLater);
         UserThread.setTimerClass(UITimer.class);

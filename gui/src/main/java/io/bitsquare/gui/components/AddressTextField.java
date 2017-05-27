@@ -20,6 +20,7 @@ package io.bitsquare.gui.components;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import io.bitsquare.common.util.Utilities;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.GUIUtil;
 import javafx.beans.property.ObjectProperty;
@@ -78,7 +79,7 @@ public class AddressTextField extends AnchorPane {
         extWalletIcon.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(this::openWallet));
 
         Label copyIcon = new Label();
-        copyIcon.setLayoutY(3);
+        copyIcon.setLayoutY(MainView.scale(3));
         copyIcon.getStyleClass().add("copy-icon");
         Tooltip.install(copyIcon, new Tooltip("Copy address to clipboard"));
         AwesomeDude.setIcon(copyIcon, AwesomeIcon.COPY);
@@ -87,10 +88,10 @@ public class AddressTextField extends AnchorPane {
                 Utilities.copyToClipboard(address.get());
         }));
 
-        AnchorPane.setRightAnchor(copyIcon, 5.0);
-        AnchorPane.setRightAnchor(extWalletIcon, 30.0);
-        AnchorPane.setRightAnchor(textField, 55.0);
-        AnchorPane.setLeftAnchor(textField, 0.0);
+        AnchorPane.setRightAnchor(copyIcon, MainView.scale(5));
+        AnchorPane.setRightAnchor(extWalletIcon, MainView.scale(30));
+        AnchorPane.setRightAnchor(textField, MainView.scale(55));
+        AnchorPane.setLeftAnchor(textField, MainView.scale(0));
 
         getChildren().addAll(textField, extWalletIcon, copyIcon);
     }

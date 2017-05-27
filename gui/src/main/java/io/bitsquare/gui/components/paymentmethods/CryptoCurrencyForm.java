@@ -19,6 +19,7 @@ package io.bitsquare.gui.components.paymentmethods;
 
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.BSFormatter;
 import io.bitsquare.gui.util.Layout;
 import io.bitsquare.gui.util.validation.AltCoinAddressValidator;
@@ -71,7 +72,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
         gridRowFrom = gridRow + 1;
 
         addTradeCurrencyComboBox();
-        currencyComboBox.setPrefWidth(250);
+        currencyComboBox.setPrefWidth(MainView.scale(350));
         Tuple2<Label, InputTextField> tuple2 = addLabelInputTextField(gridPane, ++gridRow, "Altcoin address:");
         addressLabel = tuple2.first;
         addressInputTextField = tuple2.second;
