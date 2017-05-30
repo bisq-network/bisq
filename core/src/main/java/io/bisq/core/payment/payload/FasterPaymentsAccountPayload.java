@@ -34,8 +34,8 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
     private String sortCode;
     private String accountNr;
 
-    public FasterPaymentsAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public FasterPaymentsAccountPayload(String paymentMethod, long maxTradePeriod) {
+        super(paymentMethod, maxTradePeriod);
     }
 
 
@@ -48,7 +48,7 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
                                          long maxTradePeriod,
                                          String sortCode,
                                          String accountNr) {
-        this(paymentMethod, id, maxTradePeriod);
+        super(paymentMethod, id, maxTradePeriod);
 
         this.sortCode = sortCode;
         this.accountNr = accountNr;

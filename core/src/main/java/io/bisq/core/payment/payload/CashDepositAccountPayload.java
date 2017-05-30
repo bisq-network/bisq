@@ -47,8 +47,8 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
     private String holderTaxId;
     private String bankId;
 
-    public CashDepositAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public CashDepositAccountPayload(String paymentMethod, long maxTradePeriod) {
+        super(paymentMethod, maxTradePeriod);
     }
 
 

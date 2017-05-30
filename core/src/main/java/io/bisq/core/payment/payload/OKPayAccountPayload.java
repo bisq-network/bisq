@@ -33,8 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 public final class OKPayAccountPayload extends PaymentAccountPayload {
     private String accountNr;
 
-    public OKPayAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public OKPayAccountPayload(String paymentMethod, long maxTradePeriod) {
+        super(paymentMethod, maxTradePeriod);
     }
 
 
@@ -45,7 +45,7 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
     private OKPayAccountPayload(String paymentMethod, String id,
                                 long maxTradePeriod,
                                 String accountNr) {
-        this(paymentMethod, id, maxTradePeriod);
+        super(paymentMethod, id, maxTradePeriod);
 
         this.accountNr = accountNr;
     }

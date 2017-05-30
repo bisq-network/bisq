@@ -38,9 +38,10 @@ import java.util.stream.Collectors;
 @ToString
 @Getter
 @Slf4j
+// PaymentAccount should be mostly empty with all data in the payload.
+// There should be no subclasses of PaymentAccount, subclassing the payload should be enough
 public abstract class PaymentAccount implements PersistablePayload {
     protected final PaymentMethod paymentMethod;
-    protected final String id;
     protected final long creationDate;
 
     @Setter
@@ -59,7 +60,6 @@ public abstract class PaymentAccount implements PersistablePayload {
 
     protected PaymentAccount(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
-        id = UUID.randomUUID().toString();
         creationDate = new Date().getTime();
         paymentAccountPayload = getPayload();
     }
@@ -73,7 +73,6 @@ public abstract class PaymentAccount implements PersistablePayload {
     public PB.PaymentAccount toProtoMessage() {
         PB.PaymentAccount.Builder builder = PB.PaymentAccount.newBuilder()
                 .setPaymentMethod(paymentMethod.toProtoMessage())
-                .setId(paymentMethod.getId())
                 .setCreationDate(creationDate)
                 .setPaymentAccountPayload((PB.PaymentAccountPayload) paymentAccountPayload.toProtoMessage())
                 .setAccountName(accountName)
@@ -134,4 +133,8 @@ public abstract class PaymentAccount implements PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected abstract PaymentAccountPayload getPayload();
+
+    public String getId() {
+        return getPayload().getId();
+    }
 }

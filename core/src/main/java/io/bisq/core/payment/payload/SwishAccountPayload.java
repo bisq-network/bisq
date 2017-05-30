@@ -34,8 +34,8 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     private String mobileNr;
     private String holderName;
 
-    public SwishAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public SwishAccountPayload(String paymentMethod, long maxTradePeriod) {
+        super(paymentMethod, maxTradePeriod);
     }
 
 
@@ -47,7 +47,7 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
                                 long maxTradePeriod,
                                 String mobileNr,
                                 String holderName) {
-        this(paymentMethod, id, maxTradePeriod);
+        super(paymentMethod, id, maxTradePeriod);
 
         this.mobileNr = mobileNr;
         this.holderName = holderName;

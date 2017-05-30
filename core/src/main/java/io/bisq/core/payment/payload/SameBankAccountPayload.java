@@ -27,8 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class SameBankAccountPayload extends BankAccountPayload {
 
-    public SameBankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public SameBankAccountPayload(String paymentMethod, long maxTradePeriod) {
+        super(paymentMethod, maxTradePeriod);
     }
 
 

@@ -35,9 +35,8 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     private String holderName;
 
     public ChaseQuickPayAccountPayload(String paymentMethod,
-                                       String id,
                                        long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+        super(paymentMethod, maxTradePeriod);
     }
 
 
@@ -49,7 +48,7 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
                                         long maxTradePeriod,
                                         String email,
                                         String holderName) {
-        this(paymentMethod, id, maxTradePeriod);
+        super(paymentMethod, id, maxTradePeriod);
 
         this.email = email;
         this.holderName = holderName;

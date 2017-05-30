@@ -20,38 +20,38 @@ message NetworkEnvelope {
         PreliminaryGetDataRequest preliminary_get_data_request = 2;
         GetDataResponse get_data_response = 3;
         GetUpdatedDataRequest get_updated_data_request = 4;
-       
+
         GetPeersRequest get_peers_request = 5;
         GetPeersResponse get_peers_response = 6;
         Ping ping = 7;
         Pong pong = 8;
-       
+
         OfferAvailabilityRequest offer_availability_request = 9;
         OfferAvailabilityResponse offer_availability_response = 10;
         RefreshOfferMessage refresh_offer_message = 11;
-         
+
         AddDataMessage add_data_message = 12;
         RemoveDataMessage remove_data_message = 13;
         RemoveMailboxDataMessage remove_mailbox_data_message = 14;
-        
+
         CloseConnectionMessage close_connection_message = 15;
         PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 16;
-        
+
         PayDepositRequest pay_deposit_request = 17;
         DepositTxPublishedMessage deposit_tx_published_message = 18;
         PublishDepositTxRequest publish_deposit_tx_request = 19;
         FiatTransferStartedMessage fiat_transfer_started_message = 20;
         FinalizePayoutTxRequest finalize_payout_tx_request = 21;
         PayoutTxPublishedMessage payout_tx_published_message = 22;
-        
+
         OpenNewDisputeMessage open_new_dispute_message = 24;
         PeerOpenedDisputeMessage peer_opened_dispute_message = 25;
         DisputeCommunicationMessage dispute_communication_message = 26;
         DisputeResultMessage dispute_result_message = 27;
         PeerPublishedPayoutTxMessage peer_published_payout_tx_message = 23;
-             
+
         PrivateNotificationMessage private_notification_message = 28;
-      
+
         GetBsqBlocksRequest get_bsq_blocks_request = 29;
         GetBsqBlocksResponse get_bsq_blocks_response = 30;
         NewBsqBlockBroadcastMessage new_bsq_block_broadcast_message = 31;
@@ -579,7 +579,7 @@ message DisputeResult {
         BUYER = 1;
         SELLER = 2;
     }
-    
+
     enum Reason {
         PB_ERROR_REASON = 0;
         OTHER = 1;
@@ -812,15 +812,15 @@ message PersistableEnvelope {
         TradeStatisticsList trade_statistics_list = 9;
         VoteItemsList vote_items_list = 10;
         TradableList tradable_list = 11;
-        
+
         TradeList trade_list = 16;
 
          //TODO
         PendingTradeList pending_trade_list = 12;
         ClosedTradeList closed_trade_list = 13;
         FailedTradeList failed_trade_list = 14;
-        
-        BsqChainState bsq_chain_state = 15; 
+
+        BsqChainState bsq_chain_state = 15;
     }
 }
 
@@ -1012,7 +1012,7 @@ message Trade {
         PAYOUT_PUBLISHED = 7;
         WITHDRAWN = 8;
     }
-    
+
     enum DisputeState {
         PB_ERROR_DISPUTE_STATE = 0;
         NO_DISPUTE = 1;
@@ -1020,14 +1020,14 @@ message Trade {
         DISPUTE_STARTED_BY_PEER = 3;
         DISPUTE_CLOSED = 4;
     }
-    
+
     enum TradePeriodState {
         PB_ERROR_TRADE_PERIOD_STATE = 0;
         FIRST_HALF = 1;
         SECOND_HALF = 2;
         TRADE_PERIOD_OVER = 3;
     }
-    
+
     Offer offer = 1;
     ProcessModel process_model = 2;
     string taker_fee_tx_id = 3;
@@ -1236,13 +1236,12 @@ message DisputeList {
 }
 
 message PaymentAccount {
-    string id = 1;
-    int64 creation_date = 2;
-    PaymentMethod payment_method = 3;
-    string account_name = 4;
-    repeated TradeCurrency trade_currencies = 5;
-    TradeCurrency selected_trade_currency = 6;
-    PaymentAccountPayload payment_account_payload = 7;
+    int64 creation_date = 1;
+    PaymentMethod payment_method = 2;
+    string account_name = 3;
+    repeated TradeCurrency trade_currencies = 4;
+    TradeCurrency selected_trade_currency = 5;
+    PaymentAccountPayload payment_account_payload = 6;
 }
 
 message PaymentMethod {

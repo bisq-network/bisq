@@ -23,6 +23,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.taskrunner.Model;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;

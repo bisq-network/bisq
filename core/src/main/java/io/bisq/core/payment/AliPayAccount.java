@@ -30,7 +30,7 @@ public final class AliPayAccount extends PaymentAccount {
 
     @Override
     protected PaymentAccountPayload getPayload() {
-        return new AliPayAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
+        return new AliPayAccountPayload(paymentMethod.getId(), paymentMethod.getMaxTradePeriod());
     }
 
     public void setAccountNr(String accountNr) {

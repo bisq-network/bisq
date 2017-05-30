@@ -35,8 +35,8 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private ArrayList<String> acceptedBanks = new ArrayList<>();
 
-    public SpecificBanksAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public SpecificBanksAccountPayload(String paymentMethod, long maxTradePeriod) {
+        super(paymentMethod, maxTradePeriod);
     }
 
 

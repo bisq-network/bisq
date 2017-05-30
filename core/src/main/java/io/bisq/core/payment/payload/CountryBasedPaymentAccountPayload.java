@@ -32,13 +32,13 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPayload {
     protected String countryCode;
 
-    CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod) {
-        super(paymentMethodName, id, maxTradePeriod);
+    CountryBasedPaymentAccountPayload(String paymentMethodName, long maxTradePeriod) {
+        super(paymentMethodName, maxTradePeriod);
 
     }
 
     CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod, String countryCode) {
-        this(paymentMethodName, id, maxTradePeriod);
+        super(paymentMethodName, id, maxTradePeriod);
 
         this.countryCode = countryCode;
     }

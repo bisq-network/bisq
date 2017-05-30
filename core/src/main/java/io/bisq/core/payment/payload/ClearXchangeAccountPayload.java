@@ -34,8 +34,8 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
     private String emailOrMobileNr;
     private String holderName;
 
-    public ClearXchangeAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public ClearXchangeAccountPayload(String paymentMethod, long maxTradePeriod) {
+        super(paymentMethod, maxTradePeriod);
     }
 
 
@@ -48,7 +48,7 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
                                        long maxTradePeriod,
                                        String emailOrMobileNr,
                                        String holderName) {
-        this(paymentMethod, id, maxTradePeriod);
+        super(paymentMethod, id, maxTradePeriod);
 
         this.emailOrMobileNr = emailOrMobileNr;
         this.holderName = holderName;

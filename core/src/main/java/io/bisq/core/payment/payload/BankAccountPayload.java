@@ -44,8 +44,8 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
     protected String holderTaxId;
     protected String bankId;
 
-    public BankAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public BankAccountPayload(String paymentMethod, long maxTradePeriod) {
+        super(paymentMethod, maxTradePeriod);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

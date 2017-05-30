@@ -38,10 +38,12 @@ import java.io.*;
 import java.net.URI;
 import java.net.URLConnection;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 
 /**
@@ -474,5 +476,9 @@ public class Utilities {
             return chunks[0];
         else
             return id.substring(0, Math.min(8, id.length()));
+    }
+
+    public static String collectionToString(Collection collection) {
+        return collection.stream ().map (i -> i.toString ()).collect (Collectors.joining (",")).toString();
     }
 }

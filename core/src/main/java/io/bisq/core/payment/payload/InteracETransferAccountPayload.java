@@ -36,8 +36,8 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
     private String question;
     private String answer;
 
-    public InteracETransferAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
-        super(paymentMethod, id, maxTradePeriod);
+    public InteracETransferAccountPayload(String paymentMethod, long maxTradePeriod) {
+        super(paymentMethod, maxTradePeriod);
     }
 
 
@@ -52,7 +52,7 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                                            String holderName,
                                            String question,
                                            String answer) {
-        this(paymentMethod, id, maxTradePeriod);
+        super(paymentMethod, id, maxTradePeriod);
 
         this.email = email;
         this.holderName = holderName;
