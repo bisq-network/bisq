@@ -30,6 +30,7 @@ import javafx.collections.ObservableList;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -73,6 +74,7 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                 .addAllTradable(ProtoUtil.collectionToProto(tradableList))).build();
     }
 
+    @Nullable
     public static TradableList fromProto(PB.TradableList proto,
                                          CorePersistenceProtoResolver corePersistenceProtoResolver,
                                          Storage<TradableList<OpenOffer>> openOfferStorage,
@@ -82,7 +84,7 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                                          Storage<TradableList<SellerAsTakerTrade>> sellerAsTakerTradeStorage,
                                          BtcWalletService btcWalletService) {
         log.debug("TradableList fromProto of {} ", proto);
-        if(proto.getTradableList().size() == 0) {
+        if (proto.getTradableList().size() == 0) {
             return null;
         }
 

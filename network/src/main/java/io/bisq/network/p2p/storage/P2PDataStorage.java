@@ -128,6 +128,44 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protobuffer
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Message toProtoMessage() {
+        return toProtoMessageFunction().apply(persistedMap);
+    }
+
+    @NotNull
+    /** convert hashmap to proto representation */
+    static Function<HashMap<ByteArray, ProtectedStorageEntry>, Message> toProtoMessageFunction() {
+        return (HashMap<ByteArray, ProtectedStorageEntry> map) -> {
+            Map<String, PB.ProtectedStorageEntry> protoResult =
+                    map.entrySet().stream()
+                            .collect(Collectors.toMap(
+                                            e -> e.getKey().toString(),
+                                            e -> (PB.ProtectedStorageEntry) e.getValue().toProtoMessage())
+                            );
+            return PB.PersistableEnvelope.newBuilder().setPersistedEntryMap(PB.PersistedEntryMap.newBuilder().putAllPersistedEntryMap(protoResult)).build();
+        };
+    }
+
+    public static PersistableEnvelope fromProto(Map<String, PB.ProtectedStorageEntry> protoResult,
+                                                NetworkProtoResolver networkProtoResolver) {
+        Map<ByteArray, ProtectedStorageEntry> result = protoResult.entrySet().stream()
+                .collect(Collectors.<Entry<String, PB.ProtectedStorageEntry>, ByteArray, ProtectedStorageEntry>toMap(
+                        e -> new ByteArray(e.getKey().getBytes()),
+                        e -> ProtectedStorageEntry.fromProto(e.getValue(), networkProtoResolver)
+                ));
+        return new PersistableHashMap<>(new HashMap<>(result), P2PDataStorage.toProtoMessageFunction());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void shutDown() {
         if (removeExpiredEntriesTimer != null)
             removeExpiredEntriesTimer.stop();
@@ -667,37 +705,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
     }
 
-    public Message toProtoMessage() {
-          return toProtoMessageFunction().apply(persistedMap);
-    }
 
-        @NotNull
-    /** convert hashmap to proto representation */
-    static Function<HashMap<ByteArray, ProtectedStorageEntry>, Message> toProtoMessageFunction() {
-        return (HashMap<ByteArray, ProtectedStorageEntry> map) -> {
-            Map<String, PB.ProtectedStorageEntry> protoResult =
-                    map.entrySet().stream()
-                            .collect(Collectors.toMap(
-                                    e -> e.getKey().toString(),
-                                    e -> (PB.ProtectedStorageEntry) e.getValue().toProtoMessage())
-                            );
-            return PB.PersistableEnvelope.newBuilder().setPersistedEntryMap(PB.PersistedEntryMap.newBuilder().putAllPersistedEntryMap(protoResult)).build();
-        };
-    }
-
-    public static PersistableEnvelope fromProto(Map<String, PB.ProtectedStorageEntry> protoResult,
-                                                   NetworkProtoResolver networkProtoResolver) {
-        Map<ByteArray, ProtectedStorageEntry> result = protoResult.entrySet().stream()
-                .collect(Collectors.<Entry<String, PB.ProtectedStorageEntry>, ByteArray, ProtectedStorageEntry>toMap(
-                        e -> new ByteArray(e.getKey().getBytes()),
-                        e -> ProtectedStorageEntry.fromProto(e.getValue(), networkProtoResolver)
-                ));
-        return new PersistableHashMap<>(new HashMap<>(result), P2PDataStorage.toProtoMessageFunction());
-    }
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// Static class
-///////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Static class
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Used as container for calculating cryptographic hash of data and sequenceNumber.
