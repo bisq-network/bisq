@@ -452,7 +452,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private void republishOffers() {
         int size = openOfferTradableList.size();
-        final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOfferTradableList.getTradableList());
+        final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOfferTradableList.getList());
         Log.traceCall("Number of offer for republish: " + size);
         if (!stopped) {
             stopPeriodicRefreshOffersTimer();
@@ -538,7 +538,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             Log.traceCall("Number of offer for refresh: " + size);
 
                             //we clone our list as openOffers might change during our delayed call
-                            final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOfferTradableList.getTradableList());
+                            final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOfferTradableList.getList());
                             for (int i = 0; i < size; i++) {
                                 // we delay to avoid reaching throttle limits
                                 // roughly 4 offers per second

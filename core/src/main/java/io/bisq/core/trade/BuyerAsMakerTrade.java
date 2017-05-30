@@ -20,6 +20,7 @@ package io.bisq.core.trade;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.BuyerAsMakerProtocol;
 import io.bisq.core.trade.protocol.MakerProtocol;
@@ -61,12 +62,25 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                 .setBuyerAsMakerTrade(PB.BuyerAsMakerTrade.newBuilder().setTrade((PB.Trade) super.toProtoMessage())).build();
     }
 
-    public static Tradable fromProto(PB.BuyerAsMakerTrade proto, Storage<? extends TradableList> storage,
-                                     BtcWalletService btcWalletService) {
-        return new BuyerAsMakerTrade(Offer.fromProto(proto.getTrade().getOffer()),
-                Coin.valueOf(proto.getTrade().getTxFeeAsLong()),
-                Coin.valueOf(proto.getTrade().getTakerFeeAsLong()),
-                proto.getTrade().getIsCurrencyForTakerFeeBtc(), storage, btcWalletService);
+    public static Tradable fromProto(PB.BuyerAsMakerTrade buyerAsMakerTradeProto,
+                                     Storage<? extends TradableList> storage,
+                                     BtcWalletService btcWalletService,
+                                     CoreProtoResolver coreProtoResolver) {
+        PB.Trade proto = buyerAsMakerTradeProto.getTrade();
+        final BuyerAsMakerTrade trade = new BuyerAsMakerTrade(Offer.fromProto(proto.getOffer()),
+                Coin.valueOf(proto.getTxFeeAsLong()),
+                Coin.valueOf(proto.getTakerFeeAsLong()),
+                proto.getIsCurrencyForTakerFeeBtc(),
+                storage,
+                btcWalletService);
+
+        trade.setTradeAmountAsLong(proto.getTradeAmountAsLong());
+        trade.setTradePrice(proto.getTradePrice());
+        trade.setTradingPeerNodeAddress(NodeAddress.fromProto(proto.getTradingPeerNodeAddress()));
+
+        return Trade.fromProto(trade,
+                proto,
+                coreProtoResolver);
     }
 
 

@@ -40,6 +40,18 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
         this.value = value;
     }
 
+    @Override
+    public PB.RawTransactionInput toProtoMessage() {
+        return PB.RawTransactionInput.newBuilder()
+                .setIndex(index)
+                .setParentTransaction(ByteString.copyFrom(parentTransaction))
+                .setValue(value).build();
+    }
+
+    public static RawTransactionInput fromProto(PB.RawTransactionInput proto) {
+        return new RawTransactionInput(proto.getIndex(), proto.getParentTransaction().toByteArray(), proto.getValue());
+    }
+
     // byes not printed...
     @Override
     public String toString() {
@@ -48,13 +60,5 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
                 ", parentTransaction as HEX " + Hex.toHexString(parentTransaction) +
                 ", value=" + value +
                 '}';
-    }
-
-    @Override
-    public PB.RawTransactionInput toProtoMessage() {
-        return PB.RawTransactionInput.newBuilder()
-                .setIndex(index)
-                .setParentTransaction(ByteString.copyFrom(parentTransaction))
-                .setValue(value).build();
     }
 }

@@ -2,17 +2,15 @@ package io.bisq.core.user;
 
 import com.google.common.collect.Maps;
 import com.google.protobuf.Message;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.*;
-import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -118,18 +116,26 @@ public final class PreferencesPayload implements PersistableEnvelope {
         return PB.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
     }
 
-    public static PersistableEnvelope fromProto(PB.PreferencesPayload proto, ProtoResolver protoResolver) {
-        PreferencesPayload preferences = new PreferencesPayload(
+    public static PersistableEnvelope fromProto(PB.PreferencesPayload proto, CoreProtoResolver coreProtoResolver) {
+        return new PreferencesPayload(
                 proto.getUserLanguage(),
-                new Country(proto.getUserCountry().getCode(), proto.getUserCountry().getName(), new Region(proto.getUserCountry().getRegion().getCode(), proto.getUserCountry().getRegion().getName())),
+                new Country(proto.getUserCountry().getCode(),
+                        proto.getUserCountry().getName(),
+                        new Region(proto.getUserCountry().getRegion().getCode(), proto.getUserCountry().getRegion().getName())),
                 proto.getBtcDenomination(),
                 proto.getUseAnimations(),
-                new BlockChainExplorer(proto.getBlockChainExplorerMainNet().getName(), proto.getBlockChainExplorerMainNet().getTxUrl(), proto.getBlockChainExplorerMainNet().getAddressUrl()),
-                new BlockChainExplorer(proto.getBlockChainExplorerTestNet().getName(), proto.getBlockChainExplorerTestNet().getTxUrl(), proto.getBlockChainExplorerTestNet().getAddressUrl()),
-                new BlockChainExplorer(proto.getBsqBlockChainExplorer().getName(), proto.getBsqBlockChainExplorer().getTxUrl(), proto.getBsqBlockChainExplorer().getAddressUrl()),
+                new BlockChainExplorer(proto.getBlockChainExplorerMainNet().getName(),
+                        proto.getBlockChainExplorerMainNet().getTxUrl(),
+                        proto.getBlockChainExplorerMainNet().getAddressUrl()),
+                new BlockChainExplorer(proto.getBlockChainExplorerTestNet().getName(),
+                        proto.getBlockChainExplorerTestNet().getTxUrl(),
+                        proto.getBlockChainExplorerTestNet().getAddressUrl()),
+                new BlockChainExplorer(proto.getBsqBlockChainExplorer().getName(),
+                        proto.getBsqBlockChainExplorer().getTxUrl(),
+                        proto.getBsqBlockChainExplorer().getAddressUrl()),
                 ProtoUtil.emptyStringToNull(proto.getBackupDirectory()),
                 proto.getAutoSelectArbitrators(),
-                Maps.newHashMap(proto.getDontShowAgainMapMap()), // proto returs an unmodifiable map by default
+                Maps.newHashMap(proto.getDontShowAgainMapMap()), // proto returns an unmodifiable map by default
                 proto.getTacAccepted(),
                 proto.getUseTorForBitcoinJ(),
                 proto.getShowOwnOffersInOfferBook(),
@@ -150,10 +156,9 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getDirectoryChooserPath(),
                 proto.getBuyerSecurityDepositAsLong(),
                 proto.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod() ?
-                        PaymentAccount.fromProto(proto.getSelectedPaymentAccountForCreateOffer(), protoResolver) :
+                        PaymentAccount.fromProto(proto.getSelectedPaymentAccountForCreateOffer(), coreProtoResolver) :
                         null,
                 proto.getPayFeeInBtc(),
                 proto.getResyncSpvRequested());
-        return preferences;
     }
 }

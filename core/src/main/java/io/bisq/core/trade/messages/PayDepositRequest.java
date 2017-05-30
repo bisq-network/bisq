@@ -19,10 +19,10 @@ package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
@@ -129,7 +129,7 @@ public final class PayDepositRequest extends TradeMessage {
         return NetworkEnvelope.getDefaultBuilder().setPayDepositRequest(builder).build();
     }
 
-    public static PayDepositRequest fromProto(PB.PayDepositRequest proto, ProtoResolver protoResolver) {
+    public static PayDepositRequest fromProto(PB.PayDepositRequest proto, CoreProtoResolver coreProtoResolver) {
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().stream()
                 .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
                         rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
@@ -152,7 +152,7 @@ public final class PayDepositRequest extends TradeMessage {
                 proto.getTakerMultiSigPubKey().toByteArray(),
                 proto.getTakerPayoutAddressString(),
                 PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
-                (PaymentAccountPayload) protoResolver.fromProto(proto.getTakerPaymentAccountPayload()),
+                coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()),
                 proto.getTakerAccountId(),
                 proto.getTakerFeeTxId(),
                 arbitratorNodeAddresses,

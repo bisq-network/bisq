@@ -97,13 +97,13 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
             case OPEN_OFFER:
                 return OpenOffer.fromProto(proto.getOpenOffer());
             case BUYER_AS_MAKER_TRADE:
-                return BuyerAsMakerTrade.fromProto(proto.getBuyerAsMakerTrade(), storage, btcWalletService.get());
+                return BuyerAsMakerTrade.fromProto(proto.getBuyerAsMakerTrade(), storage, btcWalletService.get(), this);
             case BUYER_AS_TAKER_TRADE:
-                return BuyerAsTakerTrade.fromProto(proto.getBuyerAsTakerTrade(), storage, btcWalletService.get());
+                return BuyerAsTakerTrade.fromProto(proto.getBuyerAsTakerTrade(), storage, btcWalletService.get(), this);
             case SELLER_AS_MAKER_TRADE:
-                return SellerAsMakerTrade.fromProto(proto.getSellerAsMakerTrade(), storage, btcWalletService.get());
+                return SellerAsMakerTrade.fromProto(proto.getSellerAsMakerTrade(), storage, btcWalletService.get(), this);
             case SELLER_AS_TAKER_TRADE:
-                return SellerAsTakerTrade.fromProto(proto.getSellerAsTakerTrade(), storage, btcWalletService.get());
+                return SellerAsTakerTrade.fromProto(proto.getSellerAsTakerTrade(), storage, btcWalletService.get(), this);
             default:
                 throw new ProtobufferException("Unknown proto message case. messageCase=" + proto.getMessageCase());
         }

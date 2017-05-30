@@ -17,7 +17,6 @@
 
 package io.bisq.core.user;
 
-import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.core.alert.Alert;
@@ -25,6 +24,7 @@ import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.Mediator;
 import io.bisq.core.filter.Filter;
 import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -93,13 +93,13 @@ public class UserPayload implements PersistableEnvelope {
         return PB.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
     }
 
-    public static UserPayload fromProto(PB.UserPayload proto, ProtoResolver resolver) {
+    public static UserPayload fromProto(PB.UserPayload proto, CoreProtoResolver coreProtoResolver) {
         return new UserPayload(
                 proto.getAccountId().isEmpty() ? null : proto.getAccountId(),
                 proto.getPaymentAccountsList().isEmpty() ? null : proto.getPaymentAccountsList().stream()
-                        .map(e -> PaymentAccount.fromProto(e, resolver))
+                        .map(e -> PaymentAccount.fromProto(e, coreProtoResolver))
                         .collect(Collectors.toSet()),
-                proto.hasCurrentPaymentAccount() ? PaymentAccount.fromProto(proto.getCurrentPaymentAccount(), resolver) : null,
+                proto.hasCurrentPaymentAccount() ? PaymentAccount.fromProto(proto.getCurrentPaymentAccount(), coreProtoResolver) : null,
                 proto.getAcceptedLanguageLocaleCodesList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedLanguageLocaleCodesList()),
                 proto.hasDevelopersAlert() ? Alert.fromProto(proto.getDevelopersAlert()) : null,
                 proto.hasDisplayedAlert() ? Alert.fromProto(proto.getDisplayedAlert()) : null,

@@ -23,7 +23,6 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.common.taskrunner.Model;
-import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -34,6 +33,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.TradeManager;
@@ -54,9 +54,9 @@ import org.bitcoinj.core.Transaction;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Getter
 @Slf4j
@@ -81,14 +81,18 @@ public class ProcessModel implements Model, PersistablePayload {
     transient private DecryptedMessageWithPubKey decryptedMessageWithPubKey;
 
 
-    // Persistable Immutable
-    private final TradingPeer tradingPeer = new TradingPeer();
+    // Persistable Immutable (only set by PB)
+    @Setter
+    private TradingPeer tradingPeer = new TradingPeer();
+    @Setter
     private String offerId;
+    @Setter
     private String accountId;
+    @Setter
     private PubKeyRing pubKeyRing;
 
     // Persistable Mutable
-    @Nullable
+    @Nullable @Setter
     private String takeOfferFeeTxId;
     @Nullable @Setter
     private byte[] payoutTxSignature;
@@ -99,7 +103,7 @@ public class ProcessModel implements Model, PersistablePayload {
     @Nullable @Setter
     private byte[] preparedDepositTx;
     @Nullable @Setter
-    private ArrayList<RawTransactionInput> rawTransactionInputs;
+    private List<RawTransactionInput> rawTransactionInputs;
     @Setter
     private long changeOutputValue;
     @Nullable @Setter
@@ -133,6 +137,7 @@ public class ProcessModel implements Model, PersistablePayload {
                 .setChangeOutputValue(changeOutputValue)
                 .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong)
                 .setUseSavingsWallet(useSavingsWallet);
+
         Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
         Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
         Optional.ofNullable(takerAcceptedArbitratorNodeAddresses).ifPresent(e -> builder.addAllTakerAcceptedArbitratorNodeAddresses(ProtoUtil.collectionToProto(takerAcceptedArbitratorNodeAddresses)));
@@ -143,6 +148,39 @@ public class ProcessModel implements Model, PersistablePayload {
         Optional.ofNullable(myMultiSigPubKey).ifPresent(e -> builder.setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey)));
         Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
         return builder.build();
+    }
+
+
+    public static ProcessModel fromProto(PB.ProcessModel proto, CoreProtoResolver coreProtoResolver) {
+        ProcessModel processModel = new ProcessModel();
+        processModel.setTradingPeer(TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver));
+        processModel.setOfferId(proto.getOfferId());
+        processModel.setAccountId(proto.getAccountId());
+        processModel.setPubKeyRing(PubKeyRing.fromProto(proto.getPubKeyRing()));
+        processModel.setChangeOutputValue(proto.getChangeOutputValue());
+        processModel.setFundsNeededForTradeAsLong(proto.getFundsNeededForTradeAsLong());
+        processModel.setUseSavingsWallet(proto.getUseSavingsWallet());
+
+        // nullable
+        processModel.setTakeOfferFeeTxId(proto.getTakeOfferFeeTxId().isEmpty() ? null : proto.getTakeOfferFeeTxId());
+        processModel.setPayoutTxSignature(proto.getPayoutTxSignature().isEmpty() ? null : proto.getPayoutTxSignature().toByteArray());
+        List<NodeAddress> takerAcceptedArbitratorNodeAddresses = proto.getTakerAcceptedArbitratorNodeAddressesList().isEmpty() ?
+                null : proto.getTakerAcceptedArbitratorNodeAddressesList().stream()
+                .map(NodeAddress::fromProto).collect(Collectors.toList());
+        List<NodeAddress> takerAcceptedMediatorNodeAddresses = proto.getTakerAcceptedMediatorNodeAddressesList().isEmpty() ?
+                null : proto.getTakerAcceptedMediatorNodeAddressesList().stream()
+                .map(NodeAddress::fromProto).collect(Collectors.toList());
+        processModel.setTakerAcceptedArbitratorNodeAddresses(takerAcceptedArbitratorNodeAddresses);
+        processModel.setTakerAcceptedMediatorNodeAddresses(takerAcceptedMediatorNodeAddresses);
+        processModel.setPreparedDepositTx(proto.getPreparedDepositTx().isEmpty() ? null : proto.getPreparedDepositTx().toByteArray());
+        List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().isEmpty() ?
+                null : proto.getRawTransactionInputsList().stream()
+                .map(RawTransactionInput::fromProto).collect(Collectors.toList());
+        processModel.setRawTransactionInputs(rawTransactionInputs);
+        processModel.setChangeOutputAddress(proto.getChangeOutputAddress().isEmpty() ? null : proto.getChangeOutputAddress());
+        processModel.setMyMultiSigPubKey(proto.getMyMultiSigPubKey().isEmpty() ? null : proto.getMyMultiSigPubKey().toByteArray());
+        processModel.setTempTradingPeerNodeAddress(NodeAddress.fromProto(proto.getTempTradingPeerNodeAddress()));
+        return processModel;
     }
 
 

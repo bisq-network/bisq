@@ -19,11 +19,11 @@ package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.arbitration.messages.DisputeCommunicationMessage;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.Contract;
 import io.bisq.generated.protobuffer.PB;
 import javafx.beans.property.*;
@@ -206,14 +206,14 @@ public final class Dispute implements NetworkPayload {
         return builder.build();
     }
 
-    public static Dispute fromProto(PB.Dispute proto, ProtoResolver protoResolver) {
+    public static Dispute fromProto(PB.Dispute proto, CoreProtoResolver coreProtoResolver) {
         final Dispute dispute = new Dispute(proto.getTradeId(),
                 proto.getTraderId(),
                 proto.getDisputeOpenerIsBuyer(),
                 proto.getDisputeOpenerIsMaker(),
                 PubKeyRing.fromProto(proto.getTraderPubKeyRing()),
                 proto.getTradeDate(),
-                Contract.fromProto(proto.getContract(), protoResolver),
+                Contract.fromProto(proto.getContract(), coreProtoResolver),
                 proto.getContractHash().toByteArray(),
                 proto.getDepositTxSerialized().toByteArray(),
                 proto.getPayoutTxSerialized().toByteArray(),
