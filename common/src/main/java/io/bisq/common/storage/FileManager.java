@@ -192,7 +192,8 @@ public class FileManager<T extends PersistableEnvelope> {
             // check if what we're saving can also be read in correctly
             if (DevEnv.DEV_MODE) {
                 log.info("Reverting the protopersistable during saving");
-                persistenceProtoResolver.fromProto(protoPersistable);
+                PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
+                //log.error("object " + object);
             }
         } catch (Throwable e) {
             log.error("Error in saveToFile toProtoMessage: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
