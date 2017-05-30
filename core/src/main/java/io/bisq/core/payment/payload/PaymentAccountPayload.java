@@ -24,8 +24,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.UUID;
-
 @Getter
 @EqualsAndHashCode
 @ToString
@@ -39,10 +37,6 @@ public abstract class PaymentAccountPayload implements NetworkPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    PaymentAccountPayload(String paymentMethodId, long maxTradePeriod) {
-        this(paymentMethodId, UUID.randomUUID().toString(), maxTradePeriod);
-    }
 
     PaymentAccountPayload(String paymentMethodId, String id, long maxTradePeriod) {
         this.paymentMethodId = paymentMethodId;

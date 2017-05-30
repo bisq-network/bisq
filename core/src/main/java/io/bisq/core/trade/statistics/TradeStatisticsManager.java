@@ -5,7 +5,7 @@ import com.google.inject.name.Named;
 import io.bisq.common.locale.CurrencyTuple;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.proto.persistable.PersistedDataHost;
-import io.bisq.common.storage.PlainTextWrapper;
+import io.bisq.common.storage.JsonFileManager;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
@@ -18,6 +18,7 @@ import javafx.collections.ObservableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,9 +28,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(TradeStatisticsManager.class);
 
     private final Storage<TradeStatisticsList> statisticsStorage;
-    private final Storage<PlainTextWrapper> fiatCurrencyListJsonStorage;
-    private final Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage;
-    private final Storage<PlainTextWrapper> statisticsJsonStorage;
+    private final JsonFileManager jsonFileManager;
     private P2PService p2PService;
     private final boolean dumpStatistics;
     private final ObservableSet<TradeStatistics> observableTradeStatisticsSet = FXCollections.observableSet();
@@ -38,17 +37,14 @@ public class TradeStatisticsManager implements PersistedDataHost {
 
     @Inject
     public TradeStatisticsManager(Storage<TradeStatisticsList> statisticsStorage,
-                                  Storage<PlainTextWrapper> fiatCurrencyListJsonStorage,
-                                  Storage<PlainTextWrapper> cryptoCurrencyListJsonStorage,
-                                  Storage<PlainTextWrapper> statisticsJsonStorage,
                                   P2PService p2PService,
+                                  @Named(Storage.STORAGE_DIR) File storageDir,
                                   @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.statisticsStorage = statisticsStorage;
-        this.fiatCurrencyListJsonStorage = fiatCurrencyListJsonStorage;
-        this.cryptoCurrencyListJsonStorage = cryptoCurrencyListJsonStorage;
-        this.statisticsJsonStorage = statisticsJsonStorage;
         this.p2PService = p2PService;
         this.dumpStatistics = dumpStatistics;
+
+        jsonFileManager = new JsonFileManager(storageDir);
 
         statisticsStorage.setNumMaxBackupFiles(1);
     }
@@ -62,20 +58,16 @@ public class TradeStatisticsManager implements PersistedDataHost {
 
     public void onAllServicesInitialized() {
         if (dumpStatistics) {
-            this.statisticsJsonStorage.initWithFileName("trade_statistics.json");
-
-            this.fiatCurrencyListJsonStorage.initWithFileName("fiat_currency_list.json");
             ArrayList<CurrencyTuple> fiatCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
                     .collect(Collectors.toList()));
-            fiatCurrencyListJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(fiatCurrencyList)), 2000);
-
-            this.cryptoCurrencyListJsonStorage.initWithFileName("crypto_currency_list.json");
+            jsonFileManager.writeToDisc(Utilities.objectToJson(fiatCurrencyList), "fiat_currency_list.json");
+           
             ArrayList<CurrencyTuple> cryptoCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
                     .collect(Collectors.toList()));
             cryptoCurrencyList.add(0, new CurrencyTuple("BTC", "Bitcoin", 8));
-            cryptoCurrencyListJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(cryptoCurrencyList)), 2000);
+            jsonFileManager.writeToDisc(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list.json");
         }
 
         if (persistedTradeStatisticsList != null)
@@ -136,7 +128,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
             list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? 1 : (o1.tradeDate == o2.tradeDate ? 0 : -1)));
             TradeStatisticsForJson[] array = new TradeStatisticsForJson[list.size()];
             list.toArray(array);
-            statisticsJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(array)), 5000);
+            jsonFileManager.writeToDisc(Utilities.objectToJson(array), "trade_statistics.json");
         }
     }
 }

@@ -270,7 +270,9 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod) {
-        return getPaymentMethodForm(PaymentAccountFactory.getPaymentAccount(paymentMethod));
+        final PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
+        paymentAccount.init();
+        return getPaymentMethodForm(paymentAccount);
     }
 
     private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {

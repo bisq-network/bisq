@@ -33,8 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     private String address;
 
-    public CryptoCurrencyAccountPayload(String paymentMethod, long maxTradePeriod) {
-        super(paymentMethod, maxTradePeriod);
+    public CryptoCurrencyAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
+        super(paymentMethod, id, maxTradePeriod);
     }
 
 
@@ -46,7 +46,7 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
                                         String id,
                                         long maxTradePeriod,
                                         String address) {
-        super(paymentMethod,
+        this(paymentMethod,
                 id,
                 maxTradePeriod);
         this.address = address;

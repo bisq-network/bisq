@@ -30,7 +30,7 @@ public final class InteracETransferAccount extends PaymentAccount {
 
     @Override
     protected PaymentAccountPayload getPayload() {
-        return new InteracETransferAccountPayload(paymentMethod.getId(), paymentMethod.getMaxTradePeriod());
+        return new InteracETransferAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setEmail(String email) {

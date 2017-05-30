@@ -774,12 +774,12 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     tradePeriodState=" + tradePeriodState +
                 ",\n     contract=" + contract +
                 ",\n     contractAsJson='" + contractAsJson + '\'' +
-                ",\n     contractHash=" + Hex.toHexString(contractHash) +
+                ",\n     contractHash=" + (contractHash != null ? Hex.toHexString(contractHash) : "null") +
                 ",\n     takerContractSignature='" + takerContractSignature + '\'' +
                 ",\n     makerContractSignature='" + makerContractSignature + '\'' +
                 ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
-                ",\n     arbitratorBtcPubKey=" + Hex.toHexString(arbitratorBtcPubKey) +
+                ",\n     arbitratorBtcPubKey=" + (arbitratorBtcPubKey != null ? Hex.toHexString(arbitratorBtcPubKey) : "null") +
                 ",\n     takerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 ",\n     errorMessage='" + errorMessage + '\'' +
                 ",\n     txFee=" + txFee +

@@ -30,7 +30,7 @@ public final class FasterPaymentsAccount extends PaymentAccount {
 
     @Override
     protected PaymentAccountPayload getPayload() {
-        return new FasterPaymentsAccountPayload(paymentMethod.getId(), paymentMethod.getMaxTradePeriod());
+        return new FasterPaymentsAccountPayload(paymentMethod.getId(), id, paymentMethod.getMaxTradePeriod());
     }
 
     public void setSortCode(String value) {

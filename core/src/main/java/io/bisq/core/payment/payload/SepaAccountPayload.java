@@ -45,8 +45,8 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     // Dont use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private final List<String> acceptedCountryCodes;
 
-    public SepaAccountPayload(String paymentMethod, long maxTradePeriod, List<Country> acceptedCountries) {
-        super(paymentMethod, maxTradePeriod);
+    public SepaAccountPayload(String paymentMethod, String id, long maxTradePeriod, List<Country> acceptedCountries) {
+        super(paymentMethod, id, maxTradePeriod);
         Set<String> acceptedCountryCodesAsSet = acceptedCountries.stream()
                 .map(e -> e.code).collect(Collectors.toSet());
         acceptedCountryCodes = new ArrayList<>(acceptedCountryCodesAsSet);

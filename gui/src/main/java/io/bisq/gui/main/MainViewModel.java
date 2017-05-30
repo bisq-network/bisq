@@ -92,8 +92,6 @@ import org.bitcoinj.store.ChainFileLockedException;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.security.Security;
@@ -1022,12 +1020,14 @@ public class MainViewModel implements ViewModel {
     private void setupDevDummyPaymentAccounts() {
         if (user.getPaymentAccounts() != null && user.getPaymentAccounts().isEmpty()) {
             OKPayAccount okPayAccount = new OKPayAccount();
+            okPayAccount.init();
             okPayAccount.setAccountNr("dummy_" + new Random().nextInt(100));
             okPayAccount.setAccountName("OKPay dummy");// Don't translate only for dev
             okPayAccount.setSelectedTradeCurrency(GlobalSettings.getDefaultTradeCurrency());
             user.addPaymentAccount(okPayAccount);
 
             CryptoCurrencyAccount cryptoCurrencyAccount = new CryptoCurrencyAccount();
+            cryptoCurrencyAccount.init();
             cryptoCurrencyAccount.setAccountName("ETH dummy");// Don't translate only for dev
             cryptoCurrencyAccount.setAddress("0x" + new Random().nextInt(1000000));
             cryptoCurrencyAccount.setSingleTradeCurrency(CurrencyUtil.getCryptoCurrency("ETH").get());

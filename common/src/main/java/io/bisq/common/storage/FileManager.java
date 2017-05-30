@@ -193,10 +193,15 @@ public class FileManager<T extends PersistableEnvelope> {
             if (DevEnv.DEV_MODE) {
                 log.info("Reverting the protopersistable during saving");
                 PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
-                //log.error("object " + object);
+                log.error("object " + object);
+                if (object == null) {
+                    log.error("object is null. storageFile=" + storageFile);
+                    persistenceProtoResolver.fromProto(protoPersistable);
+                }
             }
         } catch (Throwable e) {
             log.error("Error in saveToFile toProtoMessage: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
+            PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
         }
 
         try {
@@ -205,11 +210,7 @@ public class FileManager<T extends PersistableEnvelope> {
 
             tempFile = File.createTempFile("temp", null, dir);
             tempFile.deleteOnExit();
-            if (persistable instanceof PlainTextWrapper) {
-                // When we dump json files we don't want to safe it as java serialized string objects, so we use PrintWriter instead.
-                printWriter = new PrintWriter(tempFile);
-                printWriter.println(((PlainTextWrapper) persistable).plainText);
-            } else if (protoPersistable != null) {
+            if (protoPersistable != null) {
                 fileOutputStream = new FileOutputStream(tempFile);
 
                 log.info("Writing protobuffer class:{} to file:{}", persistable.getClass(), storageFile.getName());

@@ -34,8 +34,8 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
     private String postalAddress;
     private String holderName;
 
-    public USPostalMoneyOrderAccountPayload(String paymentMethod, long maxTradePeriod) {
-        super(paymentMethod, maxTradePeriod);
+    public USPostalMoneyOrderAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
+        super(paymentMethod, id, maxTradePeriod);
     }
 
 
@@ -47,7 +47,7 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
                                              long maxTradePeriod,
                                              String postalAddress,
                                              String holderName) {
-        super(paymentMethod, id, maxTradePeriod);
+        this(paymentMethod, id, maxTradePeriod);
 
         this.postalAddress = postalAddress;
         this.holderName = holderName;

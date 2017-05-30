@@ -33,8 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     private String accountNr;
 
-    public PerfectMoneyAccountPayload(String paymentMethod, long maxTradePeriod) {
-        super(paymentMethod, maxTradePeriod);
+    public PerfectMoneyAccountPayload(String paymentMethod, String id, long maxTradePeriod) {
+        super(paymentMethod, id, maxTradePeriod);
     }
 
 
@@ -45,7 +45,7 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     private PerfectMoneyAccountPayload(String paymentMethod, String id,
                                        long maxTradePeriod,
                                        String accountNr) {
-        super(paymentMethod, id, maxTradePeriod);
+        this(paymentMethod, id, maxTradePeriod);
 
         this.accountNr = accountNr;
     }

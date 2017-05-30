@@ -88,24 +88,27 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
             return null;
         }
 
-        List list = proto.getTradableList().stream().peek(tradable -> log.info(tradable.getClass().toString())).map(tradable -> {
-            log.debug("tradable.getMessageCase(): {}", tradable.getMessageCase());
-            switch (tradable.getMessageCase()) {
-                case OPEN_OFFER:
-                    return OpenOffer.fromProto(tradable.getOpenOffer());
-                case BUYER_AS_MAKER_TRADE:
-                    return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), buyerAsMakerTradeStorage, btcWalletService);
-                case BUYER_AS_TAKER_TRADE:
-                    Tradable tradable1 = BuyerAsTakerTrade.fromProto(tradable.getBuyerAsTakerTrade(), buyerAsTakerTradeStorage, btcWalletService);
-                    return tradable1;
-                case SELLER_AS_MAKER_TRADE:
-                    return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), sellerAsMakerTradeStorage, btcWalletService);
-                case SELLER_AS_TAKER_TRADE:
-                    return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), sellerAsTakerTradeStorage, btcWalletService);
-            }
-            return null;
-        }).collect(Collectors.toList());
-
+        List list = proto.getTradableList().stream()
+                .map(tradable -> {
+                    log.info(tradable.getClass().toString());
+                    log.debug("tradable.getMessageCase(): {}", tradable.getMessageCase());
+                    switch (tradable.getMessageCase()) {
+                        case OPEN_OFFER:
+                            return OpenOffer.fromProto(tradable.getOpenOffer());
+                        case BUYER_AS_MAKER_TRADE:
+                            return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), buyerAsMakerTradeStorage, btcWalletService);
+                        case BUYER_AS_TAKER_TRADE:
+                            Tradable tradable1 = BuyerAsTakerTrade.fromProto(tradable.getBuyerAsTakerTrade(), buyerAsTakerTradeStorage, btcWalletService);
+                            return tradable1;
+                        case SELLER_AS_MAKER_TRADE:
+                            return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), sellerAsMakerTradeStorage, btcWalletService);
+                        case SELLER_AS_TAKER_TRADE:
+                            return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), sellerAsTakerTradeStorage, btcWalletService);
+                    }
+                    return null;
+                })
+                .collect(Collectors.toList());
+        //TODO list.get(0) only works for offer/trade
         switch (list.get(0).getClass().getSimpleName()) {
             case "OpenOffer":
                 return new TradableList<OpenOffer>(openOfferStorage, list);

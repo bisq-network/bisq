@@ -24,8 +24,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.UUID;
-
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Setter
@@ -34,8 +32,10 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
     private String accountNr;
 
     public AliPayAccountPayload(String paymentMethod,
+                                String id,
                                 long maxTradePeriod) {
         super(paymentMethod,
+                id,
                 maxTradePeriod);
     }
 
@@ -48,7 +48,7 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
                                 String id,
                                 long maxTradePeriod,
                                 String accountNr) {
-        super(paymentMethod,
+        this(paymentMethod,
                 id,
                 maxTradePeriod);
 
