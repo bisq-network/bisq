@@ -191,12 +191,13 @@ public class FileManager<T extends PersistableEnvelope> {
 
             // check if what we're saving can also be read in correctly
             if (DevEnv.DEV_MODE) {
-                log.info("Reverting the protopersistable during saving");
+                log.info("Checking that the saved Persistable can be read again...");
                 PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
-                log.error("object " + object);
                 if (object == null) {
-                    log.error("object is null. storageFile=" + storageFile);
+                    log.error("Check on saved Persistable failed, object is null. storageFile={}", storageFile);
                     persistenceProtoResolver.fromProto(protoPersistable);
+                } else {
+                    log.info("Check on saved Persistable complete: {} ", object);
                 }
             }
         } catch (Throwable e) {
