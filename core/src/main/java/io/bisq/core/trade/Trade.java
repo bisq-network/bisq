@@ -31,6 +31,7 @@ import io.bisq.common.monetary.Volume;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.taskrunner.Model;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.Mediator;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -55,7 +56,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
-import org.bouncycastle.util.encoders.Hex;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -457,8 +457,9 @@ public abstract class Trade implements Tradable, Model {
         // if we have already received a msg we apply it. 
         // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context 
         // or async calls there.
-        decryptedMessageWithPubKeySet.stream()
-                .forEach(msg -> tradeProtocol.applyMailboxMessage(msg, this));
+        // Clone to avoid ConcurrentModificationException. We remove items at the applyMailboxMessage call...
+        HashSet<DecryptedMessageWithPubKey> set = new HashSet<>(decryptedMessageWithPubKeySet);
+        set.stream().forEach(msg -> tradeProtocol.applyMailboxMessage(msg, this));
     }
 
 
@@ -491,7 +492,6 @@ public abstract class Trade implements Tradable, Model {
     // will received it again at next startup. Such might happen in edge cases when the user shuts down after we 
     // received the msb but before the init is called.
     public void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        log.trace("addDecryptedMessageWithPubKey decryptedMessageWithPubKey=" + decryptedMessageWithPubKey);
         if (!decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) {
             decryptedMessageWithPubKeySet.add(decryptedMessageWithPubKey);
 
@@ -504,8 +504,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void removeDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        log.trace("removeDecryptedMessageWithPubKey decryptedMessageWithPubKey=" + decryptedMessageWithPubKey);
-        if (decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey))
+        if (decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) 
             decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
 
@@ -835,12 +834,12 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     tradePeriodState=" + tradePeriodState +
                 ",\n     contract=" + contract +
                 ",\n     contractAsJson='" + contractAsJson + '\'' +
-                ",\n     contractHash=" + (contractHash != null ? Hex.toHexString(contractHash) : "null") +
+                ",\n     contractHash=" + Utilities.bytesAsHexString(contractHash) +
                 ",\n     takerContractSignature='" + takerContractSignature + '\'' +
                 ",\n     makerContractSignature='" + makerContractSignature + '\'' +
                 ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
-                ",\n     arbitratorBtcPubKey=" + (arbitratorBtcPubKey != null ? Hex.toHexString(arbitratorBtcPubKey) : "null") +
+                ",\n     arbitratorBtcPubKey=" + Utilities.bytesAsHexString(arbitratorBtcPubKey) +
                 ",\n     takerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 ",\n     errorMessage='" + errorMessage + '\'' +
                 ",\n     txFee=" + txFee +

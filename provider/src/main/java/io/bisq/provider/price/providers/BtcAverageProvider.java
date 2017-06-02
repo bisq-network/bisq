@@ -22,9 +22,9 @@ import com.google.gson.internal.LinkedTreeMap;
 import io.bisq.network.http.HttpClient;
 import io.bisq.network.http.HttpException;
 import io.bisq.provider.price.PriceData;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;

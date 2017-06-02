@@ -32,7 +32,6 @@ import javafx.collections.ObservableList;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -52,6 +51,7 @@ public final class Dispute implements NetworkPayload {
     private final PubKeyRing traderPubKeyRing;
     private final long tradeDate;
     private final Contract contract;
+    @Nullable
     private final byte[] contractHash;
     @Nullable
     private final byte[] depositTxSerialized;
@@ -77,7 +77,7 @@ public final class Dispute implements NetworkPayload {
     private String disputePayoutTxId;
 
     private long openingDate;
-    
+
     transient private Storage<DisputeList> storage;
     transient private ObservableList<DisputeCommunicationMessage> observableList;
     transient private BooleanProperty isClosedProperty;
@@ -96,7 +96,7 @@ public final class Dispute implements NetworkPayload {
                    PubKeyRing traderPubKeyRing,
                    long tradeDate,
                    Contract contract,
-                   byte[] contractHash,
+                   @Nullable byte[] contractHash,
                    @Nullable byte[] depositTxSerialized,
                    @Nullable byte[] payoutTxSerialized,
                    @Nullable String depositTxId,
@@ -141,7 +141,7 @@ public final class Dispute implements NetworkPayload {
                    PubKeyRing traderPubKeyRing,
                    long tradeDate,
                    Contract contract,
-                   byte[] contractHash,
+                   @Nullable byte[] contractHash,
                    @Nullable byte[] depositTxSerialized,
                    @Nullable byte[] payoutTxSerialized,
                    @Nullable String depositTxId,
@@ -184,7 +184,6 @@ public final class Dispute implements NetworkPayload {
                 .setTraderPubKeyRing(traderPubKeyRing.toProtoMessage())
                 .setTradeDate(tradeDate)
                 .setContract(contract.toProtoMessage())
-                .setContractHash(ByteString.copyFrom(contractHash))
                 .setContractAsJson(contractAsJson)
                 .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage())
                 .setIsSupportTicket(isSupportTicket)
@@ -195,6 +194,7 @@ public final class Dispute implements NetworkPayload {
                 .setOpeningDate(openingDate)
                 .setId(id);
 
+        Optional.ofNullable(contractHash).ifPresent(tx -> builder.setContractHash(ByteString.copyFrom(contractHash)));
         Optional.ofNullable(depositTxSerialized).ifPresent(tx -> builder.setDepositTxSerialized(ByteString.copyFrom(tx)));
         Optional.ofNullable(payoutTxSerialized).ifPresent(tx -> builder.setPayoutTxSerialized(ByteString.copyFrom(tx)));
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
@@ -332,8 +332,8 @@ public final class Dispute implements NetworkPayload {
                 ", traderPubKeyRing=" + traderPubKeyRing +
                 ", tradeDate=" + tradeDate +
                 ", contract=" + contract +
-                ", contractHash=" + Hex.toHexString(contractHash) +
-                ", depositTxSerialized=" + Hex.toHexString(depositTxSerialized) +
+                ", contractHash=" + Utilities.bytesAsHexString(contractHash) +
+                ", depositTxSerialized=" + Utilities.bytesAsHexString(depositTxSerialized) +
                 ", payoutTxSerialized not displayed for privacy reasons..." +
                 ", depositTxId='" + depositTxId + '\'' +
                 ", payoutTxId='" + payoutTxId + '\'' +

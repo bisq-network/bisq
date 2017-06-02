@@ -21,6 +21,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.util.JsonExclude;
+import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
@@ -29,7 +30,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
-import org.bouncycastle.util.encoders.Hex;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
@@ -225,7 +225,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                 ", requestedBtc=" + requestedBtc +
                 ", btcAddress='" + btcAddress + '\'' +
                 ", nodeAddress='" + getNodeAddress() + '\'' +
-                ", p2pStorageSignaturePubKeyBytes=" + Hex.toHexString(ownerPubKeyBytes) +
+                ", p2pStorageSignaturePubKeyBytes=" + Utilities.bytesAsHexString(ownerPubKeyBytes) +
                 ", p2pStorageSignaturePubKeyAsHex='" + ownerPubPubKeyAsHex + '\'' +
                 ", signature='" + signature + '\'' +
                 ", feeTxId='" + feeTxId + '\'' +

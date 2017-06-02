@@ -18,16 +18,18 @@
 package io.bisq.core.arbitration;
 
 import com.google.protobuf.Message;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.storage.Storage;
+import io.bisq.core.proto.CoreProtoResolver;
+import io.bisq.generated.protobuffer.PB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.ArrayList;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -41,33 +43,54 @@ import java.util.stream.Stream;
  * can be saved to disc.
  */
 public final class DisputeList implements PersistableEnvelope {
-    final transient private Storage<DisputeList> storage;
-    final private List<Dispute> disputeList = new ArrayList<>();
+    transient private final Storage<DisputeList> storage;
+    @Getter
+    private final ObservableList<Dispute> list = FXCollections.observableArrayList();
 
     public DisputeList(Storage<DisputeList> storage) {
         this.storage = storage;
 
         DisputeList persisted = storage.initAndGetPersisted(this);
-        if (persisted != null) {
-            disputeList.addAll(persisted.stream().collect(Collectors.toList()));
-        }
+        if (persisted != null)
+            list.addAll(persisted.getList());
     }
 
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private DisputeList(Storage<DisputeList> storage, List<Dispute> list) {
+        this.storage = storage;
+        this.list.addAll(list);
     }
 
-    public ObservableList<Dispute> getObservableList() {
-        return FXCollections.observableArrayList(disputeList);
+    @Override
+    public Message toProtoMessage() {
+        return PB.PersistableEnvelope.newBuilder().setDisputeList(PB.DisputeList.newBuilder()
+                .addAllDispute(ProtoUtil.collectionToProto(list))).build();
     }
+
+    @Nullable
+    public static DisputeList fromProto(PB.DisputeList proto,
+                                        CoreProtoResolver coreProtoResolver,
+                                        Storage<DisputeList> storage) {
+        log.debug("DisputeList fromProto of {} ", proto);
+
+        List<Dispute> list = proto.getDisputeList().stream()
+                .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
+                .collect(Collectors.toList());
+        return new DisputeList(storage, list);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean add(Dispute dispute) {
-        if (!disputeList.contains(dispute)) {
-            boolean changed = disputeList.add(dispute);
+        if (!list.contains(dispute)) {
+            boolean changed = list.add(dispute);
             if (changed)
                 storage.queueUpForSave();
             return changed;
@@ -77,33 +100,25 @@ public final class DisputeList implements PersistableEnvelope {
     }
 
     public boolean remove(Object dispute) {
-        boolean changed = disputeList.remove(dispute);
+        boolean changed = list.remove(dispute);
         if (changed)
             storage.queueUpForSave();
         return changed;
     }
 
-    //// Delegate methods to List implementation /////
-
     public int size() {
-        return disputeList.size();
+        return list.size();
     }
 
     public boolean isEmpty() {
-        return disputeList.isEmpty();
+        return list.isEmpty();
     }
 
     public boolean contains(Object o) {
-        return disputeList.contains(o);
+        return list.contains(o);
     }
 
     public Stream<Dispute> stream() {
-        return disputeList.stream();
-    }
-
-    // TODO not impl yet
-    @Override
-    public Message toProtoMessage() {
-        return null;
+        return list.stream();
     }
 }

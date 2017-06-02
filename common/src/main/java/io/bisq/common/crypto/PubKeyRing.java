@@ -19,12 +19,12 @@ package io.bisq.common.crypto;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.proto.network.NetworkPayload;
+import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
@@ -91,8 +91,8 @@ public final class PubKeyRing implements NetworkPayload {
     @Override
     public String toString() {
         return "PubKeyRing{" +
-                "signaturePubKeyHex=" + Hex.toHexString(signaturePubKeyBytes) +
-                ", encryptionPubKeyHex=" + Hex.toHexString(encryptionPubKeyBytes) +
+                "signaturePubKeyHex=" + Utilities.bytesAsHexString(signaturePubKeyBytes) +
+                ", encryptionPubKeyHex=" + Utilities.bytesAsHexString(encryptionPubKeyBytes) +
                 ", pgpPubKeyAsString=" + pgpPubKeyAsPem +
                 '}';
     }

@@ -22,6 +22,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.util.JsonExclude;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.proto.CoreProtoResolver;
@@ -29,7 +30,6 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.Value;
 import org.bitcoinj.core.Coin;
-import org.bouncycastle.util.encoders.Hex;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -226,10 +226,10 @@ public final class Contract implements NetworkPayload {
                 ",\n     takerPubKeyRing=" + takerPubKeyRing +
                 ",\n     makerPayoutAddressString='" + makerPayoutAddressString + '\'' +
                 ",\n     takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
-                ",\n     makerMultiSigPubKey=" + Hex.toHexString(makerMultiSigPubKey) +
-                ",\n     takerMultiSigPubKey=" + Hex.toHexString(takerMultiSigPubKey) +
-                ",\n     BuyerMultiSigPubKey=" + Hex.toHexString(getBuyerMultiSigPubKey()) +
-                ",\n     SellerMultiSigPubKey=" + Hex.toHexString(getSellerMultiSigPubKey()) +
+                ",\n     makerMultiSigPubKey=" + Utilities.bytesAsHexString(makerMultiSigPubKey) +
+                ",\n     takerMultiSigPubKey=" + Utilities.bytesAsHexString(takerMultiSigPubKey) +
+                ",\n     BuyerMultiSigPubKey=" + Utilities.bytesAsHexString(getBuyerMultiSigPubKey()) +
+                ",\n     SellerMultiSigPubKey=" + Utilities.bytesAsHexString(getSellerMultiSigPubKey()) +
                 "\n}";
     }
 }

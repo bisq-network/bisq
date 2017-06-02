@@ -20,10 +20,10 @@ package io.bisq.core.alert;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.proto.network.NetworkPayload;
+import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
@@ -90,7 +90,7 @@ public final class PrivateNotificationPayload implements NetworkPayload {
         return "PrivateNotification{" +
                 "message='" + message + '\'' +
                 ", signatureAsBase64='" + signatureAsBase64 + '\'' +
-                ", publicKeyBytes=" + Hex.toHexString(sigPublicKeyBytes) +
+                ", publicKeyBytes=" + Utilities.bytesAsHexString(sigPublicKeyBytes) +
                 '}';
     }
 }

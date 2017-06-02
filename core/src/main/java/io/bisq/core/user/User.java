@@ -85,7 +85,8 @@ public final class User implements PersistedDataHost {
         userPayload.setAccountId(String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode())));
 
         // language setup
-        userPayload.getAcceptedLanguageLocaleCodes().add(LanguageUtil.getDefaultLanguageLocaleAsCode());
+        if (!userPayload.getAcceptedLanguageLocaleCodes().contains(LanguageUtil.getDefaultLanguageLocaleAsCode()))
+            userPayload.getAcceptedLanguageLocaleCodes().add(LanguageUtil.getDefaultLanguageLocaleAsCode());
         String english = LanguageUtil.getEnglishLanguageLocaleCode();
         if (!userPayload.getAcceptedLanguageLocaleCodes().contains(english))
             userPayload.getAcceptedLanguageLocaleCodes().add(english);
@@ -123,46 +124,61 @@ public final class User implements PersistedDataHost {
       }*/
 
     public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
-        Optional<Arbitrator> arbitratorOptional = userPayload.getAcceptedArbitrators().stream()
-                .filter(e -> e.getNodeAddress().equals(nodeAddress))
-                .findFirst();
-        if (arbitratorOptional.isPresent())
-            return arbitratorOptional.get();
-        else
+        if (userPayload.getAcceptedArbitrators() != null) {
+            Optional<Arbitrator> arbitratorOptional = userPayload.getAcceptedArbitrators().stream()
+                    .filter(e -> e.getNodeAddress().equals(nodeAddress))
+                    .findFirst();
+            if (arbitratorOptional.isPresent())
+                return arbitratorOptional.get();
+            else
+                return null;
+        } else {
             return null;
+        }
     }
 
     public Mediator getAcceptedMediatorByAddress(NodeAddress nodeAddress) {
-        Optional<Mediator> mediatorOptionalOptional = userPayload.getAcceptedMediators().stream()
-                .filter(e -> e.getNodeAddress().equals(nodeAddress))
-                .findFirst();
-        if (mediatorOptionalOptional.isPresent())
-            return mediatorOptionalOptional.get();
-        else
+        if (userPayload.getAcceptedMediators() != null) {
+            Optional<Mediator> mediatorOptionalOptional = userPayload.getAcceptedMediators().stream()
+                    .filter(e -> e.getNodeAddress().equals(nodeAddress))
+                    .findFirst();
+            if (mediatorOptionalOptional.isPresent())
+                return mediatorOptionalOptional.get();
+            else
+                return null;
+        } else {
             return null;
+        }
     }
 
     @Nullable
     public PaymentAccount findFirstPaymentAccountWithCurrency(TradeCurrency tradeCurrency) {
-        for (PaymentAccount paymentAccount : userPayload.getPaymentAccounts()) {
-            for (TradeCurrency tradeCurrency1 : paymentAccount.getTradeCurrencies()) {
-                if (tradeCurrency1.equals(tradeCurrency))
-                    return paymentAccount;
+        if (userPayload.getPaymentAccounts() != null) {
+            for (PaymentAccount paymentAccount : userPayload.getPaymentAccounts()) {
+                for (TradeCurrency currency : paymentAccount.getTradeCurrencies()) {
+                    if (currency.equals(tradeCurrency))
+                        return paymentAccount;
+                }
             }
+            return null;
+        } else {
+            return null;
         }
-        return null;
     }
 
     public boolean hasMatchingLanguage(Arbitrator arbitrator) {
-        if (arbitrator != null) {
-            for (String acceptedCode : userPayload.getAcceptedLanguageLocaleCodes()) {
+        final List<String> codes = userPayload.getAcceptedLanguageLocaleCodes();
+        if (arbitrator != null && codes != null) {
+            for (String acceptedCode : codes) {
                 for (String itemCode : arbitrator.getLanguageCodes()) {
                     if (acceptedCode.equals(itemCode))
                         return true;
                 }
             }
+            return false;
+        } else {
+            return false;
         }
-        return false;
     }
 
     public boolean hasPaymentAccountForCurrency(TradeCurrency tradeCurrency) {
@@ -188,12 +204,15 @@ public final class User implements PersistedDataHost {
     }
 
     public boolean addAcceptedLanguageLocale(String localeCode) {
-        boolean changed = userPayload.getAcceptedLanguageLocaleCodes() != null &&
-                !userPayload.getAcceptedLanguageLocaleCodes().contains(localeCode) &&
-                userPayload.getAcceptedLanguageLocaleCodes().add(localeCode);
-        if (changed)
-            persist();
-        return changed;
+        final List<String> codes = userPayload.getAcceptedLanguageLocaleCodes();
+        if (codes != null && !codes.contains(localeCode)) {
+            boolean changed = codes.add(localeCode);
+            if (changed)
+                persist();
+            return changed;
+        } else {
+            return false;
+        }
     }
 
     public boolean removeAcceptedLanguageLocale(String languageLocaleCode) {
@@ -204,23 +223,27 @@ public final class User implements PersistedDataHost {
         return changed;
     }
 
-    public void addAcceptedArbitrator(Arbitrator arbitrator) {
-        if (userPayload.getAcceptedArbitrators() != null &&
-                !userPayload.getAcceptedArbitrators().contains(arbitrator) &&
-                !isMyOwnRegisteredArbitrator(arbitrator)) {
-            boolean changed = userPayload.getAcceptedArbitrators().add(arbitrator);
+    public boolean addAcceptedArbitrator(Arbitrator arbitrator) {
+        final List<Arbitrator> arbitrators = userPayload.getAcceptedArbitrators();
+        if (arbitrators != null && !arbitrators.contains(arbitrator)) {
+            boolean changed = arbitrators.add(arbitrator);
             if (changed)
                 persist();
+            return changed;
+        } else {
+            return false;
         }
     }
 
-    public void addAcceptedMediator(Mediator mediator) {
-        if (userPayload.getAcceptedMediators() != null &&
-                !userPayload.getAcceptedMediators().contains(mediator) &&
-                !isMyOwnRegisteredMediator(mediator)) {
-            boolean changed = userPayload.getAcceptedMediators().add(mediator);
+    public boolean addAcceptedMediator(Mediator mediator) {
+        final List<Mediator> mediators = userPayload.getAcceptedMediators();
+        if (mediators != null && !mediators.contains(mediator)) {
+            boolean changed = mediators.add(mediator);
             if (changed)
                 persist();
+            return changed;
+        } else {
+            return false;
         }
     }
 
@@ -298,7 +321,9 @@ public final class User implements PersistedDataHost {
 
     @Nullable
     public PaymentAccount getPaymentAccount(String paymentAccountId) {
-        Optional<PaymentAccount> optional = userPayload.getPaymentAccounts().stream().filter(e -> e.getId().equals(paymentAccountId)).findAny();
+        Optional<PaymentAccount> optional = userPayload.getPaymentAccounts() != null ?
+                userPayload.getPaymentAccounts().stream().filter(e -> e.getId().equals(paymentAccountId)).findAny() :
+                Optional.<PaymentAccount>empty();
         if (optional.isPresent())
             return optional.get();
         else
@@ -346,7 +371,7 @@ public final class User implements PersistedDataHost {
 
     @Nullable
     public List<NodeAddress> getAcceptedArbitratorAddresses() {
-        return userPayload.getAcceptedArbitrators().stream().map(Arbitrator::getNodeAddress).collect(Collectors.toList());
+        return userPayload.getAcceptedArbitrators() != null ? userPayload.getAcceptedArbitrators().stream().map(Arbitrator::getNodeAddress).collect(Collectors.toList()) : null;
     }
 
     public List<Mediator> getAcceptedMediators() {
@@ -355,7 +380,7 @@ public final class User implements PersistedDataHost {
 
     @Nullable
     public List<NodeAddress> getAcceptedMediatorAddresses() {
-        return userPayload.getAcceptedMediators().stream().map(Mediator::getNodeAddress).collect(Collectors.toList());
+        return userPayload.getAcceptedMediators() != null ? userPayload.getAcceptedMediators().stream().map(Mediator::getNodeAddress).collect(Collectors.toList()) : null;
     }
 
     public List<String> getAcceptedLanguageLocaleCodes() {

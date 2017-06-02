@@ -18,7 +18,9 @@
 package io.bisq.core.dao.vote;
 
 import com.google.protobuf.Message;
+import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -69,6 +71,26 @@ public final class VoteItemsList implements PersistablePayload {
         add(compensationRequest);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // TODO not impl yet
+    @Override
+    public Message toProtoMessage() {
+        return null;
+    }
+
+    public static PersistableEnvelope fromProto(PB.VoteItemsList voteItemsList) {
+        return null;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public CompensationRequestVoteItemCollection getCompensationRequestVoteItemCollection() {
         return compensationRequest;
     }
@@ -100,11 +122,5 @@ public final class VoteItemsList implements PersistablePayload {
 
     public Optional<VoteItem> getVoteItemByVotingType(VotingType votingType) {
         return allVoteItemList.stream().filter(e -> e.getVotingType() == votingType).findAny();
-    }
-
-    // TODO not impl yet
-    @Override
-    public Message toProtoMessage() {
-        return null;
     }
 }

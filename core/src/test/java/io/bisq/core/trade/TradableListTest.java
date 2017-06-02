@@ -1,7 +1,5 @@
 package io.bisq.core.trade;
 
-import com.google.common.collect.Lists;
-import com.google.protobuf.Message;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
@@ -13,7 +11,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static io.bisq.generated.protobuffer.PB.PersistableEnvelope.MessageCase.TRADABLE_LIST;
-import static io.bisq.generated.protobuffer.PB.PersistableEnvelope.MessageCase.TRADE_LIST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

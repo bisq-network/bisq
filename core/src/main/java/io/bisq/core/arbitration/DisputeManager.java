@@ -737,7 +737,7 @@ public class DisputeManager {
     }
 
     public ObservableList<Dispute> getDisputesAsObservableList() {
-        return disputes.getObservableList();
+        return disputes.getList();
     }
 
     public boolean isTrader(Dispute dispute) {

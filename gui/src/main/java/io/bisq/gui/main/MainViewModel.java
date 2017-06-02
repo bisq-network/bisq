@@ -523,8 +523,8 @@ public class MainViewModel implements ViewModel {
 
         // tradeManager
         tradeManager.onAllServicesInitialized();
-        tradeManager.getTrades().addListener((ListChangeListener<Trade>) c -> updateBalance());
-        tradeManager.getTrades().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
+        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) c -> updateBalance());
+        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
         // We handle the trade period here as we display a global popup if we reached dispute time
         tradesAndUIReady = EasyBind.combine(isSplashScreenRemoved, tradeManager.pendingTradesInitializedProperty(), (a, b) -> a && b);
@@ -542,7 +542,7 @@ public class MainViewModel implements ViewModel {
         });
 
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
-        tradeManager.getTrades().addListener((ListChangeListener<Trade>) c -> updateBalance());
+        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) c -> updateBalance());
         openOfferManager.onAllServicesInitialized();
         arbitratorManager.onAllServicesInitialized();
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) -> displayAlertIfPresent(newValue));
@@ -709,7 +709,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void updateTradePeriodState() {
-        tradeManager.getTrades().stream().forEach(trade -> {
+        tradeManager.getTradableList().stream().forEach(trade -> {
             if (!trade.isPayoutPublished()) {
                 Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                 Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
@@ -1008,7 +1008,7 @@ public class MainViewModel implements ViewModel {
     }
 
     private void onTradesChanged() {
-        long numPendingTrades = tradeManager.getTrades().size();
+        long numPendingTrades = tradeManager.getTradableList().size();
         if (numPendingTrades > 0)
             numPendingTradesAsString.set(String.valueOf(numPendingTrades));
         if (numPendingTrades > 9)

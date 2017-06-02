@@ -111,7 +111,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
                 .filter(o -> o.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()))
                 .findAny()
                 .isPresent();
-        isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTrades().stream()
+        isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTradableList().stream()
                 .filter(t -> t.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()) ||
                         paymentAccount.getId().equals(t.getTakerPaymentAccountId()))
                 .findAny()
