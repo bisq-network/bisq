@@ -191,8 +191,9 @@ public class FileManager<T extends PersistableEnvelope> {
 
             // check if what we're saving can also be read in correctly
             if (DevEnv.DEV_MODE) {
-                log.info("Testing reading of protoPersistable");
+                log.info("Reverting the protopersistable during saving");
                 PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
+                log.error("object " + object);
                 if (object == null) {
                     log.error("object is null. storageFile=" + storageFile);
                     persistenceProtoResolver.fromProto(protoPersistable);
