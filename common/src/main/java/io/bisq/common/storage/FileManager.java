@@ -197,7 +197,7 @@ public class FileManager<T extends PersistableEnvelope> {
                     log.error("Check on saved Persistable failed, object is null. storageFile={}", storageFile);
                     persistenceProtoResolver.fromProto(protoPersistable);
                 } else {
-                    log.info("Check on saved Persistable complete: {} ", object);
+                    log.debug("Check on saved Persistable complete: {} ", object);
                 }
             }
         } catch (Throwable e) {

@@ -225,7 +225,7 @@ public final class User implements PersistedDataHost {
 
     public boolean addAcceptedArbitrator(Arbitrator arbitrator) {
         final List<Arbitrator> arbitrators = userPayload.getAcceptedArbitrators();
-        if (arbitrators != null && !arbitrators.contains(arbitrator)) {
+        if (arbitrators != null && !arbitrators.contains(arbitrator) && !isMyOwnRegisteredArbitrator(arbitrator)) {
             boolean changed = arbitrators.add(arbitrator);
             if (changed)
                 persist();
@@ -237,7 +237,7 @@ public final class User implements PersistedDataHost {
 
     public boolean addAcceptedMediator(Mediator mediator) {
         final List<Mediator> mediators = userPayload.getAcceptedMediators();
-        if (mediators != null && !mediators.contains(mediator)) {
+        if (mediators != null && !mediators.contains(mediator) && !isMyOwnRegisteredMediator(mediator)) {
             boolean changed = mediators.add(mediator);
             if (changed)
                 persist();
