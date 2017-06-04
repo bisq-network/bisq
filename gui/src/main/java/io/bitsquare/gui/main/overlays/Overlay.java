@@ -614,7 +614,9 @@ public abstract class Overlay<T extends Overlay> {
 
     protected void setModality() {
         stage.initOwner(owner.getScene().getWindow());
-        stage.initModality(Modality.WINDOW_MODAL);
+        // Setting stage to modal ruins the ability to resize. Need to figure how to restore after modal
+        // dialog is closed
+        //        stage.initModality(Modality.WINDOW_MODAL);
     }
 
     protected void removeEffectFromBackground() {
