@@ -163,8 +163,9 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("OK", "OKCash"));
         result.add(new CryptoCurrency("OMNI", "Omni"));
         result.add(new CryptoCurrency("OPAL", "Opal"));
-        result.add(new CryptoCurrency("PASC", "Pascal Coin"));
+        result.add(new CryptoCurrency("PASC", "Pascal Coin", true));
         result.add(new CryptoCurrency("PPC", "Peercoin"));
+        result.add(new CryptoCurrency("PEPECASH", "Pepe Cash"));
         result.add(new CryptoCurrency("PINK", "Pinkcoin"));
         result.add(new CryptoCurrency("PIVX", "PIVX"));
         result.add(new CryptoCurrency("XPTX", "PlatinumBar"));
