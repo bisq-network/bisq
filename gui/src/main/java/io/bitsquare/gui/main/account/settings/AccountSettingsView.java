@@ -71,6 +71,22 @@ public class AccountSettingsView extends ActivatableViewAndModel {
 
     @Override
     public void initialize() {
+        leftVBox.setPrefWidth(MainView.scale(240));
+        leftVBox.setSpacing(MainView.scale(5));
+        AnchorPane.setTopAnchor(leftVBox, MainView.scale(20));
+        AnchorPane.setRightAnchor(leftVBox, MainView.scale(0));
+        AnchorPane.setBottomAnchor(leftVBox, MainView.scale(20));
+        AnchorPane.setLeftAnchor(leftVBox, MainView.scale(15));
+        AnchorPane.setTopAnchor(scrollPane, MainView.scale(0));
+        AnchorPane.setRightAnchor(scrollPane, MainView.scale(0));
+        AnchorPane.setBottomAnchor(scrollPane, MainView.scale(0));
+        AnchorPane.setLeftAnchor(scrollPane, MainView.scale(270));
+        AnchorPane.setTopAnchor(content, MainView.scale(0));
+        AnchorPane.setRightAnchor(content, MainView.scale(0));
+        AnchorPane.setBottomAnchor(content, MainView.scale(0));
+        AnchorPane.setLeftAnchor(content, MainView.scale(0));
+
+
         listener = viewPath -> {
             if (viewPath.size() != 4 || viewPath.indexOf(AccountSettingsView.class) != 2)
                 return;
@@ -88,29 +104,6 @@ public class AccountSettingsView extends ActivatableViewAndModel {
         backup = new MenuItem(navigation, toggleGroup, "Backup", BackupView.class, AwesomeIcon.CLOUD_DOWNLOAD);
 
         leftVBox.getChildren().addAll(paymentAccount, altCoinsAccountView, arbitratorSelection, password, seedWords, backup);
-        // leftVbox scaled settings
-        leftVBox.setPrefWidth(MainView.scale(240));
-        leftVBox.setSpacing(MainView.scale(5));
-        AnchorPane a = (AnchorPane)leftVBox.getParent();
-        a.setBottomAnchor(leftVBox, MainView.scale(20));
-        a.setLeftAnchor(leftVBox, MainView.scale(15));
-        a.setTopAnchor(leftVBox, MainView.scale(20));
-
-        // scrollPane scaled settings
-        a.setBottomAnchor(scrollPane, MainView.scale(0));
-        a.setLeftAnchor(scrollPane, MainView.scale(270));
-        a.setRightAnchor(scrollPane, MainView.scale(0));
-        a.setTopAnchor(scrollPane, MainView.scale(0));
-
-        // content scaled settings
-        a.setBottomAnchor(content, MainView.scale(0));
-        a.setLeftAnchor(content, MainView.scale(0));
-        a.setRightAnchor(content, MainView.scale(0));
-        a.setTopAnchor(content, MainView.scale(0));
-
-        // root scaled settings
-        a.setPrefHeight(MainView.scale(660));
-        a.setPrefWidth(MainView.scale(1000));
     }
 
     @Override

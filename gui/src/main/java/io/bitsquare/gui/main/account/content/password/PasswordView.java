@@ -75,7 +75,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-//        ContentSettings.setDefaultSettings(root, 140);
+        ContentSettings.setDefaultSettings(root, 140);
 
         headline = addTitledGroupBg(root, gridRow, 2, "");
         passwordField = addLabelPasswordTextField(root, gridRow, "Enter password:", MainView.scale(Layout.FIRST_ROW_DISTANCE)).second;
@@ -88,7 +88,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
         repeatedPasswordField.setValidator(passwordValidator);
         repeatedPasswordFieldChangeListener = (observable, oldValue, newValue) -> validatePasswords();
 
-        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabel(root, ++gridRow, "", 15);
+        Tuple3<Button, BusyAnimation, Label> tuple = addButtonBusyAnimationLabel(root, ++gridRow, "", MainView.scale(15));
         pwButton = tuple.first;
         BusyAnimation busyAnimation = tuple.second;
         Label deriveStatusLabel = tuple.third;

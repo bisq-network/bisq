@@ -90,18 +90,18 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 
     @Override
     protected void initialize() {
-//        ContentSettings.setDefaultSettings(root, 140);
+        ContentSettings.setDefaultSettings(root, 140);
 
         addTitledGroupBg(root, gridRow, 2, "Backup your wallet seed words");
         displaySeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", MainView.scale(Layout.FIRST_ROW_DISTANCE)).second;
-        displaySeedWordsTextArea.setPrefHeight(60);
+        displaySeedWordsTextArea.setPrefHeight(MainView.scale(60));
         displaySeedWordsTextArea.setEditable(false);
         datePicker = addLabelDatePicker(root, ++gridRow, "Wallet Date:").second;
         datePicker.setMouseTransparent(true);
 
         addTitledGroupBg(root, ++gridRow, 2, "Restore your wallet seed words", MainView.scale(Layout.GROUP_DISTANCE));
         restoreSeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE)).second;
-        restoreSeedWordsTextArea.setPrefHeight(60);
+        restoreSeedWordsTextArea.setPrefHeight(MainView.scale(60));
         restoreDatePicker = addLabelDatePicker(root, ++gridRow, "Wallet Date:").second;
         restoreButton = addButtonAfterGroup(root, ++gridRow, "Restore wallet");
 

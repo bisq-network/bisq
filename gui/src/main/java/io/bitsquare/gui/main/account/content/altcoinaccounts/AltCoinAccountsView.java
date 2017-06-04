@@ -106,7 +106,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
 
     @Override
     public void initialize() {
-//        ContentSettings.setDefaultSettings(root, 160);
+        ContentSettings.setDefaultSettings(root, 160);
 
         buildForm();
         paymentAccountChangeListener = (observable, oldValue, newValue) -> {

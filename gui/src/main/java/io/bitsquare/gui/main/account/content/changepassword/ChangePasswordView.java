@@ -19,11 +19,14 @@ package io.bitsquare.gui.main.account.content.changepassword;
 
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.InitializableView;
+import io.bitsquare.gui.main.MainView;
+import io.bitsquare.gui.main.account.content.ContentSettings;
 import io.bitsquare.gui.main.help.Help;
 import io.bitsquare.gui.main.help.HelpId;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
@@ -37,7 +40,7 @@ public class ChangePasswordView extends InitializableView<GridPane, ChangePasswo
     @FXML
     Button saveButton, skipButton;
     @FXML
-    PasswordField oldPasswordField, passwordField, repeatedPasswordField;
+    PasswordField oldPasswordField, passwordField, repeatedPasswordField, oldpswd;
 
     @Inject
     private ChangePasswordView(ChangePasswordViewModel model) {
@@ -46,6 +49,15 @@ public class ChangePasswordView extends InitializableView<GridPane, ChangePasswo
 
     @Override
     public void initialize() {
+        ContentSettings.setDefaultSettings(root, 140);
+        root.setHgap(MainView.scale(5));
+        root.setVgap(MainView.scale(5));
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+
+
         passwordField.textProperty().bindBidirectional(model.passwordField);
         repeatedPasswordField.textProperty().bindBidirectional(model.repeatedPasswordField);
 

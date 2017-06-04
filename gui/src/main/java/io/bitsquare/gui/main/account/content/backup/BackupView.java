@@ -70,7 +70,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-//        ContentSettings.setDefaultSettings(root, 140);
+        ContentSettings.setDefaultSettings(root, 140);
 
         addTitledGroupBg(root, gridRow, 2, "Backup wallet and data directory");
         Tuple3<Label, TextField, Button> tuple = addLabelTextFieldButton(root, gridRow, "Backup location:", "Select backup location", MainView.scale(Layout.FIRST_ROW_DISTANCE));

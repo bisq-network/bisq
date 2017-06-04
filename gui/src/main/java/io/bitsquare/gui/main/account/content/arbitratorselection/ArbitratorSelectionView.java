@@ -75,7 +75,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
 
     @Override
     public void initialize() {
-//        ContentSettings.setDefaultSettings(root, 140);
+        ContentSettings.setDefaultSettings(root, 140);
 
         addLanguageGroup();
         addArbitratorsGroup();
@@ -153,7 +153,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
                     {
                         label.setLayoutY(5);
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, MainView.scale(0));
                     }
 
                     @Override
@@ -171,7 +171,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
             }
         });
 
-        languageComboBox = addLabelComboBox(root, ++gridRow, "", 15).second;
+        languageComboBox = addLabelComboBox(root, ++gridRow, "", MainView.scale(15)).second;
         languageComboBox.setPromptText("Add language");
         languageComboBox.setConverter(new StringConverter<String>() {
             @Override
@@ -191,42 +191,42 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         TableGroupHeadline tableGroupHeadline = new TableGroupHeadline("Which arbitrators do you accept");
         GridPane.setRowIndex(tableGroupHeadline, ++gridRow);
         GridPane.setColumnSpan(tableGroupHeadline, 2);
-        GridPane.setMargin(tableGroupHeadline, new Insets(40, -10, -10, -10));
+        GridPane.setMargin(tableGroupHeadline, new Insets(MainView.scale(40), MainView.scale(-10), MainView.scale(-10), MainView.scale(-10)));
         root.getChildren().add(tableGroupHeadline);
 
         tableView = new TableView<>();
         GridPane.setRowIndex(tableView, gridRow);
         GridPane.setColumnSpan(tableView, 2);
-        GridPane.setMargin(tableView, new Insets(60, -10, 5, -10));
+        GridPane.setMargin(tableView, new Insets(MainView.scale(60), MainView.scale(-10), MainView.scale(5), MainView.scale(-10)));
         root.getChildren().add(tableView);
 
         autoSelectAllMatchingCheckBox = addCheckBox(root, ++gridRow, "Auto select all arbitrators with matching language");
         GridPane.setColumnSpan(autoSelectAllMatchingCheckBox, 2);
         GridPane.setHalignment(autoSelectAllMatchingCheckBox, HPos.LEFT);
         GridPane.setColumnIndex(autoSelectAllMatchingCheckBox, 0);
-        GridPane.setMargin(autoSelectAllMatchingCheckBox, new Insets(0, -10, 0, -10));
+        GridPane.setMargin(autoSelectAllMatchingCheckBox, new Insets(MainView.scale(0), MainView.scale(-10), MainView.scale(0), MainView.scale(-10)));
         autoSelectAllMatchingCheckBox.setOnAction(event -> model.setAutoSelectArbitrators(autoSelectAllMatchingCheckBox.isSelected()));
 
         TableColumn<ArbitratorListItem, String> dateColumn = new TableColumn("Registration date");
         dateColumn.setSortable(false);
         dateColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getRegistrationDate()));
-        dateColumn.setMinWidth(140);
-        dateColumn.setMaxWidth(140);
+        dateColumn.setMinWidth(MainView.scale(140));
+        dateColumn.setMaxWidth(MainView.scale(140));
 
         TableColumn<ArbitratorListItem, String> nameColumn = new TableColumn("Onion address");
         nameColumn.setSortable(false);
         nameColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getAddressString()));
-        nameColumn.setMinWidth(90);
+        nameColumn.setMinWidth(MainView.scale(90));
 
         TableColumn<ArbitratorListItem, String> languagesColumn = new TableColumn("Languages");
         languagesColumn.setSortable(false);
         languagesColumn.setCellValueFactory(param -> new ReadOnlyObjectWrapper(param.getValue().getLanguageCodes()));
-        languagesColumn.setMinWidth(130);
+        languagesColumn.setMinWidth(MainView.scale(130));
 
         TableColumn<ArbitratorListItem, ArbitratorListItem> selectionColumn = new TableColumn<ArbitratorListItem, ArbitratorListItem>("Accept") {
             {
-                setMinWidth(60);
-                setMaxWidth(60);
+                setMinWidth(MainView.scale(60));
+                setMaxWidth(MainView.scale(60));
                 setSortable(false);
             }
         };

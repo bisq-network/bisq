@@ -113,7 +113,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
 
     @Override
     public void initialize() {
-//        ContentSettings.setDefaultSettings(root, 160);
+        ContentSettings.setDefaultSettings(root, 160);
 
         buildForm();
         paymentAccountChangeListener = (observable, oldValue, newValue) -> {
@@ -165,7 +165,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                     "Please use " + cxc + " only if you fulfill those requirements, " +
                     "otherwise it is very likely that the " + cxc + " transfer fails and the trade ends up in a dispute.\n" +
                     "If you have not fulfilled the above requirements you would lose your security deposit in such a case.")
-                    .width(900)
+                    .width(MainView.scale(900))
                     .closeButtonText("Cancel")
                     .actionButtonText("I confirm")
                     .onAction(() -> doSaveNewAccount(paymentAccount))
@@ -238,7 +238,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
                     {
                         label.setLayoutY(5);
                         removeButton.setId("icon-button");
-                        AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(removeButton, MainView.scale(0));
                     }
 
                     @Override
@@ -271,7 +271,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentMethodComboBox = addLabelComboBox(root, gridRow, "Payment method:", MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE)).second;
         paymentMethodComboBox.setPromptText("Select payment method");
         paymentMethodComboBox.setVisibleRowCount(15);
-        paymentMethodComboBox.setPrefWidth(250);
+        paymentMethodComboBox.setPrefWidth(MainView.scale(250));
         List<PaymentMethod> list = PaymentMethod.ALL_VALUES.stream()
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
                 .collect(Collectors.toList());

@@ -19,6 +19,6 @@
 
 <?import javafx.scene.layout.*?>
 <GridPane fx:id="root" fx:controller="io.bitsquare.gui.main.account.content.arbitratorselection.ArbitratorSelectionView"
-          xmlns:fx="http://javafx.com/fxml">
+        xmlns:fx="http://javafx.com/fxml">
 
 </GridPane>
