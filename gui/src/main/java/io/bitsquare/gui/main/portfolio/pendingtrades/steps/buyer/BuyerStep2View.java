@@ -23,6 +23,7 @@ import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.paymentmethods.*;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
@@ -156,10 +157,10 @@ public class BuyerStep2View extends TradeStepView {
         String paymentMethodName = paymentAccountContractData != null ? paymentAccountContractData.getPaymentMethodName() : "";
         TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 1,
                 "Start payment using " + BSResources.get(paymentMethodName),
-                Layout.GROUP_DISTANCE);
+                MainView.scale(Layout.GROUP_DISTANCE));
         TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to transfer:",
                 model.getFiatVolume(),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE)).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
         switch (paymentMethodName) {

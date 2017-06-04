@@ -22,6 +22,7 @@ import io.bitsquare.common.util.Tuple3;
 import io.bitsquare.gui.components.BusyAnimation;
 import io.bitsquare.gui.components.TextFieldWithCopyIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.steps.TradeStepView;
@@ -145,10 +146,10 @@ public class SellerStep3View extends TradeStepView {
     protected void addContent() {
         addTradeInfoBlock();
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, "Confirm payment receipt", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3, "Confirm payment receipt", MainView.scale(Layout.GROUP_DISTANCE));
 
         TextFieldWithCopyIcon field = addLabelTextFieldWithCopyIcon(gridPane, gridRow, "Amount to receive:",
-                model.getFiatVolume(), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+                model.getFiatVolume(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE)).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
         String myPaymentDetails = "";

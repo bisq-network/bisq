@@ -79,7 +79,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
 
         addLanguageGroup();
         addArbitratorsGroup();
-        listChangeListener = c -> languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
+        listChangeListener = c -> languagesListView.setPrefHeight(MainView.scale(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2));
     }
 
     @Override
@@ -87,7 +87,7 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
         languagesListView.getItems().addListener(listChangeListener);
         languageComboBox.setItems(model.allLanguageCodes);
         languagesListView.setItems(model.languageCodes);
-        languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2);
+        languagesListView.setPrefHeight(MainView.scale(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2));
 
         tableView.setItems(model.arbitratorListItems);
         autoSelectAllMatchingCheckBox.setSelected(model.getAutoSelectArbitrators());
@@ -136,11 +136,11 @@ public class ArbitratorSelectionView extends ActivatableViewAndModel<GridPane, A
     private void addLanguageGroup() {
         addTitledGroupBg(root, gridRow, 1, "Which languages do you speak?");
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your languages:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your languages:", MainView.scale(Layout.FIRST_ROW_DISTANCE));
         GridPane.setValignment(tuple.first, VPos.TOP);
         languagesListView = tuple.second;
-        languagesListView.setMinHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
-        languagesListView.setMaxHeight(6 * Layout.LIST_ROW_HEIGHT + 2);
+        languagesListView.setMinHeight(MainView.scale(3 * Layout.LIST_ROW_HEIGHT + 2));
+        languagesListView.setMaxHeight(MainView.scale(6 * Layout.LIST_ROW_HEIGHT + 2));
         languagesListView.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
             @Override
             public ListCell<String> call(ListView<String> list) {

@@ -24,6 +24,7 @@ import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.paymentmethods.*;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.content.ContentSettings;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
@@ -220,11 +221,11 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private void buildForm() {
         addTitledGroupBg(root, gridRow, 1, "Manage accounts");
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your national currency\naccounts:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your national currency\naccounts:", MainView.scale(Layout.FIRST_ROW_DISTANCE));
         GridPane.setValignment(tuple.first, VPos.TOP);
         tuple.first.setTextAlignment(TextAlignment.RIGHT);
         paymentAccountsListView = tuple.second;
-        paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
+        paymentAccountsListView.setPrefHeight(MainView.scale(2 * Layout.LIST_ROW_HEIGHT + 14));
         paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
             @Override
             public ListCell<PaymentAccount> call(ListView<PaymentAccount> list) {
@@ -266,8 +267,8 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
         paymentAccountsListView.getSelectionModel().clearSelection();
         removeAccountRows();
         addAccountButton.setDisable(true);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Create new account", Layout.GROUP_DISTANCE);
-        paymentMethodComboBox = addLabelComboBox(root, gridRow, "Payment method:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Create new account", MainView.scale(Layout.GROUP_DISTANCE));
+        paymentMethodComboBox = addLabelComboBox(root, gridRow, "Payment method:", MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE)).second;
         paymentMethodComboBox.setPromptText("Select payment method");
         paymentMethodComboBox.setVisibleRowCount(15);
         paymentMethodComboBox.setPrefWidth(250);
@@ -311,7 +312,7 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     private void onSelectAccount(PaymentAccount paymentAccount) {
         removeAccountRows();
         addAccountButton.setDisable(false);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Selected account", Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Selected account", MainView.scale(Layout.GROUP_DISTANCE));
         paymentMethodForm = getPaymentMethodForm(paymentAccount);
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForDisplayAccount();

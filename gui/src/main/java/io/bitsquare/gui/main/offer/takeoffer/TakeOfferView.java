@@ -634,7 +634,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, "Payment info");
         GridPane.setColumnSpan(titledGroupBg, 3);
 
-        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, gridRow, "Trading account:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, gridRow, "Trading account:", MainView.scale(Layout.FIRST_ROW_DISTANCE));
         paymentAccountsLabel = tuple.first;
         paymentAccountsLabel.setVisible(false);
         paymentAccountsLabel.setManaged(false);
@@ -659,14 +659,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             model.onPaymentAccountSelected(paymentAccountsComboBox.getSelectionModel().getSelectedItem());
         });
 
-        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, gridRow, "Payment method:", "", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, gridRow, "Payment method:", "", MainView.scale(Layout.FIRST_ROW_DISTANCE));
         paymentMethodLabel = tuple2.first;
         paymentMethodTextField = tuple2.second;
         currencyTextField = addLabelTextField(gridPane, ++gridRow, "Trade currency:", "").second;
     }
 
     private void addAmountPriceGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, "Set amount and price", Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, "Set amount and price", MainView.scale(Layout.GROUP_DISTANCE));
         GridPane.setColumnSpan(titledGroupBg, 3);
 
         imageView = new ImageView();
@@ -680,7 +680,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         imageVBox.getChildren().addAll(imageView, directionLabel);
         GridPane.setRowIndex(imageVBox, gridRow);
         GridPane.setRowSpan(imageVBox, 2);
-        GridPane.setMargin(imageVBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 10, 10, 10));
+        GridPane.setMargin(imageVBox, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), 10, 10, 10));
         gridPane.getChildren().add(imageVBox);
 
         addAmountPriceFields();
@@ -717,7 +717,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void addFundingGroup() {
         // don't increase gridRow as we removed button when this gets visible
-        payFundsPane = addTitledGroupBg(gridPane, gridRow, 3, BSResources.get("takeOffer.fundsBox.title"), Layout.GROUP_DISTANCE);
+        payFundsPane = addTitledGroupBg(gridPane, gridRow, 3, BSResources.get("takeOffer.fundsBox.title"), MainView.scale(Layout.GROUP_DISTANCE));
         GridPane.setColumnSpan(payFundsPane, 3);
         payFundsPane.setVisible(false);
 
@@ -729,7 +729,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         totalToPayBox.setSpacing(4);
         totalToPayBox.setAlignment(Pos.CENTER_RIGHT);
         totalToPayBox.getChildren().addAll(totalToPayLabel, totalToPayInfoIconLabel);
-        GridPane.setMargin(totalToPayBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
+        GridPane.setMargin(totalToPayBox, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), 0, 0, 0));
         GridPane.setRowIndex(totalToPayBox, gridRow);
         gridPane.getChildren().add(totalToPayBox);
         totalToPayTextField = new TextFieldWithCopyIcon();
@@ -739,7 +739,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         totalToPayTextField.setCopyWithoutCurrencyPostFix(true);
         GridPane.setRowIndex(totalToPayTextField, gridRow);
         GridPane.setColumnIndex(totalToPayTextField, 1);
-        GridPane.setMargin(totalToPayTextField, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
+        GridPane.setMargin(totalToPayTextField, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), 0, 0, 0));
         gridPane.getChildren().add(totalToPayTextField);
 
         qrCodeImageView = new ImageView();
@@ -754,7 +754,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 2);
         GridPane.setRowSpan(qrCodeImageView, 3);
-        GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE - 9, 0, 0, 5));
+        GridPane.setMargin(qrCodeImageView, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE) - 9, 0, 0, 5));
         gridPane.getChildren().add(qrCodeImageView);
 
         Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, BSResources.get("takeOffer.fundsBox.address"));
@@ -882,7 +882,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         hBox.getChildren().addAll(amountBox, xLabel, priceBox, resultLabel, volumeBox);
         GridPane.setRowIndex(hBox, gridRow);
         GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 10, 0, 0));
+        GridPane.setMargin(hBox, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), 10, 0, 0));
         GridPane.setColumnSpan(hBox, 2);
         gridPane.getChildren().add(hBox);
     }

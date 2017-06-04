@@ -108,7 +108,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addLabelTextField(gridPane, gridRow, "Account name:", cryptoCurrencyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(gridPane, gridRow, "Account name:", cryptoCurrencyAccount.getAccountName(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         addLabelTextField(gridPane, ++gridRow, "Payment method:", BSResources.get(cryptoCurrencyAccount.getPaymentMethod().getId()));
         Tuple2<Label, TextField> tuple2 = addLabelTextField(gridPane, ++gridRow, "Altcoin address:", cryptoCurrencyAccount.getAddress());
         addressLabel = tuple2.first;
@@ -128,7 +128,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
     @Override
     protected void addTradeCurrencyComboBox() {
-        currencyComboBox = addLabelSearchComboBox(gridPane, ++gridRow, "Altcoin:", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        currencyComboBox = addLabelSearchComboBox(gridPane, ++gridRow, "Altcoin:", MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE)).second;
         currencyComboBox.setPromptText("Select or search altcoin");
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedCryptoCurrencies()));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 15));

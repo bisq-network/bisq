@@ -24,6 +24,7 @@ import io.bitsquare.btc.WalletService;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.account.content.ContentSettings;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.WalletPasswordWindow;
@@ -92,22 +93,22 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
 //        ContentSettings.setDefaultSettings(root, 140);
 
         addTitledGroupBg(root, gridRow, 2, "Backup your wallet seed words");
-        displaySeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_DISTANCE).second;
+        displaySeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", MainView.scale(Layout.FIRST_ROW_DISTANCE)).second;
         displaySeedWordsTextArea.setPrefHeight(60);
         displaySeedWordsTextArea.setEditable(false);
         datePicker = addLabelDatePicker(root, ++gridRow, "Wallet Date:").second;
         datePicker.setMouseTransparent(true);
 
-        addTitledGroupBg(root, ++gridRow, 2, "Restore your wallet seed words", Layout.GROUP_DISTANCE);
-        restoreSeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        addTitledGroupBg(root, ++gridRow, 2, "Restore your wallet seed words", MainView.scale(Layout.GROUP_DISTANCE));
+        restoreSeedWordsTextArea = addLabelTextArea(root, gridRow, "Wallet seed words:", "", MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE)).second;
         restoreSeedWordsTextArea.setPrefHeight(60);
         restoreDatePicker = addLabelDatePicker(root, ++gridRow, "Wallet Date:").second;
         restoreButton = addButtonAfterGroup(root, ++gridRow, "Restore wallet");
 
-        addTitledGroupBg(root, ++gridRow, 1, "Information", Layout.GROUP_DISTANCE);
+        addTitledGroupBg(root, ++gridRow, 1, "Information", MainView.scale(Layout.GROUP_DISTANCE));
         addMultilineLabel(root, gridRow, "Please write down you wallet seed words and the date! " +
                         "You can recover your wallet any time with those seed words and the date.",
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
 
 
         seedWordsValidChangeListener = (observable, oldValue, newValue) -> {

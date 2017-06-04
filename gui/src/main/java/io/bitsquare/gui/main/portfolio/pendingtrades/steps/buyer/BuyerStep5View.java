@@ -113,7 +113,7 @@ public class BuyerStep5View extends TradeStepView {
     @Override
     protected void addContent() {
         addTitledGroupBg(gridPane, gridRow, 4, "Summary of completed trade ", 0);
-        Tuple2<Label, TextField> btcTradeAmountPair = addLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, TextField> btcTradeAmountPair = addLabelTextField(gridPane, gridRow, getBtcTradeAmountLabel(), model.getTradeVolume(), MainView.scale(Layout.FIRST_ROW_DISTANCE));
         btcTradeAmountLabel = btcTradeAmountPair.first;
 
         Tuple2<Label, TextField> fiatTradeAmountPair = addLabelTextField(gridPane, ++gridRow, getFiatTradeAmountLabel(), model.getFiatVolume());
@@ -123,8 +123,8 @@ public class BuyerStep5View extends TradeStepView {
 
         addLabelTextField(gridPane, ++gridRow, "Refunded security deposit:", model.getSecurityDeposit());
 
-        addTitledGroupBg(gridPane, ++gridRow, 2, "Withdraw your bitcoins", Layout.GROUP_DISTANCE);
-        addLabelTextField(gridPane, gridRow, "Amount to withdraw:", model.getPayoutAmount(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++gridRow, 2, "Withdraw your bitcoins", MainView.scale(Layout.GROUP_DISTANCE));
+        addLabelTextField(gridPane, gridRow, "Amount to withdraw:", model.getPayoutAmount(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         withdrawAddressTextField = addLabelInputTextField(gridPane, ++gridRow, "Withdraw to address:").second;
 
         HBox hBox = new HBox();

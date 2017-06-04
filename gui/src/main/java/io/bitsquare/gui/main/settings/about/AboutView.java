@@ -23,6 +23,7 @@ import io.bitsquare.gui.common.view.ActivatableViewAndModel;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
 import io.bitsquare.gui.components.TitledGroupBg;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.util.Layout;
 import javafx.geometry.HPos;
 import javafx.scene.control.Label;
@@ -48,7 +49,7 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         GridPane.setColumnSpan(titledGroupBg, 2);
         Label label = addLabel(root, gridRow, "Bitsquare is an open source project and a decentralized network of users who want to " +
                 "exchange Bitcoin with national currencies or alternative crypto currencies in a privacy protecting way. " +
-                "Learn more about Bitsquare on our project web page.", Layout.FIRST_ROW_DISTANCE);
+                "Learn more about Bitsquare on our project web page.", MainView.scale(Layout.FIRST_ROW_DISTANCE));
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
@@ -59,10 +60,10 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, "AGPL License", "https://github.com/bitsquare/bitsquare/blob/master/LICENSE");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
 
-        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Support Bitsquare", Layout.GROUP_DISTANCE);
+        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Support Bitsquare", MainView.scale(Layout.GROUP_DISTANCE));
         GridPane.setColumnSpan(titledGroupBg, 2);
         label = addLabel(root, gridRow, "Bitsquare is not a company but a community project and open for participation. " +
-                "If you want to participate or support Bitsquare please follow the links below.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                "If you want to participate or support Bitsquare please follow the links below.", MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
@@ -71,9 +72,9 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         hyperlinkWithIcon = addHyperlinkWithIcon(root, ++gridRow, "Donate", "https://bitsquare.io/contribute/#donation");
         GridPane.setColumnSpan(hyperlinkWithIcon, 2);
 
-        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Market price API providers", Layout.GROUP_DISTANCE);
+        titledGroupBg = addTitledGroupBg(root, ++gridRow, 3, "Market price API providers", MainView.scale(Layout.GROUP_DISTANCE));
         GridPane.setColumnSpan(titledGroupBg, 2);
-        label = addLabel(root, gridRow, "Bitsquare uses market price feed providers for displaying the current exchange rate.", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        label = addLabel(root, gridRow, "Bitsquare uses market price feed providers for displaying the current exchange rate.", MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         label.setWrapText(true);
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
@@ -82,9 +83,9 @@ public class AboutView extends ActivatableViewAndModel<GridPane, Activatable> {
         GridPane.setColumnSpan(label, 2);
         GridPane.setHalignment(label, HPos.LEFT);
 
-        titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, "Version details", Layout.GROUP_DISTANCE);
+        titledGroupBg = addTitledGroupBg(root, ++gridRow, 2, "Version details", MainView.scale(Layout.GROUP_DISTANCE));
         GridPane.setColumnSpan(titledGroupBg, 2);
-        addLabelTextField(root, gridRow, "Application version:", Version.VERSION, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addLabelTextField(root, gridRow, "Application version:", Version.VERSION, MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         addLabelTextField(root, ++gridRow, "Versions of subsystems:",
                 "Network version: " + Version.P2P_NETWORK_VERSION +
                         "; P2P message version: " + Version.getP2PMessageVersion() +

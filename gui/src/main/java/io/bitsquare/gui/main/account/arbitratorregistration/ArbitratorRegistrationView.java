@@ -108,8 +108,8 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
     private void updateLanguageList() {
         languagesListView.setItems(model.languageCodes);
-        languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + MainView.scale(2));
-        listChangeListener = c -> languagesListView.setPrefHeight(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + MainView.scale(2));
+        languagesListView.setPrefHeight(MainView.scale(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2));
+        listChangeListener = c -> languagesListView.setPrefHeight(MainView.scale(languagesListView.getItems().size() * Layout.LIST_ROW_HEIGHT + 2));
         languagesListView.getItems().addListener(listChangeListener);
     }
 
@@ -132,7 +132,7 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
 
         addTitledGroupBg(gridPane, gridRow, 3, "Arbitrator registration");
         pubKeyTextField = FormBuilder.addLabelTextField(gridPane, gridRow, "Public key:",
-                model.registrationPubKeyAsHex.get(), Layout.FIRST_ROW_DISTANCE).second;
+                model.registrationPubKeyAsHex.get(), MainView.scale(Layout.FIRST_ROW_DISTANCE)).second;
 
         pubKeyTextField.textProperty().bind(model.registrationPubKeyAsHex);
 
@@ -140,8 +140,8 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         GridPane.setValignment(tuple.first, VPos.TOP);
         languagesListView = tuple.second;
         languagesListView.disableProperty().bind(model.registrationEditDisabled);
-        languagesListView.setMinHeight(3 * Layout.LIST_ROW_HEIGHT + MainView.scale(2));
-        languagesListView.setMaxHeight(6 * Layout.LIST_ROW_HEIGHT + MainView.scale(2));
+        languagesListView.setMinHeight(MainView.scale(3 * Layout.LIST_ROW_HEIGHT + 2));
+        languagesListView.setMaxHeight(MainView.scale(6 * Layout.LIST_ROW_HEIGHT + 2));
         languagesListView.setCellFactory(new Callback<ListView<String>, ListCell<String>>() {
             @Override
             public ListCell<String> call(ListView<String> list) {
@@ -197,9 +197,9 @@ public class ArbitratorRegistrationView extends ActivatableViewAndModel<VBox, Ar
         revokeButton.disableProperty().bind(model.revokeButtonDisabled);
         revokeButton.setOnAction(e -> onRevoke());
 
-        addTitledGroupBg(gridPane, ++gridRow, 2, "Information", Layout.GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++gridRow, 2, "Information", MainView.scale(Layout.GROUP_DISTANCE));
         Label infoLabel = addMultilineLabel(gridPane, gridRow);
-        GridPane.setMargin(infoLabel, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
+        GridPane.setMargin(infoLabel, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         infoLabel.setText("Please note that you need to stay  available for 15 days after revoking as there might be trades which are using you as " +
                 "arbitrator. The max. allowed trade period is 8 days and the dispute process might take up to 7 days.");
     }

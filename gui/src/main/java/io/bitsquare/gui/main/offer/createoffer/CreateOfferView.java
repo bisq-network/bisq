@@ -777,7 +777,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
     }
 
     private void addAmountPriceGroup() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, "Set amount and price", MainView.scale(Layout.GROUP_DISTANCE));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, "Set amount and price", MainView.scale(MainView.scale(Layout.GROUP_DISTANCE)));
         GridPane.setColumnSpan(titledGroupBg, 3);
 
         imageView = new ImageView();
@@ -792,7 +792,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         imageVBox.getChildren().addAll(imageView, directionLabel);
         GridPane.setRowIndex(imageVBox, gridRow);
         GridPane.setRowSpan(imageVBox, 2);
-        GridPane.setMargin(imageVBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, MainView.scale(10), MainView.scale(10), MainView.scale(10)));
+        GridPane.setMargin(imageVBox, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), MainView.scale(10), MainView.scale(10), MainView.scale(10)));
         gridPane.getChildren().add(imageVBox);
 
         addAmountPriceFields();
@@ -821,7 +821,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
 
     private void addFundingGroup() {
         // don't increase gridRow as we removed button when this gets visible
-        payFundsPane = addTitledGroupBg(gridPane, gridRow, 3, BSResources.get("createOffer.fundsBox.title"), Layout.GROUP_DISTANCE);
+        payFundsPane = addTitledGroupBg(gridPane, gridRow, 3, BSResources.get("createOffer.fundsBox.title"), MainView.scale(Layout.GROUP_DISTANCE));
         GridPane.setColumnSpan(payFundsPane, 3);
         payFundsPane.setVisible(false);
 
@@ -833,7 +833,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         totalToPayBox.setSpacing(MainView.scale(4));
         totalToPayBox.setAlignment(Pos.CENTER_RIGHT);
         totalToPayBox.getChildren().addAll(totalToPayLabel, totalToPayInfoIconLabel);
-        GridPane.setMargin(totalToPayBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
+        GridPane.setMargin(totalToPayBox, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setRowIndex(totalToPayBox, gridRow);
         gridPane.getChildren().add(totalToPayBox);
         totalToPayTextField = new TextFieldWithCopyIcon();
@@ -842,7 +842,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         totalToPayTextField.setVisible(false);
         GridPane.setRowIndex(totalToPayTextField, gridRow);
         GridPane.setColumnIndex(totalToPayTextField, 1);
-        GridPane.setMargin(totalToPayTextField, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, MainView.scale(0), MainView.scale(0), MainView.scale(0)));
+        GridPane.setMargin(totalToPayTextField, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         gridPane.getChildren().add(totalToPayTextField);
 
         qrCodeImageView = new ImageView();
@@ -857,7 +857,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 2);
         GridPane.setRowSpan(qrCodeImageView, 3);
-        GridPane.setMargin(qrCodeImageView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE - 9, MainView.scale(0), MainView.scale(0), MainView.scale(5)));
+        GridPane.setMargin(qrCodeImageView, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE) - 9, MainView.scale(0), MainView.scale(0), MainView.scale(5)));
         gridPane.getChildren().add(qrCodeImageView);
 
         Tuple2<Label, AddressTextField> addressTuple = addLabelAddressTextField(gridPane, ++gridRow, BSResources.get("createOffer.fundsBox.address"));
@@ -1019,7 +1019,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         hBox.getChildren().addAll(amountBox, xLabel, priceBox, toggleButtons, resultLabel, volumeBox);
         GridPane.setRowIndex(hBox, gridRow);
         GridPane.setColumnIndex(hBox, 1);
-        GridPane.setMargin(hBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, MainView.scale(10), MainView.scale(0), MainView.scale(0)));
+        GridPane.setMargin(hBox, new Insets(MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE), MainView.scale(10), MainView.scale(0), MainView.scale(0)));
         GridPane.setColumnSpan(hBox, 2);
         gridPane.getChildren().add(hBox);
     }

@@ -116,7 +116,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         PaymentAccountContractData sellerPaymentAccountContractData = contract.getSellerPaymentAccountContractData();
         addTitledGroupBg(gridPane, ++rowIndex, rows, "Dispute details");
         addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(),
-                Layout.FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
+                MainView.scale(Layout.FIRST_ROW_DISTANCE)).second.setMouseTransparent(false);
         addLabelTextField(gridPane, ++rowIndex, "Offer date / Trade date:", formatter.formatDateTime(offer.getDate()) + " / " + formatter.formatDateTime(dispute.getTradeDate()));
         String currencyCode = offer.getCurrencyCode();
         addLabelTextField(gridPane, ++rowIndex, "Trade type:", formatter.getDirectionBothSides(offer.getDirection(), currencyCode));

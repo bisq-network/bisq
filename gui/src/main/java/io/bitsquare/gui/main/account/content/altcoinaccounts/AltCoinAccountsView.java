@@ -228,10 +228,10 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private void buildForm() {
         addTitledGroupBg(root, gridRow, 1, "Manage accounts");
 
-        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your altcoin accounts:", Layout.FIRST_ROW_DISTANCE);
+        Tuple2<Label, ListView> tuple = addLabelListView(root, gridRow, "Your altcoin accounts:", MainView.scale(Layout.FIRST_ROW_DISTANCE));
         GridPane.setValignment(tuple.first, VPos.TOP);
         paymentAccountsListView = tuple.second;
-        paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + MainView.scale(14));
+        paymentAccountsListView.setPrefHeight(MainView.scale(2 * Layout.LIST_ROW_HEIGHT + 14));
         paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
             @Override
             public ListCell<PaymentAccount> call(ListView<PaymentAccount> list) {
@@ -273,7 +273,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
         paymentAccountsListView.getSelectionModel().clearSelection();
         removeAccountRows();
         addAccountButton.setDisable(true);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Create new account", Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Create new account", MainView.scale(Layout.GROUP_DISTANCE));
 
         if (paymentMethodForm != null) {
             FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
@@ -298,7 +298,7 @@ public class AltCoinAccountsView extends ActivatableViewAndModel<GridPane, AltCo
     private void onSelectAccount(PaymentAccount paymentAccount) {
         removeAccountRows();
         addAccountButton.setDisable(false);
-        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Selected account", Layout.GROUP_DISTANCE);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, "Selected account", MainView.scale(Layout.GROUP_DISTANCE));
         paymentMethodForm = getPaymentMethodForm(paymentAccount);
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForDisplayAccount();

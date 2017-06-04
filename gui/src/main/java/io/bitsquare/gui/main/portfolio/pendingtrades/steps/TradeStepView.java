@@ -23,6 +23,7 @@ import io.bitsquare.common.Clock;
 import io.bitsquare.gui.components.TitledGroupBg;
 import io.bitsquare.gui.components.TxIdTextField;
 import io.bitsquare.gui.components.paymentmethods.PaymentMethodForm;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.portfolio.pendingtrades.PendingTradesViewModel;
 import io.bitsquare.gui.main.portfolio.pendingtrades.TradeSubView;
@@ -166,7 +167,7 @@ public abstract class TradeStepView extends AnchorPane {
 
     protected void addTradeInfoBlock() {
         tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 4, "Trade information");
-        txIdTextField = addLabelTxIdTextField(gridPane, gridRow, "Deposit transaction ID:", Layout.FIRST_ROW_DISTANCE).second;
+        txIdTextField = addLabelTxIdTextField(gridPane, gridRow, "Deposit transaction ID:", MainView.scale(Layout.FIRST_ROW_DISTANCE)).second;
         String id = model.dataModel.txId.get();
         if (!id.isEmpty())
             txIdTextField.setup(id);
@@ -193,8 +194,8 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void addInfoBlock() {
-        addTitledGroupBg(gridPane, ++gridRow, 1, getInfoBlockTitle(), Layout.GROUP_DISTANCE);
-        addMultilineLabel(gridPane, gridRow, getInfoText(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++gridRow, 1, getInfoBlockTitle(), MainView.scale(Layout.GROUP_DISTANCE));
+        addMultilineLabel(gridPane, gridRow, getInfoText(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
     }
 
     protected String getInfoText() {

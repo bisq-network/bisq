@@ -28,6 +28,7 @@ import io.bitsquare.btc.exceptions.TransactionVerificationException;
 import io.bitsquare.common.UserThread;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.util.BSFormatter;
@@ -254,7 +255,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private void addInfoPane() {
         Contract contract = dispute.getContract();
         addTitledGroupBg(gridPane, ++rowIndex, 16, "Summary");
-        addLabelTextField(gridPane, rowIndex, "Trade ID:", dispute.getShortTradeId(), Layout.FIRST_ROW_DISTANCE);
+        addLabelTextField(gridPane, rowIndex, "Trade ID:", dispute.getShortTradeId(), MainView.scale(Layout.FIRST_ROW_DISTANCE));
         addLabelTextField(gridPane, ++rowIndex, "Ticket opening date:", formatter.formatDateTime(dispute.getOpeningDate()));
         if (dispute.isDisputeOpenerIsOfferer()) {
             if (dispute.isDisputeOpenerIsBuyer())

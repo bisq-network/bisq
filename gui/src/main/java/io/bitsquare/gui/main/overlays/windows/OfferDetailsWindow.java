@@ -161,15 +161,15 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         Offer.Direction direction = offer.getDirection();
         String currencyCode = offer.getCurrencyCode();
         if (takeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTakeOffer(direction, currencyCode), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionForTakeOffer(direction, currencyCode), MainView.scale(Layout.FIRST_ROW_DISTANCE));
             fiatDirectionInfo = direction == Offer.Direction.BUY ? " to receive:" : " to spend:";
             btcDirectionInfo = direction == Offer.Direction.SELL ? " to receive:" : " to spend:";
         } else if (placeOfferHandlerOptional.isPresent()) {
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForCreateOffer(direction, currencyCode), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getOfferDirectionForCreateOffer(direction, currencyCode), MainView.scale(Layout.FIRST_ROW_DISTANCE));
             fiatDirectionInfo = direction == Offer.Direction.SELL ? " to receive:" : " to spend:";
             btcDirectionInfo = direction == Offer.Direction.BUY ? " to receive:" : " to spend:";
         } else {
-            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionBothSides(direction, currencyCode), Layout.FIRST_ROW_DISTANCE);
+            addLabelTextField(gridPane, rowIndex, "Offer type:", formatter.getDirectionBothSides(direction, currencyCode), MainView.scale(Layout.FIRST_ROW_DISTANCE));
         }
         if (takeOfferHandlerOptional.isPresent()) {
             addLabelTextField(gridPane, ++rowIndex, "Bitcoin amount" + btcDirectionInfo, formatter.formatCoinWithCode(tradeAmount));
@@ -260,8 +260,8 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (offer.getOfferFeePaymentTxID() != null)
             rows++;
 
-        addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", Layout.GROUP_DISTANCE);
-        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addTitledGroupBg(gridPane, ++rowIndex, rows, "Details", MainView.scale(Layout.GROUP_DISTANCE));
+        addLabelTextFieldWithCopyIcon(gridPane, rowIndex, "Offer ID:", offer.getId(), MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
         addLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, "Offerer's onion address:", offer.getOffererNodeAddress().getFullAddress());
         addLabelTextField(gridPane, ++rowIndex, "Creation date:", formatter.formatDateTime(offer.getDate()));
         addLabelTextField(gridPane, ++rowIndex, "Security deposit:", formatter.formatCoinWithCode(FeePolicy.getSecurityDeposit(offer)));
@@ -275,13 +275,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addLabelTxIdTextField(gridPane, ++rowIndex, "Offer fee transaction ID:", offer.getOfferFeePaymentTxID());
 
         if (placeOfferHandlerOptional.isPresent()) {
-            addTitledGroupBg(gridPane, ++rowIndex, 1, "Commitment", Layout.GROUP_DISTANCE);
-            addLabelTextField(gridPane, rowIndex, "I agree:", Offer.TAC_OFFERER, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+            addTitledGroupBg(gridPane, ++rowIndex, 1, "Commitment", MainView.scale(Layout.GROUP_DISTANCE));
+            addLabelTextField(gridPane, rowIndex, "I agree:", Offer.TAC_OFFERER, MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
 
             addConfirmAndCancelButtons(true);
         } else if (takeOfferHandlerOptional.isPresent()) {
-            addTitledGroupBg(gridPane, ++rowIndex, 1, "Contract", Layout.GROUP_DISTANCE);
-            addLabelTextField(gridPane, rowIndex, "Terms and conditions:", Offer.TAC_TAKER, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+            addTitledGroupBg(gridPane, ++rowIndex, 1, "Contract", MainView.scale(Layout.GROUP_DISTANCE));
+            addLabelTextField(gridPane, rowIndex, "Terms and conditions:", Offer.TAC_TAKER, MainView.scale(Layout.FIRST_ROW_AND_GROUP_DISTANCE));
 
             addConfirmAndCancelButtons(false);
         } else {

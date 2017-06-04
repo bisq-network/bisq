@@ -20,13 +20,13 @@ package io.bitsquare.gui.util;
 import io.bitsquare.gui.main.MainView;
 
 public class Layout {
-    public static final double FIRST_ROW_DISTANCE = MainView.scale(20);
-    public static final double GROUP_DISTANCE = MainView.scale(40);
+    public static final double FIRST_ROW_DISTANCE = 20;
+    public static final double GROUP_DISTANCE = 40;
     public static final double FIRST_ROW_AND_GROUP_DISTANCE = GROUP_DISTANCE + FIRST_ROW_DISTANCE;
-    public static final double PADDING_WINDOW = MainView.scale(20);
-    public static double PADDING = MainView.scale(10);
-    public static double SPACING_H_BOX = MainView.scale(10);
-    public static final double SPACING_V_BOX = MainView.scale(5);
-    public static final double GRID_GAP = MainView.scale(5);
-    public static final double LIST_ROW_HEIGHT = MainView.scale(34);
+    public static final double PADDING_WINDOW = 20;
+    public static double PADDING = 10;
+    public static double SPACING_H_BOX = 10;
+    public static final double SPACING_V_BOX = 5;
+    public static final double GRID_GAP = 5;
+    public static final double LIST_ROW_HEIGHT = 34;
 }

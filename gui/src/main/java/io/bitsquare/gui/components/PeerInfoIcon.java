@@ -31,7 +31,7 @@ public class PeerInfoIcon extends Group {
     private Offer offer;
     private final Map<String, String> peerTagMap;
     private final Label numTradesLabel;
-    private final double SIZE = MainView.scale(26);
+    private final double SIZE = 26;
     private final ImageView numTradesCircle;
     private final ImageView tagCircle;
     private final Label tagLabel;
@@ -69,10 +69,10 @@ public class PeerInfoIcon extends Group {
         Color color = Color.rgb(red, green, blue);
         color = color.deriveColor(1, saturation, 0.8, 1); // reduce saturation and brightness
 
-        Canvas background = new Canvas(SIZE, SIZE);
+        Canvas background = new Canvas(MainView.scale(SIZE), MainView.scale(SIZE));
         GraphicsContext gc = background.getGraphicsContext2D();
         gc.setFill(color);
-        gc.fillOval(MainView.scale(0), MainView.scale(0), SIZE, SIZE);
+        gc.fillOval(MainView.scale(0), MainView.scale(0), MainView.scale(SIZE), MainView.scale(SIZE));
         background.setLayoutY(MainView.scale(1));
 
 
