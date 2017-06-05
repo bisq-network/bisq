@@ -31,14 +31,15 @@ public final class GetPeersRequest implements PeerExchangeMessage, SendersNodeAd
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.GetPeersRequest.Builder builder = PB.GetPeersRequest.newBuilder()
-                .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                .setNonce(nonce)
-                .addAllReportedPeers(reportedPeers.stream()
-                        .map(Peer::toProtoMessage)
-                        .collect(Collectors.toList()))
-                .addAllSupportedCapabilities(supportedCapabilities);
-        return NetworkEnvelope.getDefaultBuilder().setGetPeersRequest(builder).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setGetPeersRequest(PB.GetPeersRequest.newBuilder()
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setNonce(nonce)
+                        .addAllReportedPeers(reportedPeers.stream()
+                                .map(Peer::toProtoMessage)
+                                .collect(Collectors.toList()))
+                        .addAllSupportedCapabilities(supportedCapabilities))
+                .build();
     }
 
     public static GetPeersRequest fromProto(PB.GetPeersRequest proto) {

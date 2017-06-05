@@ -55,7 +55,7 @@ public final class PrivateNotificationPayload implements NetworkPayload {
         this(message);
         this.signatureAsBase64 = signatureAsBase64;
         this.sigPublicKeyBytes = sigPublicKeyBytes;
-        publicKey = Sig.getSigPublicKeyFromBytes(sigPublicKeyBytes);
+        publicKey = Sig.getPublicKeyFromBytes(sigPublicKeyBytes);
     }
 
     public static PrivateNotificationPayload fromProto(PB.PrivateNotificationPayload proto) {
@@ -81,7 +81,7 @@ public final class PrivateNotificationPayload implements NetworkPayload {
     public void setSigAndPubKey(String signatureAsBase64, PublicKey storagePublicKey) {
         this.signatureAsBase64 = signatureAsBase64;
         this.publicKey = storagePublicKey;
-        sigPublicKeyBytes = Sig.getSigPublicKeyBytes(publicKey);
+        sigPublicKeyBytes = Sig.getPublicKeyBytes(publicKey);
     }
 
     // Hex

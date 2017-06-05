@@ -85,7 +85,7 @@ public final class Alert implements StoragePayload {
         this.signatureAsBase64 = signatureAsBase64;
         this.extraDataMap = extraDataMap;
 
-        ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
+        ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }
 
     @Override
@@ -121,7 +121,7 @@ public final class Alert implements StoragePayload {
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKey = ownerPubKey;
 
-        ownerPubKeyBytes = Sig.getSigPublicKeyBytes(ownerPubKey);
+        ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
     }
 
     public boolean isNewVersion() {

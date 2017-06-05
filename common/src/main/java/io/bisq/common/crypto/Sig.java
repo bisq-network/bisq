@@ -130,7 +130,7 @@ public class Sig {
      * @param sigPublicKeyBytes
      * @return
      */
-    public static PublicKey getSigPublicKeyFromBytes(byte[] sigPublicKeyBytes) {
+    public static PublicKey getPublicKeyFromBytes(byte[] sigPublicKeyBytes) {
         try {
             return KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
@@ -140,7 +140,7 @@ public class Sig {
         }
     }
 
-    public static byte[] getSigPublicKeyBytes(PublicKey sigPublicKey) {
+    public static byte[] getPublicKeyBytes(PublicKey sigPublicKey) {
         return new X509EncodedKeySpec(sigPublicKey.getEncoded()).getEncoded();
     }
 }

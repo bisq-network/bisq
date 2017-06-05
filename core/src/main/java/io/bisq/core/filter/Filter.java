@@ -82,7 +82,7 @@ public final class Filter implements StoragePayload {
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = extraDataMap;
 
-        ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
+        ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }
 
     @Override
@@ -123,6 +123,6 @@ public final class Filter implements StoragePayload {
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKey = ownerPubKey;
 
-        ownerPubKeyBytes = Sig.getSigPublicKeyBytes(this.ownerPubKey);
+        ownerPubKeyBytes = Sig.getPublicKeyBytes(this.ownerPubKey);
     }
 }

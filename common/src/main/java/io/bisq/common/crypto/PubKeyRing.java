@@ -48,8 +48,8 @@ public final class PubKeyRing implements NetworkPayload {
     private PGPPublicKey pgpPubKey;
 
     public PubKeyRing(PublicKey signaturePubKey, PublicKey encryptionPubKey, @Nullable PGPPublicKey pgpPubKey) {
-        this.signaturePubKeyBytes = Sig.getSigPublicKeyBytes(signaturePubKey);
-        this.encryptionPubKeyBytes = Encryption.getEncryptionPublicKeyBytes(encryptionPubKey);
+        this.signaturePubKeyBytes = Sig.getPublicKeyBytes(signaturePubKey);
+        this.encryptionPubKeyBytes = Encryption.getPublicKeyBytes(encryptionPubKey);
         this.pgpPubKeyAsPem = PGP.getPEMFromPubKey(pgpPubKey);
 
         this.signaturePubKey = signaturePubKey;
@@ -67,10 +67,10 @@ public final class PubKeyRing implements NetworkPayload {
         this.encryptionPubKeyBytes = encryptionPubKeyBytes;
         this.pgpPubKeyAsPem = pgpPubKeyAsPem;
 
-        signaturePubKey = Sig.getSigPublicKeyFromBytes(signaturePubKeyBytes);
-        encryptionPubKey = Encryption.getEncryptionPublicKeyFromBytes(encryptionPubKeyBytes);
+        signaturePubKey = Sig.getPublicKeyFromBytes(signaturePubKeyBytes);
+        encryptionPubKey = Encryption.getPublicKeyFromBytes(encryptionPubKeyBytes);
         if (pgpPubKeyAsPem != null)
-            pgpPubKey = PGP.getPubKeyFromPEM(pgpPubKeyAsPem);
+            pgpPubKey = PGP.getPubKeyFromPem(pgpPubKeyAsPem);
     }
 
     @Override
@@ -82,10 +82,10 @@ public final class PubKeyRing implements NetworkPayload {
                 .build();
     }
 
-    public static PubKeyRing fromProto(PB.PubKeyRing pubKeyRing) {
-        return new PubKeyRing(pubKeyRing.getSignaturePubKeyBytes().toByteArray(),
-                pubKeyRing.getEncryptionPubKeyBytes().toByteArray(),
-                pubKeyRing.getPgpPubKeyAsPem());
+    public static PubKeyRing fromProto(PB.PubKeyRing proto) {
+        return new PubKeyRing(proto.getSignaturePubKeyBytes().toByteArray(),
+                proto.getEncryptionPubKeyBytes().toByteArray(),
+                proto.getPgpPubKeyAsPem());
     }
 
     @Override

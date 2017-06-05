@@ -40,7 +40,6 @@ public final class PayDepositRequest extends TradeMessage {
     private final NodeAddress senderNodeAddress;
     private final long tradeAmount;
     private final long tradePrice;
-    private final byte[] takerMultiSigPubKey;
     private final long txFee;
     private final long takerFee;
     private final boolean isCurrencyForTakerFeeBtc;
@@ -48,11 +47,12 @@ public final class PayDepositRequest extends TradeMessage {
     private final long changeOutputValue;
     @Nullable
     private final String changeOutputAddress;
+    private final byte[] takerMultiSigPubKey;
     private final String takerPayoutAddressString;
     private final PubKeyRing takerPubKeyRing;
     private final PaymentAccountPayload takerPaymentAccountPayload;
     private final String takerAccountId;
-    private final String takeOfferFeeTxId;
+    private final String takerFeeTxId;
     private final List<NodeAddress> acceptedArbitratorNodeAddresses;
     private final List<NodeAddress> acceptedMediatorNodeAddresses;
     private final NodeAddress arbitratorNodeAddress;
@@ -73,7 +73,7 @@ public final class PayDepositRequest extends TradeMessage {
                              PubKeyRing takerPubKeyRing,
                              PaymentAccountPayload takerPaymentAccountPayload,
                              String takerAccountId,
-                             String takeOfferFeeTxId,
+                             String takerFeeTxId,
                              List<NodeAddress> acceptedArbitratorNodeAddresses,
                              List<NodeAddress> acceptedMediatorNodeAddresses,
                              NodeAddress arbitratorNodeAddress,
@@ -93,7 +93,7 @@ public final class PayDepositRequest extends TradeMessage {
         this.takerPubKeyRing = takerPubKeyRing;
         this.takerPaymentAccountPayload = takerPaymentAccountPayload;
         this.takerAccountId = takerAccountId;
-        this.takeOfferFeeTxId = takeOfferFeeTxId;
+        this.takerFeeTxId = takerFeeTxId;
         this.acceptedArbitratorNodeAddresses = acceptedArbitratorNodeAddresses;
         this.acceptedMediatorNodeAddresses = acceptedMediatorNodeAddresses;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
@@ -118,7 +118,7 @@ public final class PayDepositRequest extends TradeMessage {
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
                 .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
                 .setTakerAccountId(takerAccountId)
-                .setTakerFeeTxId(takeOfferFeeTxId)
+                .setTakerFeeTxId(takerFeeTxId)
                 .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream()
                         .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
                 .addAllAcceptedMediatorNodeAddresses(acceptedMediatorNodeAddresses.stream()
@@ -134,9 +134,9 @@ public final class PayDepositRequest extends TradeMessage {
                 .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
                         rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
                 .collect(Collectors.toList());
-        List<NodeAddress> arbitratorNodeAddresses = proto.getAcceptedArbitratorNodeAddressesList().stream()
+        List<NodeAddress> acceptedArbitratorNodeAddresses = proto.getAcceptedArbitratorNodeAddressesList().stream()
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
-        List<NodeAddress> mediatorNodeAddresses = proto.getAcceptedMediatorNodeAddressesList().stream()
+        List<NodeAddress> acceptedMediatorNodeAddresses = proto.getAcceptedMediatorNodeAddressesList().stream()
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
 
         return new PayDepositRequest(proto.getTradeId(),
@@ -148,15 +148,15 @@ public final class PayDepositRequest extends TradeMessage {
                 proto.getIsCurrencyForTakerFeeBtc(),
                 rawTransactionInputs,
                 proto.getChangeOutputValue(),
-                proto.getChangeOutputAddress(),
+                proto.getChangeOutputAddress().isEmpty() ? null : proto.getChangeOutputAddress(),
                 proto.getTakerMultiSigPubKey().toByteArray(),
                 proto.getTakerPayoutAddressString(),
                 PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
                 coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()),
                 proto.getTakerAccountId(),
                 proto.getTakerFeeTxId(),
-                arbitratorNodeAddresses,
-                mediatorNodeAddresses,
+                acceptedArbitratorNodeAddresses,
+                acceptedMediatorNodeAddresses,
                 NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
                 NodeAddress.fromProto(proto.getMediatorNodeAddress()));
     }

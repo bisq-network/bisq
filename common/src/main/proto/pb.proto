@@ -44,11 +44,11 @@ message NetworkEnvelope {
         FinalizePayoutTxRequest finalize_payout_tx_request = 21;
         PayoutTxPublishedMessage payout_tx_published_message = 22;
 
-        OpenNewDisputeMessage open_new_dispute_message = 24;
-        PeerOpenedDisputeMessage peer_opened_dispute_message = 25;
-        DisputeCommunicationMessage dispute_communication_message = 26;
-        DisputeResultMessage dispute_result_message = 27;
-        PeerPublishedPayoutTxMessage peer_published_payout_tx_message = 23;
+        OpenNewDisputeMessage open_new_dispute_message = 23;
+        PeerOpenedDisputeMessage peer_opened_dispute_message = 24;
+        DisputeCommunicationMessage dispute_communication_message = 25;
+        DisputeResultMessage dispute_result_message = 26;
+        PeerPublishedPayoutTxMessage peer_published_payout_tx_message = 27;
 
         PrivateNotificationMessage private_notification_message = 28;
 
@@ -66,43 +66,38 @@ message NetworkEnvelope {
 // get data
 
 message PreliminaryGetDataRequest {
-    int32 message_version = 1;
-    int32 nonce = 2;
-    repeated bytes excluded_keys = 3;
-    repeated int32 supported_capabilities = 4;
+    int32 nonce = 21;
+    repeated bytes excluded_keys = 2;
+    repeated int32 supported_capabilities = 3;
 }
 
 message GetDataResponse {
-    int32 message_version = 1;
-    int32 request_nonce = 2;
-    bool is_get_updated_data_response = 3;
-    repeated StorageEntryWrapper data_set = 4;
-    repeated int32 supported_capabilities = 5;
+    int32 request_nonce = 1;
+    bool is_get_updated_data_response = 2;
+    repeated StorageEntryWrapper data_set = 3;
+    repeated int32 supported_capabilities = 4;
 }
 
 message GetUpdatedDataRequest {
-    int32 message_version = 1;
-    NodeAddress sender_node_address = 2;
-    int32 nonce = 3;
-    repeated bytes excluded_keys = 4;
+    NodeAddress sender_node_address = 1;
+    int32 nonce = 2;
+    repeated bytes excluded_keys = 3;
 }
 
 
 // peers
 
 message GetPeersRequest {
-    int32 message_version = 1;
-    NodeAddress sender_node_address = 2;
-    int32 nonce = 3;
-    repeated int32 supported_capabilities = 4;
-    repeated Peer reported_peers = 5;
+    NodeAddress sender_node_address = 1;
+    int32 nonce = 2;
+    repeated int32 supported_capabilities = 3;
+    repeated Peer reported_peers = 4;
 }
 
 message GetPeersResponse {
-    int32 message_version = 1;
-    int32 request_nonce = 2;
-    repeated Peer reported_peers = 3;
-    repeated int32 supported_capabilities = 5;
+    int32 request_nonce = 1;
+    repeated Peer reported_peers = 2;
+    repeated int32 supported_capabilities = 3;
 }
 
 message Ping {
@@ -118,25 +113,23 @@ message Pong {
 // offer
 
 message OfferAvailabilityRequest {
-    int32 message_version = 1;
-    string offer_id = 2;
-    PubKeyRing pub_key_ring = 3;
-    int64 takers_trade_price = 4;
-    repeated int32 supported_capabilities = 5;
-}
-
-message OfferAvailabilityResponse {
-    int32 message_version = 1;
-    string offer_id = 2;
-    AvailabilityResult availability_result = 3;
+    string offer_id = 1;
+    PubKeyRing pub_key_ring = 2;
+    int64 takers_trade_price = 3;
     repeated int32 supported_capabilities = 4;
 }
 
+message OfferAvailabilityResponse {
+    string offer_id = 1;
+    AvailabilityResult availability_result = 2;
+    repeated int32 supported_capabilities = 3;
+}
+
 message RefreshOfferMessage {
-    bytes hash_of_data_and_seq_nr = 1; // 32 bytes
-    bytes signature = 2; // 46 bytes
-    bytes hash_of_payload = 3; // 32 bytes
-    int32 sequence_number = 4; // 4 bytes
+    bytes hash_of_data_and_seq_nr = 1; 
+    bytes signature = 2; 
+    bytes hash_of_payload = 3; 
+    int32 sequence_number = 4; 
 }
 
 
@@ -158,16 +151,14 @@ message RemoveMailboxDataMessage {
 // misc
 
 message CloseConnectionMessage {
-    int32 message_version = 1;
-    string reason = 2;
+    string reason = 1;
 }
 
 message PrefixedSealedAndSignedMessage {
-    int32 message_version = 1;
-    NodeAddress node_address = 2;
-    SealedAndSigned sealed_and_signed = 3;
-    bytes address_prefix_hash = 4;
-    string uid = 5;
+    NodeAddress node_address = 1;
+    SealedAndSigned sealed_and_signed = 2;
+    bytes address_prefix_hash = 3;
+    string uid = 4;
 }
 
 
@@ -175,25 +166,25 @@ message PrefixedSealedAndSignedMessage {
 
 message PayDepositRequest {
     string trade_id = 1;
-    int64 trade_amount = 2;
-    int64 trade_price = 3;
-    bytes taker_multi_sig_pub_key = 4;
+    NodeAddress sender_node_address = 2;
+    int64 trade_amount = 3;
+    int64 trade_price = 4;
     int64 tx_fee = 5;
     int64 taker_fee = 6;
-    repeated RawTransactionInput raw_transaction_inputs = 7;
-    int64 change_output_value = 8;
-    string change_output_address = 9;
-    string taker_payout_address_string = 10;
-    PubKeyRing taker_pub_key_ring = 11;
-    PaymentAccountPayload taker_payment_account_payload = 12;
-    string taker_account_id = 13;
-    string taker_fee_tx_id = 14;
-    repeated NodeAddress accepted_arbitrator_node_addresses = 15;
-    repeated NodeAddress accepted_mediator_node_addresses = 16;
-    NodeAddress arbitrator_node_address = 17;
-    NodeAddress mediator_node_address = 18;
-    NodeAddress sender_node_address = 19;
-    bool is_currency_for_taker_fee_btc = 20;
+    bool is_currency_for_taker_fee_btc = 7;
+    repeated RawTransactionInput raw_transaction_inputs = 8;
+    int64 change_output_value = 9;
+    string change_output_address = 10;
+    bytes taker_multi_sig_pub_key = 11;
+    string taker_payout_address_string = 12;
+    PubKeyRing taker_pub_key_ring = 13;
+    PaymentAccountPayload taker_payment_account_payload = 14;
+    string taker_account_id = 15;
+    string taker_fee_tx_id = 16;
+    repeated NodeAddress accepted_arbitrator_node_addresses = 17;
+    repeated NodeAddress accepted_mediator_node_addresses = 18;
+    NodeAddress arbitrator_node_address = 19;
+    NodeAddress mediator_node_address = 20;
 }
 
 message DepositTxPublishedMessage {

@@ -30,7 +30,7 @@ public final class SealedAndSigned implements NetworkPayload {
     private final byte[] encryptedPayloadWithHmac;
     private final byte[] signature;
     private final byte[] sigPublicKeyBytes;
-    private final PublicKey sigPublicKey;
+    transient private final PublicKey sigPublicKey;
 
     public SealedAndSigned(byte[] encryptedSecretKey,
                            byte[] encryptedPayloadWithHmac,
@@ -39,19 +39,26 @@ public final class SealedAndSigned implements NetworkPayload {
         this.encryptedSecretKey = encryptedSecretKey;
         this.encryptedPayloadWithHmac = encryptedPayloadWithHmac;
         this.signature = signature;
-        sigPublicKeyBytes = Sig.getSigPublicKeyBytes(sigPublicKey);
         this.sigPublicKey = sigPublicKey;
+
+        sigPublicKeyBytes = Sig.getPublicKeyBytes(sigPublicKey);
     }
 
-    public SealedAndSigned(byte[] encryptedSecretKey,
-                           byte[] encryptedPayloadWithHmac,
-                           byte[] signature,
-                           byte[] sigPublicKeyBytes) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private SealedAndSigned(byte[] encryptedSecretKey,
+                            byte[] encryptedPayloadWithHmac,
+                            byte[] signature,
+                            byte[] sigPublicKeyBytes) {
         this.encryptedSecretKey = encryptedSecretKey;
         this.encryptedPayloadWithHmac = encryptedPayloadWithHmac;
         this.signature = signature;
         this.sigPublicKeyBytes = sigPublicKeyBytes;
-        this.sigPublicKey = Sig.getSigPublicKeyFromBytes(sigPublicKeyBytes);
+
+        sigPublicKey = Sig.getPublicKeyFromBytes(sigPublicKeyBytes);
     }
 
     public PB.SealedAndSigned toProtoMessage() {

@@ -101,7 +101,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                 requestedBtc,
                 btcAddress,
                 nodeAddress.getFullAddress(),
-                Sig.getSigPublicKeyBytes(ownerPubKey),
+                Sig.getPublicKeyBytes(ownerPubKey),
                 null);
     }
 
@@ -139,7 +139,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
 
         version = Version.COMPENSATION_REQUEST_VERSION;
         creationDate = new Date().getTime();
-        this.ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
+        this.ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
         ownerPubPubKeyAsHex = Utils.HEX.encode(this.ownerPubKey.getEncoded());
     }
 
