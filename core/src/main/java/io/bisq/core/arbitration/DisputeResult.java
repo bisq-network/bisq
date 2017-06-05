@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
 import java.util.Date;
+import java.util.Optional;
 
 @EqualsAndHashCode
 @Getter
@@ -121,22 +122,43 @@ public final class DisputeResult implements NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static DisputeResult fromProto(PB.DisputeResult proto) {
-        return new DisputeResult(proto.getTradeId(),
-                proto.getTraderId(),
-                ProtoUtil.enumFromProto(DisputeResult.Winner.class, proto.getWinner().name()),
-                proto.getReasonOrdinal(),
-                proto.getTamperProofEvidence(),
-                proto.getIdVerification(),
-                proto.getScreenCast(),
-                proto.getSummaryNotes(),
-                DisputeCommunicationMessage.fromProto(proto.getDisputeCommunicationMessage()),
-                proto.getArbitratorSignature().toByteArray(),
-                proto.getBuyerPayoutAmount(),
-                proto.getSellerPayoutAmount(),
-                proto.getArbitratorPubKey().toByteArray(),
-                proto.getCloseDate(),
-                proto.getIsLoserPublisher());
+    public static Optional<DisputeResult> fromProto(PB.DisputeResult proto) {
+        return proto.equals(proto.getDefaultInstanceForType()) ? Optional.empty() :
+                Optional.of(new DisputeResult(proto.getTradeId(),
+                        proto.getTraderId(),
+                        ProtoUtil.enumFromProto(DisputeResult.Winner.class, proto.getWinner().name()),
+                        proto.getReasonOrdinal(),
+                        proto.getTamperProofEvidence(),
+                        proto.getIdVerification(),
+                        proto.getScreenCast(),
+                        proto.getSummaryNotes(),
+                        DisputeCommunicationMessage.fromProto(proto.getDisputeCommunicationMessage()),
+                        proto.getArbitratorSignature().toByteArray(),
+                        proto.getBuyerPayoutAmount(),
+                        proto.getSellerPayoutAmount(),
+                        proto.getArbitratorPubKey().toByteArray(),
+                        proto.getCloseDate(),
+                        proto.getIsLoserPublisher()));
+    }
+
+    @Override
+    public PB.DisputeResult toProtoMessage() {
+        return PB.DisputeResult.newBuilder()
+                .setTradeId(tradeId)
+                .setTraderId(traderId)
+                .setWinner(PB.DisputeResult.Winner.valueOf(winner.name()))
+                .setReasonOrdinal(reasonOrdinal)
+                .setTamperProofEvidence(tamperProofEvidence)
+                .setIdVerification(idVerification)
+                .setScreenCast(screenCast)
+                .setSummaryNotes(summaryNotes)
+                .setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
+                .setArbitratorSignature(ByteString.copyFrom(arbitratorSignature))
+                .setBuyerPayoutAmount(buyerPayoutAmount)
+                .setSellerPayoutAmount(sellerPayoutAmount)
+                .setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey))
+                .setCloseDate(closeDate)
+                .setIsLoserPublisher(isLoserPublisher).build();
     }
 
 
@@ -257,25 +279,5 @@ public final class DisputeResult implements NetworkPayload {
 
     public boolean isLoserPublisher() {
         return isLoserPublisher;
-    }
-
-    @Override
-    public PB.DisputeResult toProtoMessage() {
-        return PB.DisputeResult.newBuilder()
-                .setTradeId(tradeId)
-                .setTraderId(traderId)
-                .setWinner(PB.DisputeResult.Winner.valueOf(winner.name()))
-                .setReasonOrdinal(reasonOrdinal)
-                .setTamperProofEvidence(tamperProofEvidence)
-                .setIdVerification(idVerification)
-                .setScreenCast(screenCast)
-                .setSummaryNotes(summaryNotes)
-                .setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
-                .setArbitratorSignature(ByteString.copyFrom(arbitratorSignature))
-                .setBuyerPayoutAmount(buyerPayoutAmount)
-                .setSellerPayoutAmount(sellerPayoutAmount)
-                .setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey))
-                .setCloseDate(closeDate)
-                .setIsLoserPublisher(isLoserPublisher).build();
     }
 }

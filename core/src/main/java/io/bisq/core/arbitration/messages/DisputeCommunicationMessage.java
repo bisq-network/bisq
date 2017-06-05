@@ -80,6 +80,11 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         storedInMailboxProperty = new SimpleBooleanProperty(storedInMailbox);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return NetworkEnvelope.getDefaultBuilder()
@@ -114,6 +119,10 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         return disputeCommunicationMessage;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addAllAttachments(List<Attachment> attachments) {
         this.attachments.addAll(attachments);

@@ -184,24 +184,30 @@ public class FileManager<T extends PersistableEnvelope> {
         FileOutputStream fileOutputStream = null;
         PrintWriter printWriter = null;
 
-        log.info("saveToFile persistable.class " + persistable.getClass().getSimpleName());
+        log.debug("saveToFile persistable.class " + persistable.getClass().getSimpleName());
         PB.PersistableEnvelope protoPersistable = null;
         try {
             protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
 
             // check if what we're saving can also be read in correctly
             if (DevEnv.DEV_MODE) {
-                log.info("Checking that the saved Persistable can be read again...");
-                PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
-                if (object == null) {
-                    log.error("Check on saved Persistable failed, object is null. storageFile={}", storageFile);
-                    persistenceProtoResolver.fromProto(protoPersistable);
+                if (protoPersistable != null) {
+                    log.debug("Checking that the saved Persistable can be read again...");
+                    PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
+                    if (object == null) {
+                        log.error("Check on saved Persistable failed, object is null. storageFile={}", storageFile);
+                        persistenceProtoResolver.fromProto(protoPersistable);
+                    } else {
+                        log.debug("Check on saved Persistable complete: {} ", object);
+                    }
                 } else {
-                    log.debug("Check on saved Persistable complete: {} ", object);
+                    log.debug("protoPersistable is null ");
+                    protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
                 }
             }
         } catch (Throwable e) {
             log.error("Error in saveToFile toProtoMessage: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
+            protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
             PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
         }
 
