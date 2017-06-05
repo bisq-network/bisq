@@ -421,13 +421,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         filteredItems.setPredicate(offerBookListItem -> {
             Offer offer = offerBookListItem.getOffer();
             boolean directionResult = offer.getDirection() != direction;
-            boolean currencyResult;
-            final String currencyCode = offer.getCurrencyCode();
-            if (showAllTradeCurrenciesProperty.get()) {
-                currencyResult = tradeCurrencyCodes.contains(currencyCode);
-            } else
-                currencyResult = currencyCode.equals(selectedTradeCurrency.getCode());
-
+            boolean currencyResult = showAllTradeCurrenciesProperty.get() ||
+                    offer.getCurrencyCode().equals(selectedTradeCurrency.getCode());
             boolean paymentMethodResult = showAllPaymentMethods ||
                     offer.getPaymentMethod().equals(selectedPaymentMethod);
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
