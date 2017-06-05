@@ -24,6 +24,7 @@ import io.bitsquare.btc.listeners.BalanceListener;
 import io.bitsquare.gui.common.view.ActivatableView;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.gui.main.overlays.windows.OfferDetailsWindow;
 import io.bitsquare.gui.main.overlays.windows.TradeDetailsWindow;
@@ -41,6 +42,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
@@ -54,9 +56,13 @@ import java.util.stream.Collectors;
 @FxmlView
 public class ReservedView extends ActivatableView<VBox, Void> {
     @FXML
+    VBox root;
+    @FXML
     TableView<ReservedListItem> tableView;
     @FXML
     TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn, confidenceColumn;
+    @FXML
+    Insets rootPadding;
 
     private final WalletService walletService;
     private final TradeManager tradeManager;
@@ -90,6 +96,14 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        root.setSpacing(MainView.scale(10));
+        rootPadding = new Insets(MainView.scale(10), MainView.scale(10), MainView.scale(0), MainView.scale(10));
+        dateColumn.setMinWidth(MainView.scale(180));
+        dateColumn.setMaxWidth(MainView.scale(180));
+        detailsColumn.setMinWidth(MainView.scale(320));
+        addressColumn.setMinWidth(MainView.scale(320));
+        balanceColumn.setMinWidth(MainView.scale(110));
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new Label("No funds are reserved in open offers"));
 
