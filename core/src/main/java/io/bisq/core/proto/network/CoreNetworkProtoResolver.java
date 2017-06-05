@@ -108,8 +108,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return DisputeCommunicationMessage.fromProto(proto.getDisputeCommunicationMessage());
                 case DISPUTE_RESULT_MESSAGE:
                     return DisputeResultMessage.fromProto(proto.getDisputeResultMessage());
-                case PEER_PUBLISHED_PAYOUT_TX_MESSAGE:
-                    return PeerPublishedPayoutTxMessage.fromProto(proto.getPeerPublishedPayoutTxMessage());
+                case PEER_PUBLISHED_DISPUTE_PAYOUT_TX_MESSAGE:
+                    return PeerPublishedDisputePayoutTxMessage.fromProto(proto.getPeerPublishedDisputePayoutTxMessage());
 
                 case PRIVATE_NOTIFICATION_MESSAGE:
                     return PrivateNotificationMessage.fromProto(proto.getPrivateNotificationMessage());

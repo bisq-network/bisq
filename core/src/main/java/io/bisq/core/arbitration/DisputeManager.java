@@ -196,8 +196,8 @@ public class DisputeManager {
             onDisputeDirectMessage((DisputeCommunicationMessage) message);
         else if (message instanceof DisputeResultMessage)
             onDisputeResultMessage((DisputeResultMessage) message);
-        else if (message instanceof PeerPublishedPayoutTxMessage)
-            onDisputedPayoutTxMessage((PeerPublishedPayoutTxMessage) message);
+        else if (message instanceof PeerPublishedDisputePayoutTxMessage)
+            onDisputedPayoutTxMessage((PeerPublishedDisputePayoutTxMessage) message);
         else
             log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
     }
@@ -458,7 +458,7 @@ public class DisputeManager {
         log.trace("sendPeerPublishedPayoutTxMessage to peerAddress " + peerNodeAddress);
         p2PService.sendEncryptedMailboxMessage(peerNodeAddress,
                 peersPubKeyRing,
-                new PeerPublishedPayoutTxMessage(transaction.bitcoinSerialize(),
+                new PeerPublishedDisputePayoutTxMessage(transaction.bitcoinSerialize(),
                         dispute.getTradeId(),
                         p2PService.getAddress(),
                         UUID.randomUUID().toString()),
@@ -543,7 +543,7 @@ public class DisputeManager {
             cleanupRetryMap(uid);
 
             Dispute dispute = disputeOptional.get();
-            if (!dispute.getDisputeCommunicationMessagesAsObservableList().contains(disputeCommunicationMessage))
+            if (!dispute.getDisputeCommunicationMessages().contains(disputeCommunicationMessage))
                 dispute.addDisputeMessage(disputeCommunicationMessage);
             else
                 log.warn("We got a disputeCommunicationMessage what we have already stored. TradeId = " + tradeId);
@@ -571,7 +571,7 @@ public class DisputeManager {
                 Dispute dispute = disputeOptional.get();
 
                 DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
-                if (!dispute.getDisputeCommunicationMessagesAsObservableList().contains(disputeCommunicationMessage))
+                if (!dispute.getDisputeCommunicationMessages().contains(disputeCommunicationMessage))
                     dispute.addDisputeMessage(disputeCommunicationMessage);
                 else
                     log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeCommunicationMessage.getTradeId());
@@ -703,14 +703,14 @@ public class DisputeManager {
     }
 
     // losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
-    private void onDisputedPayoutTxMessage(PeerPublishedPayoutTxMessage peerPublishedPayoutTxMessage) {
-        final String uid = peerPublishedPayoutTxMessage.getUid();
-        final String tradeId = peerPublishedPayoutTxMessage.getTradeId();
+    private void onDisputedPayoutTxMessage(PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage) {
+        final String uid = peerPublishedDisputePayoutTxMessage.getUid();
+        final String tradeId = peerPublishedDisputePayoutTxMessage.getTradeId();
         Optional<Dispute> disputeOptional = findOwnDispute(tradeId);
         if (disputeOptional.isPresent()) {
             cleanupRetryMap(uid);
 
-            Transaction walletTx = tradeWalletService.addTxToWallet(peerPublishedPayoutTxMessage.getTransaction());
+            Transaction walletTx = tradeWalletService.addTxToWallet(peerPublishedDisputePayoutTxMessage.getTransaction());
             disputeOptional.get().setDisputePayoutTxId(walletTx.getHashAsString());
             BtcWalletService.printTx("Disputed payoutTx received from peer", walletTx);
             tradeManager.closeDisputedTrade(tradeId);
@@ -718,7 +718,7 @@ public class DisputeManager {
             log.debug("We got a peerPublishedPayoutTxMessage but we don't have a matching dispute. TradeId = " + tradeId);
             if (!delayMsgMap.containsKey(uid)) {
                 // We delay 3 sec. to be sure the close msg gets added first
-                Timer timer = UserThread.runAfter(() -> onDisputedPayoutTxMessage(peerPublishedPayoutTxMessage), 3);
+                Timer timer = UserThread.runAfter(() -> onDisputedPayoutTxMessage(peerPublishedDisputePayoutTxMessage), 3);
                 delayMsgMap.put(uid, timer);
             } else {
                 log.warn("We got a peerPublishedPayoutTxMessage after we already repeated to apply the message after a delay. " +

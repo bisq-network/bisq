@@ -46,16 +46,16 @@ public final class DisputeResultMessage extends DisputeMessage {
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return NetworkEnvelope.getDefaultBuilder()
                 .setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
-                        .setUid(getUid())
                         .setDisputeResult(disputeResult.toProtoMessage())
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setUid(uid))
                 .build();
     }
 
     public static DisputeResultMessage fromProto(PB.DisputeResultMessage proto) {
-        checkArgument(!proto.equals(proto.getDefaultInstanceForType()), "proto must be set (we received default instance)");
+        checkArgument(!proto.equals(proto.getDefaultInstanceForType()), "PB.DisputeResultMessage must be set (we received default instance)");
         final Optional<DisputeResult> disputeResult = DisputeResult.fromProto(proto.getDisputeResult());
-        checkArgument(disputeResult.isPresent(), "disputeResult i not present");
+        checkArgument(disputeResult.isPresent(), "DisputeResult is not present");
         return new DisputeResultMessage(disputeResult.get(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid());

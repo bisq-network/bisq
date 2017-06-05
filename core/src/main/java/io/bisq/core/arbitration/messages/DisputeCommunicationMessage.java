@@ -39,21 +39,18 @@ import java.util.stream.Collectors;
 @ToString
 @Getter
 public final class DisputeCommunicationMessage extends DisputeMessage {
-    private final long date;
     private final String tradeId;
     private final int traderId;
     private final boolean senderIsTrader;
     private final String message;
-    private final NodeAddress senderNodeAddress;
     private final ArrayList<Attachment> attachments = new ArrayList<>();
-
-    private boolean arrived;
-    private boolean storedInMailbox;
+    private final NodeAddress senderNodeAddress;
+    private final long date;
     @Setter
     private boolean isSystemMessage;
 
-    transient private final BooleanProperty arrivedProperty;
-    transient private final BooleanProperty storedInMailboxProperty;
+    private final BooleanProperty arrivedProperty;
+    private final BooleanProperty storedInMailboxProperty;
 
     public DisputeCommunicationMessage(String tradeId,
                                        int traderId,
@@ -73,9 +70,6 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         Optional.ofNullable(attachments).ifPresent(e -> addAllAttachments(attachments));
         this.senderNodeAddress = senderNodeAddress;
         this.date = date;
-        this.arrived = arrived;
-        this.storedInMailbox = storedInMailbox;
-
         arrivedProperty = new SimpleBooleanProperty(arrived);
         storedInMailboxProperty = new SimpleBooleanProperty(storedInMailbox);
     }
@@ -89,7 +83,6 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return NetworkEnvelope.getDefaultBuilder()
                 .setDisputeCommunicationMessage(PB.DisputeCommunicationMessage.newBuilder()
-                                .setUid(uid)
                                 .setTradeId(tradeId)
                                 .setTraderId(traderId)
                                 .setSenderIsTrader(senderIsTrader)
@@ -97,15 +90,17 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                                 .addAllAttachments(attachments.stream().map(Attachment::toProtoMessage).collect(Collectors.toList()))
                                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                                 .setDate(date)
-                                .setArrived(arrived)
-                                .setStoredInMailbox(storedInMailbox)
+                                .setArrived(arrivedProperty.get())
+                                .setStoredInMailbox(storedInMailboxProperty.get())
                                 .setIsSystemMessage(isSystemMessage)
+                                .setUid(uid)
                 )
                 .build();
     }
 
     public static DisputeCommunicationMessage fromProto(PB.DisputeCommunicationMessage proto) {
-        final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(proto.getTradeId(),
+        final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                proto.getTradeId(),
                 proto.getTraderId(),
                 proto.getSenderIsTrader(),
                 proto.getMessage(),
@@ -129,12 +124,10 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     }
 
     public void setArrived(boolean arrived) {
-        this.arrived = arrived;
         this.arrivedProperty.set(arrived);
     }
 
     public void setStoredInMailbox(boolean storedInMailbox) {
-        this.storedInMailbox = storedInMailbox;
         this.storedInMailboxProperty.set(storedInMailbox);
     }
 

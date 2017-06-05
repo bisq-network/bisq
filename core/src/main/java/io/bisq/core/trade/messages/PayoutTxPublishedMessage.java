@@ -46,7 +46,7 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return NetworkEnvelope.getDefaultBuilder()
                 .setPayoutTxPublishedMessage(PB.PayoutTxPublishedMessage.newBuilder()
-                        .setTradeId(getTradeId())
+                        .setTradeId(tradeId)
                         .setPayoutTx(ByteString.copyFrom(payoutTx))
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setUid(uid))

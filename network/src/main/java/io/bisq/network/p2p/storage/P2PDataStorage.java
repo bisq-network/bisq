@@ -715,28 +715,26 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * Needs to be Serializable because we convert the object to a byte array via java serialization
      * before calculating the hash.
      */
+    @ToString
     public static final class DataAndSeqNrPair implements NetworkPayload {
         // data are only used for calculating cryptographic hash from both values so they are kept private
-        private final StoragePayload data;
+        private final StoragePayload storagePayload;
         private final int sequenceNumber;
 
-        public DataAndSeqNrPair(StoragePayload data, int sequenceNumber) {
-            this.data = data;
+        public DataAndSeqNrPair(StoragePayload storagePayload, int sequenceNumber) {
+            this.storagePayload = storagePayload;
             this.sequenceNumber = sequenceNumber;
         }
 
         @Override
-        public String toString() {
-            return "DataAndSeqNr{" +
-                    "data=" + data +
-                    ", sequenceNumber=" + sequenceNumber +
-                    '}';
+        public com.google.protobuf.Message toProtoMessage() {
+            return PB.DataAndSeqNrPair.newBuilder()
+                    .setPayload((PB.StoragePayload) storagePayload.toProtoMessage())
+                    .setSequenceNumber(sequenceNumber)
+                    .build();
         }
 
-        @Override
-        public com.google.protobuf.Message toProtoMessage() {
-            return PB.DataAndSeqNrPair.newBuilder().setPayload((PB.StoragePayload) data.toProtoMessage()).setSequenceNumber(sequenceNumber).build();
-        }
+        //TODO from PB is missing
     }
 
 

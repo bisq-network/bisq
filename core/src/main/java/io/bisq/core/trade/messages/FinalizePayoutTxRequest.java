@@ -49,7 +49,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return NetworkEnvelope.getDefaultBuilder()
                 .setFinalizePayoutTxRequest(PB.FinalizePayoutTxRequest.newBuilder()
-                        .setTradeId(getTradeId())
+                        .setTradeId(tradeId)
                         .setSellerSignature(ByteString.copyFrom(sellerSignature))
                         .setSellerPayoutAddress(sellerPayoutAddress)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())

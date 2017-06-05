@@ -40,7 +40,7 @@ public final class PrivateNotificationPayload implements NetworkPayload {
     @Nullable
     private byte[] sigPublicKeyBytes;
     @Nullable
-    private PublicKey publicKey;
+    private PublicKey sigPublicKey;
 
     public PrivateNotificationPayload(String message) {
         this.message = message;
@@ -55,7 +55,7 @@ public final class PrivateNotificationPayload implements NetworkPayload {
         this(message);
         this.signatureAsBase64 = signatureAsBase64;
         this.sigPublicKeyBytes = sigPublicKeyBytes;
-        publicKey = Sig.getPublicKeyFromBytes(sigPublicKeyBytes);
+        sigPublicKey = Sig.getPublicKeyFromBytes(sigPublicKeyBytes);
     }
 
     public static PrivateNotificationPayload fromProto(PB.PrivateNotificationPayload proto) {
@@ -66,7 +66,8 @@ public final class PrivateNotificationPayload implements NetworkPayload {
 
     @Override
     public PB.PrivateNotificationPayload toProtoMessage() {
-        checkNotNull(sigPublicKeyBytes, "sigPublicKeyBytes must nto be null");
+        checkNotNull(sigPublicKeyBytes, "sigPublicKeyBytes must not be null");
+        checkNotNull(signatureAsBase64, "signatureAsBase64 must not be null");
         return PB.PrivateNotificationPayload.newBuilder()
                 .setMessage(message)
                 .setSignatureAsBase64(signatureAsBase64)
@@ -78,10 +79,10 @@ public final class PrivateNotificationPayload implements NetworkPayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setSigAndPubKey(String signatureAsBase64, PublicKey storagePublicKey) {
+    public void setSigAndPubKey(String signatureAsBase64, PublicKey sigPublicKey) {
         this.signatureAsBase64 = signatureAsBase64;
-        this.publicKey = storagePublicKey;
-        sigPublicKeyBytes = Sig.getPublicKeyBytes(publicKey);
+        this.sigPublicKey = sigPublicKey;
+        sigPublicKeyBytes = Sig.getPublicKeyBytes(sigPublicKey);
     }
 
     // Hex

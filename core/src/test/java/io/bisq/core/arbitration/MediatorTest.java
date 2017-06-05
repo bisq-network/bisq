@@ -39,7 +39,7 @@ public class MediatorTest {
         return new Mediator(new NodeAddress("host", 1000),
                 new PubKeyRing(getBytes(100), getBytes(100), "key"),
                 Lists.newArrayList(),
-                new Date(),
+                new Date().getTime(),
                 getBytes(100),
                 "registrationSignature",
                 "email",

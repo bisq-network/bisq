@@ -153,7 +153,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                     arbitratorDepositAddressEntry.getAddressString(),
                     keyRing.getPubKeyRing(),
                     new ArrayList<>(languageCodes),
-                    new Date(),
+                    new Date().getTime(),
                     registrationKey.getPubKey(),
                     registrationSignature,
                     emailAddress,

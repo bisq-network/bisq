@@ -50,6 +50,11 @@ public final class MailboxStoragePayload implements StoragePayload {
         ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
                                   byte[] senderPubKeyForAddOperationBytes,
                                   byte[] ownerPubKeyBytes,

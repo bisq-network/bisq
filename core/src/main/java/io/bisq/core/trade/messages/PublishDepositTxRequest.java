@@ -40,12 +40,12 @@ import java.util.stream.Collectors;
 public final class PublishDepositTxRequest extends TradeMessage implements MailboxMessage {
     private final PaymentAccountPayload makerPaymentAccountPayload;
     private final String makerAccountId;
+    private final byte[] makerMultiSigPubKey;
     private final String makerContractAsJson;
     private final String makerContractSignature;
     private final String makerPayoutAddressString;
     private final byte[] preparedDepositTx;
     private final List<RawTransactionInput> makerInputs;
-    private final byte[] makerMultiSigPubKey;
     private final NodeAddress senderNodeAddress;
     private final String uid;
 
@@ -77,7 +77,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return NetworkEnvelope.getDefaultBuilder()
                 .setPublishDepositTxRequest(PB.PublishDepositTxRequest.newBuilder()
-                        .setTradeId(getTradeId())
+                        .setTradeId(tradeId)
                         .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
                         .setMakerAccountId(makerAccountId)
                         .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
@@ -93,9 +93,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
 
     public static PublishDepositTxRequest fromProto(PB.PublishDepositTxRequest proto, CoreProtoResolver coreProtoResolver) {
         List<RawTransactionInput> makerInputs = proto.getMakerInputsList().stream()
-                .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
-                        rawTransactionInput.getParentTransaction().toByteArray(),
-                        rawTransactionInput.getValue()))
+                .map(RawTransactionInput::fromProto)
                 .collect(Collectors.toList());
 
         return new PublishDepositTxRequest(proto.getTradeId(),

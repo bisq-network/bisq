@@ -211,7 +211,7 @@ public class ArbitratorManager {
         return new Mediator(arbitrator.getNodeAddress(),
                 arbitrator.getPubKeyRing(),
                 arbitrator.getLanguageCodes(),
-                new Date(arbitrator.getRegistrationDate()),
+                arbitrator.getRegistrationDate(),
                 arbitrator.getRegistrationPubKey(),
                 arbitrator.getRegistrationSignature(),
                 arbitrator.getEmailAddress(),

@@ -43,7 +43,7 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return NetworkEnvelope.getDefaultBuilder()
                 .setOpenNewDisputeMessage(PB.OpenNewDisputeMessage.newBuilder()
-                        .setUid(getUid())
+                        .setUid(uid)
                         .setDispute(dispute.toProtoMessage())
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
                 .build();

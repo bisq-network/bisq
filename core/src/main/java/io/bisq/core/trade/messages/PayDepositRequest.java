@@ -57,6 +57,7 @@ public final class PayDepositRequest extends TradeMessage {
     private final List<NodeAddress> acceptedMediatorNodeAddresses;
     private final NodeAddress arbitratorNodeAddress;
     private final NodeAddress mediatorNodeAddress;
+    private final String uid;
 
     public PayDepositRequest(String tradeId,
                              NodeAddress senderNodeAddress,
@@ -77,7 +78,8 @@ public final class PayDepositRequest extends TradeMessage {
                              List<NodeAddress> acceptedArbitratorNodeAddresses,
                              List<NodeAddress> acceptedMediatorNodeAddresses,
                              NodeAddress arbitratorNodeAddress,
-                             NodeAddress mediatorNodeAddress) {
+                             NodeAddress mediatorNodeAddress,
+                             String uid) {
         super(tradeId);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
@@ -98,12 +100,13 @@ public final class PayDepositRequest extends TradeMessage {
         this.acceptedMediatorNodeAddresses = acceptedMediatorNodeAddresses;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
+        this.uid = uid;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         PB.PayDepositRequest.Builder builder = PB.PayDepositRequest.newBuilder()
-                .setTradeId(getTradeId())
+                .setTradeId(tradeId)
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setTradeAmount(tradeAmount)
                 .setTradePrice(tradePrice)
@@ -124,7 +127,8 @@ public final class PayDepositRequest extends TradeMessage {
                 .addAllAcceptedMediatorNodeAddresses(acceptedMediatorNodeAddresses.stream()
                         .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
-                .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage());
+                .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
+                .setUid(uid);
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         return NetworkEnvelope.getDefaultBuilder().setPayDepositRequest(builder).build();
     }
@@ -158,6 +162,7 @@ public final class PayDepositRequest extends TradeMessage {
                 acceptedArbitratorNodeAddresses,
                 acceptedMediatorNodeAddresses,
                 NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
-                NodeAddress.fromProto(proto.getMediatorNodeAddress()));
+                NodeAddress.fromProto(proto.getMediatorNodeAddress()),
+                proto.getUid());
     }
 }

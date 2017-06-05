@@ -40,6 +40,7 @@ import java.util.Optional;
 @ToString
 @Slf4j
 public final class DisputeResult implements NetworkPayload {
+
     public enum Winner {
         BUYER,
         SELLER
@@ -59,10 +60,10 @@ public final class DisputeResult implements NetworkPayload {
     private final int traderId;
     private Winner winner;
     private int reasonOrdinal = Reason.OTHER.ordinal();
-    private boolean tamperProofEvidence;
-    private boolean idVerification;
-    private boolean screenCast;
-    private String summaryNotes;
+    private final BooleanProperty tamperProofEvidenceProperty = new SimpleBooleanProperty();
+    private final BooleanProperty idVerificationProperty = new SimpleBooleanProperty();
+    private final BooleanProperty screenCastProperty = new SimpleBooleanProperty();
+    private final StringProperty summaryNotesProperty = new SimpleStringProperty();
     private DisputeCommunicationMessage disputeCommunicationMessage;
     private byte[] arbitratorSignature;
     private long buyerPayoutAmount;
@@ -71,16 +72,9 @@ public final class DisputeResult implements NetworkPayload {
     private long closeDate;
     private boolean isLoserPublisher;
 
-    transient private BooleanProperty tamperProofEvidenceProperty;
-    transient private BooleanProperty idVerificationProperty;
-    transient private BooleanProperty screenCastProperty;
-    transient private StringProperty summaryNotesProperty;
-
     public DisputeResult(String tradeId, int traderId) {
         this.tradeId = tradeId;
         this.traderId = traderId;
-
-        init();
     }
 
     public DisputeResult(String tradeId,
@@ -102,10 +96,10 @@ public final class DisputeResult implements NetworkPayload {
         this.traderId = traderId;
         this.winner = winner;
         this.reasonOrdinal = reasonOrdinal;
-        this.tamperProofEvidence = tamperProofEvidence;
-        this.idVerification = idVerification;
-        this.screenCast = screenCast;
-        this.summaryNotes = summaryNotes;
+        this.tamperProofEvidenceProperty.set(tamperProofEvidence);
+        this.idVerificationProperty.set(idVerification);
+        this.screenCastProperty.set(screenCast);
+        this.summaryNotesProperty.set(summaryNotes);
         this.disputeCommunicationMessage = disputeCommunicationMessage;
         this.arbitratorSignature = arbitratorSignature;
         this.buyerPayoutAmount = buyerPayoutAmount;
@@ -113,8 +107,6 @@ public final class DisputeResult implements NetworkPayload {
         this.arbitratorPubKey = arbitratorPubKey;
         this.closeDate = closeDate;
         this.isLoserPublisher = isLoserPublisher;
-
-        init();
     }
 
 
@@ -148,10 +140,10 @@ public final class DisputeResult implements NetworkPayload {
                 .setTraderId(traderId)
                 .setWinner(PB.DisputeResult.Winner.valueOf(winner.name()))
                 .setReasonOrdinal(reasonOrdinal)
-                .setTamperProofEvidence(tamperProofEvidence)
-                .setIdVerification(idVerification)
-                .setScreenCast(screenCast)
-                .setSummaryNotes(summaryNotes)
+                .setTamperProofEvidence(tamperProofEvidenceProperty.get())
+                .setIdVerification(idVerificationProperty.get())
+                .setScreenCast(screenCastProperty.get())
+                .setSummaryNotes(summaryNotesProperty.get())
                 .setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
                 .setArbitratorSignature(ByteString.copyFrom(arbitratorSignature))
                 .setBuyerPayoutAmount(buyerPayoutAmount)
@@ -165,26 +157,6 @@ public final class DisputeResult implements NetworkPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void init() {
-        tamperProofEvidenceProperty = new SimpleBooleanProperty(tamperProofEvidence);
-        idVerificationProperty = new SimpleBooleanProperty(idVerification);
-        screenCastProperty = new SimpleBooleanProperty(screenCast);
-        summaryNotesProperty = new SimpleStringProperty(summaryNotes);
-
-        tamperProofEvidenceProperty.addListener((observable, oldValue, newValue) -> {
-            tamperProofEvidence = newValue;
-        });
-        idVerificationProperty.addListener((observable, oldValue, newValue) -> {
-            idVerification = newValue;
-        });
-        screenCastProperty.addListener((observable, oldValue, newValue) -> {
-            screenCast = newValue;
-        });
-        summaryNotesProperty.addListener((observable, oldValue, newValue) -> {
-            summaryNotes = newValue;
-        });
-    }
 
     public BooleanProperty tamperProofEvidenceProperty() {
         return tamperProofEvidenceProperty;
