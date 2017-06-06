@@ -18,7 +18,7 @@
 package io.bisq.core.app;
 
 import io.bisq.common.CommonOptionKeys;
-import io.bisq.core.btc.BitcoinNetwork;
+import io.bisq.core.btc.BaseCryptoNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.RegTestHost;
 import io.bisq.core.dao.DaoOptionKeys;
@@ -134,8 +134,8 @@ public abstract class BisqExecutable {
                 .withRequiredArg();
 
         //BtcOptionKeys
-        parser.accepts(BtcOptionKeys.BTC_NETWORK,
-                description("Bitcoin network", BitcoinNetwork.DEFAULT.name()))
+        parser.accepts(BtcOptionKeys.BASE_CRYPTO_NETWORK,
+                description("Base crypto network", BaseCryptoNetwork.DEFAULT.name()))
                 .withRequiredArg()
                 .ofType(String.class);
         //.withValuesConvertedBy(new EnumValueConverter(String.class));

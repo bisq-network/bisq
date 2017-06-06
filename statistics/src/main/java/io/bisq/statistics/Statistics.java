@@ -84,7 +84,7 @@ public class Statistics {
 
         statisticsModule = new StatisticsModule(env);
         injector = Guice.createInjector(statisticsModule);
-        Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
+        Version.setBaseCryptoNetworkId(injector.getInstance(BisqEnvironment.class).getBaseCryptoNetwork().ordinal());
         Version.printVersion();
         p2pService = injector.getInstance(P2PService.class);
         p2pService.start(new BootstrapListener() {

@@ -198,7 +198,7 @@ public class BisqApp extends Application {
                 }
             });
 
-            Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
+            Version.setBaseCryptoNetworkId(injector.getInstance(BisqEnvironment.class).getBaseCryptoNetwork().ordinal());
             Version.printVersion();
 
             if (Utilities.isLinux())

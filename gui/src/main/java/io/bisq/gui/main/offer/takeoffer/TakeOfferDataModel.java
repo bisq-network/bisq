@@ -114,7 +114,7 @@ class TakeOfferDataModel extends ActivatableDataModel {
         this.priceFeedService = priceFeedService;
         this.formatter = formatter;
 
-        // isMainNet.set(preferences.getBitcoinNetwork() == BitcoinNetwork.MAINNET);
+        // isMainNet.set(preferences.getBaseCryptoNetwork() == BitcoinNetwork.BTC_MAINNET);
     }
 
     @Override

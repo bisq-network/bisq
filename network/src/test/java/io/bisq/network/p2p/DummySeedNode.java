@@ -89,7 +89,7 @@ public class DummySeedNode {
                     log.debug("From processArgs: networkId=" + networkId);
                     checkArgument(networkId > -1 && networkId < 3,
                             "networkId out of scope (Mainnet = 0, TestNet = 1, Regtest = 2)");
-                    Version.setBtcNetworkId(networkId);
+                    Version.setBaseCryptoNetworkId(networkId);
                 } else if (arg.startsWith(NetworkOptionKeys.MAX_CONNECTIONS)) {
                     arg = arg.substring(NetworkOptionKeys.MAX_CONNECTIONS.length() + 1);
                     maxConnections = Integer.parseInt(arg);
@@ -148,7 +148,7 @@ public class DummySeedNode {
 
     public void createAndStartP2PService(boolean useDetailedLogging) {
         createAndStartP2PService(mySeedNodeAddress, maxConnections, useLocalhostForP2P,
-                Version.getBtcNetworkId(), useDetailedLogging, progArgSeedNodes, null);
+                Version.getCryptoNetworkId(), useDetailedLogging, progArgSeedNodes, null);
     }
 
     @VisibleForTesting

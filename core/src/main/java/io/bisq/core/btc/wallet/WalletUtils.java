@@ -17,7 +17,7 @@
 
 package io.bisq.core.btc.wallet;
 
-import io.bisq.core.btc.BitcoinNetwork;
+import io.bisq.core.btc.BaseCryptoNetwork;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.TransactionOutput;
@@ -25,10 +25,10 @@ import org.bitcoinj.core.TransactionOutput;
 import javax.annotation.Nullable;
 
 public class WalletUtils {
-    private static BitcoinNetwork bitcoinNetwork;
+    private static BaseCryptoNetwork baseCryptoNetwork;
 
     public static NetworkParameters getParameters() {
-        return getBitcoinNetwork().getParameters();
+        return getBaseCryptoNetwork().getParameters();
     }
 
     public static boolean isOutputScriptConvertableToAddress(TransactionOutput output) {
@@ -48,11 +48,11 @@ public class WalletUtils {
                 output.getScriptPubKey().getToAddress(getParameters()).toString() : null;
     }
 
-    public static void setBitcoinNetwork(BitcoinNetwork bitcoinNetwork) {
-        WalletUtils.bitcoinNetwork = bitcoinNetwork;
+    public static void setBaseCryptoNetwork(BaseCryptoNetwork baseCryptoNetwork) {
+        WalletUtils.baseCryptoNetwork = baseCryptoNetwork;
     }
 
-    public static BitcoinNetwork getBitcoinNetwork() {
-        return bitcoinNetwork;
+    public static BaseCryptoNetwork getBaseCryptoNetwork() {
+        return baseCryptoNetwork;
     }
 }

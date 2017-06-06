@@ -50,7 +50,7 @@ public class AppSetup {
         // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
         persistedDataHosts.stream().forEach(PersistedDataHost::readPersisted);
 
-        Version.setBtcNetworkId(bisqEnvironment.getBitcoinNetwork().ordinal());
+        Version.setBaseCryptoNetworkId(bisqEnvironment.getBaseCryptoNetwork().ordinal());
         Version.printVersion();
     }
 

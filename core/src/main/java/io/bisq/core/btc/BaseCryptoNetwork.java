@@ -21,17 +21,23 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
+import org.libdohj.params.LitecoinMainNetParams;
+import org.libdohj.params.LitecoinRegTestParams;
+import org.libdohj.params.LitecoinTestNet3Params;
 
-public enum BitcoinNetwork {
-    MAINNET(MainNetParams.get()),
-    TESTNET(TestNet3Params.get()),
-    REGTEST(RegTestParams.get());
+public enum BaseCryptoNetwork {
+    BTC_MAINNET(MainNetParams.get()),
+    BTC_TESTNET(TestNet3Params.get()),
+    BTC_REGTEST(RegTestParams.get()),
+    LTC_MAINNET(LitecoinMainNetParams.get()),
+    LTC_TESTNET(LitecoinTestNet3Params.get()),
+    LTC_REGTEST(LitecoinRegTestParams.get());
 
-    public static final BitcoinNetwork DEFAULT = MAINNET;
+    public static final BaseCryptoNetwork DEFAULT = BTC_MAINNET;
 
     private final NetworkParameters parameters;
 
-    BitcoinNetwork(NetworkParameters parameters) {
+    BaseCryptoNetwork(NetworkParameters parameters) {
         this.parameters = parameters;
     }
 

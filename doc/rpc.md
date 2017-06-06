@@ -13,7 +13,7 @@ If you run 2 clients and want to receive the block notifications on both use dif
 5159 and 4159 are defined in the blocknotify file.
 
 For reg test setup with localhost those are typical program arguments:
---bitcoinNetwork=regtest --useLocalhostForP2P=true --nodePort=3332 --appName=bisq-LRTAli --fullDaoNode=true --rpcUser=bisq --rpcPassword=bisqPW --rpcPort=18332 --rpcBlockNotificationPort=4159
+--baseCryptoNetwork=btc_regtest --useLocalhostForP2P=true --nodePort=3332 --appName=bisq-LRTAli --fullDaoNode=true --rpcUser=bisq --rpcPassword=bisqPW --rpcPort=18332 --rpcBlockNotificationPort=4159
 
 
 For mainnet:
