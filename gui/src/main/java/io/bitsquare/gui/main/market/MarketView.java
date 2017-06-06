@@ -26,14 +26,21 @@ import io.bitsquare.gui.main.market.spread.SpreadView;
 import io.bitsquare.gui.main.market.trades.TradesChartsView;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
 
 import javax.inject.Inject;
 
 @FxmlView
 public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
+    @FXML
+    TabPane root;
+    @FXML
+    ScrollPane chartsScroll, statsScroll;
     @FXML
     Tab chartsTab, tradesTab, statisticsTab;
     private final ViewLoader viewLoader;
@@ -49,6 +56,19 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+        AnchorPane.setTopAnchor(chartsScroll, MainView.scale(0));
+        AnchorPane.setRightAnchor(chartsScroll, MainView.scale(0));
+        AnchorPane.setBottomAnchor(chartsScroll, MainView.scale(0));
+        AnchorPane.setLeftAnchor(chartsScroll, MainView.scale(0));
+        AnchorPane.setTopAnchor(statsScroll, MainView.scale(0));
+        AnchorPane.setRightAnchor(statsScroll, MainView.scale(0));
+        AnchorPane.setBottomAnchor(statsScroll, MainView.scale(0));
+        AnchorPane.setLeftAnchor(statsScroll, MainView.scale(0));
+
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(MarketView.class) == 1)
                 loadView(viewPath.tip());
