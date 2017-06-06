@@ -22,6 +22,7 @@ import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.generated.protobuffer.PB;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,7 +41,8 @@ public class PeerList extends PersistableList<Peer> {
     }
 
     public static PersistableEnvelope fromProto(PB.PeerList proto) {
-        return new PeerList(proto.getPeerList().stream().map(Peer::fromProto)
-                .collect(Collectors.toList()));
+        return new PeerList(new ArrayList<>(proto.getPeerList().stream()
+                .map(Peer::fromProto)
+                .collect(Collectors.toList())));
     }
 }

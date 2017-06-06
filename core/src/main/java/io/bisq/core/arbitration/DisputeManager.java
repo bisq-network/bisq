@@ -28,6 +28,7 @@ import io.bisq.common.handlers.FaultHandler;
 import io.bisq.common.handlers.ResultHandler;
 import io.bisq.common.locale.Res;
 import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.arbitration.messages.*;
@@ -59,7 +60,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class DisputeManager {
+public class DisputeManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(DisputeManager.class);
 
     private final TradeWalletService tradeWalletService;
@@ -70,7 +71,7 @@ public class DisputeManager {
     private final P2PService p2PService;
     private final KeyRing keyRing;
     private final Storage<DisputeList> disputeStorage;
-    private final DisputeList disputes;
+    private DisputeList disputes;
     private final String disputeInfo;
     private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
@@ -102,11 +103,9 @@ public class DisputeManager {
         this.keyRing = keyRing;
 
         disputeStorage = new Storage<>(storageDir, persistenceProtoResolver);
-        disputes = new DisputeList(disputeStorage);
 
         openDisputes = new HashMap<>();
         closedDisputes = new HashMap<>();
-        disputes.stream().forEach(dispute -> dispute.setStorage(getDisputeStorage()));
 
         disputeInfo = Res.get("support.initialInfo");
 
@@ -127,6 +126,13 @@ public class DisputeManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void readPersisted() {
+        disputes = new DisputeList(disputeStorage);
+        disputes.readPersisted();
+        disputes.stream().forEach(dispute -> dispute.setStorage(getDisputeStorage()));
+    }
 
     public void onAllServicesInitialized() {
         if (p2PService.isBootstrapped())

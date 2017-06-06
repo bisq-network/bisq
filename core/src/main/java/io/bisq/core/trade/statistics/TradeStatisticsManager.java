@@ -51,7 +51,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        TradeStatisticsList persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatistics");
+        TradeStatisticsList persisted = statisticsStorage.initAndGetPersistedWithFileName("TradeStatisticsList");
         if (persisted != null)
             persistedTradeStatisticsList = persisted.getList();
     }

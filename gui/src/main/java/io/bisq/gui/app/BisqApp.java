@@ -37,6 +37,7 @@ import io.bisq.core.alert.AlertManager;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorManager;
+import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.wallet.*;
 import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
@@ -187,7 +188,9 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(TradeManager.class));
             persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));
             persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
-
+            persistedDataHosts.add(injector.getInstance(DisputeManager.class));
+            persistedDataHosts.add(injector.getInstance(P2PService.class));
+            
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.stream().forEach(e -> {
                 try {

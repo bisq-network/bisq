@@ -2,15 +2,16 @@ syntax = "proto3";
 package io.bisq.protobuffer;
 
 //
-// Protobuffer v3 definitions of WIRE and PERSISTED messages.
+// Protobuffer v3 definitions of network messages and persisted objects.
 //
 
 option java_package = "io.bisq.generated.protobuffer";
 option java_outer_classname = "PB";
 
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////
-// P2P network messages
+// Network messages
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // Those are messages sent over wire
@@ -778,7 +779,6 @@ message USPostalMoneyOrderAccountPayload {
 }
 
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 // PersistableEnvelope
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -795,7 +795,7 @@ message PersistableEnvelope {
         DisputeList dispute_list = 7;
         PreferencesPayload preferences_payload = 8;
         UserPayload user_payload = 9;
-        ViewPathAsString view_path_as_string = 10;
+        NavigationPath navigation_path = 10;
         CompensationRequestPayload compensation_request_payload = 11;
         VoteItemsList vote_items_list = 12;
         BsqChainState bsq_chain_state = 13;
@@ -1197,8 +1197,8 @@ message ByteArray {
     bytes bytes = 1;
 }
 
-message ViewPathAsString {
-    repeated string view_path = 1;
+message NavigationPath {
+    repeated string path = 1;
 }
 
 message DisputeList {

@@ -37,16 +37,15 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
 
     }
 
-    CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod, String countryCode) {
+    protected CountryBasedPaymentAccountPayload(String paymentMethodName, String id, long maxTradePeriod, String countryCode) {
         this(paymentMethodName, id, maxTradePeriod);
 
         this.countryCode = countryCode;
     }
 
     protected PB.CountryBasedPaymentAccountPayload.Builder getCountryBasedPaymentAccountPayloadBuilder() {
-        PB.CountryBasedPaymentAccountPayload.Builder builder =
-                PB.CountryBasedPaymentAccountPayload.newBuilder()
-                        .setCountryCode(countryCode);
+        PB.CountryBasedPaymentAccountPayload.Builder builder = PB.CountryBasedPaymentAccountPayload.newBuilder()
+                .setCountryCode(countryCode);
         return getPaymentAccountPayloadBuilder()
                 .setCountryBasedPaymentAccountPayload(builder)
                 .getCountryBasedPaymentAccountPayloadBuilder();

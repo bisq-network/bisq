@@ -23,6 +23,7 @@ import io.bisq.generated.protobuffer.PB;
 import lombok.*;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @EqualsAndHashCode
@@ -30,18 +31,17 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-public class PersistableViewPath implements PersistableEnvelope {
-    private List<String> viewPath = Lists.newArrayList();
+public class NavigationPath implements PersistableEnvelope {
+    private List<String> path = Lists.newArrayList();
 
     @Override
     public Message toProtoMessage() {
-        final PB.ViewPathAsString.Builder builder = PB.ViewPathAsString.newBuilder();
-        if (!CollectionUtils.isEmpty(viewPath))
-            builder.addAllViewPath(viewPath);
-        return PB.PersistableEnvelope.newBuilder().setViewPathAsString(builder).build();
+        final PB.NavigationPath.Builder builder = PB.NavigationPath.newBuilder();
+        if (!CollectionUtils.isEmpty(path)) builder.addAllPath(path);
+        return PB.PersistableEnvelope.newBuilder().setNavigationPath(builder).build();
     }
 
-    public static PersistableEnvelope fromProto(PB.ViewPathAsString proto) {
-        return new PersistableViewPath(proto.getViewPathList());
+    public static PersistableEnvelope fromProto(PB.NavigationPath proto) {
+        return new NavigationPath(new ArrayList<>(proto.getPathList()));
     }
 }

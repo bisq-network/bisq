@@ -22,6 +22,7 @@ import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistableList;
 import io.bisq.generated.protobuffer.PB;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,12 +36,15 @@ public class TradeStatisticsList extends PersistableList<TradeStatistics> {
     public Message toProtoMessage() {
         return PB.PersistableEnvelope.newBuilder()
                 .setTradeStatisticsList(PB.TradeStatisticsList.newBuilder()
-                        .addAllTradeStatistics(getList().stream().map(TradeStatistics::toProtoTradeStatistics).collect(Collectors.toList())))
+                        .addAllTradeStatistics(getList().stream()
+                                .map(TradeStatistics::toProtoTradeStatistics)
+                                .collect(Collectors.toList())))
                 .build();
     }
 
     public static PersistableEnvelope fromProto(PB.TradeStatisticsList proto) {
-        return new TradeStatisticsList(proto.getTradeStatisticsList().stream().map(TradeStatistics::fromProto)
-                .collect(Collectors.toList()));
+        return new TradeStatisticsList(new ArrayList<>(proto.getTradeStatisticsList().stream()
+                .map(TradeStatistics::fromProto)
+                .collect(Collectors.toList())));
     }
 }

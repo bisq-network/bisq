@@ -20,6 +20,7 @@ package io.bisq.core.arbitration;
 import com.google.protobuf.Message;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.generated.protobuffer.PB;
@@ -42,19 +43,21 @@ import java.util.stream.Stream;
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
  */
-public final class DisputeList implements PersistableEnvelope {
+public final class DisputeList implements PersistableEnvelope, PersistedDataHost {
     transient private final Storage<DisputeList> storage;
     @Getter
     private final ObservableList<Dispute> list = FXCollections.observableArrayList();
 
     public DisputeList(Storage<DisputeList> storage) {
         this.storage = storage;
+    }
 
+    @Override
+    public void readPersisted() {
         DisputeList persisted = storage.initAndGetPersisted(this);
         if (persisted != null)
             list.addAll(persisted.getList());
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER

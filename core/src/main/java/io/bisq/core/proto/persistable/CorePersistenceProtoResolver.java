@@ -3,8 +3,8 @@ package io.bisq.core.proto.persistable;
 import com.google.inject.Provider;
 import io.bisq.common.proto.ProtobufferException;
 import io.bisq.common.proto.network.NetworkProtoResolver;
+import io.bisq.common.proto.persistable.NavigationPath;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
-import io.bisq.common.proto.persistable.PersistableViewPath;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.arbitration.DisputeList;
@@ -73,8 +73,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return PreferencesPayload.fromProto(proto.getPreferencesPayload(), this);
                 case USER_PAYLOAD:
                     return UserPayload.fromProto(proto.getUserPayload(), this);
-                case VIEW_PATH_AS_STRING:
-                    return PersistableViewPath.fromProto(proto.getViewPathAsString());
+                case NAVIGATION_PATH:
+                    return NavigationPath.fromProto(proto.getNavigationPath());
                 case COMPENSATION_REQUEST_PAYLOAD:
                     return CompensationRequestPayload.fromProto(proto.getCompensationRequestPayload());
                 case VOTE_ITEMS_LIST:

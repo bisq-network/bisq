@@ -104,7 +104,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 proto.getTraderId(),
                 proto.getSenderIsTrader(),
                 proto.getMessage(),
-                proto.getAttachmentsList().stream().map(Attachment::fromProto).collect(Collectors.toList()),
+                new ArrayList<>(proto.getAttachmentsList().stream().map(Attachment::fromProto).collect(Collectors.toList())),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getDate(),
                 proto.getArrived(),

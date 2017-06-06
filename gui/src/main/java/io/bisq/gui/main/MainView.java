@@ -236,7 +236,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 navigation.navigateToPreviousVisitedView();
 
                 if (!persistedFilesCorrupted.isEmpty()) {
-                    if (persistedFilesCorrupted.size() > 1 || !persistedFilesCorrupted.get(0).equals("Navigation")) {
+                    if (persistedFilesCorrupted.size() > 1 || !persistedFilesCorrupted.get(0).equals("ViewPathAsString")) {
                         // show warning that some files has been corrupted
                         new Popup<>()
                                 .warning(Res.get("popup.warning.incompatibleDB",
