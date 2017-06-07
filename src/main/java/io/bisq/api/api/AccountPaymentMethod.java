@@ -1,6 +1,7 @@
 package io.bitsquare.api.api;
 
-import io.bitsquare.payment.PaymentMethod;
+
+import io.bitsquare.messages.payment.PaymentMethod;
 
 /**
  * Created by mike on 05/09/16.

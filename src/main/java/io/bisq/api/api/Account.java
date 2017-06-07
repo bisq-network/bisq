@@ -2,8 +2,8 @@ package io.bitsquare.api.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.bitsquare.locale.Country;
-import io.bitsquare.locale.TradeCurrency;
+import io.bitsquare.messages.locale.Country;
+import io.bitsquare.messages.locale.TradeCurrency;
 import io.bitsquare.payment.PaymentAccount;
 import lombok.Data;
 import org.springframework.util.CollectionUtils;
