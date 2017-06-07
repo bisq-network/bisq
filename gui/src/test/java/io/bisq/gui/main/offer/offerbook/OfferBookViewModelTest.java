@@ -301,6 +301,7 @@ public class OfferBookViewModelTest {
                 0,
                 false,
                 null,
-                null));
+                null,
+                1));
     }
 }

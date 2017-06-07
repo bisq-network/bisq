@@ -394,7 +394,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 lowerClosePrice,
                 isPrivateOffer,
                 hashOfChallenge,
-                extraDataMap);
+                extraDataMap,
+                Version.TRADE_PROTOCOL_VERSION);
         Offer offer = new Offer(offerPayload);
         offer.setPriceFeedService(priceFeedService);
         return offer;

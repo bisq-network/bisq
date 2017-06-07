@@ -60,10 +60,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
     @Getter
     private final OfferPayload offerPayload;
     @JsonExclude
-    transient private Offer.State state = Offer.State.UNKNOWN;
-    @JsonExclude
     @Getter
-    transient private ObjectProperty<Offer.State> stateProperty = new SimpleObjectProperty<>(state);
+    transient private ObjectProperty<Offer.State> stateProperty = new SimpleObjectProperty<>(Offer.State.UNKNOWN);
     @JsonExclude
     @Nullable
     transient private OfferAvailabilityProtocol availabilityProtocol;
@@ -211,7 +209,6 @@ public class Offer implements NetworkPayload, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(Offer.State state) {
-        this.state = state;
         stateProperty().set(state);
     }
 
@@ -305,7 +302,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     // domain properties
     public Offer.State getState() {
-        return state;
+        return stateProperty.get();
     }
 
     public ReadOnlyStringProperty errorMessageProperty() {
@@ -450,7 +447,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
         Offer offer = (Offer) o;
 
         if (offerPayload != null ? !offerPayload.equals(offer.offerPayload) : offer.offerPayload != null) return false;
-        if (state != offer.state) return false;
+        if (getState() != offer.getState()) return false;
         return !(getErrorMessage() != null ? !getErrorMessage().equals(offer.getErrorMessage()) : offer.getErrorMessage() != null);
 
     }
@@ -458,7 +455,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     @Override
     public int hashCode() {
         int result = offerPayload != null ? offerPayload.hashCode() : 0;
-        result = 31 * result + (state != null ? state.hashCode() : 0);
+        result = 31 * result + (getState() != null ? getState().hashCode() : 0);
         result = 31 * result + (getErrorMessage() != null ? getErrorMessage().hashCode() : 0);
         return result;
     }
@@ -467,7 +464,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     public String toString() {
         return "Offer{" +
                 "getErrorMessage()='" + getErrorMessage() + '\'' +
-                ", state=" + state +
+                ", state=" + getState() +
                 ", offerPayload=" + offerPayload +
                 '}';
     }

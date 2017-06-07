@@ -126,7 +126,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     @Override
     public void readPersisted() {
         openOffers = new TradableList<>(openOfferTradableListStorage, "OpenOffers");
-        openOffers.readPersisted();
         openOffers.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
     }
 

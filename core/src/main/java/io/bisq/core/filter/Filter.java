@@ -43,7 +43,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode
 @ToString
 public final class Filter implements StoragePayload {
-    private final long TTL = TimeUnit.DAYS.toMillis(21);
     private final List<String> bannedOfferIds;
     private final List<String> bannedNodeAddress;
     private final List<PaymentAccountFilter> bannedPaymentAccounts;
@@ -120,6 +119,11 @@ public final class Filter implements StoragePayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public long getTTL() {
+        return TimeUnit.DAYS.toMillis(30);
+    }
+    
     public void setSigAndPubKey(String signatureAsBase64, PublicKey ownerPubKey) {
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKey = ownerPubKey;

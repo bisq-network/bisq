@@ -42,7 +42,6 @@ import java.util.stream.Collectors;
 @ToString
 @Getter
 public final class Mediator implements StoragePayload {
-    private final long TTL = TimeUnit.DAYS.toMillis(10);
     private final PubKeyRing pubKeyRing;
     private final NodeAddress nodeAddress;
     private final List<String> languageCodes;
@@ -116,6 +115,11 @@ public final class Mediator implements StoragePayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public long getTTL() {
+        return TimeUnit.DAYS.toMillis(10);
+    }
+    
     @Override
     public PublicKey getOwnerPubKey() {
         return pubKeyRing.getSignaturePubKey();

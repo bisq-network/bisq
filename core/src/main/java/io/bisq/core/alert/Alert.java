@@ -41,7 +41,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @ToString
 @Slf4j
 public final class Alert implements StoragePayload {
-    private final long TTL = TimeUnit.DAYS.toMillis(30);
     private final String message;
     private final boolean isUpdateInfo;
     private final String version;
@@ -116,6 +115,11 @@ public final class Alert implements StoragePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public long getTTL() {
+        return TimeUnit.DAYS.toMillis(30);
+    }
 
     public void setSigAndPubKey(String signatureAsBase64, PublicKey ownerPubKey) {
         this.signatureAsBase64 = signatureAsBase64;

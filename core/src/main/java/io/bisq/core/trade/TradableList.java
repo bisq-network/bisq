@@ -18,10 +18,9 @@
 package io.bisq.core.trade;
 
 import com.google.protobuf.Message;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.proto.ProtoUtil;
+import io.bisq.common.proto.ProtobufferException;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
-import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.OpenOffer;
@@ -29,6 +28,7 @@ import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -38,9 +38,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
-public final class TradableList<T extends Tradable> implements PersistableEnvelope, PersistedDataHost {
+public final class TradableList<T extends Tradable> implements PersistableEnvelope {
     transient final private Storage<TradableList<T>> storage;
-    private String fileName;
+    @Getter
     private final ObservableList<T> list = FXCollections.observableArrayList();
 
 
@@ -50,15 +50,12 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
 
     public TradableList(Storage<TradableList<T>> storage, String fileName) {
         this.storage = storage;
-        this.fileName = fileName;
-    }
 
-    @Override
-    public void readPersisted() {
         TradableList<T> persisted = storage.initAndGetPersisted(this, fileName);
         if (persisted != null)
             list.addAll(persisted.getList());
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -71,14 +68,16 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
 
     @Override
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setTradableList(PB.TradableList.newBuilder()
-                .addAllTradable(ProtoUtil.collectionToProto(list))).build();
+        return PB.PersistableEnvelope.newBuilder()
+                .setTradableList(PB.TradableList.newBuilder()
+                        .addAllTradable(ProtoUtil.collectionToProto(list)))
+                .build();
     }
 
     @Nullable
     public static TradableList fromProto(PB.TradableList proto,
                                          CoreProtoResolver coreProtoResolver,
-                                         Storage<TradableList<Tradable>> tradableListStorage,
+                                         Storage<TradableList<Tradable>> storage,
                                          BtcWalletService btcWalletService) {
         log.debug("TradableList fromProto of {} ", proto);
 
@@ -88,24 +87,21 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                         case OPEN_OFFER:
                             return OpenOffer.fromProto(tradable.getOpenOffer());
                         case BUYER_AS_MAKER_TRADE:
-                            return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), tradableListStorage, btcWalletService, coreProtoResolver);
+                            return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), storage, btcWalletService, coreProtoResolver);
                         case BUYER_AS_TAKER_TRADE:
-                            return BuyerAsTakerTrade.fromProto(tradable.getBuyerAsTakerTrade(), tradableListStorage, btcWalletService, coreProtoResolver);
+                            return BuyerAsTakerTrade.fromProto(tradable.getBuyerAsTakerTrade(), storage, btcWalletService, coreProtoResolver);
                         case SELLER_AS_MAKER_TRADE:
-                            return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), tradableListStorage, btcWalletService, coreProtoResolver);
+                            return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), storage, btcWalletService, coreProtoResolver);
                         case SELLER_AS_TAKER_TRADE:
-                            return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), tradableListStorage, btcWalletService, coreProtoResolver);
+                            return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), storage, btcWalletService, coreProtoResolver);
                         default:
                             log.error("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
-                            if (DevEnv.DEV_MODE)
-                                throw new RuntimeException("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
-                            return null;
+                            throw new ProtobufferException("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
                     }
                 })
-                .filter(e -> e != null)
                 .collect(Collectors.toList());
 
-        return new TradableList<>(tradableListStorage, list);
+        return new TradableList<>(storage, list);
     }
 
 
@@ -121,18 +117,18 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
     }
 
     public boolean remove(T tradable) {
-        boolean changed = this.list.remove(tradable);
+        boolean changed = list.remove(tradable);
         if (changed)
             storage.queueUpForSave();
         return changed;
     }
 
     public Stream<T> stream() {
-        return this.list.stream();
+        return list.stream();
     }
 
     public void forEach(Consumer<? super T> action) {
-        this.list.forEach(action);
+        list.forEach(action);
     }
 
     public int size() {
@@ -141,9 +137,5 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
 
     public boolean contains(T thing) {
         return list.contains(thing);
-    }
-
-    public ObservableList<T> getList() {
-        return list;
     }
 }

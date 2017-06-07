@@ -168,7 +168,6 @@ public class TradeManager implements PersistedDataHost {
     @Override
     public void readPersisted() {
         tradableList = new TradableList<>(tradableListStorage, "PendingTrades");
-        tradableList.readPersisted();
         tradableList.forEach(trade -> {
             trade.setTransientFields(tradableListStorage, btcWalletService);
             trade.getOffer().setPriceFeedService(priceFeedService);

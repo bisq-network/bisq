@@ -473,32 +473,32 @@ message OfferPayload {
         SELL = 2;
     }
 
-    Direction direction = 1;
-    string base_currency_code = 2;
-    string counter_currency_code = 3;
-    string payment_method_id = 4;
-    string country_code = 5;
-    repeated string accepted_country_codes = 6;
-    string bank_id = 7;
-    repeated string accepted_bank_ids = 8;
-    repeated NodeAddress arbitrator_node_addresses = 9;
-    repeated NodeAddress mediator_node_addresses = 10;
-    string id = 11;
-    int64 date = 12;
-    int64 protocol_version = 13;
-    bool use_market_based_price = 14;
-    int64 price = 15;
-    double market_price_margin = 16;
-    int64 amount = 17;
-    int64 min_amount = 18;
-    NodeAddress owner_node_address = 19;
-    PubKeyRing pub_key_ring = 20;
-    string maker_payment_account_id = 21;
-    string offer_fee_payment_tx_id = 22;
-    string version_nr = 23;
-    int64 block_height_at_offer_creation = 24;
-    int64 tx_fee = 25;
-    int64 maker_fee = 26;
+    string id = 1;
+    int64 date = 2;
+    NodeAddress owner_node_address = 3;
+    PubKeyRing pub_key_ring = 4;
+    Direction direction = 5;
+    int64 price = 6;
+    double market_price_margin = 7;
+    bool use_market_based_price = 8;
+    int64 amount = 9;
+    int64 min_amount = 10;   
+    string base_currency_code = 11;
+    string counter_currency_code = 12;
+    repeated NodeAddress arbitrator_node_addresses = 13;
+    repeated NodeAddress mediator_node_addresses = 14;
+    string payment_method_id = 15;
+    string maker_payment_account_id = 16;
+    string offer_fee_payment_tx_id = 17;
+    string country_code = 18;
+    repeated string accepted_country_codes =19;
+    string bank_id = 20;
+    repeated string accepted_bank_ids = 21;
+    string version_nr = 22;
+    int64 block_height_at_offer_creation = 23;
+    int64 tx_fee = 24;
+    int64 maker_fee = 25;
+    bool is_currency_for_maker_fee_btc = 26;
     int64 buyer_security_deposit = 27;
     int64 seller_security_deposit = 28;
     int64 max_trade_limit = 29;
@@ -510,7 +510,7 @@ message OfferPayload {
     bool is_private_offer = 35;
     string hash_of_challenge = 36;
     map<string, string> extra_data = 37;
-    bool is_currency_for_maker_fee_btc = 38;
+    int32 protocol_version = 38;
 }
 
 // TODO not fully verified as impl. is not completed
@@ -912,8 +912,6 @@ message Tradable {
         SellerAsTakerTrade seller_as_taker_trade = 5;
     }
 }
-
-
 
 message Trade {
     enum State {
