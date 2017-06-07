@@ -21,7 +21,9 @@ import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.ClearXchangeAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 public final class ClearXchangeAccount extends PaymentAccount {
     public ClearXchangeAccount() {
         super(PaymentMethod.CLEAR_X_CHANGE);

@@ -21,7 +21,9 @@ import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.payment.payload.SwishAccountPayload;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 public final class SwishAccount extends PaymentAccount {
     public SwishAccount() {
         super(PaymentMethod.SWISH);

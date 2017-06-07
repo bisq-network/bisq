@@ -116,7 +116,7 @@ public final class AddressEntry implements PersistablePayload {
         return new AddressEntry(proto.getPubKey().toByteArray(),
                 proto.getPubKeyHash().toByteArray(),
                 ProtoUtil.enumFromProto(AddressEntry.Context.class, proto.getContext().name()),
-                proto.getOfferId().isEmpty() ? null : proto.getOfferId(),
+                ProtoUtil.protoToNullableString(proto.getOfferId()),
                 Coin.valueOf(proto.getCoinLockedInMultiSig()));
     }
 

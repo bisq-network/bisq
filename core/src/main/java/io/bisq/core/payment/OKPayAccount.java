@@ -21,8 +21,10 @@ import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.core.payment.payload.OKPayAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import lombok.EqualsAndHashCode;
 
 //TODO missing support for selected trade currency
+@EqualsAndHashCode(callSuper = true)
 public final class OKPayAccount extends PaymentAccount {
     public OKPayAccount() {
         super(PaymentMethod.OK_PAY);

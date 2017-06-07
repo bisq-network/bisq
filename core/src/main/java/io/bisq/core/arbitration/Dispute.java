@@ -19,6 +19,7 @@ package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
@@ -205,14 +206,14 @@ public final class Dispute implements NetworkPayload {
                 PubKeyRing.fromProto(proto.getTraderPubKeyRing()),
                 proto.getTradeDate(),
                 Contract.fromProto(proto.getContract(), coreProtoResolver),
-                proto.getContractHash().toByteArray().length == 0 ? null : proto.getContractHash().toByteArray(),
-                proto.getDepositTxSerialized().toByteArray().length == 0 ? null : proto.getDepositTxSerialized().toByteArray(),
-                proto.getPayoutTxSerialized().toByteArray().length == 0 ? null : proto.getPayoutTxSerialized().toByteArray(),
-                proto.getDepositTxId().isEmpty() ? null : proto.getDepositTxId(),
-                proto.getPayoutTxId().isEmpty() ? null : proto.getPayoutTxId(),
+                ProtoUtil.protoToToNullableByteArray(proto.getContractHash()),
+                ProtoUtil.protoToToNullableByteArray(proto.getDepositTxSerialized()),
+                ProtoUtil.protoToToNullableByteArray(proto.getPayoutTxSerialized()),
+                ProtoUtil.protoToNullableString(proto.getDepositTxId()),
+                ProtoUtil.protoToNullableString(proto.getPayoutTxId()),
                 proto.getContractAsJson(),
-                proto.getMakerContractSignature().isEmpty() ? null : proto.getMakerContractSignature(),
-                proto.getTakerContractSignature().isEmpty() ? null : proto.getTakerContractSignature(),
+                ProtoUtil.protoToNullableString(proto.getMakerContractSignature()),
+                ProtoUtil.protoToNullableString(proto.getTakerContractSignature()),
                 PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()),
                 proto.getIsSupportTicket());
 
@@ -222,8 +223,9 @@ public final class Dispute implements NetworkPayload {
 
         dispute.openingDate = proto.getOpeningDate();
         dispute.isClosedProperty.set(proto.getIsClosed());
-        DisputeResult.fromProto(proto.getDisputeResult()).ifPresent(dispute.disputeResultProperty::set);
-        dispute.disputePayoutTxId = proto.getDisputePayoutTxId().isEmpty() ? null : proto.getDisputePayoutTxId();
+        if (proto.hasDisputeResult())
+            dispute.disputeResultProperty.set(DisputeResult.fromProto(proto.getDisputeResult()));
+        dispute.disputePayoutTxId = ProtoUtil.protoToNullableString(proto.getDisputePayoutTxId());
         return dispute;
     }
 

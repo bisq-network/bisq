@@ -84,19 +84,19 @@ public final class TradingPeer implements PersistablePayload {
     public static TradingPeer fromProto(PB.TradingPeer proto, CoreProtoResolver coreProtoResolver) {
         TradingPeer tradingPeer = new TradingPeer();
         tradingPeer.setChangeOutputValue(proto.getChangeOutputValue());
-        tradingPeer.setAccountId(proto.getAccountId().isEmpty() ? null : proto.getAccountId());
+        tradingPeer.setAccountId(ProtoUtil.protoToNullableString(proto.getAccountId()));
         tradingPeer.setPaymentAccountPayload(coreProtoResolver.fromProto(proto.getPaymentAccountPayload()));
-        tradingPeer.setPayoutAddressString(proto.getPayoutAddressString().isEmpty() ? null : proto.getPayoutAddressString());
-        tradingPeer.setContractAsJson(proto.getContractAsJson().isEmpty() ? null : proto.getContractAsJson());
-        tradingPeer.setContractSignature(proto.getContractSignature().isEmpty() ? null : proto.getContractSignature());
-        tradingPeer.setSignature(proto.getSignature().isEmpty() ? null : proto.getSignature().toByteArray());
+        tradingPeer.setPayoutAddressString(ProtoUtil.protoToNullableString(proto.getPayoutAddressString()));
+        tradingPeer.setContractAsJson(ProtoUtil.protoToNullableString(proto.getContractAsJson()));
+        tradingPeer.setContractSignature(ProtoUtil.protoToNullableString(proto.getContractSignature()));
+        tradingPeer.setSignature(ProtoUtil.protoToToNullableByteArray(proto.getSignature()));
         tradingPeer.setPubKeyRing(PubKeyRing.fromProto(proto.getPubKeyRing()));
-        tradingPeer.setMultiSigPubKey(proto.getMultiSigPubKey().isEmpty() ? null : proto.getMultiSigPubKey().toByteArray());
+        tradingPeer.setMultiSigPubKey(ProtoUtil.protoToToNullableByteArray(proto.getMultiSigPubKey()));
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().isEmpty() ?
                 null : proto.getRawTransactionInputsList().stream()
                 .map(RawTransactionInput::fromProto).collect(Collectors.toList());
         tradingPeer.setRawTransactionInputs(rawTransactionInputs);
-        tradingPeer.setChangeOutputAddress(proto.getChangeOutputAddress().isEmpty() ? null : proto.getChangeOutputAddress());
+        tradingPeer.setChangeOutputAddress(ProtoUtil.protoToNullableString(proto.getChangeOutputAddress()));
         return tradingPeer;
     }
 }

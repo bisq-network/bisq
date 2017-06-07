@@ -162,8 +162,8 @@ public class ProcessModel implements Model, PersistablePayload {
         processModel.setUseSavingsWallet(proto.getUseSavingsWallet());
 
         // nullable
-        processModel.setTakeOfferFeeTxId(proto.getTakeOfferFeeTxId().isEmpty() ? null : proto.getTakeOfferFeeTxId());
-        processModel.setPayoutTxSignature(proto.getPayoutTxSignature().isEmpty() ? null : proto.getPayoutTxSignature().toByteArray());
+        processModel.setTakeOfferFeeTxId(ProtoUtil.protoToNullableString(proto.getTakeOfferFeeTxId()));
+        processModel.setPayoutTxSignature(ProtoUtil.protoToToNullableByteArray(proto.getPayoutTxSignature()));
         List<NodeAddress> takerAcceptedArbitratorNodeAddresses = proto.getTakerAcceptedArbitratorNodeAddressesList().isEmpty() ?
                 null : proto.getTakerAcceptedArbitratorNodeAddressesList().stream()
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
@@ -172,13 +172,13 @@ public class ProcessModel implements Model, PersistablePayload {
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
         processModel.setTakerAcceptedArbitratorNodeAddresses(takerAcceptedArbitratorNodeAddresses);
         processModel.setTakerAcceptedMediatorNodeAddresses(takerAcceptedMediatorNodeAddresses);
-        processModel.setPreparedDepositTx(proto.getPreparedDepositTx().isEmpty() ? null : proto.getPreparedDepositTx().toByteArray());
+        processModel.setPreparedDepositTx(ProtoUtil.protoToToNullableByteArray(proto.getPreparedDepositTx()));
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().isEmpty() ?
                 null : proto.getRawTransactionInputsList().stream()
                 .map(RawTransactionInput::fromProto).collect(Collectors.toList());
         processModel.setRawTransactionInputs(rawTransactionInputs);
-        processModel.setChangeOutputAddress(proto.getChangeOutputAddress().isEmpty() ? null : proto.getChangeOutputAddress());
-        processModel.setMyMultiSigPubKey(proto.getMyMultiSigPubKey().isEmpty() ? null : proto.getMyMultiSigPubKey().toByteArray());
+        processModel.setChangeOutputAddress(ProtoUtil.protoToNullableString(proto.getChangeOutputAddress()));
+        processModel.setMyMultiSigPubKey(ProtoUtil.protoToToNullableByteArray(proto.getMyMultiSigPubKey()));
         processModel.setTempTradingPeerNodeAddress(NodeAddress.fromProto(proto.getTempTradingPeerNodeAddress()));
         return processModel;
     }

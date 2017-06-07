@@ -19,6 +19,7 @@ package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
@@ -152,7 +153,7 @@ public final class PayDepositRequest extends TradeMessage {
                 proto.getIsCurrencyForTakerFeeBtc(),
                 rawTransactionInputs,
                 proto.getChangeOutputValue(),
-                proto.getChangeOutputAddress().isEmpty() ? null : proto.getChangeOutputAddress(),
+                ProtoUtil.protoToNullableString(proto.getChangeOutputAddress()),
                 proto.getTakerMultiSigPubKey().toByteArray(),
                 proto.getTakerPayoutAddressString(),
                 PubKeyRing.fromProto(proto.getTakerPubKeyRing()),

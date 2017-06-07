@@ -400,19 +400,19 @@ public abstract class Trade implements Tradable, Model {
         trade.setDisputeState(DisputeState.fromProto(proto.getDisputeState()));
         trade.setTradePeriodState(TradePeriodState.fromProto(proto.getTradePeriodState()));
 
-        trade.setTakerFeeTxId(proto.getTakerFeeTxId().isEmpty() ? null : proto.getTakerFeeTxId());
-        trade.setDepositTxId(proto.getDepositTxId().isEmpty() ? null : proto.getDepositTxId());
-        trade.setPayoutTxId(proto.getPayoutTxId().isEmpty() ? null : proto.getPayoutTxId());
+        trade.setTakerFeeTxId(ProtoUtil.protoToNullableString(proto.getTakerFeeTxId()));
+        trade.setDepositTxId(ProtoUtil.protoToNullableString(proto.getDepositTxId()));
+        trade.setPayoutTxId(ProtoUtil.protoToNullableString(proto.getPayoutTxId()));
         trade.setTradingPeerNodeAddress(NodeAddress.fromProto(proto.getTradingPeerNodeAddress()));
         trade.setContract(Contract.fromProto(proto.getContract(), coreProtoResolver));
-        trade.setContractAsJson(proto.getContractAsJson().isEmpty() ? null : proto.getContractAsJson());
-        trade.setTakerContractSignature(proto.getTakerContractSignature().isEmpty() ? null : proto.getTakerContractSignature());
-        trade.setMakerContractSignature(proto.getMakerContractSignature().isEmpty() ? null : proto.getMakerContractSignature());
+        trade.setContractAsJson(ProtoUtil.protoToNullableString(proto.getContractAsJson()));
+        trade.setTakerContractSignature(ProtoUtil.protoToNullableString(proto.getTakerContractSignature()));
+        trade.setMakerContractSignature(ProtoUtil.protoToNullableString(proto.getMakerContractSignature()));
         trade.setArbitratorNodeAddress(NodeAddress.fromProto(proto.getArbitratorNodeAddress()));
         trade.setMediatorNodeAddress(NodeAddress.fromProto(proto.getMediatorNodeAddress()));
         trade.setArbitratorBtcPubKey(proto.getArbitratorBtcPubKey().toByteArray());
-        trade.setTakerPaymentAccountId(proto.getTakerPaymentAccountId().isEmpty() ? null : proto.getTakerPaymentAccountId());
-        trade.setErrorMessage(proto.getErrorMessage().isEmpty() ? null : proto.getErrorMessage());
+        trade.setTakerPaymentAccountId(ProtoUtil.protoToNullableString(proto.getTakerPaymentAccountId()));
+        trade.setErrorMessage(ProtoUtil.protoToNullableString(proto.getErrorMessage()));
 
         return trade;
     }
@@ -504,7 +504,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void removeDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        if (decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) 
+        if (decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey))
             decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
 

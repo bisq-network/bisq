@@ -287,13 +287,13 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
     public static OfferPayload fromProto(PB.OfferPayload proto) {
         checkArgument(!proto.getOfferFeePaymentTxId().isEmpty(), "OfferFeePaymentTxId must be set in PB.OfferPayload");
-        String countryCode = proto.getCountryCode().isEmpty() ? null : proto.getCountryCode();
-        String bankId = proto.getBankId().isEmpty() ? null : proto.getBankId();
+        String countryCode = ProtoUtil.protoToNullableString(proto.getCountryCode());
+        String bankId = ProtoUtil.protoToNullableString(proto.getBankId());
         List<String> acceptedBankIds = proto.getAcceptedBankIdsList().isEmpty() ?
                 null : proto.getAcceptedBankIdsList().stream().collect(Collectors.toList());
         List<String> acceptedCountryCodes = proto.getAcceptedCountryCodesList().isEmpty() ?
                 null : proto.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
-        String hashOfChallenge = proto.getHashOfChallenge().isEmpty() ? null : proto.getHashOfChallenge();
+        String hashOfChallenge = ProtoUtil.protoToNullableString(proto.getHashOfChallenge());
         Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
                 null : proto.getExtraDataMap();
         return new OfferPayload(proto.getId(),

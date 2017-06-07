@@ -20,15 +20,13 @@ package io.bisq.core.payment;
 import io.bisq.common.locale.Country;
 import io.bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
+@EqualsAndHashCode(callSuper = true)
 public abstract class CountryBasedPaymentAccount extends PaymentAccount {
-    private static final Logger log = LoggerFactory.getLogger(CountryBasedPaymentAccount.class);
-
     @Nullable
     protected Country country;
 
@@ -47,7 +45,6 @@ public abstract class CountryBasedPaymentAccount extends PaymentAccount {
     // Getter, Setter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     @Nullable
     public Country getCountry() {
         return country;
@@ -56,31 +53,5 @@ public abstract class CountryBasedPaymentAccount extends PaymentAccount {
     public void setCountry(@NotNull Country country) {
         this.country = country;
         ((CountryBasedPaymentAccountPayload) paymentAccountPayload).setCountryCode(country.code);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CountryBasedPaymentAccount)) return false;
-        if (!super.equals(o)) return false;
-
-        CountryBasedPaymentAccount that = (CountryBasedPaymentAccount) o;
-
-        return !(country != null ? !country.equals(that.country) : that.country != null);
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (country != null ? country.hashCode() : 0);
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "CountryBasedPaymentAccount{" +
-                "country=" + country +
-                "} " + super.toString();
     }
 }

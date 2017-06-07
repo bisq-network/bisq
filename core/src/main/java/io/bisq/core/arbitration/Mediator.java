@@ -19,6 +19,7 @@ package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
@@ -106,8 +107,8 @@ public final class Mediator implements StoragePayload {
                 proto.getRegistrationDate(),
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
-                proto.getEmailAddress().isEmpty() ? null : proto.getEmailAddress(),
-                proto.getInfo().isEmpty() ? null : proto.getInfo(),
+                ProtoUtil.protoToNullableString(proto.getEmailAddress()),
+                ProtoUtil.protoToNullableString(proto.getInfo()),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 

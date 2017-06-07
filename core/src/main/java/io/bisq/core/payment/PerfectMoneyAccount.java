@@ -21,7 +21,9 @@ import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.payment.payload.PerfectMoneyAccountPayload;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 public final class PerfectMoneyAccount extends PaymentAccount {
     public PerfectMoneyAccount() {
         super(PaymentMethod.PERFECT_MONEY);
@@ -40,6 +42,4 @@ public final class PerfectMoneyAccount extends PaymentAccount {
     public String getAccountNr() {
         return ((PerfectMoneyAccountPayload) paymentAccountPayload).getAccountNr();
     }
-
-
 }

@@ -21,7 +21,9 @@ import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.ChaseQuickPayAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 public final class ChaseQuickPayAccount extends PaymentAccount {
     public ChaseQuickPayAccount() {
         super(PaymentMethod.CHASE_QUICK_PAY);

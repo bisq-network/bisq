@@ -21,8 +21,6 @@ import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
 
-import java.util.Optional;
-
 public final class CryptoCurrency extends TradeCurrency {
     // http://boschista.deviantart.com/journal/Cool-ASCII-Symbols-214218618
     private final static String PREFIX = "✦ ";
@@ -30,32 +28,53 @@ public final class CryptoCurrency extends TradeCurrency {
     @Getter
     private boolean isAsset = false;
 
-    public CryptoCurrency(String currencyCode, String name) {
+    public CryptoCurrency(String currencyCode,
+                          String name) {
         this(currencyCode, name, false);
     }
 
-    public CryptoCurrency(String currencyCode, String name, boolean isAsset) {
+    public CryptoCurrency(String currencyCode,
+                          String name,
+                          boolean isAsset) {
         super(currencyCode, name);
         this.isAsset = isAsset;
     }
 
-    public CryptoCurrency(String currencyCode, String name, String symbol, boolean isAsset) {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private CryptoCurrency(String currencyCode,
+                           String name,
+                           String symbol,
+                           boolean isAsset) {
         super(currencyCode, name, symbol);
         this.isAsset = isAsset;
     }
+
+    @Override
+    public Message toProtoMessage() {
+        return getTradeCurrencyBuilder()
+                .setCryptoCurrency(PB.CryptoCurrency.newBuilder()
+                        .setIsAsset(isAsset))
+                .build();
+    }
+
+    public static CryptoCurrency fromProto(PB.TradeCurrency proto) {
+        return new CryptoCurrency(proto.getCode(),
+                proto.getName(),
+                proto.getSymbol(),
+                proto.getCryptoCurrency().getIsAsset());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public String getDisplayPrefix() {
         return PREFIX;
     }
 
-    @Override
-    public Message toProtoMessage() {
-        PB.TradeCurrency.Builder builder = PB.TradeCurrency.newBuilder()
-                .setCode(code)
-                .setName(name)
-                .setCryptoCurrency(PB.CryptoCurrency.newBuilder().setIsAsset(isAsset));
-        Optional.ofNullable(symbol).ifPresent(builder::setSymbol);
-        return builder.build();
-    }
 }

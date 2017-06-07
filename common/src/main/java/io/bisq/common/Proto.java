@@ -24,6 +24,6 @@ import java.io.Serializable;
 /**
  * Base interface for Envelope and Payload.
  */
-interface Proto extends Serializable {
+public interface Proto extends Serializable {
     Message toProtoMessage();
 }
