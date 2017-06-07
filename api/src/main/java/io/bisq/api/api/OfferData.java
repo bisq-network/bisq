@@ -1,12 +1,11 @@
-package io.bitsquare.api.api;
+package io.bisq.api.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.bitsquare.payment.*;
-import io.bitsquare.trade.offer.Offer;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferPayload;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.bitcoinj.core.Coin;
 
 import java.util.Date;
 import java.util.List;
@@ -31,7 +30,7 @@ public class OfferData {
     @JsonProperty
     String offer_id;
     @JsonProperty
-    Offer.Direction direction;
+    OfferPayload.Direction direction;
     @JsonProperty
     Offer.State state;
     @JsonProperty
@@ -61,7 +60,7 @@ public class OfferData {
         this.created = offer.getDate();
         this.arbitrators = offer.getArbitratorNodeAddresses().stream()
                 .map(nodeAddress -> nodeAddress.toString()).collect(Collectors.toList());
-        this.offerer = offer.getOffererNodeAddress().toString();
+        this.offerer = offer.getMakerNodeAddress().toString();
         this.btc_amount = offer.getAmount().toPlainString();
         this.min_btc_amount = offer.getMinAmount().toPlainString();
         if(offer.getPrice() != null) {
@@ -69,7 +68,7 @@ public class OfferData {
             this.other_currency = offer.getPrice().getCurrencyCode();
         }
 
-        this.price_detail = new PriceDetail(offer.getUseMarketBasedPrice(),
+        this.price_detail = new PriceDetail(offer.isUseMarketBasedPrice(),
                 offer.getMarketPriceMargin());
     }
 

@@ -323,7 +323,7 @@
             <version>1.4.0</version>
         </dependency>
         <dependency>
-            <groupId>io.bitsquare</groupId>
+            <groupId>io.bisq</groupId>
             <artifactId>api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

@@ -349,7 +349,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     // In the offer we support base and counter currency
     // Fiat offers have base currency BTC and counterCurrency Fiat
     // Altcoins have base currency Altcoin and counterCurrency BTC
-    // The rest of the app does not support yet that concept of base currency and counter currencies 
+    // The rest of the app does not support yet that concept of base currency and counter currencies
     // so we map here for convenience
     public String getCurrencyCode() {
         if (CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()))

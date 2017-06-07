@@ -1,7 +1,6 @@
-package io.bitsquare.api.api;
+package io.bisq.api.api;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.AllArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;

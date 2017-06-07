@@ -1,9 +1,12 @@
-package io.bitsquare.api.api;
+package io.bisq.api.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
-import io.bitsquare.payment.*;
+import io.bisq.core.payment.BankAccount;
+import io.bisq.core.payment.CountryBasedPaymentAccount;
+import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.SepaAccount;
+import io.bisq.core.payment.payload.PaymentAccountPayload;
 import lombok.Data;
 
 import java.util.List;
@@ -25,7 +28,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Data
 public class ContractData {
-    PaymentAccountContractData contractData;
+    PaymentAccountPayload contractData;
     @JsonProperty
     String payment_method_id;
     @JsonProperty
@@ -50,8 +53,8 @@ public class ContractData {
     String single_trade_currency;
 
     public ContractData(PaymentAccount bitsquarePaymentAccount) {
-        this.contractData = bitsquarePaymentAccount.getContractData();
-        this.payment_method_id = contractData.getPaymentMethodName();
+        this.contractData = bitsquarePaymentAccount.getPaymentAccountPayload();
+        this.payment_method_id = contractData.getPaymentMethodId();
         this.contract_id = contractData.getId();
         this.max_trade_period = contractData.getMaxTradePeriod();
 
@@ -68,7 +71,7 @@ public class ContractData {
         }
 
         single_trade_currency = bitsquarePaymentAccount.getSingleTradeCurrency().getCode();
-        payment_details = bitsquarePaymentAccount.getPaymentDetails();
+        payment_details = bitsquarePaymentAccount.getPaymentAccountPayload().getPaymentDetailsForTradePopup();
 
     }
 }

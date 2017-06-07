@@ -1,10 +1,10 @@
-package io.bitsquare.api.api;
+package io.bisq.api.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.bitsquare.messages.locale.Country;
-import io.bitsquare.messages.locale.TradeCurrency;
-import io.bitsquare.payment.PaymentAccount;
+import io.bisq.common.locale.Country;
+import io.bisq.common.locale.TradeCurrency;
+import io.bisq.core.payment.PaymentAccount;
 import lombok.Data;
 import org.springframework.util.CollectionUtils;
 

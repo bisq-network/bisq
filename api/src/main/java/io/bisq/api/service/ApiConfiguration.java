@@ -1,4 +1,4 @@
-package io.bitsquare.api.service;
+package io.bisq.api.service;
 
 import io.dropwizard.Configuration;
 import com.fasterxml.jackson.annotation.JsonProperty;

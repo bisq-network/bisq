@@ -1,4 +1,4 @@
-package io.bitsquare.api.api;
+package io.bisq.api.api;
 
 import lombok.AllArgsConstructor;
 

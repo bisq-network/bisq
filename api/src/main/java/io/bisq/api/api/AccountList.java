@@ -1,9 +1,7 @@
-package io.bitsquare.api.api;
+package io.bisq.api.api;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import io.bitsquare.payment.PaymentAccount;
 
-import java.util.List;
 import java.util.Set;
 
 /**

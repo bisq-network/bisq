@@ -1,4 +1,4 @@
-package io.bitsquare.api;
+package io.bisq.api;
 
 import org.junit.Test;
 
