@@ -1056,7 +1056,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         xLabel.setVisible(false); // we just use it to get the same layout as the upper row
 
         HBox hBox = new HBox();
-        hBox.setSpacing(5);
+        hBox.setSpacing(MainView.scale(5));
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.getChildren().addAll(amountInputBoxTuple.second, xLabel, priceAsPercentageInputBox);
         GridPane.setRowIndex(hBox, ++gridRow);

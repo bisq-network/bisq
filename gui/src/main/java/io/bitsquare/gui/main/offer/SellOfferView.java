@@ -21,12 +21,28 @@ import io.bitsquare.btc.pricefeed.PriceFeedService;
 import io.bitsquare.gui.Navigation;
 import io.bitsquare.gui.common.view.FxmlView;
 import io.bitsquare.gui.common.view.ViewLoader;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.user.Preferences;
+import javafx.fxml.FXML;
+import javafx.scene.control.TabPane;
+import javafx.scene.layout.AnchorPane;
 
 import javax.inject.Inject;
 
 @FxmlView
 public class SellOfferView extends OfferView {
+    @FXML
+    TabPane root;
+
+    @Override
+    protected void initialize() {
+        super.initialize();
+        AnchorPane.setTopAnchor(root, MainView.scale(0));
+        AnchorPane.setRightAnchor(root, MainView.scale(0));
+        AnchorPane.setBottomAnchor(root, MainView.scale(0));
+        AnchorPane.setLeftAnchor(root, MainView.scale(0));
+
+    }
 
     @Inject
     public SellOfferView(ViewLoader viewLoader, Navigation navigation, PriceFeedService priceFeedService, Preferences preferences) {
