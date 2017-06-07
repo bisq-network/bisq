@@ -1,5 +1,6 @@
 package io.bisq.network.p2p.storage.messages;
 
+import com.google.protobuf.Message;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
@@ -17,16 +18,16 @@ public final class AddDataMessage extends BroadcastMessage {
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.StorageEntryWrapper.Builder builder;
+        PB.StorageEntryWrapper.Builder builder = PB.StorageEntryWrapper.newBuilder();
+        final Message message = protectedStorageEntry.toProtoMessage();
         if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-            builder = PB.StorageEntryWrapper.newBuilder()
-                    .setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage());
+            builder.setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) message);
         else
-            builder = PB.StorageEntryWrapper.newBuilder()
-                    .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage());
+            builder.setProtectedStorageEntry((PB.ProtectedStorageEntry) message);
 
         return NetworkEnvelope.getDefaultBuilder()
-                .setAddDataMessage(PB.AddDataMessage.newBuilder().setEntry(builder))
+                .setAddDataMessage(PB.AddDataMessage.newBuilder()
+                        .setEntry(builder))
                 .build();
     }
 

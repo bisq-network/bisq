@@ -18,8 +18,8 @@
 package io.bisq.common.crypto;
 
 import com.google.common.base.Charsets;
+import io.bisq.common.util.Utilities;
 import org.bouncycastle.util.encoders.Base64;
-import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,17 +130,17 @@ public class Sig {
      * @param sigPublicKeyBytes
      * @return
      */
-    public static PublicKey getSigPublicKeyFromBytes(byte[] sigPublicKeyBytes) {
+    public static PublicKey getPublicKeyFromBytes(byte[] sigPublicKeyBytes) {
         try {
             return KeyFactory.getInstance(Sig.KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(sigPublicKeyBytes));
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
-            log.error("Error creating sigPublicKey from bytes. sigPublicKeyBytes as hex={}, error={}", Hex.toHexString(sigPublicKeyBytes), e);
+            log.error("Error creating sigPublicKey from bytes. sigPublicKeyBytes as hex={}, error={}", Utilities.bytesAsHexString(sigPublicKeyBytes), e);
             e.printStackTrace();
             throw new KeyConversionException(e);
         }
     }
 
-    public static byte[] getSigPublicKeyBytes(PublicKey sigPublicKey) {
+    public static byte[] getPublicKeyBytes(PublicKey sigPublicKey) {
         return new X509EncodedKeySpec(sigPublicKey.getEncoded()).getEncoded();
     }
 }

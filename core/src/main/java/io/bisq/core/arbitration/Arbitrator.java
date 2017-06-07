@@ -30,7 +30,6 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -67,7 +66,7 @@ public final class Arbitrator implements StoragePayload {
                       String btcAddress,
                       PubKeyRing pubKeyRing,
                       List<String> languageCodes,
-                      Date registrationDate,
+                      long registrationDate,
                       byte[] registrationPubKey,
                       String registrationSignature,
                       @Nullable String emailAddress,
@@ -78,7 +77,7 @@ public final class Arbitrator implements StoragePayload {
         this.btcAddress = btcAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;
-        this.registrationDate = registrationDate.getTime();
+        this.registrationDate = registrationDate;
         this.registrationPubKey = registrationPubKey;
         this.registrationSignature = registrationSignature;
         this.emailAddress = emailAddress;
@@ -113,13 +112,18 @@ public final class Arbitrator implements StoragePayload {
                 proto.getBtcAddress(),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 proto.getLanguageCodesList().stream().collect(Collectors.toList()),
-                new Date(proto.getRegistrationDate()),
+                proto.getRegistrationDate(),
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
                 proto.getEmailAddress().isEmpty() ? null : proto.getEmailAddress(),
                 proto.getInfo().isEmpty() ? null : proto.getInfo(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public PublicKey getOwnerPubKey() {

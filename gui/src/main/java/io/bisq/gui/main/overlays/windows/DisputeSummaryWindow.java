@@ -161,10 +161,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void addContent() {
         Contract contract = dispute.getContract();
-        if (dispute.disputeResultProperty().get() == null)
+        if (dispute.getDisputeResultProperty().get() == null)
             disputeResult = new DisputeResult(dispute.getTradeId(), dispute.getTraderId());
         else
-            disputeResult = dispute.disputeResultProperty().get();
+            disputeResult = dispute.getDisputeResultProperty().get();
 
         peersDisputeOptional = disputeManager.getDisputesAsObservableList().stream()
                 .filter(d -> dispute.getTradeId().equals(d.getTradeId()) && dispute.getTraderId() != d.getTraderId()).findFirst();
@@ -181,7 +181,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         boolean applyPeersDisputeResult = peersDisputeOptional.isPresent() && peersDisputeOptional.get().isClosed();
         if (applyPeersDisputeResult) {
             // If the other peers dispute has been closed we apply the result to ourselves
-            DisputeResult peersDisputeResult = peersDisputeOptional.get().disputeResultProperty().get();
+            DisputeResult peersDisputeResult = peersDisputeOptional.get().getDisputeResultProperty().get();
             disputeResult.setBuyerPayoutAmount(peersDisputeResult.getBuyerPayoutAmount());
             disputeResult.setSellerPayoutAmount(peersDisputeResult.getSellerPayoutAmount());
             disputeResult.setWinner(peersDisputeResult.getWinner());

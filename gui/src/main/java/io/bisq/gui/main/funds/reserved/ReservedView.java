@@ -128,7 +128,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @Override
     protected void activate() {
         openOfferManager.getObservableList().addListener(openOfferListChangeListener);
-        tradeManager.getTrades().addListener(tradeListChangeListener);
+        tradeManager.getTradableList().addListener(tradeListChangeListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
         updateList();
@@ -139,7 +139,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @Override
     protected void deactivate() {
         openOfferManager.getObservableList().removeListener(openOfferListChangeListener);
-        tradeManager.getTrades().removeListener(tradeListChangeListener);
+        tradeManager.getTradableList().removeListener(tradeListChangeListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(ReservedListItem::cleanup);
         walletService.removeBalanceListener(balanceListener);

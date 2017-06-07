@@ -31,11 +31,12 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
@@ -56,7 +57,7 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
             byte[] contractHash = Hash.getHash(trade.getContractAsJson());
             trade.setContractHash(contractHash);
 
-            ArrayList<RawTransactionInput> sellerInputs = processModel.getRawTransactionInputs();
+            List<RawTransactionInput> sellerInputs = checkNotNull(processModel.getRawTransactionInputs(), "sellerInputs must not be null");
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 

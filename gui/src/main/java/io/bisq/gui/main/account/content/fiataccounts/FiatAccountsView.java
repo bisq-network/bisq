@@ -311,7 +311,9 @@ public class FiatAccountsView extends ActivatableViewAndModel<GridPane, FiatAcco
     }
 
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod) {
-        return getPaymentMethodForm(paymentMethod, PaymentAccountFactory.getPaymentAccount(paymentMethod));
+        final PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
+        paymentAccount.init();
+        return getPaymentMethodForm(paymentMethod, paymentAccount);
     }
 
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod, PaymentAccount paymentAccount) {

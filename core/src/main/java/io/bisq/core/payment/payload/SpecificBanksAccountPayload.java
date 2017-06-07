@@ -76,8 +76,7 @@ public final class SpecificBanksAccountPayload extends BankAccountPayload {
                 .addAllAcceptedBanks(acceptedBanks);
         return getBankAccountPayloadBuilder()
                 .setSpecificBanksAccountPayload(builder)
-                .build()
-                .getSpecificBanksAccountPayload();
+                .build();
     }
 
     public static SpecificBanksAccountPayload fromProto(PB.PaymentAccountPayload proto) {

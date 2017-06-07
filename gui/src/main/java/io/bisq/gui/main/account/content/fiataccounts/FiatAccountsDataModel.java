@@ -112,7 +112,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
                 .filter(o -> o.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()))
                 .findAny()
                 .isPresent();
-        isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTrades().stream()
+        isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTradableList().stream()
                 .filter(t -> t.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()) ||
                         paymentAccount.getId().equals(t.getTakerPaymentAccountId()))
                 .findAny()
@@ -127,10 +127,12 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     }
 
     public void exportAccounts() {
-        ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
-                .filter(paymentAccount -> !(paymentAccount instanceof CryptoCurrencyAccount))
-                .collect(Collectors.toList()));
-        GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver);
+        if (user.getPaymentAccounts() != null) {
+            ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
+                    .filter(paymentAccount -> !(paymentAccount instanceof CryptoCurrencyAccount))
+                    .collect(Collectors.toList()));
+            GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver);
+        }
     }
 
     public void importAccounts() {

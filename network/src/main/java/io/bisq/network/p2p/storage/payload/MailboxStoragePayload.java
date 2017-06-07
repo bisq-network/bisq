@@ -46,9 +46,14 @@ public final class MailboxStoragePayload implements StoragePayload {
         this.senderPubKeyForAddOperation = senderPubKeyForAddOperation;
         this.ownerPubKey = ownerPubKey;
 
-        senderPubKeyForAddOperationBytes = Sig.getSigPublicKeyBytes(senderPubKeyForAddOperation);
-        ownerPubKeyBytes = Sig.getSigPublicKeyBytes(ownerPubKey);
+        senderPubKeyForAddOperationBytes = Sig.getPublicKeyBytes(senderPubKeyForAddOperation);
+        ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private MailboxStoragePayload(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage,
                                   byte[] senderPubKeyForAddOperationBytes,
@@ -59,8 +64,8 @@ public final class MailboxStoragePayload implements StoragePayload {
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = extraDataMap;
 
-        senderPubKeyForAddOperation = Sig.getSigPublicKeyFromBytes(senderPubKeyForAddOperationBytes);
-        ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
+        senderPubKeyForAddOperation = Sig.getPublicKeyFromBytes(senderPubKeyForAddOperationBytes);
+        ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }
 
     @Override

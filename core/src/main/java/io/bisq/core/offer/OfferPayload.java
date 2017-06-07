@@ -37,18 +37,23 @@ import javax.annotation.Nullable;
 import java.security.PublicKey;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @ToString
 @EqualsAndHashCode
 @Getter
 @Slf4j
 public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnlinePayload {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Enum
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public enum Direction {
         BUY, SELL;
 
@@ -60,6 +65,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
             return PB.OfferPayload.Direction.valueOf(direction.name());
         }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -266,11 +272,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setIsPrivateOffer(isPrivateOffer)
                 .setProtocolVersion(protocolVersion);
 
-        if (Objects.nonNull(offerFeePaymentTxId)) {
-            builder.setOfferFeePaymentTxId(offerFeePaymentTxId);
-        } else {
-            throw new RuntimeException("OfferPayload is in invalid state: offerFeePaymentTxID is not set when adding to P2P network.");
-        }
+        checkNotNull(offerFeePaymentTxId, "OfferPayload is in invalid state: offerFeePaymentTxID is not set when adding to P2P network.");
+        builder.setOfferFeePaymentTxId(offerFeePaymentTxId);
 
         Optional.ofNullable(countryCode).ifPresent(builder::setCountryCode);
         Optional.ofNullable(bankId).ifPresent(builder::setBankId);
@@ -352,10 +355,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     // The rest of the app does not support yet that concept of base currency and counter currencies
     // so we map here for convenience
     public String getCurrencyCode() {
-        if (CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()))
-            return getBaseCurrencyCode();
-        else
-            return getCounterCurrencyCode();
+        return CurrencyUtil.isCryptoCurrency(getBaseCurrencyCode()) ? getBaseCurrencyCode() : getCounterCurrencyCode();
     }
-
 }

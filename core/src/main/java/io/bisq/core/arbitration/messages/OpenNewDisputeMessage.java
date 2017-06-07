@@ -17,9 +17,9 @@
 
 package io.bisq.core.arbitration.messages;
 
-import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.core.arbitration.Dispute;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
@@ -43,14 +43,14 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return NetworkEnvelope.getDefaultBuilder()
                 .setOpenNewDisputeMessage(PB.OpenNewDisputeMessage.newBuilder()
-                        .setUid(getUid())
+                        .setUid(uid)
                         .setDispute(dispute.toProtoMessage())
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
                 .build();
     }
 
-    public static OpenNewDisputeMessage fromProto(PB.OpenNewDisputeMessage proto, ProtoResolver protoResolver) {
-        return new OpenNewDisputeMessage(Dispute.fromProto(proto.getDispute(), protoResolver),
+    public static OpenNewDisputeMessage fromProto(PB.OpenNewDisputeMessage proto, CoreProtoResolver coreProtoResolver) {
+        return new OpenNewDisputeMessage(Dispute.fromProto(proto.getDispute(), coreProtoResolver),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid());
     }

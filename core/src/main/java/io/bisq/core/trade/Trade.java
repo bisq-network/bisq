@@ -28,8 +28,10 @@ import io.bisq.common.app.Log;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.monetary.Volume;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.taskrunner.Model;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.Mediator;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -38,6 +40,7 @@ import io.bisq.core.btc.wallet.TradeWalletService;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.protocol.ProcessModel;
 import io.bisq.core.trade.protocol.TradeProtocol;
 import io.bisq.core.user.User;
@@ -53,7 +56,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
-import org.bouncycastle.util.encoders.Hex;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -158,6 +160,14 @@ public abstract class Trade implements Tradable, Model {
         State(@NotNull Phase phase) {
             this.phase = phase;
         }
+
+        public static Trade.State fromProto(PB.Trade.State state) {
+            return ProtoUtil.enumFromProto(Trade.State.class, state.name());
+        }
+
+        public static PB.Trade.State toProtoMessage(Trade.State state) {
+            return PB.Trade.State.valueOf(state.name());
+        }
     }
 
     public enum Phase {
@@ -168,20 +178,44 @@ public abstract class Trade implements Tradable, Model {
         FIAT_SENT,
         FIAT_RECEIVED,
         PAYOUT_PUBLISHED,
-        WITHDRAWN
+        WITHDRAWN;
+
+        public static Trade.Phase fromProto(PB.Trade.Phase phase) {
+            return ProtoUtil.enumFromProto(Trade.Phase.class, phase.name());
+        }
+
+        public static PB.Trade.Phase toProtoMessage(Trade.Phase phase) {
+            return PB.Trade.Phase.valueOf(phase.name());
+        }
     }
 
     public enum DisputeState {
         NO_DISPUTE,
         DISPUTE_REQUESTED,
         DISPUTE_STARTED_BY_PEER,
-        DISPUTE_CLOSED
+        DISPUTE_CLOSED;
+
+        public static Trade.DisputeState fromProto(PB.Trade.DisputeState disputeState) {
+            return ProtoUtil.enumFromProto(Trade.DisputeState.class, disputeState.name());
+        }
+
+        public static PB.Trade.DisputeState toProtoMessage(Trade.DisputeState disputeState) {
+            return PB.Trade.DisputeState.valueOf(disputeState.name());
+        }
     }
 
     public enum TradePeriodState {
         FIRST_HALF,
         SECOND_HALF,
-        TRADE_PERIOD_OVER
+        TRADE_PERIOD_OVER;
+
+        public static Trade.TradePeriodState fromProto(PB.Trade.TradePeriodState tradePeriodState) {
+            return ProtoUtil.enumFromProto(Trade.TradePeriodState.class, tradePeriodState.name());
+        }
+
+        public static PB.Trade.TradePeriodState toProtoMessage(Trade.TradePeriodState tradePeriodState) {
+            return PB.Trade.TradePeriodState.valueOf(tradePeriodState.name());
+        }
     }
 
 
@@ -199,9 +233,10 @@ public abstract class Trade implements Tradable, Model {
     private final long txFeeAsLong;
     @Getter
     private final long takerFeeAsLong;
-    private final long takeOfferDate;
-    @Getter
-    private final ProcessModel processModel;
+    @Setter
+    private long takeOfferDate;
+    @Getter @Setter
+    private ProcessModel processModel;
 
     //  Mutable
     @Nullable @Getter @Setter
@@ -358,6 +393,30 @@ public abstract class Trade implements Tradable, Model {
         return builder.build();
     }
 
+    public static Trade fromProto(Trade trade, PB.Trade proto, CoreProtoResolver coreProtoResolver) {
+        trade.setTakeOfferDate(proto.getTakeOfferDate());
+        trade.setProcessModel(ProcessModel.fromProto(proto.getProcessModel(), coreProtoResolver));
+        trade.setState(State.fromProto(proto.getState()));
+        trade.setDisputeState(DisputeState.fromProto(proto.getDisputeState()));
+        trade.setTradePeriodState(TradePeriodState.fromProto(proto.getTradePeriodState()));
+
+        trade.setTakerFeeTxId(proto.getTakerFeeTxId().isEmpty() ? null : proto.getTakerFeeTxId());
+        trade.setDepositTxId(proto.getDepositTxId().isEmpty() ? null : proto.getDepositTxId());
+        trade.setPayoutTxId(proto.getPayoutTxId().isEmpty() ? null : proto.getPayoutTxId());
+        trade.setTradingPeerNodeAddress(NodeAddress.fromProto(proto.getTradingPeerNodeAddress()));
+        trade.setContract(Contract.fromProto(proto.getContract(), coreProtoResolver));
+        trade.setContractAsJson(proto.getContractAsJson().isEmpty() ? null : proto.getContractAsJson());
+        trade.setTakerContractSignature(proto.getTakerContractSignature().isEmpty() ? null : proto.getTakerContractSignature());
+        trade.setMakerContractSignature(proto.getMakerContractSignature().isEmpty() ? null : proto.getMakerContractSignature());
+        trade.setArbitratorNodeAddress(NodeAddress.fromProto(proto.getArbitratorNodeAddress()));
+        trade.setMediatorNodeAddress(NodeAddress.fromProto(proto.getMediatorNodeAddress()));
+        trade.setArbitratorBtcPubKey(proto.getArbitratorBtcPubKey().toByteArray());
+        trade.setTakerPaymentAccountId(proto.getTakerPaymentAccountId().isEmpty() ? null : proto.getTakerPaymentAccountId());
+        trade.setErrorMessage(proto.getErrorMessage().isEmpty() ? null : proto.getErrorMessage());
+
+        return trade;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -398,8 +457,9 @@ public abstract class Trade implements Tradable, Model {
         // if we have already received a msg we apply it. 
         // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context 
         // or async calls there.
-        decryptedMessageWithPubKeySet.stream()
-                .forEach(msg -> tradeProtocol.applyMailboxMessage(msg, this));
+        // Clone to avoid ConcurrentModificationException. We remove items at the applyMailboxMessage call...
+        HashSet<DecryptedMessageWithPubKey> set = new HashSet<>(decryptedMessageWithPubKeySet);
+        set.stream().forEach(msg -> tradeProtocol.applyMailboxMessage(msg, this));
     }
 
 
@@ -432,7 +492,6 @@ public abstract class Trade implements Tradable, Model {
     // will received it again at next startup. Such might happen in edge cases when the user shuts down after we 
     // received the msb but before the init is called.
     public void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        log.trace("addDecryptedMessageWithPubKey decryptedMessageWithPubKey=" + decryptedMessageWithPubKey);
         if (!decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) {
             decryptedMessageWithPubKeySet.add(decryptedMessageWithPubKey);
 
@@ -445,8 +504,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void removeDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        log.trace("removeDecryptedMessageWithPubKey decryptedMessageWithPubKey=" + decryptedMessageWithPubKey);
-        if (decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey))
+        if (decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) 
             decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
 
@@ -547,17 +605,19 @@ public abstract class Trade implements Tradable, Model {
 
     public void setArbitratorNodeAddress(NodeAddress arbitratorNodeAddress) {
         this.arbitratorNodeAddress = arbitratorNodeAddress;
-
-        Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
-        checkNotNull(arbitrator, "arbitrator must not be null");
-        arbitratorBtcPubKey = arbitrator.getBtcPubKey();
+        if (processModel.getUser() != null) {
+            Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
+            checkNotNull(arbitrator, "arbitrator must not be null");
+            arbitratorBtcPubKey = arbitrator.getBtcPubKey();
+        }
     }
 
     public void setMediatorNodeAddress(NodeAddress mediatorNodeAddress) {
         this.mediatorNodeAddress = mediatorNodeAddress;
-
-        Mediator mediator = processModel.getUser().getAcceptedMediatorByAddress(mediatorNodeAddress);
-        checkNotNull(mediator, "mediator must not be null");
+        if (processModel.getUser() != null) {
+            Mediator mediator = processModel.getUser().getAcceptedMediatorByAddress(mediatorNodeAddress);
+            checkNotNull(mediator, "mediator must not be null");
+        }
     }
 
 
@@ -774,12 +834,12 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     tradePeriodState=" + tradePeriodState +
                 ",\n     contract=" + contract +
                 ",\n     contractAsJson='" + contractAsJson + '\'' +
-                ",\n     contractHash=" + Hex.toHexString(contractHash) +
+                ",\n     contractHash=" + Utilities.bytesAsHexString(contractHash) +
                 ",\n     takerContractSignature='" + takerContractSignature + '\'' +
                 ",\n     makerContractSignature='" + makerContractSignature + '\'' +
                 ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
-                ",\n     arbitratorBtcPubKey=" + Hex.toHexString(arbitratorBtcPubKey) +
+                ",\n     arbitratorBtcPubKey=" + Utilities.bytesAsHexString(arbitratorBtcPubKey) +
                 ",\n     takerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 ",\n     errorMessage='" + errorMessage + '\'' +
                 ",\n     txFee=" + txFee +

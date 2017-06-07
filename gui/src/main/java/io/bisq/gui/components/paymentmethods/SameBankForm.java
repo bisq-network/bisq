@@ -65,18 +65,20 @@ public class SameBankForm extends BankForm {
                 && paymentAccount.getSingleTradeCurrency() != null
                 && ((CountryBasedPaymentAccount) paymentAccount).getCountry() != null;
 
-        if (BankUtil.isBankNameRequired(bankAccountPayload.getCountryCode()))
-            result = result && inputValidator.validate(bankAccountPayload.getBankName()).isValid;
+        final String countryCode = bankAccountPayload.getCountryCode();
+        if (countryCode != null) {
+            if (BankUtil.isBankNameRequired(countryCode))
+                result = result && inputValidator.validate(bankAccountPayload.getBankName()).isValid;
 
-        if (BankUtil.isBankIdRequired(bankAccountPayload.getCountryCode()))
-            result = result && inputValidator.validate(bankAccountPayload.getBankId()).isValid;
+            if (BankUtil.isBankIdRequired(countryCode))
+                result = result && inputValidator.validate(bankAccountPayload.getBankId()).isValid;
 
-        if (BankUtil.isBranchIdRequired(bankAccountPayload.getCountryCode()))
-            result = result && inputValidator.validate(bankAccountPayload.getBranchId()).isValid;
+            if (BankUtil.isBranchIdRequired(countryCode))
+                result = result && inputValidator.validate(bankAccountPayload.getBranchId()).isValid;
 
-        if (BankUtil.isAccountNrRequired(bankAccountPayload.getCountryCode()))
-            result = result && inputValidator.validate(bankAccountPayload.getAccountNr()).isValid;
-
+            if (BankUtil.isAccountNrRequired(countryCode))
+                result = result && inputValidator.validate(bankAccountPayload.getAccountNr()).isValid;
+        }
         allInputsValid.set(result);
     }
 

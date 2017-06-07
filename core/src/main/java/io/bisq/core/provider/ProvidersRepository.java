@@ -28,7 +28,8 @@ public class ProvidersRepository {
             if (useLocalhostForP2P) {
                 // If we run in localhost mode we don't have the tor node running, so we need a clearnet host
                 // Use localhost for using a locally running provider
-                // providers = "http://localhost:8080/, http://146.185.175.243:8080/";
+                //providers = "http://localhost:8080/";
+                //providers = "http://localhost:8080/, http://146.185.175.243:8080/";
                 providers = "http://146.185.175.243:8080/";
             } else {
                 providers = "http://kijf4m2pqd54tbck.onion/";
@@ -36,7 +37,7 @@ public class ProvidersRepository {
         }
 
         providerArray = StringUtils.deleteWhitespace(providers).split(",");
-        
+
         int index = new Random().nextInt(providerArray.length);
         baseUrl = providerArray[index];
         log.info("baseUrl for PriceFeedService: " + baseUrl);

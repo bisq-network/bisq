@@ -18,7 +18,6 @@
 package io.bisq.common.storage;
 
 import com.google.common.util.concurrent.CycleDetectingLockFactory;
-import com.google.protobuf.Message;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.DevEnv;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
@@ -72,7 +71,7 @@ public class FileManager<T extends PersistableEnvelope> {
                     return null;
                 }
                 saveNowInternal(persistable);
-            } catch(Throwable e) {
+            } catch (Throwable e) {
                 log.error("Error during saveFileTask", e);
             }
             return null;
@@ -183,35 +182,42 @@ public class FileManager<T extends PersistableEnvelope> {
     private synchronized void saveToFile(T persistable, File dir, File storageFile) {
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
-        ObjectOutputStream objectOutputStream = null;
         PrintWriter printWriter = null;
 
-        log.info("saveToFile persistable.class " + persistable.getClass().getSimpleName());
+        log.debug("saveToFile persistable.class " + persistable.getClass().getSimpleName());
         PB.PersistableEnvelope protoPersistable = null;
         try {
             protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
+
+            // check if what we're saving can also be read in correctly
+            if (DevEnv.DEV_MODE) {
+                if (protoPersistable != null) {
+                    log.debug("Checking that the saved Persistable can be read again...");
+                    PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
+                    if (object == null) {
+                        log.error("Check on saved Persistable failed, object is null. storageFile={}", storageFile);
+                        persistenceProtoResolver.fromProto(protoPersistable);
+                    } else {
+                        log.debug("Check on saved Persistable complete: {} ", object);
+                    }
+                } else {
+                    log.debug("protoPersistable is null ");
+                    protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
+                }
+            }
         } catch (Throwable e) {
             log.error("Error in saveToFile toProtoMessage: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
-        }
-
-        // check if what we're saving can also be read in correctly
-        if(DevEnv.DEV_MODE) {
-            log.info("Reverting the protopersistable during saving");
-            persistenceProtoResolver.fromProto(protoPersistable);
+            protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
+            PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
         }
 
         try {
-            if (!dir.exists())
-                if (!dir.mkdir())
-                    log.warn("make dir failed");
+            if (!dir.exists() && !dir.mkdir())
+                log.warn("make dir failed");
 
             tempFile = File.createTempFile("temp", null, dir);
             tempFile.deleteOnExit();
-            if (persistable instanceof PlainTextWrapper) {
-                // When we dump json files we don't want to safe it as java serialized string objects, so we use PrintWriter instead.
-                printWriter = new PrintWriter(tempFile);
-                printWriter.println(((PlainTextWrapper) persistable).plainText);
-            } else if (protoPersistable != null) {
+            if (protoPersistable != null) {
                 fileOutputStream = new FileOutputStream(tempFile);
 
                 log.info("Writing protobuffer class:{} to file:{}", persistable.getClass(), storageFile.getName());
@@ -263,8 +269,6 @@ public class FileManager<T extends PersistableEnvelope> {
             }
 
             try {
-                if (objectOutputStream != null)
-                    objectOutputStream.close();
                 if (fileOutputStream != null)
                     fileOutputStream.close();
                 if (printWriter != null)

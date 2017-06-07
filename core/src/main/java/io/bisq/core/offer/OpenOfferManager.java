@@ -84,7 +84,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final Storage<TradableList<OpenOffer>> openOfferTradableListStorage;
     private boolean stopped;
     private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, retryRepublishOffersTimer;
-    private TradableList<OpenOffer> openOfferTradableList;
+    private TradableList<OpenOffer> openOffers;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -125,8 +125,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     @Override
     public void readPersisted() {
-        openOfferTradableList = new TradableList<>(openOfferTradableListStorage, "OpenOffers");
-        openOfferTradableList.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
+        openOffers = new TradableList<>(openOfferTradableListStorage, "OpenOffers");
+        openOffers.readPersisted();
+        openOffers.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
     }
 
     public void onAllServicesInitialized() {
@@ -162,9 +163,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         // we remove own offers from offerbook when we go offline
         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
 
-        final int size = openOfferTradableList.size();
+        final int size = openOffers.size();
         if (offerBookService.isBootstrapped()) {
-            openOfferTradableList.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayload()));
+            openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayload()));
             if (completeHandler != null)
                 UserThread.runAfter(completeHandler::run, size * 200 + 500, TimeUnit.MILLISECONDS);
         } else {
@@ -283,7 +284,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 model,
                 transaction -> {
                     OpenOffer openOffer = new OpenOffer(offer, openOfferTradableListStorage);
-                    openOfferTradableList.add(openOffer);
+                    openOffers.add(openOffer);
                     openOfferTradableListStorage.queueUpForSave();
                     resultHandler.handleResult(transaction);
                     if (!stopped) {
@@ -319,7 +320,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 () -> {
                     offer.setState(Offer.State.REMOVED);
                     openOffer.setState(OpenOffer.State.CANCELED);
-                    openOfferTradableList.remove(openOffer);
+                    openOffers.remove(openOffer);
                     closedTradableManager.add(openOffer);
                     walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.OFFER_FUNDING);
                     walletService.swapTradeEntryToAvailableEntry(offer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
@@ -331,7 +332,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     // Close openOffer after deposit published
     public void closeOpenOffer(Offer offer) {
         findOpenOffer(offer.getId()).ifPresent(openOffer -> {
-            openOfferTradableList.remove(openOffer);
+            openOffers.remove(openOffer);
             openOffer.setState(OpenOffer.State.CLOSED);
             offerBookService.removeOffer(openOffer.getOffer().getOfferPayload(),
                     () -> log.trace("Successful removed offer"),
@@ -353,15 +354,15 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     public ObservableList<OpenOffer> getObservableList() {
-        return openOfferTradableList.getObservableList();
+        return openOffers.getList();
     }
 
     public Optional<OpenOffer> findOpenOffer(String offerId) {
-        return openOfferTradableList.stream().filter(openOffer -> openOffer.getId().equals(offerId)).findAny();
+        return openOffers.stream().filter(openOffer -> openOffer.getId().equals(offerId)).findAny();
     }
 
     public Optional<OpenOffer> getOpenOfferById(String offerId) {
-        return openOfferTradableList.stream().filter(e -> e.getId().equals(offerId)).findFirst();
+        return openOffers.stream().filter(e -> e.getId().equals(offerId)).findFirst();
     }
 
 
@@ -451,8 +452,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void republishOffers() {
-        int size = openOfferTradableList.size();
-        final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOfferTradableList.getTradableList());
+        int size = openOffers.size();
+        final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers.getList());
         Log.traceCall("Number of offer for republish: " + size);
         if (!stopped) {
             stopPeriodicRefreshOffersTimer();
@@ -464,7 +465,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 final long maxDelay = (i + 2) * delay;
                 final OpenOffer openOffer = openOffersList.get(i);
                 UserThread.runAfterRandomDelay(() -> {
-                    if (openOfferTradableList.contains(openOffer)) {
+                    if (openOffers.contains(openOffer)) {
                         // The openOffer.getId().contains("_") check is because there was once a version
                         // where we encoded the version nr in the offer id with a "_" as separator.
                         // That caused several issues and was reverted. So if there are still old offers out with that
@@ -534,11 +535,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         if (periodicRefreshOffersTimer == null)
             periodicRefreshOffersTimer = UserThread.runPeriodically(() -> {
                         if (!stopped) {
-                            int size = openOfferTradableList.size();
+                            int size = openOffers.size();
                             Log.traceCall("Number of offer for refresh: " + size);
 
                             //we clone our list as openOffers might change during our delayed call
-                            final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOfferTradableList.getTradableList());
+                            final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers.getList());
                             for (int i = 0; i < size; i++) {
                                 // we delay to avoid reaching throttle limits
                                 // roughly 4 offers per second
@@ -549,7 +550,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                 final OpenOffer openOffer = openOffersList.get(i);
                                 UserThread.runAfterRandomDelay(() -> {
                                     // we need to check if in the meantime the offer has been removed
-                                    if (openOfferTradableList.contains(openOffer))
+                                    if (openOffers.contains(openOffer))
                                         refreshOffer(openOffer);
                                 }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
                             }

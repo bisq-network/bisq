@@ -43,13 +43,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class Alert implements StoragePayload {
     private final long TTL = TimeUnit.DAYS.toMillis(30);
     private final String message;
-    private final String version;
     private final boolean isUpdateInfo;
+    private final String version;
 
     @Nullable
-    private String signatureAsBase64;
-    @Nullable
     private byte[] ownerPubKeyBytes;
+    @Nullable
+    private String signatureAsBase64;
     @Nullable
     private PublicKey ownerPubKey;
 
@@ -85,7 +85,7 @@ public final class Alert implements StoragePayload {
         this.signatureAsBase64 = signatureAsBase64;
         this.extraDataMap = extraDataMap;
 
-        ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
+        ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }
 
     @Override
@@ -121,7 +121,7 @@ public final class Alert implements StoragePayload {
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKey = ownerPubKey;
 
-        ownerPubKeyBytes = Sig.getSigPublicKeyBytes(ownerPubKey);
+        ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
     }
 
     public boolean isNewVersion() {

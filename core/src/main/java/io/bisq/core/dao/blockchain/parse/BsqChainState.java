@@ -30,13 +30,12 @@ import io.bisq.core.btc.BitcoinNetwork;
 import io.bisq.core.dao.DaoOptionKeys;
 import io.bisq.core.dao.blockchain.exceptions.BlockNotConnectingException;
 import io.bisq.core.dao.blockchain.vo.*;
+import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -141,10 +140,20 @@ public class BsqChainState implements PersistableEnvelope {
         lock = new FunctionalReadWriteLock(true);
     }
 
-    private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
-        ois.defaultReadObject();
-        lock = new FunctionalReadWriteLock(true);
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // TODO not impl yet
+    @Override
+    public Message toProtoMessage() {
+        return null;
     }
+
+    public static PersistableEnvelope fromProto(PB.BsqChainState bsqChainState) {
+        return null;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public write access
@@ -474,12 +483,6 @@ public class BsqChainState implements PersistableEnvelope {
                 compensationRequestFees.size(),
                 votingFees.size(),
                 Utilities.serialize(blocks.toArray()).length / 1000d);
-    }
-
-    // TODO not impl yet
-    @Override
-    public Message toProtoMessage() {
-        return null;
     }
 }
 

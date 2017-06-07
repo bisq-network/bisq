@@ -21,7 +21,7 @@ import com.google.inject.name.Named;
 import io.bisq.common.UserThread;
 import io.bisq.common.handlers.ErrorMessageHandler;
 import io.bisq.common.handlers.ResultHandler;
-import io.bisq.common.storage.PlainTextWrapper;
+import io.bisq.common.storage.JsonFileManager;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.AppOptionKeys;
@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -54,8 +55,8 @@ public class OfferBookService {
 
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
-    private final Storage<PlainTextWrapper> offersJsonStorage;
     private final List<OfferBookChangedListener> offerBookChangedListeners = new LinkedList<>();
+    private final JsonFileManager jsonFileManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,11 +66,11 @@ public class OfferBookService {
     @Inject
     public OfferBookService(P2PService p2PService,
                             PriceFeedService priceFeedService,
-                            Storage<PlainTextWrapper> offersJsonStorage,
+                            @Named(Storage.STORAGE_DIR) File storageDir,
                             @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
-        this.offersJsonStorage = offersJsonStorage;
+        jsonFileManager = new JsonFileManager(storageDir);
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
@@ -98,8 +99,6 @@ public class OfferBookService {
         });
 
         if (dumpStatistics) {
-            this.offersJsonStorage.initWithFileName("offers_statistics.json");
-
             p2PService.addP2PServiceListener(new BootstrapListener() {
                 @Override
                 public void onBootstrapComplete() {
@@ -212,6 +211,6 @@ public class OfferBookService {
                 })
                 .filter(e -> e != null)
                 .collect(Collectors.toList());
-        offersJsonStorage.queueUpForSave(new PlainTextWrapper(Utilities.objectToJson(offerForJsonList)), 5000);
+        jsonFileManager.writeToDisc(Utilities.objectToJson(offerForJsonList), "offers_statistics.json");
     }
 }

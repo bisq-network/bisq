@@ -19,11 +19,11 @@ package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
-import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.arbitration.messages.DisputeCommunicationMessage;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.Contract;
 import io.bisq.generated.protobuffer.PB;
 import javafx.beans.property.*;
@@ -32,10 +32,8 @@ import javafx.collections.ObservableList;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -52,6 +50,7 @@ public final class Dispute implements NetworkPayload {
     private final PubKeyRing traderPubKeyRing;
     private final long tradeDate;
     private final Contract contract;
+    @Nullable
     private final byte[] contractHash;
     @Nullable
     private final byte[] depositTxSerialized;
@@ -68,20 +67,16 @@ public final class Dispute implements NetworkPayload {
     private final String takerContractSignature;
     private final PubKeyRing arbitratorPubKeyRing;
     private final boolean isSupportTicket;
-    private final ArrayList<DisputeCommunicationMessage> disputeCommunicationMessages = new ArrayList<>();
-
-    private boolean isClosed;
-    @Nullable
-    private DisputeResult disputeResult;
+    private final ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages = FXCollections.observableArrayList();
+    private BooleanProperty isClosedProperty = new SimpleBooleanProperty();
+    // disputeResultProperty.get is Nullable!
+    private ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>();
     @Nullable
     private String disputePayoutTxId;
 
     private long openingDate;
-    
+
     transient private Storage<DisputeList> storage;
-    transient private ObservableList<DisputeCommunicationMessage> observableList;
-    transient private BooleanProperty isClosedProperty;
-    transient private ObjectProperty<DisputeResult> disputeResultProperty;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +91,7 @@ public final class Dispute implements NetworkPayload {
                    PubKeyRing traderPubKeyRing,
                    long tradeDate,
                    Contract contract,
-                   byte[] contractHash,
+                   @Nullable byte[] contractHash,
                    @Nullable byte[] depositTxSerialized,
                    @Nullable byte[] payoutTxSerialized,
                    @Nullable String depositTxId,
@@ -123,10 +118,8 @@ public final class Dispute implements NetworkPayload {
                 takerContractSignature,
                 arbitratorPubKeyRing,
                 isSupportTicket);
-
-        openingDate = new Date().getTime();
-
         this.storage = storage;
+        openingDate = new Date().getTime();
     }
 
 
@@ -141,7 +134,7 @@ public final class Dispute implements NetworkPayload {
                    PubKeyRing traderPubKeyRing,
                    long tradeDate,
                    Contract contract,
-                   byte[] contractHash,
+                   @Nullable byte[] contractHash,
                    @Nullable byte[] depositTxSerialized,
                    @Nullable byte[] payoutTxSerialized,
                    @Nullable String depositTxId,
@@ -170,8 +163,6 @@ public final class Dispute implements NetworkPayload {
         this.isSupportTicket = isSupportTicket;
 
         id = tradeId + "_" + traderId;
-
-        init();
     }
 
     @Override
@@ -184,44 +175,44 @@ public final class Dispute implements NetworkPayload {
                 .setTraderPubKeyRing(traderPubKeyRing.toProtoMessage())
                 .setTradeDate(tradeDate)
                 .setContract(contract.toProtoMessage())
-                .setContractHash(ByteString.copyFrom(contractHash))
                 .setContractAsJson(contractAsJson)
                 .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage())
                 .setIsSupportTicket(isSupportTicket)
                 .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
                         .collect(Collectors.toList()))
-                .setIsClosed(isClosed)
+                .setIsClosed(isClosedProperty.get())
                 .setOpeningDate(openingDate)
                 .setId(id);
 
-        Optional.ofNullable(depositTxSerialized).ifPresent(tx -> builder.setDepositTxSerialized(ByteString.copyFrom(tx)));
-        Optional.ofNullable(payoutTxSerialized).ifPresent(tx -> builder.setPayoutTxSerialized(ByteString.copyFrom(tx)));
+        Optional.ofNullable(contractHash).ifPresent(e -> builder.setContractHash(ByteString.copyFrom(e)));
+        Optional.ofNullable(depositTxSerialized).ifPresent(e -> builder.setDepositTxSerialized(ByteString.copyFrom(e)));
+        Optional.ofNullable(payoutTxSerialized).ifPresent(e -> builder.setPayoutTxSerialized(ByteString.copyFrom(e)));
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
         Optional.ofNullable(payoutTxId).ifPresent(builder::setPayoutTxId);
         Optional.ofNullable(disputePayoutTxId).ifPresent(builder::setDisputePayoutTxId);
         Optional.ofNullable(makerContractSignature).ifPresent(builder::setMakerContractSignature);
         Optional.ofNullable(takerContractSignature).ifPresent(builder::setTakerContractSignature);
-        Optional.ofNullable(disputeResult).ifPresent(result -> builder.setDisputeResult(disputeResult.toProtoMessage()));
+        Optional.ofNullable(disputeResultProperty.get()).ifPresent(result -> builder.setDisputeResult(disputeResultProperty.get().toProtoMessage()));
         return builder.build();
     }
 
-    public static Dispute fromProto(PB.Dispute proto, ProtoResolver protoResolver) {
+    public static Dispute fromProto(PB.Dispute proto, CoreProtoResolver coreProtoResolver) {
         final Dispute dispute = new Dispute(proto.getTradeId(),
                 proto.getTraderId(),
                 proto.getDisputeOpenerIsBuyer(),
                 proto.getDisputeOpenerIsMaker(),
                 PubKeyRing.fromProto(proto.getTraderPubKeyRing()),
                 proto.getTradeDate(),
-                Contract.fromProto(proto.getContract(), protoResolver),
-                proto.getContractHash().toByteArray(),
-                proto.getDepositTxSerialized().toByteArray(),
-                proto.getPayoutTxSerialized().toByteArray(),
-                proto.getDepositTxId(),
-                proto.getPayoutTxId(),
+                Contract.fromProto(proto.getContract(), coreProtoResolver),
+                proto.getContractHash().toByteArray().length == 0 ? null : proto.getContractHash().toByteArray(),
+                proto.getDepositTxSerialized().toByteArray().length == 0 ? null : proto.getDepositTxSerialized().toByteArray(),
+                proto.getPayoutTxSerialized().toByteArray().length == 0 ? null : proto.getPayoutTxSerialized().toByteArray(),
+                proto.getDepositTxId().isEmpty() ? null : proto.getDepositTxId(),
+                proto.getPayoutTxId().isEmpty() ? null : proto.getPayoutTxId(),
                 proto.getContractAsJson(),
-                proto.getMakerContractSignature(),
-                proto.getTakerContractSignature(),
+                proto.getMakerContractSignature().isEmpty() ? null : proto.getMakerContractSignature(),
+                proto.getTakerContractSignature().isEmpty() ? null : proto.getTakerContractSignature(),
                 PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()),
                 proto.getIsSupportTicket());
 
@@ -230,10 +221,9 @@ public final class Dispute implements NetworkPayload {
                 .collect(Collectors.toList()));
 
         dispute.openingDate = proto.getOpeningDate();
-        dispute.isClosed = proto.getIsClosed();
-        dispute.disputeResult = DisputeResult.fromProto(proto.getDisputeResult());
-        dispute.disputePayoutTxId = proto.getDisputePayoutTxId();
-
+        dispute.isClosedProperty.set(proto.getIsClosed());
+        DisputeResult.fromProto(proto.getDisputeResult()).ifPresent(dispute.disputeResultProperty::set);
+        dispute.disputePayoutTxId = proto.getDisputePayoutTxId().isEmpty() ? null : proto.getDisputePayoutTxId();
         return dispute;
     }
 
@@ -242,16 +232,9 @@ public final class Dispute implements NetworkPayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void init() {
-        observableList = FXCollections.observableArrayList(disputeCommunicationMessages);
-        isClosedProperty = new SimpleBooleanProperty(isClosed);
-        disputeResultProperty = new SimpleObjectProperty<>(disputeResult);
-    }
-
     public void addDisputeMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
         if (!disputeCommunicationMessages.contains(disputeCommunicationMessage)) {
             disputeCommunicationMessages.add(disputeCommunicationMessage);
-            observableList.add(disputeCommunicationMessage);
             storage.queueUpForSave();
         } else {
             log.error("disputeDirectMessage already exists");
@@ -269,16 +252,14 @@ public final class Dispute implements NetworkPayload {
     }
 
     public void setIsClosed(boolean isClosed) {
-        boolean changed = this.isClosed != isClosed;
-        this.isClosed = isClosed;
-        isClosedProperty.set(isClosed);
+        boolean changed = this.isClosedProperty.get() != isClosed;
+        this.isClosedProperty.set(isClosed);
         if (changed)
             storage.queueUpForSave();
     }
 
     public void setDisputeResult(DisputeResult disputeResult) {
-        boolean changed = this.disputeResult == null || !this.disputeResult.equals(disputeResult);
-        this.disputeResult = disputeResult;
+        boolean changed = disputeResultProperty.get() == null || !disputeResultProperty.get().equals(disputeResult);
         disputeResultProperty.set(disputeResult);
         if (changed)
             storage.queueUpForSave();
@@ -300,15 +281,11 @@ public final class Dispute implements NetworkPayload {
         return Utilities.getShortId(tradeId);
     }
 
-    public ObservableList<DisputeCommunicationMessage> getDisputeCommunicationMessagesAsObservableList() {
-        return observableList;
-    }
-
     public ReadOnlyBooleanProperty isClosedProperty() {
         return isClosedProperty;
     }
 
-    public ObjectProperty<DisputeResult> disputeResultProperty() {
+    public ReadOnlyObjectProperty<DisputeResult> disputeResultProperty() {
         return disputeResultProperty;
     }
 
@@ -318,6 +295,10 @@ public final class Dispute implements NetworkPayload {
 
     public Date getOpeningDate() {
         return new Date(openingDate);
+    }
+
+    public boolean isClosed() {
+        return isClosedProperty.get();
     }
 
     @Override
@@ -332,8 +313,8 @@ public final class Dispute implements NetworkPayload {
                 ", traderPubKeyRing=" + traderPubKeyRing +
                 ", tradeDate=" + tradeDate +
                 ", contract=" + contract +
-                ", contractHash=" + Hex.toHexString(contractHash) +
-                ", depositTxSerialized=" + Hex.toHexString(depositTxSerialized) +
+                ", contractHash=" + Utilities.bytesAsHexString(contractHash) +
+                ", depositTxSerialized=" + Utilities.bytesAsHexString(depositTxSerialized) +
                 ", payoutTxSerialized not displayed for privacy reasons..." +
                 ", depositTxId='" + depositTxId + '\'' +
                 ", payoutTxId='" + payoutTxId + '\'' +
@@ -343,10 +324,9 @@ public final class Dispute implements NetworkPayload {
                 ", arbitratorPubKeyRing=" + arbitratorPubKeyRing +
                 ", isSupportTicket=" + isSupportTicket +
                 ", disputeCommunicationMessages=" + disputeCommunicationMessages +
-                ", isClosed=" + isClosed +
-                ", disputeResult=" + disputeResult +
+                ", isClosed=" + isClosedProperty.get() +
+                ", disputeResult=" + disputeResultProperty.get() +
                 ", disputePayoutTxId='" + disputePayoutTxId + '\'' +
-                ", disputeCommunicationMessagesAsObservableList=" + observableList +
                 ", isClosedProperty=" + isClosedProperty +
                 ", disputeResultProperty=" + disputeResultProperty +
                 '}';

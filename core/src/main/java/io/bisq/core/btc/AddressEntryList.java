@@ -54,7 +54,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     public void readPersisted() {
         AddressEntryList persisted = storage.initAndGetPersisted(this);
         if (persisted != null)
-            list = persisted.getList();
+            list = new ArrayList<>(persisted.getList());
     }
 
 
@@ -62,12 +62,12 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AddressEntryList(List<AddressEntry> list) {
+    private AddressEntryList(List<AddressEntry> list) {
         this.list = list;
     }
 
     public static AddressEntryList fromProto(PB.AddressEntryList proto) {
-        return new AddressEntryList(proto.getAddressEntryList().stream().map(AddressEntry::fromProto).collect(Collectors.toList()));
+        return new AddressEntryList(new ArrayList<>(proto.getAddressEntryList().stream().map(AddressEntry::fromProto).collect(Collectors.toList())));
     }
 
     @Override

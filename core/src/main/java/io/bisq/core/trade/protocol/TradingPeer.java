@@ -24,6 +24,7 @@ import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
@@ -77,5 +79,24 @@ public final class TradingPeer implements PersistablePayload {
         Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoUtil.collectionToProto(rawTransactionInputs)));
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         return builder.build();
+    }
+
+    public static TradingPeer fromProto(PB.TradingPeer proto, CoreProtoResolver coreProtoResolver) {
+        TradingPeer tradingPeer = new TradingPeer();
+        tradingPeer.setChangeOutputValue(proto.getChangeOutputValue());
+        tradingPeer.setAccountId(proto.getAccountId().isEmpty() ? null : proto.getAccountId());
+        tradingPeer.setPaymentAccountPayload(coreProtoResolver.fromProto(proto.getPaymentAccountPayload()));
+        tradingPeer.setPayoutAddressString(proto.getPayoutAddressString().isEmpty() ? null : proto.getPayoutAddressString());
+        tradingPeer.setContractAsJson(proto.getContractAsJson().isEmpty() ? null : proto.getContractAsJson());
+        tradingPeer.setContractSignature(proto.getContractSignature().isEmpty() ? null : proto.getContractSignature());
+        tradingPeer.setSignature(proto.getSignature().isEmpty() ? null : proto.getSignature().toByteArray());
+        tradingPeer.setPubKeyRing(PubKeyRing.fromProto(proto.getPubKeyRing()));
+        tradingPeer.setMultiSigPubKey(proto.getMultiSigPubKey().isEmpty() ? null : proto.getMultiSigPubKey().toByteArray());
+        List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().isEmpty() ?
+                null : proto.getRawTransactionInputsList().stream()
+                .map(RawTransactionInput::fromProto).collect(Collectors.toList());
+        tradingPeer.setRawTransactionInputs(rawTransactionInputs);
+        tradingPeer.setChangeOutputAddress(proto.getChangeOutputAddress().isEmpty() ? null : proto.getChangeOutputAddress());
+        return tradingPeer;
     }
 }

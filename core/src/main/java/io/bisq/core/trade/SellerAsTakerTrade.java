@@ -20,6 +20,7 @@ package io.bisq.core.trade;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.protocol.SellerAsTakerProtocol;
 import io.bisq.core.trade.protocol.TakerProtocol;
 import io.bisq.generated.protobuffer.PB;
@@ -65,13 +66,22 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                 .setSellerAsTakerTrade(PB.SellerAsTakerTrade.newBuilder().setTrade((PB.Trade) super.toProtoMessage())).build();
     }
 
-    public static Tradable fromProto(PB.SellerAsTakerTrade proto, Storage<? extends TradableList> storage,
-                                     BtcWalletService btcWalletService) {
-        PB.Trade trade = proto.getTrade();
-        return new SellerAsTakerTrade(Offer.fromProto(trade.getOffer()), Coin.valueOf(trade.getTradeAmountAsLong()),
-                Coin.valueOf(trade.getTxFeeAsLong()), Coin.valueOf(trade.getTakerFeeAsLong()),
-                trade.getIsCurrencyForTakerFeeBtc(), trade.getTradePrice(),
-                NodeAddress.fromProto(trade.getTradingPeerNodeAddress()), storage, btcWalletService);
+    public static Tradable fromProto(PB.SellerAsTakerTrade sellerAsTakerTradeProto,
+                                     Storage<? extends TradableList> storage,
+                                     BtcWalletService btcWalletService,
+                                     CoreProtoResolver coreProtoResolver) {
+        PB.Trade proto = sellerAsTakerTradeProto.getTrade();
+        return Trade.fromProto(new SellerAsTakerTrade(Offer.fromProto(proto.getOffer()),
+                        Coin.valueOf(proto.getTradeAmountAsLong()),
+                        Coin.valueOf(proto.getTxFeeAsLong()),
+                        Coin.valueOf(proto.getTakerFeeAsLong()),
+                        proto.getIsCurrencyForTakerFeeBtc(),
+                        proto.getTradePrice(),
+                        NodeAddress.fromProto(proto.getTradingPeerNodeAddress()),
+                        storage,
+                        btcWalletService),
+                proto,
+                coreProtoResolver);
     }
 
 

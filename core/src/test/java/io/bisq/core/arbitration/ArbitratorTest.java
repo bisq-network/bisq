@@ -40,7 +40,7 @@ public class ArbitratorTest {
                 "btcaddress",
                 new PubKeyRing(getBytes(100), getBytes(100), "key"),
                 Lists.newArrayList(),
-                new Date(),
+                new Date().getTime(),
                 getBytes(100),
                 "registrationSignature",
                 null, null, null);

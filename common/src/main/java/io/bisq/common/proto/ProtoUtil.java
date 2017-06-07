@@ -53,7 +53,7 @@ public class ProtoUtil {
         E result = null;
         try {
             result = Enum.valueOf(e, id);
-        } catch (IllegalArgumentException err) {
+        } catch (Throwable err) {
             log.error("Invalid value for enum " + e.getSimpleName() + ": " + id, err);
         }
 

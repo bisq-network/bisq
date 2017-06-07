@@ -19,10 +19,10 @@ package io.bisq.core.payment;
 
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.common.proto.ProtoUtil;
-import io.bisq.common.proto.ProtoResolver;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,8 +40,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class PaymentAccount implements PersistablePayload {
     protected final PaymentMethod paymentMethod;
-    protected final String id;
-    protected final long creationDate;
+    @Setter
+    protected String id;
+    @Setter
+    protected long creationDate;
 
     @Setter
     public PaymentAccountPayload paymentAccountPayload;
@@ -59,6 +61,9 @@ public abstract class PaymentAccount implements PersistablePayload {
 
     protected PaymentAccount(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public void init() {
         id = UUID.randomUUID().toString();
         creationDate = new Date().getTime();
         paymentAccountPayload = getPayload();
@@ -69,11 +74,12 @@ public abstract class PaymentAccount implements PersistablePayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+
     @Override
     public PB.PaymentAccount toProtoMessage() {
         PB.PaymentAccount.Builder builder = PB.PaymentAccount.newBuilder()
                 .setPaymentMethod(paymentMethod.toProtoMessage())
-                .setId(paymentMethod.getId())
+                .setId(id)
                 .setCreationDate(creationDate)
                 .setPaymentAccountPayload((PB.PaymentAccountPayload) paymentAccountPayload.toProtoMessage())
                 .setAccountName(accountName)
@@ -82,12 +88,14 @@ public abstract class PaymentAccount implements PersistablePayload {
         return builder.build();
     }
 
-    public static PaymentAccount fromProto(PB.PaymentAccount proto, ProtoResolver protoResolver) {
+    public static PaymentAccount fromProto(PB.PaymentAccount proto, CoreProtoResolver coreProtoResolver) {
         PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(proto.getPaymentMethod().getId()));
+        paymentAccount.setId(proto.getId());
+        paymentAccount.setCreationDate(proto.getCreationDate());
         paymentAccount.setAccountName(proto.getAccountName());
         paymentAccount.getTradeCurrencies().addAll(proto.getTradeCurrenciesList().stream().map(TradeCurrency::fromProto).collect(Collectors.toList()));
         paymentAccount.setSelectedTradeCurrency(paymentAccount.getSelectedTradeCurrency());
-        paymentAccount.setPaymentAccountPayload((PaymentAccountPayload) protoResolver.fromProto(proto.getPaymentAccountPayload()));
+        paymentAccount.setPaymentAccountPayload(coreProtoResolver.fromProto(proto.getPaymentAccountPayload()));
         return paymentAccount;
     }
 

@@ -48,7 +48,8 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                 .setOfferAvailabilityResponse(PB.OfferAvailabilityResponse.newBuilder()
                         .setOfferId(offerId)
                         .setAvailabilityResult(PB.AvailabilityResult.valueOf(availabilityResult.name()))
-                        .addAllSupportedCapabilities(supportedCapabilities)).build();
+                        .addAllSupportedCapabilities(supportedCapabilities))
+                .build();
     }
 
     public static OfferAvailabilityResponse fromProto(PB.OfferAvailabilityResponse proto) {

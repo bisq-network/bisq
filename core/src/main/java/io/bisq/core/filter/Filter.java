@@ -17,6 +17,7 @@
 
 package io.bisq.core.filter;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
@@ -69,6 +70,7 @@ public final class Filter implements StoragePayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @VisibleForTesting
     public Filter(List<String> bannedOfferIds,
                   List<String> bannedNodeAddress,
                   List<PaymentAccountFilter> bannedPaymentAccounts,
@@ -82,7 +84,7 @@ public final class Filter implements StoragePayload {
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = extraDataMap;
 
-        ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
+        ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }
 
     @Override
@@ -105,8 +107,7 @@ public final class Filter implements StoragePayload {
     public static Filter fromProto(PB.Filter proto) {
         return new Filter(proto.getBannedOfferIdsList().stream().collect(Collectors.toList()),
                 proto.getBannedNodeAddressList().stream().collect(Collectors.toList()),
-                proto.getBannedPaymentAccountsList()
-                        .stream()
+                proto.getBannedPaymentAccountsList().stream()
                         .map(PaymentAccountFilter::fromProto)
                         .collect(Collectors.toList()),
                 proto.getSignatureAsBase64(),
@@ -123,6 +124,6 @@ public final class Filter implements StoragePayload {
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKey = ownerPubKey;
 
-        ownerPubKeyBytes = Sig.getSigPublicKeyBytes(this.ownerPubKey);
+        ownerPubKeyBytes = Sig.getPublicKeyBytes(this.ownerPubKey);
     }
 }

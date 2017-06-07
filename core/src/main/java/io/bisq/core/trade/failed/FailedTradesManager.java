@@ -37,8 +37,11 @@ import java.util.Optional;
 
 public class FailedTradesManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(FailedTradesManager.class);
-    private final TradableList<Trade> failedTrades;
+    private TradableList<Trade> failedTrades;
     private final KeyRing keyRing;
+    private final PriceFeedService priceFeedService;
+    private final BtcWalletService btcWalletService;
+    private final Storage<TradableList<Trade>> tradableListStorage;
 
     @Inject
     public FailedTradesManager(KeyRing keyRing, PriceFeedService priceFeedService,
@@ -46,8 +49,16 @@ public class FailedTradesManager implements PersistedDataHost {
                                BtcWalletService btcWalletService,
                                @Named(Storage.STORAGE_DIR) File storageDir) {
         this.keyRing = keyRing;
-        final Storage<TradableList<Trade>> tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        this.priceFeedService = priceFeedService;
+        this.btcWalletService = btcWalletService;
+        tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
+
+    }
+
+    @Override
+    public void readPersisted() {
         this.failedTrades = new TradableList<>(tradableListStorage, "FailedTrades");
+        failedTrades.readPersisted();
         failedTrades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
         failedTrades.forEach(trade -> {
             trade.getOffer().setPriceFeedService(priceFeedService);
@@ -55,9 +66,6 @@ public class FailedTradesManager implements PersistedDataHost {
         });
     }
 
-    @Override
-    public void readPersisted() {
-    }
     public void add(Trade trade) {
         if (!failedTrades.contains(trade))
             failedTrades.add(trade);
@@ -68,7 +76,7 @@ public class FailedTradesManager implements PersistedDataHost {
     }
 
     public ObservableList<Trade> getFailedTrades() {
-        return failedTrades.getObservableList();
+        return failedTrades.getList();
     }
 
     public Optional<Trade> getTradeById(String id) {

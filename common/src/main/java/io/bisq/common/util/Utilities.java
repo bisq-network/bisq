@@ -29,19 +29,25 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.bitcoinj.core.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.crypto.Cipher;
 import java.awt.*;
 import java.io.*;
 import java.net.URI;
 import java.net.URLConnection;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**
@@ -404,6 +410,25 @@ public class Utilities {
         return Utilities.isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home");
     }
 
+    public static String encodeToHex(@Nullable byte[] bytes, boolean allowNullable) {
+        if (allowNullable)
+            return bytes != null ? Utils.HEX.encode(bytes) : "null";
+        else
+            return Utils.HEX.encode(checkNotNull(bytes, "bytes must not be null at encodeToHex"));
+    }
+
+    public static String bytesAsHexString(@Nullable byte[] bytes) {
+        return encodeToHex(bytes, true);
+    }
+
+    public static String encodeToHex(@Nullable byte[] bytes) {
+        return encodeToHex(bytes, false);
+    }
+
+    public static byte[] decodeFromHex(String encoded) {
+        return Utils.HEX.decode(encoded);
+    }
+
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {
         @Override
         public boolean shouldSkipField(FieldAttributes f) {
@@ -474,5 +499,9 @@ public class Utilities {
             return chunks[0];
         else
             return id.substring(0, Math.min(8, id.length()));
+    }
+
+    public static String collectionToString(Collection collection) {
+        return collection.stream().map(i -> i.toString()).collect(Collectors.joining(",")).toString();
     }
 }

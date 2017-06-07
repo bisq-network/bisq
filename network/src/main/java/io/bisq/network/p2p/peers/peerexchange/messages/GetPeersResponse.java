@@ -25,13 +25,14 @@ public final class GetPeersResponse implements PeerExchangeMessage, SupportedCap
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.GetPeersResponse.Builder builder = PB.GetPeersResponse.newBuilder()
-                .setRequestNonce(requestNonce)
-                .addAllReportedPeers(reportedPeers.stream()
-                        .map(Peer::toProtoMessage)
-                        .collect(Collectors.toList()))
-                .addAllSupportedCapabilities(supportedCapabilities);
-        return NetworkEnvelope.getDefaultBuilder().setGetPeersResponse(builder).build();
+        return NetworkEnvelope.getDefaultBuilder()
+                .setGetPeersResponse(PB.GetPeersResponse.newBuilder()
+                        .setRequestNonce(requestNonce)
+                        .addAllReportedPeers(reportedPeers.stream()
+                                .map(Peer::toProtoMessage)
+                                .collect(Collectors.toList()))
+                        .addAllSupportedCapabilities(supportedCapabilities))
+                .build();
     }
 
     public static GetPeersResponse fromProto(PB.GetPeersResponse getPeersResponse) {

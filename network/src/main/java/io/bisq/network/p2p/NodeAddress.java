@@ -38,8 +38,8 @@ public final class NodeAddress implements PersistablePayload, NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static NodeAddress fromProto(PB.NodeAddress nodeAddress) {
-        return new NodeAddress(nodeAddress.getHostName(), nodeAddress.getPort());
+    public static NodeAddress fromProto(PB.NodeAddress proto) {
+        return new NodeAddress(proto.getHostName(), proto.getPort());
     }
 
     public PB.NodeAddress toProtoMessage() {

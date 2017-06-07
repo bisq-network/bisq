@@ -18,7 +18,7 @@
 package io.bisq.gui;
 
 import com.google.inject.Inject;
-import io.bisq.common.proto.persistable.PersistableViewPath;
+import io.bisq.common.proto.persistable.NavigationPath;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.gui.common.view.View;
@@ -44,14 +44,14 @@ public final class Navigation implements PersistedDataHost {
 
     // New listeners can be added during iteration so we use CopyOnWriteArrayList to
     // prevent invalid array modification
-    transient private final CopyOnWriteArraySet<Listener> listeners = new CopyOnWriteArraySet<>();
-    transient private final Storage<PersistableViewPath> storage;
-    transient private ViewPath currentPath;
+    private final CopyOnWriteArraySet<Listener> listeners = new CopyOnWriteArraySet<>();
+    private final Storage<NavigationPath> storage;
+    private ViewPath currentPath;
     // Used for returning to the last important view. After setup is done we want to
     // return to the last opened view (e.g. sell/buy)
-    transient private ViewPath returnPath;
+    private ViewPath returnPath;
     // this string is updated just before saving to disk so it reflects the latest currentPath situation.
-    transient private PersistableViewPath persistableViewPath = new PersistableViewPath();
+    private NavigationPath navigationPath = new NavigationPath();
 
     // Persisted fields
     @Getter
@@ -60,16 +60,16 @@ public final class Navigation implements PersistedDataHost {
 
 
     @Inject
-    public Navigation(Storage<PersistableViewPath> storage) {
+    public Navigation(Storage<NavigationPath> storage) {
         this.storage = storage;
         storage.setNumMaxBackupFiles(3);
     }
 
     @Override
     public void readPersisted() {
-        PersistableViewPath persisted = storage.initAndGetPersisted(persistableViewPath, "Navigation");
+        NavigationPath persisted = storage.initAndGetPersisted(navigationPath, "NavigationPath");
         if (persisted != null) {
-            List<Class<? extends View>> viewClasses = persisted.getViewPath().stream()
+            List<Class<? extends View>> viewClasses = persisted.getPath().stream()
                     .map(className -> {
                         try {
                             return ((Class<? extends View>) Class.forName(className));
@@ -123,9 +123,9 @@ public final class Navigation implements PersistedDataHost {
 
     private void queueUpForSave() {
         if (currentPath.tip() != null) {
-            persistableViewPath.setViewPath(currentPath.stream().map(aClass -> aClass.getName()).collect(Collectors.toList()));
+            navigationPath.setPath(currentPath.stream().map(aClass -> aClass.getName()).collect(Collectors.toList()));
         }
-        storage.queueUpForSave(persistableViewPath, 1000);
+        storage.queueUpForSave(navigationPath, 1000);
     }
 
     public void navigateToPreviousVisitedView() {

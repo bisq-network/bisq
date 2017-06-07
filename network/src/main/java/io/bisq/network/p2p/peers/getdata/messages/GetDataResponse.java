@@ -33,15 +33,14 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage, Exte
                 .setGetDataResponse(PB.GetDataResponse.newBuilder()
                         .addAllDataSet(dataSet.stream()
                                 .map(protectedStorageEntry -> {
-                                    if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
-                                        return PB.StorageEntryWrapper.newBuilder()
-                                                .setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage())
-                                                .build();
-                                    } else {
-                                        return PB.StorageEntryWrapper.newBuilder()
-                                                .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())
-                                                .build();
-                                    }
+                                    return protectedStorageEntry instanceof ProtectedMailboxStorageEntry ?
+                                            PB.StorageEntryWrapper.newBuilder()
+                                                    .setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage())
+                                                    .build()
+                                            :
+                                            PB.StorageEntryWrapper.newBuilder()
+                                                    .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())
+                                                    .build();
                                 })
                                 .collect(Collectors.toList()))
                         .setRequestNonce(requestNonce)
@@ -50,13 +49,13 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage, Exte
                 .build();
     }
 
-    public static GetDataResponse fromProto(PB.GetDataResponse getDataResponse, NetworkProtoResolver resolver) {
+    public static GetDataResponse fromProto(PB.GetDataResponse proto, NetworkProtoResolver resolver) {
         HashSet<ProtectedStorageEntry> dataSet = new HashSet<>(
-                getDataResponse.getDataSetList().stream()
+                proto.getDataSetList().stream()
                         .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry))
                         .collect(Collectors.toSet()));
         return new GetDataResponse(dataSet,
-                getDataResponse.getRequestNonce(),
-                getDataResponse.getIsGetUpdatedDataResponse());
+                proto.getRequestNonce(),
+                proto.getIsGetUpdatedDataResponse());
     }
 }

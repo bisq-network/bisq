@@ -14,6 +14,7 @@ import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.network.NetworkProtoResolver;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.Storage;
@@ -62,7 +63,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class P2PService implements SetupListener, MessageListener, ConnectionListener, RequestDataManager.Listener,
-        HashMapChangedListener {
+        HashMapChangedListener, PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
     public static final int MAX_CONNECTIONS_DEFAULT = 12;
 
@@ -214,7 +215,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
 
         broadcaster = new Broadcaster(networkNode, peerManager);
 
-        p2PDataStorage = new P2PDataStorage(broadcaster, networkNode, storageDir, persistenceProtoResolver, networkProtoResolver);
+        p2PDataStorage = new P2PDataStorage(broadcaster, networkNode, storageDir, persistenceProtoResolver);
         p2PDataStorage.addHashMapChangedListener(this);
 
         requestDataManager = new RequestDataManager(networkNode, p2PDataStorage, peerManager, seedNodeAddresses, this);
@@ -234,6 +235,11 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         });
     }
 
+    @Override
+    public void readPersisted() {
+        p2PDataStorage.readPersisted();
+    }
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API

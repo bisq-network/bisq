@@ -32,8 +32,9 @@ public class TxIdIndexTuple implements PersistablePayload {
     @Override
     public String toString() {
         return txId + ":" + index;
-    } // TODO not impl yet
+    }
 
+    // TODO not impl yet
     @Override
     public Message toProtoMessage() {
         return null;

@@ -30,7 +30,6 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -60,11 +59,10 @@ public final class Mediator implements StoragePayload {
     @Nullable
     private Map<String, String> extraDataMap;
 
-    // Called from domain and PB
     public Mediator(NodeAddress nodeAddress,
                     PubKeyRing pubKeyRing,
                     List<String> languageCodes,
-                    Date registrationDate,
+                    long registrationDate,
                     byte[] registrationPubKey,
                     String registrationSignature,
                     @Nullable String emailAddress,
@@ -73,13 +71,18 @@ public final class Mediator implements StoragePayload {
         this.nodeAddress = nodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;
-        this.registrationDate = registrationDate.getTime();
+        this.registrationDate = registrationDate;
         this.registrationPubKey = registrationPubKey;
         this.registrationSignature = registrationSignature;
         this.emailAddress = emailAddress;
         this.info = info;
         this.extraDataMap = extraDataMap;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public PB.StoragePayload toProtoMessage() {
@@ -100,14 +103,17 @@ public final class Mediator implements StoragePayload {
         return new Mediator(NodeAddress.fromProto(proto.getNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 proto.getLanguageCodesList().stream().collect(Collectors.toList()),
-                new Date(proto.getRegistrationDate()),
+                proto.getRegistrationDate(),
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
                 proto.getEmailAddress().isEmpty() ? null : proto.getEmailAddress(),
                 proto.getInfo().isEmpty() ? null : proto.getInfo(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
-
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public PublicKey getOwnerPubKey() {

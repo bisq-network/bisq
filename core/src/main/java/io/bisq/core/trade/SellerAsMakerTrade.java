@@ -20,6 +20,7 @@ package io.bisq.core.trade;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.offer.Offer;
+import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.core.trade.messages.TradeMessage;
 import io.bisq.core.trade.protocol.MakerProtocol;
 import io.bisq.core.trade.protocol.SellerAsMakerProtocol;
@@ -60,12 +61,25 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                 .setSellerAsMakerTrade(PB.SellerAsMakerTrade.newBuilder().setTrade((PB.Trade) super.toProtoMessage())).build();
     }
 
-    public static Tradable fromProto(PB.SellerAsMakerTrade proto, Storage<? extends TradableList> storage,
-                                     BtcWalletService btcWalletService) {
-        PB.Trade trade = proto.getTrade();
-        return new SellerAsMakerTrade(Offer.fromProto(trade.getOffer()),
-                Coin.valueOf(trade.getTxFeeAsLong()), Coin.valueOf(trade.getTakerFeeAsLong()),
-                trade.getIsCurrencyForTakerFeeBtc(), storage, btcWalletService);
+    public static Tradable fromProto(PB.SellerAsMakerTrade sellerAsMakerTradeProto,
+                                     Storage<? extends TradableList> storage,
+                                     BtcWalletService btcWalletService,
+                                     CoreProtoResolver coreProtoResolver) {
+        PB.Trade proto = sellerAsMakerTradeProto.getTrade();
+        final SellerAsMakerTrade trade = new SellerAsMakerTrade(Offer.fromProto(proto.getOffer()),
+                Coin.valueOf(proto.getTxFeeAsLong()),
+                Coin.valueOf(proto.getTakerFeeAsLong()),
+                proto.getIsCurrencyForTakerFeeBtc(),
+                storage,
+                btcWalletService);
+
+        trade.setTradeAmountAsLong(proto.getTradeAmountAsLong());
+        trade.setTradePrice(proto.getTradePrice());
+        trade.setTradingPeerNodeAddress(NodeAddress.fromProto(proto.getTradingPeerNodeAddress()));
+
+        return Trade.fromProto(trade,
+                proto,
+                coreProtoResolver);
     }
 
 

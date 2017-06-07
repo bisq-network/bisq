@@ -43,7 +43,7 @@ public class PGP {
     // TODO not tested yet, remove Nullable once impl.
     // PEM encoding
     @Nullable
-    public static PGPPublicKey getPubKeyFromPEM(@Nullable String pem) {
+    public static PGPPublicKey getPubKeyFromPem(@Nullable String pem) {
         if (pem != null) {
             InputStream inputStream = new ByteArrayInputStream(pem.getBytes());
             try {

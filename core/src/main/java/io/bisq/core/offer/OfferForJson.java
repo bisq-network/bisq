@@ -9,7 +9,6 @@ import org.bitcoinj.utils.MonetaryFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Date;
 
 public class OfferForJson {
@@ -69,15 +68,6 @@ public class OfferForJson {
         this.offerFeeTxID = offerFeeTxID;
 
         setDisplayStrings();
-    }
-
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-        try {
-            in.defaultReadObject();
-            setDisplayStrings();
-        } catch (Throwable t) {
-            log.warn("Cannot be deserialized." + t.getMessage());
-        }
     }
 
     protected final MonetaryFormat fiatFormat = new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0);

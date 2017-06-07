@@ -24,6 +24,10 @@ import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Value
 @EqualsAndHashCode(callSuper = true)
 public final class DisputeResultMessage extends DisputeMessage {
@@ -42,14 +46,17 @@ public final class DisputeResultMessage extends DisputeMessage {
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return NetworkEnvelope.getDefaultBuilder()
                 .setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
-                        .setUid(getUid())
                         .setDisputeResult(disputeResult.toProtoMessage())
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setUid(uid))
                 .build();
     }
 
     public static DisputeResultMessage fromProto(PB.DisputeResultMessage proto) {
-        return new DisputeResultMessage(DisputeResult.fromProto(proto.getDisputeResult()),
+        checkArgument(!proto.equals(proto.getDefaultInstanceForType()), "PB.DisputeResultMessage must be set (we received default instance)");
+        final Optional<DisputeResult> disputeResult = DisputeResult.fromProto(proto.getDisputeResult());
+        checkArgument(disputeResult.isPresent(), "DisputeResult is not present");
+        return new DisputeResultMessage(disputeResult.get(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid());
     }
