@@ -17,9 +17,7 @@
 
 package io.bisq.common.util;
 
-import java.io.Serializable;
-
-public class Tuple4<A, B, C, D> implements Serializable {
+public class Tuple4<A, B, C, D> {
     final public A first;
     final public B second;
     final public C third;

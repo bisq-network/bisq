@@ -41,6 +41,6 @@ public final class GetUpdatedDataRequest implements SendersNodeAddressMessage, G
     public static GetUpdatedDataRequest fromProto(PB.GetUpdatedDataRequest proto) {
         return new GetUpdatedDataRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getNonce(),
-                ProtoUtil.getByteSet(proto.getExcludedKeysList()));
+                ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()));
     }
 }

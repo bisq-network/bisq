@@ -26,11 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import java.io.Serializable;
 
 @Slf4j
 @Value
 @Immutable
-public class TxOutputVo implements PersistablePayload {
+public class TxOutputVo implements PersistablePayload, Serializable {
     private final int index;
     private final long value;
     private final String txId;

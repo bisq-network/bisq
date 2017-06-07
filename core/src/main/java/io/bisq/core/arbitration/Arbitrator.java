@@ -42,6 +42,8 @@ import java.util.stream.Collectors;
 @ToString
 @Getter
 public final class Arbitrator implements StoragePayload {
+    public static final long TTL = TimeUnit.DAYS.toMillis(10);
+    
     private final NodeAddress nodeAddress;
     private final byte[] btcPubKey;
     private final String btcAddress;
@@ -115,8 +117,8 @@ public final class Arbitrator implements StoragePayload {
                 proto.getRegistrationDate(),
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
-                ProtoUtil.protoToNullableString(proto.getEmailAddress()),
-                ProtoUtil.protoToNullableString(proto.getInfo()),
+                ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
+                ProtoUtil.stringOrNullFromProto(proto.getInfo()),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 
@@ -127,9 +129,9 @@ public final class Arbitrator implements StoragePayload {
 
     @Override
     public long getTTL() {
-        return TimeUnit.DAYS.toMillis(10);
+        return TTL;
     }
-    
+
     @Override
     public PublicKey getOwnerPubKey() {
         return pubKeyRing.getSignaturePubKey();

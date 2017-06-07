@@ -280,7 +280,7 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 null : proto.getAcceptedBankIdsList().stream().collect(Collectors.toList());
         List<String> acceptedCountryCodes = proto.getAcceptedCountryCodesList().isEmpty() ?
                 null : proto.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
-        String hashOfChallenge = ProtoUtil.protoToNullableString(proto.getHashOfChallenge());
+        String hashOfChallenge = ProtoUtil.stringOrNullFromProto(proto.getHashOfChallenge());
         Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
                 null : proto.getExtraDataMap();
         return new OfferPayload(proto.getId(),
@@ -304,9 +304,9 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 proto.getPaymentMethodId(),
                 proto.getMakerPaymentAccountId(),
                 proto.getOfferFeePaymentTxId(),
-                ProtoUtil.protoToNullableString(proto.getCountryCode()),
+                ProtoUtil.stringOrNullFromProto(proto.getCountryCode()),
                 acceptedCountryCodes,
-                ProtoUtil.protoToNullableString(proto.getBankId()),
+                ProtoUtil.stringOrNullFromProto(proto.getBankId()),
                 acceptedBankIds,
                 proto.getVersionNr(),
                 proto.getBlockHeightAtOfferCreation(),

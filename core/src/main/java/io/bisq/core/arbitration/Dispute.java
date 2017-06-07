@@ -206,14 +206,14 @@ public final class Dispute implements NetworkPayload {
                 PubKeyRing.fromProto(proto.getTraderPubKeyRing()),
                 proto.getTradeDate(),
                 Contract.fromProto(proto.getContract(), coreProtoResolver),
-                ProtoUtil.protoToToNullableByteArray(proto.getContractHash()),
-                ProtoUtil.protoToToNullableByteArray(proto.getDepositTxSerialized()),
-                ProtoUtil.protoToToNullableByteArray(proto.getPayoutTxSerialized()),
-                ProtoUtil.protoToNullableString(proto.getDepositTxId()),
-                ProtoUtil.protoToNullableString(proto.getPayoutTxId()),
+                ProtoUtil.byteArrayOrNullFromProto(proto.getContractHash()),
+                ProtoUtil.byteArrayOrNullFromProto(proto.getDepositTxSerialized()),
+                ProtoUtil.byteArrayOrNullFromProto(proto.getPayoutTxSerialized()),
+                ProtoUtil.stringOrNullFromProto(proto.getDepositTxId()),
+                ProtoUtil.stringOrNullFromProto(proto.getPayoutTxId()),
                 proto.getContractAsJson(),
-                ProtoUtil.protoToNullableString(proto.getMakerContractSignature()),
-                ProtoUtil.protoToNullableString(proto.getTakerContractSignature()),
+                ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()),
+                ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()),
                 PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()),
                 proto.getIsSupportTicket());
 
@@ -225,7 +225,7 @@ public final class Dispute implements NetworkPayload {
         dispute.isClosedProperty.set(proto.getIsClosed());
         if (proto.hasDisputeResult())
             dispute.disputeResultProperty.set(DisputeResult.fromProto(proto.getDisputeResult()));
-        dispute.disputePayoutTxId = ProtoUtil.protoToNullableString(proto.getDisputePayoutTxId());
+        dispute.disputePayoutTxId = ProtoUtil.stringOrNullFromProto(proto.getDisputePayoutTxId());
         return dispute;
     }
 

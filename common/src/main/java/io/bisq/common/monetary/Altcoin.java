@@ -4,10 +4,7 @@ import com.google.common.math.LongMath;
 import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -20,9 +17,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * <p>
  * This class is immutable.
  */
-public final class Altcoin implements Monetary, Comparable<Altcoin>, Serializable {
-    private static final Logger log = LoggerFactory.getLogger(Altcoin.class);
-
+public final class Altcoin implements Monetary, Comparable<Altcoin> {
     /**
      * The absolute value of exponent of the value of a "smallest unit" in scientific notation. We picked 4 rather than
      * 2, because in financial applications it's common to use sub-cent precision.

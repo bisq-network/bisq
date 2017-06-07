@@ -20,8 +20,6 @@ package io.bisq.common.proto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import io.bisq.common.Proto;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.generated.protobuffer.PB;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -34,12 +32,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProtoUtil {
 
-    public static Set<byte[]> getByteSet(List<ByteString> byteStringList) {
+    public static Set<byte[]> byteSetFromProtoByteStringList(List<ByteString> byteStringList) {
         return byteStringList.stream().map(ByteString::toByteArray).collect(Collectors.toSet());
-    }
-
-    public static String getCurrencyCode(PB.OfferPayload pbOffer) {
-        return CurrencyUtil.isCryptoCurrency(pbOffer.getBaseCurrencyCode()) ? pbOffer.getBaseCurrencyCode() : pbOffer.getCounterCurrencyCode();
     }
 
     /**
@@ -47,12 +41,12 @@ public class ProtoUtil {
      * Note: "" is the default value for a protobuffer string, so this means it's not filled in.
      */
     @Nullable
-    public static String protoToNullableString(String proto) {
+    public static String stringOrNullFromProto(String proto) {
         return "".equals(proto) ? null : proto;
     }
 
     @Nullable
-    public static byte[] protoToToNullableByteArray(ByteString proto) {
+    public static byte[] byteArrayOrNullFromProto(ByteString proto) {
         return proto.isEmpty() ? null : proto.toByteArray();
     }
 

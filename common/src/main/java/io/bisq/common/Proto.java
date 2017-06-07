@@ -19,11 +19,9 @@ package io.bisq.common;
 
 import com.google.protobuf.Message;
 
-import java.io.Serializable;
-
 /**
  * Base interface for Envelope and Payload.
  */
-public interface Proto extends Serializable {
+public interface Proto {
     Message toProtoMessage();
 }

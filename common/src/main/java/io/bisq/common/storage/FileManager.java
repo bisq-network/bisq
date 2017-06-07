@@ -220,7 +220,7 @@ public class FileManager<T extends PersistableEnvelope> {
             if (protoPersistable != null) {
                 fileOutputStream = new FileOutputStream(tempFile);
 
-                log.info("Writing protobuffer class:{} to file:{}", persistable.getClass(), storageFile.getName());
+                log.debug("Writing protobuffer class:{} to file:{}", persistable.getClass(), storageFile.getName());
                 writeLock.lock();
                 protoPersistable.writeDelimitedTo(fileOutputStream);
 

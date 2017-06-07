@@ -311,11 +311,11 @@ public class VotingManager {
         //TODO check equals code
         if (!voteItemsLists.contains(voteItemsList)) {
             voteItemsLists.add(voteItemsList);
-            PersistableList<VoteItemsList> serializable = new PersistableList<>(voteItemsLists);
-            serializable.setToProto((list) -> PB.PersistableEnvelope.newBuilder()
+            PersistableList<VoteItemsList> list = new PersistableList<>(voteItemsLists);
+            list.setToProto(e -> PB.PersistableEnvelope.newBuilder()
                     .setVoteItemsList(PB.VoteItemsList.newBuilder()
                             .addAllVoteItem(ProtoUtil.collectionToProto(voteItemsList.getAllVoteItemList()))).build());
-            voteItemCollectionsStorage.queueUpForSave(serializable, 500);
+            voteItemCollectionsStorage.queueUpForSave(list, 500);
         }
     }
 

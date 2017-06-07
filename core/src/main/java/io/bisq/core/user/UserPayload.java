@@ -95,7 +95,7 @@ public class UserPayload implements PersistableEnvelope {
 
     public static UserPayload fromProto(PB.UserPayload proto, CoreProtoResolver coreProtoResolver) {
         return new UserPayload(
-                ProtoUtil.protoToNullableString(proto.getAccountId()),
+                ProtoUtil.stringOrNullFromProto(proto.getAccountId()),
                 proto.getPaymentAccountsList().isEmpty() ? new HashSet<>() : new HashSet<>(proto.getPaymentAccountsList().stream()
                         .map(e -> PaymentAccount.fromProto(e, coreProtoResolver))
                         .collect(Collectors.toSet())),

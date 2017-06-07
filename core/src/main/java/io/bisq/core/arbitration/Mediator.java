@@ -106,8 +106,8 @@ public final class Mediator implements StoragePayload {
                 proto.getRegistrationDate(),
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
-                ProtoUtil.protoToNullableString(proto.getEmailAddress()),
-                ProtoUtil.protoToNullableString(proto.getInfo()),
+                ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
+                ProtoUtil.stringOrNullFromProto(proto.getInfo()),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 

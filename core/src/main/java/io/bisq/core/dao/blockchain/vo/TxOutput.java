@@ -22,8 +22,10 @@ import lombok.Data;
 import lombok.experimental.Delegate;
 import org.bitcoinj.core.Utils;
 
+import java.io.Serializable;
+
 @Data
-public class TxOutput implements PersistablePayload {
+public class TxOutput implements PersistablePayload, Serializable {
     @Delegate
     private final TxOutputVo txOutputVo;
 

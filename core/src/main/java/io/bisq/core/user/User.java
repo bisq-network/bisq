@@ -91,7 +91,6 @@ public final class User implements PersistedDataHost {
         if (!userPayload.getAcceptedLanguageLocaleCodes().contains(english))
             userPayload.getAcceptedLanguageLocaleCodes().add(english);
 
-        // Use that to guarantee update of the serializable field and to make a storage update in case of a change
         paymentAccountsAsObservable.addListener((SetChangeListener<PaymentAccount>) change -> {
             userPayload.setPaymentAccounts(new HashSet<>(paymentAccountsAsObservable));
             persist();

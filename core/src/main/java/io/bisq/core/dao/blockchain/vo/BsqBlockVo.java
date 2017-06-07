@@ -22,10 +22,11 @@ import io.bisq.common.proto.persistable.PersistablePayload;
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
+import java.io.Serializable;
 
 @Value
 @Immutable
-public class BsqBlockVo implements PersistablePayload {
+public class BsqBlockVo implements PersistablePayload, Serializable {
     private final int height;
     private final String hash;
     private String previousBlockHash;

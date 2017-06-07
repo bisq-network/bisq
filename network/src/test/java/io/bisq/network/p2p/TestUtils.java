@@ -14,8 +14,10 @@ import io.bisq.network.p2p.seed.SeedNodesRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.security.*;
+import java.io.File;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
@@ -32,42 +34,6 @@ public class TestUtils {
         KeyPair keyPair = keyPairGenerator.genKeyPair();
         log.trace("Generate storageSignatureKeyPair needed {} ms", System.currentTimeMillis() - ts);
         return keyPair;
-    }
-
-
-    public static byte[] sign(PrivateKey privateKey, Serializable data)
-            throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
-        Signature sig = Signature.getInstance("SHA1withDSA");
-        sig.initSign(privateKey);
-        sig.update(objectToByteArray(data));
-        return sig.sign();
-    }
-
-    public static byte[] objectToByteArray(Object object) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutput out = null;
-        byte[] result = null;
-        try {
-            out = new ObjectOutputStream(bos);
-            out.writeObject(object);
-            result = bos.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (IOException ex) {
-                // ignore close exception
-            }
-            try {
-                bos.close();
-            } catch (IOException ex) {
-                // ignore close exception
-            }
-        }
-        return result;
     }
 
     public static DummySeedNode getAndStartSeedNode(int port, boolean useLocalhostForP2P, Set<NodeAddress> seedNodes) throws InterruptedException {

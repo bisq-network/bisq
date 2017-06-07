@@ -107,7 +107,7 @@ public class Connection implements MessageListener {
     private volatile boolean stopped;
     private PeerType peerType;
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
-    private final List<Tuple2<Long, Serializable>> messageTimeStamps = new ArrayList<>();
+    private final List<Tuple2<Long, NetworkEnvelope>> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private volatile long lastSendTimeStamp = 0;
 
@@ -815,8 +815,6 @@ public class Connection implements MessageListener {
                                 return;
                         }
 
-                        // Then check data throttle limit. Do that for non-message type objects as well,
-                        // so that's why we use serializable here.
                         if (connection.violatesThrottleLimit(networkEnvelope)
                                 && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
                             return;

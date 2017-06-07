@@ -21,10 +21,11 @@ import io.bisq.common.proto.persistable.PersistablePayload;
 import lombok.Data;
 import lombok.experimental.Delegate;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Data
-public class BsqBlock implements PersistablePayload {
+public class BsqBlock implements PersistablePayload, Serializable {
     @Delegate
     private final BsqBlockVo bsqBlockVo;
     

@@ -153,7 +153,7 @@ public final class PayDepositRequest extends TradeMessage {
                 proto.getIsCurrencyForTakerFeeBtc(),
                 rawTransactionInputs,
                 proto.getChangeOutputValue(),
-                ProtoUtil.protoToNullableString(proto.getChangeOutputAddress()),
+                ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()),
                 proto.getTakerMultiSigPubKey().toByteArray(),
                 proto.getTakerPayoutAddressString(),
                 PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
