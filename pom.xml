@@ -3,15 +3,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.bitsquare</groupId>
+    <groupId>io.bisq</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.9.9</version>
-    <description>Bitsquare - The decentralized bitcoin exchange</description>
-    <url>https://bitsquare.io</url>
+    <version>0.5.0.0</version>
+    <description>bisq - The decentralized bitcoin exchange</description>
+    <url>https://bisq.io</url>
 
     <organization>
-        <name>bitsquare.io</name>
+        <name>bisq.io</name>
     </organization>
 
     <licenses>
@@ -24,33 +24,32 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/bitsquare/bitsquare/issues</url>
+        <url>https://github.com/bisq/bisq/issues</url>
     </issueManagement>
 
     <scm>
-        <connection>scm:git:https://github.com/bitsquare/bitsquare</connection>
-        <developerConnection>scm:git:https://github.com/bitsquare/bitsquare</developerConnection>
-        <url>scm:git:https://github.com/bitsquare/bitsquare</url>
+        <connection>scm:git:https://github.com/bisq/bisq</connection>
+        <developerConnection>scm:git:https://github.com/bisq/bisq</developerConnection>
+        <url>scm:git:https://github.com/bisq/bisq</url>
     </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spring.version>4.3.6.RELEASE</spring.version>
     </properties>
 
     <modules>
         <module>common</module>
+        <module>network</module>
         <module>core</module>
         <module>jsocks</module>
         <module>jtorctl</module>
         <module>jtorproxy</module>
-        <module>network</module>
         <module>gui</module>
-        <module>headless</module>
         <module>seednode</module>
-        <module>monitor</module>
         <module>statistics</module>
-        <module>pricefeed</module>
         <module>api</module>
+        <module>provider</module>
     </modules>
 
     <build>
@@ -64,6 +63,24 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+            <!--
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.5.0</version>
+                <configuration>
+                    <protocExecutable>/usr/local/bin/protoc</protocExecutable>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
         </plugins>
     </build>
 
@@ -77,27 +94,57 @@
 
     <dependencies>
         <!--bitcoinj
-            Needs local installation!
-            See doc/build.md for further info
-        -->
+           Needs local installation!
+           See doc/build.md for further info
+       -->
         <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
-            <version>0.13.1.9</version>
+            <version>0.14.4.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.findbugs</groupId>
+                    <artifactId>jsr305</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.protobuf</groupId>
+                    <artifactId>protobuf-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!--guice-->
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>3.0</version>
+            <version>4.1.0</version>
         </dependency>
 
         <!--crypto-->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.53</version>
+            <version>1.56</version>
+        </dependency>
+
+        <!-- We need both bcpg-jdk15on and bcpg-jdk16 -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpg-jdk15on</artifactId>
+            <version>1.56</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpg-jdk16</artifactId>
+            <version>1.46</version>
         </dependency>
 
         <!--utils-->
@@ -114,7 +161,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>18.0</version>
+            <version>19.0</version>
         </dependency>
         <dependency>
             <groupId>org.fxmisc.easybind</groupId>
@@ -139,9 +186,16 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.16.10</version>
+            <version>1.16.16</version>
+            <scope>provided</scope>
         </dependency>
-
+        <!--
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.3.0</version>
+        </dependency>
+-->
         <!--logging-->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -173,9 +227,27 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+            <version>1.30</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>3.3.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
-            <version>4.1.1.RELEASE</version>
+            <version>${spring.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-logpath=/home/bs/bitsquare/logs
+logpath=/home/bs/bisq/logs
 datapath=/home/bs/.local/share
 
 mkdir -p $logpath

@@ -236,8 +236,8 @@ public class TorControlConnection implements TorControlCommands {
 
     /**
      * Sets <b>w</b> as the PrintWriter for debugging output,
-     * which writes out all messages passed between Tor and the controller.
-     * Outgoing messages are preceded by "\>\>" and incoming messages are preceded
+     * which writes out all network_messages passed between Tor and the controller.
+     * Outgoing network_messages are preceded by "\>\>" and incoming network_messages are preceded
      * by "\<\<"
      */
     public void setDebugging(PrintWriter w) {
@@ -246,8 +246,8 @@ public class TorControlConnection implements TorControlCommands {
 
     /**
      * Sets <b>s</b> as the PrintStream for debugging output,
-     * which writes out all messages passed between Tor and the controller.
-     * Outgoing messages are preceded by "\>\>" and incoming messages are preceded
+     * which writes out all network_messages passed between Tor and the controller.
+     * Outgoing network_messages are preceded by "\>\>" and incoming network_messages are preceded
      * by "\<\<"
      */
     public void setDebugging(PrintStream s) {

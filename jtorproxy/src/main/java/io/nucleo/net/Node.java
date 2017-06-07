@@ -235,7 +235,7 @@ public class Node {
                     // get incoming data
                     try {
                         out = prepareOOSForSocket(socket);
-                        // LookAheadObjectInputStream not needed here as the class it not used in Bitsquare (used to test the library)
+                        // LookAheadObjectInputStream not needed here as the class it not used in bisq (used to test the library)
                         objectInputStream = new ObjectInputStream(socket.getInputStream());
                     } catch (EOFException e) {
                         log.debug("Got bogus incoming connection");
@@ -304,7 +304,7 @@ public class Node {
                     // Here we go
                     log.debug("Incoming Connection ready!");
                     try {
-                        // TODO: listeners are only added afterwards, so messages can be lost!
+                        // TODO: listeners are only added afterwards, so network_messages can be lost!
                         IncomingConnection incomingConnection = new IncomingConnection(peer, socket, out, objectInputStream);
                         serverConnectListener.onConnect(incomingConnection);
                     } catch (IOException e) {

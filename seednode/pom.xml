@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>parent</artifactId>
-        <groupId>io.bitsquare</groupId>
-        <version>0.4.9.9</version>
+        <groupId>io.bisq</groupId>
+        <version>0.5.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -42,7 +42,7 @@
                     <transformers>
                         <transformer
                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>io.bitsquare.seednode.SeedNodeMain</mainClass>
+                            <mainClass>io.bisq.seednode.SeedNodeMain</mainClass>
                         </transformer>
                     </transformers>
                     <filters>
@@ -77,7 +77,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.bitsquare</groupId>
+            <groupId>io.bisq</groupId>
             <artifactId>core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
