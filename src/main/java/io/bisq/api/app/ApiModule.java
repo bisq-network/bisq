@@ -15,26 +15,26 @@
  * along with Bitsquare. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.bitsquare.api.app;
+package io.bisq.api.app;
 
 import com.google.inject.Singleton;
-import io.bitsquare.alert.AlertModule;
-import io.bitsquare.api.service.DropwizardApplication;
-import io.bitsquare.app.AppModule;
-import io.bitsquare.app.BitsquareEnvironment;
-import io.bitsquare.arbitration.ArbitratorModule;
-import io.bitsquare.btc.BitcoinModule;
-import io.bitsquare.common.Clock;
-import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.common.crypto.KeyStorage;
-import io.bitsquare.crypto.EncryptionServiceModule;
-import io.bitsquare.filter.FilterModule;
-import io.bitsquare.p2p.P2PModule;
-import io.bitsquare.storage.Storage;
-import io.bitsquare.trade.TradeModule;
-import io.bitsquare.trade.offer.OfferModule;
-import io.bitsquare.user.Preferences;
-import io.bitsquare.user.User;
+import io.bisq.api.service.DropwizardApplication;
+import io.bisq.common.Clock;
+import io.bisq.common.app.AppModule;
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.crypto.KeyStorage;
+import io.bisq.common.storage.Storage;
+import io.bisq.core.alert.AlertModule;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.arbitration.ArbitratorModule;
+import io.bisq.core.btc.BitcoinModule;
+import io.bisq.core.filter.FilterModule;
+import io.bisq.core.offer.OfferModule;
+import io.bisq.core.trade.TradeModule;
+import io.bisq.core.user.Preferences;
+import io.bisq.core.user.User;
+import io.bisq.network.crypto.EncryptionServiceModule;
+import io.bisq.network.p2p.P2PModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 
@@ -58,13 +58,13 @@ public class ApiModule extends AppModule {
         bind(Clock.class).in(Singleton.class);
         bind(DropwizardApplication.class).in(Singleton.class);
 
-        File storageDir = new File(env.getRequiredProperty(Storage.DIR_KEY));
-        bind(File.class).annotatedWith(named(Storage.DIR_KEY)).toInstance(storageDir);
+        File storageDir = new File(env.getRequiredProperty(Storage.STORAGE_DIR));
+        bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
 
-        File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.DIR_KEY));
-        bind(File.class).annotatedWith(named(KeyStorage.DIR_KEY)).toInstance(keyStorageDir);
+        File keyStorageDir = new File(env.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
+        bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
 
-        bind(BitsquareEnvironment.class).toInstance((BitsquareEnvironment) env);
+        bind(BisqEnvironment.class).toInstance((BisqEnvironment) env);
 
         // ordering is used for shut down sequence
         install(tradeModule());

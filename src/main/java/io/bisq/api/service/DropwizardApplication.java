@@ -1,15 +1,15 @@
-package io.bitsquare.api.service;
+package io.bisq.api.service;
 
 import com.google.inject.Inject;
-import io.bitsquare.api.BitsquareProxy;
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.pricefeed.PriceFeedService;
-import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.p2p.P2PService;
-import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.offer.OfferBookService;
-import io.bitsquare.trade.offer.OpenOfferManager;
-import io.bitsquare.user.User;
+import io.bisq.api.BitsquareProxy;
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.core.btc.wallet.WalletService;
+import io.bisq.core.offer.OfferBookService;
+import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.provider.price.PriceFeedService;
+import io.bisq.core.trade.TradeManager;
+import io.bisq.core.user.User;
+import io.bisq.network.p2p.P2PService;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.setup.Bootstrap;

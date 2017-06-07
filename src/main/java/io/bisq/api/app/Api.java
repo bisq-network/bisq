@@ -1,25 +1,26 @@
-package io.bitsquare.api.app;
+package io.bisq.api.app;
 
 import ch.qos.logback.classic.Level;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import io.bitsquare.api.service.DropwizardApplication;
-import io.bitsquare.app.AppOptionKeys;
-import io.bitsquare.app.BitsquareEnvironment;
-import io.bitsquare.app.Log;
-import io.bitsquare.app.Version;
-import io.bitsquare.arbitration.ArbitratorManager;
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.common.CommonOptionKeys;
-import io.bitsquare.common.UserThread;
-import io.bitsquare.common.handlers.ResultHandler;
-import io.bitsquare.common.util.LimitedKeyStrengthException;
-import io.bitsquare.common.util.Utilities;
-import io.bitsquare.p2p.P2PService;
-import io.bitsquare.p2p.P2PServiceListener;
-import io.bitsquare.trade.offer.OfferBookService;
-import io.bitsquare.trade.offer.OpenOfferManager;
-import io.bitsquare.user.User;
+import io.bisq.api.service.DropwizardApplication;
+import io.bisq.common.CommonOptionKeys;
+import io.bisq.common.UserThread;
+import io.bisq.common.app.Log;
+import io.bisq.common.app.Version;
+import io.bisq.common.crypto.LimitedKeyStrengthException;
+import io.bisq.common.handlers.ResultHandler;
+import io.bisq.common.util.Utilities;
+import io.bisq.core.app.AppOptionKeys;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.arbitration.ArbitratorManager;
+import io.bisq.core.btc.wallet.BtcWalletService;
+import io.bisq.core.btc.wallet.WalletService;
+import io.bisq.core.offer.OfferBookService;
+import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.user.User;
+import io.bisq.network.p2p.P2PService;
+import io.bisq.network.p2p.P2PServiceListener;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.bitcoinj.store.BlockStoreException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -81,7 +82,7 @@ public class Api {
 
         apiModule = new ApiModule(env);
         injector = Guice.createInjector(apiModule);
-        Version.setBtcNetworkId(injector.getInstance(BitsquareEnvironment.class).getBitcoinNetwork().ordinal());
+        Version.setBtcNetworkId(injector.getInstance(BisqEnvironment.class).getBitcoinNetwork().ordinal());
         p2pService = injector.getInstance(P2PService.class);
         offerBookService = injector.getInstance(OfferBookService.class);
         walletService = injector.getInstance(WalletService.class);
@@ -147,12 +148,7 @@ public class Api {
                 injector.getInstance(ArbitratorManager.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
                     injector.getInstance(P2PService.class).shutDown(() -> {
-                        injector.getInstance(WalletService.class).shutDownDone.addListener((ov, o, n) -> {
-                            apiModule.close(injector);
-                            log.debug("Graceful shutdown completed");
-                            resultHandler.handleResult();
-                        });
-                        injector.getInstance(WalletService.class).shutDown();
+                        injector.getInstance(BtcWalletService.class).shutDown();
                     });
                 });
                 // we wait max 5 sec.

@@ -1,8 +1,8 @@
-package io.bitsquare.api.service;
+package io.bisq.api.service;
 
 import com.codahale.metrics.annotation.Timed;
-import io.bitsquare.api.BitsquareProxy;
-import io.bitsquare.api.api.*;
+import io.bisq.api.BitsquareProxy;
+import io.bisq.api.api.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -139,7 +139,7 @@ public class ApiResource {
                           @QueryParam("min_amount") BigDecimal minAmount,
                           @DefaultValue("fixed") @QueryParam("price_type") String fixed,
                           @DefaultValue("100") @QueryParam("price") String price) {
-        return bitsquareProxy.offerMake(market, accountId, direction, amount, minAmount, false, 100, "XMR", price);
+        return bitsquareProxy.offerMake(market, accountId, direction, amount, minAmount, false, 100, "XMR", price, "100", "1.0");
     }
 
    /**
@@ -197,8 +197,8 @@ public class ApiResource {
     @Timed
     @Path("/wallet_addresses")
     public List<WalletAddress> walletAddresses(@DefaultValue("BOTH") @QueryParam("status") String status,
-                                         @DefaultValue("0") @QueryParam("start") Integer start,
-                                         @DefaultValue("100") @QueryParam("limit") Integer limit) {
+                                               @DefaultValue("0") @QueryParam("start") Integer start,
+                                               @DefaultValue("100") @QueryParam("limit") Integer limit) {
         return bitsquareProxy.getWalletAddresses();
     }
 

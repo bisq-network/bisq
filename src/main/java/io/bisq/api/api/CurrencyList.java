@@ -1,6 +1,5 @@
-package io.bitsquare.api.api;
+package io.bisq.api.api;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.util.ArrayList;

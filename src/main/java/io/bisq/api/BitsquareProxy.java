@@ -1,29 +1,29 @@
-package io.bitsquare.api;
+package io.bisq.api;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import io.bitsquare.api.api.*;
-import io.bitsquare.api.api.Currency;
-import io.bitsquare.btc.FeePolicy;
-import io.bitsquare.btc.WalletService;
-import io.bitsquare.btc.pricefeed.PriceFeedService;
-import io.bitsquare.common.crypto.KeyRing;
-import io.bitsquare.locale.CurrencyUtil;
-import io.bitsquare.p2p.NodeAddress;
-import io.bitsquare.p2p.P2PService;
-import io.bitsquare.payment.CryptoCurrencyAccount;
-import io.bitsquare.payment.PaymentAccount;
-import io.bitsquare.payment.SameBankAccount;
-import io.bitsquare.payment.SpecificBanksAccount;
-import io.bitsquare.trade.TradeManager;
-import io.bitsquare.trade.offer.Offer;
-import io.bitsquare.trade.offer.OfferBookService;
-import io.bitsquare.trade.offer.OpenOfferManager;
-import io.bitsquare.user.User;
+import io.bisq.api.api.*;
+import io.bisq.api.api.Currency;
+import io.bisq.common.crypto.KeyRing;
+import io.bisq.common.locale.CurrencyUtil;
+import io.bisq.core.btc.wallet.WalletService;
+import io.bisq.core.offer.Offer;
+import io.bisq.core.offer.OfferBookService;
+import io.bisq.core.offer.OfferPayload;
+import io.bisq.core.offer.OpenOfferManager;
+import io.bisq.core.payment.CryptoCurrencyAccount;
+import io.bisq.core.payment.PaymentAccount;
+import io.bisq.core.payment.SameBankAccount;
+import io.bisq.core.payment.SpecificBanksAccount;
+import io.bisq.core.provider.price.PriceFeedService;
+import io.bisq.core.trade.TradeManager;
+import io.bisq.core.user.User;
+import io.bisq.network.p2p.NodeAddress;
+import io.bisq.network.p2p.P2PService;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.Wallet;
+import org.bitcoinj.wallet.Wallet;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -72,7 +72,7 @@ public class BitsquareProxy {
         CurrencyList currencyList = new CurrencyList();
         CurrencyUtil.getAllSortedCryptoCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getCode(), cryptoCurrency.getName(), "crypto"));
         CurrencyUtil.getAllSortedFiatCurrencies().forEach(cryptoCurrency -> currencyList.add(cryptoCurrency.getSymbol(), cryptoCurrency.getName(), "fiat"));
-        Collections.sort(currencyList.currencies, (Currency p1, Currency p2) -> p1.name.compareTo(p2.name));
+        Collections.sort(currencyList.currencies, (io.bisq.api.api.Currency p1, io.bisq.api.api.Currency p2) -> p1.name.compareTo(p2.name));
         return currencyList;
     }
 
@@ -84,7 +84,7 @@ public class BitsquareProxy {
         marketList.markets.addAll(btc);
         btc = CurrencyUtil.getAllSortedFiatCurrencies().stream().map(cryptoCurrency -> new Market("BTC", cryptoCurrency.getCode())).collect(toList());
         marketList.markets.addAll(btc);
-        Collections.sort(currencyList.currencies, (Currency p1, Currency p2) -> p1.name.compareTo(p2.name));
+        Collections.sort(currencyList.currencies, (io.bisq.api.api.Currency p1, Currency p2) -> p1.name.compareTo(p2.name));
         return marketList;
     }
 
@@ -105,7 +105,7 @@ public class BitsquareProxy {
             return false;
         }
         // do something more intelligent here, maybe block till handler is called.
-        offerBookService.removeOffer(offer.get(), () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err));
+        offerBookService.removeOffer(offer.get().getOfferPayload(), () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err));
         return true;
     }
 
@@ -127,7 +127,7 @@ public class BitsquareProxy {
     }
 
     public boolean offerMake(String market, String accountId, String direction, BigDecimal amount, BigDecimal minAmount,
-                          boolean marketPriceMargin, double marketPriceMarginParam, String currencyCode, String fiatPrice) {
+                          boolean useMarketBasedPrice, double marketPriceMarginParam, String currencyCode, String counterCurrencyCode, String fiatPrice, String versionNr) {
         // TODO: detect bad direction, bad market, no paymentaccount for user
         // PaymentAccountUtil.isPaymentAccountValidForOffer
         Optional<Account> optionalAccount = getAccountList().getPaymentAccounts().stream()
@@ -146,52 +146,72 @@ public class BitsquareProxy {
             acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
         }
 
-        Offer offer = new Offer(UUID.randomUUID().toString(),
+        OfferPayload offerPayload = new OfferPayload(
+                UUID.randomUUID().toString(),
+                new Date().getTime(),
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
-                Offer.Direction.valueOf(direction),
+                OfferPayload.Direction.valueOf(direction),
                 Long.valueOf(fiatPrice),
-                marketPriceMarginParam, //marketPriceMarginParam,
-                marketPriceMargin, //useMarketBasedPrice.get(),
+                marketPriceMarginParam,
+                useMarketBasedPrice,
                 amount.longValueExact(),
                 minAmount.longValueExact(),
-                currencyCode,  // currencycode
+                currencyCode,
+                counterCurrencyCode,
                 (ArrayList<NodeAddress>) user.getAcceptedArbitratorAddresses(),
+                (ArrayList<NodeAddress>) user.getAcceptedMediatorAddresses(),
                 account.getContract_data().getPayment_method_id(),
-                account.getPayment_account_id(), //paymentAccount.getId(),
-                account.getCountry().toString(), //countryCode,
-                account.getAccepted_country_codes(), //acceptedCountryCodes,
-                account.getBank_id(), //bankId,
-                acceptedBanks, // acceptedBanks,
-                priceFeedService); // priceFeedService);
+                account.getPayment_account_id(),
+                "TO BE FILLED IN", // offerfeepaymenttxid
+                account.getCountry().toString(),
+                account.getAccepted_country_codes(),
+                account.getBank_id(),
+                acceptedBanks,
+                versionNr,
+                0,
+                0,
+                0,
+                true,
+                0,
+                0,
+                0,
+                0,
+                true,
+                true,
+                0,
+                0,
+                true,
+                null,
+                null
+                );
 
-//        offerBookService.addOffer(offer, () -> log.info("offer removed"), (err) -> log.error("Error removing offer: " + err));
-        openOfferManager.placeOffer(offer, Coin.valueOf(amount.longValue()).subtract(FeePolicy.getCreateOfferFee()),
+        Offer offer = new Offer(offerPayload); // priceFeedService);
+
+        // TODO subtract OfferFee: .subtract(FeePolicy.getCreateOfferFee())
+        openOfferManager.placeOffer(offer, Coin.valueOf(amount.longValue()),
                 true, (transaction) -> log.info("Result is "+transaction));
         return true;
-
-        // TODO use openoffermanager.placeoffer instead
     }
 
     public WalletDetails getWalletDetails() {
-        Wallet wallet = walletService.getWallet();
-        if (wallet == null) {
+        if (!walletService.isWalletReady()) {
             return null;
         }
 
-        Coin availableBalance = wallet.getBalance(Wallet.BalanceType.AVAILABLE);
-        Coin reservedBalance = wallet.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE);
+        Coin availableBalance = walletService.getAvailableBalance();
+        Coin reservedBalance = walletService.getBalance(Wallet.BalanceType.ESTIMATED_SPENDABLE);
         return new WalletDetails(availableBalance.toPlainString(), reservedBalance.toPlainString());
     }
 
     public WalletTransactions getWalletTransactions(long start, long end, long limit) {
         boolean includeDeadTransactions = false;
-        Set<Transaction> transactions = walletService.getWallet().getTransactions(includeDeadTransactions);
+        Set<Transaction> transactions = walletService.getTransactions(includeDeadTransactions);
         WalletTransactions walletTransactions = new WalletTransactions();
-        List<io.bitsquare.api.api.WalletTransaction> transactionList = walletTransactions.getTransactions();
+        List<WalletTransaction> transactionList = walletTransactions.getTransactions();
 
         for (Transaction t : transactions) {
-//            transactionList.add(new io.bitsquare.api.api.WalletTransaction(t.getValue(walletService.getWallet().getTransactionsByTime())))
+//            transactionList.add(new WalletTransaction(t.getValue(walletService.getWallet().getTransactionsByTime())))
         }
         return null;
     }
