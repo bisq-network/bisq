@@ -22,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 
 // need to define seed node addresses first before using tor version
 //TODO P2P network tests are outdated
+@SuppressWarnings({"UnusedAssignment", "EmptyMethod"})
 @Ignore
 public class PeerManagerTest {
     private static final Logger log = LoggerFactory.getLogger(PeerManagerTest.class);
@@ -39,6 +40,7 @@ public class PeerManagerTest {
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
 
         seedNodes = new HashSet<>();
+        //noinspection ConstantConditions
         if (useLocalhostForP2P) {
             //seedNodes.add(new NodeAddress("localhost:8001"));
             // seedNodes.add(new NodeAddress("localhost:8002"));
@@ -59,17 +61,17 @@ public class PeerManagerTest {
 
         if (seedNode1 != null) {
             CountDownLatch shutDownLatch = new CountDownLatch(1);
-            seedNode1.shutDown(() -> shutDownLatch.countDown());
+            seedNode1.shutDown(shutDownLatch::countDown);
             shutDownLatch.await();
         }
         if (seedNode2 != null) {
             CountDownLatch shutDownLatch = new CountDownLatch(1);
-            seedNode2.shutDown(() -> shutDownLatch.countDown());
+            seedNode2.shutDown(shutDownLatch::countDown);
             shutDownLatch.await();
         }
         if (seedNode3 != null) {
             CountDownLatch shutDownLatch = new CountDownLatch(1);
-            seedNode3.shutDown(() -> shutDownLatch.countDown());
+            seedNode3.shutDown(shutDownLatch::countDown);
             shutDownLatch.await();
         }
     }

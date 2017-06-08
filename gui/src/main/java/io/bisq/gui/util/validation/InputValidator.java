@@ -77,6 +77,7 @@ public class InputValidator {
         return isPositiveNumber(input) && input.length() >= minLength && input.length() <= maxLength;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") 
     protected boolean isStringWithFixedLength(String input, int length) {
         return input != null && input.length() == length;
     }

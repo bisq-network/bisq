@@ -126,7 +126,7 @@ public class BtcWalletService extends WalletService {
 
 
     public Transaction completePreparedSendBsqTx(Transaction preparedBsqTx, boolean isSendTx) throws
-            TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
+            TransactionVerificationException, WalletException, InsufficientMoneyException {
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
         // outputs [0-1] BSQ receivers output
@@ -143,7 +143,7 @@ public class BtcWalletService extends WalletService {
     }
 
     public Transaction completePreparedBsqTx(Transaction preparedBsqTx, boolean useCustomTxFee, @Nullable byte[] opReturnData) throws
-            TransactionVerificationException, WalletException, InsufficientFundsException, InsufficientMoneyException {
+            TransactionVerificationException, WalletException, InsufficientMoneyException {
 
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
@@ -279,7 +279,7 @@ public class BtcWalletService extends WalletService {
     // AddressEntry
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<AddressEntry> getAddressEntry(String offerId, AddressEntry.Context context) {
+    public Optional<AddressEntry> getAddressEntry(String offerId, @SuppressWarnings("SameParameterValue") AddressEntry.Context context) {
         return getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))
                 .filter(e -> context == e.getContext())
@@ -668,7 +668,7 @@ public class BtcWalletService extends WalletService {
                             Coin receiverAmount,
                             Coin fee,
                             @Nullable KeyParameter aesKey,
-                            AddressEntry.Context context,
+                            @SuppressWarnings("SameParameterValue") AddressEntry.Context context,
                             FutureCallback<Transaction> callback) throws AddressFormatException,
             AddressEntryException, InsufficientMoneyException {
         SendRequest sendRequest = getSendRequest(fromAddress, toAddress, receiverAmount, fee, aesKey, context);

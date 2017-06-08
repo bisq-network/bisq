@@ -640,6 +640,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                 }
             });
 
+            //noinspection unchecked
             this.setOnAction(e -> navigation.navigateTo(MainView.class, viewClass));
         }
 

@@ -309,7 +309,7 @@ public abstract class Trade implements Tradable, Model {
 
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Volume> tradeVolumeProperty;
-    transient private Set<DecryptedMessageWithPubKey> decryptedMessageWithPubKeySet = new HashSet<>();
+    final transient private Set<DecryptedMessageWithPubKey> decryptedMessageWithPubKeySet = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -338,6 +338,7 @@ public abstract class Trade implements Tradable, Model {
 
 
     // taker
+    @SuppressWarnings("NullableProblems")
     protected Trade(Offer offer,
                     Coin tradeAmount,
                     Coin txFee,
@@ -471,6 +472,7 @@ public abstract class Trade implements Tradable, Model {
             setDepositTx(processModel.getTradeWalletService().getWalletTx(getDepositTx().getHash()));
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setDepositTx(Transaction tx) {
         log.debug("setDepositTx " + tx);
         this.depositTx = tx;
@@ -577,6 +579,7 @@ public abstract class Trade implements Tradable, Model {
             persist();
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setTradingPeerNodeAddress(NodeAddress tradingPeerNodeAddress) {
         if (tradingPeerNodeAddress == null)
             log.error("tradingPeerAddress=null");
@@ -584,6 +587,7 @@ public abstract class Trade implements Tradable, Model {
             this.tradingPeerNodeAddress = tradingPeerNodeAddress;
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setTradeAmount(Coin tradeAmount) {
         this.tradeAmount = tradeAmount;
         tradeAmountAsLong = tradeAmount.value;
@@ -591,16 +595,19 @@ public abstract class Trade implements Tradable, Model {
         getTradeVolumeProperty().set(getTradeVolume());
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setPayoutTx(Transaction payoutTx) {
         this.payoutTx = payoutTx;
         payoutTxId = payoutTx.getHashAsString();
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
         errorMessageProperty.set(errorMessage);
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setArbitratorNodeAddress(NodeAddress arbitratorNodeAddress) {
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         if (processModel.getUser() != null) {
@@ -610,6 +617,7 @@ public abstract class Trade implements Tradable, Model {
         }
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setMediatorNodeAddress(NodeAddress mediatorNodeAddress) {
         this.mediatorNodeAddress = mediatorNodeAddress;
         if (processModel.getUser() != null) {
@@ -675,6 +683,7 @@ public abstract class Trade implements Tradable, Model {
         return getState().getPhase().ordinal() >= Phase.FIAT_SENT.ordinal();
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") 
     public boolean isFiatReceived() {
         return getState().getPhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
     }

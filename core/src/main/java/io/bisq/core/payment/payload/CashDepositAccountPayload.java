@@ -66,8 +66,8 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                                       String branchId,
                                       String accountNr,
                                       String accountType,
-                                      String requirements,
-                                      String holderTaxId,
+                                      @SuppressWarnings("NullableProblems") String requirements,
+                                      @SuppressWarnings("NullableProblems") String holderTaxId,
                                       String bankId) {
         super(paymentMethodName, id, maxTradePeriod, countryCode);
         this.holderName = holderName;

@@ -3,8 +3,10 @@ package io.bisq.network.p2p.storage.messages;
 import com.google.protobuf.ByteString;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+@EqualsAndHashCode(callSuper = true)
 @Value
 public final class RefreshOfferMessage extends BroadcastMessage {
     private final byte[] hashOfDataAndSeqNr;     // 32 bytes

@@ -103,6 +103,7 @@ public final class DisputeList implements PersistableEnvelope, PersistedDataHost
     }
 
     public boolean remove(Object dispute) {
+        //noinspection SuspiciousMethodCalls
         boolean changed = list.remove(dispute);
         if (changed)
             storage.queueUpForSave();
@@ -117,6 +118,7 @@ public final class DisputeList implements PersistableEnvelope, PersistedDataHost
         return list.isEmpty();
     }
 
+    @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "SuspiciousMethodCalls"}) 
     public boolean contains(Object o) {
         return list.contains(o);
     }

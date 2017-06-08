@@ -25,9 +25,7 @@ import io.bisq.common.app.Log;
 import io.bisq.common.locale.Res;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentMethod;
-import io.bisq.core.trade.BuyerTrade;
 import io.bisq.core.trade.Contract;
-import io.bisq.core.trade.MakerTrade;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.closed.ClosedTradableManager;
 import io.bisq.core.user.User;
@@ -130,8 +128,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         }
         if (selectedItem != null) {
             this.trade = selectedItem.getTrade();
-            boolean isBuyerTrade = trade instanceof BuyerTrade;
-            boolean isMakerTrade = trade instanceof MakerTrade;
             tradeStateSubscription = EasyBind.subscribe(trade.stateProperty(), this::onTradeStateChanged);
         }
     }

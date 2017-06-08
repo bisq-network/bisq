@@ -219,11 +219,9 @@ public class TradeManager implements PersistedDataHost {
                 }
         );
 
-        for (Trade trade : addTradeToFailedTradesList)
-            addTradeToFailedTrades(trade);
+        addTradeToFailedTradesList.forEach(this::addTradeToFailedTrades);
 
-        for (Trade trade : removePreparedTradeList)
-            removePreparedTrade(trade);
+        removePreparedTradeList.forEach(this::removePreparedTrade);
 
         tradesForStatistics.addAll(closedTradableManager.getClosedTrades().stream()
                 .filter(tradable -> tradable instanceof Trade).map(tradable -> (Trade) tradable)

@@ -34,16 +34,14 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage, Exte
         return NetworkEnvelope.getDefaultBuilder()
                 .setGetDataResponse(PB.GetDataResponse.newBuilder()
                         .addAllDataSet(dataSet.stream()
-                                .map(protectedStorageEntry -> {
-                                    return protectedStorageEntry instanceof ProtectedMailboxStorageEntry ?
-                                            PB.StorageEntryWrapper.newBuilder()
-                                                    .setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage())
-                                                    .build()
-                                            :
-                                            PB.StorageEntryWrapper.newBuilder()
-                                                    .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())
-                                                    .build();
-                                })
+                                .map(protectedStorageEntry -> protectedStorageEntry instanceof ProtectedMailboxStorageEntry ?
+                                        PB.StorageEntryWrapper.newBuilder()
+                                                .setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage())
+                                                .build()
+                                        :
+                                        PB.StorageEntryWrapper.newBuilder()
+                                                .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())
+                                                .build())
                                 .collect(Collectors.toList()))
                         .setRequestNonce(requestNonce)
                         .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse)

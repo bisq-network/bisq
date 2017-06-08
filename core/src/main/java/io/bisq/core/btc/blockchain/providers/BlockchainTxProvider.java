@@ -2,7 +2,6 @@ package io.bisq.core.btc.blockchain.providers;
 
 import io.bisq.core.provider.HttpClientProvider;
 import io.bisq.network.http.HttpClient;
-import io.bisq.network.http.HttpException;
 import org.bitcoinj.core.Coin;
 
 import java.io.IOException;
@@ -12,5 +11,5 @@ public abstract class BlockchainTxProvider extends HttpClientProvider {
         super(httpClient, baseUrl);
     }
 
-    public abstract Coin getFee(String transactionId) throws IOException, HttpException;
+    public abstract Coin getFee(String transactionId) throws IOException;
 }

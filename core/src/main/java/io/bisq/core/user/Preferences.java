@@ -1,7 +1,6 @@
 package io.bisq.core.user;
 
 import io.bisq.common.GlobalSettings;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.*;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
@@ -11,8 +10,6 @@ import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.WalletUtils;
 import io.bisq.core.payment.PaymentAccount;
-import io.bisq.core.trade.Tradable;
-import io.bisq.core.trade.TradableList;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -29,7 +26,6 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -242,7 +238,8 @@ public final class Preferences implements PersistedDataHost {
             if (fiatCurrenciesAsObservable.contains(tradeCurrency))
                 fiatCurrenciesAsObservable.remove(tradeCurrency);
 
-            if (prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
+            if (prefPayload.getPreferredTradeCurrency() != null &&
+                    prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
                 setPreferredTradeCurrency(tradeCurrenciesAsObservable.get(0));
         } else {
             log.error("you cannot remove the last currency");
@@ -259,7 +256,8 @@ public final class Preferences implements PersistedDataHost {
             if (cryptoCurrenciesAsObservable.contains(tradeCurrency))
                 cryptoCurrenciesAsObservable.remove(tradeCurrency);
 
-            if (prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
+            if (prefPayload.getPreferredTradeCurrency() != null &&
+                    prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
                 setPreferredTradeCurrency(tradeCurrenciesAsObservable.get(0));
         } else {
             log.error("you cannot remove the last currency");
@@ -492,6 +490,7 @@ public final class Preferences implements PersistedDataHost {
         // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
         // Atm we don't support onion addresses there
         // This check includes localhost, so we also override useTorForBitcoinJ
+        //noinspection SimplifiableIfStatement
         if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty() || WalletUtils.getBitcoinNetwork() == BitcoinNetwork.REGTEST)
             return false;
         else
@@ -534,38 +533,71 @@ public final class Preferences implements PersistedDataHost {
 
     private interface ExcludesDelegateMethods {
         void setTacAccepted(boolean tacAccepted);
+
         void setUseAnimations(boolean useAnimations);
+
         void setUserLanguage(@NotNull String userLanguageCode);
+
         void setUserCountry(@NotNull Country userCountry);
+
         void setPreferredTradeCurrency(TradeCurrency preferredTradeCurrency);
+
         void setUseTorForBitcoinJ(boolean useTorForBitcoinJ);
+
         void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook);
+
         void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent);
+
         void setBackupDirectory(String backupDirectory);
+
         void setAutoSelectArbitrators(boolean autoSelectArbitrators);
+
         void setUsePercentageBasedPrice(boolean usePercentageBasedPrice);
+
         void setTagForPeer(String hostName, String tag);
+
         void setOfferBookChartScreenCurrencyCode(String offerBookChartScreenCurrencyCode);
+
         void setBuyScreenCurrencyCode(String buyScreenCurrencyCode);
+
         void setSellScreenCurrencyCode(String sellScreenCurrencyCode);
+
         void setIgnoreTradersList(List<String> ignoreTradersList);
+
         void setDirectoryChooserPath(String directoryChooserPath);
+
         void setTradeChartsScreenCurrencyCode(String tradeChartsScreenCurrencyCode);
+
         void setTradeStatisticsTickUnitIndex(int tradeStatisticsTickUnitIndex);
+
         void setSortMarketCurrenciesNumerically(boolean sortMarketCurrenciesNumerically);
+
         void setBitcoinNodes(String bitcoinNodes);
+
         void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee);
+
         void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes);
+
         void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong);
+
         void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount);
+
         void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer);
+
         void setPayFeeInBtc(boolean payFeeInBtc);
+
         void setFiatCurrencies(List<FiatCurrency> currencies);
+
         void setCryptoCurrencies(List<CryptoCurrency> currencies);
+
         void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet);
+
         void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet);
+
         void setResyncSpvRequested(boolean resyncSpvRequested);
+
         void setDontShowAgainMap(Map<String, Boolean> dontShowAgainMap);
+
         void setPeerTagMap(Map<String, String> peerTagMap);
     }
 }

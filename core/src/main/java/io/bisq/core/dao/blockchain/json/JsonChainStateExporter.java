@@ -136,7 +136,7 @@ public class JsonChainStateExporter {
                                 return new JsonTxInput(txInput.getTxOutputIndex(),
                                         txInput.getTxId(),
                                         connectedTxOutput != null ? connectedTxOutput.getValue() : 0,
-                                        connectedTxOutput != null ? connectedTxOutput.isVerified() : false,
+                                        connectedTxOutput != null && connectedTxOutput.isVerified(),
                                         connectedTxOutput != null ? connectedTxOutput.getAddress() : null,
                                         tx.getTime());
                             })

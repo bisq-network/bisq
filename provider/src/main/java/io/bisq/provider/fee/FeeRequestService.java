@@ -74,7 +74,7 @@ public class FeeRequestService {
         }
     }
 
-    private void requestBitcoinFees() throws IOException, HttpException {
+    private void requestBitcoinFees() throws IOException {
         long ts = System.currentTimeMillis();
         long result = btcFeesProvider.getFee();
         log.info("requestBitcoinFees took {} ms.", (System.currentTimeMillis() - ts));

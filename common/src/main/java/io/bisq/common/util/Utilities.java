@@ -420,7 +420,8 @@ public class Utilities {
             return id.substring(0, Math.min(8, id.length()));
     }
 
+    @SuppressWarnings("unchecked")
     public static String collectionToCSV(Collection collection) {
-        return collection.stream().map(i -> i.toString()).collect(Collectors.joining(",")).toString();
+        return collection.stream().map(Object::toString).collect(Collectors.joining(",")).toString();
     }
 }

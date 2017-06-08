@@ -24,6 +24,7 @@ import org.junit.Test;
  * You should have received a copy of the GNU Affero General Public License
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+@SuppressWarnings("UnusedAssignment")
 public class UserPayloadModelVOTest {
 
 

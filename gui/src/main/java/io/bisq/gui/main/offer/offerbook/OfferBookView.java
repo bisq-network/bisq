@@ -114,10 +114,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         addTitledGroupBg(root, gridRow, 3, Res.get("offerbook.availableOffers"));
 
+        //noinspection unchecked
         currencyComboBox = addLabelComboBox(root, gridRow, Res.get("offerbook.filterByCurrency"), Layout.FIRST_ROW_DISTANCE).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setConverter(GUIUtil.getTradeCurrencyConverter());
 
+        //noinspection unchecked
         paymentMethodComboBox = addLabelComboBox(root, ++gridRow, Res.get("offerbook.filterByPaymentMethod")).second;
         paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(20);
@@ -342,6 +344,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     .closeButtonText(Res.get("offerbook.setupNewAccount"))
                     .onClose(() -> {
                         navigation.setReturnPath(navigation.getCurrentPath());
+                        //noinspection unchecked
                         navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
                     })
                     .show();
@@ -410,6 +413,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 () -> {
                     log.debug(Res.get("offerbook.removeOffer.success"));
                     if (DontShowAgainLookup.showAgain(key))
+                        //noinspection unchecked
                         new Popup<>().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
                                 .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
@@ -428,6 +432,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 .actionButtonTextWithGoTo(targetAsString)
                 .onAction(() -> {
                     navigation.setReturnPath(navigation.getCurrentPath());
+                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, target);
                 }).show();
     }

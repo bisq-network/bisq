@@ -66,9 +66,7 @@ public class SequenceNumberMap implements PersistableEnvelope {
 
     public static SequenceNumberMap fromProto(PB.SequenceNumberMap proto) {
         HashMap<P2PDataStorage.ByteArray, P2PDataStorage.MapValue> map = new HashMap<>();
-        proto.getSequenceNumberEntriesList().stream().forEach(entry -> {
-            map.put(P2PDataStorage.ByteArray.fromProto(entry.getBytes()), P2PDataStorage.MapValue.fromProto(entry.getMapValue()));
-        });
+        proto.getSequenceNumberEntriesList().stream().forEach(entry -> map.put(P2PDataStorage.ByteArray.fromProto(entry.getBytes()), P2PDataStorage.MapValue.fromProto(entry.getMapValue())));
         return new SequenceNumberMap(map);
     }
 

@@ -51,7 +51,7 @@ public final class Navigation implements PersistedDataHost {
     // return to the last opened view (e.g. sell/buy)
     private ViewPath returnPath;
     // this string is updated just before saving to disk so it reflects the latest currentPath situation.
-    private NavigationPath navigationPath = new NavigationPath();
+    private final NavigationPath navigationPath = new NavigationPath();
 
     // Persisted fields
     @Getter
@@ -72,6 +72,7 @@ public final class Navigation implements PersistedDataHost {
             List<Class<? extends View>> viewClasses = persisted.getPath().stream()
                     .map(className -> {
                         try {
+                            //noinspection unchecked
                             return ((Class<? extends View>) Class.forName(className));
                         } catch (ClassNotFoundException e) {
                             log.warn("Could not find the Viewpath class {}; exception: {}", className, e);
@@ -106,6 +107,7 @@ public final class Navigation implements PersistedDataHost {
                             i != newPath.size() - 1)) {
                 ArrayList<Class<? extends View>> temp2 = new ArrayList<>(temp);
                 for (int n = i + 1; n < newPath.size(); n++) {
+                    //noinspection unchecked,unchecked,unchecked
                     Class<? extends View>[] newTemp = new Class[i + 1];
                     currentPath = ViewPath.to(temp2.toArray(newTemp));
                     navigateTo(currentPath);
@@ -123,7 +125,7 @@ public final class Navigation implements PersistedDataHost {
 
     private void queueUpForSave() {
         if (currentPath.tip() != null) {
-            navigationPath.setPath(currentPath.stream().map(aClass -> aClass.getName()).collect(Collectors.toList()));
+            navigationPath.setPath(currentPath.stream().map(Class::getName).collect(Collectors.toList()));
         }
         storage.queueUpForSave(navigationPath, 1000);
     }

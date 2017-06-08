@@ -143,7 +143,7 @@ public class PriceRequestService {
     }
 
 
-    private void requestCoinmarketcapPrices() throws IOException, HttpException {
+    private void requestCoinmarketcapPrices() throws IOException {
         long ts = System.currentTimeMillis();
         Map<String, PriceData> map = coinmarketcapProvider.request();
         log.info("requestCoinmarketcapPrices took {} ms.", (System.currentTimeMillis() - ts));
@@ -163,7 +163,7 @@ public class PriceRequestService {
     }
 
 
-    private void requestPoloniexPrices() throws IOException, HttpException {
+    private void requestPoloniexPrices() throws IOException {
         long ts = System.currentTimeMillis();
         poloniexMap = poloniexProvider.request();
         log.info("requestPoloniexPrices took {} ms.", (System.currentTimeMillis() - ts));
@@ -177,7 +177,7 @@ public class PriceRequestService {
         writeToJson();
     }
 
-    private void requestBtcAverageLocalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException, HttpException {
+    private void requestBtcAverageLocalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException {
         long ts = System.currentTimeMillis();
         btcAverageLocalMap = btcAverageProvider.getLocal();
 
@@ -191,7 +191,7 @@ public class PriceRequestService {
         writeToJson();
     }
 
-    private void requestBtcAverageGlobalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException, HttpException {
+    private void requestBtcAverageGlobalPrices() throws NoSuchAlgorithmException, InvalidKeyException, IOException {
         long ts = System.currentTimeMillis();
         Map<String, PriceData> map = btcAverageProvider.getGlobal();
 

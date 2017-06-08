@@ -86,7 +86,9 @@ public class GUIUtil {
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
+        //noinspection UnusedAssignment
         String key = "miningFeeInfo";
+        //noinspection ConstantConditions,ConstantConditions
         if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
             new Popup<>().information(Res.get("guiUtil.miningFeeInfo"))
                     .dontShowAgainId(key)
@@ -358,6 +360,7 @@ public class GUIUtil {
             }
         }
 
+        //noinspection unchecked
         return parent != null ? (T) parent : null;
     }
 

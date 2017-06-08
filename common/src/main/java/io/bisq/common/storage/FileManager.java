@@ -109,7 +109,8 @@ public class FileManager<T extends PersistableEnvelope> {
         executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
     }
 
-    public synchronized T read(File file) throws IOException, ClassNotFoundException {
+    @SuppressWarnings("unchecked")
+    public synchronized T read(File file) {
         log.info("Reading file:{}", file.getAbsolutePath());
 
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
@@ -185,7 +186,7 @@ public class FileManager<T extends PersistableEnvelope> {
         PrintWriter printWriter = null;
 
         log.debug("saveToFile persistable.class " + persistable.getClass().getSimpleName());
-        PB.PersistableEnvelope protoPersistable = null;
+        PB.PersistableEnvelope protoPersistable;
         try {
             protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
 
@@ -208,6 +209,7 @@ public class FileManager<T extends PersistableEnvelope> {
         } catch (Throwable e) {
             log.error("Error in saveToFile toProtoMessage: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
             protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
+            //noinspection UnusedAssignment
             PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
         }
 
@@ -271,6 +273,7 @@ public class FileManager<T extends PersistableEnvelope> {
             try {
                 if (fileOutputStream != null)
                     fileOutputStream.close();
+                //noinspection ConstantConditions,ConstantConditions
                 if (printWriter != null)
                     printWriter.close();
             } catch (IOException e) {

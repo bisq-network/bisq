@@ -5,5 +5,5 @@ public interface SendMailboxMessageListener {
 
     void onStoredInMailbox();
 
-    void onFault(String errorMessage);
+    void onFault(@SuppressWarnings("UnusedParameters") String errorMessage);
 }

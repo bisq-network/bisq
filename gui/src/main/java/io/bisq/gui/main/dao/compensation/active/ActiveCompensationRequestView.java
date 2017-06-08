@@ -186,6 +186,7 @@ public class ActiveCompensationRequestView extends ActivatableView<SplitPane, Vo
                 Button voteButton = addButtonAfterGroup(gridPane, compensationRequestDisplay.incrementAndGetGridRow(), Res.get("dao.compensation.active.vote"));
                 voteButton.setOnAction(event -> {
                     compensationRequestManger.setSelectedCompensationRequest(compensationRequest);
+                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, DaoView.class, VotingView.class, VoteView.class);
                 });
             } else if (compensationRequest.isInFundingPeriod()) {

@@ -63,6 +63,7 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {
                 if (compensationTab == null && viewPath.get(2).equals(CompensationView.class))
+                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqDashboardView.class);
                 else
                     loadView(viewPath.tip());
@@ -73,12 +74,16 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
             if (newValue == bsqWalletTab) {
                 Class<? extends View> selectedViewClass = bsqWalletView.getSelectedViewClass();
                 if (selectedViewClass == null)
+                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqDashboardView.class);
                 else
+                    //noinspection unchecked
                     navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, selectedViewClass);
             } else if (newValue == compensationTab) {
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, CompensationView.class);
             } else if (newValue == votingTab) {
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
             }
         };
@@ -92,10 +97,13 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == DaoView.class) {
             Tab selectedItem = root.getSelectionModel().getSelectedItem();
             if (selectedItem == bsqWalletTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
             else if (selectedItem == compensationTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, CompensationView.class);
             else if (selectedItem == votingTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, DaoView.class, VotingView.class);
         }
     }

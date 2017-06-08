@@ -22,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 // Run it once then lookup for onion address at: tor/hiddenservice/hostname and use that for the NodeAddress param.
 
 // TODO deactivated because outdated
+@SuppressWarnings({"UnusedAssignment", "EmptyMethod"})
 @Ignore
 public class PeerServiceTest {
     private static final Logger log = LoggerFactory.getLogger(PeerServiceTest.class);
@@ -40,6 +41,7 @@ public class PeerServiceTest {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(50);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
 
+        //noinspection ConstantConditions
         if (useLocalhostForP2P) {
             seedNodeAddresses.add(new NodeAddress("localhost:8001"));
             seedNodeAddresses.add(new NodeAddress("localhost:8002"));

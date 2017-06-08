@@ -267,6 +267,7 @@ public final class Dispute implements NetworkPayload {
             storage.queueUpForSave();
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setDisputePayoutTxId(String disputePayoutTxId) {
         boolean changed = this.disputePayoutTxId == null || !this.disputePayoutTxId.equals(disputePayoutTxId);
         this.disputePayoutTxId = disputePayoutTxId;

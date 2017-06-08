@@ -50,6 +50,7 @@ public class FilterManager {
     private final User user;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
 
+    @SuppressWarnings("ConstantConditions")
     private static final String pubKeyAsHex = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
             DevEnv.DEV_PRIVILEGE_PUB_KEY :
             "022ac7b7766b0aedff82962522c2c14fb8d1961dabef6e5cfd10edc679456a32f1";

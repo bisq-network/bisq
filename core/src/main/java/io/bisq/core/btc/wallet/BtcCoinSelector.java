@@ -48,7 +48,7 @@ class BtcCoinSelector extends BisqDefaultCoinSelector {
         this(addresses, true);
     }
 
-    BtcCoinSelector(Address address, boolean permitForeignPendingTx) {
+    BtcCoinSelector(Address address, @SuppressWarnings("SameParameterValue") boolean permitForeignPendingTx) {
         this(Sets.newHashSet(address), permitForeignPendingTx);
     }
 

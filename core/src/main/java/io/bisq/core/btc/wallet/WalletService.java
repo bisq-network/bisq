@@ -65,6 +65,7 @@ public abstract class WalletService {
     protected final Preferences preferences;
     protected final FeeService feeService;
     protected final NetworkParameters params;
+    @SuppressWarnings("deprecation")
     protected final WalletEventListener walletEventListener = new BisqWalletListener();
     protected final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
     protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
@@ -95,6 +96,7 @@ public abstract class WalletService {
 
     public void shutDown() {
         if (wallet != null)
+            //noinspection deprecation
             wallet.removeEventListener(walletEventListener);
     }
 
@@ -192,7 +194,7 @@ public abstract class WalletService {
         try {
             log.trace("Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey. Check input at index: " + inputIndex);
             checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
-            input.getScriptSig().correctlySpends(transaction, inputIndex, input.getConnectedOutput().getScriptPubKey());
+            input.getScriptSig().correctlySpends(transaction, inputIndex, input.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
         } catch (Throwable t) {
             t.printStackTrace();
             log.error(t.getMessage());
@@ -218,10 +220,10 @@ public abstract class WalletService {
                 // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
                 // we sign missing pieces (to check this would require either assuming any signatures are signing
                 // standard output types or a way to get processed signatures out of script execution)
-                txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey());
+                txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
                 log.warn("Input {} already correctly spends output, assuming SIGHASH type used will be safe and skipping signing.", index);
                 return;
-            } catch (ScriptException e) {  
+            } catch (ScriptException e) {
                 // Expected.
             }
 
@@ -456,11 +458,15 @@ public abstract class WalletService {
     // Wallet delegates to avoid direct access to wallet outside the service class
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("deprecation")
     public void addEventListener(WalletEventListener listener) {
+        //noinspection deprecation
         wallet.addEventListener(listener, Threading.USER_THREAD);
     }
 
+    @SuppressWarnings("deprecation")
     public boolean removeEventListener(WalletEventListener listener) {
+        //noinspection deprecation
         return wallet.removeEventListener(listener);
     }
 
@@ -509,7 +515,7 @@ public abstract class WalletService {
         return wallet.getTransactions(includeDead);
     }
 
-    public Coin getBalance(Wallet.BalanceType balanceType) {
+    public Coin getBalance(@SuppressWarnings("SameParameterValue") Wallet.BalanceType balanceType) {
         return wallet.getBalance(balanceType);
     }
 
@@ -564,6 +570,7 @@ public abstract class WalletService {
     // bisqWalletEventListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("deprecation") 
     public class BisqWalletListener extends AbstractWalletEventListener {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {

@@ -119,6 +119,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 options)));
     }
 
+    @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
         //CommonOptionKeys
         logLevel = commandLineProperties.containsProperty(CommonOptionKeys.LOG_LEVEL_KEY) ?
@@ -204,6 +205,7 @@ public class BisqEnvironment extends StandardEnvironment {
             btcNetworkDir = Paths.get(appDataDir, bitcoinNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())
+                //noinspection ResultOfMethodCallIgnored
                 btcNetworkDirFile.mkdir();
 
             // btcNetworkDir used in defaultProperties
@@ -227,11 +229,11 @@ public class BisqEnvironment extends StandardEnvironment {
         return new ResourcePropertySource(BISQ_APP_DIR_PROPERTY_SOURCE_NAME, resource);
     }
 
-    private PropertySource<?> homeDirProperties() throws Exception {
+    private PropertySource<?> homeDirProperties() {
         return new PropertySource.StubPropertySource(BISQ_HOME_DIR_PROPERTY_SOURCE_NAME);
     }
 
-    private PropertySource<?> classpathProperties() throws Exception {
+    private PropertySource<?> classpathProperties() {
         return new PropertySource.StubPropertySource(BISQ_CLASSPATH_PROPERTY_SOURCE_NAME);
     }
 

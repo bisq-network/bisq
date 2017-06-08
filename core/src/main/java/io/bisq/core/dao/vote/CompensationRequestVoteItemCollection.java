@@ -34,7 +34,7 @@ public final class CompensationRequestVoteItemCollection extends VoteItem implem
     private final List<CompensationRequestVoteItem> compensationRequestVoteItems = new ArrayList<>();
 
     /** constructor */
-    public CompensationRequestVoteItemCollection(VotingType votingType) {
+    public CompensationRequestVoteItemCollection(@SuppressWarnings("SameParameterValue") VotingType votingType) {
         super(votingType, null, null);
     }
 

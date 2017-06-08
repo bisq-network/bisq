@@ -190,6 +190,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             boolean showAllEntry = isShowAllEntry(code);
             showAllTradeCurrenciesProperty.set(showAllEntry);
             if (isEditEntry(code))
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, SettingsView.class, PreferencesView.class);
             else if (!showAllEntry) {
                 this.selectedTradeCurrency = tradeCurrency;
@@ -405,7 +406,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean hasPaymentAccountForCurrency() {
-        return (showAllTradeCurrenciesProperty.get() && !user.getPaymentAccounts().isEmpty()) ||
+        return (showAllTradeCurrenciesProperty.get() &&
+                user.getPaymentAccounts() != null &&
+                !user.getPaymentAccounts().isEmpty()) ||
                 user.hasPaymentAccountForCurrency(selectedTradeCurrency);
     }
 

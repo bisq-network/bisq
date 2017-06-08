@@ -123,11 +123,11 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         this.attachments.addAll(attachments);
     }
 
-    public void setArrived(boolean arrived) {
+    public void setArrived(@SuppressWarnings("SameParameterValue") boolean arrived) {
         this.arrivedProperty.set(arrived);
     }
 
-    public void setStoredInMailbox(boolean storedInMailbox) {
+    public void setStoredInMailbox(@SuppressWarnings("SameParameterValue") boolean storedInMailbox) {
         this.storedInMailboxProperty.set(storedInMailbox);
     }
 

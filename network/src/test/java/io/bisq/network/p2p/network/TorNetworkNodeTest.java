@@ -22,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 // Hidden service created. Took 40-50 sec.
 // Connection establishment takes about 4 sec.
 //TODO P2P network tests are outdated
+@SuppressWarnings("ConstantConditions")
 @Ignore
 public class TorNetworkNodeTest {
     private static final Logger log = LoggerFactory.getLogger(TorNetworkNodeTest.class);
@@ -100,12 +101,8 @@ public class TorNetworkNodeTest {
 
 
         latch = new CountDownLatch(2);
-        node1.shutDown(() -> {
-            latch.countDown();
-        });
-        node2.shutDown(() -> {
-            latch.countDown();
-        });
+        node1.shutDown(latch::countDown);
+        node2.shutDown(latch::countDown);
         latch.await();
     }
 
@@ -175,12 +172,8 @@ public class TorNetworkNodeTest {
 
 
         latch = new CountDownLatch(2);
-        node1.shutDown(() -> {
-            latch.countDown();
-        });
-        node2.shutDown(() -> {
-            latch.countDown();
-        });
+        node1.shutDown(latch::countDown);
+        node2.shutDown(latch::countDown);
         latch.await();
     }
 }

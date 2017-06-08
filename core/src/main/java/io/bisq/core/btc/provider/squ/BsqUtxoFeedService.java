@@ -61,7 +61,7 @@ public class BsqUtxoFeedService {
         requestBsqUtxo(null, null);
     }
 
-    public void requestBsqUtxo(@Nullable Consumer<Set<UTXO>> resultHandler, @Nullable FaultHandler faultHandler) {
+    public void requestBsqUtxo(@SuppressWarnings("SameParameterValue") @Nullable Consumer<Set<UTXO>> resultHandler, @SuppressWarnings("SameParameterValue") @Nullable FaultHandler faultHandler) {
         //TODO add throttle
         Log.traceCall();
         BsqUtxoFeedRequest squUtxoRequest = new BsqUtxoFeedRequest();

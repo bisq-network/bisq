@@ -29,8 +29,9 @@ import javax.inject.Inject;
 
 public class BsqFormatter extends BSFormatter {
     private static final Logger log = LoggerFactory.getLogger(BsqFormatter.class);
+    @SuppressWarnings("PointlessBooleanExpression") 
     private static final boolean useBsqAddressFormat = true || !DevEnv.DEV_MODE;
-    private String prefix = "B";
+    private final String prefix = "B";
 
     @Inject
     private BsqFormatter() {

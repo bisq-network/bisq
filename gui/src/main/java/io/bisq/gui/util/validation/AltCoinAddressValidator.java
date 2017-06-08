@@ -121,7 +121,7 @@ public final class AltCoinAddressValidator extends InputValidator {
                     if (input.matches("^[83][a-km-zA-HJ-NP-Z1-9]{25,34}$")) {
                         if (OctocoinAddressValidator.ValidateAddress(input)) {
                             try {
-                                new Address(OctocoinParams.get(), input);
+                                Address.fromBase58(OctocoinParams.get(), input);
                                 return new ValidationResult(true);
                             } catch (AddressFormatException e) {
                                 return new ValidationResult(false, getErrorMessage(e));

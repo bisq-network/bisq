@@ -53,12 +53,9 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
         processModel.getTradingPeer().setPubKeyRing(trade.getOffer().getPubKeyRing());
 
-        Trade.Phase phase = trade.getState().getPhase();
         if (trade.isFiatSent() && !trade.isPayoutPublished()) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                    () -> {
-                        handleTaskRunnerSuccess("BuyerSetupPayoutTxListener");
-                    },
+                    () -> handleTaskRunnerSuccess("BuyerSetupPayoutTxListener"),
                     this::handleTaskRunnerFault);
 
             taskRunner.addTasks(BuyerSetupPayoutTxListener.class);
@@ -176,9 +173,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
-                () -> {
-                    handleTaskRunnerSuccess("handle PayoutTxPublishedMessage");
-                },
+                () -> handleTaskRunnerSuccess("handle PayoutTxPublishedMessage"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(

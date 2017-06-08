@@ -437,6 +437,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen) {
+        //noinspection unchecked
         disputeManager.sendOpenNewDisputeMessage(dispute,
                 reOpen,
                 () -> navigation.navigateTo(MainView.class, DisputesView.class),

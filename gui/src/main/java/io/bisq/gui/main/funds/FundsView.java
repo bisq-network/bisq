@@ -68,14 +68,19 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == depositTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, FundsView.class, DepositView.class);
             else if (newValue == withdrawalTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
             else if (newValue == reservedTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, FundsView.class, ReservedView.class);
             else if (newValue == lockedTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, FundsView.class, LockedView.class);
             else if (newValue == transactionsTab)
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
         };
     }
@@ -86,14 +91,19 @@ public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (root.getSelectionModel().getSelectedItem() == depositTab)
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, FundsView.class, DepositView.class);
         else if (root.getSelectionModel().getSelectedItem() == withdrawalTab)
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class);
         else if (root.getSelectionModel().getSelectedItem() == reservedTab)
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, FundsView.class, ReservedView.class);
         else if (root.getSelectionModel().getSelectedItem() == lockedTab)
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, FundsView.class, LockedView.class);
         else if (root.getSelectionModel().getSelectedItem() == transactionsTab)
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, FundsView.class, TransactionsView.class);
     }
 

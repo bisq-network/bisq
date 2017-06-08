@@ -116,18 +116,16 @@ public class Statistics {
         try {
             if (injector != null) {
                 injector.getInstance(ArbitratorManager.class).shutDown();
-                injector.getInstance(OpenOfferManager.class).shutDown(() -> {
-                    injector.getInstance(P2PService.class).shutDown(() -> {
-                        injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
-                            statisticsModule.close(injector);
-                            log.debug("Graceful shutdown completed");
-                            resultHandler.handleResult();
-                        });
-                        injector.getInstance(WalletsSetup.class).shutDown();
-                        injector.getInstance(BtcWalletService.class).shutDown();
-                        injector.getInstance(BsqWalletService.class).shutDown();
+                injector.getInstance(OpenOfferManager.class).shutDown(() -> injector.getInstance(P2PService.class).shutDown(() -> {
+                    injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
+                        statisticsModule.close(injector);
+                        log.debug("Graceful shutdown completed");
+                        resultHandler.handleResult();
                     });
-                });
+                    injector.getInstance(WalletsSetup.class).shutDown();
+                    injector.getInstance(BtcWalletService.class).shutDown();
+                    injector.getInstance(BsqWalletService.class).shutDown();
+                }));
                 // we wait max 5 sec.
                 UserThread.runAfter(resultHandler::handleResult, 5);
             } else {

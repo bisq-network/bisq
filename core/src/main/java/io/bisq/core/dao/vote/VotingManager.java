@@ -123,11 +123,11 @@ public class VotingManager implements PersistedDataHost {
         CompensationRequestVoteItemCollection compensationRequestVoteItemCollection = voteItems.getCompensationRequestVoteItemCollection();
         // Protocol allows values 0 or multiple of 2. But in implementation we limit to 0 and 2
         int sizeOfCompReqVotesInBytes = 0;
-        CompensationRequestVoteItem compensationRequestVoteItem = null;
+        CompensationRequestVoteItem compensationRequestVoteItem;
         VotingType votingTypeByCode = null;
         for (int i = 0; i < opReturnData.length; i++) {
             Byte currentByte = opReturnData[i];
-            String info = "";
+            String info;
             if (i == 0) {
                 info = "Version" + ": " + String.format("0x%02x ", currentByte);
                 if (currentByte != Version.VOTING_VERSION)
@@ -276,7 +276,7 @@ public class VotingManager implements PersistedDataHost {
             byte[] bytes = outputStream.toByteArray();
             for (int i = 0; i < bytes.length; i++) {
                 Byte currentByte = bytes[i];
-                String info = "";
+                String info;
                 if (i == 0)
                     info = "Version" + ": " + String.format("0x%02x ", currentByte);
                 else if (i < 21)

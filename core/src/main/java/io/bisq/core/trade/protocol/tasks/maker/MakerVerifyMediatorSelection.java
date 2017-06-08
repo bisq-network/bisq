@@ -21,6 +21,7 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.MediatorSelectionRule;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -36,9 +37,11 @@ public class MakerVerifyMediatorSelection extends TradeTask {
         try {
             runInterceptHook();
 
-            if (trade.getMediatorNodeAddress().equals(MediatorSelectionRule.select(
+            final NodeAddress selectedAddress = MediatorSelectionRule.select(
                     processModel.getTakerAcceptedMediatorNodeAddresses(),
-                    processModel.getOffer())))
+                    processModel.getOffer());
+            if (trade.getMediatorNodeAddress() != null &&
+                    trade.getMediatorNodeAddress().equals(selectedAddress))
                 complete();
             else
                 failed("Mediator selection verification failed");

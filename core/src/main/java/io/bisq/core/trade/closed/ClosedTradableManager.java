@@ -38,8 +38,8 @@ public class ClosedTradableManager implements PersistedDataHost {
     private final Storage<TradableList<Tradable>> tradableListStorage;
     private TradableList<Tradable> closedTrades;
     private final KeyRing keyRing;
-    private PriceFeedService priceFeedService;
-    private BtcWalletService btcWalletService;
+    private final PriceFeedService priceFeedService;
+    private final BtcWalletService btcWalletService;
 
     @Inject
     public ClosedTradableManager(KeyRing keyRing, PriceFeedService priceFeedService,

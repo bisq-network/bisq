@@ -29,7 +29,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
 
     private final Storage<TradeStatisticsList> statisticsStorage;
     private final JsonFileManager jsonFileManager;
-    private P2PService p2PService;
+    private final P2PService p2PService;
     private final boolean dumpStatistics;
     private final ObservableSet<TradeStatistics> observableTradeStatisticsSet = FXCollections.observableSet();
     private final HashSet<TradeStatistics> tradeStatisticsSet = new HashSet<>();

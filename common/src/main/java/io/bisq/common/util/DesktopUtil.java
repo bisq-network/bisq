@@ -133,15 +133,15 @@ class DesktopUtil {
             if (p == null) return false;
 
             try {
-                int retval = p.exitValue();
-                if (retval == 0) {
+                int value = p.exitValue();
+                if (value == 0) {
                     logErr("Process ended immediately.");
                     return false;
                 } else {
                     logErr("Process crashed.");
                     return false;
                 }
-            } catch (IllegalThreadStateException itse) {
+            } catch (IllegalThreadStateException e) {
                 logErr("Process is running.");
                 return true;
             }

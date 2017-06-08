@@ -71,11 +71,13 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     }
 
     private void fillAndSortPaymentAccounts() {
-        List<PaymentAccount> list = user.getPaymentAccounts().stream()
-                .filter(paymentAccount -> !paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
-                .collect(Collectors.toList());
-        paymentAccounts.setAll(list);
-        paymentAccounts.sort((o1, o2) -> o1.getCreationDate().compareTo(o2.getCreationDate()));
+        if (user.getPaymentAccounts() != null) {
+            List<PaymentAccount> list = user.getPaymentAccounts().stream()
+                    .filter(paymentAccount -> !paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
+                    .collect(Collectors.toList());
+            paymentAccounts.setAll(list);
+            paymentAccounts.sort((o1, o2) -> o1.getCreationDate().compareTo(o2.getCreationDate()));
+        }
     }
 
     @Override

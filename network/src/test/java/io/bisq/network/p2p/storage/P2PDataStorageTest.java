@@ -54,10 +54,14 @@ public class P2PDataStorageTest {
     public void setup() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {
         Security.addProvider(new BouncyCastleProvider());
         dir1 = File.createTempFile("temp_tests1", "");
+        //noinspection ResultOfMethodCallIgnored
         dir1.delete();
+        //noinspection ResultOfMethodCallIgnored
         dir1.mkdir();
         dir2 = File.createTempFile("temp_tests2", "");
+        //noinspection ResultOfMethodCallIgnored
         dir2.delete();
+        //noinspection ResultOfMethodCallIgnored
         dir2.mkdir();
 
         keyRing1 = new KeyRing(new KeyStorage(dir1));

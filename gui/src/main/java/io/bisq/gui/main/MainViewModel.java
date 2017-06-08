@@ -128,6 +128,7 @@ public class MainViewModel implements ViewModel {
 
     // BTC network
     final StringProperty btcInfo = new SimpleStringProperty(Res.get("mainView.footer.btcInfo.initializing"));
+    @SuppressWarnings("ConstantConditions") 
     final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(DevEnv.STRESS_TEST_MODE ? 0 : -1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
@@ -845,12 +846,10 @@ public class MainViewModel implements ViewModel {
 
         priceFeedAllLoadedSubscription = EasyBind.subscribe(priceFeedService.currenciesUpdateFlagProperty(), newPriceUpdate -> setMarketPriceInItems());
 
-        preferences.getTradeCurrenciesAsObservable().addListener((ListChangeListener<TradeCurrency>) c -> {
-            UserThread.runAfter(() -> {
-                fillPriceFeedComboBoxItems();
-                setMarketPriceInItems();
-            }, 100, TimeUnit.MILLISECONDS);
-        });
+        preferences.getTradeCurrenciesAsObservable().addListener((ListChangeListener<TradeCurrency>) c -> UserThread.runAfter(() -> {
+            fillPriceFeedComboBoxItems();
+            setMarketPriceInItems();
+        }, 100, TimeUnit.MILLISECONDS));
     }
 
     private void setMarketPriceInItems() {

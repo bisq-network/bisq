@@ -250,6 +250,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                     .actionButtonTextWithGoTo("navigation.account")
                     .onAction(() -> {
                         navigation.setReturnPath(navigation.getCurrentPath());
+                        //noinspection unchecked
                         navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, FiatAccountsView.class);
                     }).show();
         }
@@ -287,6 +288,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             model.dataModel.swapTradeToSavings();
             String key = "CreateOfferCancelAndFunded";
             if (model.dataModel.getPreferences().showAgain(key)) {
+                //noinspection unchecked
                 new Popup<>().information(Res.get("createOffer.alreadyFunded"))
                         .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                         .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
@@ -324,6 +326,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                             .actionButtonTextWithGoTo("navigation.arbitratorSelection")
                             .onAction(() -> {
                                 navigation.setReturnPath(navigation.getCurrentPath());
+                                //noinspection unchecked
                                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, ArbitratorSelectionView.class);
                             }).show();
                 }
@@ -346,6 +349,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
+            //noinspection unchecked
             new Popup<>().warning(message)
                     .actionButtonTextWithGoTo("navigation.dao.wallet.receive")
                     .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class, BsqReceiveView.class))
@@ -674,6 +678,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
                                     .dontShowAgainId(key)
                                     .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
                                     .onAction(() -> {
+                                        //noinspection unchecked
                                         UserThread.runAfter(() ->
                                                         navigation.navigateTo(MainView.class, PortfolioView.class,
                                                                 OpenOffersView.class),
@@ -792,6 +797,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, Res.get("shared.selectTradingAccount"));
         GridPane.setColumnSpan(titledGroupBg, 3);
 
+        //noinspection unchecked
         paymentAccountsComboBox = addLabelComboBox(gridPane, gridRow, Res.getWithCol("shared.tradingAccount"), Layout.FIRST_ROW_DISTANCE).second;
         paymentAccountsComboBox.setPromptText(Res.get("shared.selectTradingAccount"));
         paymentAccountsComboBox.setMinWidth(300);
@@ -801,6 +807,7 @@ public class CreateOfferView extends ActivatableViewAndModel<AnchorPane, CreateO
         Tuple2<Label, ComboBox> currencyComboBoxTuple = addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency"));
         currencyComboBoxLabel = currencyComboBoxTuple.first;
         editOfferElements.add(currencyComboBoxLabel);
+        //noinspection unchecked
         currencyComboBox = currencyComboBoxTuple.second;
         editOfferElements.add(currencyComboBox);
         currencyComboBox.setPromptText(Res.get("list.currency.select"));

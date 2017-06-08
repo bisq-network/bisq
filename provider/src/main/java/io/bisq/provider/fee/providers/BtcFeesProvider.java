@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.network.http.HttpClient;
-import io.bisq.network.http.HttpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,10 +21,11 @@ public class BtcFeesProvider {
         this.httpClient = new HttpClient("https://bitcoinfees.21.co/api/v1/fees/");
     }
 
-    public Long getFee() throws IOException, HttpException {
+    public Long getFee() throws IOException {
         String response = httpClient.requestWithGET("recommended", "User-Agent", "");
         log.info("Get recommended fee response:  " + response);
         Map<String, Long> map = new HashMap<>();
+        //noinspection unchecked
         LinkedTreeMap<String, Double> treeMap = new Gson().fromJson(response, LinkedTreeMap.class);
         treeMap.entrySet().stream().forEach(e -> map.put(e.getKey(), e.getValue().longValue()));
 

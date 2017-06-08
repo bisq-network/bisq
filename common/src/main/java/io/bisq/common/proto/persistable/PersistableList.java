@@ -49,16 +49,10 @@ public class PersistableList<T extends PersistablePayload> implements Persistabl
         this.toProto = toProto;
     }
 
-    /**
-     * convenience ctor
-     */
     public PersistableList(HashSet<T> set) {
         this(set.stream().collect(Collectors.toList()));
     }
 
-    /**
-     * convenience ctor
-     */
     public PersistableList(HashSet<T> set, Function<List<T>, Message> toProto) {
         this(set);
         this.toProto = toProto;

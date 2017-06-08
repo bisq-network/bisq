@@ -21,6 +21,7 @@ import io.bisq.common.taskrunner.TaskRunner;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.protocol.ArbitratorSelectionRule;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import io.bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -36,9 +37,11 @@ public class MakerVerifyArbitratorSelection extends TradeTask {
         try {
             runInterceptHook();
 
-            if (trade.getArbitratorNodeAddress().equals(ArbitratorSelectionRule.select(
+            final NodeAddress selectedAddress = ArbitratorSelectionRule.select(
                     processModel.getTakerAcceptedArbitratorNodeAddresses(),
-                    processModel.getOffer())))
+                    processModel.getOffer());
+            if (trade.getArbitratorNodeAddress() != null &&
+                    trade.getArbitratorNodeAddress().equals(selectedAddress))
                 complete();
             else
                 failed("Arbitrator selection verification failed");

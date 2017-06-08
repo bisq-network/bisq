@@ -363,6 +363,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         if (doPrint) {
             try {
                 DateFormat formatter = new SimpleDateFormat("dd/MM/yy");
+                //noinspection UnusedAssignment
                 Date startDate = formatter.parse("10/02/17");
                 startDate = new Date(0); // print all from start
 

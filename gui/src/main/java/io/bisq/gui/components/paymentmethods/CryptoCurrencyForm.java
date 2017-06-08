@@ -142,6 +142,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
     @Override
     protected void addTradeCurrencyComboBox() {
+        //noinspection unchecked
         currencyComboBox = addLabelSearchComboBox(gridPane, ++gridRow, Res.get("payment.altcoin"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         currencyComboBox.setPromptText(Res.get("payment.select.altcoin"));

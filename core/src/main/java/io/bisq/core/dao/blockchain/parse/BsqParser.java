@@ -63,7 +63,7 @@ public class BsqParser {
                         int genesisBlockHeight,
                         String genesisTxId,
                         Consumer<BsqBlock> newBlockHandler)
-            throws BsqBlockchainException, BlockNotConnectingException {
+            throws BlockNotConnectingException {
         for (BsqBlock bsqBlock : bsqBlocks) {
             parseBsqBlock(bsqBlock,
                     genesisBlockHeight,

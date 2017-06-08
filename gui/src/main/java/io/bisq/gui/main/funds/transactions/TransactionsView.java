@@ -98,6 +98,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final DisputeManager disputeManager;
     private final Stage stage;
     private final OfferDetailsWindow offerDetailsWindow;
+    @SuppressWarnings("deprecation")
     private WalletEventListener walletEventListener;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
@@ -163,6 +164,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
+        //noinspection deprecation
         walletEventListener = new WalletEventListener() {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {

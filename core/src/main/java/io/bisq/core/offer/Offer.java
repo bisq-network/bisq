@@ -447,6 +447,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
         Offer offer = (Offer) o;
 
         if (offerPayload != null ? !offerPayload.equals(offer.offerPayload) : offer.offerPayload != null) return false;
+        //noinspection SimplifiableIfStatement
         if (getState() != offer.getState()) return false;
         return !(getErrorMessage() != null ? !getErrorMessage().equals(offer.getErrorMessage()) : offer.getErrorMessage() != null);
 

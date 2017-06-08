@@ -88,6 +88,7 @@ public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
         GridPane.setMargin(label, new Insets(0, 0, 10, 0));
 
         Tuple2<Label, ComboBox> tuple = addLabelComboBox(gridPane, ++rowIndex, Res.get("selectDepositTxWindow.select"));
+        //noinspection unchecked
         transactionsComboBox = tuple.second;
         transactionsComboBox.setPromptText(Res.get("shared.select"));
         transactionsComboBox.setConverter(new StringConverter<Transaction>() {

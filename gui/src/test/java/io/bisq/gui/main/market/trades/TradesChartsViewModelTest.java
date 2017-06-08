@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 public class TradesChartsViewModelTest {
     private static final Logger log = LoggerFactory.getLogger(TradesChartsViewModelTest.class);
 
+    @SuppressWarnings("ConstantConditions")
     @Test
     public void testGetCandleData() {
         TradesChartsViewModel model = new TradesChartsViewModel();

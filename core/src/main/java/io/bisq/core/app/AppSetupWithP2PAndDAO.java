@@ -28,7 +28,7 @@ import javax.inject.Inject;
 
 @Slf4j
 public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
-    private BsqBlockchainManager bsqBlockchainManager;
+    private final BsqBlockchainManager bsqBlockchainManager;
 
     @Inject
     public AppSetupWithP2PAndDAO(BisqEnvironment bisqEnvironment,

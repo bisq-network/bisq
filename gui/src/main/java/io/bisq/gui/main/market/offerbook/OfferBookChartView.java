@@ -233,10 +233,12 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         sellOfferTableView.setItems(model.getTopSellOfferList());
         buyTableRowSelectionListener = (observable, oldValue, newValue) -> {
             model.preferences.setSellScreenCurrencyCode(model.getCurrencyCode());
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, SellOfferView.class);
         };
         sellTableRowSelectionListener = (observable, oldValue, newValue) -> {
             model.preferences.setBuyScreenCurrencyCode(model.getCurrencyCode());
+            //noinspection unchecked
             navigation.navigateTo(MainView.class, BuyOfferView.class);
         };
         buyOfferTableView.getSelectionModel().selectedItemProperty().addListener(buyTableRowSelectionListener);
@@ -284,7 +286,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         seriesBuy.getData().clear();
         seriesSell.getData().clear();
 
+        //noinspection unchecked
         seriesBuy.getData().addAll(model.getBuyData());
+        //noinspection unchecked
         seriesSell.getData().addAll(model.getSellData());
     }
 
@@ -461,9 +465,11 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         button.setOnAction(e -> {
             if (isSellOffer) {
                 model.preferences.setBuyScreenCurrencyCode(model.getCurrencyCode());
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, BuyOfferView.class);
             } else {
                 model.preferences.setSellScreenCurrencyCode(model.getCurrencyCode());
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, SellOfferView.class);
             }
         });

@@ -150,11 +150,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
     private void initializeGeneralOptions() {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 7, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 4);
+        //noinspection unchecked
         userLanguageComboBox = addLabelComboBox(root, gridRow,
                 Res.getWithCol("shared.language"), Layout.FIRST_ROW_DISTANCE).second;
+        //noinspection unchecked
         userCountryComboBox = addLabelComboBox(root, ++gridRow,
                 Res.getWithCol("shared.country")).second;
         // btcDenominationComboBox = addLabelComboBox(root, ++gridRow, "Bitcoin denomination:").second;
+        //noinspection unchecked
         blockChainExplorerComboBox = addLabelComboBox(root, ++gridRow,
                 Res.get("setting.preferences.explorer")).second;
         deviationInputTextField = addLabelInputTextField(root, ++gridRow,
@@ -242,6 +245,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
                 Layout.GROUP_DISTANCE);
         GridPane.setColumnSpan(titledGroupBg, 4);
 
+        //noinspection unchecked
         preferredTradeCurrencyComboBox = addLabelComboBox(root, gridRow, Res.get("setting.preferences.prefCurrency"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         preferredTradeCurrencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
@@ -259,6 +263,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
 
         Tuple2<Label, ListView> fiatTuple = addLabelListView(root, ++gridRow, Res.get("setting.preferences.displayFiat"));
         GridPane.setValignment(fiatTuple.first, VPos.TOP);
+        //noinspection unchecked
         fiatCurrenciesListView = fiatTuple.second;
         fiatCurrenciesListView.setMinHeight(2 * Layout.LIST_ROW_HEIGHT + 2);
         fiatCurrenciesListView.setPrefHeight(3 * Layout.LIST_ROW_HEIGHT + 2);
@@ -307,6 +312,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         Tuple2<Label, ListView> cryptoCurrenciesTuple = addLabelListView(root, gridRow, Res.get("setting.preferences.displayAltcoins"));
         GridPane.setValignment(cryptoCurrenciesTuple.first, VPos.TOP);
         GridPane.setMargin(cryptoCurrenciesTuple.first, new Insets(0, 0, 0, 20));
+        //noinspection unchecked
         cryptoCurrenciesListView = cryptoCurrenciesTuple.second;
         GridPane.setColumnIndex(cryptoCurrenciesTuple.first, 2);
         GridPane.setColumnIndex(cryptoCurrenciesListView, 3);
@@ -354,6 +360,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
             }
         });
 
+        //noinspection unchecked
         fiatCurrenciesComboBox = addLabelComboBox(root, ++gridRow).second;
         fiatCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addFiat"));
         fiatCurrenciesComboBox.setConverter(new StringConverter<FiatCurrency>() {
@@ -369,6 +376,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Activatab
         });
 
         Tuple2<Label, ComboBox> labelComboBoxTuple2 = addLabelComboBox(root, gridRow);
+        //noinspection unchecked
         cryptoCurrenciesComboBox = labelComboBoxTuple2.second;
         GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
         cryptoCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addAltcoin"));

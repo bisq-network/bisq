@@ -111,9 +111,9 @@ public class CompensationRequestManager implements PersistedDataHost {
     }
 
     public void onAllServicesInitialized() {
-        if (daoPeriodService.getPhase() == DaoPeriodService.Phase.OPEN_FOR_COMPENSATION_REQUESTS) {
+        /*if (daoPeriodService.getPhase() == DaoPeriodService.Phase.OPEN_FOR_COMPENSATION_REQUESTS) {
 
-        }
+        }*/
     }
 
     public void addToP2PNetwork(CompensationRequestPayload compensationRequestPayload) {

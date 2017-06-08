@@ -24,6 +24,7 @@ import java.util.Date;
  * You should have received a copy of the GNU Affero General Public License
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+@SuppressWarnings({"SameParameterValue", "UnusedAssignment"})
 public class ArbitratorTest {
 
     @Test
@@ -47,7 +48,7 @@ public class ArbitratorTest {
     }
 
     // TODO move to common if used often
-    public static byte[] getBytes(int count) {
+    public static byte[] getBytes(@SuppressWarnings("SameParameterValue") int count) {
         return RandomUtils.nextBytes(count);
     }
 }

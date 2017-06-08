@@ -100,9 +100,7 @@ public class BsqFullNodeExecutor {
                     chainHeadHeight,
                     genesisBlockHeight,
                     genesisTxId,
-                    newBsqBlock -> {
-                        UserThread.execute(() -> newBlockHandler.accept(newBsqBlock));
-                    });
+                    newBsqBlock -> UserThread.execute(() -> newBlockHandler.accept(newBsqBlock)));
             log.info("parseBlocks took {} ms for {} blocks", System.currentTimeMillis() - startTs, chainHeadHeight - startBlockHeight);
             return null;
         });
@@ -110,9 +108,7 @@ public class BsqFullNodeExecutor {
         Futures.addCallback(future, new FutureCallback<Void>() {
             @Override
             public void onSuccess(Void ignore) {
-                UserThread.execute(() -> {
-                    UserThread.execute(resultHandler::handleResult);
-                });
+                UserThread.execute(() -> UserThread.execute(resultHandler::handleResult));
             }
 
             @Override
@@ -127,18 +123,14 @@ public class BsqFullNodeExecutor {
                                String genesisTxId,
                                Consumer<BsqBlock> resultHandler,
                                Consumer<Throwable> errorHandler) {
-        ListenableFuture<BsqBlock> future = parseBlocksExecutor.submit(() -> {
-            return bsqParser.parseBlock(btcdBlock,
-                    genesisBlockHeight,
-                    genesisTxId);
-        });
+        ListenableFuture<BsqBlock> future = parseBlocksExecutor.submit(() -> bsqParser.parseBlock(btcdBlock,
+                genesisBlockHeight,
+                genesisTxId));
 
         Futures.addCallback(future, new FutureCallback<BsqBlock>() {
             @Override
             public void onSuccess(BsqBlock bsqBlock) {
-                UserThread.execute(() -> {
-                    resultHandler.accept(bsqBlock);
-                });
+                UserThread.execute(() -> resultHandler.accept(bsqBlock));
             }
 
             @Override

@@ -111,6 +111,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Called also from SeedNodeP2PService
+    @SuppressWarnings("SameParameterValue")
     @Inject
     public P2PService(SeedNodesRepository seedNodesRepository,
                       @Named(NetworkOptionKeys.PORT_KEY) int port,

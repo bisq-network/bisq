@@ -194,6 +194,7 @@ class MenuItem extends ToggleButton {
     }
 
     public void activate() {
+        //noinspection unchecked
         setOnAction((event) -> navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class, viewClass));
         selectedProperty().addListener(selectedPropertyChangeListener);
         disableProperty().addListener(disablePropertyChangeListener);

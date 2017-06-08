@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class JsonFileManager {
     private final ThreadPoolExecutor executor = Utilities.getThreadPoolExecutor("saveToDiscExecutor", 5, 50, 60);
-    private File dir;
+    private final File dir;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

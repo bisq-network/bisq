@@ -9,7 +9,7 @@ public abstract class HttpClientProvider {
         this(httpClient, baseUrl, false);
     }
 
-    public HttpClientProvider(HttpClient httpClient, String baseUrl, boolean ignoreSocks5Proxy) {
+    public HttpClientProvider(HttpClient httpClient, String baseUrl, @SuppressWarnings("SameParameterValue") boolean ignoreSocks5Proxy) {
         this.httpClient = httpClient;
 
         httpClient.setBaseUrl(baseUrl);
