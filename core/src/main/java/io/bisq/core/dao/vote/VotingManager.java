@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistableList;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -32,10 +33,9 @@ import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.generated.protobuffer.PB;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,8 +44,8 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class VotingManager {
-    private static final Logger log = LoggerFactory.getLogger(VotingManager.class);
+@Slf4j
+public class VotingManager implements PersistedDataHost {
 
     public static final String ERROR_MSG_MISSING_BYTE = "We need to have at least 1 more byte for the voting value.";
     public static final String ERROR_MSG_WRONG_SIZE = "sizeOfCompReqVotesInBytes must be 0 or multiple of 2. sizeOfCompReqVotesInBytes=";
@@ -77,14 +77,9 @@ public class VotingManager {
         this.compensationRequestManager = compensationRequestManager;
         this.daoPeriodService = daoPeriodService;
         this.votingDefaultValues = votingDefaultValues;
-
-        PersistableList<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
-        if (persisted != null)
-            voteItemsLists.addAll(persisted.getList());
     }
 
-    @VisibleForTesting
-    VotingManager(VotingDefaultValues votingDefaultValues) {
+    @VisibleForTesting VotingManager(VotingDefaultValues votingDefaultValues) {
         this.btcWalletService = null;
         this.bsqWalletService = null;
         this.feeService = null;
@@ -92,6 +87,13 @@ public class VotingManager {
         this.compensationRequestManager = null;
         this.daoPeriodService = null;
         this.votingDefaultValues = votingDefaultValues;
+    }
+
+    @Override
+    public void readPersisted() {
+        PersistableList<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
+        if (persisted != null)
+            voteItemsLists.addAll(persisted.getList());
     }
 
     public void onAllServicesInitialized() {

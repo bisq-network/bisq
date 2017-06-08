@@ -9,11 +9,13 @@ import io.bisq.network.p2p.SupportedCapabilitiesMessage;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Value
 public final class GetDataResponse implements SupportedCapabilitiesMessage, ExtendedDataSizePermission {
     private final HashSet<ProtectedStorageEntry> dataSet;

@@ -4,14 +4,14 @@ import io.bisq.common.Clock;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.Storage;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.network.*;
 import io.bisq.network.p2p.peers.peerexchange.Peer;
 import io.bisq.network.p2p.peers.peerexchange.PeerList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -20,11 +20,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class PeerManager implements ConnectionListener {
+@Slf4j
+public class PeerManager implements ConnectionListener, PersistedDataHost {
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
-    private static final Logger log = LoggerFactory.getLogger(PeerManager.class);
 
     private static final long CHECK_MAX_CONN_DELAY_SEC = 10;
     // Use a long delay as the bootstrapping peer might need a while until it knows its onion address
@@ -33,30 +34,12 @@ public class PeerManager implements ConnectionListener {
     private static final int MAX_REPORTED_PEERS = 1000;
     private static final int MAX_PERSISTED_PEERS = 500;
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(14); // max age for reported peers is 14 days
-
-    private final boolean printReportedPeersDetails = true;
-    private boolean lostAllConnections;
-
-    private int maxConnections;
-    private int minConnections;
-    private int maxConnectionsPeer;
-    private int maxConnectionsNonDirect;
-    private int maxConnectionsAbsolute;
-    private Object listToProto;
-
-    // Modify this to change the relationships between connection limits.
-    private void setConnectionLimits(int maxConnections) {
-        this.maxConnections = maxConnections;
-        minConnections = Math.max(1, maxConnections - 4);
-        maxConnectionsPeer = maxConnections + 4;
-        maxConnectionsNonDirect = maxConnections + 8;
-        maxConnectionsAbsolute = maxConnections + 18;
-    }
+    private static final boolean PRINT_REPORTED_PEERS_DETAILS = true;
+    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     public interface Listener {
         void onAllConnectionsLost();
@@ -65,6 +48,7 @@ public class PeerManager implements ConnectionListener {
 
         void onAwakeFromStandby();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields
@@ -75,13 +59,18 @@ public class PeerManager implements ConnectionListener {
     private final Clock clock;
     private final Set<NodeAddress> seedNodeAddresses;
     private final Storage<PeerList> dbStorage;
-
     private final HashSet<Peer> persistedPeers = new HashSet<>();
     private final Set<Peer> reportedPeers = new HashSet<>();
-    private Timer checkMaxConnectionsTimer;
     private final Clock.Listener listener;
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
+    private Timer checkMaxConnectionsTimer;
     private boolean stopped;
+    private boolean lostAllConnections;
+    private int maxConnections;
+    private int minConnections;
+    private int maxConnectionsPeer;
+    private int maxConnectionsNonDirect;
+    private int maxConnectionsAbsolute;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -97,11 +86,7 @@ public class PeerManager implements ConnectionListener {
         this.seedNodeAddresses = new HashSet<>(seedNodeAddresses);
         networkNode.addConnectionListener(this);
         dbStorage = new Storage<>(storageDir, persistenceProtoResolver);
-        PeerList persistedPeerList = dbStorage.initAndGetPersistedWithFileName("PeerList");
-        if (persistedPeerList != null) {
-            log.debug("We have persisted reported list. persistedPeerList.size()=" + persistedPeerList.getList().size());
-            this.persistedPeers.addAll(persistedPeerList.getList());
-        }
+
 
         // we check if app was idle for more then 5 sec.
         listener = new Clock.Listener() {
@@ -138,6 +123,13 @@ public class PeerManager implements ConnectionListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public void readPersisted() {
+        PeerList persistedPeerList = dbStorage.initAndGetPersistedWithFileName("PeerList");
+        if (persistedPeerList != null)
+            this.persistedPeers.addAll(persistedPeerList.getList());
+    }
+
     public int getMaxConnections() {
         return maxConnectionsAbsolute;
     }
@@ -150,6 +142,14 @@ public class PeerManager implements ConnectionListener {
         listeners.remove(listener);
     }
 
+    // Modify this to change the relationships between connection limits.
+    private void setConnectionLimits(int maxConnections) {
+        this.maxConnections = maxConnections;
+        minConnections = Math.max(1, maxConnections - 4);
+        maxConnectionsPeer = maxConnections + 4;
+        maxConnectionsNonDirect = maxConnections + 8;
+        maxConnectionsAbsolute = maxConnections + 18;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ConnectionListener implementation
@@ -423,7 +423,7 @@ public class PeerManager implements ConnectionListener {
     private void printReportedPeers() {
         if (!reportedPeers.isEmpty()) {
             //noinspection ConstantConditions
-            if (printReportedPeersDetails) {
+            if (PRINT_REPORTED_PEERS_DETAILS) {
                 StringBuilder result = new StringBuilder("\n\n------------------------------------------------------------\n" +
                         "Collected reported peers:");
                 List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
@@ -437,7 +437,7 @@ public class PeerManager implements ConnectionListener {
 
     private void printNewReportedPeers(HashSet<Peer> reportedPeers) {
         //noinspection ConstantConditions
-        if (printReportedPeersDetails) {
+        if (PRINT_REPORTED_PEERS_DETAILS) {
             StringBuilder result = new StringBuilder("We received new reportedPeers:");
             List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
             reportedPeersClone.stream().forEach(e -> result.append("\n\t").append(e));

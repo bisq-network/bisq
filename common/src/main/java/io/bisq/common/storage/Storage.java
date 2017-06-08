@@ -80,18 +80,6 @@ public class Storage<T extends PersistableEnvelope> {
         this.persistenceProtoResolver = persistenceProtoResolver;
     }
 
-    /*
-    public Storage(@Named(DIR_KEY) File dir) {
-        this.dir = dir;
-        this.protobufferResolver = protobufferResolver;
-    }
-*/
-    public void initWithFileName(String fileName) {
-        this.fileName = fileName;
-        storageFile = new File(dir, fileName);
-        fileManager = new FileManager<>(dir, storageFile, 300, persistenceProtoResolver);
-    }
-
     @Nullable
     public T initAndGetPersistedWithFileName(String fileName) {
         this.fileName = fileName;

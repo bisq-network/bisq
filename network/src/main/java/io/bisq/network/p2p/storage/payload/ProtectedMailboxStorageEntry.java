@@ -4,12 +4,14 @@ import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
 
 @Slf4j
+@EqualsAndHashCode(callSuper = true)
 @Value
 public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     private final byte[] receiversPubKeyBytes;

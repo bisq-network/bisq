@@ -299,7 +299,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public boolean add(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
                        @Nullable BroadcastHandler.Listener listener, boolean isDataOwner, boolean allowBroadcast) {
         Log.traceCall("with allowBroadcast=" + allowBroadcast);
-
         final StoragePayload storagePayload = protectedStorageEntry.getStoragePayload();
         ByteArray hashOfPayload = getHashAsByteArray(storagePayload);
         boolean sequenceNrValid = isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload);
@@ -314,6 +313,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // printData("before add");
         if (result) {
             final boolean hasSequenceNrIncreased = hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload);
+
             if (!containsKey || hasSequenceNrIncreased) {
                 // At startup we don't have the item so we store it. At updates of the seq nr we store as well.
                 map.put(hashOfPayload, protectedStorageEntry);
@@ -502,8 +502,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     public Set<ProtectedStorageEntry> getFilteredValues(Set<ByteArray> excludedKeys) {
-        return map.entrySet()
-                .stream().filter(e -> !excludedKeys.contains(e.getKey()))
+        return map.entrySet().stream()
+                .filter(e -> !excludedKeys.contains(e.getKey()))
                 .map(Entry::getValue)
                 .collect(Collectors.toSet());
     }
@@ -723,6 +723,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             this.sequenceNumber = sequenceNumber;
         }
 
+        // Used only for calculating hash of byte array from PB object
         @Override
         public com.google.protobuf.Message toProtoMessage() {
             return PB.DataAndSeqNrPair.newBuilder()
@@ -730,8 +731,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                     .setSequenceNumber(sequenceNumber)
                     .build();
         }
-
-        //TODO from PB is missing
     }
 
 

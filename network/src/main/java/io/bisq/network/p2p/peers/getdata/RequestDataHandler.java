@@ -47,8 +47,7 @@ public class RequestDataHandler implements MessageListener {
     public interface Listener {
         void onComplete();
 
-        @SuppressWarnings("UnusedParameters")
-        void onFault(String errorMessage, @SuppressWarnings("SameParameterValue") @Nullable Connection connection);
+        @SuppressWarnings("UnusedParameters") void onFault(String errorMessage, @SuppressWarnings("SameParameterValue") @Nullable Connection connection);
     }
 
 
@@ -186,9 +185,14 @@ public class RequestDataHandler implements MessageListener {
                         payloadByClassName.get(className).add(storagePayload);
                     });
                     // Log different data types
-                    StringBuilder sb = new StringBuilder("Received data size: ").append(dataSet.size()).append(", data items: ");
-                    payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getValue().size()).append(" items of ")
-                            .append(e.getKey()).append("; "));
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("\n#################################################################");
+                    sb.append("\nReceived ").append(dataSet.size()).append(" instances of storage payload\n");
+                    payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getKey())
+                            .append(": ")
+                            .append(e.getValue().size())
+                            .append("\n"));
+                    sb.append("#################################################################");
                     log.info(sb.toString());
 
                     if (getDataResponse.getRequestNonce() == nonce) {

@@ -20,6 +20,7 @@ package io.bisq.core.dao.compensation;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.inject.Inject;
 import io.bisq.common.proto.persistable.PersistableList;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
@@ -39,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class CompensationRequestManager {
+public class CompensationRequestManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(CompensationRequestManager.class);
 
     private static final int GENESIS_BLOCK_HEIGHT = 391; // TODO dev version regtest
@@ -80,11 +81,6 @@ public class CompensationRequestManager {
 
         observableList = FXCollections.observableArrayList(model.getList());
 
-        PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
-        if (persisted != null)
-            model.setPersistedCompensationRequest(persisted.getList());
-
-
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
@@ -105,6 +101,13 @@ public class CompensationRequestManager {
             if (storagePayload instanceof CompensationRequestPayload)
                 addToList((CompensationRequestPayload) storagePayload, false);
         });
+    }
+
+    @Override
+    public void readPersisted() {
+        PersistableList<CompensationRequest> persisted = compensationRequestsStorage.initAndGetPersistedWithFileName("CompensationRequests");
+        if (persisted != null)
+            model.setPersistedCompensationRequest(persisted.getList());
     }
 
     public void onAllServicesInitialized() {
