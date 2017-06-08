@@ -21,8 +21,10 @@ import io.bisq.common.proto.persistable.PersistablePayload;
 import lombok.Data;
 import lombok.experimental.Delegate;
 
+import java.io.Serializable;
+
 @Data
-public class TxInput implements PersistablePayload {
+public class TxInput implements PersistablePayload, Serializable {
     @Delegate
     private final TxInputVo txInputVo;
 

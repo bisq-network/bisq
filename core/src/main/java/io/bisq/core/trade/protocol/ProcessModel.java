@@ -135,8 +135,8 @@ public class ProcessModel implements Model, PersistablePayload {
                 .setAccountId(accountId)
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
                 .setChangeOutputValue(changeOutputValue)
-                .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong)
-                .setUseSavingsWallet(useSavingsWallet);
+                .setUseSavingsWallet(useSavingsWallet)
+                .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong);
 
         Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
         Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
@@ -150,20 +150,19 @@ public class ProcessModel implements Model, PersistablePayload {
         return builder.build();
     }
 
-
     public static ProcessModel fromProto(PB.ProcessModel proto, CoreProtoResolver coreProtoResolver) {
         ProcessModel processModel = new ProcessModel();
-        processModel.setTradingPeer(TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver));
+        processModel.setTradingPeer(proto.hasTradingPeer() ? TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver) : null);
         processModel.setOfferId(proto.getOfferId());
         processModel.setAccountId(proto.getAccountId());
         processModel.setPubKeyRing(PubKeyRing.fromProto(proto.getPubKeyRing()));
         processModel.setChangeOutputValue(proto.getChangeOutputValue());
-        processModel.setFundsNeededForTradeAsLong(proto.getFundsNeededForTradeAsLong());
         processModel.setUseSavingsWallet(proto.getUseSavingsWallet());
+        processModel.setFundsNeededForTradeAsLong(proto.getFundsNeededForTradeAsLong());
 
         // nullable
-        processModel.setTakeOfferFeeTxId(proto.getTakeOfferFeeTxId().isEmpty() ? null : proto.getTakeOfferFeeTxId());
-        processModel.setPayoutTxSignature(proto.getPayoutTxSignature().isEmpty() ? null : proto.getPayoutTxSignature().toByteArray());
+        processModel.setTakeOfferFeeTxId(ProtoUtil.stringOrNullFromProto(proto.getTakeOfferFeeTxId()));
+        processModel.setPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getPayoutTxSignature()));
         List<NodeAddress> takerAcceptedArbitratorNodeAddresses = proto.getTakerAcceptedArbitratorNodeAddressesList().isEmpty() ?
                 null : proto.getTakerAcceptedArbitratorNodeAddressesList().stream()
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
@@ -172,14 +171,14 @@ public class ProcessModel implements Model, PersistablePayload {
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
         processModel.setTakerAcceptedArbitratorNodeAddresses(takerAcceptedArbitratorNodeAddresses);
         processModel.setTakerAcceptedMediatorNodeAddresses(takerAcceptedMediatorNodeAddresses);
-        processModel.setPreparedDepositTx(proto.getPreparedDepositTx().isEmpty() ? null : proto.getPreparedDepositTx().toByteArray());
+        processModel.setPreparedDepositTx(ProtoUtil.byteArrayOrNullFromProto(proto.getPreparedDepositTx()));
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().isEmpty() ?
                 null : proto.getRawTransactionInputsList().stream()
                 .map(RawTransactionInput::fromProto).collect(Collectors.toList());
         processModel.setRawTransactionInputs(rawTransactionInputs);
-        processModel.setChangeOutputAddress(proto.getChangeOutputAddress().isEmpty() ? null : proto.getChangeOutputAddress());
-        processModel.setMyMultiSigPubKey(proto.getMyMultiSigPubKey().isEmpty() ? null : proto.getMyMultiSigPubKey().toByteArray());
-        processModel.setTempTradingPeerNodeAddress(NodeAddress.fromProto(proto.getTempTradingPeerNodeAddress()));
+        processModel.setChangeOutputAddress(ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()));
+        processModel.setMyMultiSigPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getMyMultiSigPubKey()));
+        processModel.setTempTradingPeerNodeAddress(proto.hasTempTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTempTradingPeerNodeAddress()) : null);
         return processModel;
     }
 

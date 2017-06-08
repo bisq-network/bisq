@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
 import java.util.Date;
-import java.util.Optional;
 
 @EqualsAndHashCode
 @Getter
@@ -114,9 +113,8 @@ public final class DisputeResult implements NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Optional<DisputeResult> fromProto(PB.DisputeResult proto) {
-        return proto.equals(proto.getDefaultInstanceForType()) ? Optional.empty() :
-                Optional.of(new DisputeResult(proto.getTradeId(),
+    public static DisputeResult fromProto(PB.DisputeResult proto) {
+        return new DisputeResult(proto.getTradeId(),
                         proto.getTraderId(),
                         ProtoUtil.enumFromProto(DisputeResult.Winner.class, proto.getWinner().name()),
                         proto.getReasonOrdinal(),
@@ -130,7 +128,7 @@ public final class DisputeResult implements NetworkPayload {
                         proto.getSellerPayoutAmount(),
                         proto.getArbitratorPubKey().toByteArray(),
                         proto.getCloseDate(),
-                        proto.getIsLoserPublisher()));
+                proto.getIsLoserPublisher());
     }
 
     @Override

@@ -29,6 +29,7 @@ import io.bisq.core.filter.Filter;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
@@ -59,7 +60,6 @@ public final class User implements PersistedDataHost {
     private ObjectProperty<PaymentAccount> currentPaymentAccountProperty;
 
     private UserPayload userPayload = new UserPayload();
-    private boolean initialReadDone = false;
 
     @Inject
     public User(Storage<UserPayload> storage, KeyRing keyRing) throws NoSuchAlgorithmException {
@@ -75,7 +75,7 @@ public final class User implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        UserPayload persisted = storage.initAndGetPersistedWithFileName("User");
+        UserPayload persisted = storage.initAndGetPersistedWithFileName("UserPayload");
         userPayload = persisted != null ? persisted : new UserPayload();
 
         checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");
@@ -91,8 +91,6 @@ public final class User implements PersistedDataHost {
         if (!userPayload.getAcceptedLanguageLocaleCodes().contains(english))
             userPayload.getAcceptedLanguageLocaleCodes().add(english);
 
-
-        // Use that to guarantee update of the serializable field and to make a storage update in case of a change
         paymentAccountsAsObservable.addListener((SetChangeListener<PaymentAccount>) change -> {
             userPayload.setPaymentAccounts(new HashSet<>(paymentAccountsAsObservable));
             persist();
@@ -102,13 +100,10 @@ public final class User implements PersistedDataHost {
             persist();
         });
 
-        initialReadDone = true;
     }
 
     private void persist() {
-        // TODO if we persist we get a blank screen (exception in view class contrs. or circ. dependency?)
-        if (initialReadDone)
-            storage.queueUpForSave(userPayload);
+        storage.queueUpForSave(userPayload);
     }
 
 
@@ -123,9 +118,11 @@ public final class User implements PersistedDataHost {
                   .findFirst();
       }*/
 
+    @Nullable
     public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
-        if (userPayload.getAcceptedArbitrators() != null) {
-            Optional<Arbitrator> arbitratorOptional = userPayload.getAcceptedArbitrators().stream()
+        final List<Arbitrator> acceptedArbitrators = userPayload.getAcceptedArbitrators();
+        if (acceptedArbitrators != null) {
+            Optional<Arbitrator> arbitratorOptional = acceptedArbitrators.stream()
                     .filter(e -> e.getNodeAddress().equals(nodeAddress))
                     .findFirst();
             if (arbitratorOptional.isPresent())
@@ -137,9 +134,11 @@ public final class User implements PersistedDataHost {
         }
     }
 
+    @Nullable
     public Mediator getAcceptedMediatorByAddress(NodeAddress nodeAddress) {
-        if (userPayload.getAcceptedMediators() != null) {
-            Optional<Mediator> mediatorOptionalOptional = userPayload.getAcceptedMediators().stream()
+        final List<Mediator> acceptedMediators = userPayload.getAcceptedMediators();
+        if (acceptedMediators != null) {
+            Optional<Mediator> mediatorOptionalOptional = acceptedMediators.stream()
                     .filter(e -> e.getNodeAddress().equals(nodeAddress))
                     .findFirst();
             if (mediatorOptionalOptional.isPresent())
@@ -283,7 +282,6 @@ public final class User implements PersistedDataHost {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     public void setCurrentPaymentAccount(PaymentAccount paymentAccount) {
         currentPaymentAccountProperty.set(paymentAccount);
         persist();
@@ -334,15 +332,11 @@ public final class User implements PersistedDataHost {
         return userPayload.getAccountId();
     }
 
-   /* public boolean isRegistered() {
-        return getAccountId() != null;
-    }*/
-
     private PaymentAccount getCurrentPaymentAccount() {
         return userPayload.getCurrentPaymentAccount();
     }
 
-    public ObjectProperty<PaymentAccount> currentPaymentAccountProperty() {
+    public ReadOnlyObjectProperty<PaymentAccount> currentPaymentAccountProperty() {
         return currentPaymentAccountProperty;
     }
 

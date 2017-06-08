@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 @EqualsAndHashCode
 @Slf4j
 public final class MailboxStoragePayload implements StoragePayload {
-    private final long TTL = TimeUnit.DAYS.toMillis(10);
     private final PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage;
     private PublicKey senderPubKeyForAddOperation;
     private final byte[] senderPubKeyForAddOperationBytes;
@@ -84,5 +83,15 @@ public final class MailboxStoragePayload implements StoragePayload {
                 proto.getSenderPubKeyForAddOperationBytes().toByteArray(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public long getTTL() {
+        return TimeUnit.DAYS.toMillis(15);
     }
 }

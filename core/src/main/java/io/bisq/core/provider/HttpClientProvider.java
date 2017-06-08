@@ -2,9 +2,7 @@ package io.bisq.core.provider;
 
 import io.bisq.network.http.HttpClient;
 
-import java.io.Serializable;
-
-public abstract class HttpClientProvider implements Serializable {
+public abstract class HttpClientProvider {
     protected final HttpClient httpClient;
 
     public HttpClientProvider(HttpClient httpClient, String baseUrl) {

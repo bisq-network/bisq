@@ -114,7 +114,7 @@ public class EncryptionService {
 
 
     /**
-     * @param data Any serializable object. Will be converted into a byte array using Java serialisation.
+     * @param data 
      * @return Hash of data
      */
     public static byte[] getHash(NetworkPayload data) {

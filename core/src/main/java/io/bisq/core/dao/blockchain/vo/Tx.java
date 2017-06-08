@@ -21,12 +21,13 @@ import io.bisq.common.proto.persistable.PersistablePayload;
 import lombok.Data;
 import lombok.experimental.Delegate;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 @Data
-public class Tx implements PersistablePayload {
+public class Tx implements PersistablePayload, Serializable {
     @Delegate
     private final TxVo txVo;
 

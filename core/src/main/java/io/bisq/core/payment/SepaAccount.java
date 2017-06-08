@@ -21,9 +21,11 @@ import io.bisq.common.locale.CountryUtil;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.payment.payload.SepaAccountPayload;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
+@EqualsAndHashCode(callSuper = true)
 public final class SepaAccount extends CountryBasedPaymentAccount implements BankAccount {
     public SepaAccount() {
         super(PaymentMethod.SEPA);
@@ -75,6 +77,4 @@ public final class SepaAccount extends CountryBasedPaymentAccount implements Ban
     public void removeAcceptedCountry(String countryCode) {
         ((SepaAccountPayload) paymentAccountPayload).removeAcceptedCountry(countryCode);
     }
-
-
 }

@@ -44,4 +44,10 @@ public final class Country implements PersistablePayload {
         return PB.Country.newBuilder().setCode(code).setName(name)
                 .setRegion(PB.Region.newBuilder().setCode(region.code).setName(region.name)).build();
     }
+
+    public static Country fromProto(PB.Country proto) {
+        return new Country(proto.getCode(),
+                proto.getName(),
+                Region.fromProto(proto.getRegion()));
+    }
 }

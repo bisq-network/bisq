@@ -26,7 +26,6 @@ import lombok.ToString;
 
 import java.util.Currency;
 import java.util.Locale;
-import java.util.Optional;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -52,6 +51,29 @@ public final class FiatCurrency extends TradeCurrency {
         this.currency = currency;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public Message toProtoMessage() {
+        PB.Currency.Builder currencyBuilder = PB.Currency.newBuilder().setCurrencyCode(currency.getCurrencyCode());
+        PB.FiatCurrency.Builder fiatCurrencyBuilder = PB.FiatCurrency.newBuilder().setCurrency(currencyBuilder);
+        return getTradeCurrencyBuilder()
+                .setFiatCurrency(fiatCurrencyBuilder)
+                .build();
+    }
+
+    public static FiatCurrency fromProto(PB.TradeCurrency proto) {
+        return new FiatCurrency(proto.getCode());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     private static Locale getLocale() {
         return GlobalSettings.getLocale();
     }
@@ -61,16 +83,4 @@ public final class FiatCurrency extends TradeCurrency {
         return PREFIX;
     }
 
-    @Override
-    public Message toProtoMessage() {
-        PB.Currency.Builder currencyBuilder = PB.Currency.newBuilder().setCurrencyCode(currency.getCurrencyCode());
-        PB.FiatCurrency.Builder fiatCurrencyBuilder = PB.FiatCurrency.newBuilder().setCurrency(currencyBuilder);
-
-        PB.TradeCurrency.Builder builder = PB.TradeCurrency.newBuilder()
-                .setCode(code)
-                .setName(name)
-                .setFiatCurrency(fiatCurrencyBuilder);
-        Optional.ofNullable(symbol).ifPresent(builder::setSymbol);
-        return builder.build();
-    }
 }

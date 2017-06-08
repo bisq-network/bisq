@@ -82,21 +82,27 @@ public final class TradingPeer implements PersistablePayload {
     }
 
     public static TradingPeer fromProto(PB.TradingPeer proto, CoreProtoResolver coreProtoResolver) {
-        TradingPeer tradingPeer = new TradingPeer();
-        tradingPeer.setChangeOutputValue(proto.getChangeOutputValue());
-        tradingPeer.setAccountId(proto.getAccountId().isEmpty() ? null : proto.getAccountId());
-        tradingPeer.setPaymentAccountPayload(coreProtoResolver.fromProto(proto.getPaymentAccountPayload()));
-        tradingPeer.setPayoutAddressString(proto.getPayoutAddressString().isEmpty() ? null : proto.getPayoutAddressString());
-        tradingPeer.setContractAsJson(proto.getContractAsJson().isEmpty() ? null : proto.getContractAsJson());
-        tradingPeer.setContractSignature(proto.getContractSignature().isEmpty() ? null : proto.getContractSignature());
-        tradingPeer.setSignature(proto.getSignature().isEmpty() ? null : proto.getSignature().toByteArray());
-        tradingPeer.setPubKeyRing(PubKeyRing.fromProto(proto.getPubKeyRing()));
-        tradingPeer.setMultiSigPubKey(proto.getMultiSigPubKey().isEmpty() ? null : proto.getMultiSigPubKey().toByteArray());
-        List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().isEmpty() ?
-                null : proto.getRawTransactionInputsList().stream()
-                .map(RawTransactionInput::fromProto).collect(Collectors.toList());
-        tradingPeer.setRawTransactionInputs(rawTransactionInputs);
-        tradingPeer.setChangeOutputAddress(proto.getChangeOutputAddress().isEmpty() ? null : proto.getChangeOutputAddress());
-        return tradingPeer;
+        if (proto.getDefaultInstanceForType().equals(proto)) {
+            return null;
+        } else {
+            TradingPeer tradingPeer = new TradingPeer();
+            tradingPeer.setChangeOutputValue(proto.getChangeOutputValue());
+            tradingPeer.setAccountId(ProtoUtil.stringOrNullFromProto(proto.getAccountId()));
+            tradingPeer.setPaymentAccountPayload(proto.hasPaymentAccountPayload() ? coreProtoResolver.fromProto(proto.getPaymentAccountPayload()) : null);
+            tradingPeer.setPayoutAddressString(ProtoUtil.stringOrNullFromProto(proto.getPayoutAddressString()));
+            tradingPeer.setContractAsJson(ProtoUtil.stringOrNullFromProto(proto.getContractAsJson()));
+            tradingPeer.setContractSignature(ProtoUtil.stringOrNullFromProto(proto.getContractSignature()));
+            tradingPeer.setSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getSignature()));
+            tradingPeer.setPubKeyRing(proto.hasPubKeyRing() ? PubKeyRing.fromProto(proto.getPubKeyRing()) : null);
+            tradingPeer.setMultiSigPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getMultiSigPubKey()));
+            List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().isEmpty() ?
+                    null :
+                    proto.getRawTransactionInputsList().stream()
+                            .map(RawTransactionInput::fromProto)
+                            .collect(Collectors.toList());
+            tradingPeer.setRawTransactionInputs(rawTransactionInputs);
+            tradingPeer.setChangeOutputAddress(ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()));
+            return tradingPeer;
+        }
     }
 }

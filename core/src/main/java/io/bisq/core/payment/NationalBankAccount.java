@@ -21,7 +21,9 @@ import io.bisq.core.payment.payload.BankAccountPayload;
 import io.bisq.core.payment.payload.NationalBankAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 public final class NationalBankAccount extends CountryBasedPaymentAccount implements SameCountryRestrictedBankAccount {
     public NationalBankAccount() {
         super(PaymentMethod.NATIONAL_BANK);

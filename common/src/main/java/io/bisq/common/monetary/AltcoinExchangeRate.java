@@ -1,18 +1,13 @@
 package io.bisq.common.monetary;
 
 import org.bitcoinj.core.Coin;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.math.BigInteger;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 // Cloned from ExchangeRate. Use Altcoin instead of Fiat.
-public class AltcoinExchangeRate implements Serializable {
-    private static final Logger log = LoggerFactory.getLogger(AltcoinExchangeRate.class);
-
+public class AltcoinExchangeRate {
     /**
      * An exchange rate is expressed as a ratio of a {@link Coin} and a {@link Altcoin} amount.
      */

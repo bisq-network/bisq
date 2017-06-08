@@ -50,11 +50,6 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                 tradingPeerNodeAddress, storage, btcWalletService);
     }
 
-    @Override
-    protected void createTradeProtocol() {
-        tradeProtocol = new SellerAsTakerProtocol(this);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -63,7 +58,9 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
     @Override
     public PB.Tradable toProtoMessage() {
         return PB.Tradable.newBuilder()
-                .setSellerAsTakerTrade(PB.SellerAsTakerTrade.newBuilder().setTrade((PB.Trade) super.toProtoMessage())).build();
+                .setSellerAsTakerTrade(PB.SellerAsTakerTrade.newBuilder()
+                        .setTrade((PB.Trade) super.toProtoMessage()))
+                .build();
     }
 
     public static Tradable fromProto(PB.SellerAsTakerTrade sellerAsTakerTradeProto,
@@ -71,13 +68,14 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
         PB.Trade proto = sellerAsTakerTradeProto.getTrade();
-        return Trade.fromProto(new SellerAsTakerTrade(Offer.fromProto(proto.getOffer()),
+        return Trade.fromProto(new SellerAsTakerTrade(
+                        Offer.fromProto(proto.getOffer()),
                         Coin.valueOf(proto.getTradeAmountAsLong()),
                         Coin.valueOf(proto.getTxFeeAsLong()),
                         Coin.valueOf(proto.getTakerFeeAsLong()),
                         proto.getIsCurrencyForTakerFeeBtc(),
                         proto.getTradePrice(),
-                        NodeAddress.fromProto(proto.getTradingPeerNodeAddress()),
+                        proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null,
                         storage,
                         btcWalletService),
                 proto,
@@ -88,6 +86,11 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void createTradeProtocol() {
+        tradeProtocol = new SellerAsTakerProtocol(this);
+    }
 
     @Override
     public void takeAvailableOffer() {

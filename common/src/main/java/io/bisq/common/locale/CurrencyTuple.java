@@ -17,12 +17,7 @@
 
 package io.bisq.common.locale;
 
-import java.io.Serializable;
-
-//TODO
-public class CurrencyTuple implements Serializable {
-    // That object is used for serializing to a Json file.
-
+public class CurrencyTuple {
     public final String code;
     public final String name;
     public final int precision; // precision 4 is 1/10000 -> 0.0001 is smallest unit

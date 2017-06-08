@@ -22,10 +22,11 @@ import io.bisq.common.proto.persistable.PersistablePayload;
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
+import java.io.Serializable;
 
 @Value
 @Immutable
-public class TxIdIndexTuple implements PersistablePayload {
+public class TxIdIndexTuple implements PersistablePayload, Serializable {
     private final String txId;
     private final int index;
 

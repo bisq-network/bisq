@@ -43,7 +43,6 @@ import java.util.concurrent.TimeUnit;
 @Data
 // TODO There will be another object for PersistableEnvelope
 public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload, PersistableEnvelope {
-    private final long TTL = TimeUnit.DAYS.toMillis(30);
     private final String uid;
     private final String name;
     private final String title;
@@ -185,6 +184,11 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public long getTTL() {
+        return TimeUnit.DAYS.toMillis(30);
+    }
+    
     public Date getStartDate() {
         return new Date(startDate);
     }

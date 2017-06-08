@@ -212,18 +212,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             seedNodeAddresses = seedNodesRepository.getSeedNodeAddresses(useLocalhostForP2P, networkId);
 
         peerManager = new PeerManager(networkNode, maxConnections, seedNodeAddresses, storageDir, clock, persistenceProtoResolver);
-
         broadcaster = new Broadcaster(networkNode, peerManager);
-
         p2PDataStorage = new P2PDataStorage(broadcaster, networkNode, storageDir, persistenceProtoResolver);
         p2PDataStorage.addHashMapChangedListener(this);
-
         requestDataManager = new RequestDataManager(networkNode, p2PDataStorage, peerManager, seedNodeAddresses, this);
-
         peerExchangeManager = new PeerExchangeManager(networkNode, peerManager, seedNodeAddresses);
-
         keepAliveManager = new KeepAliveManager(networkNode, peerManager);
-
 
         // We need to have both the initial data delivered and the hidden service published
         networkReadyBinding = EasyBind.combine(hiddenServicePublished, preliminaryDataReceived,

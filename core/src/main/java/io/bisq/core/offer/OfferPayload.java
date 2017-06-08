@@ -17,11 +17,9 @@
 
 package io.bisq.core.offer;
 
-import io.bisq.common.app.Version;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.proto.ProtoUtil;
-import io.bisq.common.util.JsonExclude;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
@@ -71,11 +69,32 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     // Instance fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private final long TTL = TimeUnit.MINUTES.toMillis(6);
+    private final String id;
+    private final long date;
+    private final NodeAddress ownerNodeAddress;
+    private final PubKeyRing pubKeyRing;
     private final Direction direction;
+    // price if fixed price is used (usePercentageBasedPrice = false), otherwise 0
+    private final long price;
+    // Distance form market price if percentage based price is used (usePercentageBasedPrice = true), otherwise 0.
+    // E.g. 0.1 -> 10%. Can be negative as well. Depending on direction the marketPriceMargin is above or below the market price.
+    // Positive values is always the usual case where you want a better price as the market.
+    // E.g. Buy offer with market price 400.- leads to a 360.- price.
+    // Sell offer with market price 400.- leads to a 440.- price.
+    private final double marketPriceMargin;
+    // We use 2 type of prices: fixed price or price based on distance from market price
+    private final boolean useMarketBasedPrice;
+    private final long amount;
+    private final long minAmount;
     private final String baseCurrencyCode;
     private final String counterCurrencyCode;
+    private final List<NodeAddress> arbitratorNodeAddresses;
+    private final List<NodeAddress> mediatorNodeAddresses;
     private final String paymentMethodId;
+    private final String makerPaymentAccountId;
+    // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
+    @Nullable @Setter
+    private String offerFeePaymentTxId;
     @Nullable
     private final String countryCode;
     @Nullable
@@ -84,34 +103,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final String bankId;
     @Nullable
     private final List<String> acceptedBankIds;
-    private final List<NodeAddress> arbitratorNodeAddresses;
-    private final List<NodeAddress> mediatorNodeAddresses;
-    private final String id;
-    private final long date;
-
-    // We use 2 type of prices: fixed price or price based on distance from market price
-    private final boolean useMarketBasedPrice;
-    // price if fixed price is used (usePercentageBasedPrice = false), otherwise 0
-    private final long price;
-
-    // Distance form market price if percentage based price is used (usePercentageBasedPrice = true), otherwise 0.
-    // E.g. 0.1 -> 10%. Can be negative as well. Depending on direction the marketPriceMargin is above or below the market price.
-    // Positive values is always the usual case where you want a better price as the market.
-    // E.g. Buy offer with market price 400.- leads to a 360.- price.
-    // Sell offer with market price 400.- leads to a 440.- price.
-    private final double marketPriceMargin;
-    private final long amount;
-    private final long minAmount;
-    private final NodeAddress ownerNodeAddress;
-    @JsonExclude
-    private final PubKeyRing pubKeyRing;
-    private final String makerPaymentAccountId;
-
-    // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
-    @Setter
-    private String offerFeePaymentTxId;
-
-    // New properties from v. 0.5.0.0
     private final String versionNr;
     private final long blockHeightAtOfferCreation;
     private final long txFee;
@@ -136,13 +127,12 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
     private final boolean isPrivateOffer;
     @Nullable
     private final String hashOfChallenge;
-
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
     private final Map<String, String> extraDataMap;
-    private final long protocolVersion;
+    private final int protocolVersion;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -185,8 +175,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                         long upperClosePrice,
                         boolean isPrivateOffer,
                         @Nullable String hashOfChallenge,
-                        @Nullable Map<String, String> extraDataMap) {
-
+                        @Nullable Map<String, String> extraDataMap,
+                        int protocolVersion) {
         this.id = id;
         this.date = date;
         this.ownerNodeAddress = ownerNodeAddress;
@@ -224,10 +214,9 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.isPrivateOffer = isPrivateOffer;
         this.hashOfChallenge = hashOfChallenge;
         this.extraDataMap = extraDataMap;
-
-        protocolVersion = Version.TRADE_PROTOCOL_VERSION;
+        this.protocolVersion = protocolVersion;
     }
-
+//38
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -272,8 +261,8 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 .setIsPrivateOffer(isPrivateOffer)
                 .setProtocolVersion(protocolVersion);
 
-        checkNotNull(offerFeePaymentTxId, "OfferPayload is in invalid state: offerFeePaymentTxID is not set when adding to P2P network.");
-        builder.setOfferFeePaymentTxId(offerFeePaymentTxId);
+        builder.setOfferFeePaymentTxId(checkNotNull(offerFeePaymentTxId,
+                "OfferPayload is in invalid state: offerFeePaymentTxID is not set when adding to P2P network."));
 
         Optional.ofNullable(countryCode).ifPresent(builder::setCountryCode);
         Optional.ofNullable(bankId).ifPresent(builder::setBankId);
@@ -287,13 +276,11 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
 
     public static OfferPayload fromProto(PB.OfferPayload proto) {
         checkArgument(!proto.getOfferFeePaymentTxId().isEmpty(), "OfferFeePaymentTxId must be set in PB.OfferPayload");
-        String countryCode = proto.getCountryCode().isEmpty() ? null : proto.getCountryCode();
-        String bankId = proto.getBankId().isEmpty() ? null : proto.getBankId();
         List<String> acceptedBankIds = proto.getAcceptedBankIdsList().isEmpty() ?
                 null : proto.getAcceptedBankIdsList().stream().collect(Collectors.toList());
         List<String> acceptedCountryCodes = proto.getAcceptedCountryCodesList().isEmpty() ?
                 null : proto.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
-        String hashOfChallenge = proto.getHashOfChallenge().isEmpty() ? null : proto.getHashOfChallenge();
+        String hashOfChallenge = ProtoUtil.stringOrNullFromProto(proto.getHashOfChallenge());
         Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
                 null : proto.getExtraDataMap();
         return new OfferPayload(proto.getId(),
@@ -317,9 +304,9 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 proto.getPaymentMethodId(),
                 proto.getMakerPaymentAccountId(),
                 proto.getOfferFeePaymentTxId(),
-                countryCode,
+                ProtoUtil.stringOrNullFromProto(proto.getCountryCode()),
                 acceptedCountryCodes,
-                bankId,
+                ProtoUtil.stringOrNullFromProto(proto.getBankId()),
                 acceptedBankIds,
                 proto.getVersionNr(),
                 proto.getBlockHeightAtOfferCreation(),
@@ -336,13 +323,19 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
                 proto.getUpperClosePrice(),
                 proto.getIsPrivateOffer(),
                 hashOfChallenge,
-                extraDataMapMap);
+                extraDataMapMap,
+                proto.getProtocolVersion());
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public long getTTL() {
+        return TimeUnit.MINUTES.toMillis(6);
+    }
 
     @Override
     public PublicKey getOwnerPubKey() {

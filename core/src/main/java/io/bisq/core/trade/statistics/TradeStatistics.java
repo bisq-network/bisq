@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 @Value
 public final class TradeStatistics implements LazyProcessedStoragePayload, PersistedStoragePayload /*,CapabilityRequiringPayload*/ {
     @JsonExclude
-    private final long TTL = TimeUnit.DAYS.toMillis(30);
     private final OfferPayload.Direction direction;
     private final String baseCurrency;
     private final String counterCurrency;
@@ -172,6 +171,11 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Persi
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public long getTTL() {
+        return TimeUnit.DAYS.toMillis(30);
+    }
+    
     @Override
     public PublicKey getOwnerPubKey() {
         return pubKeyRing.getSignaturePubKey();

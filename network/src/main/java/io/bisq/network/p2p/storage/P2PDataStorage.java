@@ -711,8 +711,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     /**
      * Used as container for calculating cryptographic hash of data and sequenceNumber.
-     * Needs to be Serializable because we convert the object to a byte array via java serialization
-     * before calculating the hash.
      */
     @ToString
     public static final class DataAndSeqNrPair implements NetworkPayload {

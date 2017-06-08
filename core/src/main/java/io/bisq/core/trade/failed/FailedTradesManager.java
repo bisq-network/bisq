@@ -58,7 +58,6 @@ public class FailedTradesManager implements PersistedDataHost {
     @Override
     public void readPersisted() {
         this.failedTrades = new TradableList<>(tradableListStorage, "FailedTrades");
-        failedTrades.readPersisted();
         failedTrades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
         failedTrades.forEach(trade -> {
             trade.getOffer().setPriceFeedService(priceFeedService);

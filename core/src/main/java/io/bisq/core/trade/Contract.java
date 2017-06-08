@@ -31,6 +31,8 @@ import io.bisq.network.p2p.NodeAddress;
 import lombok.Value;
 import org.bitcoinj.core.Coin;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Value
@@ -111,26 +113,27 @@ public final class Contract implements NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Contract fromProto(PB.Contract contract, CoreProtoResolver coreProtoResolver) {
-        return new Contract(OfferPayload.fromProto(contract.getOfferPayload()),
-                contract.getTradeAmount(),
-                contract.getTradePrice(),
-                contract.getTakerFeeTxId(),
-                NodeAddress.fromProto(contract.getBuyerNodeAddress()),
-                NodeAddress.fromProto(contract.getSellerNodeAddress()),
-                NodeAddress.fromProto(contract.getArbitratorNodeAddress()),
-                NodeAddress.fromProto(contract.getMediatorNodeAddress()),
-                contract.getIsBuyerMakerAndSellerTaker(),
-                contract.getMakerAccountId(),
-                contract.getTakerAccountId(),
-                coreProtoResolver.fromProto(contract.getMakerPaymentAccountPayload()),
-                coreProtoResolver.fromProto(contract.getTakerPaymentAccountPayload()),
-                PubKeyRing.fromProto(contract.getMakerPubKeyRing()),
-                PubKeyRing.fromProto(contract.getTakerPubKeyRing()),
-                contract.getMakerPayoutAddressString(),
-                contract.getTakerPayoutAddressString(),
-                contract.getMakerMultiSigPubKey().toByteArray(),
-                contract.getTakerMultiSigPubKey().toByteArray());
+    @Nullable
+    public static Contract fromProto(PB.Contract proto, CoreProtoResolver coreProtoResolver) {
+        return new Contract(OfferPayload.fromProto(proto.getOfferPayload()),
+                proto.getTradeAmount(),
+                proto.getTradePrice(),
+                proto.getTakerFeeTxId(),
+                NodeAddress.fromProto(proto.getBuyerNodeAddress()),
+                NodeAddress.fromProto(proto.getSellerNodeAddress()),
+                NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
+                NodeAddress.fromProto(proto.getMediatorNodeAddress()),
+                proto.getIsBuyerMakerAndSellerTaker(),
+                proto.getMakerAccountId(),
+                proto.getTakerAccountId(),
+                coreProtoResolver.fromProto(proto.getMakerPaymentAccountPayload()),
+                coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()),
+                PubKeyRing.fromProto(proto.getMakerPubKeyRing()),
+                PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
+                proto.getMakerPayoutAddressString(),
+                proto.getTakerPayoutAddressString(),
+                proto.getMakerMultiSigPubKey().toByteArray(),
+                proto.getTakerMultiSigPubKey().toByteArray());
     }
 
     @Override

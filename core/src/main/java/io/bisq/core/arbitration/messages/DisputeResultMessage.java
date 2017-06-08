@@ -24,8 +24,6 @@ import io.bisq.network.p2p.NodeAddress;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-import java.util.Optional;
-
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Value
@@ -53,10 +51,8 @@ public final class DisputeResultMessage extends DisputeMessage {
     }
 
     public static DisputeResultMessage fromProto(PB.DisputeResultMessage proto) {
-        checkArgument(!proto.equals(proto.getDefaultInstanceForType()), "PB.DisputeResultMessage must be set (we received default instance)");
-        final Optional<DisputeResult> disputeResult = DisputeResult.fromProto(proto.getDisputeResult());
-        checkArgument(disputeResult.isPresent(), "DisputeResult is not present");
-        return new DisputeResultMessage(disputeResult.get(),
+        checkArgument(proto.hasDisputeResult(), "DisputeResult must be set");
+        return new DisputeResultMessage(DisputeResult.fromProto(proto.getDisputeResult()),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid());
     }

@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,7 +45,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 // Represents mutable state of BSQ chain data
 // We get accessed the data from different threads so we need to make sure it is thread safe.
 @Slf4j
-public class BsqChainState implements PersistableEnvelope {
+public class BsqChainState implements PersistableEnvelope, Serializable {
+    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -273,8 +275,7 @@ public class BsqChainState implements PersistableEnvelope {
 
     public BsqChainState getClone() {
         return lock.read(() -> {
-            final byte[] serialize = Utilities.serialize(this);
-            return Utilities.<BsqChainState>deserialize(serialize);
+            return Utilities.<BsqChainState>cloneObject(this);
         });
     }
 
@@ -447,15 +448,13 @@ public class BsqChainState implements PersistableEnvelope {
                 // At trigger event we store the latest snapshotCandidate to disc
                 if (snapshotCandidate != null) {
                     // We clone because storage is in a threaded context
-                    final byte[] serialize = Utilities.serialize(snapshotCandidate);
-                    final BsqChainState cloned = Utilities.<BsqChainState>deserialize(serialize);
+                    final BsqChainState cloned = Utilities.<BsqChainState>cloneObject(snapshotCandidate);
                     snapshotBsqChainStateStorage.queueUpForSave(cloned);
                     // dont access cloned anymore with methods as locks are transient!
                     log.info("Saved snapshotCandidate to Disc at height " + cloned.chainHeadHeight);
                 }
                 // Now we clone and keep it in memory for the next trigger
-                final byte[] serialize = Utilities.serialize(this);
-                snapshotCandidate = Utilities.<BsqChainState>deserialize(serialize);
+                snapshotCandidate = Utilities.<BsqChainState>cloneObject(this);
                 // dont access cloned anymore with methods as locks are transient!
                 log.debug("Cloned new snapshotCandidate at height " + snapshotCandidate.chainHeadHeight);
             }

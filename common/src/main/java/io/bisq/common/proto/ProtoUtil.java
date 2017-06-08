@@ -19,11 +19,10 @@ package io.bisq.common.proto;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import io.bisq.common.Payload;
-import io.bisq.common.locale.CurrencyUtil;
-import io.bisq.generated.protobuffer.PB;
+import io.bisq.common.Proto;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -33,20 +32,22 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProtoUtil {
 
-    public static Set<byte[]> getByteSet(List<ByteString> byteStringList) {
+    public static Set<byte[]> byteSetFromProtoByteStringList(List<ByteString> byteStringList) {
         return byteStringList.stream().map(ByteString::toByteArray).collect(Collectors.toSet());
-    }
-
-    public static String getCurrencyCode(PB.OfferPayload pbOffer) {
-        return CurrencyUtil.isCryptoCurrency(pbOffer.getBaseCurrencyCode()) ? pbOffer.getBaseCurrencyCode() : pbOffer.getCounterCurrencyCode();
     }
 
     /**
      * Returns the input String, except when it's the empty string: "", then null is returned.
      * Note: "" is the default value for a protobuffer string, so this means it's not filled in.
      */
-    public static String emptyStringToNull(String stringFromProto) {
-        return "".equals(stringFromProto) ? null : stringFromProto;
+    @Nullable
+    public static String stringOrNullFromProto(String proto) {
+        return "".equals(proto) ? null : proto;
+    }
+
+    @Nullable
+    public static byte[] byteArrayOrNullFromProto(ByteString proto) {
+        return proto.isEmpty() ? null : proto.toByteArray();
     }
 
     public static <E extends Enum<E>> E enumFromProto(Class<E> e, String id) {
@@ -60,7 +61,7 @@ public class ProtoUtil {
         return result;
     }
 
-    public static <T extends Message> Iterable<T> collectionToProto(Collection<? extends Payload> collection) {
+    public static <T extends Message> Iterable<T> collectionToProto(Collection<? extends Proto> collection) {
         return collection.stream()
                 .map(e -> {
                     final Message message = e.toProtoMessage();
@@ -76,7 +77,7 @@ public class ProtoUtil {
                 .collect(Collectors.toList());
     }
 
-    public static <T> Iterable<T> collectionToProto(Collection<? extends Payload> collection, Function<? super Message, T> extra) {
+    public static <T> Iterable<T> collectionToProto(Collection<? extends Proto> collection, Function<? super Message, T> extra) {
         return collection.stream().map(o -> extra.apply(o.toProtoMessage())).collect(Collectors.toList());
     }
 }

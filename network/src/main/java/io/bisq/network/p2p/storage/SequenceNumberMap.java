@@ -18,7 +18,6 @@
 package io.bisq.network.p2p.storage;
 
 import io.bisq.common.proto.persistable.PersistableEnvelope;
-import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,7 +39,7 @@ public class SequenceNumberMap implements PersistableEnvelope {
     }
 
     public static SequenceNumberMap clone(SequenceNumberMap map) {
-        return new SequenceNumberMap(Utilities.deserialize(Utilities.serialize(map.getHashMap())));
+        return new SequenceNumberMap(map.getHashMap());
     }
 
 

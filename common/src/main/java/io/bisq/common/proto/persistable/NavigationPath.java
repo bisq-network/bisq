@@ -17,7 +17,6 @@
 
 package io.bisq.common.proto.persistable;
 
-import com.google.common.collect.Lists;
 import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.*;
@@ -32,7 +31,7 @@ import java.util.List;
 @Getter
 @Setter
 public class NavigationPath implements PersistableEnvelope {
-    private List<String> path = Lists.newArrayList();
+    private List<String> path = new ArrayList<>();
 
     @Override
     public Message toProtoMessage() {

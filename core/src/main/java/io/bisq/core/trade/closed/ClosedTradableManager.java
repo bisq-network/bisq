@@ -58,7 +58,6 @@ public class ClosedTradableManager implements PersistedDataHost {
     @Override
     public void readPersisted() {
         closedTrades = new TradableList<>(tradableListStorage, "ClosedTrades");
-        closedTrades.readPersisted();
         closedTrades.forEach(tradable -> {
             tradable.getOffer().setPriceFeedService(priceFeedService);
             if (tradable instanceof Trade) {

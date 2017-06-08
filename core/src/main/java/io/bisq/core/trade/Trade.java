@@ -368,9 +368,9 @@ public abstract class Trade implements Tradable, Model {
                 .setTxFeeAsLong(txFeeAsLong)
                 .setTakerFeeAsLong(takerFeeAsLong)
                 .setTakeOfferDate(takeOfferDate)
+                .setProcessModel(processModel.toProtoMessage())
                 .setTradeAmountAsLong(tradeAmountAsLong)
                 .setTradePrice(tradePrice)
-                .setProcessModel(processModel.toProtoMessage())
                 .setState(PB.Trade.State.valueOf(state.name()))
                 .setDisputeState(PB.Trade.DisputeState.valueOf(disputeState.name()))
                 .setTradePeriodState(PB.Trade.TradePeriodState.valueOf(tradePeriodState.name()));
@@ -399,21 +399,19 @@ public abstract class Trade implements Tradable, Model {
         trade.setState(State.fromProto(proto.getState()));
         trade.setDisputeState(DisputeState.fromProto(proto.getDisputeState()));
         trade.setTradePeriodState(TradePeriodState.fromProto(proto.getTradePeriodState()));
-
-        trade.setTakerFeeTxId(proto.getTakerFeeTxId().isEmpty() ? null : proto.getTakerFeeTxId());
-        trade.setDepositTxId(proto.getDepositTxId().isEmpty() ? null : proto.getDepositTxId());
-        trade.setPayoutTxId(proto.getPayoutTxId().isEmpty() ? null : proto.getPayoutTxId());
-        trade.setTradingPeerNodeAddress(NodeAddress.fromProto(proto.getTradingPeerNodeAddress()));
-        trade.setContract(Contract.fromProto(proto.getContract(), coreProtoResolver));
-        trade.setContractAsJson(proto.getContractAsJson().isEmpty() ? null : proto.getContractAsJson());
-        trade.setTakerContractSignature(proto.getTakerContractSignature().isEmpty() ? null : proto.getTakerContractSignature());
-        trade.setMakerContractSignature(proto.getMakerContractSignature().isEmpty() ? null : proto.getMakerContractSignature());
-        trade.setArbitratorNodeAddress(NodeAddress.fromProto(proto.getArbitratorNodeAddress()));
-        trade.setMediatorNodeAddress(NodeAddress.fromProto(proto.getMediatorNodeAddress()));
-        trade.setArbitratorBtcPubKey(proto.getArbitratorBtcPubKey().toByteArray());
-        trade.setTakerPaymentAccountId(proto.getTakerPaymentAccountId().isEmpty() ? null : proto.getTakerPaymentAccountId());
-        trade.setErrorMessage(proto.getErrorMessage().isEmpty() ? null : proto.getErrorMessage());
-
+        trade.setTakerFeeTxId(ProtoUtil.stringOrNullFromProto(proto.getTakerFeeTxId()));
+        trade.setDepositTxId(ProtoUtil.stringOrNullFromProto(proto.getDepositTxId()));
+        trade.setPayoutTxId(ProtoUtil.stringOrNullFromProto(proto.getPayoutTxId()));
+        trade.setContract(proto.hasContract() ? Contract.fromProto(proto.getContract(), coreProtoResolver) : null);
+        trade.setContractAsJson(ProtoUtil.stringOrNullFromProto(proto.getContractAsJson()));
+        trade.setContractHash(ProtoUtil.byteArrayOrNullFromProto(proto.getContractHash()));
+        trade.setTakerContractSignature(ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()));
+        trade.setMakerContractSignature(ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()));
+        trade.setArbitratorNodeAddress(proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null);
+        trade.setMediatorNodeAddress(proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null);
+        trade.setArbitratorBtcPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getArbitratorBtcPubKey()));
+        trade.setTakerPaymentAccountId(ProtoUtil.stringOrNullFromProto(proto.getTakerPaymentAccountId()));
+        trade.setErrorMessage(ProtoUtil.stringOrNullFromProto(proto.getErrorMessage()));
         return trade;
     }
 
@@ -504,7 +502,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void removeDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        if (decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) 
+        if (decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey))
             decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
 

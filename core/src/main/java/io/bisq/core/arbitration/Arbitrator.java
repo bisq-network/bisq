@@ -19,6 +19,7 @@ package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
 @Getter
 public final class Arbitrator implements StoragePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
+    
     private final NodeAddress nodeAddress;
     private final byte[] btcPubKey;
     private final String btcAddress;
@@ -115,8 +117,8 @@ public final class Arbitrator implements StoragePayload {
                 proto.getRegistrationDate(),
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
-                proto.getEmailAddress().isEmpty() ? null : proto.getEmailAddress(),
-                proto.getInfo().isEmpty() ? null : proto.getInfo(),
+                ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
+                ProtoUtil.stringOrNullFromProto(proto.getInfo()),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 
@@ -126,12 +128,12 @@ public final class Arbitrator implements StoragePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PublicKey getOwnerPubKey() {
-        return pubKeyRing.getSignaturePubKey();
+    public long getTTL() {
+        return TTL;
     }
 
     @Override
-    public long getTTL() {
-        return TTL;
+    public PublicKey getOwnerPubKey() {
+        return pubKeyRing.getSignaturePubKey();
     }
 }

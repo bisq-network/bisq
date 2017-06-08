@@ -82,7 +82,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
     public static final List<PaymentMethod> ALL_VALUES = new ArrayList<>(Arrays.asList(
             // EUR
-            SEPA = new PaymentMethod(SEPA_ID, 4 * DAY, Coin.parseCoin("0.5")),
+            SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, Coin.parseCoin("0.5")),
 
             // Global
             NATIONAL_BANK = new PaymentMethod(NATIONAL_BANK_ID, 4 * DAY, Coin.parseCoin("0.5")),
@@ -121,8 +121,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final String id;
-    private long maxTradePeriod;
-    private long maxTradeLimit;
+    private final long maxTradePeriod;
+    private final long maxTradeLimit;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -152,7 +152,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
         return PB.PaymentMethod.newBuilder()
                 .setId(id)
                 .setMaxTradePeriod(maxTradePeriod)
-                .setMaxTradeLimit(maxTradeLimit).build();
+                .setMaxTradeLimit(maxTradeLimit)
+                .build();
     }
 
     public static PaymentMethod fromProto(PB.PaymentMethod proto) {
