@@ -48,13 +48,13 @@ import java.util.Date;
 
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {
-    private final File dataDir;
+    private final File dataDir, logFile;
     private int gridRow = 0;
     private final Stage stage;
     private final Preferences preferences;
     private Button selectBackupDir, backupNow;
     private TextField backUpLocationTextField;
-    private Button openDataDir;
+    private Button openDataDirButton, openLogsButton;
     private ChangeListener<Boolean> backUpLocationTextFieldFocusListener;
 
 
@@ -68,6 +68,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         this.stage = stage;
         this.preferences = preferences;
         dataDir = new File(environment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY));
+        logFile = new File(Paths.get(dataDir.getPath(), "bisq.log").toString());
     }
 
 
@@ -91,10 +92,13 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         backupNow = tuple2.second;
         updateButtons();
 
-        FormBuilder.addTitledGroupBg(root, ++gridRow, 1, Res.get("account.backup.appDir"), Layout.GROUP_DISTANCE);
-        openDataDir = FormBuilder.addLabelButton(root, gridRow, Res.getWithCol("account.backup.appDir"),
+        FormBuilder.addTitledGroupBg(root, ++gridRow, 2, Res.get("account.backup.appDir"), Layout.GROUP_DISTANCE);
+        openDataDirButton = FormBuilder.addLabelButton(root, gridRow, Res.getWithCol("account.backup.appDir"),
                 Res.get("account.backup.openDirectory"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        openDataDir.setDefaultButton(false);
+        openDataDirButton.setDefaultButton(false);
+        openLogsButton = FormBuilder.addLabelButton(root, ++gridRow, Res.getWithCol("account.backup.logFile"),
+                Res.get("account.backup.openLogFile")).second;
+        openLogsButton.setDefaultButton(false);
     }
 
     @Override
@@ -119,15 +123,25 @@ public class BackupView extends ActivatableView<GridPane, Void> {
             }
 
         });
-        openDataDir.setOnAction(event -> {
+        openDataDirButton.setOnAction(event -> {
             try {
-                Utilities.openDirectory(dataDir);
+                Utilities.openFile(dataDir);
             } catch (IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
                 showWrongPathWarningAndReset(e);
             }
         });
+        openLogsButton.setOnAction(event -> {
+            try {
+                Utilities.openFile(logFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+                showWrongPathWarningAndReset(e);
+            }
+        });
+
         backupNow.setOnAction(event -> {
             String backupDirectory = preferences.getBackupDirectory();
             if (backupDirectory != null && backupDirectory.length() > 0) {
@@ -150,7 +164,8 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     protected void deactivate() {
         backUpLocationTextField.focusedProperty().removeListener(backUpLocationTextFieldFocusListener);
         selectBackupDir.setOnAction(null);
-        openDataDir.setOnAction(null);
+        openDataDirButton.setOnAction(null);
+        openLogsButton.setOnAction(null);
         backupNow.setOnAction(null);
     }
 
