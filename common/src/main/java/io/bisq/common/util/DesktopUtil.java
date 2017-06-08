@@ -182,7 +182,11 @@ class DesktopUtil {
     }
 
     public enum EnumOS {
-        linux, macos, solaris, unknown, windows;
+        linux,
+        macos,
+        solaris,
+        unknown,
+        windows;
 
         public boolean isLinux() {
 

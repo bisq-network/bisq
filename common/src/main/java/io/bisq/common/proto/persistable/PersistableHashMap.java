@@ -26,7 +26,8 @@ import java.util.HashMap;
 import java.util.function.Function;
 
 public class PersistableHashMap<K extends PersistablePayload, V extends PersistablePayload> implements PersistableEnvelope {
-    @Delegate @Getter
+    @Delegate
+    @Getter
     private HashMap<K, V> hashMap = new HashMap<>();
     @Setter
     private Function<HashMap<K, V>, Message> toProto;
