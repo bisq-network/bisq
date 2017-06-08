@@ -645,6 +645,7 @@ public class DisputeManager {
                             } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
                                 e.printStackTrace();
                                 log.error("Error at traderSignAndFinalizeDisputedPayoutTx " + e.getMessage());
+                                throw new RuntimeException(e);
                             }
                         } else {
                             log.warn("DepositTx is null. TradeId = " + tradeId);
