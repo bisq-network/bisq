@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 @Getter
 public final class Arbitrator implements StoragePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
-    
+
     private final NodeAddress nodeAddress;
     private final byte[] btcPubKey;
     private final String btcAddress;

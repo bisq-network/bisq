@@ -35,7 +35,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     private static final int MAX_PERSISTED_PEERS = 500;
     private static final long MAX_AGE = TimeUnit.DAYS.toMillis(14); // max age for reported peers is 14 days
     private static final boolean PRINT_REPORTED_PEERS_DETAILS = true;
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener

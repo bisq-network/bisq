@@ -570,7 +570,7 @@ public abstract class WalletService {
     // bisqWalletEventListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("deprecation") 
+    @SuppressWarnings("deprecation")
     public class BisqWalletListener extends AbstractWalletEventListener {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {

@@ -35,7 +35,7 @@ public class NotificationCenter {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final static List<Notification> notifications = new ArrayList<>();
     private Consumer<String> selectItemByTradeIdConsumer;
 

@@ -53,7 +53,8 @@ public abstract class PaymentAccount implements PersistablePayload {
     @Setter
     protected String accountName;
     protected final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
-    @Setter @Nullable
+    @Setter
+    @Nullable
     protected TradeCurrency selectedTradeCurrency;
 
 

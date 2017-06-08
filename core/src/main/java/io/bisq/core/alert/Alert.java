@@ -71,7 +71,7 @@ public final class Alert implements StoragePayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("NullableProblems") 
+    @SuppressWarnings("NullableProblems")
     public Alert(String message,
                  boolean isUpdateInfo,
                  String version,

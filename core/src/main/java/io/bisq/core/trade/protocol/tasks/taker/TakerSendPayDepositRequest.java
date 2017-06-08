@@ -54,7 +54,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
             final List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
             checkNotNull(acceptedArbitratorAddresses, "acceptedArbitratorAddresses must not be null");
             checkNotNull(acceptedMediatorAddresses, "acceptedMediatorAddresses must not be null");
-            
+
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);

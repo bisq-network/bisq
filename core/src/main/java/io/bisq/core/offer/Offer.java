@@ -69,7 +69,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
     @Getter
     transient private StringProperty errorMessageProperty = new SimpleStringProperty();
     @JsonExclude
-    @Nullable @Setter
+    @Nullable
+    @Setter
     transient private PriceFeedService priceFeedService;
 
 

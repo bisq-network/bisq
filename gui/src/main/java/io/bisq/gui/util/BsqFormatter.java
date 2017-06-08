@@ -29,7 +29,7 @@ import javax.inject.Inject;
 
 public class BsqFormatter extends BSFormatter {
     private static final Logger log = LoggerFactory.getLogger(BsqFormatter.class);
-    @SuppressWarnings("PointlessBooleanExpression") 
+    @SuppressWarnings("PointlessBooleanExpression")
     private static final boolean useBsqAddressFormat = true || !DevEnv.DEV_MODE;
     private final String prefix = "B";
 
@@ -53,7 +53,7 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public Address getAddressFromBsqAddress(String encoded) {
-        if (useBsqAddressFormat) 
+        if (useBsqAddressFormat)
             encoded = encoded.substring(prefix.length(), encoded.length());
 
         try {

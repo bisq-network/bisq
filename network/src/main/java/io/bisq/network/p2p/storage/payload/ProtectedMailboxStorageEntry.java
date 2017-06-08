@@ -38,11 +38,11 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private ProtectedMailboxStorageEntry(long creationTimeStamp,
-                                        MailboxStoragePayload mailboxStoragePayload,
-                                        byte[] ownerPubKey,
-                                        int sequenceNumber,
-                                        byte[] signature,
-                                        byte[] receiversPubKeyBytes) {
+                                         MailboxStoragePayload mailboxStoragePayload,
+                                         byte[] ownerPubKey,
+                                         int sequenceNumber,
+                                         byte[] signature,
+                                         byte[] receiversPubKeyBytes) {
         super(creationTimeStamp,
                 mailboxStoragePayload,
                 ownerPubKey,

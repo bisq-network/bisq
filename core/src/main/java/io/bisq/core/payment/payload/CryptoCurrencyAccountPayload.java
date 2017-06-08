@@ -43,9 +43,9 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private CryptoCurrencyAccountPayload(String paymentMethod,
-                                        String id,
-                                        long maxTradePeriod,
-                                        String address) {
+                                         String id,
+                                         long maxTradePeriod,
+                                         String address) {
         this(paymentMethod,
                 id,
                 maxTradePeriod);

@@ -70,7 +70,7 @@ public class CompensationViewItem {
                 .isPresent();
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted") 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isEmpty() {
         return instances.isEmpty();
     }

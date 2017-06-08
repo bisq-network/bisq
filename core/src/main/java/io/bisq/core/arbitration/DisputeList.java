@@ -118,7 +118,7 @@ public final class DisputeList implements PersistableEnvelope, PersistedDataHost
         return list.isEmpty();
     }
 
-    @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "SuspiciousMethodCalls"}) 
+    @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "SuspiciousMethodCalls"})
     public boolean contains(Object o) {
         return list.contains(o);
     }

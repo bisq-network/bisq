@@ -123,7 +123,7 @@ public final class Filter implements StoragePayload {
     public long getTTL() {
         return TimeUnit.DAYS.toMillis(30);
     }
-    
+
     public void setSigAndPubKey(String signatureAsBase64, PublicKey ownerPubKey) {
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKey = ownerPubKey;

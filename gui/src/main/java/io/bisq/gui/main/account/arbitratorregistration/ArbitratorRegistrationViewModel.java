@@ -147,7 +147,8 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
             String registrationSignature = arbitratorManager.signStorageSignaturePubKey(registrationKey);
             // TODO not impl in UI
             String emailAddress = null;
-            @SuppressWarnings("ConstantConditions") Arbitrator arbitrator = new Arbitrator(
+            @SuppressWarnings("ConstantConditions")
+            Arbitrator arbitrator = new Arbitrator(
                     p2PService.getAddress(),
                     arbitratorDepositAddressEntry.getPubKey(),
                     arbitratorDepositAddressEntry.getAddressString(),

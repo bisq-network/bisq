@@ -47,7 +47,8 @@ public class RequestDataHandler implements MessageListener {
     public interface Listener {
         void onComplete();
 
-        @SuppressWarnings("UnusedParameters") void onFault(String errorMessage, @SuppressWarnings("SameParameterValue") @Nullable Connection connection);
+        @SuppressWarnings("UnusedParameters")
+        void onFault(String errorMessage, @SuppressWarnings("SameParameterValue") @Nullable Connection connection);
     }
 
 

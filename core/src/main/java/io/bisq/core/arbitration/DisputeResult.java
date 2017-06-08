@@ -115,19 +115,19 @@ public final class DisputeResult implements NetworkPayload {
 
     public static DisputeResult fromProto(PB.DisputeResult proto) {
         return new DisputeResult(proto.getTradeId(),
-                        proto.getTraderId(),
-                        ProtoUtil.enumFromProto(DisputeResult.Winner.class, proto.getWinner().name()),
-                        proto.getReasonOrdinal(),
-                        proto.getTamperProofEvidence(),
-                        proto.getIdVerification(),
-                        proto.getScreenCast(),
-                        proto.getSummaryNotes(),
-                        DisputeCommunicationMessage.fromProto(proto.getDisputeCommunicationMessage()),
-                        proto.getArbitratorSignature().toByteArray(),
-                        proto.getBuyerPayoutAmount(),
-                        proto.getSellerPayoutAmount(),
-                        proto.getArbitratorPubKey().toByteArray(),
-                        proto.getCloseDate(),
+                proto.getTraderId(),
+                ProtoUtil.enumFromProto(DisputeResult.Winner.class, proto.getWinner().name()),
+                proto.getReasonOrdinal(),
+                proto.getTamperProofEvidence(),
+                proto.getIdVerification(),
+                proto.getScreenCast(),
+                proto.getSummaryNotes(),
+                DisputeCommunicationMessage.fromProto(proto.getDisputeCommunicationMessage()),
+                proto.getArbitratorSignature().toByteArray(),
+                proto.getBuyerPayoutAmount(),
+                proto.getSellerPayoutAmount(),
+                proto.getArbitratorPubKey().toByteArray(),
+                proto.getCloseDate(),
                 proto.getIsLoserPublisher());
     }
 

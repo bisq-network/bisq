@@ -235,7 +235,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         p2PDataStorage.readPersisted();
         peerManager.readPersisted();
     }
-    
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API

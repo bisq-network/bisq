@@ -194,7 +194,7 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(P2PService.class));
             persistedDataHosts.add(injector.getInstance(VotingManager.class));
             persistedDataHosts.add(injector.getInstance(CompensationRequestManager.class));
-            
+
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.stream().forEach(e -> {
                 try {

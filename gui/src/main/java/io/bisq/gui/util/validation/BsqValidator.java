@@ -41,7 +41,7 @@ public class BsqValidator extends AltcoinValidator {
     protected double getMinValue() {
         return 2.730; // dust
     }
-    
+
     @Inject
     public BsqValidator(BsqFormatter bsqFormatter) {
         this.bsqFormatter = bsqFormatter;

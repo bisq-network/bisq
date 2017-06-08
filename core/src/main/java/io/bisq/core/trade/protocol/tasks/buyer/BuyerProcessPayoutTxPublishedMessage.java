@@ -53,7 +53,7 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             processModel.removeMailboxMessageAfterProcessing(trade);
-            
+
             trade.setState(Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
 
             complete();

@@ -79,7 +79,8 @@ public class VotingManager implements PersistedDataHost {
         this.votingDefaultValues = votingDefaultValues;
     }
 
-    @VisibleForTesting VotingManager(VotingDefaultValues votingDefaultValues) {
+    @VisibleForTesting
+    VotingManager(VotingDefaultValues votingDefaultValues) {
         this.btcWalletService = null;
         this.bsqWalletService = null;
         this.feeService = null;

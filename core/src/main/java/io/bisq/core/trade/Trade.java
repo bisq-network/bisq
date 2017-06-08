@@ -235,21 +235,30 @@ public abstract class Trade implements Tradable, Model {
     private final long takerFeeAsLong;
     @Setter
     private long takeOfferDate;
-    @Getter @Setter
+    @Getter
+    @Setter
     private ProcessModel processModel;
 
     //  Mutable
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String takerFeeTxId;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String depositTxId;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String payoutTxId;
-    @Getter @Setter
+    @Getter
+    @Setter
     private long tradeAmountAsLong;
     @Setter
     private long tradePrice;
-    @Nullable @Getter
+    @Nullable
+    @Getter
     private NodeAddress tradingPeerNodeAddress;
     @Getter
     private State state = State.PREPARATION;
@@ -257,23 +266,38 @@ public abstract class Trade implements Tradable, Model {
     private DisputeState disputeState = DisputeState.NO_DISPUTE;
     @Getter
     private TradePeriodState tradePeriodState = TradePeriodState.FIRST_HALF;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private Contract contract;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String contractAsJson;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private byte[] contractHash;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String takerContractSignature;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String makerContractSignature;
-    @Nullable @Getter
+    @Nullable
+    @Getter
     private NodeAddress arbitratorNodeAddress;
-    @Nullable @Getter
+    @Nullable
+    @Getter
     private NodeAddress mediatorNodeAddress;
-    @Nullable @Setter
+    @Nullable
+    @Setter
     private byte[] arbitratorBtcPubKey;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String takerPaymentAccountId;
     @Nullable
     private String errorMessage;
@@ -298,7 +322,8 @@ public abstract class Trade implements Tradable, Model {
 
     //  Mutable
     transient protected TradeProtocol tradeProtocol;
-    @Nullable @Setter
+    @Nullable
+    @Setter
     transient private Date maxTradePeriodDate, halfTradePeriodDate;
     @Nullable
     transient private Transaction payoutTx;
@@ -683,7 +708,7 @@ public abstract class Trade implements Tradable, Model {
         return getState().getPhase().ordinal() >= Phase.FIAT_SENT.ordinal();
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted") 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isFiatReceived() {
         return getState().getPhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
     }
@@ -822,7 +847,8 @@ public abstract class Trade implements Tradable, Model {
             setState(State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "Trade{" +
                 "\n     offer=" + offer +
                 ",\n     isCurrencyForTakerFeeBtc=" + isCurrencyForTakerFeeBtc +

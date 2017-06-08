@@ -46,7 +46,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 // We get accessed the data from different threads so we need to make sure it is thread safe.
 @Slf4j
 public class BsqChainState implements PersistableEnvelope, Serializable {
-    
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////

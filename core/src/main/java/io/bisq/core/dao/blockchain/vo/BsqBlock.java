@@ -28,7 +28,7 @@ import java.util.List;
 public class BsqBlock implements PersistablePayload, Serializable {
     @Delegate
     private final BsqBlockVo bsqBlockVo;
-    
+
     private final List<Tx> txs;
 
     public BsqBlock(BsqBlockVo bsqBlockVo, List<Tx> txs) {

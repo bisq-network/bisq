@@ -92,31 +92,40 @@ public class ProcessModel implements Model, PersistablePayload {
     private PubKeyRing pubKeyRing;
 
     // Persistable Mutable
-    @Nullable @Setter
+    @Nullable
+    @Setter
     private String takeOfferFeeTxId;
-    @Nullable @Setter
+    @Nullable
+    @Setter
     private byte[] payoutTxSignature;
-    @Nullable @Setter
+    @Nullable
+    @Setter
     private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
-    @Nullable @Setter
+    @Nullable
+    @Setter
     private List<NodeAddress> takerAcceptedMediatorNodeAddresses;
-    @Nullable @Setter
+    @Nullable
+    @Setter
     private byte[] preparedDepositTx;
-    @Nullable @Setter
+    @Nullable
+    @Setter
     private List<RawTransactionInput> rawTransactionInputs;
     @Setter
     private long changeOutputValue;
-    @Nullable @Setter
+    @Nullable
+    @Setter
     private String changeOutputAddress;
     @Setter
     private boolean useSavingsWallet;
     @Setter
     private long fundsNeededForTradeAsLong;
-    @Nullable @Setter
+    @Nullable
+    @Setter
     private byte[] myMultiSigPubKey;
     // that is used to store temp. the peers address when we get an incoming message before the message is verified.
     // After successful verified we copy that over to the trade.tradingPeerAddress
-    @Nullable @Setter
+    @Nullable
+    @Setter
     private NodeAddress tempTradingPeerNodeAddress;
 
     public ProcessModel() {

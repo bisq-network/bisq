@@ -114,7 +114,7 @@ public class EncryptionService {
 
 
     /**
-     * @param data 
+     * @param data
      * @return Hash of data
      */
     public static byte[] getHash(NetworkPayload data) {

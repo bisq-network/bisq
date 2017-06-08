@@ -128,7 +128,7 @@ public class MainViewModel implements ViewModel {
 
     // BTC network
     final StringProperty btcInfo = new SimpleStringProperty(Res.get("mainView.footer.btcInfo.initializing"));
-    @SuppressWarnings("ConstantConditions") 
+    @SuppressWarnings("ConstantConditions")
     final DoubleProperty btcSyncProgress = new SimpleDoubleProperty(DevEnv.STRESS_TEST_MODE ? 0 : -1);
     final StringProperty walletServiceErrorMsg = new SimpleStringProperty();
     final StringProperty btcSplashSyncIconId = new SimpleStringProperty();

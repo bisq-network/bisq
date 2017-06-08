@@ -175,7 +175,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Persi
     public long getTTL() {
         return TimeUnit.DAYS.toMillis(30);
     }
-    
+
     @Override
     public PublicKey getOwnerPubKey() {
         return pubKeyRing.getSignaturePubKey();

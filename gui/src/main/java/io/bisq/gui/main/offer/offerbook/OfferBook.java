@@ -81,7 +81,7 @@ public class OfferBook {
         });
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted") 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean isOfferWithIdInList(Offer offer) {
         return offerBookListItems.stream().filter(o -> o.getOffer().getId().equals(offer.getId())).findAny().isPresent();
     }

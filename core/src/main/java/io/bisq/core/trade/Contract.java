@@ -210,7 +210,8 @@ public final class Contract implements NetworkPayload {
         return Price.valueOf(offerPayload.getCurrencyCode(), tradePrice);
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "Contract{" +
                 "\n     offerPayload=" + offerPayload +
                 ",\n     tradeAmount=" + tradeAmount +
