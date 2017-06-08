@@ -146,6 +146,7 @@ public class BitsquareProxy {
             acceptedBanks.add(((SameBankAccount) paymentAccount).getBankId());
         }
 
+        // TODO there are a lot of dummy values in this constructor !!!
         OfferPayload offerPayload = new OfferPayload(
                 UUID.randomUUID().toString(),
                 new Date().getTime(),
@@ -183,7 +184,8 @@ public class BitsquareProxy {
                 0,
                 true,
                 null,
-                null
+                null,
+                0
                 );
 
         Offer offer = new Offer(offerPayload); // priceFeedService);
