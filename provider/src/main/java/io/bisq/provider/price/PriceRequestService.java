@@ -18,7 +18,6 @@
 package io.bisq.provider.price;
 
 import io.bisq.common.util.Utilities;
-import io.bisq.network.http.HttpException;
 import io.bisq.provider.price.providers.BtcAverageProvider;
 import io.bisq.provider.price.providers.CoinmarketcapProvider;
 import io.bisq.provider.price.providers.PoloniexProvider;
@@ -85,7 +84,7 @@ public class PriceRequestService {
                 } catch (NoSuchAlgorithmException | InvalidKeyException e) {
                     log.error(e.toString());
                     e.printStackTrace();
-                } catch (HttpException | IOException e) {
+                } catch (IOException e) {
                     log.warn(e.toString());
                     e.printStackTrace();
                 }
@@ -100,7 +99,7 @@ public class PriceRequestService {
                 } catch (NoSuchAlgorithmException | InvalidKeyException e) {
                     log.error(e.toString());
                     e.printStackTrace();
-                } catch (HttpException | IOException e) {
+                } catch (IOException e) {
                     log.warn(e.toString());
                     e.printStackTrace();
                 }
@@ -112,7 +111,7 @@ public class PriceRequestService {
             public void run() {
                 try {
                     requestPoloniexPrices();
-                } catch (IOException | HttpException e) {
+                } catch (IOException e) {
                     log.warn(e.toString());
                     e.printStackTrace();
                 }
@@ -124,22 +123,17 @@ public class PriceRequestService {
             public void run() {
                 try {
                     requestCoinmarketcapPrices();
-                } catch (IOException | HttpException e) {
+                } catch (IOException e) {
                     log.warn(e.toString());
                     e.printStackTrace();
                 }
             }
         }, INTERVAL_COIN_MARKET_CAP_MS, INTERVAL_COIN_MARKET_CAP_MS);
 
-        try {
-            requestBtcAverageLocalPrices();
-            requestBtcAverageGlobalPrices();
-            requestPoloniexPrices();
-            requestCoinmarketcapPrices();
-        } catch (HttpException e) {
-            log.warn(e.toString());
-            e.printStackTrace();
-        }
+        requestBtcAverageLocalPrices();
+        requestBtcAverageGlobalPrices();
+        requestPoloniexPrices();
+        requestCoinmarketcapPrices();
     }
 
 

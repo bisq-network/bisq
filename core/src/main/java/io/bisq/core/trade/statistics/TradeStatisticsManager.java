@@ -15,8 +15,7 @@ import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -24,9 +23,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class TradeStatisticsManager implements PersistedDataHost {
-    private static final Logger log = LoggerFactory.getLogger(TradeStatisticsManager.class);
-
     private final Storage<TradeStatisticsList> statisticsStorage;
     private final JsonFileManager jsonFileManager;
     private final P2PService p2PService;
@@ -46,7 +44,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
 
         jsonFileManager = new JsonFileManager(storageDir);
 
-        statisticsStorage.setNumMaxBackupFiles(1);
+        this.statisticsStorage.setNumMaxBackupFiles(1);
     }
 
     @Override
@@ -61,13 +59,13 @@ public class TradeStatisticsManager implements PersistedDataHost {
             ArrayList<CurrencyTuple> fiatCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedFiatCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
                     .collect(Collectors.toList()));
-            jsonFileManager.writeToDisc(Utilities.objectToJson(fiatCurrencyList), "fiat_currency_list.json");
+            jsonFileManager.writeToDisc(Utilities.objectToJson(fiatCurrencyList), "fiat_currency_list");
 
             ArrayList<CurrencyTuple> cryptoCurrencyList = new ArrayList<>(CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
                     .collect(Collectors.toList()));
             cryptoCurrencyList.add(0, new CurrencyTuple("BTC", "Bitcoin", 8));
-            jsonFileManager.writeToDisc(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list.json");
+            jsonFileManager.writeToDisc(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list");
         }
 
         if (persistedTradeStatisticsList != null)
@@ -90,8 +88,9 @@ public class TradeStatisticsManager implements PersistedDataHost {
         // At startup the P2PDataStorage inits earlier, otherwise we ge the listener called.
         p2PService.getP2PDataStorage().getMap().values().forEach(e -> {
             final StoragePayload storagePayload = e.getStoragePayload();
-            if (storagePayload instanceof TradeStatistics)
+            if (storagePayload instanceof TradeStatistics) {
                 add((TradeStatistics) storagePayload, false);
+            }
         });
     }
 
@@ -128,7 +127,7 @@ public class TradeStatisticsManager implements PersistedDataHost {
             list.sort((o1, o2) -> (o1.tradeDate < o2.tradeDate ? 1 : (o1.tradeDate == o2.tradeDate ? 0 : -1)));
             TradeStatisticsForJson[] array = new TradeStatisticsForJson[list.size()];
             list.toArray(array);
-            jsonFileManager.writeToDisc(Utilities.objectToJson(array), "trade_statistics.json");
+            jsonFileManager.writeToDisc(Utilities.objectToJson(array), "trade_statistics");
         }
     }
 }

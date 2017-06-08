@@ -1,5 +1,6 @@
 package io.bisq.common.monetary;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 
 import java.math.BigInteger;
@@ -7,6 +8,7 @@ import java.math.BigInteger;
 import static com.google.common.base.Preconditions.checkArgument;
 
 // Cloned from ExchangeRate. Use Altcoin instead of Fiat.
+@Slf4j
 public class AltcoinExchangeRate {
     /**
      * An exchange rate is expressed as a ratio of a {@link Coin} and a {@link Altcoin} amount.

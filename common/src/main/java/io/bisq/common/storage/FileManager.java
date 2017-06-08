@@ -19,7 +19,6 @@ package io.bisq.common.storage;
 
 import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.util.Utilities;
@@ -186,12 +185,12 @@ public class FileManager<T extends PersistableEnvelope> {
         PrintWriter printWriter = null;
 
         log.debug("saveToFile persistable.class " + persistable.getClass().getSimpleName());
-        PB.PersistableEnvelope protoPersistable;
+        PB.PersistableEnvelope protoPersistable = null;
         try {
             protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
 
             // check if what we're saving can also be read in correctly
-            if (DevEnv.DEV_MODE) {
+           /* if (DevEnv.DEV_MODE) {
                 if (protoPersistable != null) {
                     log.debug("Checking that the saved Persistable can be read again...");
                     PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
@@ -203,14 +202,15 @@ public class FileManager<T extends PersistableEnvelope> {
                     }
                 } else {
                     log.debug("protoPersistable is null ");
-                    protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
+                    //protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
                 }
-            }
+            }*/
         } catch (Throwable e) {
-            log.error("Error in saveToFile toProtoMessage: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
-            protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
+            log.error("Error in saveToFile toProtoMessage: {}, {}", persistable.getClass().getSimpleName(), storageFile);
+            e.printStackTrace();
+            //  protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
             //noinspection UnusedAssignment
-            PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
+            //PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
         }
 
         try {

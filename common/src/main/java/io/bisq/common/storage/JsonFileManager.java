@@ -20,8 +20,11 @@ package io.bisq.common.storage;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Utilities;
 import lombok.extern.slf4j.Slf4j;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
@@ -98,5 +101,16 @@ public class JsonFileManager {
                     printWriter.close();
             }
         });
+    }
+
+    public Object readJsonFromDisc(String fileName) {
+        final File jsonFile = new File(Paths.get(dir.getAbsolutePath(), fileName + ".json").toString());
+        JSONParser parser = new JSONParser();
+        try {
+            return parser.parse(new FileReader(jsonFile));
+        } catch (ParseException | IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 }

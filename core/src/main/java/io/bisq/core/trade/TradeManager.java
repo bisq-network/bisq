@@ -242,7 +242,7 @@ public class TradeManager implements PersistedDataHost {
                     trade.getTradeAmount(),
                     trade.getDate(),
                     (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                    keyRing.getPubKeyRing());
+                    keyRing.getPubKeyRing().getSignaturePubKeyBytes());
             tradeStatisticsManager.add(tradeStatistics, true);
 
             // We only republish trades from last 10 days

@@ -2,7 +2,6 @@ package io.bisq.network.p2p.storage;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
 import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.app.Log;
@@ -10,8 +9,9 @@ import io.bisq.common.crypto.CryptoException;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.network.NetworkPayload;
-import io.bisq.common.proto.network.NetworkProtoResolver;
-import io.bisq.common.proto.persistable.*;
+import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.common.proto.persistable.PersistedDataHost;
+import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.storage.FileUtil;
 import io.bisq.common.storage.ResourceNotFoundException;
 import io.bisq.common.storage.Storage;
@@ -25,12 +25,10 @@ import io.bisq.network.p2p.peers.BroadcastHandler;
 import io.bisq.network.p2p.peers.Broadcaster;
 import io.bisq.network.p2p.storage.messages.*;
 import io.bisq.network.p2p.storage.payload.*;
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.util.encoders.Hex;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,11 +43,10 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 // Run in UserThread
-public class P2PDataStorage implements MessageListener, ConnectionListener, PersistableEnvelope, PersistedDataHost {
+public class P2PDataStorage implements MessageListener, ConnectionListener, PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(P2PDataStorage.class);
 
     /**
@@ -67,8 +64,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private Timer removeExpiredEntriesTimer;
     private final SequenceNumberMap sequenceNumberMap = new SequenceNumberMap();
     private final Storage<SequenceNumberMap> sequenceNumberMapStorage;
-    private HashMap<ByteArray, ProtectedStorageEntry> persistedMap = new HashMap<>();
-    private final Storage<PersistableHashMap<ByteArray, ProtectedStorageEntry>> persistedEntryMapStorage;
+    private final Storage<PersistedEntryMap> persistedEntryMapStorage;
+    private PersistedEntryMap persistedEntryMap;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -95,10 +92,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public void readPersisted() {
         SequenceNumberMap persistedSequenceNumberMap = sequenceNumberMapStorage.initAndGetPersisted(sequenceNumberMap);
         if (persistedSequenceNumberMap != null)
-            sequenceNumberMap.setHashMap(getPurgedSequenceNumberMap(persistedSequenceNumberMap.getHashMap()));
+            sequenceNumberMap.setMap(getPurgedSequenceNumberMap(persistedSequenceNumberMap.getMap()));
 
 
-        final String storageFileName = "PersistedP2PStorageData";
+        final String storageFileName = "PersistedEntryMap";
         File dbDir = new File(storageDir.getAbsolutePath());
         if (!dbDir.exists() && !dbDir.mkdir())
             log.warn("make dir failed.\ndbDir=" + dbDir.getAbsolutePath());
@@ -115,49 +112,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             log.debug(storageFileName + " file exists already.");
         }
 
-        PersistableHashMap<ByteArray, ProtectedStorageEntry> persistedEntryMap = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName(storageFileName);
+        persistedEntryMap = persistedEntryMapStorage.<HashMap<ByteArray, MapValue>>initAndGetPersistedWithFileName(storageFileName);
         if (persistedEntryMap != null) {
-            persistedMap = new HashMap<>(persistedEntryMap.getHashMap());
-            map.putAll(persistedMap);
+            map.putAll(persistedEntryMap.getMap());
+            log.info("persistedEntryMap size=" + map.size());
 
             // In case another object is already listening...
             if (!hashMapChangedListeners.isEmpty())
                 map.values().stream()
                         .forEach(protectedStorageEntry -> hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry)));
+        } else {
+            persistedEntryMap = new PersistedEntryMap();
         }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protobuffer
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Message toProtoMessage() {
-        return toProtoMessageFunction().apply(persistedMap);
-    }
-
-    @NotNull
-    /** convert hashmap to proto representation */
-    static Function<HashMap<ByteArray, ProtectedStorageEntry>, Message> toProtoMessageFunction() {
-        return (HashMap<ByteArray, ProtectedStorageEntry> map) -> {
-            Map<String, PB.ProtectedStorageEntry> values = map.entrySet().stream()
-                    .collect(Collectors.toMap(e -> e.getKey().toString(),
-                            e -> (PB.ProtectedStorageEntry) e.getValue().toProtoMessage()));
-            return PB.PersistableEnvelope.newBuilder()
-                    .setPersistedEntryMap(PB.PersistedEntryMap.newBuilder()
-                            .putAllPersistedEntryMap(values))
-                    .build();
-        };
-    }
-
-    public static PersistableEnvelope fromProto(Map<String, PB.ProtectedStorageEntry> protoResult,
-                                                NetworkProtoResolver networkProtoResolver) {
-        Map<ByteArray, ProtectedStorageEntry> map = protoResult.entrySet().stream()
-                .collect(Collectors.<Entry<String, PB.ProtectedStorageEntry>, ByteArray, ProtectedStorageEntry>toMap(
-                        e -> new ByteArray(e.getKey().getBytes()),
-                        e -> ProtectedStorageEntry.fromProto(e.getValue(), networkProtoResolver)
-                ));
-        return new PersistableHashMap<>(new HashMap<>(map), P2PDataStorage.toProtoMessageFunction());
     }
 
 
@@ -197,7 +163,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                             listener -> listener.onRemoved(protectedDataToRemove)));
 
             if (sequenceNumberMap.size() > 1000)
-                sequenceNumberMap.setHashMap(getPurgedSequenceNumberMap(sequenceNumberMap.getHashMap()));
+                sequenceNumberMap.setMap(getPurgedSequenceNumberMap(sequenceNumberMap.getMap()));
         }, CHECK_TTL_INTERVAL_SEC);
     }
 
@@ -320,8 +286,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
                 // If we get a PersistedStoragePayload we save to disc
                 if (storagePayload instanceof PersistedStoragePayload) {
-                    persistedMap.put(hashOfPayload, protectedStorageEntry);
-                    persistedEntryMapStorage.queueUpForSave(new PersistableHashMap<>(persistedMap, toProtoMessageFunction()), 5000);
+                    persistedEntryMap.put(hashOfPayload, protectedStorageEntry);
+                    persistedEntryMapStorage.queueUpForSave(persistedEntryMap, 2000);
                 }
 
                 hashMapChangedListeners.stream().forEach(e -> e.onAdded(protectedStorageEntry));
@@ -591,8 +557,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     // in the contained mailbox message, or the pubKey of other kinds of network_messages.
     boolean checkPublicKeys(ProtectedStorageEntry protectedStorageEntry, boolean isAddOperation) {
         boolean result;
-        if (protectedStorageEntry.getStoragePayload() instanceof MailboxStoragePayload) {
-            MailboxStoragePayload payload = (MailboxStoragePayload) protectedStorageEntry.getStoragePayload();
+        final StoragePayload storagePayload = protectedStorageEntry.getStoragePayload();
+        if (storagePayload instanceof MailboxStoragePayload) {
+            MailboxStoragePayload payload = (MailboxStoragePayload) storagePayload;
             if (isAddOperation)
                 result = payload.getSenderPubKeyForAddOperation() != null &&
                         payload.getSenderPubKeyForAddOperation().equals(protectedStorageEntry.getOwnerPubKey());
@@ -600,19 +567,17 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 result = payload.getOwnerPubKey() != null &&
                         payload.getOwnerPubKey().equals(protectedStorageEntry.getOwnerPubKey());
         } else {
-            // TODO We got sometimes a nullPointer at protectedStorageEntry.ownerPubKey
-            // Probably caused by an exception at deserialization:  OfferPayload: Cannot be deserialized.null
             result = protectedStorageEntry.getOwnerPubKey() != null &&
-                    protectedStorageEntry.getStoragePayload() != null &&
-                    protectedStorageEntry.getOwnerPubKey().equals(protectedStorageEntry.getStoragePayload().getOwnerPubKey());
+                    storagePayload != null &&
+                    protectedStorageEntry.getOwnerPubKey().equals(storagePayload.getOwnerPubKey());
         }
 
         if (!result) {
             String res1 = protectedStorageEntry.toString();
             String res2 = "null";
-            if (protectedStorageEntry.getStoragePayload() != null &&
-                    protectedStorageEntry.getStoragePayload().getOwnerPubKey() != null)
-                res2 = protectedStorageEntry.getStoragePayload().getOwnerPubKey().toString();
+            if (storagePayload != null &&
+                    storagePayload.getOwnerPubKey() != null)
+                res2 = Utilities.encodeToHex(storagePayload.getOwnerPubKey().getEncoded(), true);
 
             log.warn("PublicKey of payload data and ProtectedData are not matching. protectedStorageEntry=" + res1 +
                     "protectedStorageEntry.getStoragePayload().getOwnerPubKey()=" + res2);
@@ -659,8 +624,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     // Get a new map with entries older than PURGE_AGE_DAYS purged from the given map.
-    private HashMap<ByteArray, MapValue> getPurgedSequenceNumberMap(HashMap<ByteArray, MapValue> persisted) {
-        HashMap<ByteArray, MapValue> purged = new HashMap<>();
+    private Map<ByteArray, MapValue> getPurgedSequenceNumberMap(Map<ByteArray, MapValue> persisted) {
+        Map<ByteArray, MapValue> purged = new HashMap<>();
         long maxAgeTs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(PURGE_AGE_DAYS);
         persisted.entrySet().stream().forEach(entry -> {
             if (entry.getValue().timeStamp > maxAgeTs)
@@ -712,6 +677,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     /**
      * Used as container for calculating cryptographic hash of data and sequenceNumber.
      */
+    @EqualsAndHashCode
     @ToString
     public static final class DataAndSeqNrPair implements NetworkPayload {
         // data are only used for calculating cryptographic hash from both values so they are kept private
@@ -739,7 +705,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * used as key
      */
     @EqualsAndHashCode
-    @AllArgsConstructor
     public static final class ByteArray implements PersistablePayload {
         // That object is saved to disc. We need to take care of changes to not break deserialization.
         public final byte[] bytes;
@@ -751,6 +716,19 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                     '}';
         }
 
+        public ByteArray(byte[] bytes) {
+            this.bytes = bytes;
+        }
+
+
+        ///////////////////////////////////////////////////////////////////////////////////////////
+        // Protobuffer
+        ///////////////////////////////////////////////////////////////////////////////////////////
+
+        public ByteArray(String hex) {
+            this.bytes = Utilities.decodeFromHex(hex);
+        }
+
         @Override
         public PB.ByteArray toProtoMessage() {
             return PB.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes)).build();
@@ -758,6 +736,10 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         public static ByteArray fromProto(PB.ByteArray proto) {
             return new ByteArray(proto.getBytes().toByteArray());
+        }
+
+        public String getHex() {
+            return Utilities.encodeToHex(bytes);
         }
     }
 

@@ -454,7 +454,7 @@ message TradeStatistics {
     int64 offer_min_amount = 12;
     string offer_id = 13;
     string deposit_tx_id = 14;
-    PubKeyRing pub_key_ring = 15;
+    bytes signature_pub_key_bytes = 15;
     map<string, string> extra_data = 16;
 }
 

@@ -19,7 +19,6 @@ package io.bisq.provider.fee;
 
 import io.bisq.common.util.Utilities;
 import io.bisq.core.provider.fee.FeeService;
-import io.bisq.network.http.HttpException;
 import io.bisq.provider.fee.providers.BtcFeesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +57,7 @@ public class FeeRequestService {
             public void run() {
                 try {
                     requestBitcoinFees();
-                } catch (HttpException | IOException e) {
+                } catch (IOException e) {
                     log.warn(e.toString());
                     e.printStackTrace();
                 }
@@ -66,12 +65,7 @@ public class FeeRequestService {
         }, INTERVAL_BTC_FEES_MS, INTERVAL_BTC_FEES_MS);
 
 
-        try {
-            requestBitcoinFees();
-        } catch (HttpException e) {
-            log.warn(e.toString());
-            e.printStackTrace();
-        }
+        requestBitcoinFees();
     }
 
     private void requestBitcoinFees() throws IOException {
