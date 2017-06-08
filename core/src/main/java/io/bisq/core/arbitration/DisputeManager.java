@@ -672,6 +672,7 @@ public class DisputeManager implements PersistedDataHost {
                             } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
                                 e.printStackTrace();
                                 log.error("Error at traderSignAndFinalizeDisputedPayoutTx " + e.getMessage());
+                                throw new RuntimeException("Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString());
                             }
                         } else {
                             log.warn("DepositTx is null. TradeId = " + tradeId);
@@ -719,7 +720,6 @@ public class DisputeManager implements PersistedDataHost {
             Transaction walletTx = tradeWalletService.addTxToWallet(peerPublishedDisputePayoutTxMessage.getTransaction());
             disputeOptional.get().setDisputePayoutTxId(walletTx.getHashAsString());
             BtcWalletService.printTx("Disputed payoutTx received from peer", walletTx);
-            tradeManager.closeDisputedTrade(tradeId);
         } else {
             log.debug("We got a peerPublishedPayoutTxMessage but we don't have a matching dispute. TradeId = " + tradeId);
             if (!delayMsgMap.containsKey(uid)) {
