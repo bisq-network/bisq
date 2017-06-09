@@ -97,9 +97,9 @@
            See doc/build.md for further info
        -->
         <dependency>
-            <groupId>org.bitcoinj</groupId>
-            <artifactId>bitcoinj-core</artifactId>
-            <version>0.14.4.1</version>
+            <groupId>org.libdohj</groupId>
+            <artifactId>libdohj-core</artifactId>
+            <version>0.14-1</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.google.code.findbugs</groupId>
