@@ -8,15 +8,15 @@ import lombok.Value;
 
 @Value
 public class PrivateNotificationMessage implements MailboxMessage {
-    private final NodeAddress senderNodeAddress;
     private final PrivateNotificationPayload privateNotificationPayload;
+    private final NodeAddress senderNodeAddress;
     private final String uid;
 
     public PrivateNotificationMessage(PrivateNotificationPayload privateNotificationPayload,
                                       NodeAddress senderNodeAddress,
                                       String uid) {
-        this.senderNodeAddress = senderNodeAddress;
         this.privateNotificationPayload = privateNotificationPayload;
+        this.senderNodeAddress = senderNodeAddress;
         this.uid = uid;
     }
 

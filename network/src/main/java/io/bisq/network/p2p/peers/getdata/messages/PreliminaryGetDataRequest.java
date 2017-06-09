@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDataRequest, SupportedCapabilitiesMessage {
     private final int nonce;
     private final Set<byte[]> excludedKeys;
+    // ordinals of enum
     private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public PreliminaryGetDataRequest(int nonce, Set<byte[]> excludedKeys) {
@@ -38,6 +39,6 @@ public final class PreliminaryGetDataRequest implements AnonymousMessage, GetDat
 
     public static PreliminaryGetDataRequest fromProto(PB.PreliminaryGetDataRequest proto) {
         return new PreliminaryGetDataRequest(proto.getNonce(),
-                ProtoUtil.getByteSet(proto.getExcludedKeysList()));
+                ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()));
     }
 }

@@ -49,6 +49,7 @@ public class AlertManager {
     private final ObjectProperty<Alert> alertMessageProperty = new SimpleObjectProperty<>();
 
     // Pub key for developer global alert message
+    @SuppressWarnings("ConstantConditions")
     private static final String pubKeyAsHex = DevEnv.USE_DEV_PRIVILEGE_KEYS ?
             DevEnv.DEV_PRIVILEGE_PUB_KEY :
             "036d8a1dfcb406886037d2381da006358722823e1940acc2598c844bbc0fd1026f";

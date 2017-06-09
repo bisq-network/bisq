@@ -45,11 +45,6 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
         super(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, storage, btcWalletService);
     }
 
-    @Override
-    protected void createTradeProtocol() {
-        tradeProtocol = new SellerAsMakerProtocol(this);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -58,7 +53,9 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
     @Override
     public PB.Tradable toProtoMessage() {
         return PB.Tradable.newBuilder()
-                .setSellerAsMakerTrade(PB.SellerAsMakerTrade.newBuilder().setTrade((PB.Trade) super.toProtoMessage())).build();
+                .setSellerAsMakerTrade(PB.SellerAsMakerTrade.newBuilder()
+                        .setTrade((PB.Trade) super.toProtoMessage()))
+                .build();
     }
 
     public static Tradable fromProto(PB.SellerAsMakerTrade sellerAsMakerTradeProto,
@@ -66,7 +63,8 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
         PB.Trade proto = sellerAsMakerTradeProto.getTrade();
-        final SellerAsMakerTrade trade = new SellerAsMakerTrade(Offer.fromProto(proto.getOffer()),
+        final SellerAsMakerTrade trade = new SellerAsMakerTrade(
+                Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getTxFeeAsLong()),
                 Coin.valueOf(proto.getTakerFeeAsLong()),
                 proto.getIsCurrencyForTakerFeeBtc(),
@@ -75,7 +73,7 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
 
         trade.setTradeAmountAsLong(proto.getTradeAmountAsLong());
         trade.setTradePrice(proto.getTradePrice());
-        trade.setTradingPeerNodeAddress(NodeAddress.fromProto(proto.getTradingPeerNodeAddress()));
+        trade.setTradingPeerNodeAddress(proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null);
 
         return Trade.fromProto(trade,
                 proto,
@@ -86,6 +84,11 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void createTradeProtocol() {
+        tradeProtocol = new SellerAsMakerProtocol(this);
+    }
 
     @Override
     public void handleTakeOfferRequest(TradeMessage message, NodeAddress taker) {

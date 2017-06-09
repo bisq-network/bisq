@@ -214,6 +214,7 @@ public class SellerStep3View extends TradeStepView {
     private void onPaymentReceived() {
         log.debug("onPaymentReceived");
         if (model.p2PService.isBootstrapped()) {
+            //noinspection UnusedAssignment
             String key = "confirmPaymentReceived";
             //noinspection ConstantConditions
             if (!DevEnv.DEV_MODE && DontShowAgainLookup.showAgain(key)) {
@@ -248,6 +249,7 @@ public class SellerStep3View extends TradeStepView {
     @SuppressWarnings("PointlessBooleanExpression")
     private void showPopup() {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+        //noinspection UnusedAssignment
         String key = "confirmPayment" + trade.getId();
         String message;
         String tradeVolumeWithCode = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
@@ -256,6 +258,7 @@ public class SellerStep3View extends TradeStepView {
         String id = trade.getShortId();
         if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
             String address = ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress();
+            //noinspection UnusedAssignment
             message = Res.get("portfolio.pending.step3_seller.altcoin", part1, currencyName, address, tradeVolumeWithCode, currencyName);
         } else {
             if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload)
@@ -269,6 +272,7 @@ public class SellerStep3View extends TradeStepView {
 
             Optional<String> optionalHolderName = getOptionalHolderName();
             if (optionalHolderName.isPresent()) {
+                //noinspection UnusedAssignment
                 message = message + Res.get("portfolio.pending.step3_seller.bankCheck" + optionalHolderName.get(), part);
             }
         }

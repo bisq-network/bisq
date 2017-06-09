@@ -42,10 +42,10 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public CryptoCurrencyAccountPayload(String paymentMethod,
-                                        String id,
-                                        long maxTradePeriod,
-                                        String address) {
+    private CryptoCurrencyAccountPayload(String paymentMethod,
+                                         String id,
+                                         long maxTradePeriod,
+                                         String address) {
         this(paymentMethod,
                 id,
                 maxTradePeriod);
@@ -54,8 +54,9 @@ public final class CryptoCurrencyAccountPayload extends PaymentAccountPayload {
 
     @Override
     public Message toProtoMessage() {
-        return getPaymentAccountPayloadBuilder().setCryptoCurrencyAccountPayload(PB.CryptoCurrencyAccountPayload.newBuilder()
-                .setAddress(address))
+        return getPaymentAccountPayloadBuilder()
+                .setCryptoCurrencyAccountPayload(PB.CryptoCurrencyAccountPayload.newBuilder()
+                        .setAddress(address))
                 .build();
     }
 

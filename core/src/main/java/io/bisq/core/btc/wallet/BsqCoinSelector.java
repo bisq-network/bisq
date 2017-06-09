@@ -29,7 +29,7 @@ import javax.inject.Inject;
  */
 @Slf4j
 public class BsqCoinSelector extends BisqDefaultCoinSelector {
-    private BsqChainState bsqChainState;
+    private final BsqChainState bsqChainState;
 
     @Inject
     public BsqCoinSelector(BsqChainState bsqChainState) {
@@ -40,6 +40,7 @@ public class BsqCoinSelector extends BisqDefaultCoinSelector {
     @Override
     protected boolean isTxOutputSpendable(TransactionOutput output) {
         // output.getParentTransaction() cannot be null as it is checked in calling method
-        return bsqChainState.isTxOutputSpendable(output.getParentTransaction().getHashAsString(), output.getIndex());
+        return output.getParentTransaction() != null &&
+                bsqChainState.isTxOutputSpendable(output.getParentTransaction().getHashAsString(), output.getIndex());
     }
 }

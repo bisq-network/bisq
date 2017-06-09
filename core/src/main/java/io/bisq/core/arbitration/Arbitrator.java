@@ -19,6 +19,7 @@ package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
@@ -30,7 +31,6 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 @Getter
 public final class Arbitrator implements StoragePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
+
     private final NodeAddress nodeAddress;
     private final byte[] btcPubKey;
     private final String btcAddress;
@@ -67,7 +68,7 @@ public final class Arbitrator implements StoragePayload {
                       String btcAddress,
                       PubKeyRing pubKeyRing,
                       List<String> languageCodes,
-                      Date registrationDate,
+                      long registrationDate,
                       byte[] registrationPubKey,
                       String registrationSignature,
                       @Nullable String emailAddress,
@@ -78,7 +79,7 @@ public final class Arbitrator implements StoragePayload {
         this.btcAddress = btcAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;
-        this.registrationDate = registrationDate.getTime();
+        this.registrationDate = registrationDate;
         this.registrationPubKey = registrationPubKey;
         this.registrationSignature = registrationSignature;
         this.emailAddress = emailAddress;
@@ -113,21 +114,26 @@ public final class Arbitrator implements StoragePayload {
                 proto.getBtcAddress(),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 proto.getLanguageCodesList().stream().collect(Collectors.toList()),
-                new Date(proto.getRegistrationDate()),
+                proto.getRegistrationDate(),
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
-                proto.getEmailAddress().isEmpty() ? null : proto.getEmailAddress(),
-                proto.getInfo().isEmpty() ? null : proto.getInfo(),
+                ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
+                ProtoUtil.stringOrNullFromProto(proto.getInfo()),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public long getTTL() {
+        return TTL;
     }
 
     @Override
     public PublicKey getOwnerPubKey() {
         return pubKeyRing.getSignaturePubKey();
-    }
-
-    @Override
-    public long getTTL() {
-        return TTL;
     }
 }

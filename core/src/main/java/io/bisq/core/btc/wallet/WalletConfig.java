@@ -113,9 +113,9 @@ public class WalletConfig extends AbstractIdleService {
     public WalletConfig(NetworkParameters params,
                         Socks5Proxy socks5Proxy,
                         File directory,
-                        String btcWalletFileName,
-                        String bsqWalletFileName,
-                        String spvChainFileName) {
+                        @SuppressWarnings("SameParameterValue") String btcWalletFileName,
+                        @SuppressWarnings("SameParameterValue") String bsqWalletFileName,
+                        @SuppressWarnings("SameParameterValue") String spvChainFileName) {
         this.context = new Context(params);
         this.params = checkNotNull(context.getParams());
         this.directory = checkNotNull(directory);
@@ -249,7 +249,7 @@ public class WalletConfig extends AbstractIdleService {
      * potentially take a very long time. If false, then startup is considered complete once the network activity
      * begins and peer connections/block chain sync will continue in the background.
      */
-    public WalletConfig setBlockingStartup(boolean blockingStartup) {
+    public WalletConfig setBlockingStartup(@SuppressWarnings("SameParameterValue") boolean blockingStartup) {
         this.blockingStartup = blockingStartup;
         return this;
     }
@@ -363,7 +363,7 @@ public class WalletConfig extends AbstractIdleService {
             vBtcWallet = createOrLoadWallet(vBtcWalletFile, shouldReplayWallet, keyChainGroup, false, seed);
 
             vBtcWallet.allowSpendingUnconfirmedTransactions();
-           
+
             // BSQ walelt
             vBsqWalletFile = new File(directory, bsqWalletFileName);
             if (seed != null)
@@ -495,8 +495,7 @@ public class WalletConfig extends AbstractIdleService {
 
     private Wallet loadWallet(File walletFile, boolean shouldReplayWallet, boolean useBitcoinDeterministicKeyChain) throws Exception {
         Wallet wallet;
-        FileInputStream walletStream = new FileInputStream(walletFile);
-        try {
+        try (FileInputStream walletStream = new FileInputStream(walletFile)) {
             List<WalletExtension> extensions = provideWalletExtensions();
             WalletExtension[] extArray = extensions.toArray(new WalletExtension[extensions.size()]);
             Protos.Wallet proto = WalletProtobufSerializer.parseToProto(walletStream);
@@ -510,8 +509,6 @@ public class WalletConfig extends AbstractIdleService {
             wallet = serializer.readWallet(params, extArray, proto);
             if (shouldReplayWallet)
                 wallet.reset();
-        } finally {
-            walletStream.close();
         }
         return wallet;
     }

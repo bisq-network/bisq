@@ -65,6 +65,7 @@ public class MakerCreateAndSignContract extends TradeTask {
                     "addressEntry must not be set here.");
             AddressEntry makerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] makerMultiSigPubKey = makerAddressEntry.getPubKey();
+            checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
             Contract contract = new Contract(
                     processModel.getOffer().getOfferPayload(),
                     trade.getTradeAmount().value,

@@ -46,7 +46,7 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class BsqFullNode extends BsqNode {
 
-    private BsqFullNodeExecutor bsqFullNodeExecutor;
+    private final BsqFullNodeExecutor bsqFullNodeExecutor;
     private final JsonChainStateExporter jsonChainStateExporter;
     @Getter
     private boolean parseBlockchainComplete;
@@ -90,9 +90,7 @@ public class BsqFullNode extends BsqNode {
     @Override
     protected void parseBlocksWithChainHeadHeight(int startBlockHeight, int genesisBlockHeight, String genesisTxId) {
         log.info("parseBlocksWithChainHeadHeight startBlockHeight={}", startBlockHeight);
-        bsqFullNodeExecutor.requestChainHeadHeight(chainHeadHeight -> {
-            parseBlocks(startBlockHeight, genesisBlockHeight, genesisTxId, chainHeadHeight);
-        }, throwable -> {
+        bsqFullNodeExecutor.requestChainHeadHeight(chainHeadHeight -> parseBlocks(startBlockHeight, genesisBlockHeight, genesisTxId, chainHeadHeight), throwable -> {
             log.error(throwable.toString());
             throwable.printStackTrace();
         });
@@ -127,9 +125,7 @@ public class BsqFullNode extends BsqNode {
                         });
             } else {
                 log.warn("We are trying to start with a block which is above the chain height of bitcoin core. We need probably wait longer until bitcoin core has fully synced. We try again after a delay of 1 min.");
-                UserThread.runAfter(() -> {
-                    parseBlocksWithChainHeadHeight(startBlockHeight, genesisBlockHeight, genesisTxId);
-                }, 60);
+                UserThread.runAfter(() -> parseBlocksWithChainHeadHeight(startBlockHeight, genesisBlockHeight, genesisTxId), 60);
             }
         } else {
             // We dont have received new blocks in the meantime so we are completed and we register our handler
@@ -142,20 +138,18 @@ public class BsqFullNode extends BsqNode {
         log.info("onParseBlockchainComplete");
         parseBlockchainComplete = true;
         // We register our handler for new blocks
-        bsqFullNodeExecutor.addBlockHandler(btcdBlock -> {
-            bsqFullNodeExecutor.parseBtcdBlock(btcdBlock,
-                    genesisBlockHeight,
-                    genesisTxId,
-                    this::onNewBsqBlock,
-                    throwable -> {
-                        if (throwable instanceof BlockNotConnectingException) {
-                            startReOrgFromLastSnapshot();
-                        } else {
-                            log.error(throwable.toString());
-                            throwable.printStackTrace();
-                        }
-                    });
-        });
+        bsqFullNodeExecutor.addBlockHandler(btcdBlock -> bsqFullNodeExecutor.parseBtcdBlock(btcdBlock,
+                genesisBlockHeight,
+                genesisTxId,
+                this::onNewBsqBlock,
+                throwable -> {
+                    if (throwable instanceof BlockNotConnectingException) {
+                        startReOrgFromLastSnapshot();
+                    } else {
+                        log.error(throwable.toString());
+                        throwable.printStackTrace();
+                    }
+                }));
 
         log.info("Register MessageListener");
         p2PService.getNetworkNode().addMessageListener(this::onMessage);

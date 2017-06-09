@@ -42,7 +42,7 @@ public class BuyerAsTakerCreatesDepositTxInputs extends TradeTask {
 
             // In case we pay the taker fee in bsq we reduce tx fee by that as the burned bsq satoshis goes to miners.
             Coin bsqTakerFee = trade.isCurrencyForTakerFeeBtc() ? Coin.ZERO : trade.getTakerFee();
-            
+
             Coin txFee = trade.getTxFee();
             Coin takerInputAmount = trade.getOffer().getBuyerSecurityDeposit().add(txFee).add(txFee).subtract(bsqTakerFee);
             BtcWalletService walletService = processModel.getBtcWalletService();

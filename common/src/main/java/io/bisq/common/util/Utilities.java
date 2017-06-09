@@ -17,40 +17,35 @@
 
 package io.bisq.common.util;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
 import io.bisq.common.crypto.LimitedKeyStrengthException;
-import io.bisq.common.io.LookAheadObjectInputStream;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.bitcoinj.core.Utils;
 
+import javax.annotation.Nullable;
 import javax.crypto.Cipher;
 import java.awt.*;
 import java.io.*;
 import java.net.URI;
-import java.net.URLConnection;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * General utilities
- */
+
+@Slf4j
 public class Utilities {
-    private static final Logger log = LoggerFactory.getLogger(Utilities.class);
     private static long lastTimeStamp = System.currentTimeMillis();
     public static final String LB = System.getProperty("line.separator");
 
@@ -189,11 +184,11 @@ public class Utilities {
         }
     }
 
-    public static void openDirectory(File directory) throws IOException {
+    public static void openFile(File file) throws IOException {
         if (!isLinux()
                 && Desktop.isDesktopSupported()
                 && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-            Desktop.getDesktop().open(directory);
+            Desktop.getDesktop().open(file);
         } else {
             // Maybe Application.HostServices works in those cases?
             // HostServices hostServices = getHostServices();
@@ -201,8 +196,8 @@ public class Utilities {
 
             // On Linux Desktop is poorly implemented.
             // See https://stackoverflow.com/questions/18004150/desktop-api-is-not-supported-on-the-current-platform
-            if (!DesktopUtil.open(directory))
-                throw new IOException("Failed to open directory: " + directory.toString());
+            if (!DesktopUtil.open(file))
+                throw new IOException("Failed to open file: " + file.toString());
         }
     }
 
@@ -249,53 +244,12 @@ public class Utilities {
         return gson.fromJson(jsonString, classOfT);
     }
 
-
-/*    public static Object deserializeHexStringToObject(String serializedHexString) {
-        Object result = null;
-        try {
-            ByteArrayInputStream byteInputStream =
-                    new ByteArrayInputStream(org.bitcoinj.core.Utils.parseAsHexOrBase58(serializedHexString));
-
-            try (ObjectInputStream objectInputStream = new LookAheadObjectInputStream(byteInputStream)) {
-                result = objectInputStream.readObject();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } finally {
-                byteInputStream.close();
-
-            }
-
-        } catch (IOException i) {
-            i.printStackTrace();
-        }
-        return result;
-    }
-
-
-    public static String serializeObjectToHexString(Serializable serializable) {
-        String result = null;
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        try {
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-            objectOutputStream.writeObject(serializable);
-
-            result = org.bitcoinj.core.Utils.HEX.encode(byteArrayOutputStream.toByteArray());
-            byteArrayOutputStream.close();
-            objectOutputStream.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }*/
-
     public static <T extends Serializable> T deserialize(byte[] data) {
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         ObjectInput in = null;
         Object result = null;
         try {
-            in = new LookAheadObjectInputStream(bis, true);
-            //in = new ObjectInputStream(bis);
+            in = new ObjectInputStream(bis);
             result = in.readObject();
             if (!(result instanceof Serializable))
                 throw new RuntimeException("Object not of type Serializable");
@@ -345,6 +299,10 @@ public class Utilities {
         return result;
     }
 
+    public static <T extends Serializable> T cloneObject(Serializable object) {
+        return deserialize(serialize(object));
+    }
+
     @SuppressWarnings("SameParameterValue")
     private static void printElapsedTime(String msg) {
         if (!msg.isEmpty()) {
@@ -359,41 +317,6 @@ public class Utilities {
         printElapsedTime("");
     }
 
-
-    public static Object copy(Serializable orig) throws IOException, ClassNotFoundException {
-        try {
-            // Write the object out to a byte array
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ObjectOutputStream out = new ObjectOutputStream(bos);
-            out.writeObject(orig);
-            out.flush();
-            out.close();
-
-            // Make an input stream from the byte array and read
-            // a copy of the object back in.
-            ObjectInputStream in = new LookAheadObjectInputStream(new ByteArrayInputStream(bos.toByteArray()), true);
-            return in.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            throw e;
-        }
-    }
-
-    public static String readTextFileFromServer(String url, String userAgent) throws IOException {
-        URLConnection connection = URI.create(url).toURL().openConnection();
-        connection.setDoOutput(true);
-        connection.setUseCaches(false);
-        connection.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(10));
-        connection.addRequestProperty("User-Agent", userAgent);
-        connection.connect();
-        try (InputStream inputStream = connection.getInputStream()) {
-            return CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw e;
-        }
-    }
-
     public static void setThreadName(String name) {
         Thread.currentThread().setName(name + "-" + new Random().nextInt(10000));
     }
@@ -404,6 +327,25 @@ public class Utilities {
 
     public static String getSystemHomeDirectory() {
         return Utilities.isWindows() ? System.getenv("USERPROFILE") : System.getProperty("user.home");
+    }
+
+    public static String encodeToHex(@Nullable byte[] bytes, boolean allowNullable) {
+        if (allowNullable)
+            return bytes != null ? Utils.HEX.encode(bytes) : "null";
+        else
+            return Utils.HEX.encode(checkNotNull(bytes, "bytes must not be null at encodeToHex"));
+    }
+
+    public static String bytesAsHexString(@Nullable byte[] bytes) {
+        return encodeToHex(bytes, true);
+    }
+
+    public static String encodeToHex(@Nullable byte[] bytes) {
+        return encodeToHex(bytes, false);
+    }
+
+    public static byte[] decodeFromHex(String encoded) {
+        return Utils.HEX.decode(encoded);
     }
 
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {
@@ -426,10 +368,10 @@ public class Utilities {
     }
 
     public static String toTruncatedString(Object message, int maxLength) {
-        if (Objects.nonNull(message)) {
+        if (message != null) {
             return StringUtils.abbreviate(message.toString(), maxLength).replace("\n", "");
         }
-        return "NULL";
+        return "null";
     }
 
     public static String toTruncatedString(Object message) {
@@ -478,7 +420,8 @@ public class Utilities {
             return id.substring(0, Math.min(8, id.length()));
     }
 
-    public static String collectionToString(Collection collection) {
-        return collection.stream ().map (i -> i.toString ()).collect (Collectors.joining (",")).toString();
+    @SuppressWarnings("unchecked")
+    public static String collectionToCSV(Collection collection) {
+        return collection.stream().map(Object::toString).collect(Collectors.joining(",")).toString();
     }
 }

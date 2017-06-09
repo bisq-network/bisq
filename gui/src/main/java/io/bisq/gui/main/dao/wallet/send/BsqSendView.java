@@ -19,8 +19,6 @@ package io.bisq.gui.main.dao.wallet.send;
 
 import com.google.common.util.concurrent.FutureCallback;
 import io.bisq.common.locale.Res;
-import io.bisq.core.btc.exceptions.TransactionVerificationException;
-import io.bisq.core.btc.exceptions.WalletException;
 import io.bisq.core.btc.wallet.BsqWalletService;
 import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.util.CoinUtil;
@@ -57,7 +55,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
     private final BtcWalletService btcWalletService;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
-    private Navigation navigation;
+    private final Navigation navigation;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BsqValidator bsqValidator;
     private final BsqAddressValidator bsqAddressValidator;
@@ -128,30 +126,24 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                                 bsqFormatter.formatCoinWithCode(receiverAmount)))
                         .actionButtonText(Res.get("shared.yes"))
                         .onAction(() -> {
-                            try {
-                                bsqWalletService.commitTx(txWithBtcFee);
-                                // We need to create another instance, otherwise the tx would trigger an invalid state exception
-                                // if it gets committed 2 times
-                                btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
-                                bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
-                                    @Override
-                                    public void onSuccess(@Nullable Transaction transaction) {
-                                        if (transaction != null) {
-                                            log.error("Successfully sent tx with id " + transaction.getHashAsString());
-                                        }
+                            bsqWalletService.commitTx(txWithBtcFee);
+                            // We need to create another instance, otherwise the tx would trigger an invalid state exception
+                            // if it gets committed 2 times
+                            btcWalletService.commitTx(btcWalletService.getClonedTransaction(txWithBtcFee));
+                            bsqWalletService.broadcastTx(signedTx, new FutureCallback<Transaction>() {
+                                @Override
+                                public void onSuccess(@Nullable Transaction transaction) {
+                                    if (transaction != null) {
+                                        log.error("Successfully sent tx with id " + transaction.getHashAsString());
                                     }
+                                }
 
-                                    @Override
-                                    public void onFailure(@NotNull Throwable t) {
-                                        log.error(t.toString());
-                                        new Popup<>().warning(t.toString());
-                                    }
-                                });
-                            } catch (WalletException | TransactionVerificationException e) {
-                                log.error(e.toString());
-                                e.printStackTrace();
-                                new Popup<>().warning(e.toString());
-                            }
+                                @Override
+                                public void onFailure(@NotNull Throwable t) {
+                                    log.error(t.toString());
+                                    new Popup<>().warning(t.toString());
+                                }
+                            });
                         })
                         .closeButtonText(Res.get("shared.cancel"))
                         .show();
@@ -159,6 +151,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> {
                 if (t instanceof InsufficientMoneyException) {
                     final Coin missingCoin = ((InsufficientMoneyException) t).missing;
                     final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
+                    //noinspection unchecked
                     new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
                             .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                             .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))

@@ -51,7 +51,8 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
                         .setOfferId(offerId)
                         .setPubKeyRing(pubKeyRing.toProtoMessage())
                         .setTakersTradePrice(takersTradePrice)
-                        .addAllSupportedCapabilities(supportedCapabilities)).build();
+                        .addAllSupportedCapabilities(supportedCapabilities))
+                .build();
     }
 
     public static OfferAvailabilityRequest fromProto(PB.OfferAvailabilityRequest proto) {

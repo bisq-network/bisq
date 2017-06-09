@@ -51,7 +51,7 @@ import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 @Slf4j
 public class BsqWalletService extends WalletService {
     private final BsqCoinSelector bsqCoinSelector;
-    private BsqChainState bsqChainState;
+    private final BsqChainState bsqChainState;
     private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
     private Coin availableBsqBalance = Coin.ZERO;
@@ -82,6 +82,7 @@ public class BsqWalletService extends WalletService {
 
             wallet.addEventListener(walletEventListener);
 
+            //noinspection deprecation
             wallet.addEventListener(new AbstractWalletEventListener() {
                 @Override
                 public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
@@ -261,7 +262,7 @@ public class BsqWalletService extends WalletService {
     // Broadcast tx 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) throws WalletException, TransactionVerificationException {
+    public void broadcastTx(Transaction tx, FutureCallback<Transaction> callback) {
         Futures.addCallback(walletsSetup.getPeerGroup().broadcastTransaction(tx).future(), callback);
         printTx("BSQ broadcast Tx", tx);
     }
@@ -301,7 +302,7 @@ public class BsqWalletService extends WalletService {
     // Burn fee tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction getPreparedBurnFeeTx(Coin fee) throws WalletException, TransactionVerificationException,
+    public Transaction getPreparedBurnFeeTx(Coin fee) throws
             InsufficientMoneyException, ChangeBelowDustException {
         Transaction tx = new Transaction(params);
 
@@ -320,7 +321,7 @@ public class BsqWalletService extends WalletService {
         return tx;
     }
 
-    protected Set<Address> getAllAddressesFromActiveKeys() throws UTXOProviderException {
+    protected Set<Address> getAllAddressesFromActiveKeys() {
         return wallet.getActiveKeychain().getLeafKeys().stream().
                 map(key -> Address.fromP2SHHash(params, key.getPubKeyHash())).
                 collect(Collectors.toSet());

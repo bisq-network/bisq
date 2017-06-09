@@ -81,12 +81,8 @@ public class LocalhostNetworkNodeTest {
         msgLatch.await();
 
         CountDownLatch shutDownLatch = new CountDownLatch(2);
-        node1.shutDown(() -> {
-            shutDownLatch.countDown();
-        });
-        node2.shutDown(() -> {
-            shutDownLatch.countDown();
-        });
+        node1.shutDown(shutDownLatch::countDown);
+        node2.shutDown(shutDownLatch::countDown);
         shutDownLatch.await();
     }
 }

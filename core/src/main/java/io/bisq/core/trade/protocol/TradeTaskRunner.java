@@ -25,6 +25,7 @@ import io.bisq.core.trade.Trade;
 public class TradeTaskRunner extends TaskRunner<Trade> {
 
     public TradeTaskRunner(Trade sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        //noinspection unchecked
         super(sharedModel, (Class<Trade>) sharedModel.getClass().getSuperclass().getSuperclass(), resultHandler, errorMessageHandler);
     }
 }

@@ -421,7 +421,7 @@ public class WalletsSetup {
         return downloadListener.percentageProperty();
     }
 
-    public Set<Address> getAddressesByContext(AddressEntry.Context context) {
+    public Set<Address> getAddressesByContext(@SuppressWarnings("SameParameterValue") AddressEntry.Context context) {
         return ImmutableList.copyOf(addressEntryList.getList()).stream()
                 .filter(addressEntry -> addressEntry.getContext() == context)
                 .map(AddressEntry::getAddress)

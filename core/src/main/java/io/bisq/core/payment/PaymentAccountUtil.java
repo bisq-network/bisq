@@ -5,8 +5,7 @@ import io.bisq.core.offer.Offer;
 import io.bisq.core.payment.payload.PaymentMethod;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,9 +15,8 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class PaymentAccountUtil {
-    private static final Logger log = LoggerFactory.getLogger(PaymentAccountUtil.class);
-
     public static boolean isAnyPaymentAccountValidForOffer(Offer offer, Collection<PaymentAccount> paymentAccounts) {
         for (PaymentAccount paymentAccount : paymentAccounts) {
             if (isPaymentAccountValidForOffer(offer, paymentAccount))
@@ -103,5 +101,4 @@ public class PaymentAccountUtil {
             return arePaymentMethodsEqual;
         }
     }
-
 }

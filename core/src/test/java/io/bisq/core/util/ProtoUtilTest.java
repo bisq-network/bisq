@@ -26,6 +26,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+@SuppressWarnings("UnusedAssignment")
 public class ProtoUtilTest {
 
 //TODO CoreProtobufferResolver is not accessible here
@@ -48,7 +49,7 @@ public class ProtoUtilTest {
         try {
             OpenOffer.State finalResult = OpenOffer.State.valueOf(result.name());
             fail();
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException ignore) {
         }
     }
 

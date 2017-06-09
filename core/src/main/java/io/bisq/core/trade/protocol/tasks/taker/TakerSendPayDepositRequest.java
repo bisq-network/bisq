@@ -23,10 +23,14 @@ import io.bisq.core.btc.wallet.BtcWalletService;
 import io.bisq.core.trade.Trade;
 import io.bisq.core.trade.messages.PayDepositRequest;
 import io.bisq.core.trade.protocol.tasks.TradeTask;
+import io.bisq.core.user.User;
+import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.SendDirectMessageListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -44,6 +48,12 @@ public class TakerSendPayDepositRequest extends TradeTask {
             runInterceptHook();
             checkNotNull(trade.getTradeAmount(), "TradeAmount must not be null");
             checkNotNull(trade.getTakerFeeTxId(), "TakeOfferFeeTxId must not be null");
+            final User user = processModel.getUser();
+            checkNotNull(user, "User must not be null");
+            final List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
+            final List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
+            checkNotNull(acceptedArbitratorAddresses, "acceptedArbitratorAddresses must not be null");
+            checkNotNull(acceptedMediatorAddresses, "acceptedMediatorAddresses must not be null");
 
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
@@ -53,6 +63,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
             AddressEntry addressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] takerMultiSigPubKey = addressEntry.getPubKey();
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
+
             PayDepositRequest message = new PayDepositRequest(
                     processModel.getOfferId(),
                     processModel.getMyNodeAddress(),
@@ -70,11 +81,11 @@ public class TakerSendPayDepositRequest extends TradeTask {
                     processModel.getPaymentAccountPayload(trade),
                     processModel.getAccountId(),
                     trade.getTakerFeeTxId(),
-                    new ArrayList<>(processModel.getUser().getAcceptedArbitratorAddresses()),
-                    new ArrayList<>(processModel.getUser().getAcceptedMediatorAddresses()),
+                    new ArrayList<>(acceptedArbitratorAddresses),
+                    new ArrayList<>(acceptedMediatorAddresses),
                     trade.getArbitratorNodeAddress(),
-                    trade.getMediatorNodeAddress()
-            );
+                    trade.getMediatorNodeAddress(),
+                    UUID.randomUUID().toString());
             processModel.setMyMultiSigPubKey(takerMultiSigPubKey);
 
             processModel.getP2PService().sendEncryptedDirectMessage(

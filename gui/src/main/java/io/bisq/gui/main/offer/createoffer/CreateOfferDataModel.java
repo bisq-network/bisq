@@ -72,7 +72,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class CreateOfferDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
     private final BtcWalletService btcWalletService;
-    private BsqWalletService bsqWalletService;
+    private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final User user;
     private final KeyRing keyRing;
@@ -181,9 +181,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
             }
         };
 
-        bsqBalanceListener = (availableBalance, unverifiedBalance) -> {
-            updateBalance();
-        };
+        bsqBalanceListener = (availableBalance, unverifiedBalance) -> updateBalance();
 
         paymentAccountsChangeListener = change -> fillPaymentAccounts();
     }
@@ -239,10 +237,13 @@ class CreateOfferDataModel extends ActivatableDataModel {
 
         PaymentAccount account;
         PaymentAccount lastSelectedPaymentAccount = preferences.getSelectedPaymentAccountForCreateOffer();
-        if (lastSelectedPaymentAccount != null && user.getPaymentAccounts().contains(lastSelectedPaymentAccount))
+        if (lastSelectedPaymentAccount != null &&
+                user.getPaymentAccounts() != null &&
+                user.getPaymentAccounts().contains(lastSelectedPaymentAccount)) {
             account = lastSelectedPaymentAccount;
-        else
+        } else {
             account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
+        }
 
         if (account != null && isNotUSBankAccount(account)) {
             paymentAccount = account;
@@ -298,6 +299,7 @@ class CreateOfferDataModel extends ActivatableDataModel {
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("ConstantConditions")
     Offer createAndGetOffer() {
         final boolean useMarketBasedPriceValue = marketPriceAvailable && useMarketBasedPrice.get();
         long priceAsLong = price.get() != null && !useMarketBasedPriceValue ? price.get().getValue() : 0L;
@@ -394,7 +396,8 @@ class CreateOfferDataModel extends ActivatableDataModel {
                 lowerClosePrice,
                 isPrivateOffer,
                 hashOfChallenge,
-                extraDataMap);
+                extraDataMap,
+                Version.TRADE_PROTOCOL_VERSION);
         Offer offer = new Offer(offerPayload);
         offer.setPriceFeedService(priceFeedService);
         return offer;
@@ -655,9 +658,11 @@ class CreateOfferDataModel extends ActivatableDataModel {
     }
 
     private void fillPaymentAccounts() {
-        paymentAccounts.setAll(user.getPaymentAccounts().stream()
-                .filter(this::isNotUSBankAccount)
-                .collect(Collectors.toSet()));
+        if (user.getPaymentAccounts() != null) {
+            paymentAccounts.setAll(user.getPaymentAccounts().stream()
+                    .filter(this::isNotUSBankAccount)
+                    .collect(Collectors.toSet()));
+        }
     }
 
     private boolean isNotUSBankAccount(PaymentAccount paymentAccount) {

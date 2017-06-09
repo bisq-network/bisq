@@ -35,10 +35,10 @@ public class IssuanceVerification {
     public static final long MIN_BSQ_ISSUANCE_AMOUNT = 1000;
     public static final long MAX_BSQ_ISSUANCE_AMOUNT = 10_000_000;
 
-    private BsqChainState bsqChainState;
-    private PeriodVerification periodVerification;
-    private VotingVerification votingVerification;
-    private CompensationRequestModel compensationRequestModel;
+    private final BsqChainState bsqChainState;
+    private final PeriodVerification periodVerification;
+    private final VotingVerification votingVerification;
+    private final CompensationRequestModel compensationRequestModel;
 
     @Inject
     public IssuanceVerification(BsqChainState bsqChainState,

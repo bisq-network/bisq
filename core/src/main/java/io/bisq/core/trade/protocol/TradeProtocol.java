@@ -93,7 +93,8 @@ public abstract class TradeProtocol {
 
     public void applyMailboxMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
         log.debug("applyMailboxMessage " + decryptedMessageWithPubKey.getWireEnvelope());
-        if (decryptedMessageWithPubKey.getSignaturePubKey().equals(processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey())) {
+        if (processModel.getTradingPeer().getPubKeyRing() != null &&
+                decryptedMessageWithPubKey.getSignaturePubKey().equals(processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey())) {
             processModel.setDecryptedMessageWithPubKey(decryptedMessageWithPubKey);
             doApplyMailboxMessage(decryptedMessageWithPubKey.getWireEnvelope(), trade);
         } else {
@@ -137,8 +138,6 @@ public abstract class TradeProtocol {
         final Trade.State state = trade.getState();
         log.debug("cleanupTradable tradeState=" + state);
         TradeManager tradeManager = processModel.getTradeManager();
-        final Trade.Phase phase = state.getPhase();
-
         if (trade.isInPreparation()) {
             // no funds left. we just clean up the trade list
             tradeManager.removePreparedTrade(trade);

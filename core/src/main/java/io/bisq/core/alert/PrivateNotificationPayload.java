@@ -20,10 +20,10 @@ package io.bisq.core.alert;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.proto.network.NetworkPayload;
+import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
@@ -40,7 +40,7 @@ public final class PrivateNotificationPayload implements NetworkPayload {
     @Nullable
     private byte[] sigPublicKeyBytes;
     @Nullable
-    private PublicKey publicKey;
+    private PublicKey sigPublicKey;
 
     public PrivateNotificationPayload(String message) {
         this.message = message;
@@ -51,11 +51,12 @@ public final class PrivateNotificationPayload implements NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("NullableProblems")
     private PrivateNotificationPayload(String message, String signatureAsBase64, byte[] sigPublicKeyBytes) {
         this(message);
         this.signatureAsBase64 = signatureAsBase64;
         this.sigPublicKeyBytes = sigPublicKeyBytes;
-        publicKey = Sig.getSigPublicKeyFromBytes(sigPublicKeyBytes);
+        sigPublicKey = Sig.getPublicKeyFromBytes(sigPublicKeyBytes);
     }
 
     public static PrivateNotificationPayload fromProto(PB.PrivateNotificationPayload proto) {
@@ -66,7 +67,8 @@ public final class PrivateNotificationPayload implements NetworkPayload {
 
     @Override
     public PB.PrivateNotificationPayload toProtoMessage() {
-        checkNotNull(sigPublicKeyBytes, "sigPublicKeyBytes must nto be null");
+        checkNotNull(sigPublicKeyBytes, "sigPublicKeyBytes must not be null");
+        checkNotNull(signatureAsBase64, "signatureAsBase64 must not be null");
         return PB.PrivateNotificationPayload.newBuilder()
                 .setMessage(message)
                 .setSignatureAsBase64(signatureAsBase64)
@@ -78,10 +80,10 @@ public final class PrivateNotificationPayload implements NetworkPayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setSigAndPubKey(String signatureAsBase64, PublicKey storagePublicKey) {
+    public void setSigAndPubKey(String signatureAsBase64, PublicKey sigPublicKey) {
         this.signatureAsBase64 = signatureAsBase64;
-        this.publicKey = storagePublicKey;
-        sigPublicKeyBytes = Sig.getSigPublicKeyBytes(publicKey);
+        this.sigPublicKey = sigPublicKey;
+        sigPublicKeyBytes = Sig.getPublicKeyBytes(sigPublicKey);
     }
 
     // Hex
@@ -90,7 +92,7 @@ public final class PrivateNotificationPayload implements NetworkPayload {
         return "PrivateNotification{" +
                 "message='" + message + '\'' +
                 ", signatureAsBase64='" + signatureAsBase64 + '\'' +
-                ", publicKeyBytes=" + Hex.toHexString(sigPublicKeyBytes) +
+                ", publicKeyBytes=" + Utilities.bytesAsHexString(sigPublicKeyBytes) +
                 '}';
     }
 }

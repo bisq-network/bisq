@@ -205,16 +205,19 @@ public abstract class Overlay<T extends Overlay> {
 
     public T onClose(Runnable closeHandler) {
         this.closeHandlerOptional = Optional.of(closeHandler);
+        //noinspection unchecked
         return (T) this;
     }
 
     public T onAction(Runnable actionHandler) {
         this.actionHandlerOptional = Optional.of(actionHandler);
+        //noinspection unchecked
         return (T) this;
     }
 
     public T headLine(String headLine) {
         this.headLine = headLine;
+        //noinspection unchecked
         return (T) this;
     }
 
@@ -224,6 +227,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.notification");
         this.message = message;
         setTruncatedMessage();
+        //noinspection unchecked
         return (T) this;
     }
 
@@ -233,6 +237,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.instruction");
         this.message = message;
         setTruncatedMessage();
+        //noinspection unchecked
         return (T) this;
     }
 
@@ -242,6 +247,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.attention");
         this.message = message;
         setTruncatedMessage();
+        //noinspection unchecked
         return (T) this;
     }
 
@@ -251,6 +257,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.backgroundInfo");
         this.message = message;
         setTruncatedMessage();
+        //noinspection unchecked
         return (T) this;
     }
 
@@ -260,6 +267,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.feedback");
         this.message = message;
         setTruncatedMessage();
+        //noinspection unchecked
         return (T) this;
     }
 
@@ -269,6 +277,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.confirmation");
         this.message = message;
         setTruncatedMessage();
+        //noinspection unchecked
         return (T) this;
     }
 
@@ -278,6 +287,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.information");
         this.message = message;
         setTruncatedMessage();
+        //noinspection unchecked
         return (T) this;
     }
 
@@ -288,6 +298,7 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.warning");
         this.message = message;
         setTruncatedMessage();
+        //noinspection unchecked
         return (T) this;
     }
 
@@ -298,90 +309,107 @@ public abstract class Overlay<T extends Overlay> {
             this.headLine = Res.get("popup.headline.error");
         this.message = message;
         setTruncatedMessage();
+        //noinspection unchecked
         return (T) this;
     }
 
     @SuppressWarnings("UnusedReturnValue")
     public T showReportErrorButtons() {
         this.showReportErrorButtons = true;
+        //noinspection unchecked
         return (T) this;
     }
 
     public T message(String message) {
         this.message = message;
         setTruncatedMessage();
+        //noinspection unchecked
         return (T) this;
     }
 
     public T closeButtonText(String closeButtonText) {
         this.closeButtonText = closeButtonText;
+        //noinspection unchecked
         return (T) this;
     }
 
     public T useReportBugButton() {
         this.closeButtonText = Res.get("shared.reportBug");
         this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bisq/bisq/issues"));
+        //noinspection unchecked
         return (T) this;
     }
 
     public T useIUnderstandButton() {
         this.closeButtonText = Res.get("shared.iUnderstand");
+        //noinspection unchecked
         return (T) this;
     }
 
     public T actionButtonTextWithGoTo(String target) {
         this.actionButtonText = Res.get("shared.goTo", Res.get(target));
+        //noinspection unchecked
         return (T) this;
     }
 
     public T closeButtonTextWithGoTo(String target) {
         this.closeButtonText = Res.get("shared.goTo", Res.get(target));
+        //noinspection unchecked
         return (T) this;
     }
 
     public T actionButtonText(String actionButtonText) {
         this.actionButtonText = actionButtonText;
+        //noinspection unchecked
         return (T) this;
     }
 
     public T useShutDownButton() {
         this.actionButtonText = Res.get("shared.shutDown");
         this.actionHandlerOptional = Optional.of(BisqApp.shutDownHandler::run);
+        //noinspection unchecked
         return (T) this;
     }
 
     public T width(double width) {
         this.width = width;
+        //noinspection unchecked
         return (T) this;
     }
 
     public T showBusyAnimation() {
         this.showBusyAnimation = true;
+        //noinspection unchecked
         return (T) this;
     }
 
     public T dontShowAgainId(String key) {
         this.dontShowAgainId = key;
+        //noinspection unchecked
         return (T) this;
     }
 
     public T dontShowAgainText(String dontShowAgainText) {
         this.dontShowAgainText = dontShowAgainText;
+        //noinspection unchecked
         return (T) this;
     }
 
     public T hideCloseButton() {
         this.hideCloseButton = true;
+        //noinspection unchecked
         return (T) this;
     }
 
     public T useAnimation(boolean useAnimation) {
         this.useAnimation = useAnimation;
+        //noinspection unchecked
         return (T) this;
     }
 
     public T setHeadlineStyle(String headlineStyle) {
         this.headlineStyle = headlineStyle;
+        //noinspection unchecked
         return (T) this;
     }
 

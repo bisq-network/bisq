@@ -30,7 +30,7 @@ class BisqKeyChainGroup extends KeyChainGroup {
         return useBitcoinDeterministicKeyChain;
     }
 
-    public BisqKeyChainGroup(NetworkParameters params, boolean useBitcoinDeterministicKeyChain) {
+    public BisqKeyChainGroup(NetworkParameters params, @SuppressWarnings("SameParameterValue") boolean useBitcoinDeterministicKeyChain) {
         super(params);
         this.useBitcoinDeterministicKeyChain = useBitcoinDeterministicKeyChain;
     }
@@ -39,11 +39,6 @@ class BisqKeyChainGroup extends KeyChainGroup {
         super(params, chain);
 
         this.useBitcoinDeterministicKeyChain = useBitcoinDeterministicKeyChain;
-    }
-
-    @Override
-    public void setLookaheadSize(int lookaheadSize) {
-        super.setLookaheadSize(lookaheadSize);
     }
 
     @Override

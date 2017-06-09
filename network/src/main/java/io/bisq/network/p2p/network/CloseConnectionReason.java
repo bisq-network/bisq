@@ -5,7 +5,8 @@ public enum CloseConnectionReason {
     SOCKET_CLOSED(false, false),
     RESET(false, false),
     SOCKET_TIMEOUT(false, false),
-    TERMINATED(false, false), // EOFException
+    TERMINATED(false, false),
+    // EOFException
     CORRUPTED_DATA(false, false),
     NO_PROTO_BUFFER_DATA(false, false),
     NO_PROTO_BUFFER_ENV(false, false),

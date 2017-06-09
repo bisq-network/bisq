@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -61,11 +62,10 @@ public final class NationalBankAccountPayload extends BankAccountPayload {
     }
 
     @Override
-    public PB.NationalBankAccountPayload toProtoMessage() {
+    public Message toProtoMessage() {
         return getBankAccountPayloadBuilder()
                 .setNationalBankAccountPayload(PB.NationalBankAccountPayload.newBuilder())
-                .build()
-                .getNationalBankAccountPayload();
+                .build();
     }
 
     public static NationalBankAccountPayload fromProto(PB.PaymentAccountPayload proto) {

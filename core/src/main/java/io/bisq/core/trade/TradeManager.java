@@ -88,11 +88,12 @@ public class TradeManager implements PersistedDataHost {
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
     private final P2PService p2PService;
+    private final PriceFeedService priceFeedService;
     private final FilterManager filterManager;
     private final TradeStatisticsManager tradeStatisticsManager;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
-    private final TradableList<Trade> trades;
+    private TradableList<Trade> tradableList;
     private final BooleanProperty pendingTradesInitialized = new SimpleBooleanProperty();
     private boolean stopped;
     private List<Trade> tradesForStatistics;
@@ -126,15 +127,11 @@ public class TradeManager implements PersistedDataHost {
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
         this.p2PService = p2PService;
+        this.priceFeedService = priceFeedService;
         this.filterManager = filterManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
 
         tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
-        trades = new TradableList<>(tradableListStorage, "PendingTrades");
-        trades.forEach(trade -> {
-            trade.setTransientFields(tradableListStorage, btcWalletService);
-            trade.getOffer().setPriceFeedService(priceFeedService);
-        });
 
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
@@ -153,13 +150,13 @@ public class TradeManager implements PersistedDataHost {
         p2PService.addDecryptedMailboxListener(new DecryptedMailboxListener() {
             @Override
             public void onMailboxMessageAdded(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress) {
-                log.trace("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMessageWithPubKey);
+                log.debug("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMessageWithPubKey);
                 log.trace("onMailboxMessageAdded senderAddress: " + senderNodeAddress);
                 NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
                 if (wireEnvelope instanceof TradeMessage) {
                     log.trace("Received TradeMessage: " + wireEnvelope);
                     String tradeId = ((TradeMessage) wireEnvelope).getTradeId();
-                    Optional<Trade> tradeOptional = trades.stream().filter(e -> e.getId().equals(tradeId)).findAny();
+                    Optional<Trade> tradeOptional = tradableList.stream().filter(e -> e.getId().equals(tradeId)).findAny();
                     // The mailbox message will be removed inside the tasks after they are processed successfully
                     if (tradeOptional.isPresent())
                         tradeOptional.get().addDecryptedMessageWithPubKey(decryptedMessageWithPubKey);
@@ -170,12 +167,11 @@ public class TradeManager implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-       /* OpenOfferList persisted = openOffersStorage.initAndGetPersisted(openOfferList);
-        if (persisted != null)
-            openOfferList.addAll(persisted.getTradableList());
-
-        observableList = FXCollections.observableArrayList(openOfferList.getTradableList());
-        observableList.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));*/
+        tradableList = new TradableList<>(tradableListStorage, "PendingTrades");
+        tradableList.forEach(trade -> {
+            trade.setTransientFields(tradableListStorage, btcWalletService);
+            trade.getOffer().setPriceFeedService(priceFeedService);
+        });
     }
 
 
@@ -208,7 +204,7 @@ public class TradeManager implements PersistedDataHost {
         List<Trade> addTradeToFailedTradesList = new ArrayList<>();
         List<Trade> removePreparedTradeList = new ArrayList<>();
         tradesForStatistics = new ArrayList<>();
-        trades.forEach(trade -> {
+        tradableList.forEach(trade -> {
                     if (trade.isDepositPublished() ||
                             (trade.isTakerFeePublished() && !trade.hasFailed())) {
                         initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
@@ -223,11 +219,9 @@ public class TradeManager implements PersistedDataHost {
                 }
         );
 
-        for (Trade trade : addTradeToFailedTradesList)
-            addTradeToFailedTrades(trade);
+        addTradeToFailedTradesList.forEach(this::addTradeToFailedTrades);
 
-        for (Trade trade : removePreparedTradeList)
-            removePreparedTrade(trade);
+        removePreparedTradeList.forEach(this::removePreparedTrade);
 
         tradesForStatistics.addAll(closedTradableManager.getClosedTrades().stream()
                 .filter(tradable -> tradable instanceof Trade).map(tradable -> (Trade) tradable)
@@ -248,7 +242,7 @@ public class TradeManager implements PersistedDataHost {
                     trade.getTradeAmount(),
                     trade.getDate(),
                     (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                    keyRing.getPubKeyRing());
+                    keyRing.getPubKeyRing().getSignaturePubKeyBytes());
             tradeStatisticsManager.add(tradeStatistics, true);
 
             // We only republish trades from last 10 days
@@ -300,7 +294,7 @@ public class TradeManager implements PersistedDataHost {
                         btcWalletService);
 
             initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTradeAsLong());
-            trades.add(trade);
+            tradableList.add(trade);
             ((MakerTrade) trade).handleTakeOfferRequest(message, peerNodeAddress);
         } else {
             // TODO respond
@@ -416,7 +410,7 @@ public class TradeManager implements PersistedDataHost {
 
         initTrade(trade, useSavingsWallet, fundsNeededForTrade);
 
-        trades.add(trade);
+        tradableList.add(trade);
         ((TakerTrade) trade).takeAvailableOffer();
         tradeResultHandler.handleResult(trade);
     }
@@ -484,7 +478,7 @@ public class TradeManager implements PersistedDataHost {
     }
 
     private void removeTrade(Trade trade) {
-        trades.remove(trade);
+        tradableList.remove(trade);
 
         // we only swap if we have not an open offer (in case the removeTrade happened at the trade preparation phase)
         if (!openOfferManager.findOpenOffer(trade.getId()).isPresent())
@@ -509,8 +503,8 @@ public class TradeManager implements PersistedDataHost {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<Trade> getTrades() {
-        return trades.getObservableList();
+    public ObservableList<Trade> getTradableList() {
+        return tradableList.getList();
     }
 
     public BooleanProperty pendingTradesInitializedProperty() {
@@ -530,7 +524,7 @@ public class TradeManager implements PersistedDataHost {
     }
 
     public Optional<Trade> getTradeById(String tradeId) {
-        return trades.stream().filter(e -> e.getId().equals(tradeId)).findFirst();
+        return tradableList.stream().filter(e -> e.getId().equals(tradeId)).findFirst();
     }
 
     public Stream<AddressEntry> getAddressEntriesForAvailableBalanceStream() {
@@ -544,7 +538,7 @@ public class TradeManager implements PersistedDataHost {
     }
 
     public Stream<Trade> getLockedTradeStream() {
-        return getTrades().stream()
+        return getTradableList().stream()
                 .filter(trade -> trade.isDepositPublished() && !trade.isPayoutPublished());
     }
 }

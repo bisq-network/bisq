@@ -242,7 +242,8 @@ public final class Preferences implements PersistedDataHost {
             if (fiatCurrenciesAsObservable.contains(tradeCurrency))
                 fiatCurrenciesAsObservable.remove(tradeCurrency);
 
-            if (prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
+            if (prefPayload.getPreferredTradeCurrency() != null &&
+                    prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
                 setPreferredTradeCurrency(tradeCurrenciesAsObservable.get(0));
         } else {
             log.error("you cannot remove the last currency");
@@ -259,7 +260,8 @@ public final class Preferences implements PersistedDataHost {
             if (cryptoCurrenciesAsObservable.contains(tradeCurrency))
                 cryptoCurrenciesAsObservable.remove(tradeCurrency);
 
-            if (prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
+            if (prefPayload.getPreferredTradeCurrency() != null &&
+                    prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
                 setPreferredTradeCurrency(tradeCurrenciesAsObservable.get(0));
         } else {
             log.error("you cannot remove the last currency");
@@ -540,73 +542,73 @@ public final class Preferences implements PersistedDataHost {
             tradeCurrenciesAsObservable.remove(change.getRemoved().get(0));
     }
 
-private interface ExcludesDelegateMethods {
-    void setTacAccepted(boolean tacAccepted);
+    private interface ExcludesDelegateMethods {
+        void setTacAccepted(boolean tacAccepted);
 
-    void setUseAnimations(boolean useAnimations);
+        void setUseAnimations(boolean useAnimations);
 
-    void setUserLanguage(@NotNull String userLanguageCode);
+        void setUserLanguage(@NotNull String userLanguageCode);
 
-    void setUserCountry(@NotNull Country userCountry);
+        void setUserCountry(@NotNull Country userCountry);
 
-    void setPreferredTradeCurrency(TradeCurrency preferredTradeCurrency);
+        void setPreferredTradeCurrency(TradeCurrency preferredTradeCurrency);
 
-    void setUseTorForBitcoinJ(boolean useTorForBitcoinJ);
+        void setUseTorForBitcoinJ(boolean useTorForBitcoinJ);
 
-    void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook);
+        void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook);
 
-    void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent);
+        void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent);
 
-    void setBackupDirectory(String backupDirectory);
+        void setBackupDirectory(String backupDirectory);
 
-    void setAutoSelectArbitrators(boolean autoSelectArbitrators);
+        void setAutoSelectArbitrators(boolean autoSelectArbitrators);
 
-    void setUsePercentageBasedPrice(boolean usePercentageBasedPrice);
+        void setUsePercentageBasedPrice(boolean usePercentageBasedPrice);
 
-    void setTagForPeer(String hostName, String tag);
+        void setTagForPeer(String hostName, String tag);
 
-    void setOfferBookChartScreenCurrencyCode(String offerBookChartScreenCurrencyCode);
+        void setOfferBookChartScreenCurrencyCode(String offerBookChartScreenCurrencyCode);
 
-    void setBuyScreenCurrencyCode(String buyScreenCurrencyCode);
+        void setBuyScreenCurrencyCode(String buyScreenCurrencyCode);
 
-    void setSellScreenCurrencyCode(String sellScreenCurrencyCode);
+        void setSellScreenCurrencyCode(String sellScreenCurrencyCode);
 
-    void setIgnoreTradersList(List<String> ignoreTradersList);
+        void setIgnoreTradersList(List<String> ignoreTradersList);
 
-    void setDirectoryChooserPath(String directoryChooserPath);
+        void setDirectoryChooserPath(String directoryChooserPath);
 
-    void setTradeChartsScreenCurrencyCode(String tradeChartsScreenCurrencyCode);
+        void setTradeChartsScreenCurrencyCode(String tradeChartsScreenCurrencyCode);
 
-    void setTradeStatisticsTickUnitIndex(int tradeStatisticsTickUnitIndex);
+        void setTradeStatisticsTickUnitIndex(int tradeStatisticsTickUnitIndex);
 
-    void setSortMarketCurrenciesNumerically(boolean sortMarketCurrenciesNumerically);
+        void setSortMarketCurrenciesNumerically(boolean sortMarketCurrenciesNumerically);
 
-    void setBitcoinNodes(String bitcoinNodes);
+        void setBitcoinNodes(String bitcoinNodes);
 
-    void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee);
+        void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee);
 
-    void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes);
+        void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes);
 
-    void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong);
+        void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong);
 
-    void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount);
+        void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount);
 
-    void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer);
+        void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer);
 
-    void setPayFeeInBtc(boolean payFeeInBtc);
+        void setPayFeeInBtc(boolean payFeeInBtc);
 
-    void setFiatCurrencies(List<FiatCurrency> currencies);
+        void setFiatCurrencies(List<FiatCurrency> currencies);
 
-    void setCryptoCurrencies(List<CryptoCurrency> currencies);
+        void setCryptoCurrencies(List<CryptoCurrency> currencies);
 
-    void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet);
+        void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet);
 
-    void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet);
+        void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet);
 
-    void setResyncSpvRequested(boolean resyncSpvRequested);
+        void setResyncSpvRequested(boolean resyncSpvRequested);
 
-    void setDontShowAgainMap(Map<String, Boolean> dontShowAgainMap);
+        void setDontShowAgainMap(Map<String, Boolean> dontShowAgainMap);
 
-    void setPeerTagMap(Map<String, String> peerTagMap);
-}
+        void setPeerTagMap(Map<String, String> peerTagMap);
+    }
 }

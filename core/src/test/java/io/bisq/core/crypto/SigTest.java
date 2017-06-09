@@ -31,7 +31,9 @@ public class SigTest {
     public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
         Security.addProvider(new BouncyCastleProvider());
         dir = File.createTempFile("temp_tests", "");
+        //noinspection ResultOfMethodCallIgnored
         dir.delete();
+        //noinspection ResultOfMethodCallIgnored
         dir.mkdir();
         KeyStorage keyStorage = new KeyStorage(dir);
         keyRing = new KeyRing(keyStorage);

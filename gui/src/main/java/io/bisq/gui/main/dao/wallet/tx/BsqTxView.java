@@ -140,9 +140,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         root.getChildren().add(vBox);
 
         walletBsqTransactionsListener = change -> updateList();
-        bsqBalanceListener = (availableBalance, unverifiedBalance) -> {
-            updateList();
-        };
+        bsqBalanceListener = (availableBalance, unverifiedBalance) -> updateList();
         parentHeightListener = (observable, oldValue, newValue) -> layout();
         bsqChainStateListener = this::onChainHeightChanged;
     }
@@ -209,14 +207,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> {
         // copy list to avoid ConcurrentModificationException
         final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
         Set<BsqTxListItem> items = walletTransactions.stream()
-                .map(transaction -> {
-                            return new BsqTxListItem(transaction,
-                                    bsqWalletService,
-                                    btcWalletService,
-                                    bsqChainState.getTxType(transaction.getHashAsString()),
-                                    bsqChainState.hasTxBurntFee(transaction.getHashAsString()),
-                                    bsqFormatter);
-                        }
+                .map(transaction -> new BsqTxListItem(transaction,
+                                bsqWalletService,
+                                btcWalletService,
+                                bsqChainState.getTxType(transaction.getHashAsString()),
+                                bsqChainState.hasTxBurntFee(transaction.getHashAsString()),
+                                bsqFormatter)
                 )
                 .collect(Collectors.toSet());
         observableList.setAll(items);

@@ -37,7 +37,7 @@ public class MakerPublishTradeStatistics extends TradeTask {
                     trade.getTradeAmount(),
                     trade.getDate(),
                     (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                    processModel.getPubKeyRing());
+                    processModel.getPubKeyRing().getSignaturePubKeyBytes());
             processModel.getP2PService().addData(tradeStatistics, true);
             complete();
         } catch (Throwable t) {

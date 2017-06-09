@@ -20,9 +20,9 @@ package io.bisq.core.btc.data;
 import com.google.protobuf.ByteString;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.proto.persistable.PersistablePayload;
+import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
-import org.bouncycastle.util.encoders.Hex;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -45,19 +45,19 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
         return PB.RawTransactionInput.newBuilder()
                 .setIndex(index)
                 .setParentTransaction(ByteString.copyFrom(parentTransaction))
-                .setValue(value).build();
+                .setValue(value)
+                .build();
     }
 
     public static RawTransactionInput fromProto(PB.RawTransactionInput proto) {
         return new RawTransactionInput(proto.getIndex(), proto.getParentTransaction().toByteArray(), proto.getValue());
     }
 
-    // byes not printed...
     @Override
     public String toString() {
         return "RawTransactionInput{" +
                 "index=" + index +
-                ", parentTransaction as HEX " + Hex.toHexString(parentTransaction) +
+                ", parentTransaction as HEX " + Utilities.bytesAsHexString(parentTransaction) +
                 ", value=" + value +
                 '}';
     }

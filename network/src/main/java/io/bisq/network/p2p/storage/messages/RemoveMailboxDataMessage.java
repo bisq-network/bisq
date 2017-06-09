@@ -4,8 +4,10 @@ import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.proto.network.NetworkProtoResolver;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+@EqualsAndHashCode(callSuper = true)
 @Value
 public final class RemoveMailboxDataMessage extends BroadcastMessage {
     private final ProtectedMailboxStorageEntry protectedMailboxStorageEntry;

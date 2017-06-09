@@ -86,6 +86,7 @@ public class StatisticsMain extends BisqExecutable {
         new StatisticsMain().execute(args);
     }
 
+    @SuppressWarnings("InfiniteLoopStatement")
     @Override
     protected void doExecute(OptionSet options) {
         final BisqEnvironment environment = getBisqEnvironment(options);
@@ -159,6 +160,7 @@ public class StatisticsMain extends BisqExecutable {
     private void restart(BisqEnvironment environment) {
         stopped = true;
         statistics.gracefulShutDown(() -> {
+            //noinspection finally
             try {
                 final String[] tokens = environment.getAppDataDir().split("_");
                 String logPath = "error_" + (tokens.length > 1 ? tokens[tokens.length - 2] : "") + ".log";

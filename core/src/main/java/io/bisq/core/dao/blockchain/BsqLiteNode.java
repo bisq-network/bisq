@@ -47,7 +47,7 @@ import java.util.List;
 // We are in UserThread context. We get callbacks from threaded classes which are already mapped to the UserThread.
 @Slf4j
 public class BsqLiteNode extends BsqNode {
-    private BsqLiteNodeExecutor bsqLiteNodeExecutor;
+    private final BsqLiteNodeExecutor bsqLiteNodeExecutor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -153,9 +153,7 @@ public class BsqLiteNode extends BsqNode {
                     genesisBlockHeight,
                     genesisTxId,
                     this::onNewBsqBlock,
-                    () -> {
-                        onParseBlockchainComplete(genesisBlockHeight, genesisTxId);
-                    }, throwable -> {
+                    () -> onParseBlockchainComplete(genesisBlockHeight, genesisTxId), throwable -> {
                         if (throwable instanceof BlockNotConnectingException) {
                             startReOrgFromLastSnapshot();
                         } else {
@@ -174,9 +172,7 @@ public class BsqLiteNode extends BsqNode {
                 bsqLiteNodeExecutor.parseBsqBlockForLiteNode(bsqBlock,
                         genesisBlockHeight,
                         genesisTxId,
-                        () -> {
-                            onNewBsqBlock(bsqBlock);
-                        }, throwable -> {
+                        () -> onNewBsqBlock(bsqBlock), throwable -> {
                             if (throwable instanceof BlockNotConnectingException) {
                                 startReOrgFromLastSnapshot();
                             } else {

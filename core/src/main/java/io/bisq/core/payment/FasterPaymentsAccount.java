@@ -21,7 +21,9 @@ import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 public final class FasterPaymentsAccount extends PaymentAccount {
     public FasterPaymentsAccount() {
         super(PaymentMethod.FASTER_PAYMENTS);

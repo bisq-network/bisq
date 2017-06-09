@@ -20,11 +20,10 @@ package io.bisq.provider.price.providers;
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
 import io.bisq.network.http.HttpClient;
-import io.bisq.network.http.HttpException;
 import io.bisq.provider.price.PriceData;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -56,11 +55,11 @@ public class BtcAverageProvider {
         return payload + "." + Hex.toHexString(mac.doFinal(payload.getBytes()));
     }
 
-    public Map<String, PriceData> getLocal() throws HttpException, NoSuchAlgorithmException, InvalidKeyException, IOException {
+    public Map<String, PriceData> getLocal() throws NoSuchAlgorithmException, InvalidKeyException, IOException {
         return getMap(httpClient.requestWithGETNoProxy("indices/local/ticker/all?crypto=BTC", "X-signature", getHeader()));
     }
 
-    public Map<String, PriceData> getGlobal() throws HttpException, NoSuchAlgorithmException, InvalidKeyException, IOException {
+    public Map<String, PriceData> getGlobal() throws NoSuchAlgorithmException, InvalidKeyException, IOException {
         return getMap(httpClient.requestWithGETNoProxy("indices/global/ticker/all?crypto=BTC", "X-signature", getHeader()));
     }
 
@@ -72,6 +71,7 @@ public class BtcAverageProvider {
             Object value = e.getValue();
             // We need to check the type as we get an unexpected "timestamp" object at the end: 
             if (value instanceof LinkedTreeMap) {
+                //noinspection unchecked
                 LinkedTreeMap<String, Object> data = (LinkedTreeMap) value;
                 String currencyCode = e.getKey().substring(3);
                 marketPriceMap.put(currencyCode,

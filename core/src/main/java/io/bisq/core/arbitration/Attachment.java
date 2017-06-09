@@ -7,8 +7,8 @@ import lombok.Value;
 
 @Value
 public final class Attachment implements NetworkPayload {
-    private final byte[] bytes;
     private final String fileName;
+    private final byte[] bytes;
 
     public Attachment(String fileName, byte[] bytes) {
         this.fileName = fileName;
@@ -18,8 +18,8 @@ public final class Attachment implements NetworkPayload {
     @Override
     public PB.Attachment toProtoMessage() {
         return PB.Attachment.newBuilder()
-                .setBytes(ByteString.copyFrom(bytes))
                 .setFileName(fileName)
+                .setBytes(ByteString.copyFrom(bytes))
                 .build();
     }
 

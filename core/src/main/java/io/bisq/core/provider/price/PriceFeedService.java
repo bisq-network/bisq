@@ -57,7 +57,7 @@ public class PriceFeedService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public PriceFeedService(HttpClient httpClient, ProvidersRepository providersRepository, Preferences preferences) {
+    public PriceFeedService(@SuppressWarnings("SameParameterValue") HttpClient httpClient, @SuppressWarnings("SameParameterValue") ProvidersRepository providersRepository, @SuppressWarnings("SameParameterValue") Preferences preferences) {
         this.httpClient = httpClient;
         this.providersRepository = providersRepository;
         this.preferences = preferences;

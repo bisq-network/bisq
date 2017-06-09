@@ -1,6 +1,7 @@
 package io.bisq.core.trade.statistics;
 
-import io.bisq.common.crypto.PubKeyRing;
+import com.google.protobuf.ByteString;
+import io.bisq.common.crypto.Sig;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.monetary.Altcoin;
 import io.bisq.common.monetary.AltcoinExchangeRate;
@@ -31,11 +32,9 @@ import java.util.concurrent.TimeUnit;
 // We also don't include the trade date as that is set locally and different for maker and taker
 
 @Slf4j
-@EqualsAndHashCode(exclude = {"pubKeyRing"})
+@EqualsAndHashCode(exclude = {"signaturePubKeyBytes", "signaturePubKey"})
 @Value
-public final class TradeStatistics implements LazyProcessedStoragePayload, PersistedStoragePayload /*,CapabilityRequiringPayload*/ {
-    @JsonExclude
-    private final long TTL = TimeUnit.DAYS.toMillis(30);
+public final class TradeStatistics implements LazyProcessedStoragePayload, PersistedStoragePayload {
     private final OfferPayload.Direction direction;
     private final String baseCurrency;
     private final String counterCurrency;
@@ -51,7 +50,10 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Persi
     private final long tradeDate;
     private final String depositTxId;
     @JsonExclude
-    private final PubKeyRing pubKeyRing;
+    private final byte[] signaturePubKeyBytes;
+    @JsonExclude
+    transient private final PublicKey signaturePubKey;
+
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
@@ -63,7 +65,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Persi
                            Coin tradeAmount,
                            Date tradeDate,
                            String depositTxId,
-                           PubKeyRing pubKeyRing) {
+                           byte[] signaturePubKeyBytes) {
         this(offerPayload.getDirection(),
                 offerPayload.getBaseCurrencyCode(),
                 offerPayload.getCounterCurrencyCode(),
@@ -78,7 +80,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Persi
                 tradeAmount.value,
                 tradeDate.getTime(),
                 depositTxId,
-                pubKeyRing,
+                signaturePubKeyBytes,
                 null);
     }
 
@@ -87,22 +89,22 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Persi
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private TradeStatistics(OfferPayload.Direction direction,
-                            String baseCurrency,
-                            String counterCurrency,
-                            String offerPaymentMethod,
-                            long offerDate,
-                            boolean offerUseMarketBasedPrice,
-                            double offerMarketPriceMargin,
-                            long offerAmount,
-                            long offerMinAmount,
-                            String offerId,
-                            long tradePrice,
-                            long tradeAmount,
-                            long tradeDate,
-                            String depositTxId,
-                            PubKeyRing pubKeyRing,
-                            @Nullable Map<String, String> extraDataMap) {
+    TradeStatistics(OfferPayload.Direction direction,
+                    String baseCurrency,
+                    String counterCurrency,
+                    String offerPaymentMethod,
+                    long offerDate,
+                    boolean offerUseMarketBasedPrice,
+                    double offerMarketPriceMargin,
+                    long offerAmount,
+                    long offerMinAmount,
+                    String offerId,
+                    long tradePrice,
+                    long tradeAmount,
+                    long tradeDate,
+                    String depositTxId,
+                    byte[] signaturePubKeyBytes,
+                    @Nullable Map<String, String> extraDataMap) {
         this.direction = direction;
         this.baseCurrency = baseCurrency;
         this.counterCurrency = counterCurrency;
@@ -117,8 +119,10 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Persi
         this.tradeAmount = tradeAmount;
         this.tradeDate = tradeDate;
         this.depositTxId = depositTxId;
-        this.pubKeyRing = pubKeyRing;
+        this.signaturePubKeyBytes = signaturePubKeyBytes;
         this.extraDataMap = extraDataMap;
+
+        signaturePubKey = Sig.getPublicKeyFromBytes(signaturePubKeyBytes);
     }
 
     @Override
@@ -138,7 +142,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Persi
                 .setTradeAmount(tradeAmount)
                 .setTradeDate(tradeDate)
                 .setDepositTxId(depositTxId)
-                .setPubKeyRing(pubKeyRing.toProtoMessage());
+                .setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return PB.StoragePayload.newBuilder().setTradeStatistics(builder).build();
     }
@@ -163,7 +167,7 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Persi
                 proto.getTradeAmount(),
                 proto.getTradeDate(),
                 proto.getDepositTxId(),
-                PubKeyRing.fromProto(proto.getPubKeyRing()),
+                proto.getSignaturePubKeyBytes().toByteArray(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 
@@ -173,17 +177,14 @@ public final class TradeStatistics implements LazyProcessedStoragePayload, Persi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PublicKey getOwnerPubKey() {
-        return pubKeyRing.getSignaturePubKey();
+    public long getTTL() {
+        return TimeUnit.DAYS.toMillis(30);
     }
 
-    // Not needed anymore
-   /* @Override
-    public List<Integer> getRequiredCapabilities() {
-        return Collections.singletonList(
-                Capabilities.Capability.TRADE_STATISTICS.ordinal()
-        );
-    }*/
+    @Override
+    public PublicKey getOwnerPubKey() {
+        return signaturePubKey;
+    }
 
     public Date getTradeDate() {
         return new Date(tradeDate);

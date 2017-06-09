@@ -100,7 +100,7 @@ public final class AccountNrValidator extends BankValidator {
                     else
                         return super.validate(input);
                 } else {
-                    return super.validate(input);
+                    return super.validate(null);
                 }
             default:
                 return super.validate(input);

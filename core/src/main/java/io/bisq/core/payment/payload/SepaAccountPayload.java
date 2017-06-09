@@ -17,6 +17,7 @@
 
 package io.bisq.core.payment.payload;
 
+import com.google.protobuf.Message;
 import io.bisq.common.locale.Country;
 import io.bisq.common.locale.CountryUtil;
 import io.bisq.generated.protobuffer.PB;
@@ -74,16 +75,16 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     }
 
     @Override
-    public PB.SepaAccountPayload toProtoMessage() {
+    public Message toProtoMessage() {
         PB.SepaAccountPayload.Builder builder =
                 PB.SepaAccountPayload.newBuilder()
                         .setHolderName(holderName)
                         .setIban(iban)
                         .setBic(bic)
                         .addAllAcceptedCountryCodes(acceptedCountryCodes);
-        return getCountryBasedPaymentAccountPayloadBuilder().setSepaAccountPayload(builder)
-                .build()
-                .getSepaAccountPayload();
+        return getCountryBasedPaymentAccountPayloadBuilder()
+                .setSepaAccountPayload(builder)
+                .build();
     }
 
     public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {

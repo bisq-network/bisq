@@ -46,7 +46,7 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return NetworkEnvelope.getDefaultBuilder()
                 .setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
-                        .setTradeId(getTradeId())
+                        .setTradeId(tradeId)
                         .setDepositTx(ByteString.copyFrom(depositTx))
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setUid(uid))

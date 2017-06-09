@@ -26,7 +26,7 @@ import io.bisq.core.dao.blockchain.vo.TxType;
 import javax.inject.Inject;
 
 public class CompensationRequestVerification {
-    private BsqChainState bsqChainState;
+    private final BsqChainState bsqChainState;
 
     @Inject
     public CompensationRequestVerification(BsqChainState bsqChainState) {

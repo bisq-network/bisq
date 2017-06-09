@@ -19,7 +19,6 @@ package io.bisq.common.storage;
 
 import com.google.common.util.concurrent.CycleDetectingLockFactory;
 import io.bisq.common.UserThread;
-import io.bisq.common.app.DevEnv;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.proto.persistable.PersistenceProtoResolver;
 import io.bisq.common.util.Utilities;
@@ -109,7 +108,8 @@ public class FileManager<T extends PersistableEnvelope> {
         executor.schedule(saveFileTask, delayInMilli, TimeUnit.MILLISECONDS);
     }
 
-    public synchronized T read(File file) throws IOException, ClassNotFoundException {
+    @SuppressWarnings("unchecked")
+    public synchronized T read(File file) {
         log.info("Reading file:{}", file.getAbsolutePath());
 
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
@@ -184,25 +184,33 @@ public class FileManager<T extends PersistableEnvelope> {
         FileOutputStream fileOutputStream = null;
         PrintWriter printWriter = null;
 
-        log.info("saveToFile persistable.class " + persistable.getClass().getSimpleName());
+        log.debug("saveToFile persistable.class " + persistable.getClass().getSimpleName());
         PB.PersistableEnvelope protoPersistable = null;
         try {
             protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
 
             // check if what we're saving can also be read in correctly
-            if (DevEnv.DEV_MODE) {
-                log.info("Checking that the saved Persistable can be read again...");
-                PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
-                if (object == null) {
-                    log.error("Check on saved Persistable failed, object is null. storageFile={}", storageFile);
-                    persistenceProtoResolver.fromProto(protoPersistable);
+           /* if (DevEnv.DEV_MODE) {
+                if (protoPersistable != null) {
+                    log.debug("Checking that the saved Persistable can be read again...");
+                    PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
+                    if (object == null) {
+                        log.error("Check on saved Persistable failed, object is null. storageFile={}", storageFile);
+                        persistenceProtoResolver.fromProto(protoPersistable);
+                    } else {
+                        log.debug("Check on saved Persistable complete: {} ", object);
+                    }
                 } else {
-                    log.info("Check on saved Persistable complete: {} ", object);
+                    log.debug("protoPersistable is null ");
+                    //protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
                 }
-            }
+            }*/
         } catch (Throwable e) {
-            log.error("Error in saveToFile toProtoMessage: {}, {}, {}", persistable.getClass().getSimpleName(), storageFile, e.getStackTrace());
-            PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
+            log.error("Error in saveToFile toProtoMessage: {}, {}", persistable.getClass().getSimpleName(), storageFile);
+            e.printStackTrace();
+            //  protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
+            //noinspection UnusedAssignment
+            //PersistableEnvelope object = persistenceProtoResolver.fromProto(protoPersistable);
         }
 
         try {
@@ -214,7 +222,7 @@ public class FileManager<T extends PersistableEnvelope> {
             if (protoPersistable != null) {
                 fileOutputStream = new FileOutputStream(tempFile);
 
-                log.info("Writing protobuffer class:{} to file:{}", persistable.getClass(), storageFile.getName());
+                log.debug("Writing protobuffer class:{} to file:{}", persistable.getClass(), storageFile.getName());
                 writeLock.lock();
                 protoPersistable.writeDelimitedTo(fileOutputStream);
 
@@ -265,6 +273,7 @@ public class FileManager<T extends PersistableEnvelope> {
             try {
                 if (fileOutputStream != null)
                     fileOutputStream.close();
+                //noinspection ConstantConditions,ConstantConditions
                 if (printWriter != null)
                     printWriter.close();
             } catch (IOException e) {

@@ -593,6 +593,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
             updateButtonDisableState();
             return true;
         } else {
+            //noinspection unchecked
             new Popup<>().warning(Res.get("shared.notEnoughFunds",
                     btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoinProperty().get()),
                     btcFormatter.formatCoinWithCode(dataModel.totalAvailableBalance)))
@@ -764,6 +765,7 @@ class CreateOfferViewModel extends ActivatableWithDataModel<CreateOfferDataModel
 
     private void displayPriceOutOfRangePopup() {
         Popup popup = new Popup<>();
+        //noinspection unchecked
         popup.warning(Res.get("createOffer.priceOutSideOfDeviation",
                 btcFormatter.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())))
                 .actionButtonText(Res.get("createOffer.changePrice"))

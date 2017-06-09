@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import io.bisq.common.app.Version;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.proto.persistable.PersistableList;
+import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -32,10 +33,9 @@ import io.bisq.core.dao.compensation.CompensationRequestManager;
 import io.bisq.core.dao.compensation.CompensationRequestPayload;
 import io.bisq.core.provider.fee.FeeService;
 import io.bisq.generated.protobuffer.PB;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bitcoinj.core.Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,8 +44,8 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public class VotingManager {
-    private static final Logger log = LoggerFactory.getLogger(VotingManager.class);
+@Slf4j
+public class VotingManager implements PersistedDataHost {
 
     public static final String ERROR_MSG_MISSING_BYTE = "We need to have at least 1 more byte for the voting value.";
     public static final String ERROR_MSG_WRONG_SIZE = "sizeOfCompReqVotesInBytes must be 0 or multiple of 2. sizeOfCompReqVotesInBytes=";
@@ -77,10 +77,6 @@ public class VotingManager {
         this.compensationRequestManager = compensationRequestManager;
         this.daoPeriodService = daoPeriodService;
         this.votingDefaultValues = votingDefaultValues;
-
-        PersistableList<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
-        if (persisted != null)
-            voteItemsLists.addAll(persisted.getList());
     }
 
     @VisibleForTesting
@@ -92,6 +88,13 @@ public class VotingManager {
         this.compensationRequestManager = null;
         this.daoPeriodService = null;
         this.votingDefaultValues = votingDefaultValues;
+    }
+
+    @Override
+    public void readPersisted() {
+        PersistableList<VoteItemsList> persisted = voteItemCollectionsStorage.initAndGetPersistedWithFileName("VoteItemCollections");
+        if (persisted != null)
+            voteItemsLists.addAll(persisted.getList());
     }
 
     public void onAllServicesInitialized() {
@@ -121,11 +124,11 @@ public class VotingManager {
         CompensationRequestVoteItemCollection compensationRequestVoteItemCollection = voteItems.getCompensationRequestVoteItemCollection();
         // Protocol allows values 0 or multiple of 2. But in implementation we limit to 0 and 2
         int sizeOfCompReqVotesInBytes = 0;
-        CompensationRequestVoteItem compensationRequestVoteItem = null;
+        CompensationRequestVoteItem compensationRequestVoteItem;
         VotingType votingTypeByCode = null;
         for (int i = 0; i < opReturnData.length; i++) {
             Byte currentByte = opReturnData[i];
-            String info = "";
+            String info;
             if (i == 0) {
                 info = "Version" + ": " + String.format("0x%02x ", currentByte);
                 if (currentByte != Version.VOTING_VERSION)
@@ -274,7 +277,7 @@ public class VotingManager {
             byte[] bytes = outputStream.toByteArray();
             for (int i = 0; i < bytes.length; i++) {
                 Byte currentByte = bytes[i];
-                String info = "";
+                String info;
                 if (i == 0)
                     info = "Version" + ": " + String.format("0x%02x ", currentByte);
                 else if (i < 21)
@@ -311,11 +314,11 @@ public class VotingManager {
         //TODO check equals code
         if (!voteItemsLists.contains(voteItemsList)) {
             voteItemsLists.add(voteItemsList);
-            PersistableList<VoteItemsList> serializable = new PersistableList<>(voteItemsLists);
-            serializable.setToProto((list) -> PB.PersistableEnvelope.newBuilder()
+            PersistableList<VoteItemsList> list = new PersistableList<>(voteItemsLists);
+            list.setToProto(e -> PB.PersistableEnvelope.newBuilder()
                     .setVoteItemsList(PB.VoteItemsList.newBuilder()
                             .addAllVoteItem(ProtoUtil.collectionToProto(voteItemsList.getAllVoteItemList()))).build());
-            voteItemCollectionsStorage.queueUpForSave(serializable, 500);
+            voteItemCollectionsStorage.queueUpForSave(list, 500);
         }
     }
 

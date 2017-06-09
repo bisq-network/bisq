@@ -120,7 +120,6 @@ public class GetDataRequestHandler {
                     filteredDataSet.add(protectedStorageEntry);
             }
         }
-
         GetDataResponse getDataResponse = new GetDataResponse(filteredDataSet, getDataRequest.getNonce(),
                 getDataRequest instanceof GetUpdatedDataRequest);
 

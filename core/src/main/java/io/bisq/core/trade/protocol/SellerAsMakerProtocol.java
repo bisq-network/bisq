@@ -57,9 +57,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         Trade.Phase phase = trade.getState().getPhase();
         if (phase == Trade.Phase.TAKER_FEE_PUBLISHED) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                    () -> {
-                        handleTaskRunnerSuccess("MakerSetupDepositTxListener");
-                    },
+                    () -> handleTaskRunnerSuccess("MakerSetupDepositTxListener"),
                     this::handleTaskRunnerFault);
 
             taskRunner.addTasks(MakerSetupDepositTxListener.class);

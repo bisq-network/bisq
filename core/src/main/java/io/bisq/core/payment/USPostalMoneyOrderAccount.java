@@ -21,7 +21,9 @@ import io.bisq.common.locale.FiatCurrency;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
 import io.bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 public final class USPostalMoneyOrderAccount extends PaymentAccount {
     public USPostalMoneyOrderAccount() {
         super(PaymentMethod.US_POSTAL_MONEY_ORDER);

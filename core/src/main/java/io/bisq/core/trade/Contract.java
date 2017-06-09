@@ -22,6 +22,7 @@ import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.monetary.Price;
 import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.util.JsonExclude;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.offer.OfferPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.proto.CoreProtoResolver;
@@ -29,7 +30,8 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import lombok.Value;
 import org.bitcoinj.core.Coin;
-import org.bouncycastle.util.encoders.Hex;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -111,26 +113,27 @@ public final class Contract implements NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Contract fromProto(PB.Contract contract, CoreProtoResolver coreProtoResolver) {
-        return new Contract(OfferPayload.fromProto(contract.getOfferPayload()),
-                contract.getTradeAmount(),
-                contract.getTradePrice(),
-                contract.getTakerFeeTxId(),
-                NodeAddress.fromProto(contract.getBuyerNodeAddress()),
-                NodeAddress.fromProto(contract.getSellerNodeAddress()),
-                NodeAddress.fromProto(contract.getArbitratorNodeAddress()),
-                NodeAddress.fromProto(contract.getMediatorNodeAddress()),
-                contract.getIsBuyerMakerAndSellerTaker(),
-                contract.getMakerAccountId(),
-                contract.getTakerAccountId(),
-                coreProtoResolver.fromProto(contract.getMakerPaymentAccountPayload()),
-                coreProtoResolver.fromProto(contract.getTakerPaymentAccountPayload()),
-                PubKeyRing.fromProto(contract.getMakerPubKeyRing()),
-                PubKeyRing.fromProto(contract.getTakerPubKeyRing()),
-                contract.getMakerPayoutAddressString(),
-                contract.getTakerPayoutAddressString(),
-                contract.getMakerMultiSigPubKey().toByteArray(),
-                contract.getTakerMultiSigPubKey().toByteArray());
+    @Nullable
+    public static Contract fromProto(PB.Contract proto, CoreProtoResolver coreProtoResolver) {
+        return new Contract(OfferPayload.fromProto(proto.getOfferPayload()),
+                proto.getTradeAmount(),
+                proto.getTradePrice(),
+                proto.getTakerFeeTxId(),
+                NodeAddress.fromProto(proto.getBuyerNodeAddress()),
+                NodeAddress.fromProto(proto.getSellerNodeAddress()),
+                NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
+                NodeAddress.fromProto(proto.getMediatorNodeAddress()),
+                proto.getIsBuyerMakerAndSellerTaker(),
+                proto.getMakerAccountId(),
+                proto.getTakerAccountId(),
+                coreProtoResolver.fromProto(proto.getMakerPaymentAccountPayload()),
+                coreProtoResolver.fromProto(proto.getTakerPaymentAccountPayload()),
+                PubKeyRing.fromProto(proto.getMakerPubKeyRing()),
+                PubKeyRing.fromProto(proto.getTakerPubKeyRing()),
+                proto.getMakerPayoutAddressString(),
+                proto.getTakerPayoutAddressString(),
+                proto.getMakerMultiSigPubKey().toByteArray(),
+                proto.getTakerMultiSigPubKey().toByteArray());
     }
 
     @Override
@@ -207,7 +210,8 @@ public final class Contract implements NetworkPayload {
         return Price.valueOf(offerPayload.getCurrencyCode(), tradePrice);
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "Contract{" +
                 "\n     offerPayload=" + offerPayload +
                 ",\n     tradeAmount=" + tradeAmount +
@@ -226,10 +230,10 @@ public final class Contract implements NetworkPayload {
                 ",\n     takerPubKeyRing=" + takerPubKeyRing +
                 ",\n     makerPayoutAddressString='" + makerPayoutAddressString + '\'' +
                 ",\n     takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
-                ",\n     makerMultiSigPubKey=" + Hex.toHexString(makerMultiSigPubKey) +
-                ",\n     takerMultiSigPubKey=" + Hex.toHexString(takerMultiSigPubKey) +
-                ",\n     BuyerMultiSigPubKey=" + Hex.toHexString(getBuyerMultiSigPubKey()) +
-                ",\n     SellerMultiSigPubKey=" + Hex.toHexString(getSellerMultiSigPubKey()) +
+                ",\n     makerMultiSigPubKey=" + Utilities.bytesAsHexString(makerMultiSigPubKey) +
+                ",\n     takerMultiSigPubKey=" + Utilities.bytesAsHexString(takerMultiSigPubKey) +
+                ",\n     BuyerMultiSigPubKey=" + Utilities.bytesAsHexString(getBuyerMultiSigPubKey()) +
+                ",\n     SellerMultiSigPubKey=" + Utilities.bytesAsHexString(getSellerMultiSigPubKey()) +
                 "\n}";
     }
 }

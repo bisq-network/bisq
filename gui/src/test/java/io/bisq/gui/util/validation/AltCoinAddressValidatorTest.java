@@ -105,6 +105,7 @@ public class AltCoinAddressValidatorTest {
         assertFalse(validator.validate("2a65Aca4D5fC5B5C859090a6c34d16413539822g").isValid);
         assertFalse(validator.validate("").isValid);
     }
+
     @Test
     public void test888() {
         AltCoinAddressValidator validator = new AltCoinAddressValidator();

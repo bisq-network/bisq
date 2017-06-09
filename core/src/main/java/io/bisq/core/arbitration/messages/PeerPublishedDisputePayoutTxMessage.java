@@ -26,15 +26,15 @@ import lombok.Value;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
+public final class PeerPublishedDisputePayoutTxMessage extends DisputeMessage {
     private final byte[] transaction;
     private final String tradeId;
     private final NodeAddress senderNodeAddress;
 
-    public PeerPublishedPayoutTxMessage(byte[] transaction,
-                                        String tradeId,
-                                        NodeAddress senderNodeAddress,
-                                        String uid) {
+    public PeerPublishedDisputePayoutTxMessage(byte[] transaction,
+                                               String tradeId,
+                                               NodeAddress senderNodeAddress,
+                                               String uid) {
         super(uid);
         this.transaction = transaction;
         this.tradeId = tradeId;
@@ -44,7 +44,7 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return NetworkEnvelope.getDefaultBuilder()
-                .setPeerPublishedPayoutTxMessage(PB.PeerPublishedPayoutTxMessage.newBuilder()
+                .setPeerPublishedDisputePayoutTxMessage(PB.PeerPublishedDisputePayoutTxMessage.newBuilder()
                         .setTransaction(ByteString.copyFrom(transaction))
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
@@ -52,8 +52,8 @@ public final class PeerPublishedPayoutTxMessage extends DisputeMessage {
                 .build();
     }
 
-    public static PeerPublishedPayoutTxMessage fromProto(PB.PeerPublishedPayoutTxMessage proto) {
-        return new PeerPublishedPayoutTxMessage(proto.getTransaction().toByteArray(),
+    public static PeerPublishedDisputePayoutTxMessage fromProto(PB.PeerPublishedDisputePayoutTxMessage proto) {
+        return new PeerPublishedDisputePayoutTxMessage(proto.getTransaction().toByteArray(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid());

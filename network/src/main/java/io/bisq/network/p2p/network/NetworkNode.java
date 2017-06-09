@@ -130,6 +130,7 @@ public abstract class NetworkNode implements MessageListener {
                             @Override
                             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                                 log.trace("onDisconnect connectionListener\n\tconnection={}" + connection);
+                                //noinspection SuspiciousMethodCalls
                                 outBoundConnections.remove(connection);
                                 printOutBoundConnections();
                                 connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
@@ -365,6 +366,7 @@ public abstract class NetworkNode implements MessageListener {
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
                 log.trace("onDisconnect at server socket connectionListener\n\tconnection={}" + connection);
+                //noinspection SuspiciousMethodCalls
                 inBoundConnections.remove(connection);
                 printInboundConnections();
                 connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));

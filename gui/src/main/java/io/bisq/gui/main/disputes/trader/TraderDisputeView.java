@@ -286,7 +286,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                                 .append(dispute.getTraderId())
                                 .append("\n*******************************************************************************************\n")
                                 .append("\n");
-                        dispute.getDisputeCommunicationMessagesAsObservableList().stream().forEach(m -> {
+                        dispute.getDisputeCommunicationMessages().stream().forEach(m -> {
                             String role = m.isSenderIsTrader() ? ">> Trader's msg: " : "<< Arbitrator's msg: ";
                             stringBuilder.append(role)
                                     .append(m.getMessage())
@@ -363,6 +363,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         if (doPrint) {
             try {
                 DateFormat formatter = new SimpleDateFormat("dd/MM/yy");
+                //noinspection UnusedAssignment
                 Date startDate = formatter.parse("10/02/17");
                 startDate = new Date(0); // print all from start
 
@@ -606,7 +607,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             AnchorPane.setBottomAnchor(tableGroupHeadline, 0d);
             AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
 
-            disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessagesAsObservableList();
+            disputeCommunicationMessages = selectedDispute.getDisputeCommunicationMessages();
             SortedList<DisputeCommunicationMessage> sortedList = new SortedList<>(disputeCommunicationMessages);
             sortedList.setComparator((o1, o2) -> new Date(o1.getDate()).compareTo(new Date(o2.getDate())));
             messageListView = new ListView<>(sortedList);

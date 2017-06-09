@@ -54,6 +54,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface SendPrivateNotificationHandler {
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         boolean handle(PrivateNotificationPayload privateNotification, PubKeyRing pubKeyRing,
                        NodeAddress nodeAddress, String privKey, SendMailboxMessageListener sendMailboxMessageListener);
     }

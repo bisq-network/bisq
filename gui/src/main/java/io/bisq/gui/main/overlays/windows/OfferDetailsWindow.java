@@ -377,6 +377,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             } else {
                 new Popup<>().warning(Res.get("offerDetailsWindow.warn.noArbitrator")).show();
 
+                //noinspection unchecked
                 navigation.navigateTo(MainView.class, AccountView.class, AccountSettingsView.class,
                         ArbitratorSelectionView.class);
             }

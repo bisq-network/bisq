@@ -17,8 +17,7 @@ import java.security.PublicKey;
 public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload {
     private final StoragePayload storagePayload;
     private final byte[] ownerPubKeyBytes;
-    private final PublicKey ownerPubKey;
-
+    transient private final PublicKey ownerPubKey;
     private int sequenceNumber;
     private byte[] signature;
     private long creationTimeStamp;
@@ -28,7 +27,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                                  int sequenceNumber,
                                  byte[] signature) {
         this.storagePayload = storagePayload;
-        ownerPubKeyBytes = Sig.getSigPublicKeyBytes(ownerPubKey);
+        ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
         this.ownerPubKey = ownerPubKey;
 
         this.sequenceNumber = sequenceNumber;
@@ -41,20 +40,20 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ProtectedStorageEntry(long creationTimeStamp,
-                                 StoragePayload storagePayload,
-                                 byte[] ownerPubKeyBytes,
-                                 int sequenceNumber,
-                                 byte[] signature) {
+    protected ProtectedStorageEntry(long creationTimeStamp,
+                                    StoragePayload storagePayload,
+                                    byte[] ownerPubKeyBytes,
+                                    int sequenceNumber,
+                                    byte[] signature) {
         this.storagePayload = storagePayload;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
-        ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
+        ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
 
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
         this.creationTimeStamp = creationTimeStamp;
 
-        checkCreationTimeStamp();
+        maybeAdjustCreationTimeStamp();
     }
 
     public Message toProtoMessage() {
@@ -63,7 +62,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSequenceNumber(sequenceNumber)
                 .setSignature(ByteString.copyFrom(signature))
-                .setCreationTimeStamp(creationTimeStamp).build();
+                .setCreationTimeStamp(creationTimeStamp)
+                .build();
     }
 
     public static ProtectedStorageEntry fromProto(PB.ProtectedStorageEntry proto,
@@ -80,7 +80,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void checkCreationTimeStamp() {
+    public void maybeAdjustCreationTimeStamp() {
         // We don't allow creation date in the future, but we cannot be too strict as clocks are not synced
         if (creationTimeStamp > System.currentTimeMillis())
             creationTimeStamp = System.currentTimeMillis();

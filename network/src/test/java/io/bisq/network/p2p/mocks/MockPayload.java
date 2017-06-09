@@ -6,6 +6,7 @@ import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.storage.payload.ExpirablePayload;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+@SuppressWarnings("ALL")
 public final class MockPayload implements NetworkEnvelope, ExpirablePayload {
     public final String msg;
     public long ttl;

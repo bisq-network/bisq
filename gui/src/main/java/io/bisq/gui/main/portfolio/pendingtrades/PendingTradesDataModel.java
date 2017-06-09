@@ -117,7 +117,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     @Override
     protected void activate() {
-        tradeManager.getTrades().addListener(tradesListChangeListener);
+        tradeManager.getTradableList().addListener(tradesListChangeListener);
         onListChanged();
         if (selectedItemProperty.get() != null)
             notificationCenter.setSelectedTradeId(selectedItemProperty.get().getTrade().getId());
@@ -127,7 +127,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     @Override
     protected void deactivate() {
-        tradeManager.getTrades().removeListener(tradesListChangeListener);
+        tradeManager.getTradableList().removeListener(tradesListChangeListener);
         notificationCenter.setSelectedTradeId(null);
         activated = false;
     }
@@ -294,7 +294,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private void onListChanged() {
         Log.traceCall();
         list.clear();
-        list.addAll(tradeManager.getTrades().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(tradeManager.getTradableList().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
@@ -437,6 +437,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen) {
+        //noinspection unchecked
         disputeManager.sendOpenNewDisputeMessage(dispute,
                 reOpen,
                 () -> navigation.navigateTo(MainView.class, DisputesView.class),

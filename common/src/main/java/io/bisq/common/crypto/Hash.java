@@ -18,9 +18,9 @@
 package io.bisq.common.crypto;
 
 import com.google.common.base.Charsets;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;

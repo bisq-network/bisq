@@ -34,6 +34,8 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @EqualsAndHashCode
 @ToString
 @Getter
@@ -52,6 +54,7 @@ public abstract class PaymentAccount implements PersistablePayload {
     protected String accountName;
     protected final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
     @Setter
+    @Nullable
     protected TradeCurrency selectedTradeCurrency;
 
 
@@ -74,9 +77,9 @@ public abstract class PaymentAccount implements PersistablePayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     @Override
     public PB.PaymentAccount toProtoMessage() {
+        checkNotNull(accountName, "accountName must not be null");
         PB.PaymentAccount.Builder builder = PB.PaymentAccount.newBuilder()
                 .setPaymentMethod(paymentMethod.toProtoMessage())
                 .setId(id)
@@ -89,14 +92,15 @@ public abstract class PaymentAccount implements PersistablePayload {
     }
 
     public static PaymentAccount fromProto(PB.PaymentAccount proto, CoreProtoResolver coreProtoResolver) {
-        PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(proto.getPaymentMethod().getId()));
-        paymentAccount.setId(proto.getId());
-        paymentAccount.setCreationDate(proto.getCreationDate());
-        paymentAccount.setAccountName(proto.getAccountName());
-        paymentAccount.getTradeCurrencies().addAll(proto.getTradeCurrenciesList().stream().map(TradeCurrency::fromProto).collect(Collectors.toList()));
-        paymentAccount.setSelectedTradeCurrency(paymentAccount.getSelectedTradeCurrency());
-        paymentAccount.setPaymentAccountPayload(coreProtoResolver.fromProto(proto.getPaymentAccountPayload()));
-        return paymentAccount;
+        PaymentAccount account = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(proto.getPaymentMethod().getId()));
+        account.setId(proto.getId());
+        account.setCreationDate(proto.getCreationDate());
+        account.setAccountName(proto.getAccountName());
+        account.getTradeCurrencies().addAll(proto.getTradeCurrenciesList().stream().map(TradeCurrency::fromProto).collect(Collectors.toList()));
+        account.setPaymentAccountPayload(coreProtoResolver.fromProto(proto.getPaymentAccountPayload()));
+        if (proto.hasSelectedTradeCurrency())
+            account.setSelectedTradeCurrency(TradeCurrency.fromProto(proto.getSelectedTradeCurrency()));
+        return account;
     }
 
 
@@ -135,11 +139,6 @@ public abstract class PaymentAccount implements PersistablePayload {
         else
             return null;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getter, Setter
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected abstract PaymentAccountPayload getPayload();
 }

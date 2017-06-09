@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.util.Optional;
 
 @EqualsAndHashCode
 @ToString
@@ -55,15 +56,20 @@ public abstract class TradeCurrency implements PersistablePayload, Comparable<Tr
     public static TradeCurrency fromProto(PB.TradeCurrency proto) {
         switch (proto.getMessageCase()) {
             case FIAT_CURRENCY:
-                return new FiatCurrency(proto.getCode());
+                return FiatCurrency.fromProto(proto);
             case CRYPTO_CURRENCY:
-                return new CryptoCurrency(proto.getCode(),
-                        proto.getName(),
-                        proto.getSymbol(),
-                        proto.getCryptoCurrency().getIsAsset());
+                return CryptoCurrency.fromProto(proto);
             default:
                 throw new ProtobufferException("Unknown message case: " + proto.getMessageCase());
         }
+    }
+
+    public PB.TradeCurrency.Builder getTradeCurrencyBuilder() {
+        PB.TradeCurrency.Builder builder = PB.TradeCurrency.newBuilder()
+                .setCode(code)
+                .setName(name);
+        Optional.ofNullable(symbol).ifPresent(builder::setSymbol);
+        return builder;
     }
 
 

@@ -37,7 +37,7 @@ import java.util.function.Consumer;
 public class BsqLiteNodeExecutor {
 
     private final BsqParser bsqParser;
-    private BsqChainState bsqChainState;
+    private final BsqChainState bsqChainState;
 
     private final ListeningExecutorService parseBlocksExecutor = Utilities.getListeningExecutorService("ParseBlocks", 1, 1, 60);
 
@@ -64,9 +64,7 @@ public class BsqLiteNodeExecutor {
             bsqParser.parseBsqBlocks(bsqBlockList,
                     genesisBlockHeight,
                     genesisTxId,
-                    newBsqBlock -> {
-                        UserThread.execute(() -> newBlockHandler.accept(newBsqBlock));
-                    });
+                    newBsqBlock -> UserThread.execute(() -> newBlockHandler.accept(newBsqBlock)));
             log.info("parseBlocks took {} ms for {} blocks", System.currentTimeMillis() - startTs, bsqBlockList.size());
             return null;
         });
@@ -74,9 +72,7 @@ public class BsqLiteNodeExecutor {
         Futures.addCallback(future, new FutureCallback<Void>() {
             @Override
             public void onSuccess(Void ignore) {
-                UserThread.execute(() -> {
-                    UserThread.execute(resultHandler::handleResult);
-                });
+                UserThread.execute(() -> UserThread.execute(resultHandler::handleResult));
             }
 
             @Override
@@ -104,9 +100,7 @@ public class BsqLiteNodeExecutor {
         Futures.addCallback(future, new FutureCallback<Void>() {
             @Override
             public void onSuccess(Void ignore) {
-                UserThread.execute(() -> {
-                    UserThread.execute(resultHandler::handleResult);
-                });
+                UserThread.execute(() -> UserThread.execute(resultHandler::handleResult));
             }
 
             @Override

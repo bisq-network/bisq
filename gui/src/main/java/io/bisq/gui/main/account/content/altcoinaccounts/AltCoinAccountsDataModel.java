@@ -71,10 +71,12 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     }
 
     private void fillAndSortPaymentAccounts() {
-        paymentAccounts.setAll(user.getPaymentAccounts().stream()
-                .filter(paymentAccount -> paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
-                .collect(Collectors.toList()));
-        paymentAccounts.sort((o1, o2) -> o1.getCreationDate().compareTo(o2.getCreationDate()));
+        if (user.getPaymentAccounts() != null) {
+            paymentAccounts.setAll(user.getPaymentAccounts().stream()
+                    .filter(paymentAccount -> paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
+                    .collect(Collectors.toList()));
+            paymentAccounts.sort((o1, o2) -> o1.getCreationDate().compareTo(o2.getCreationDate()));
+        }
     }
 
     @Override
@@ -111,7 +113,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
                 .filter(o -> o.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()))
                 .findAny()
                 .isPresent();
-        isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTrades().stream()
+        isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getTradableList().stream()
                 .filter(t -> t.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()) ||
                         paymentAccount.getId().equals(t.getTakerPaymentAccountId()))
                 .findAny()
@@ -126,10 +128,12 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     }
 
     public void exportAccounts() {
-        ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
-                .filter(paymentAccount -> paymentAccount instanceof CryptoCurrencyAccount)
-                .collect(Collectors.toList()));
-        GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver);
+        if (user.getPaymentAccounts() != null) {
+            ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
+                    .filter(paymentAccount -> paymentAccount instanceof CryptoCurrencyAccount)
+                    .collect(Collectors.toList()));
+            GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver);
+        }
     }
 
     public void importAccounts() {

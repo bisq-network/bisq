@@ -5,7 +5,6 @@ import com.google.gson.internal.LinkedTreeMap;
 import io.bisq.common.locale.CurrencyUtil;
 import io.bisq.common.locale.TradeCurrency;
 import io.bisq.network.http.HttpClient;
-import io.bisq.network.http.HttpException;
 import io.bisq.provider.price.PriceData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +32,10 @@ public class PoloniexProvider {
                 .collect(Collectors.toSet());
     }
 
-    public Map<String, PriceData> request() throws IOException, HttpException {
+    public Map<String, PriceData> request() throws IOException {
         Map<String, PriceData> marketPriceMap = new HashMap<>();
         String response = httpClient.requestWithGET("?command=returnTicker", "User-Agent", "");
+        //noinspection unchecked
         LinkedTreeMap<String, Object> treeMap = new Gson().fromJson(response, LinkedTreeMap.class);
         long ts = Instant.now().getEpochSecond();
         treeMap.entrySet().stream().forEach(e -> {
@@ -48,6 +48,7 @@ public class PoloniexProvider {
                     altcoinCurrency = tokens[1];
                     if (supportedAltcoins.contains(altcoinCurrency)) {
                         if (value instanceof LinkedTreeMap) {
+                            //noinspection unchecked
                             LinkedTreeMap<String, Object> data = (LinkedTreeMap) value;
                             marketPriceMap.put(altcoinCurrency,
                                     new PriceData(altcoinCurrency,

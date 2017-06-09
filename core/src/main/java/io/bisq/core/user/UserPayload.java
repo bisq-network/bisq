@@ -95,10 +95,10 @@ public class UserPayload implements PersistableEnvelope {
 
     public static UserPayload fromProto(PB.UserPayload proto, CoreProtoResolver coreProtoResolver) {
         return new UserPayload(
-                proto.getAccountId().isEmpty() ? null : proto.getAccountId(),
-                proto.getPaymentAccountsList().isEmpty() ? null : proto.getPaymentAccountsList().stream()
+                ProtoUtil.stringOrNullFromProto(proto.getAccountId()),
+                proto.getPaymentAccountsList().isEmpty() ? new HashSet<>() : new HashSet<>(proto.getPaymentAccountsList().stream()
                         .map(e -> PaymentAccount.fromProto(e, coreProtoResolver))
-                        .collect(Collectors.toSet()),
+                        .collect(Collectors.toSet())),
                 proto.hasCurrentPaymentAccount() ? PaymentAccount.fromProto(proto.getCurrentPaymentAccount(), coreProtoResolver) : null,
                 proto.getAcceptedLanguageLocaleCodesList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedLanguageLocaleCodesList()),
                 proto.hasDevelopersAlert() ? Alert.fromProto(proto.getDevelopersAlert()) : null,
@@ -106,12 +106,12 @@ public class UserPayload implements PersistableEnvelope {
                 proto.hasDevelopersFilter() ? Filter.fromProto(proto.getDevelopersFilter()) : null,
                 proto.hasRegisteredArbitrator() ? Arbitrator.fromProto(proto.getRegisteredArbitrator()) : null,
                 proto.hasRegisteredMediator() ? Mediator.fromProto(proto.getRegisteredMediator()) : null,
-                proto.getAcceptedArbitratorsList().isEmpty() ? new ArrayList<>() : proto.getAcceptedArbitratorsList().stream()
+                proto.getAcceptedArbitratorsList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedArbitratorsList().stream()
                         .map(Arbitrator::fromProto)
-                        .collect(Collectors.toList()),
-                proto.getAcceptedMediatorsList().isEmpty() ? new ArrayList<>() : proto.getAcceptedMediatorsList().stream()
+                        .collect(Collectors.toList())),
+                proto.getAcceptedMediatorsList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedMediatorsList().stream()
                         .map(Mediator::fromProto)
-                        .collect(Collectors.toList())
+                        .collect(Collectors.toList()))
         );
     }
 }

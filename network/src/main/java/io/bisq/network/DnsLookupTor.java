@@ -90,6 +90,7 @@ public class DnsLookupTor {
             proxySocket.getOutputStream().write(buf);
 
             buf = new byte[4];
+            //noinspection UnusedAssignment
             int bytesRead = proxySocket.getInputStream().read(buf);
 
             // TODO: Should not be a length check here as well?

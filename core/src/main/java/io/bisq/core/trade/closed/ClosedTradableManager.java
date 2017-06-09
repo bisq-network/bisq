@@ -29,17 +29,17 @@ import io.bisq.core.trade.Tradable;
 import io.bisq.core.trade.TradableList;
 import io.bisq.core.trade.Trade;
 import javafx.collections.ObservableList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
 import java.io.File;
 import java.util.Optional;
 
 public class ClosedTradableManager implements PersistedDataHost {
-    private static final Logger log = LoggerFactory.getLogger(ClosedTradableManager.class);
-    private final TradableList<Tradable> closedTrades;
+    private final Storage<TradableList<Tradable>> tradableListStorage;
+    private TradableList<Tradable> closedTrades;
     private final KeyRing keyRing;
+    private final PriceFeedService priceFeedService;
+    private final BtcWalletService btcWalletService;
 
     @Inject
     public ClosedTradableManager(KeyRing keyRing, PriceFeedService priceFeedService,
@@ -47,10 +47,17 @@ public class ClosedTradableManager implements PersistedDataHost {
                                  BtcWalletService btcWalletService,
                                  @Named(Storage.STORAGE_DIR) File storageDir) {
         this.keyRing = keyRing;
-        final Storage<TradableList<Tradable>> tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        this.priceFeedService = priceFeedService;
+        this.btcWalletService = btcWalletService;
+        tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
         // The ClosedTrades object can become a few MB so we don't keep so many backups
         tradableListStorage.setNumMaxBackupFiles(3);
-        this.closedTrades = new TradableList<>(tradableListStorage, "ClosedTrades");
+
+    }
+
+    @Override
+    public void readPersisted() {
+        closedTrades = new TradableList<>(tradableListStorage, "ClosedTrades");
         closedTrades.forEach(tradable -> {
             tradable.getOffer().setPriceFeedService(priceFeedService);
             if (tradable instanceof Trade) {
@@ -58,10 +65,6 @@ public class ClosedTradableManager implements PersistedDataHost {
                 trade.setTransientFields(tradableListStorage, btcWalletService);
             }
         });
-    }
-
-    @Override
-    public void readPersisted() {
     }
 
     public void add(Tradable tradable) {
@@ -73,7 +76,7 @@ public class ClosedTradableManager implements PersistedDataHost {
     }
 
     public ObservableList<Tradable> getClosedTrades() {
-        return closedTrades.getObservableList();
+        return closedTrades.getList();
     }
 
     public Optional<Tradable> getTradableById(String id) {

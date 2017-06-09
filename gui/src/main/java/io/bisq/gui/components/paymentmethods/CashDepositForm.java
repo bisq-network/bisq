@@ -277,6 +277,7 @@ public class CashDepositForm extends PaymentMethodForm {
 
         Tuple3<Label, ComboBox, ComboBox> tuple3 = FormBuilder.addLabelComboBoxComboBox(gridPane, ++gridRow, Res.get("payment.country"));
 
+        //noinspection unchecked,unchecked,unchecked
         ComboBox<Region> regionComboBox = tuple3.second;
         regionComboBox.setPromptText(Res.get("payment.select.region"));
         regionComboBox.setConverter(new StringConverter<Region>() {
@@ -292,6 +293,7 @@ public class CashDepositForm extends PaymentMethodForm {
         });
         regionComboBox.setItems(FXCollections.observableArrayList(CountryUtil.getAllRegions()));
 
+        //noinspection unchecked,unchecked,unchecked
         ComboBox<Country> countryComboBox = tuple3.third;
         countryComboBox.setVisibleRowCount(15);
         countryComboBox.setDisable(true);
@@ -418,6 +420,7 @@ public class CashDepositForm extends PaymentMethodForm {
             }
         });
 
+        //noinspection unchecked
         currencyComboBox = FormBuilder.addLabelComboBox(gridPane, ++gridRow, Res.getWithCol("shared.currency")).second;
         currencyComboBox.setPromptText(Res.get("list.currency.select"));
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
@@ -494,6 +497,7 @@ public class CashDepositForm extends PaymentMethodForm {
 
         accountTypeTuple = FormBuilder.addLabelComboBox(gridPane, ++gridRow, "");
         accountTypeLabel = accountTypeTuple.first;
+        //noinspection unchecked
         accountTypeComboBox = accountTypeTuple.second;
         accountTypeComboBox.setPromptText(Res.get("payment.select.account"));
         accountTypeComboBox.setOnAction(e -> {

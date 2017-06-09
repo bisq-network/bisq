@@ -35,7 +35,9 @@ public class ByteballAddressValidator {
     private static final Base64 base64 = new Base64();
     private static final String PI = "14159265358979323846264338327950288419716939937510";
     private static final String[] arrRelativeOffsets = PI.split("");
+    @SuppressWarnings("CanBeFinal")
     private static Integer[] arrOffsets160;
+    @SuppressWarnings("CanBeFinal")
     private static Integer[] arrOffsets288;
 
     static {
@@ -126,7 +128,7 @@ public class ByteballAddressValidator {
     }
 
     private static String buffer2bin(byte[] buf) {
-        StringBuffer bytes = new StringBuffer();
+        StringBuilder bytes = new StringBuilder();
         //noinspection ForLoopReplaceableByForEach
         for (int i = 0; i < buf.length; i++) {
             String bin = String.format("%8s", Integer.toBinaryString(buf[i] & 0xFF)).replace(' ', '0');

@@ -9,11 +9,13 @@ import io.bisq.network.p2p.SupportedCapabilitiesMessage;
 import io.bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import io.bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Value
 public final class GetDataResponse implements SupportedCapabilitiesMessage, ExtendedDataSizePermission {
     private final HashSet<ProtectedStorageEntry> dataSet;
@@ -32,17 +34,14 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage, Exte
         return NetworkEnvelope.getDefaultBuilder()
                 .setGetDataResponse(PB.GetDataResponse.newBuilder()
                         .addAllDataSet(dataSet.stream()
-                                .map(protectedStorageEntry -> {
-                                    if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
-                                        return PB.StorageEntryWrapper.newBuilder()
+                                .map(protectedStorageEntry -> protectedStorageEntry instanceof ProtectedMailboxStorageEntry ?
+                                        PB.StorageEntryWrapper.newBuilder()
                                                 .setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage())
-                                                .build();
-                                    } else {
-                                        return PB.StorageEntryWrapper.newBuilder()
+                                                .build()
+                                        :
+                                        PB.StorageEntryWrapper.newBuilder()
                                                 .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())
-                                                .build();
-                                    }
-                                })
+                                                .build())
                                 .collect(Collectors.toList()))
                         .setRequestNonce(requestNonce)
                         .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse)
@@ -50,13 +49,13 @@ public final class GetDataResponse implements SupportedCapabilitiesMessage, Exte
                 .build();
     }
 
-    public static GetDataResponse fromProto(PB.GetDataResponse getDataResponse, NetworkProtoResolver resolver) {
+    public static GetDataResponse fromProto(PB.GetDataResponse proto, NetworkProtoResolver resolver) {
         HashSet<ProtectedStorageEntry> dataSet = new HashSet<>(
-                getDataResponse.getDataSetList().stream()
+                proto.getDataSetList().stream()
                         .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry))
                         .collect(Collectors.toSet()));
         return new GetDataResponse(dataSet,
-                getDataResponse.getRequestNonce(),
-                getDataResponse.getIsGetUpdatedDataResponse());
+                proto.getRequestNonce(),
+                proto.getIsGetUpdatedDataResponse());
     }
 }

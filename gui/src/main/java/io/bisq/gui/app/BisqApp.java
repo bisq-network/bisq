@@ -37,9 +37,12 @@ import io.bisq.core.alert.AlertManager;
 import io.bisq.core.app.AppOptionKeys;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.arbitration.ArbitratorManager;
+import io.bisq.core.arbitration.DisputeManager;
 import io.bisq.core.btc.AddressEntryList;
 import io.bisq.core.btc.wallet.*;
 import io.bisq.core.dao.blockchain.json.JsonChainStateExporter;
+import io.bisq.core.dao.compensation.CompensationRequestManager;
+import io.bisq.core.dao.vote.VotingManager;
 import io.bisq.core.filter.FilterManager;
 import io.bisq.core.offer.OpenOfferManager;
 import io.bisq.core.trade.TradeManager;
@@ -187,6 +190,10 @@ public class BisqApp extends Application {
             persistedDataHosts.add(injector.getInstance(TradeManager.class));
             persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));
             persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
+            persistedDataHosts.add(injector.getInstance(DisputeManager.class));
+            persistedDataHosts.add(injector.getInstance(P2PService.class));
+            persistedDataHosts.add(injector.getInstance(VotingManager.class));
+            persistedDataHosts.add(injector.getInstance(CompensationRequestManager.class));
 
             // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
             persistedDataHosts.stream().forEach(e -> {
@@ -296,7 +303,9 @@ public class BisqApp extends Application {
             // make the UI visible
             primaryStage.show();
 
-
+            // Used only for migrating old trade statistic to new data structure
+            // injector.getInstance(TradeStatisticsMigrationTool.class);
+                    
             if (!Utilities.isCorrectOSArchitecture()) {
                 String osArchitecture = Utilities.getOSArchitecture();
                 // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.

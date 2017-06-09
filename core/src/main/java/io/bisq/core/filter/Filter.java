@@ -17,6 +17,7 @@
 
 package io.bisq.core.filter;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.Sig;
 import io.bisq.generated.protobuffer.PB;
@@ -42,7 +43,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode
 @ToString
 public final class Filter implements StoragePayload {
-    private final long TTL = TimeUnit.DAYS.toMillis(21);
     private final List<String> bannedOfferIds;
     private final List<String> bannedNodeAddress;
     private final List<PaymentAccountFilter> bannedPaymentAccounts;
@@ -69,6 +69,7 @@ public final class Filter implements StoragePayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @VisibleForTesting
     public Filter(List<String> bannedOfferIds,
                   List<String> bannedNodeAddress,
                   List<PaymentAccountFilter> bannedPaymentAccounts,
@@ -82,7 +83,7 @@ public final class Filter implements StoragePayload {
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = extraDataMap;
 
-        ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
+        ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }
 
     @Override
@@ -105,8 +106,7 @@ public final class Filter implements StoragePayload {
     public static Filter fromProto(PB.Filter proto) {
         return new Filter(proto.getBannedOfferIdsList().stream().collect(Collectors.toList()),
                 proto.getBannedNodeAddressList().stream().collect(Collectors.toList()),
-                proto.getBannedPaymentAccountsList()
-                        .stream()
+                proto.getBannedPaymentAccountsList().stream()
                         .map(PaymentAccountFilter::fromProto)
                         .collect(Collectors.toList()),
                 proto.getSignatureAsBase64(),
@@ -119,10 +119,15 @@ public final class Filter implements StoragePayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public long getTTL() {
+        return TimeUnit.DAYS.toMillis(30);
+    }
+
     public void setSigAndPubKey(String signatureAsBase64, PublicKey ownerPubKey) {
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKey = ownerPubKey;
 
-        ownerPubKeyBytes = Sig.getSigPublicKeyBytes(this.ownerPubKey);
+        ownerPubKeyBytes = Sig.getPublicKeyBytes(this.ownerPubKey);
     }
 }

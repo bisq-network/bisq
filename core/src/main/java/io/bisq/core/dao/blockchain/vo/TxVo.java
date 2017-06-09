@@ -23,10 +23,11 @@ import io.bisq.common.proto.persistable.PersistablePayload;
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
+import java.io.Serializable;
 
 @Value
 @Immutable
-public class TxVo implements PersistablePayload {
+public class TxVo implements PersistablePayload, Serializable {
     private final String txVersion = Version.BSQ_TX_VERSION;
     private final String id;
     private final int blockHeight;

@@ -41,4 +41,8 @@ public final class Region implements PersistablePayload {
     public Message toProtoMessage() {
         return PB.Region.newBuilder().setCode(code).setName(name).build();
     }
+
+    public static Region fromProto(PB.Region proto) {
+        return new Region(proto.getCode(), proto.getName());
+    }
 }

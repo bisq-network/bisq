@@ -98,6 +98,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final DisputeManager disputeManager;
     private final Stage stage;
     private final OfferDetailsWindow offerDetailsWindow;
+    @SuppressWarnings("deprecation")
     private WalletEventListener walletEventListener;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
@@ -163,6 +164,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
+        //noinspection deprecation
         walletEventListener = new WalletEventListener() {
             @Override
             public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
@@ -264,7 +266,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateList() {
-        Stream<Tradable> concat1 = Stream.concat(openOfferManager.getObservableList().stream(), tradeManager.getTrades().stream());
+        Stream<Tradable> concat1 = Stream.concat(openOfferManager.getObservableList().stream(), tradeManager.getTradableList().stream());
         Stream<Tradable> concat2 = Stream.concat(concat1, closedTradableManager.getClosedTrades().stream());
         Stream<Tradable> concat3 = Stream.concat(concat2, failedTradesManager.getFailedTrades().stream());
         Set<Tradable> all = concat3.collect(Collectors.toSet());

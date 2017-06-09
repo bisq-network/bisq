@@ -19,7 +19,10 @@ package io.bisq.core.btc;
 
 import javax.net.SocketFactory;
 import java.io.IOException;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.Socket;
 
 /**
  * A basic SocketFactory for creating sockets that connect through the specified
@@ -58,14 +61,14 @@ public class ProxySocketFactory extends SocketFactory {
     }
 
     @Override
-    public Socket createSocket(String string, int i) throws IOException, UnknownHostException {
+    public Socket createSocket(String string, int i) throws IOException {
         Socket socket = new Socket(proxy);
         socket.connect(new InetSocketAddress(string, i));
         return socket;
     }
 
     @Override
-    public Socket createSocket(String string, int i, InetAddress localAddress, int localPort) throws IOException, UnknownHostException {
+    public Socket createSocket(String string, int i, InetAddress localAddress, int localPort) throws IOException {
         Socket socket = new Socket(proxy);
         socket.bind(new InetSocketAddress(localAddress, localPort));
         socket.connect(new InetSocketAddress(string, i));

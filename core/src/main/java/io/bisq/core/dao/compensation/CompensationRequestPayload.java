@@ -21,6 +21,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.Sig;
 import io.bisq.common.proto.persistable.PersistableEnvelope;
 import io.bisq.common.util.JsonExclude;
+import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.LazyProcessedStoragePayload;
@@ -29,7 +30,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Utils;
-import org.bouncycastle.util.encoders.Hex;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
@@ -43,7 +43,6 @@ import java.util.concurrent.TimeUnit;
 @Data
 // TODO There will be another object for PersistableEnvelope
 public final class CompensationRequestPayload implements LazyProcessedStoragePayload, PersistedStoragePayload, PersistableEnvelope {
-    private final long TTL = TimeUnit.DAYS.toMillis(30);
     private final String uid;
     private final String name;
     private final String title;
@@ -101,7 +100,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                 requestedBtc,
                 btcAddress,
                 nodeAddress.getFullAddress(),
-                Sig.getSigPublicKeyBytes(ownerPubKey),
+                Sig.getPublicKeyBytes(ownerPubKey),
                 null);
     }
 
@@ -139,7 +138,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
 
         version = Version.COMPENSATION_REQUEST_VERSION;
         creationDate = new Date().getTime();
-        this.ownerPubKey = Sig.getSigPublicKeyFromBytes(ownerPubKeyBytes);
+        this.ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
         ownerPubPubKeyAsHex = Utils.HEX.encode(this.ownerPubKey.getEncoded());
     }
 
@@ -185,6 +184,11 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public long getTTL() {
+        return TimeUnit.DAYS.toMillis(30);
+    }
+
     public Date getStartDate() {
         return new Date(startDate);
     }
@@ -225,7 +229,7 @@ public final class CompensationRequestPayload implements LazyProcessedStoragePay
                 ", requestedBtc=" + requestedBtc +
                 ", btcAddress='" + btcAddress + '\'' +
                 ", nodeAddress='" + getNodeAddress() + '\'' +
-                ", p2pStorageSignaturePubKeyBytes=" + Hex.toHexString(ownerPubKeyBytes) +
+                ", p2pStorageSignaturePubKeyBytes=" + Utilities.bytesAsHexString(ownerPubKeyBytes) +
                 ", p2pStorageSignaturePubKeyAsHex='" + ownerPubPubKeyAsHex + '\'' +
                 ", signature='" + signature + '\'' +
                 ", feeTxId='" + feeTxId + '\'' +

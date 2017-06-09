@@ -5,7 +5,6 @@ import io.bisq.common.Timer;
 import io.bisq.common.UserThread;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.blockchain.providers.BlockchainTxProvider;
-import io.bisq.network.http.HttpException;
 import org.bitcoinj.core.Coin;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -32,7 +31,7 @@ class GetTransactionRequest {
             Thread.currentThread().setName("requestFee-" + provider.toString());
             try {
                 return provider.getFee(transactionId);
-            } catch (IOException | HttpException e) {
+            } catch (IOException e) {
                 log.debug("Fee request failed for tx {} from provider {}\n" +
                                 "That is expected if the tx was not propagated yet to the provider.\n" +
                                 "error={}",

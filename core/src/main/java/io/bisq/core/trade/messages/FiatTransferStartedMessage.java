@@ -49,7 +49,7 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return NetworkEnvelope.getDefaultBuilder()
                 .setFiatTransferStartedMessage(PB.FiatTransferStartedMessage.newBuilder()
-                        .setTradeId(getTradeId())
+                        .setTradeId(tradeId)
                         .setBuyerPayoutAddress(buyerPayoutAddress)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setBuyerSignature(ByteString.copyFrom(buyerSignature))

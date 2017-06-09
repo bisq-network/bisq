@@ -124,6 +124,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         root.getTabs().addListener(tabListChangeListener);
         navigation.addListener(navigationListener);
+        //noinspection unchecked
         navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
     }
 
@@ -163,6 +164,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                     if (!createOfferViewOpen) {
                         OfferView.this.createOfferViewOpen = true;
                         OfferView.this.tradeCurrency = tradeCurrency;
+                        //noinspection unchecked
                         OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
                                 CreateOfferView.class);
                     } else {
@@ -175,6 +177,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                     if (!takeOfferViewOpen) {
                         OfferView.this.takeOfferViewOpen = true;
                         OfferView.this.offer = offer;
+                        //noinspection unchecked
                         OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
                                 TakeOfferView.class);
                     } else {
@@ -222,6 +225,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         offerBookView.enableCreateOfferButton();
 
         // update the navigation state
+        //noinspection unchecked
         navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
     }
 
@@ -234,6 +238,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         }
 
         // update the navigation state
+        //noinspection unchecked
         navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
     }
 

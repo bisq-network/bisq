@@ -2,15 +2,16 @@ syntax = "proto3";
 package io.bisq.protobuffer;
 
 //
-// Protobuffer v3 definitions of WIRE and PERSISTED messages.
+// Protobuffer v3 definitions of network messages and persisted objects.
 //
 
 option java_package = "io.bisq.generated.protobuffer";
 option java_outer_classname = "PB";
 
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////
-// P2P network messages
+// Network messages
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // Those are messages sent over wire
@@ -38,17 +39,17 @@ message NetworkEnvelope {
         PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 16;
 
         PayDepositRequest pay_deposit_request = 17;
-        DepositTxPublishedMessage deposit_tx_published_message = 18;
-        PublishDepositTxRequest publish_deposit_tx_request = 19;
+        PublishDepositTxRequest publish_deposit_tx_request = 18;
+        DepositTxPublishedMessage deposit_tx_published_message = 19;
         FiatTransferStartedMessage fiat_transfer_started_message = 20;
         FinalizePayoutTxRequest finalize_payout_tx_request = 21;
         PayoutTxPublishedMessage payout_tx_published_message = 22;
 
-        OpenNewDisputeMessage open_new_dispute_message = 24;
-        PeerOpenedDisputeMessage peer_opened_dispute_message = 25;
-        DisputeCommunicationMessage dispute_communication_message = 26;
-        DisputeResultMessage dispute_result_message = 27;
-        PeerPublishedPayoutTxMessage peer_published_payout_tx_message = 23;
+        OpenNewDisputeMessage open_new_dispute_message = 23;
+        PeerOpenedDisputeMessage peer_opened_dispute_message = 24;
+        DisputeCommunicationMessage dispute_communication_message = 25;
+        DisputeResultMessage dispute_result_message = 26;
+        PeerPublishedDisputePayoutTxMessage peer_published_dispute_payout_tx_message = 27;
 
         PrivateNotificationMessage private_notification_message = 28;
 
@@ -66,43 +67,38 @@ message NetworkEnvelope {
 // get data
 
 message PreliminaryGetDataRequest {
-    int32 message_version = 1;
-    int32 nonce = 2;
-    repeated bytes excluded_keys = 3;
-    repeated int32 supported_capabilities = 4;
+    int32 nonce = 21;
+    repeated bytes excluded_keys = 2;
+    repeated int32 supported_capabilities = 3;
 }
 
 message GetDataResponse {
-    int32 message_version = 1;
-    int32 request_nonce = 2;
-    bool is_get_updated_data_response = 3;
-    repeated StorageEntryWrapper data_set = 4;
-    repeated int32 supported_capabilities = 5;
+    int32 request_nonce = 1;
+    bool is_get_updated_data_response = 2;
+    repeated StorageEntryWrapper data_set = 3;
+    repeated int32 supported_capabilities = 4;
 }
 
 message GetUpdatedDataRequest {
-    int32 message_version = 1;
-    NodeAddress sender_node_address = 2;
-    int32 nonce = 3;
-    repeated bytes excluded_keys = 4;
+    NodeAddress sender_node_address = 1;
+    int32 nonce = 2;
+    repeated bytes excluded_keys = 3;
 }
 
 
 // peers
 
 message GetPeersRequest {
-    int32 message_version = 1;
-    NodeAddress sender_node_address = 2;
-    int32 nonce = 3;
-    repeated int32 supported_capabilities = 4;
-    repeated Peer reported_peers = 5;
+    NodeAddress sender_node_address = 1;
+    int32 nonce = 2;
+    repeated int32 supported_capabilities = 3;
+    repeated Peer reported_peers = 4;
 }
 
 message GetPeersResponse {
-    int32 message_version = 1;
-    int32 request_nonce = 2;
-    repeated Peer reported_peers = 3;
-    repeated int32 supported_capabilities = 5;
+    int32 request_nonce = 1;
+    repeated Peer reported_peers = 2;
+    repeated int32 supported_capabilities = 3;
 }
 
 message Ping {
@@ -118,25 +114,23 @@ message Pong {
 // offer
 
 message OfferAvailabilityRequest {
-    int32 message_version = 1;
-    string offer_id = 2;
-    PubKeyRing pub_key_ring = 3;
-    int64 takers_trade_price = 4;
-    repeated int32 supported_capabilities = 5;
-}
-
-message OfferAvailabilityResponse {
-    int32 message_version = 1;
-    string offer_id = 2;
-    AvailabilityResult availability_result = 3;
+    string offer_id = 1;
+    PubKeyRing pub_key_ring = 2;
+    int64 takers_trade_price = 3;
     repeated int32 supported_capabilities = 4;
 }
 
+message OfferAvailabilityResponse {
+    string offer_id = 1;
+    AvailabilityResult availability_result = 2;
+    repeated int32 supported_capabilities = 3;
+}
+
 message RefreshOfferMessage {
-    bytes hash_of_data_and_seq_nr = 1; // 32 bytes
-    bytes signature = 2; // 46 bytes
-    bytes hash_of_payload = 3; // 32 bytes
-    int32 sequence_number = 4; // 4 bytes
+    bytes hash_of_data_and_seq_nr = 1; 
+    bytes signature = 2; 
+    bytes hash_of_payload = 3; 
+    int32 sequence_number = 4; 
 }
 
 
@@ -158,16 +152,14 @@ message RemoveMailboxDataMessage {
 // misc
 
 message CloseConnectionMessage {
-    int32 message_version = 1;
-    string reason = 2;
+    string reason = 1;
 }
 
 message PrefixedSealedAndSignedMessage {
-    int32 message_version = 1;
-    NodeAddress node_address = 2;
-    SealedAndSigned sealed_and_signed = 3;
-    bytes address_prefix_hash = 4;
-    string uid = 5;
+    NodeAddress node_address = 1;
+    SealedAndSigned sealed_and_signed = 2;
+    bytes address_prefix_hash = 3;
+    string uid = 4;
 }
 
 
@@ -175,83 +167,71 @@ message PrefixedSealedAndSignedMessage {
 
 message PayDepositRequest {
     string trade_id = 1;
-    int64 trade_amount = 2;
-    int64 trade_price = 3;
-    bytes taker_multi_sig_pub_key = 4;
+    NodeAddress sender_node_address = 2;
+    int64 trade_amount = 3;
+    int64 trade_price = 4;
     int64 tx_fee = 5;
     int64 taker_fee = 6;
-    repeated RawTransactionInput raw_transaction_inputs = 7;
-    int64 change_output_value = 8;
-    string change_output_address = 9;
-    string taker_payout_address_string = 10;
-    PubKeyRing taker_pub_key_ring = 11;
-    PaymentAccountPayload taker_payment_account_payload = 12;
-    string taker_account_id = 13;
-    string taker_fee_tx_id = 14;
-    repeated NodeAddress accepted_arbitrator_node_addresses = 15;
-    repeated NodeAddress accepted_mediator_node_addresses = 16;
-    NodeAddress arbitrator_node_address = 17;
-    NodeAddress mediator_node_address = 18;
-    NodeAddress sender_node_address = 19;
-    bool is_currency_for_taker_fee_btc = 20;
-}
-
-message DepositTxPublishedMessage {
-    int32 message_version = 1;
-    string trade_id = 2;
-    bytes deposit_tx = 3;
-    NodeAddress sender_node_address = 4;
-    string uid = 5;
+    bool is_currency_for_taker_fee_btc = 7;
+    repeated RawTransactionInput raw_transaction_inputs = 8;
+    int64 change_output_value = 9;
+    string change_output_address = 10;
+    bytes taker_multi_sig_pub_key = 11;
+    string taker_payout_address_string = 12;
+    PubKeyRing taker_pub_key_ring = 13;
+    PaymentAccountPayload taker_payment_account_payload = 14;
+    string taker_account_id = 15;
+    string taker_fee_tx_id = 16;
+    repeated NodeAddress accepted_arbitrator_node_addresses = 17;
+    repeated NodeAddress accepted_mediator_node_addresses = 18;
+    NodeAddress arbitrator_node_address = 19;
+    NodeAddress mediator_node_address = 20;
+    string uid = 21;
 }
 
 message PublishDepositTxRequest {
-    int32 message_version = 1;
-    string trade_id = 2;
-    PaymentAccountPayload maker_payment_account_payload = 3;
-    string maker_account_id = 4;
-    string maker_contract_as_json = 5;
-    string maker_contract_signature = 6;
-    string maker_payout_address_string = 7;
-    bytes prepared_deposit_tx = 8;
-    repeated RawTransactionInput maker_inputs = 9;
-    bytes maker_multi_sig_pub_key = 10;
-    NodeAddress sender_node_address = 11;
-    string uid = 12;
+    string trade_id = 1;
+    PaymentAccountPayload maker_payment_account_payload = 2;
+    string maker_account_id = 3;
+    string maker_contract_as_json = 4;
+    string maker_contract_signature = 5;
+    string maker_payout_address_string = 6;
+    bytes prepared_deposit_tx = 7;
+    repeated RawTransactionInput maker_inputs = 8;
+    bytes maker_multi_sig_pub_key = 9;
+    NodeAddress sender_node_address = 10;
+    string uid = 11;
 }
 
-message FiatTransferStartedMessage {
-    int32 message_version = 1;
-    string trade_id = 2;
-    string buyer_payout_address = 3;
-    NodeAddress sender_node_address = 4;
-    bytes buyer_signature = 5;
-    string uid = 6;
-}
-
-message FinalizePayoutTxRequest {
-    int32 message_version = 1;
-    string trade_id = 2;
-    bytes seller_signature = 3;
-    string seller_payout_address = 4;
-    NodeAddress sender_node_address = 5;
-    string uid = 6;
-}
-
-message PayoutTxPublishedMessage {
-    string uid = 1;
-    int32 message_version = 2;
-    string trade_id = 3;
-    bytes payout_tx = 4;
-    NodeAddress sender_node_address = 5;
-}
-
-message PeerPublishedPayoutTxMessage {
-    bytes transaction = 1;
-    string trade_id = 2;
+message DepositTxPublishedMessage {
+    string trade_id = 1;
+    bytes deposit_tx = 2;
     NodeAddress sender_node_address = 3;
     string uid = 4;
 }
 
+message FiatTransferStartedMessage {
+    string trade_id = 1;
+    string buyer_payout_address = 2;
+    NodeAddress sender_node_address = 3;
+    bytes buyer_signature = 4;
+    string uid = 5;
+}
+
+message FinalizePayoutTxRequest {
+    string trade_id = 1;
+    bytes seller_signature = 2;
+    string seller_payout_address = 3;
+    NodeAddress sender_node_address = 4;
+    string uid = 5;
+}
+
+message PayoutTxPublishedMessage {
+    string trade_id = 1;
+    bytes payout_tx = 2;
+    NodeAddress sender_node_address = 3;
+     string uid = 4;
+}
 
 // dispute
 
@@ -287,12 +267,18 @@ message DisputeResultMessage {
     NodeAddress sender_node_address = 3;
 }
 
+message PeerPublishedDisputePayoutTxMessage {
+    string uid = 1;
+    bytes transaction = 2;
+    string trade_id = 3;
+    NodeAddress sender_node_address = 4;
+}
+
 
 message PrivateNotificationMessage {
-    int32 message_version = 1;
-    string uid = 2;
-    NodeAddress sender_node_address = 3;
-    PrivateNotificationPayload private_notification_payload = 4;
+    string uid = 1;
+    NodeAddress sender_node_address = 2;
+    PrivateNotificationPayload private_notification_payload = 3;
 }
 
 
@@ -302,10 +288,12 @@ message GetBsqBlocksRequest {
     int32 from_block_height = 1;
 }
 
+// TODO not fully impl. yet, serialized data used atm
 message GetBsqBlocksResponse {
     bytes bsq_blocks_bytes = 1;
 }
 
+// TODO not fully impl. yet, serialized data used atm
 message NewBsqBlockBroadcastMessage {
     bytes bsq_block_bytes = 1;
 }
@@ -351,10 +339,10 @@ message StoragePayload {
         Arbitrator arbitrator = 2;
         Mediator mediator = 3;
         Filter filter = 4;
-        CompensationRequestPayload compensation_request_payload = 5;
-        TradeStatistics trade_statistics = 6;
-        MailboxStoragePayload mailbox_storage_payload = 7;
-        OfferPayload offer_payload = 8;
+        TradeStatistics trade_statistics = 5;
+        MailboxStoragePayload mailbox_storage_payload = 6;
+        OfferPayload offer_payload = 7;
+        CompensationRequestPayload compensation_request_payload = 8;
     }
 }
 
@@ -385,6 +373,22 @@ message DataAndSeqNrPair {
     StoragePayload payload = 1;
     int32 sequence_number = 2;
 }
+
+
+// misc
+
+message PrivateNotificationPayload {
+    string message = 1;
+    string signature_as_base64 = 2;
+    bytes sig_public_key_bytes = 3;
+}
+
+message PaymentAccountFilter {
+    string payment_method_id = 1;
+    string get_method_name = 2;
+    string value = 3;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -435,12 +439,81 @@ message Filter {
     map<string, string> extra_data = 6;
 }
 
-message PaymentAccountFilter {
-    string payment_method_id = 1;
-    string get_method_name = 2;
-    string value = 3;
+message TradeStatistics {
+    string base_currency = 1;
+    string counter_currency = 2;
+    OfferPayload.Direction direction = 3;
+    int64 trade_price = 4;
+    int64 trade_amount = 5;
+    int64 trade_date = 6;
+    string payment_method_id = 7;
+    int64 offer_date = 8;
+    bool offer_use_market_based_price = 9;
+    double offer_market_price_margin = 10;
+    int64 offer_amount = 11;
+    int64 offer_min_amount = 12;
+    string offer_id = 13;
+    string deposit_tx_id = 14;
+    bytes signature_pub_key_bytes = 15;
+    map<string, string> extra_data = 16;
 }
 
+
+message MailboxStoragePayload {
+    PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 1;
+    bytes sender_pub_key_for_add_operation_bytes = 2;
+    bytes owner_pub_key_bytes = 3;
+    map<string, string> extra_data = 4;
+}
+
+message OfferPayload {
+    enum Direction {
+        PB_ERROR = 0;
+        BUY = 1;
+        SELL = 2;
+    }
+
+    string id = 1;
+    int64 date = 2;
+    NodeAddress owner_node_address = 3;
+    PubKeyRing pub_key_ring = 4;
+    Direction direction = 5;
+    int64 price = 6;
+    double market_price_margin = 7;
+    bool use_market_based_price = 8;
+    int64 amount = 9;
+    int64 min_amount = 10;   
+    string base_currency_code = 11;
+    string counter_currency_code = 12;
+    repeated NodeAddress arbitrator_node_addresses = 13;
+    repeated NodeAddress mediator_node_addresses = 14;
+    string payment_method_id = 15;
+    string maker_payment_account_id = 16;
+    string offer_fee_payment_tx_id = 17;
+    string country_code = 18;
+    repeated string accepted_country_codes =19;
+    string bank_id = 20;
+    repeated string accepted_bank_ids = 21;
+    string version_nr = 22;
+    int64 block_height_at_offer_creation = 23;
+    int64 tx_fee = 24;
+    int64 maker_fee = 25;
+    bool is_currency_for_maker_fee_btc = 26;
+    int64 buyer_security_deposit = 27;
+    int64 seller_security_deposit = 28;
+    int64 max_trade_limit = 29;
+    int64 max_trade_period = 30;
+    bool use_auto_close = 31;
+    bool use_re_open_after_auto_close = 32;
+    int64 lower_close_price = 33;
+    int64 upper_close_price = 34;
+    bool is_private_offer = 35;
+    string hash_of_challenge = 36;
+    map<string, string> extra_data = 37;
+    int32 protocol_version = 38;
+}
+
+// TODO not fully verified as impl. is not completed
 message CompensationRequestPayload {
     uint32 version = 1;
     int64 creation_date = 2;
@@ -460,80 +533,6 @@ message CompensationRequestPayload {
     string signature = 16;
     string fee_tx_id = 17;
     map<string, string> extra_data = 18;
-}
-
-message TradeStatistics {
-    string base_currency = 1;
-    string counter_currency = 2;
-    OfferPayload.Direction direction = 3;
-    int64 trade_price = 4;
-    int64 trade_amount = 5;
-    int64 trade_date = 6;
-    string payment_method_id = 7;
-    int64 offer_date = 8;
-    bool offer_use_market_based_price = 9;
-    double offer_market_price_margin = 10;
-    int64 offer_amount = 11;
-    int64 offer_min_amount = 12;
-    string offer_id = 13;
-    string deposit_tx_id = 14;
-    PubKeyRing pub_key_ring = 15;
-    map<string, string> extra_data = 16;
-}
-
-
-message MailboxStoragePayload {
-    PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 1;
-    bytes sender_pub_key_for_add_operation_bytes = 2;
-    bytes owner_pub_key_bytes = 3;
-    map<string, string> extra_data = 4;
-}
-
-message OfferPayload {
-    enum Direction {
-        PB_ERROR = 0;
-        BUY = 1;
-        SELL = 2;
-    }
-
-    Direction direction = 1;
-    string base_currency_code = 2;
-    string counter_currency_code = 3;
-    string payment_method_id = 4;
-    string country_code = 5;
-    repeated string accepted_country_codes = 6;
-    string bank_id = 7;
-    repeated string accepted_bank_ids = 8;
-    repeated NodeAddress arbitrator_node_addresses = 9;
-    repeated NodeAddress mediator_node_addresses = 10;
-    string id = 11;
-    int64 date = 12;
-    int64 protocol_version = 13;
-    bool use_market_based_price = 14;
-    int64 price = 15;
-    double market_price_margin = 16;
-    int64 amount = 17;
-    int64 min_amount = 18;
-    NodeAddress owner_node_address = 19;
-    PubKeyRing pub_key_ring = 20;
-    string maker_payment_account_id = 21;
-    string offer_fee_payment_tx_id = 22;
-    string version_nr = 23;
-    int64 block_height_at_offer_creation = 24;
-    int64 tx_fee = 25;
-    int64 maker_fee = 26;
-    int64 buyer_security_deposit = 27;
-    int64 seller_security_deposit = 28;
-    int64 max_trade_limit = 29;
-    int64 max_trade_period = 30;
-    bool use_auto_close = 31;
-    bool use_re_open_after_auto_close = 32;
-    int64 lower_close_price = 33;
-    int64 upper_close_price = 34;
-    bool is_private_offer = 35;
-    string hash_of_challenge = 36;
-    map<string, string> extra_data = 37;
-    bool is_currency_for_maker_fee_btc = 38;
 }
 
 
@@ -569,8 +568,8 @@ message Dispute {
 }
 
 message Attachment {
-    bytes bytes = 1;
-    string file_name = 2;
+    string file_name = 1;
+    bytes bytes = 2;
 }
 
 message DisputeResult {
@@ -595,7 +594,6 @@ message DisputeResult {
     int32 trader_id = 2;
     Winner winner = 3;
     int32 reason_ordinal = 4;
-
     bool tamper_proof_evidence = 5;
     bool id_verification = 6;
     bool screen_cast = 7;
@@ -782,113 +780,66 @@ message USPostalMoneyOrderAccountPayload {
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Misc
-///////////////////////////////////////////////////////////////////////////////////////////
-
-
-message PrivateNotificationPayload {
-    string message = 1;
-    string signature_as_base64 = 2;
-    bytes sig_public_key_bytes = 3;
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////
 // PersistableEnvelope
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // Those are persisted to disc
 message PersistableEnvelope {
     oneof message {
-        AddressEntryList address_entry_list = 1;
-        ViewPathAsString view_path_as_string = 2;
+        SequenceNumberMap sequence_number_map = 1;
+        PersistedEntryMap persisted_entry_map = 2;
         PeerList peer_list = 3;
-        PreferencesPayload preferences_payload = 4;
-        UserPayload user_payload = 5;
-        CompensationRequestPayload compensation_request_payload = 6;
-        SequenceNumberMap sequence_number_map = 7;
-        PersistedEntryMap persisted_entry_map = 8;
-        TradeStatisticsList trade_statistics_list = 9;
-        VoteItemsList vote_items_list = 10;
-        TradableList tradable_list = 11;
-
-        TradeList trade_list = 16;
-
-         //TODO
-        PendingTradeList pending_trade_list = 12;
-        ClosedTradeList closed_trade_list = 13;
-        FailedTradeList failed_trade_list = 14;
-
-        BsqChainState bsq_chain_state = 15;
+        AddressEntryList address_entry_list = 4;
+        NavigationPath navigation_path = 5;
+        
+        TradableList tradable_list = 6;
+        TradeStatisticsList trade_statistics_list = 7;
+        DisputeList dispute_list = 8;
+        
+        PreferencesPayload preferences_payload = 9;
+        UserPayload user_payload = 10;
+        
+        // TODO not fully implemented yet
+        CompensationRequestPayload compensation_request_payload = 11;
+        VoteItemsList vote_items_list = 12;
+        BsqChainState bsq_chain_state = 13;
     }
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Preferences
+// Collections
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-message PreferencesPayload {
-    string user_language = 1;
-    Country user_country = 2;
-    repeated TradeCurrency fiat_currencies = 3;
-    repeated TradeCurrency crypto_currencies = 4;
-    BlockChainExplorer block_chain_explorer_main_net = 5;
-    BlockChainExplorer block_chain_explorer_test_net = 6;
-    BlockChainExplorer bsq_block_chain_explorer = 7;
-    string backup_directory = 8;
-    bool auto_select_arbitrators = 9;
-    map<string, bool> dont_show_again_map = 10;
-    bool tac_accepted = 11;
-    bool use_tor_for_bitcoin_j = 12;
-    bool show_own_offers_in_offer_book = 13;
-    TradeCurrency preferred_trade_currency = 14;
-    int64 withdrawal_tx_fee_in_bytes = 15;
-    bool use_custom_withdrawal_tx_fee = 16;
-    double max_price_distance_in_percent = 17;
-    string offer_book_chart_screen_currency_code = 18;
-    string trade_charts_screen_currency_code = 19;
-    string buy_screen_currency_code = 20;
-    string sell_screen_currency_code = 21;
-    int32 trade_statistics_tick_unit_index = 22;
-    bool resync_Spv_requested = 23;
-    bool sort_market_currencies_numerically = 24;
-    bool use_percentage_based_price = 25;
-    map<string, string> peer_tag_map = 26;
-    string bitcoin_nodes = 27;
-    repeated string ignore_traders_list = 28;
-    string directory_chooser_path = 29;
-    int64 buyer_security_deposit_as_long = 30;
-    string btc_denomination = 31;
-    bool use_animations = 32;
-    PaymentAccount selectedPayment_account_for_createOffer = 33;
-    bool pay_fee_in_Btc = 34;
+message SequenceNumberMap {
+    repeated SequenceNumberEntry sequence_number_entries = 1;
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// UserPayload
-///////////////////////////////////////////////////////////////////////////////////////////
-
-message UserPayload {
-    string account_id = 1;
-    repeated PaymentAccount payment_accounts = 2;
-    PaymentAccount current_payment_account = 3;
-    repeated string accepted_language_locale_codes = 4;
-    Alert developers_alert = 5;
-    Alert displayed_alert = 6;
-    Filter developers_filter = 7;
-    repeated Arbitrator accepted_arbitrators = 8;
-    repeated Mediator accepted_mediators = 9;
-    Arbitrator registered_arbitrator = 10;
-    Mediator registered_mediator = 11;
+message SequenceNumberEntry {
+    ByteArray bytes = 1;
+    MapValue map_value = 2;
 }
 
+message ByteArray {
+    bytes bytes = 1;
+}
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// AddressEntry
-///////////////////////////////////////////////////////////////////////////////////////////
+message MapValue {
+    int32 sequence_nr = 1;
+    int64 time_stamp = 2;
+}
+
+message PersistedEntryMap {
+    map<string, ProtectedStorageEntry> persisted_entry_map = 1;
+}
+
+message PeerList {
+    repeated Peer peer = 1;
+}
+
+message AddressEntryList {
+    repeated AddressEntry address_entry = 1;
+}
 
 message AddressEntry {
     enum Context {
@@ -908,14 +859,22 @@ message AddressEntry {
     int64 coin_locked_in_multi_sig = 11;
 }
 
-message AddressEntryList {
-    repeated AddressEntry address_entry = 1;
+message NavigationPath {
+    repeated string path = 1;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Offer/Trade
 ///////////////////////////////////////////////////////////////////////////////////////////
+
+message TradableList {
+    repeated Tradable tradable = 1;
+}
+
+message TradeStatisticsList {
+    repeated TradeStatistics trade_statistics = 1;
+}
 
 message Offer {
     enum State {
@@ -952,18 +911,6 @@ message Tradable {
         SellerAsMakerTrade seller_as_maker_trade = 4;
         SellerAsTakerTrade seller_as_taker_trade = 5;
     }
-}
-
-message TradableList {
-    repeated Tradable tradable = 1;
-}
-
-message OpenOfferList {
-    repeated OpenOffer open_offer = 1;
-}
-
-message TradeList {
-    repeated Trade trade = 1;
 }
 
 message Trade {
@@ -1063,10 +1010,6 @@ message BuyerAsTakerTrade {
     Trade trade = 1;
 }
 
-message SellerTrade {
-    Trade trade = 1;
-}
-
 message SellerAsMakerTrade {
     Trade trade = 1;
 }
@@ -1108,23 +1051,78 @@ message TradingPeer {
     string change_output_address = 11;
 }
 
-message TradeStatisticsList {
-    repeated TradeStatistics trade_statistics = 1;
-}
 
-message PendingTradeList {
-    repeated Trade trade = 1;
-}
+///////////////////////////////////////////////////////////////////////////////////////////
+// Dispute
+///////////////////////////////////////////////////////////////////////////////////////////
 
-message ClosedTradeList {
-    repeated Trade trade = 1;
-}
-
-message FailedTradeList {
-    repeated Trade trade = 1;
+message DisputeList {
+    repeated Dispute dispute = 1;
 }
 
 
+///////////////////////////////////////////////////////////////////////////////////////////
+// Preferences
+///////////////////////////////////////////////////////////////////////////////////////////
+
+message PreferencesPayload {
+    string user_language = 1;
+    Country user_country = 2;
+    repeated TradeCurrency fiat_currencies = 3;
+    repeated TradeCurrency crypto_currencies = 4;
+    BlockChainExplorer block_chain_explorer_main_net = 5;
+    BlockChainExplorer block_chain_explorer_test_net = 6;
+    BlockChainExplorer bsq_block_chain_explorer = 7;
+    string backup_directory = 8;
+    bool auto_select_arbitrators = 9;
+    map<string, bool> dont_show_again_map = 10;
+    bool tac_accepted = 11;
+    bool use_tor_for_bitcoin_j = 12;
+    bool show_own_offers_in_offer_book = 13;
+    TradeCurrency preferred_trade_currency = 14;
+    int64 withdrawal_tx_fee_in_bytes = 15;
+    bool use_custom_withdrawal_tx_fee = 16;
+    double max_price_distance_in_percent = 17;
+    string offer_book_chart_screen_currency_code = 18;
+    string trade_charts_screen_currency_code = 19;
+    string buy_screen_currency_code = 20;
+    string sell_screen_currency_code = 21;
+    int32 trade_statistics_tick_unit_index = 22;
+    bool resync_Spv_requested = 23;
+    bool sort_market_currencies_numerically = 24;
+    bool use_percentage_based_price = 25;
+    map<string, string> peer_tag_map = 26;
+    string bitcoin_nodes = 27;
+    repeated string ignore_traders_list = 28;
+    string directory_chooser_path = 29;
+    int64 buyer_security_deposit_as_long = 30;
+    string btc_denomination = 31;
+    bool use_animations = 32;
+    PaymentAccount selectedPayment_account_for_createOffer = 33;
+    bool pay_fee_in_Btc = 34;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// UserPayload
+///////////////////////////////////////////////////////////////////////////////////////////
+
+message UserPayload {
+    string account_id = 1;
+    repeated PaymentAccount payment_accounts = 2;
+    PaymentAccount current_payment_account = 3;
+    repeated string accepted_language_locale_codes = 4;
+    Alert developers_alert = 5;
+    Alert displayed_alert = 6;
+    Filter developers_filter = 7;
+    repeated Arbitrator accepted_arbitrators = 8;
+    repeated Mediator accepted_mediators = 9;
+    Arbitrator registered_arbitrator = 10;
+    Mediator registered_mediator = 11;
+}
+
+
+// TODO fully implemented yet
 ///////////////////////////////////////////////////////////////////////////////////////////
 // DAO
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1187,52 +1185,15 @@ message CompensationRequestVoteItemCollection {
 }
 
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Misc
 ///////////////////////////////////////////////////////////////////////////////////////////
-
-message Transaction {
-   bytes hash = 1;
-}
-
-message PeerList {
-    repeated Peer peer = 1;
-}
-
-message PersistedEntryMap {
-    map<string, ProtectedStorageEntry> persisted_entry_map = 1;
-}
-
-message SequenceNumberMap {
-    repeated SequenceNumberEntry sequence_number_entries = 1;
-}
-
-message SequenceNumberEntry {
-    ByteArray bytes = 1;
-    MapValue map_value = 2;
-}
-
-message MapValue {
-    int32 sequence_nr = 1;
-    int64 time_stamp = 2;
-}
 
 message BlockChainExplorer {
     string name = 1;
     string tx_url = 2;
     string address_url = 3;
-}
-
-message ByteArray {
-    bytes bytes = 1;
-}
-
-message ViewPathAsString {
-    repeated string view_path = 1;
-}
-
-message DisputeList {
-    repeated Dispute dispute = 1;
 }
 
 message PaymentAccount {
@@ -1250,7 +1211,6 @@ message PaymentMethod {
     int64 max_trade_period = 2;
     int64 max_trade_limit = 3;
 }
-
 
 // Currency
 
@@ -1276,15 +1236,6 @@ message FiatCurrency {
     Currency currency = 1;
 }
 
-
-// Locale
-
-message Locale {
-    string language = 1;
-    string country = 2;
-    string variant = 3;
-}
-
 message Country {
     string code = 1;
     string name = 2;
@@ -1297,15 +1248,15 @@ message Region {
 }
 
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Mock
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 message MockMailboxPayload {
-    int32 message_version = 1;
-    string message = 2;
-    NodeAddress sender_node_address = 3;
-    string uid = 4;
+    string message = 1;
+    NodeAddress sender_node_address = 2;
+    string uid = 3;
 }
 
 message MockPayload {

@@ -19,6 +19,7 @@ package io.bisq.core.arbitration;
 
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.proto.ProtoUtil;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
 import io.bisq.network.p2p.storage.payload.StoragePayload;
@@ -30,7 +31,6 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.security.PublicKey;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,7 +42,6 @@ import java.util.stream.Collectors;
 @ToString
 @Getter
 public final class Mediator implements StoragePayload {
-    private final long TTL = TimeUnit.DAYS.toMillis(10);
     private final PubKeyRing pubKeyRing;
     private final NodeAddress nodeAddress;
     private final List<String> languageCodes;
@@ -60,11 +59,10 @@ public final class Mediator implements StoragePayload {
     @Nullable
     private Map<String, String> extraDataMap;
 
-    // Called from domain and PB
     public Mediator(NodeAddress nodeAddress,
                     PubKeyRing pubKeyRing,
                     List<String> languageCodes,
-                    Date registrationDate,
+                    long registrationDate,
                     byte[] registrationPubKey,
                     String registrationSignature,
                     @Nullable String emailAddress,
@@ -73,13 +71,18 @@ public final class Mediator implements StoragePayload {
         this.nodeAddress = nodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;
-        this.registrationDate = registrationDate.getTime();
+        this.registrationDate = registrationDate;
         this.registrationPubKey = registrationPubKey;
         this.registrationSignature = registrationSignature;
         this.emailAddress = emailAddress;
         this.info = info;
         this.extraDataMap = extraDataMap;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public PB.StoragePayload toProtoMessage() {
@@ -100,13 +103,21 @@ public final class Mediator implements StoragePayload {
         return new Mediator(NodeAddress.fromProto(proto.getNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 proto.getLanguageCodesList().stream().collect(Collectors.toList()),
-                new Date(proto.getRegistrationDate()),
+                proto.getRegistrationDate(),
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
-                proto.getEmailAddress().isEmpty() ? null : proto.getEmailAddress(),
-                proto.getInfo().isEmpty() ? null : proto.getInfo(),
+                ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
+                ProtoUtil.stringOrNullFromProto(proto.getInfo()),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+    }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public long getTTL() {
+        return TimeUnit.DAYS.toMillis(10);
     }
 
     @Override

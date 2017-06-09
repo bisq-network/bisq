@@ -29,6 +29,7 @@ import io.bisq.core.filter.Filter;
 import io.bisq.core.payment.PaymentAccount;
 import io.bisq.network.p2p.NodeAddress;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
@@ -38,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -59,10 +59,9 @@ public final class User implements PersistedDataHost {
     private ObjectProperty<PaymentAccount> currentPaymentAccountProperty;
 
     private UserPayload userPayload = new UserPayload();
-    private boolean initialReadDone = false;
 
     @Inject
-    public User(Storage<UserPayload> storage, KeyRing keyRing) throws NoSuchAlgorithmException {
+    public User(Storage<UserPayload> storage, KeyRing keyRing) {
         this.storage = storage;
         this.keyRing = keyRing;
     }
@@ -75,7 +74,7 @@ public final class User implements PersistedDataHost {
 
     @Override
     public void readPersisted() {
-        UserPayload persisted = storage.initAndGetPersistedWithFileName("User");
+        UserPayload persisted = storage.initAndGetPersistedWithFileName("UserPayload");
         userPayload = persisted != null ? persisted : new UserPayload();
 
         checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");
@@ -85,13 +84,12 @@ public final class User implements PersistedDataHost {
         userPayload.setAccountId(String.valueOf(Math.abs(keyRing.getPubKeyRing().hashCode())));
 
         // language setup
-        userPayload.getAcceptedLanguageLocaleCodes().add(LanguageUtil.getDefaultLanguageLocaleAsCode());
+        if (!userPayload.getAcceptedLanguageLocaleCodes().contains(LanguageUtil.getDefaultLanguageLocaleAsCode()))
+            userPayload.getAcceptedLanguageLocaleCodes().add(LanguageUtil.getDefaultLanguageLocaleAsCode());
         String english = LanguageUtil.getEnglishLanguageLocaleCode();
         if (!userPayload.getAcceptedLanguageLocaleCodes().contains(english))
             userPayload.getAcceptedLanguageLocaleCodes().add(english);
 
-
-        // Use that to guarantee update of the serializable field and to make a storage update in case of a change
         paymentAccountsAsObservable.addListener((SetChangeListener<PaymentAccount>) change -> {
             userPayload.setPaymentAccounts(new HashSet<>(paymentAccountsAsObservable));
             persist();
@@ -101,13 +99,10 @@ public final class User implements PersistedDataHost {
             persist();
         });
 
-        initialReadDone = true;
     }
 
     private void persist() {
-        // TODO if we persist we get a blank screen (exception in view class contrs. or circ. dependency?)
-        if (initialReadDone)
-            storage.queueUpForSave(userPayload);
+        storage.queueUpForSave(userPayload);
     }
 
 
@@ -122,47 +117,66 @@ public final class User implements PersistedDataHost {
                   .findFirst();
       }*/
 
+    @Nullable
     public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
-        Optional<Arbitrator> arbitratorOptional = userPayload.getAcceptedArbitrators().stream()
-                .filter(e -> e.getNodeAddress().equals(nodeAddress))
-                .findFirst();
-        if (arbitratorOptional.isPresent())
-            return arbitratorOptional.get();
-        else
+        final List<Arbitrator> acceptedArbitrators = userPayload.getAcceptedArbitrators();
+        if (acceptedArbitrators != null) {
+            Optional<Arbitrator> arbitratorOptional = acceptedArbitrators.stream()
+                    .filter(e -> e.getNodeAddress().equals(nodeAddress))
+                    .findFirst();
+            if (arbitratorOptional.isPresent())
+                return arbitratorOptional.get();
+            else
+                return null;
+        } else {
             return null;
+        }
     }
 
+    @Nullable
     public Mediator getAcceptedMediatorByAddress(NodeAddress nodeAddress) {
-        Optional<Mediator> mediatorOptionalOptional = userPayload.getAcceptedMediators().stream()
-                .filter(e -> e.getNodeAddress().equals(nodeAddress))
-                .findFirst();
-        if (mediatorOptionalOptional.isPresent())
-            return mediatorOptionalOptional.get();
-        else
+        final List<Mediator> acceptedMediators = userPayload.getAcceptedMediators();
+        if (acceptedMediators != null) {
+            Optional<Mediator> mediatorOptionalOptional = acceptedMediators.stream()
+                    .filter(e -> e.getNodeAddress().equals(nodeAddress))
+                    .findFirst();
+            if (mediatorOptionalOptional.isPresent())
+                return mediatorOptionalOptional.get();
+            else
+                return null;
+        } else {
             return null;
+        }
     }
 
     @Nullable
     public PaymentAccount findFirstPaymentAccountWithCurrency(TradeCurrency tradeCurrency) {
-        for (PaymentAccount paymentAccount : userPayload.getPaymentAccounts()) {
-            for (TradeCurrency tradeCurrency1 : paymentAccount.getTradeCurrencies()) {
-                if (tradeCurrency1.equals(tradeCurrency))
-                    return paymentAccount;
+        if (userPayload.getPaymentAccounts() != null) {
+            for (PaymentAccount paymentAccount : userPayload.getPaymentAccounts()) {
+                for (TradeCurrency currency : paymentAccount.getTradeCurrencies()) {
+                    if (currency.equals(tradeCurrency))
+                        return paymentAccount;
+                }
             }
+            return null;
+        } else {
+            return null;
         }
-        return null;
     }
 
     public boolean hasMatchingLanguage(Arbitrator arbitrator) {
-        if (arbitrator != null) {
-            for (String acceptedCode : userPayload.getAcceptedLanguageLocaleCodes()) {
+        final List<String> codes = userPayload.getAcceptedLanguageLocaleCodes();
+        if (arbitrator != null && codes != null) {
+            for (String acceptedCode : codes) {
                 for (String itemCode : arbitrator.getLanguageCodes()) {
                     if (acceptedCode.equals(itemCode))
                         return true;
                 }
             }
+            return false;
+        } else {
+            return false;
         }
-        return false;
     }
 
     public boolean hasPaymentAccountForCurrency(TradeCurrency tradeCurrency) {
@@ -188,12 +202,15 @@ public final class User implements PersistedDataHost {
     }
 
     public boolean addAcceptedLanguageLocale(String localeCode) {
-        boolean changed = userPayload.getAcceptedLanguageLocaleCodes() != null &&
-                !userPayload.getAcceptedLanguageLocaleCodes().contains(localeCode) &&
-                userPayload.getAcceptedLanguageLocaleCodes().add(localeCode);
-        if (changed)
-            persist();
-        return changed;
+        final List<String> codes = userPayload.getAcceptedLanguageLocaleCodes();
+        if (codes != null && !codes.contains(localeCode)) {
+            boolean changed = codes.add(localeCode);
+            if (changed)
+                persist();
+            return changed;
+        } else {
+            return false;
+        }
     }
 
     public boolean removeAcceptedLanguageLocale(String languageLocaleCode) {
@@ -204,23 +221,27 @@ public final class User implements PersistedDataHost {
         return changed;
     }
 
-    public void addAcceptedArbitrator(Arbitrator arbitrator) {
-        if (userPayload.getAcceptedArbitrators() != null &&
-                !userPayload.getAcceptedArbitrators().contains(arbitrator) &&
-                !isMyOwnRegisteredArbitrator(arbitrator)) {
-            boolean changed = userPayload.getAcceptedArbitrators().add(arbitrator);
+    public boolean addAcceptedArbitrator(Arbitrator arbitrator) {
+        final List<Arbitrator> arbitrators = userPayload.getAcceptedArbitrators();
+        if (arbitrators != null && !arbitrators.contains(arbitrator) && !isMyOwnRegisteredArbitrator(arbitrator)) {
+            boolean changed = arbitrators.add(arbitrator);
             if (changed)
                 persist();
+            return changed;
+        } else {
+            return false;
         }
     }
 
-    public void addAcceptedMediator(Mediator mediator) {
-        if (userPayload.getAcceptedMediators() != null &&
-                !userPayload.getAcceptedMediators().contains(mediator) &&
-                !isMyOwnRegisteredMediator(mediator)) {
-            boolean changed = userPayload.getAcceptedMediators().add(mediator);
+    public boolean addAcceptedMediator(Mediator mediator) {
+        final List<Mediator> mediators = userPayload.getAcceptedMediators();
+        if (mediators != null && !mediators.contains(mediator) && !isMyOwnRegisteredMediator(mediator)) {
+            boolean changed = mediators.add(mediator);
             if (changed)
                 persist();
+            return changed;
+        } else {
+            return false;
         }
     }
 
@@ -260,7 +281,6 @@ public final class User implements PersistedDataHost {
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     public void setCurrentPaymentAccount(PaymentAccount paymentAccount) {
         currentPaymentAccountProperty.set(paymentAccount);
         persist();
@@ -298,7 +318,9 @@ public final class User implements PersistedDataHost {
 
     @Nullable
     public PaymentAccount getPaymentAccount(String paymentAccountId) {
-        Optional<PaymentAccount> optional = userPayload.getPaymentAccounts().stream().filter(e -> e.getId().equals(paymentAccountId)).findAny();
+        Optional<PaymentAccount> optional = userPayload.getPaymentAccounts() != null ?
+                userPayload.getPaymentAccounts().stream().filter(e -> e.getId().equals(paymentAccountId)).findAny() :
+                Optional.<PaymentAccount>empty();
         if (optional.isPresent())
             return optional.get();
         else
@@ -309,15 +331,11 @@ public final class User implements PersistedDataHost {
         return userPayload.getAccountId();
     }
 
-   /* public boolean isRegistered() {
-        return getAccountId() != null;
-    }*/
-
     private PaymentAccount getCurrentPaymentAccount() {
         return userPayload.getCurrentPaymentAccount();
     }
 
-    public ObjectProperty<PaymentAccount> currentPaymentAccountProperty() {
+    public ReadOnlyObjectProperty<PaymentAccount> currentPaymentAccountProperty() {
         return currentPaymentAccountProperty;
     }
 
@@ -346,7 +364,7 @@ public final class User implements PersistedDataHost {
 
     @Nullable
     public List<NodeAddress> getAcceptedArbitratorAddresses() {
-        return userPayload.getAcceptedArbitrators().stream().map(Arbitrator::getNodeAddress).collect(Collectors.toList());
+        return userPayload.getAcceptedArbitrators() != null ? userPayload.getAcceptedArbitrators().stream().map(Arbitrator::getNodeAddress).collect(Collectors.toList()) : null;
     }
 
     public List<Mediator> getAcceptedMediators() {
@@ -355,7 +373,7 @@ public final class User implements PersistedDataHost {
 
     @Nullable
     public List<NodeAddress> getAcceptedMediatorAddresses() {
-        return userPayload.getAcceptedMediators().stream().map(Mediator::getNodeAddress).collect(Collectors.toList());
+        return userPayload.getAcceptedMediators() != null ? userPayload.getAcceptedMediators().stream().map(Mediator::getNodeAddress).collect(Collectors.toList()) : null;
     }
 
     public List<String> getAcceptedLanguageLocaleCodes() {

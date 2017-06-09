@@ -1,7 +1,5 @@
 package io.bisq.core.trade;
 
-import com.google.common.collect.Lists;
-import com.google.protobuf.Message;
 import io.bisq.common.storage.Storage;
 import io.bisq.core.offer.Offer;
 import io.bisq.core.offer.OfferPayload;
@@ -13,7 +11,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static io.bisq.generated.protobuffer.PB.PersistableEnvelope.MessageCase.TRADABLE_LIST;
-import static io.bisq.generated.protobuffer.PB.PersistableEnvelope.MessageCase.TRADE_LIST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -39,9 +36,9 @@ public class TradableListTest {
     @Test
     public void protoTesting(@Mocked OfferPayload offerPayload) {
         Storage<TradableList<OpenOffer>> storage = new Storage<>(null, null);
-        TradableList<OpenOffer> openOfferTradableList = new TradableList<>(storage,"filename");
+        TradableList<OpenOffer> openOfferTradableList = new TradableList<>(storage, "filename");
         PB.PersistableEnvelope message = (PB.PersistableEnvelope) openOfferTradableList.toProtoMessage();
-        assertTrue(message.getMessageCase().equals(TRADABLE_LIST) );
+        assertTrue(message.getMessageCase().equals(TRADABLE_LIST));
 
         // test adding an OpenOffer and convert toProto
         Offer offer = new Offer(offerPayload);
@@ -49,7 +46,7 @@ public class TradableListTest {
         //openOfferTradableList = new TradableList<OpenOffer>(storage,Lists.newArrayList(openOffer));
         openOfferTradableList.add(openOffer);
         message = (PB.PersistableEnvelope) openOfferTradableList.toProtoMessage();
-        assertTrue(message.getMessageCase().equals(TRADABLE_LIST) );
+        assertTrue(message.getMessageCase().equals(TRADABLE_LIST));
         assertEquals(1, message.getTradableList().getTradableList().size());
     }
 }

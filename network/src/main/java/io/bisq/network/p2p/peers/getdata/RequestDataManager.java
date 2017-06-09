@@ -364,7 +364,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 .collect(Collectors.toList())
                 .stream()
                 .sorted((o1, o2) -> o2.getDate().compareTo(o1.getDate()))
-                .map(e -> e.getNodeAddress())
+                .map(Peer::getNodeAddress)
                 .collect(Collectors.toList());
     }
 

@@ -310,6 +310,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceChart.setPrefHeight(198);
         priceChart.setMaxHeight(300);
         priceChart.setLegendVisible(false);
+        //noinspection unchecked
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
 
 
@@ -348,6 +349,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
+        //noinspection unchecked
         volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
         volumeChart.setMinHeight(148);
         volumeChart.setPrefHeight(148);
@@ -364,6 +366,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceSeries = new XYChart.Series<>();
         priceSeries.getData().setAll(model.priceItems);
         priceChart.getData().clear();
+        //noinspection unchecked
         priceChart.setData(FXCollections.observableArrayList(priceSeries));
     }
 

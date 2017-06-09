@@ -56,18 +56,14 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         Trade.Phase phase = trade.getState().getPhase();
         if (phase == Trade.Phase.TAKER_FEE_PUBLISHED) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                    () -> {
-                        handleTaskRunnerSuccess("MakerSetupDepositTxListener");
-                    },
+                    () -> handleTaskRunnerSuccess("MakerSetupDepositTxListener"),
                     this::handleTaskRunnerFault);
 
             taskRunner.addTasks(MakerSetupDepositTxListener.class);
             taskRunner.run();
         } else if (trade.isFiatSent() && !trade.isPayoutPublished()) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                    () -> {
-                        handleTaskRunnerSuccess("BuyerSetupPayoutTxListener");
-                    },
+                    () -> handleTaskRunnerSuccess("BuyerSetupPayoutTxListener"),
                     this::handleTaskRunnerFault);
 
             taskRunner.addTasks(BuyerSetupPayoutTxListener.class);
@@ -190,9 +186,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
 
         TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
-                () -> {
-                    handleTaskRunnerSuccess("handle PayoutTxPublishedMessage");
-                },
+                () -> handleTaskRunnerSuccess("handle PayoutTxPublishedMessage"),
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(

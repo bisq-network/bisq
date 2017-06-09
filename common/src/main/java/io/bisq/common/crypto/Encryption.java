@@ -17,9 +17,10 @@
 
 package io.bisq.common.crypto;
 
+import io.bisq.common.util.Utilities;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -215,7 +216,7 @@ public class Encryption {
         }
     }
 
-    public static byte[] getEncryptionPublicKeyBytes(PublicKey encryptionPubKey) {
+    public static byte[] getPublicKeyBytes(PublicKey encryptionPubKey) {
         return new X509EncodedKeySpec(encryptionPubKey.getEncoded()).getEncoded();
     }
 
@@ -223,11 +224,11 @@ public class Encryption {
      * @param encryptionPubKeyBytes
      * @return
      */
-    public static PublicKey getEncryptionPublicKeyFromBytes(byte[] encryptionPubKeyBytes) {
+    public static PublicKey getPublicKeyFromBytes(byte[] encryptionPubKeyBytes) {
         try {
             return KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO, "BC").generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e) {
-            log.error("Error creating sigPublicKey from bytes. sigPublicKeyBytes as hex={}, error={}", org.bouncycastle.util.encoders.Hex.toHexString(encryptionPubKeyBytes), e);
+            log.error("Error creating sigPublicKey from bytes. sigPublicKeyBytes as hex={}, error={}", Utilities.bytesAsHexString(encryptionPubKeyBytes), e);
             e.printStackTrace();
             throw new KeyConversionException(e);
         }

@@ -31,6 +31,7 @@ import io.bisq.common.monetary.Volume;
 import io.bisq.common.proto.ProtoUtil;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.taskrunner.Model;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.arbitration.Arbitrator;
 import io.bisq.core.arbitration.Mediator;
 import io.bisq.core.btc.wallet.BsqWalletService;
@@ -55,7 +56,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
-import org.bouncycastle.util.encoders.Hex;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -235,21 +235,30 @@ public abstract class Trade implements Tradable, Model {
     private final long takerFeeAsLong;
     @Setter
     private long takeOfferDate;
-    @Getter @Setter
+    @Getter
+    @Setter
     private ProcessModel processModel;
 
     //  Mutable
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String takerFeeTxId;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String depositTxId;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String payoutTxId;
-    @Getter @Setter
+    @Getter
+    @Setter
     private long tradeAmountAsLong;
     @Setter
     private long tradePrice;
-    @Nullable @Getter
+    @Nullable
+    @Getter
     private NodeAddress tradingPeerNodeAddress;
     @Getter
     private State state = State.PREPARATION;
@@ -257,23 +266,38 @@ public abstract class Trade implements Tradable, Model {
     private DisputeState disputeState = DisputeState.NO_DISPUTE;
     @Getter
     private TradePeriodState tradePeriodState = TradePeriodState.FIRST_HALF;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private Contract contract;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String contractAsJson;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private byte[] contractHash;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String takerContractSignature;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String makerContractSignature;
-    @Nullable @Getter
+    @Nullable
+    @Getter
     private NodeAddress arbitratorNodeAddress;
-    @Nullable @Getter
+    @Nullable
+    @Getter
     private NodeAddress mediatorNodeAddress;
-    @Nullable @Setter
+    @Nullable
+    @Setter
     private byte[] arbitratorBtcPubKey;
-    @Nullable @Getter @Setter
+    @Nullable
+    @Getter
+    @Setter
     private String takerPaymentAccountId;
     @Nullable
     private String errorMessage;
@@ -298,7 +322,8 @@ public abstract class Trade implements Tradable, Model {
 
     //  Mutable
     transient protected TradeProtocol tradeProtocol;
-    @Nullable @Setter
+    @Nullable
+    @Setter
     transient private Date maxTradePeriodDate, halfTradePeriodDate;
     @Nullable
     transient private Transaction payoutTx;
@@ -309,7 +334,7 @@ public abstract class Trade implements Tradable, Model {
 
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Volume> tradeVolumeProperty;
-    transient private Set<DecryptedMessageWithPubKey> decryptedMessageWithPubKeySet = new HashSet<>();
+    final transient private Set<DecryptedMessageWithPubKey> decryptedMessageWithPubKeySet = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -338,6 +363,7 @@ public abstract class Trade implements Tradable, Model {
 
 
     // taker
+    @SuppressWarnings("NullableProblems")
     protected Trade(Offer offer,
                     Coin tradeAmount,
                     Coin txFee,
@@ -368,9 +394,9 @@ public abstract class Trade implements Tradable, Model {
                 .setTxFeeAsLong(txFeeAsLong)
                 .setTakerFeeAsLong(takerFeeAsLong)
                 .setTakeOfferDate(takeOfferDate)
+                .setProcessModel(processModel.toProtoMessage())
                 .setTradeAmountAsLong(tradeAmountAsLong)
                 .setTradePrice(tradePrice)
-                .setProcessModel(processModel.toProtoMessage())
                 .setState(PB.Trade.State.valueOf(state.name()))
                 .setDisputeState(PB.Trade.DisputeState.valueOf(disputeState.name()))
                 .setTradePeriodState(PB.Trade.TradePeriodState.valueOf(tradePeriodState.name()));
@@ -399,21 +425,19 @@ public abstract class Trade implements Tradable, Model {
         trade.setState(State.fromProto(proto.getState()));
         trade.setDisputeState(DisputeState.fromProto(proto.getDisputeState()));
         trade.setTradePeriodState(TradePeriodState.fromProto(proto.getTradePeriodState()));
-
-        trade.setTakerFeeTxId(proto.getTakerFeeTxId().isEmpty() ? null : proto.getTakerFeeTxId());
-        trade.setDepositTxId(proto.getDepositTxId().isEmpty() ? null : proto.getDepositTxId());
-        trade.setPayoutTxId(proto.getPayoutTxId().isEmpty() ? null : proto.getPayoutTxId());
-        trade.setTradingPeerNodeAddress(NodeAddress.fromProto(proto.getTradingPeerNodeAddress()));
-        trade.setContract(Contract.fromProto(proto.getContract(), coreProtoResolver));
-        trade.setContractAsJson(proto.getContractAsJson().isEmpty() ? null : proto.getContractAsJson());
-        trade.setTakerContractSignature(proto.getTakerContractSignature().isEmpty() ? null : proto.getTakerContractSignature());
-        trade.setMakerContractSignature(proto.getMakerContractSignature().isEmpty() ? null : proto.getMakerContractSignature());
-        trade.setArbitratorNodeAddress(NodeAddress.fromProto(proto.getArbitratorNodeAddress()));
-        trade.setMediatorNodeAddress(NodeAddress.fromProto(proto.getMediatorNodeAddress()));
-        trade.setArbitratorBtcPubKey(proto.getArbitratorBtcPubKey().toByteArray());
-        trade.setTakerPaymentAccountId(proto.getTakerPaymentAccountId().isEmpty() ? null : proto.getTakerPaymentAccountId());
-        trade.setErrorMessage(proto.getErrorMessage().isEmpty() ? null : proto.getErrorMessage());
-
+        trade.setTakerFeeTxId(ProtoUtil.stringOrNullFromProto(proto.getTakerFeeTxId()));
+        trade.setDepositTxId(ProtoUtil.stringOrNullFromProto(proto.getDepositTxId()));
+        trade.setPayoutTxId(ProtoUtil.stringOrNullFromProto(proto.getPayoutTxId()));
+        trade.setContract(proto.hasContract() ? Contract.fromProto(proto.getContract(), coreProtoResolver) : null);
+        trade.setContractAsJson(ProtoUtil.stringOrNullFromProto(proto.getContractAsJson()));
+        trade.setContractHash(ProtoUtil.byteArrayOrNullFromProto(proto.getContractHash()));
+        trade.setTakerContractSignature(ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()));
+        trade.setMakerContractSignature(ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()));
+        trade.setArbitratorNodeAddress(proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null);
+        trade.setMediatorNodeAddress(proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null);
+        trade.setArbitratorBtcPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getArbitratorBtcPubKey()));
+        trade.setTakerPaymentAccountId(ProtoUtil.stringOrNullFromProto(proto.getTakerPaymentAccountId()));
+        trade.setErrorMessage(ProtoUtil.stringOrNullFromProto(proto.getErrorMessage()));
         return trade;
     }
 
@@ -457,8 +481,9 @@ public abstract class Trade implements Tradable, Model {
         // if we have already received a msg we apply it. 
         // removeDecryptedMsgWithPubKey will be called synchronous after apply. We don't have threaded context 
         // or async calls there.
-        decryptedMessageWithPubKeySet.stream()
-                .forEach(msg -> tradeProtocol.applyMailboxMessage(msg, this));
+        // Clone to avoid ConcurrentModificationException. We remove items at the applyMailboxMessage call...
+        HashSet<DecryptedMessageWithPubKey> set = new HashSet<>(decryptedMessageWithPubKeySet);
+        set.stream().forEach(msg -> tradeProtocol.applyMailboxMessage(msg, this));
     }
 
 
@@ -472,6 +497,7 @@ public abstract class Trade implements Tradable, Model {
             setDepositTx(processModel.getTradeWalletService().getWalletTx(getDepositTx().getHash()));
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setDepositTx(Transaction tx) {
         log.debug("setDepositTx " + tx);
         this.depositTx = tx;
@@ -491,7 +517,6 @@ public abstract class Trade implements Tradable, Model {
     // will received it again at next startup. Such might happen in edge cases when the user shuts down after we 
     // received the msb but before the init is called.
     public void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        log.trace("addDecryptedMessageWithPubKey decryptedMessageWithPubKey=" + decryptedMessageWithPubKey);
         if (!decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) {
             decryptedMessageWithPubKeySet.add(decryptedMessageWithPubKey);
 
@@ -504,7 +529,6 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void removeDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        log.trace("removeDecryptedMessageWithPubKey decryptedMessageWithPubKey=" + decryptedMessageWithPubKey);
         if (decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey))
             decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
@@ -580,6 +604,7 @@ public abstract class Trade implements Tradable, Model {
             persist();
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setTradingPeerNodeAddress(NodeAddress tradingPeerNodeAddress) {
         if (tradingPeerNodeAddress == null)
             log.error("tradingPeerAddress=null");
@@ -587,6 +612,7 @@ public abstract class Trade implements Tradable, Model {
             this.tradingPeerNodeAddress = tradingPeerNodeAddress;
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setTradeAmount(Coin tradeAmount) {
         this.tradeAmount = tradeAmount;
         tradeAmountAsLong = tradeAmount.value;
@@ -594,16 +620,19 @@ public abstract class Trade implements Tradable, Model {
         getTradeVolumeProperty().set(getTradeVolume());
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setPayoutTx(Transaction payoutTx) {
         this.payoutTx = payoutTx;
         payoutTxId = payoutTx.getHashAsString();
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
         errorMessageProperty.set(errorMessage);
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setArbitratorNodeAddress(NodeAddress arbitratorNodeAddress) {
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         if (processModel.getUser() != null) {
@@ -613,6 +642,7 @@ public abstract class Trade implements Tradable, Model {
         }
     }
 
+    @SuppressWarnings("NullableProblems")
     public void setMediatorNodeAddress(NodeAddress mediatorNodeAddress) {
         this.mediatorNodeAddress = mediatorNodeAddress;
         if (processModel.getUser() != null) {
@@ -678,6 +708,7 @@ public abstract class Trade implements Tradable, Model {
         return getState().getPhase().ordinal() >= Phase.FIAT_SENT.ordinal();
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isFiatReceived() {
         return getState().getPhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
     }
@@ -816,7 +847,8 @@ public abstract class Trade implements Tradable, Model {
             setState(State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN);
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "Trade{" +
                 "\n     offer=" + offer +
                 ",\n     isCurrencyForTakerFeeBtc=" + isCurrencyForTakerFeeBtc +
@@ -835,12 +867,12 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     tradePeriodState=" + tradePeriodState +
                 ",\n     contract=" + contract +
                 ",\n     contractAsJson='" + contractAsJson + '\'' +
-                ",\n     contractHash=" + (contractHash != null ? Hex.toHexString(contractHash) : "null") +
+                ",\n     contractHash=" + Utilities.bytesAsHexString(contractHash) +
                 ",\n     takerContractSignature='" + takerContractSignature + '\'' +
                 ",\n     makerContractSignature='" + makerContractSignature + '\'' +
                 ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
-                ",\n     arbitratorBtcPubKey=" + (arbitratorBtcPubKey != null ? Hex.toHexString(arbitratorBtcPubKey) : "null") +
+                ",\n     arbitratorBtcPubKey=" + Utilities.bytesAsHexString(arbitratorBtcPubKey) +
                 ",\n     takerPaymentAccountId='" + takerPaymentAccountId + '\'' +
                 ",\n     errorMessage='" + errorMessage + '\'' +
                 ",\n     txFee=" + txFee +

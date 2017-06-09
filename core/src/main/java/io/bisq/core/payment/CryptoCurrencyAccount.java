@@ -20,7 +20,9 @@ package io.bisq.core.payment;
 import io.bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.payment.payload.PaymentMethod;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 public final class CryptoCurrencyAccount extends PaymentAccount {
 
     public CryptoCurrencyAccount() {

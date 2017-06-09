@@ -35,6 +35,7 @@ public class NotificationCenter {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final static List<Notification> notifications = new ArrayList<>();
     private Consumer<String> selectItemByTradeIdConsumer;
 
@@ -73,7 +74,7 @@ public class NotificationCenter {
     }
 
     public void onAllServicesAndViewsInitialized() {
-        tradeManager.getTrades().addListener((ListChangeListener<Trade>) change -> {
+        tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> {
             change.next();
             if (change.wasRemoved()) {
                 change.getRemoved().stream().forEach(trade -> {
@@ -111,7 +112,7 @@ public class NotificationCenter {
             }
         });
 
-        tradeManager.getTrades().stream()
+        tradeManager.getTradableList().stream()
                 .forEach(trade -> {
                             String tradeId = trade.getId();
                             Subscription disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(),
@@ -174,6 +175,7 @@ public class NotificationCenter {
                     notification.actionButtonTextWithGoTo("navigation.portfolio.pending")
                             .onAction(() -> {
                                 DontShowAgainLookup.dontShowAgain(key, true);
+                                //noinspection unchecked
                                 navigation.navigateTo(MainView.class, PortfolioView.class, PendingTradesView.class);
                                 if (selectItemByTradeIdConsumer != null)
                                     UserThread.runAfter(() -> selectItemByTradeIdConsumer.accept(trade.getId()), 1);
@@ -216,6 +218,7 @@ public class NotificationCenter {
             if (message != null) {
                 Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
                 if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TraderDisputeView.class)) {
+                    //noinspection unchecked
                     notification.actionButtonTextWithGoTo("navigation.support")
                             .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class))
                             .show();

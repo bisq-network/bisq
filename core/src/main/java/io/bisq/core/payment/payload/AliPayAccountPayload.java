@@ -44,21 +44,21 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AliPayAccountPayload(String paymentMethod,
-                                String id,
-                                long maxTradePeriod,
-                                String accountNr) {
+    private AliPayAccountPayload(String paymentMethod,
+                                 String id,
+                                 long maxTradePeriod,
+                                 String accountNr) {
         this(paymentMethod,
                 id,
                 maxTradePeriod);
-
         this.accountNr = accountNr;
     }
 
     @Override
     public Message toProtoMessage() {
-        return getPaymentAccountPayloadBuilder().setAliPayAccountPayload(PB.AliPayAccountPayload.newBuilder()
-                .setAccountNr(accountNr))
+        return getPaymentAccountPayloadBuilder()
+                .setAliPayAccountPayload(PB.AliPayAccountPayload.newBuilder()
+                        .setAccountNr(accountNr))
                 .build();
     }
 

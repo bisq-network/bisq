@@ -36,4 +36,10 @@ public final class BlockChainExplorer implements PersistablePayload {
     public Message toProtoMessage() {
         return PB.BlockChainExplorer.newBuilder().setName(name).setTxUrl(txUrl).setAddressUrl(addressUrl).build();
     }
+
+    public static BlockChainExplorer fromProto(PB.BlockChainExplorer proto) {
+        return new BlockChainExplorer(proto.getName(),
+                proto.getTxUrl(),
+                proto.getAddressUrl());
+    }
 }

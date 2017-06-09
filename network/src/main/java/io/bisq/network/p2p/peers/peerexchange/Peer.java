@@ -4,33 +4,33 @@ import io.bisq.common.proto.network.NetworkPayload;
 import io.bisq.common.proto.persistable.PersistablePayload;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.time.Instant;
 import java.util.Date;
 
 @Getter
+@EqualsAndHashCode(exclude = {"date"})
 @ToString
 public final class Peer implements NetworkPayload, PersistablePayload {
     private static final int MAX_FAILED_CONNECTION_ATTEMPTS = 5;
 
     private final NodeAddress nodeAddress;
-    private final Date date;
-
+    private final long date;
     @Setter
     private int failedConnectionAttempts = 0;
 
     public Peer(NodeAddress nodeAddress) {
-        this(nodeAddress, new Date());
+        this(nodeAddress, new Date().getTime());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Peer(NodeAddress nodeAddress, Date date) {
+    private Peer(NodeAddress nodeAddress, long date) {
         this.nodeAddress = nodeAddress;
         this.date = date;
     }
@@ -39,13 +39,13 @@ public final class Peer implements NetworkPayload, PersistablePayload {
     public PB.Peer toProtoMessage() {
         return PB.Peer.newBuilder()
                 .setNodeAddress(nodeAddress.toProtoMessage())
-                .setDate(date.getTime())
+                .setDate(date)
                 .build();
     }
 
     public static Peer fromProto(PB.Peer peer) {
         return new Peer(NodeAddress.fromProto(peer.getNodeAddress()),
-                Date.from(Instant.ofEpochMilli(peer.getDate())));
+                peer.getDate());
     }
 
 
@@ -61,22 +61,7 @@ public final class Peer implements NetworkPayload, PersistablePayload {
         return failedConnectionAttempts >= MAX_FAILED_CONNECTION_ATTEMPTS;
     }
 
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Peer)) return false;
-
-        Peer that = (Peer) o;
-
-        return !(nodeAddress != null ? !nodeAddress.equals(that.nodeAddress) : that.nodeAddress != null);
-
+    public Date getDate() {
+        return new Date(date);
     }
-
-    // We don't use the lastActivityDate for identity
-    @Override
-    public int hashCode() {
-        return nodeAddress != null ? nodeAddress.hashCode() : 0;
-    }
-
 }
