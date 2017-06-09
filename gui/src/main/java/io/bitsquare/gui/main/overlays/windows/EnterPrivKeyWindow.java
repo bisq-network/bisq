@@ -18,6 +18,7 @@
 package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import javafx.beans.value.ChangeListener;
@@ -103,11 +104,11 @@ public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
     private void addInputFields() {
         Label label = new Label("Enter private key:");
         label.setWrapText(true);
-        GridPane.setMargin(label, new Insets(3, 0, 0, 0));
+        GridPane.setMargin(label, new Insets(MainView.scale(3), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setRowIndex(label, ++rowIndex);
 
         keyInputTextField = new InputTextField();
-        GridPane.setMargin(keyInputTextField, new Insets(3, 0, 0, 0));
+        GridPane.setMargin(keyInputTextField, new Insets(MainView.scale(3), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
         GridPane.setRowIndex(keyInputTextField, rowIndex);
         GridPane.setColumnIndex(keyInputTextField, 1);
         changeListener = (observable, oldValue, newValue) -> {
@@ -135,7 +136,7 @@ public class EnterPrivKeyWindow extends Overlay<EnterPrivKeyWindow> {
         });
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         hBox.getChildren().addAll(unlockButton, cancelButton);

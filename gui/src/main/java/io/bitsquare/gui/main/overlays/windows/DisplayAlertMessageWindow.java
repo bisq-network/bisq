@@ -19,6 +19,7 @@ package io.bitsquare.gui.main.overlays.windows;
 
 import io.bitsquare.alert.Alert;
 import io.bitsquare.gui.components.HyperlinkWithIcon;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -44,7 +45,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
     }
 
     public void show() {
-        width = 700;
+        width = MainView.scale(700);
         // need to set headLine, otherwise the fields will not be created in addHeadLine
         headLine = "Important information!";
         createGridPane();
@@ -66,14 +67,14 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
 
     private void addContent() {
         checkNotNull(alert, "alertMessage must not be null");
-        addMultilineLabel(gridPane, ++rowIndex, alert.message, 10);
+        addMultilineLabel(gridPane, ++rowIndex, alert.message, MainView.scale(10));
         if (alert.isUpdateInfo) {
             headLine = "Important update information!";
             headLineLabel.setStyle("-fx-text-fill: -fx-accent;  -fx-font-weight: bold;  -fx-font-size: 22;");
             String url = "https://bitsquare.io/downloads";
             HyperlinkWithIcon hyperlinkWithIcon = addLabelHyperlinkWithIcon(gridPane, ++rowIndex,
                     "Download:", url, url).second;
-            hyperlinkWithIcon.setMaxWidth(550);
+            hyperlinkWithIcon.setMaxWidth(MainView.scale(550));
         } else {
             headLine = "Important information!";
             headLineLabel.setStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 22;");
@@ -87,7 +88,7 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
         GridPane.setRowIndex(closeButton, ++rowIndex);
         GridPane.setColumnIndex(closeButton, 1);
         gridPane.getChildren().add(closeButton);
-        GridPane.setMargin(closeButton, new Insets(10, 0, 0, 0));
+        GridPane.setMargin(closeButton, new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
     }
 
 

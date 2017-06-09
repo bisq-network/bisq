@@ -21,6 +21,7 @@ import io.bitsquare.alert.PrivateNotification;
 import io.bitsquare.common.crypto.PubKeyRing;
 import io.bitsquare.common.util.Tuple2;
 import io.bitsquare.gui.components.InputTextField;
+import io.bitsquare.gui.main.MainView;
 import io.bitsquare.gui.main.overlays.Overlay;
 import io.bitsquare.gui.main.overlays.popups.Popup;
 import io.bitsquare.p2p.NodeAddress;
@@ -72,7 +73,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         if (headLine == null)
             headLine = "Send private message";
 
-        width = 800;
+        width = MainView.scale(800);
         createGridPane();
         addHeadLine();
         addSeparator();
@@ -104,11 +105,11 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     }
 
     private void addContent() {
-        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Key for private notification:", 10).second;
+        InputTextField keyInputTextField = addLabelInputTextField(gridPane, ++rowIndex, "Key for private notification:", MainView.scale(10)).second;
         Tuple2<Label, TextArea> labelTextAreaTuple2 = addLabelTextArea(gridPane, ++rowIndex, "Private notification:", "Enter notification");
         TextArea alertMessageTextArea = labelTextAreaTuple2.second;
         Label first = labelTextAreaTuple2.first;
-        first.setMinWidth(200);
+        first.setMinWidth(MainView.scale(200));
 
         sendButton = new Button("Send private notification");
         sendButton.setOnAction(e -> {
@@ -136,7 +137,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
                                 new Popup<>().feedback("Message sending failed. error=" + errorMessage).onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
                         }))
-                    new Popup().warning("The key you entered was not correct.").width(300).onClose(() -> blurAgain()).show();
+                    new Popup().warning("The key you entered was not correct.").width(MainView.scale(300)).onClose(() -> blurAgain()).show();
             }
         });
 
@@ -147,12 +148,12 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
         });
 
         HBox hBox = new HBox();
-        hBox.setSpacing(10);
+        hBox.setSpacing(MainView.scale(10));
         GridPane.setRowIndex(hBox, ++rowIndex);
         GridPane.setColumnIndex(hBox, 1);
         hBox.getChildren().addAll(sendButton, closeButton);
         gridPane.getChildren().add(hBox);
-        GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
+        GridPane.setMargin(hBox, new Insets(MainView.scale(10), MainView.scale(0), MainView.scale(0), MainView.scale(0)));
     }
 
 

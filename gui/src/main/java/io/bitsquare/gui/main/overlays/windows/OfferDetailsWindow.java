@@ -92,7 +92,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         this.tradePrice = tradePrice;
 
         rowIndex = -1;
-        width = 950;
+        width = MainView.scale(950);
         createGridPane();
         addContent();
         display();
@@ -101,7 +101,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     public void show(Offer offer) {
         this.offer = offer;
         rowIndex = -1;
-        width = 950;
+        width = MainView.scale(950);
         createGridPane();
         addContent();
         display();
@@ -131,11 +131,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     @Override
     protected void createGridPane() {
         super.createGridPane();
-        gridPane.setPadding(new Insets(35, 40, 30, 40));
+        gridPane.setPadding(new Insets(MainView.scale(35), MainView.scale(40), MainView.scale(30), MainView.scale(40)));
         gridPane.setStyle("-fx-background-color: -bs-content-bg-grey;" +
-                        "-fx-background-radius: 5 5 5 5;" +
-                        "-fx-effect: dropshadow(gaussian, #999, 10, 0, 0, 0);" +
-                        "-fx-background-insets: 10;"
+                "-fx-background-radius: " + MainView.scale(5) + " " + MainView.scale(5) + " " +
+                MainView.scale(5) + " " + MainView.scale(5) + ";" +
+                "-fx-effect: dropshadow(gaussian, #999, " + MainView.scale(10) + "," + MainView.scale(0) +
+                "," + MainView.scale(0) + "," + MainView.scale(0) + ";" +
+                "-fx-background-insets: " + MainView.scale(10) + ";"
         );
     }
 
@@ -306,10 +308,10 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         Tuple3<Button, BusyAnimation, Label> placeOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++rowIndex, isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
         Button button = placeOfferTuple.first;
-        button.setMinHeight(40);
-        button.setPadding(new Insets(0, 20, 0, 20));
+        button.setMinHeight(MainView.scale(40));
+        button.setPadding(new Insets(MainView.scale(0), MainView.scale(20), MainView.scale(0), MainView.scale(20)));
         button.setGraphic(iconView);
-        button.setGraphicTextGap(10);
+        button.setGraphicTextGap(MainView.scale(10));
         button.setId(isBuyerRole ? "buy-button-big" : "sell-button-big");
         button.setText(isPlaceOffer ? placeOfferButtonText : takeOfferButtonText);
 
