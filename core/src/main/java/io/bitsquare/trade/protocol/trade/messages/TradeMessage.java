@@ -34,7 +34,7 @@ public abstract class TradeMessage implements DirectMessage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TradeMessage)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         TradeMessage that = (TradeMessage) o;
 

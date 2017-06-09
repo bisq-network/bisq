@@ -79,7 +79,7 @@ public class WithdrawalListItem {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof WithdrawalListItem)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         WithdrawalListItem that = (WithdrawalListItem) o;
 

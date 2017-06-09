@@ -36,7 +36,7 @@ public final class DisputeResultMessage extends DisputeMessage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DisputeResultMessage)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         DisputeResultMessage that = (DisputeResultMessage) o;
 

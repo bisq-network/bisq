@@ -87,7 +87,7 @@ public final class MailboxStoragePayload implements StoragePayload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MailboxStoragePayload)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         MailboxStoragePayload that = (MailboxStoragePayload) o;
 

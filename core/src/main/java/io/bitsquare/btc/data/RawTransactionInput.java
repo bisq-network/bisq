@@ -39,7 +39,7 @@ public final class RawTransactionInput implements Payload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RawTransactionInput)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         RawTransactionInput rawTransactionInput = (RawTransactionInput) o;
 

@@ -73,7 +73,7 @@ public class FrameRateTimer implements Timer, Runnable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof FrameRateTimer)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         FrameRateTimer that = (FrameRateTimer) o;
 

@@ -33,7 +33,7 @@ public final class MockMailboxPayload implements MailboxMessage, ExpirablePayloa
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MockMailboxPayload)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         MockMailboxPayload that = (MockMailboxPayload) o;
 

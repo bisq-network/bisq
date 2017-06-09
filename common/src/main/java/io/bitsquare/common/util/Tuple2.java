@@ -31,7 +31,7 @@ public class Tuple2<A, B> implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Tuple2)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         Tuple2<?, ?> tuple2 = (Tuple2<?, ?>) o;
 

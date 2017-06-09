@@ -31,7 +31,7 @@ public final class Attachment implements Payload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Attachment)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         Attachment that = (Attachment) o;
 

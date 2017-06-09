@@ -703,7 +703,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof ByteArray)) return false;
+            if (o == null || this.getClass() != o.getClass()) return false;
 
             ByteArray byteArray = (ByteArray) o;
 
@@ -742,7 +742,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof MapValue)) return false;
+            if (o == null || this.getClass() != o.getClass()) return false;
 
             MapValue mapValue = (MapValue) o;
 

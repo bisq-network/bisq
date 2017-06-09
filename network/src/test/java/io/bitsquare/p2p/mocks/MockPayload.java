@@ -21,7 +21,7 @@ public final class MockPayload implements Message, ExpirablePayload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MockPayload)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         MockPayload that = (MockPayload) o;
 

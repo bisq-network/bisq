@@ -84,7 +84,7 @@ public final class Filter implements StoragePayload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Filter)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         Filter filter = (Filter) o;
 

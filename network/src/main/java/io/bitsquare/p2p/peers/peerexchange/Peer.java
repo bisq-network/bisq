@@ -32,7 +32,7 @@ public final class Peer implements Payload, Persistable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Peer)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         Peer that = (Peer) o;
 

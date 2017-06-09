@@ -35,7 +35,7 @@ public class Tuple4<A, B, C, D> implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Tuple4)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         Tuple4<?, ?, ?, ?> tuple4 = (Tuple4<?, ?, ?, ?>) o;
 

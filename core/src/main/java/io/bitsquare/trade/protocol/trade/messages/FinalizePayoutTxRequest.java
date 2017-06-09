@@ -62,7 +62,7 @@ public final class FinalizePayoutTxRequest extends TradeMessage implements Mailb
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof FinalizePayoutTxRequest)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
         FinalizePayoutTxRequest that = (FinalizePayoutTxRequest) o;

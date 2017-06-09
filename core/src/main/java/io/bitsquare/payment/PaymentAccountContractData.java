@@ -62,7 +62,7 @@ public abstract class PaymentAccountContractData implements Payload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PaymentAccountContractData)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         PaymentAccountContractData that = (PaymentAccountContractData) o;
 

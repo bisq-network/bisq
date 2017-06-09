@@ -136,7 +136,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof DisputeCommunicationMessage)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         DisputeCommunicationMessage that = (DisputeCommunicationMessage) o;
 

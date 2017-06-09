@@ -17,7 +17,7 @@ public class MockData implements StoragePayload {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MockData)) return false;
+        if (o == null || this.getClass() != o.getClass()) return false;
 
         MockData that = (MockData) o;
 
