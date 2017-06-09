@@ -84,11 +84,11 @@ public class Version {
         return p2pMessageVersion;
     }
 
-    // The version for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
+    // The version for the crypto network (BTC_Mainnet = 0, BTC_TestNet = 1, BTC_Regtest = 2, ...)
     private static int CRYPTO_NETWORK_ID;
 
-    public static void setBaseCryptoNetworkId(int btcNetworkId) {
-        CRYPTO_NETWORK_ID = btcNetworkId;
+    public static void setBaseCryptoNetworkId(int baseCryptoNetworkId) {
+        CRYPTO_NETWORK_ID = baseCryptoNetworkId;
 
         // CRYPTO_NETWORK_ID  is 0, 1 or 2, we use for changes at NETWORK_PROTOCOL_VERSION a multiplication with 10
         // to avoid conflicts:

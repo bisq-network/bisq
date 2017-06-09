@@ -49,12 +49,20 @@ public class ProtoUtil {
         return "".equals(stringFromProto) ? null : stringFromProto;
     }
 
-    public static <E extends Enum<E>> E enumFromProto(Class<E> e, String id) {
+    /**
+     * Get a Java enum from a Protobuf enum in a safe way.
+     *
+     * @param enumType the class of the enum, e.g: BlaEnum.class
+     * @param name the name of the enum entry, e.g: proto.getWinner().name()
+     * @param <E> the enum Type
+     * @return an enum
+     */
+    public static <E extends Enum<E>> E enumFromProto(Class<E> enumType, String name) {
         E result = null;
         try {
-            result = Enum.valueOf(e, id);
+            result = Enum.valueOf(enumType, name);
         } catch (IllegalArgumentException err) {
-            log.error("Invalid value for enum " + e.getSimpleName() + ": " + id, err);
+            log.error("Invalid value for enum " + enumType.getSimpleName() + ": " + name, err);
         }
 
         return result;

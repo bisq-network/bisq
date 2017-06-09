@@ -26,22 +26,27 @@ import org.libdohj.params.LitecoinRegTestParams;
 import org.libdohj.params.LitecoinTestNet3Params;
 
 public enum BaseCryptoNetwork {
-    BTC_MAINNET(MainNetParams.get()),
-    BTC_TESTNET(TestNet3Params.get()),
-    BTC_REGTEST(RegTestParams.get()),
-    LTC_MAINNET(LitecoinMainNetParams.get()),
-    LTC_TESTNET(LitecoinTestNet3Params.get()),
-    LTC_REGTEST(LitecoinRegTestParams.get());
+    BTC_MAINNET(MainNetParams.get(), "BTC", "MAINNET"),
+    BTC_TESTNET(TestNet3Params.get(), "BTC", "TESTNET"),
+    BTC_REGTEST(RegTestParams.get(), "BTC", "REGTEST"),
+    LTC_MAINNET(LitecoinMainNetParams.get(), "LTC", "MAINNET"),
+    LTC_TESTNET(LitecoinTestNet3Params.get(), "LTC", "TESTNET"),
+    LTC_REGTEST(LitecoinRegTestParams.get(), "LTC", "REGTEST");
 
     public static final BaseCryptoNetwork DEFAULT = BTC_MAINNET;
 
     private final NetworkParameters parameters;
+    private String cryptoName;
+    private String networkTranslation;
 
-    BaseCryptoNetwork(NetworkParameters parameters) {
+    BaseCryptoNetwork(NetworkParameters parameters, String cryptoName, String networkTranslation) {
         this.parameters = parameters;
+        this.cryptoName = cryptoName;
+        this.networkTranslation = networkTranslation;
     }
 
     public NetworkParameters getParameters() {
         return parameters;
     }
+
 }

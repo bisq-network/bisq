@@ -5,6 +5,7 @@ import io.bisq.common.locale.*;
 import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
+import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BaseCryptoNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.Restrictions;
@@ -20,6 +21,7 @@ import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
+import org.bouncycastle.jce.provider.symmetric.ARC4;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -66,6 +68,7 @@ public final class Preferences implements PersistedDataHost {
     @Delegate(excludes = ExcludesDelegateMethods.class)
     private PreferencesPayload prefPayload = new PreferencesPayload();
     private boolean initialReadDone = false;
+    private BisqEnvironment bisqEnvironment;
 
     // Observable wrappers
     @Getter
@@ -88,7 +91,6 @@ public final class Preferences implements PersistedDataHost {
     private boolean resyncSpvRequested;
     private boolean tacAccepted;
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -97,10 +99,12 @@ public final class Preferences implements PersistedDataHost {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public Preferences(Storage<PreferencesPayload> storage,
+                       BisqEnvironment bisqEnvironment,
                        @Named(BtcOptionKeys.BTC_NODES) String btcNodesFromOptions,
                        @Named(BtcOptionKeys.USE_TOR_FOR_BTC) String useTorFlagFromOptions) {
 
         this.storage = storage;
+        this.bisqEnvironment = bisqEnvironment;
         this.btcNodesFromOptions = btcNodesFromOptions;
         this.useTorFlagFromOptions = useTorFlagFromOptions;
     }
@@ -441,6 +445,14 @@ public final class Preferences implements PersistedDataHost {
         persist();
     }
 
+    public BaseCryptoNetwork getBaseCrypteNetwork(BaseCryptoNetwork baseCrypteNetwork) {
+        return bisqEnvironment.getBaseCryptoNetwork();
+    }
+
+    public void setBaseCrypteNetwork(BaseCryptoNetwork baseCrypteNetwork) {
+        if (bisqEnvironment.getBaseCryptoNetwork() != baseCrypteNetwork)
+            bisqEnvironment.saveBaseCryptoNetwork(baseCrypteNetwork);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -528,40 +540,73 @@ public final class Preferences implements PersistedDataHost {
             tradeCurrenciesAsObservable.remove(change.getRemoved().get(0));
     }
 
-    private interface ExcludesDelegateMethods {
-        void setTacAccepted(boolean tacAccepted);
-        void setUseAnimations(boolean useAnimations);
-        void setUserLanguage(@NotNull String userLanguageCode);
-        void setUserCountry(@NotNull Country userCountry);
-        void setPreferredTradeCurrency(TradeCurrency preferredTradeCurrency);
-        void setUseTorForBitcoinJ(boolean useTorForBitcoinJ);
-        void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook);
-        void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent);
-        void setBackupDirectory(String backupDirectory);
-        void setAutoSelectArbitrators(boolean autoSelectArbitrators);
-        void setUsePercentageBasedPrice(boolean usePercentageBasedPrice);
-        void setTagForPeer(String hostName, String tag);
-        void setOfferBookChartScreenCurrencyCode(String offerBookChartScreenCurrencyCode);
-        void setBuyScreenCurrencyCode(String buyScreenCurrencyCode);
-        void setSellScreenCurrencyCode(String sellScreenCurrencyCode);
-        void setIgnoreTradersList(List<String> ignoreTradersList);
-        void setDirectoryChooserPath(String directoryChooserPath);
-        void setTradeChartsScreenCurrencyCode(String tradeChartsScreenCurrencyCode);
-        void setTradeStatisticsTickUnitIndex(int tradeStatisticsTickUnitIndex);
-        void setSortMarketCurrenciesNumerically(boolean sortMarketCurrenciesNumerically);
-        void setBitcoinNodes(String bitcoinNodes);
-        void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee);
-        void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes);
-        void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong);
-        void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount);
-        void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer);
-        void setPayFeeInBtc(boolean payFeeInBtc);
-        void setFiatCurrencies(List<FiatCurrency> currencies);
-        void setCryptoCurrencies(List<CryptoCurrency> currencies);
-        void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet);
-        void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet);
-        void setResyncSpvRequested(boolean resyncSpvRequested);
-        void setDontShowAgainMap(Map<String, Boolean> dontShowAgainMap);
-        void setPeerTagMap(Map<String, String> peerTagMap);
-    }
+private interface ExcludesDelegateMethods {
+    void setTacAccepted(boolean tacAccepted);
+
+    void setUseAnimations(boolean useAnimations);
+
+    void setUserLanguage(@NotNull String userLanguageCode);
+
+    void setUserCountry(@NotNull Country userCountry);
+
+    void setPreferredTradeCurrency(TradeCurrency preferredTradeCurrency);
+
+    void setUseTorForBitcoinJ(boolean useTorForBitcoinJ);
+
+    void setShowOwnOffersInOfferBook(boolean showOwnOffersInOfferBook);
+
+    void setMaxPriceDistanceInPercent(double maxPriceDistanceInPercent);
+
+    void setBackupDirectory(String backupDirectory);
+
+    void setAutoSelectArbitrators(boolean autoSelectArbitrators);
+
+    void setUsePercentageBasedPrice(boolean usePercentageBasedPrice);
+
+    void setTagForPeer(String hostName, String tag);
+
+    void setOfferBookChartScreenCurrencyCode(String offerBookChartScreenCurrencyCode);
+
+    void setBuyScreenCurrencyCode(String buyScreenCurrencyCode);
+
+    void setSellScreenCurrencyCode(String sellScreenCurrencyCode);
+
+    void setIgnoreTradersList(List<String> ignoreTradersList);
+
+    void setDirectoryChooserPath(String directoryChooserPath);
+
+    void setTradeChartsScreenCurrencyCode(String tradeChartsScreenCurrencyCode);
+
+    void setTradeStatisticsTickUnitIndex(int tradeStatisticsTickUnitIndex);
+
+    void setSortMarketCurrenciesNumerically(boolean sortMarketCurrenciesNumerically);
+
+    void setBitcoinNodes(String bitcoinNodes);
+
+    void setUseCustomWithdrawalTxFee(boolean useCustomWithdrawalTxFee);
+
+    void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes);
+
+    void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong);
+
+    void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount);
+
+    void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer);
+
+    void setPayFeeInBtc(boolean payFeeInBtc);
+
+    void setFiatCurrencies(List<FiatCurrency> currencies);
+
+    void setCryptoCurrencies(List<CryptoCurrency> currencies);
+
+    void setBlockChainExplorerTestNet(BlockChainExplorer blockChainExplorerTestNet);
+
+    void setBlockChainExplorerMainNet(BlockChainExplorer blockChainExplorerMainNet);
+
+    void setResyncSpvRequested(boolean resyncSpvRequested);
+
+    void setDontShowAgainMap(Map<String, Boolean> dontShowAgainMap);
+
+    void setPeerTagMap(Map<String, String> peerTagMap);
+}
 }

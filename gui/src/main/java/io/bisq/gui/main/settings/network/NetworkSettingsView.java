@@ -20,6 +20,8 @@ package io.bisq.gui.main.settings.network;
 import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
+import io.bisq.core.app.BisqEnvironment;
+import io.bisq.core.btc.BaseCryptoNetwork;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.app.BisqApp;
@@ -41,6 +43,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.VPos;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.util.StringConverter;
 import org.bitcoinj.core.Peer;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -61,6 +64,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     InputTextField btcNodes;
     @FXML
     TextField onionAddress, totalTrafficTextField;
+    @FXML
+    ComboBox<BaseCryptoNetwork> netWorkComboBox;
     @FXML
     TextArea bitcoinPeersTextArea;
     @FXML
@@ -89,14 +94,16 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     private final SortedList<P2pNetworkListItem> sortedList = new SortedList<>(networkListItems);
     private ChangeListener<Boolean> btcNodesFocusListener;
     private String btcNodesPreFocusText;
+    private BisqEnvironment bisqEnvironment;
 
     @Inject
-    public NetworkSettingsView(WalletsSetup walletsSetup, P2PService p2PService, Preferences preferences, Clock clock,
-                               BSFormatter formatter) {
+    public NetworkSettingsView(WalletsSetup walletsSetup, P2PService p2PService, Preferences preferences,
+                               BisqEnvironment bisqEnvironment, Clock clock, BSFormatter formatter) {
         super();
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.preferences = preferences;
+        this.bisqEnvironment = bisqEnvironment;
         this.clock = clock;
         this.formatter = formatter;
     }
@@ -126,6 +133,20 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         GridPane.setValignment(p2PPeersLabel, VPos.TOP);
 
         bitcoinPeersTextArea.setPrefRowCount(6);
+        netWorkComboBox.setItems(FXCollections.observableArrayList(BaseCryptoNetwork.values()));
+        netWorkComboBox.getSelectionModel().select(bisqEnvironment.getBaseCryptoNetwork());
+        netWorkComboBox.setOnAction(e -> onSelectNetwork());
+        netWorkComboBox.setConverter(new StringConverter<BaseCryptoNetwork>() {
+            @Override
+            public String toString(BaseCryptoNetwork baseCryptoNetwork) {
+                return Res.get(baseCryptoNetwork.name());
+            }
+
+            @Override
+            public BaseCryptoNetwork fromString(String string) {
+                return null;
+            }
+        });
 
         tableView.setMinHeight(230);
         tableView.setPrefHeight(230);
@@ -258,6 +279,25 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 bitcoinPeersTextArea.appendText(e.toString());
             });
         }
+    }
+
+
+    private void onSelectNetwork() {
+        if (netWorkComboBox.getSelectionModel().getSelectedItem() != bisqEnvironment.getBaseCryptoNetwork())
+            selectNetwork();
+    }
+
+    private void selectNetwork() {
+        new Popup().warning("You need to shut down and restart the application to apply the change of the Bitcoin network.\n\n" +
+                "Do you want to shut down now?")
+                .onAction(() -> {
+                    bisqEnvironment.saveBaseCryptoNetwork(netWorkComboBox.getSelectionModel().getSelectedItem());
+                    UserThread.runAfter(BisqApp.shutDownHandler::run, 500, TimeUnit.MILLISECONDS);
+                })
+                .actionButtonText("Shut down")
+                .closeButtonText("Cancel")
+                .onClose(() -> netWorkComboBox.getSelectionModel().select(bisqEnvironment.getBaseCryptoNetwork()))
+                .show();
     }
 }
 

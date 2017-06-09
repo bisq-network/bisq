@@ -111,7 +111,7 @@ public class WalletsSetup {
 
         WalletUtils.setBaseCryptoNetwork(bisqEnvironment.getBaseCryptoNetwork());
         params = WalletUtils.getParameters();
-        walletDir = new File(appDir, "bitcoin");
+        walletDir = new File(appDir, "wallet");
         PeerGroup.setIgnoreHttpSeeds(true);
     }
 

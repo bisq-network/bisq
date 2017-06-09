@@ -41,7 +41,7 @@ public class BisqEnvironmentTests {
 
         ConfigurableEnvironment env = new BisqEnvironment(commandlineProps) {
             @Override
-            PropertySource<?> appDirProperties() {
+            PropertySource<?> getAppDirProperties() {
                 return filesystemProps;
             }
         };

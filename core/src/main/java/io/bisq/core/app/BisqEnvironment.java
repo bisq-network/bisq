@@ -91,7 +91,7 @@ public class BisqEnvironment extends StandardEnvironment {
             File file = resource.getFile();
             Properties properties = new Properties();
             if (file.exists()) {
-                Object propertiesObject = appDirProperties().getSource();
+                Object propertiesObject = getAppDirProperties().getSource();
                 if (propertiesObject instanceof Properties) {
                     properties = (Properties) propertiesObject;
                 } else {
@@ -199,6 +199,7 @@ public class BisqEnvironment extends StandardEnvironment {
         MutablePropertySources propertySources = this.getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
+            propertySources.addLast(getAppDirProperties());
             baseCryptoNetwork = BaseCryptoNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CRYPTO_NETWORK,
                     BaseCryptoNetwork.DEFAULT.name()).toUpperCase());
             btcNetworkDir = Paths.get(appDataDir, baseCryptoNetwork.name().toLowerCase()).toString();
@@ -218,7 +219,7 @@ public class BisqEnvironment extends StandardEnvironment {
         return resourceLoader.getResource(location);
     }
 
-    PropertySource<?> appDirProperties() throws Exception {
+    PropertySource<?> getAppDirProperties() throws Exception {
         Resource resource = getAppDirPropertiesResource();
 
         if (!resource.exists())
