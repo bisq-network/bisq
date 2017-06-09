@@ -17,7 +17,7 @@
 
 package io.bisq.core.arbitration.messages;
 
-import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.app.Version;
 import io.bisq.core.arbitration.Dispute;
 import io.bisq.core.proto.CoreProtoResolver;
 import io.bisq.generated.protobuffer.PB;
@@ -34,14 +34,29 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
     public OpenNewDisputeMessage(Dispute dispute,
                                  NodeAddress senderNodeAddress,
                                  String uid) {
-        super(uid);
+        this(dispute,
+                senderNodeAddress,
+                uid,
+                Version.getP2PMessageVersion());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private OpenNewDisputeMessage(Dispute dispute,
+                                  NodeAddress senderNodeAddress,
+                                  String uid,
+                                  int messageVersion) {
+        super(messageVersion, uid);
         this.dispute = dispute;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        return NetworkEnvelope.getDefaultBuilder()
+        return getNetworkEnvelopeBuilder()
                 .setOpenNewDisputeMessage(PB.OpenNewDisputeMessage.newBuilder()
                         .setUid(uid)
                         .setDispute(dispute.toProtoMessage())
@@ -49,9 +64,12 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
                 .build();
     }
 
-    public static OpenNewDisputeMessage fromProto(PB.OpenNewDisputeMessage proto, CoreProtoResolver coreProtoResolver) {
+    public static OpenNewDisputeMessage fromProto(PB.OpenNewDisputeMessage proto,
+                                                  CoreProtoResolver coreProtoResolver,
+                                                  int messageVersion) {
         return new OpenNewDisputeMessage(Dispute.fromProto(proto.getDispute(), coreProtoResolver),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getUid());
+                proto.getUid(),
+                messageVersion);
     }
 }

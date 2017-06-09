@@ -20,7 +20,7 @@ package io.bisq.core.trade.messages;
 import com.google.protobuf.ByteString;
 import io.bisq.common.crypto.PubKeyRing;
 import io.bisq.common.proto.ProtoUtil;
-import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.util.Utilities;
 import io.bisq.core.btc.data.RawTransactionInput;
 import io.bisq.core.payment.payload.PaymentAccountPayload;
 import io.bisq.core.proto.CoreProtoResolver;
@@ -80,8 +80,9 @@ public final class PayDepositRequest extends TradeMessage {
                              List<NodeAddress> acceptedMediatorNodeAddresses,
                              NodeAddress arbitratorNodeAddress,
                              NodeAddress mediatorNodeAddress,
-                             String uid) {
-        super(tradeId);
+                             String uid,
+                             int messageVersion) {
+        super(messageVersion, tradeId);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
         this.tradePrice = tradePrice;
@@ -103,6 +104,11 @@ public final class PayDepositRequest extends TradeMessage {
         this.mediatorNodeAddress = mediatorNodeAddress;
         this.uid = uid;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
@@ -131,10 +137,10 @@ public final class PayDepositRequest extends TradeMessage {
                 .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
                 .setUid(uid);
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
-        return NetworkEnvelope.getDefaultBuilder().setPayDepositRequest(builder).build();
+        return getNetworkEnvelopeBuilder().setPayDepositRequest(builder).build();
     }
 
-    public static PayDepositRequest fromProto(PB.PayDepositRequest proto, CoreProtoResolver coreProtoResolver) {
+    public static PayDepositRequest fromProto(PB.PayDepositRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().stream()
                 .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
                         rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
@@ -164,6 +170,34 @@ public final class PayDepositRequest extends TradeMessage {
                 acceptedMediatorNodeAddresses,
                 NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
                 NodeAddress.fromProto(proto.getMediatorNodeAddress()),
-                proto.getUid());
+                proto.getUid(),
+                messageVersion);
+    }
+
+
+    @Override
+    public String toString() {
+        return "PayDepositRequest{" +
+                "\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     tradeAmount=" + tradeAmount +
+                ",\n     tradePrice=" + tradePrice +
+                ",\n     txFee=" + txFee +
+                ",\n     takerFee=" + takerFee +
+                ",\n     isCurrencyForTakerFeeBtc=" + isCurrencyForTakerFeeBtc +
+                ",\n     rawTransactionInputs=" + rawTransactionInputs +
+                ",\n     changeOutputValue=" + changeOutputValue +
+                ",\n     changeOutputAddress='" + changeOutputAddress + '\'' +
+                ",\n     takerMultiSigPubKey=" + Utilities.bytesAsHexString(takerMultiSigPubKey) +
+                ",\n     takerPayoutAddressString='" + takerPayoutAddressString + '\'' +
+                ",\n     takerPubKeyRing=" + takerPubKeyRing +
+                ",\n     takerPaymentAccountPayload=" + takerPaymentAccountPayload +
+                ",\n     takerAccountId='" + takerAccountId + '\'' +
+                ",\n     takerFeeTxId='" + takerFeeTxId + '\'' +
+                ",\n     acceptedArbitratorNodeAddresses=" + acceptedArbitratorNodeAddresses +
+                ",\n     acceptedMediatorNodeAddresses=" + acceptedMediatorNodeAddresses +
+                ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
+                ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
+                ",\n     uid='" + uid + '\'' +
+                "\n} " + super.toString();
     }
 }

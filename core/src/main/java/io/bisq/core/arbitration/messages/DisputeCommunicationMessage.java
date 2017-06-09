@@ -17,7 +17,7 @@
 
 package io.bisq.core.arbitration.messages;
 
-import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.app.Version;
 import io.bisq.core.arbitration.Attachment;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.NodeAddress;
@@ -62,7 +62,36 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                                        boolean arrived,
                                        boolean storedInMailbox,
                                        String uid) {
-        super(uid);
+        this(tradeId,
+                traderId,
+                senderIsTrader,
+                message,
+                attachments,
+                senderNodeAddress,
+                date,
+                arrived,
+                storedInMailbox,
+                uid,
+                Version.getP2PMessageVersion());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private DisputeCommunicationMessage(String tradeId,
+                                        int traderId,
+                                        boolean senderIsTrader,
+                                        String message,
+                                        @Nullable List<Attachment> attachments,
+                                        NodeAddress senderNodeAddress,
+                                        long date,
+                                        boolean arrived,
+                                        boolean storedInMailbox,
+                                        String uid,
+                                        int messageVersion) {
+        super(messageVersion, uid);
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
@@ -74,14 +103,9 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         storedInMailboxProperty = new SimpleBooleanProperty(storedInMailbox);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        return NetworkEnvelope.getDefaultBuilder()
+        return getNetworkEnvelopeBuilder()
                 .setDisputeCommunicationMessage(PB.DisputeCommunicationMessage.newBuilder()
                                 .setTradeId(tradeId)
                                 .setTraderId(traderId)
@@ -98,7 +122,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 .build();
     }
 
-    public static DisputeCommunicationMessage fromProto(PB.DisputeCommunicationMessage proto) {
+    public static DisputeCommunicationMessage fromProto(PB.DisputeCommunicationMessage proto, int messageVersion) {
         final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                 proto.getTradeId(),
                 proto.getTraderId(),
@@ -109,7 +133,29 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 proto.getDate(),
                 proto.getArrived(),
                 proto.getStoredInMailbox(),
-                proto.getUid());
+                proto.getUid(),
+                messageVersion);
+        disputeCommunicationMessage.setSystemMessage(proto.getIsSystemMessage());
+        return disputeCommunicationMessage;
+    }
+
+    public static DisputeCommunicationMessage fromPayloadProto(PB.DisputeCommunicationMessage proto) {
+        // We have the case that an envelope got wrapped into a payload. 
+        // We don't check the message version here as it was checked in the carrier envelope already (in connection class)
+        // Payloads dont have a message version and are also used for persistence
+        // We set the value to -1 to indicate it is set but irrelevant
+        final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                proto.getTradeId(),
+                proto.getTraderId(),
+                proto.getSenderIsTrader(),
+                proto.getMessage(),
+                new ArrayList<>(proto.getAttachmentsList().stream().map(Attachment::fromProto).collect(Collectors.toList())),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getDate(),
+                proto.getArrived(),
+                proto.getStoredInMailbox(),
+                proto.getUid(),
+                -1);
         disputeCommunicationMessage.setSystemMessage(proto.getIsSystemMessage());
         return disputeCommunicationMessage;
     }

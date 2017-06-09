@@ -18,7 +18,8 @@
 package io.bisq.core.trade.messages;
 
 import com.google.protobuf.ByteString;
-import io.bisq.common.proto.network.NetworkEnvelope;
+import io.bisq.common.app.Version;
+import io.bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.MailboxMessage;
 import io.bisq.network.p2p.NodeAddress;
@@ -38,7 +39,26 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
                                       NodeAddress senderNodeAddress,
                                       byte[] buyerSignature,
                                       String uid) {
-        super(tradeId);
+        this(tradeId,
+                buyerPayoutAddress,
+                senderNodeAddress,
+                buyerSignature,
+                uid,
+                Version.getP2PMessageVersion());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private FiatTransferStartedMessage(String tradeId,
+                                       String buyerPayoutAddress,
+                                       NodeAddress senderNodeAddress,
+                                       byte[] buyerSignature,
+                                       String uid,
+                                       int messageVersion) {
+        super(messageVersion, tradeId);
         this.buyerPayoutAddress = buyerPayoutAddress;
         this.senderNodeAddress = senderNodeAddress;
         this.buyerSignature = buyerSignature;
@@ -47,7 +67,7 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        return NetworkEnvelope.getDefaultBuilder()
+        return getNetworkEnvelopeBuilder()
                 .setFiatTransferStartedMessage(PB.FiatTransferStartedMessage.newBuilder()
                         .setTradeId(tradeId)
                         .setBuyerPayoutAddress(buyerPayoutAddress)
@@ -57,12 +77,23 @@ public final class FiatTransferStartedMessage extends TradeMessage implements Ma
                 .build();
     }
 
-    public static FiatTransferStartedMessage fromProto(PB.FiatTransferStartedMessage proto) {
+    public static FiatTransferStartedMessage fromProto(PB.FiatTransferStartedMessage proto, int messageVersion) {
         return new FiatTransferStartedMessage(proto.getTradeId(),
                 proto.getBuyerPayoutAddress(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getBuyerSignature().toByteArray(),
-                proto.getUid()
-        );
+                proto.getUid(),
+                messageVersion);
+    }
+
+
+    @Override
+    public String toString() {
+        return "FiatTransferStartedMessage{" +
+                "\n     buyerPayoutAddress='" + buyerPayoutAddress + '\'' +
+                ",\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     uid='" + uid + '\'' +
+                ",\n     buyerSignature=" + Utilities.bytesAsHexString(buyerSignature) +
+                "\n} " + super.toString();
     }
 }

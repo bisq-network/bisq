@@ -20,24 +20,18 @@ package io.bisq.network.crypto;
 
 import io.bisq.common.proto.network.NetworkEnvelope;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 
 import java.security.PublicKey;
 
 @EqualsAndHashCode
+@Value
 public final class DecryptedDataTuple {
-    public final NetworkEnvelope payload;
-    public final PublicKey sigPublicKey;
+    private final NetworkEnvelope networkEnvelope;
+    private final PublicKey sigPublicKey;
 
-    public DecryptedDataTuple(NetworkEnvelope payload, PublicKey sigPublicKey) {
-        this.payload = payload;
+    public DecryptedDataTuple(NetworkEnvelope networkEnvelope, PublicKey sigPublicKey) {
+        this.networkEnvelope = networkEnvelope;
         this.sigPublicKey = sigPublicKey;
-    }
-
-    @Override
-    public String toString() {
-        return "DecryptedPayloadWithPubKey{" +
-                "payload=" + payload +
-                ", sigPublicKey.hashCode()=" + sigPublicKey.hashCode() +
-                '}';
     }
 }

@@ -14,9 +14,8 @@ import io.bisq.network.p2p.network.CloseConnectionReason;
 import io.bisq.network.p2p.network.Connection;
 import io.bisq.network.p2p.network.MessageListener;
 import io.bisq.network.p2p.network.NetworkNode;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +24,8 @@ import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 class RequestBsqBlocksHandler implements MessageListener {
-    private static final Logger log = LoggerFactory.getLogger(RequestBsqBlocksHandler.class);
-
     private static final long TIME_OUT_SEC = 40;
     private NodeAddress peersNodeAddress;
     private Consumer<List<BsqBlock>> blockListHandler;
@@ -122,13 +120,13 @@ class RequestBsqBlocksHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
+    public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
         if (connection.getPeersNodeAddressOptional().isPresent() &&
                 connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
-            if (wireEnvelope instanceof GetBsqBlocksResponse) {
-                Log.traceCall(wireEnvelope.toString() + "\n\tconnection=" + connection);
+            if (networkEnvelop instanceof GetBsqBlocksResponse) {
+                Log.traceCall(networkEnvelop.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
-                    GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) wireEnvelope;
+                    GetBsqBlocksResponse getBsqBlocksResponse = (GetBsqBlocksResponse) networkEnvelop;
                     stopTimeoutTimer();
                     checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
                             "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +

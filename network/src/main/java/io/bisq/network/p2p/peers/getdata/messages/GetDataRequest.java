@@ -2,11 +2,22 @@ package io.bisq.network.p2p.peers.getdata.messages;
 
 import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.network.p2p.ExtendedDataSizePermission;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Set;
 
-public interface GetDataRequest extends NetworkEnvelope, ExtendedDataSizePermission {
-    int getNonce();
+@EqualsAndHashCode(callSuper = true)
+@Getter
+@ToString
+public abstract class GetDataRequest extends NetworkEnvelope implements ExtendedDataSizePermission {
+    protected final int nonce;
+    protected final Set<byte[]> excludedKeys;
 
-    Set<byte[]> getExcludedKeys();
+    public GetDataRequest(int messageVersion, int nonce, Set<byte[]> excludedKeys) {
+        super(messageVersion);
+        this.nonce = nonce;
+        this.excludedKeys = excludedKeys;
+    }
 }

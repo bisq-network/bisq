@@ -19,8 +19,8 @@ package io.bisq.core.offer.messages;
 
 
 import io.bisq.common.app.Capabilities;
+import io.bisq.common.app.Version;
 import io.bisq.common.proto.ProtoUtil;
-import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.core.offer.AvailabilityResult;
 import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.p2p.SupportedCapabilitiesMessage;
@@ -38,13 +38,22 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     private final ArrayList<Integer> supportedCapabilities = Capabilities.getCapabilities();
 
     public OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult) {
-        super(offerId);
+        this(offerId, availabilityResult, Version.getP2PMessageVersion());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private OfferAvailabilityResponse(String offerId, AvailabilityResult availabilityResult, int messageVersion) {
+        super(messageVersion, offerId);
         this.availabilityResult = availabilityResult;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        return NetworkEnvelope.getDefaultBuilder()
+        return getNetworkEnvelopeBuilder()
                 .setOfferAvailabilityResponse(PB.OfferAvailabilityResponse.newBuilder()
                         .setOfferId(offerId)
                         .setAvailabilityResult(PB.AvailabilityResult.valueOf(availabilityResult.name()))
@@ -52,8 +61,9 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                 .build();
     }
 
-    public static OfferAvailabilityResponse fromProto(PB.OfferAvailabilityResponse proto) {
+    public static OfferAvailabilityResponse fromProto(PB.OfferAvailabilityResponse proto, int messageVersion) {
         return new OfferAvailabilityResponse(proto.getOfferId(),
-                ProtoUtil.enumFromProto(AvailabilityResult.class, proto.getAvailabilityResult().name()));
+                ProtoUtil.enumFromProto(AvailabilityResult.class, proto.getAvailabilityResult().name()),
+                messageVersion);
     }
 }

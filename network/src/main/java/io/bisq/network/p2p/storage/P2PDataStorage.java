@@ -173,18 +173,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
-        if (wireEnvelope instanceof BroadcastMessage) {
-            Log.traceCall(Utilities.toTruncatedString(wireEnvelope) + "\n\tconnection=" + connection);
+    public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
+        if (networkEnvelop instanceof BroadcastMessage) {
+            Log.traceCall(Utilities.toTruncatedString(networkEnvelop) + "\n\tconnection=" + connection);
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
-                if (wireEnvelope instanceof AddDataMessage) {
-                    add(((AddDataMessage) wireEnvelope).getProtectedStorageEntry(), peersNodeAddress, null, false);
-                } else if (wireEnvelope instanceof RemoveDataMessage) {
-                    remove(((RemoveDataMessage) wireEnvelope).getProtectedStorageEntry(), peersNodeAddress, false);
-                } else if (wireEnvelope instanceof RemoveMailboxDataMessage) {
-                    removeMailboxData(((RemoveMailboxDataMessage) wireEnvelope).getProtectedMailboxStorageEntry(), peersNodeAddress, false);
-                } else if (wireEnvelope instanceof RefreshOfferMessage) {
-                    refreshTTL((RefreshOfferMessage) wireEnvelope, peersNodeAddress, false);
+                if (networkEnvelop instanceof AddDataMessage) {
+                    add(((AddDataMessage) networkEnvelop).getProtectedStorageEntry(), peersNodeAddress, null, false);
+                } else if (networkEnvelop instanceof RemoveDataMessage) {
+                    remove(((RemoveDataMessage) networkEnvelop).getProtectedStorageEntry(), peersNodeAddress, false);
+                } else if (networkEnvelop instanceof RemoveMailboxDataMessage) {
+                    removeMailboxData(((RemoveMailboxDataMessage) networkEnvelop).getProtectedMailboxStorageEntry(), peersNodeAddress, false);
+                } else if (networkEnvelop instanceof RefreshOfferMessage) {
+                    refreshTTL((RefreshOfferMessage) networkEnvelop, peersNodeAddress, false);
                 }
             });
         }

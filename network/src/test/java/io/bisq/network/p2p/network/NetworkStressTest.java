@@ -6,14 +6,15 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyRing;
 import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.crypto.PubKeyRing;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.common.util.Tuple3;
-import io.bisq.generated.protobuffer.PB;
 import io.bisq.network.crypto.EncryptionService;
 import io.bisq.network.p2p.*;
 import io.bisq.network.p2p.messaging.DecryptedMailboxListener;
 import io.bisq.network.p2p.seed.SeedNodesRepository;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +26,6 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -558,9 +558,9 @@ public class NetworkStressTest {
 
             // Make the peer ready for receiving direct network_messages.
             srcPeer.addDecryptedDirectMessageListener((decryptedDirectMessageListener, peerNodeAddress) -> {
-                if (!(decryptedDirectMessageListener.getWireEnvelope() instanceof StressTestDirectMessage))
+                if (!(decryptedDirectMessageListener.getNetworkEnvelope() instanceof StressTestDirectMessage))
                     return;
-                StressTestDirectMessage directMessage = (StressTestDirectMessage) (decryptedDirectMessageListener.getWireEnvelope());
+                StressTestDirectMessage directMessage = (StressTestDirectMessage) (decryptedDirectMessageListener.getNetworkEnvelope());
                 if ((directMessage.getData().equals("test/" + srcPeerAddress)))
                     receivedDirectLatch.countDown();
             });
@@ -742,9 +742,9 @@ public class NetworkStressTest {
     private void addMailboxListeners(P2PService peer, CountDownLatch receivedMailboxLatch) {
         class MailboxMessageListener implements DecryptedDirectMessageListener, DecryptedMailboxListener {
             private void handle(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-                if (!(decryptedMessageWithPubKey.getWireEnvelope() instanceof StressTestMailboxMessage))
+                if (!(decryptedMessageWithPubKey.getNetworkEnvelope() instanceof StressTestMailboxMessage))
                     return;
-                StressTestMailboxMessage msg = (StressTestMailboxMessage) (decryptedMessageWithPubKey.getWireEnvelope());
+                StressTestMailboxMessage msg = (StressTestMailboxMessage) (decryptedMessageWithPubKey.getNetworkEnvelope());
                 if ((msg.getData().equals("test/" + peer.getAddress())))
                     countDownAndPrint(receivedMailboxLatch, 'm');
             }
@@ -808,23 +808,14 @@ public class NetworkStressTest {
 
 // # MESSAGE CLASSES
 
-final class StressTestDirectMessage implements DirectMessage {
+final class StressTestDirectMessage extends NetworkEnvelope implements DirectMessage {
     private final int messageVersion = Version.getP2PMessageVersion();
 
     private final String data;
 
     StressTestDirectMessage(String data) {
+        super(0);
         this.data = data;
-    }
-
-    @Override
-    public int getMessageVersion() {
-        return messageVersion;
-    }
-
-    @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        throw new NotImplementedException();
     }
 
     String getData() {
@@ -832,20 +823,17 @@ final class StressTestDirectMessage implements DirectMessage {
     }
 }
 
+@EqualsAndHashCode(callSuper = true)
 @Value
-final class StressTestMailboxMessage implements MailboxMessage {
+final class StressTestMailboxMessage extends NetworkEnvelope implements MailboxMessage {
     private final int messageVersion = Version.getP2PMessageVersion();
     private final String uid = UUID.randomUUID().toString();
     private final NodeAddress senderNodeAddress;
     private final String data;
 
     StressTestMailboxMessage(NodeAddress sender, String data) {
+        super(0);
         this.senderNodeAddress = sender;
         this.data = data;
-    }
-
-    @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        throw new NotImplementedException();
     }
 }

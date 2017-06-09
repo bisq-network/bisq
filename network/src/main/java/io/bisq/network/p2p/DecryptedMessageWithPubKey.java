@@ -24,11 +24,11 @@ import java.security.PublicKey;
 
 @Value
 public final class DecryptedMessageWithPubKey {
-    private final NetworkEnvelope wireEnvelope;
+    private final NetworkEnvelope networkEnvelope;
     private final PublicKey signaturePubKey;
 
-    public DecryptedMessageWithPubKey(NetworkEnvelope wireEnvelope, PublicKey signaturePubKey) {
-        this.wireEnvelope = wireEnvelope;
+    public DecryptedMessageWithPubKey(NetworkEnvelope networkEnvelope, PublicKey signaturePubKey) {
+        this.networkEnvelope = networkEnvelope;
         this.signaturePubKey = signaturePubKey;
     }
 }

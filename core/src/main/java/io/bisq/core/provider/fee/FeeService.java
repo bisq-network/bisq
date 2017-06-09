@@ -41,7 +41,7 @@ public class FeeService {
     private static final Logger log = LoggerFactory.getLogger(FeeService.class);
 
     public static final long MIN_TX_FEE = 40; // satoshi/byte
-    public static final long MAX_TX_FEE = 500;
+    public static final long MAX_TX_FEE = 1000;
     public static final long DEFAULT_TX_FEE = 150;
 
     private static final long MIN_MAKER_FEE_IN_BTC = 10_000;

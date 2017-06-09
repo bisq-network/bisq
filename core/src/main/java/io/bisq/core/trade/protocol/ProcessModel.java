@@ -229,7 +229,7 @@ public class ProcessModel implements Model, PersistablePayload {
     public void removeMailboxMessageAfterProcessing(Trade trade) {
         if (tradeMessage instanceof MailboxMessage &&
                 decryptedMessageWithPubKey != null &&
-                decryptedMessageWithPubKey.getWireEnvelope().equals(tradeMessage)) {
+                decryptedMessageWithPubKey.getNetworkEnvelope().equals(tradeMessage)) {
             log.debug("Remove decryptedMsgWithPubKey from P2P network. decryptedMsgWithPubKey = " + decryptedMessageWithPubKey);
             p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
             trade.removeDecryptedMessageWithPubKey(decryptedMessageWithPubKey);

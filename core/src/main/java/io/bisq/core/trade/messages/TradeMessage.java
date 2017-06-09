@@ -17,21 +17,21 @@
 
 package io.bisq.core.trade.messages;
 
-import io.bisq.common.app.Version;
+import io.bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.network.p2p.DirectMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
 
-@EqualsAndHashCode
-@ToString
+@EqualsAndHashCode(callSuper = true)
 @Getter
-public abstract class TradeMessage implements DirectMessage {
-    protected final int messageVersion = Version.getP2PMessageVersion();
+@ToString
+public abstract class TradeMessage extends NetworkEnvelope implements DirectMessage {
     protected final String tradeId;
 
-    protected TradeMessage(String tradeId) {
+    protected TradeMessage(int messageVersion, String tradeId) {
+        super(messageVersion);
         this.tradeId = tradeId;
     }
 }

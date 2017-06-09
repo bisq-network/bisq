@@ -54,10 +54,10 @@ public abstract class TradeProtocol {
             PubKeyRing tradingPeerPubKeyRing = processModel.getTradingPeer().getPubKeyRing();
             PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
             if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
-                NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
-                log.trace("handleNewMessage: message = " + wireEnvelope.getClass().getSimpleName() + " from " + peersNodeAddress);
-                if (wireEnvelope instanceof TradeMessage) {
-                    TradeMessage tradeMessage = (TradeMessage) wireEnvelope;
+                NetworkEnvelope networkEnvelop = decryptedMessageWithPubKey.getNetworkEnvelope();
+                log.trace("handleNewMessage: message = " + networkEnvelop.getClass().getSimpleName() + " from " + peersNodeAddress);
+                if (networkEnvelop instanceof TradeMessage) {
+                    TradeMessage tradeMessage = (TradeMessage) networkEnvelop;
                     nonEmptyStringOf(tradeMessage.getTradeId());
 
                     if (tradeMessage.getTradeId().equals(processModel.getOfferId()))
@@ -92,17 +92,17 @@ public abstract class TradeProtocol {
     }
 
     public void applyMailboxMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
-        log.debug("applyMailboxMessage " + decryptedMessageWithPubKey.getWireEnvelope());
+        log.debug("applyMailboxMessage " + decryptedMessageWithPubKey.getNetworkEnvelope());
         if (processModel.getTradingPeer().getPubKeyRing() != null &&
                 decryptedMessageWithPubKey.getSignaturePubKey().equals(processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey())) {
             processModel.setDecryptedMessageWithPubKey(decryptedMessageWithPubKey);
-            doApplyMailboxMessage(decryptedMessageWithPubKey.getWireEnvelope(), trade);
+            doApplyMailboxMessage(decryptedMessageWithPubKey.getNetworkEnvelope(), trade);
         } else {
             log.error("SignaturePubKey in message does not match the SignaturePubKey we have stored to that trading peer.");
         }
     }
 
-    protected abstract void doApplyMailboxMessage(NetworkEnvelope wireEnvelope, Trade trade);
+    protected abstract void doApplyMailboxMessage(NetworkEnvelope networkEnvelop, Trade trade);
 
     protected abstract void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress);
 

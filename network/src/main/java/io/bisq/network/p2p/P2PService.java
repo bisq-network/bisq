@@ -443,13 +443,13 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
-        if (wireEnvelope instanceof PrefixedSealedAndSignedMessage) {
-            Log.traceCall("\n\t" + wireEnvelope.toString() + "\n\tconnection=" + connection);
+    public void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
+        if (networkEnvelop instanceof PrefixedSealedAndSignedMessage) {
+            Log.traceCall("\n\t" + networkEnvelop.toString() + "\n\tconnection=" + connection);
             // Seed nodes don't have set the encryptionService
             if (optionalEncryptionService.isPresent()) {
                 try {
-                    PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = (PrefixedSealedAndSignedMessage) wireEnvelope;
+                    PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage = (PrefixedSealedAndSignedMessage) networkEnvelop;
                     if (verifyAddressPrefixHash(prefixedSealedAndSignedMessage)) {
                         // We set connectionType to that connection to avoid that is get closed when
                         // we get too many connection attempts.
@@ -471,7 +471,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                         log.debug("Wrong receiverAddressMaskHash. The message is not intended for us.");
                     }
                 } catch (CryptoException e) {
-                    log.debug(wireEnvelope.toString());
+                    log.debug(networkEnvelop.toString());
                     log.debug(e.toString());
                     log.debug("Decryption of prefixedSealedAndSignedMessage.sealedAndSigned failed. " +
                             "That is expected if the message is not intended for us.");
@@ -500,7 +500,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     // DirectMessages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void sendEncryptedDirectMessage(NodeAddress peerNodeAddress, PubKeyRing pubKeyRing, DirectMessage message,
+    public void sendEncryptedDirectMessage(NodeAddress peerNodeAddress, PubKeyRing pubKeyRing, NetworkEnvelope message,
                                            SendDirectMessageListener sendDirectMessageListener) {
         Log.traceCall();
         checkNotNull(peerNodeAddress, "PeerAddress must not be null (sendEncryptedDirectMessage)");
@@ -511,7 +511,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
-    private void doSendEncryptedDirectMessage(@NotNull NodeAddress peersNodeAddress, PubKeyRing pubKeyRing, DirectMessage message,
+    private void doSendEncryptedDirectMessage(@NotNull NodeAddress peersNodeAddress, PubKeyRing pubKeyRing, NetworkEnvelope message,
                                               SendDirectMessageListener sendDirectMessageListener) {
         Log.traceCall();
         checkNotNull(peersNodeAddress, "Peer node address must not be null at doSendEncryptedDirectMessage");
@@ -564,8 +564,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 try {
                     DecryptedMessageWithPubKey decryptedMessageWithPubKey = optionalEncryptionService.get().decryptAndVerify(
                             prefixedSealedAndSignedMessage.getSealedAndSigned());
-                    if (decryptedMessageWithPubKey.getWireEnvelope() instanceof MailboxMessage) {
-                        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getWireEnvelope();
+                    if (decryptedMessageWithPubKey.getNetworkEnvelope() instanceof MailboxMessage) {
+                        MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
                         NodeAddress senderNodeAddress = mailboxMessage.getSenderNodeAddress();
                         checkNotNull(senderNodeAddress, "senderAddress must not be null for mailbox network_messages");
 
@@ -576,7 +576,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                 e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, senderNodeAddress));
                     } else {
                         log.warn("tryDecryptMailboxData: Expected MailboxMessage but got other type. " +
-                                "decryptedMsgWithPubKey.message=", decryptedMessageWithPubKey.getWireEnvelope());
+                                "decryptedMsgWithPubKey.message=", decryptedMessageWithPubKey.getNetworkEnvelope());
                     }
                 } catch (CryptoException e) {
                     log.debug(e.toString());
@@ -590,7 +590,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     public void sendEncryptedMailboxMessage(NodeAddress peersNodeAddress, PubKeyRing peersPubKeyRing,
-                                            MailboxMessage message,
+                                            NetworkEnvelope message,
                                             SendMailboxMessageListener sendMailboxMessageListener) {
         Log.traceCall("message " + message);
         checkNotNull(peersNodeAddress,
@@ -740,7 +740,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         Log.traceCall();
         checkArgument(optionalKeyRing.isPresent(), "keyRing not set. Seems that is called on a seed node which must not happen.");
         if (isBootstrapped()) {
-            MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getWireEnvelope();
+            MailboxMessage mailboxMessage = (MailboxMessage) decryptedMessageWithPubKey.getNetworkEnvelope();
             String uid = mailboxMessage.getUid();
             if (mailboxMap.containsKey(uid)) {
                 ProtectedMailboxStorageEntry mailboxData = mailboxMap.get(uid);

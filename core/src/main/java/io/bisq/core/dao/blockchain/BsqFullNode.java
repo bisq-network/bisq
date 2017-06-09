@@ -156,9 +156,9 @@ public class BsqFullNode extends BsqNode {
     }
 
     // TODO use handler class
-    private void onMessage(NetworkEnvelope wireEnvelope, Connection connection) {
-        if (wireEnvelope instanceof GetBsqBlocksRequest && connection.getPeersNodeAddressOptional().isPresent()) {
-            GetBsqBlocksRequest getBsqBlocksRequest = (GetBsqBlocksRequest) wireEnvelope;
+    private void onMessage(NetworkEnvelope networkEnvelop, Connection connection) {
+        if (networkEnvelop instanceof GetBsqBlocksRequest && connection.getPeersNodeAddressOptional().isPresent()) {
+            GetBsqBlocksRequest getBsqBlocksRequest = (GetBsqBlocksRequest) networkEnvelop;
             final NodeAddress peersNodeAddress = connection.getPeersNodeAddressOptional().get();
             log.info("Received getBsqBlocksRequest with data: {} from {}",
                     getBsqBlocksRequest.getFromBlockHeight(), peersNodeAddress);

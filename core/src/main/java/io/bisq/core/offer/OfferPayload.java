@@ -218,7 +218,6 @@ public final class OfferPayload implements StoragePayload, RequiresOwnerIsOnline
         this.extraDataMap = extraDataMap;
         this.protocolVersion = protocolVersion;
     }
-//38
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER

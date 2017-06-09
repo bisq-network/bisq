@@ -136,12 +136,12 @@ public class TradeManager implements PersistedDataHost {
         p2PService.addDecryptedDirectMessageListener(new DecryptedDirectMessageListener() {
             @Override
             public void onDirectMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress peerNodeAddress) {
-                NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
+                NetworkEnvelope networkEnvelop = decryptedMessageWithPubKey.getNetworkEnvelope();
 
                 // Handler for incoming initial network_messages from taker
-                if (wireEnvelope instanceof PayDepositRequest) {
-                    log.trace("Received PayDepositRequest: " + wireEnvelope);
-                    handleInitialTakeOfferRequest((PayDepositRequest) wireEnvelope, peerNodeAddress);
+                if (networkEnvelop instanceof PayDepositRequest) {
+                    log.trace("Received PayDepositRequest: " + networkEnvelop);
+                    handleInitialTakeOfferRequest((PayDepositRequest) networkEnvelop, peerNodeAddress);
                 }
             }
         });
@@ -152,10 +152,10 @@ public class TradeManager implements PersistedDataHost {
             public void onMailboxMessageAdded(DecryptedMessageWithPubKey decryptedMessageWithPubKey, NodeAddress senderNodeAddress) {
                 log.debug("onMailboxMessageAdded decryptedMessageWithPubKey: " + decryptedMessageWithPubKey);
                 log.trace("onMailboxMessageAdded senderAddress: " + senderNodeAddress);
-                NetworkEnvelope wireEnvelope = decryptedMessageWithPubKey.getWireEnvelope();
-                if (wireEnvelope instanceof TradeMessage) {
-                    log.trace("Received TradeMessage: " + wireEnvelope);
-                    String tradeId = ((TradeMessage) wireEnvelope).getTradeId();
+                NetworkEnvelope networkEnvelop = decryptedMessageWithPubKey.getNetworkEnvelope();
+                if (networkEnvelop instanceof TradeMessage) {
+                    log.trace("Received TradeMessage: " + networkEnvelop);
+                    String tradeId = ((TradeMessage) networkEnvelop).getTradeId();
                     Optional<Trade> tradeOptional = tradableList.stream().filter(e -> e.getId().equals(tradeId)).findAny();
                     // The mailbox message will be removed inside the tasks after they are processed successfully
                     if (tradeOptional.isPresent())
