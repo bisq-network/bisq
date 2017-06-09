@@ -305,7 +305,7 @@ public class BisqApp extends Application {
 
             // Used only for migrating old trade statistic to new data structure
             // injector.getInstance(TradeStatisticsMigrationTool.class);
-                    
+
             if (!Utilities.isCorrectOSArchitecture()) {
                 String osArchitecture = Utilities.getOSArchitecture();
                 // We don't force a shutdown as the osArchitecture might in strange cases return a wrong value.
