@@ -86,9 +86,10 @@ At IntelliJ 14 you need to edit the idea.properties in the app container:
 /Applications/IntelliJ\ IDEA\ 14\ CE.app/Contents/bin/idea.properties 
 
 
-Build bitcoinj and btcd-cli4j fork
------------------
-### 3. Install BitcoinJ fork (bisq_0.14.4.1) and Btcd-cli4j
+Build required dependencies
+---------------------------
+### 3. Install BitcoinJ (branch bisq_0.14.4.1), libdohj and Btcd-cli4j
+libdohj is used for supporting usage of some altcoins with BitcoinJ.
 Btcd-cli4j is used for RPC communication to a local Bitcoin Core node for verifying the BSQ transactions.
 It is not needed for a normal user to run such a "full node" but for the build it is required.
 
@@ -98,6 +99,11 @@ It is not needed for a normal user to run such a "full node" but for the build i
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
     
     $ cd ..
+    $ git clone https://github.com/bitsquare/libdohj.git
+    $ cd bitcoinj
+    $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
+        
+    $ cd ..
     $ git clone https://github.com/bitsquare/btcd-cli4j.git
     $ cd btcd-cli4j
     $ mvn clean install -DskipTests -Dmaven.javadoc.skip=true
@@ -106,10 +112,13 @@ It is not needed for a normal user to run such a "full node" but for the build i
 Prepare bisq build
 -----------------
 ### 4. Install Protobuffer
+Install Protobuffer as binary or build from source.
 
-    $ wget https://github.com/google/protobuf/releases/download/v3.2.0/protobuf-java-3.2.0.tar.gz
-    $ tar xzf protobuf-3.2.0.tar.gz
-    $ cd protobuf-3.2.0
+Build from source:
+
+    $ wget https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-java-3.3.0.tar.gz
+    $ tar xzf protobuf-3.3.0.tar.gz
+    $ cd protobuf-3.3.0
     $ sudo apt-get update
     $ sudo apt-get install build-essential
     $ sudo ./configure
@@ -121,7 +130,7 @@ Prepare bisq build
 
 ### 5. Get bisq source code and build a preliminary bisq version (don't run the jar, it wont work)
 
-You need to get the bisq dependencies first as we need to copy the BouncyCastle jar to the JRE directory.
+We need to get the bisq dependencies resolved first as we need to copy the BouncyCastle jar to the JRE directory.
 
     $ git clone https://github.com/bitsquare/bitsquare.git
     $ cd bisq
