@@ -46,6 +46,7 @@ public class SeedNodesRepository {
     // - testnet use port ends in 1
     // - regtest use port ends in 2
     private Set<NodeAddress> localhostSeedNodeAddresses = Sets.newHashSet(
+            // BTC
             // mainnet
             new NodeAddress("localhost:2000"),
             new NodeAddress("localhost:3000"),
@@ -59,7 +60,14 @@ public class SeedNodesRepository {
             // regtest
             new NodeAddress("localhost:2002"),
             new NodeAddress("localhost:3002"),
-            new NodeAddress("localhost:4002")
+            new NodeAddress("localhost:4002"),
+
+            // LTC
+            // mainnet
+            new NodeAddress("localhost:2003"),
+
+            // regtest
+            new NodeAddress("localhost:2005")
     );
     private NodeAddress nodeAddressToExclude;
 
