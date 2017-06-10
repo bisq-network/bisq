@@ -19,6 +19,7 @@ package io.bisq.gui.main.settings.network;
 
 import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
+import io.bisq.common.app.DevEnv;
 import io.bisq.common.locale.Res;
 import io.bisq.core.app.BisqEnvironment;
 import io.bisq.core.btc.BaseCurrencyNetwork;
@@ -136,7 +137,15 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         GridPane.setValignment(p2PPeersLabel, VPos.TOP);
 
         bitcoinPeersTextArea.setPrefRowCount(6);
-        selectCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(BaseCurrencyNetwork.values()));
+
+        ObservableList<BaseCurrencyNetwork> baseCurrencyNetworks = FXCollections.observableArrayList(BaseCurrencyNetwork.values());
+        // show ony mainnet in production version
+        if (!DevEnv.DEV_MODE)
+            baseCurrencyNetworks = FXCollections.observableArrayList(baseCurrencyNetworks.stream()
+                    .filter(e -> e.getNetwork().equals("MAINNET"))
+                    .collect(Collectors.toList()));
+        selectCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
+        
         selectCurrencyNetworkComboBox.getSelectionModel().select(bisqEnvironment.getBaseCurrencyNetwork());
         selectCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
         selectCurrencyNetworkComboBox.setConverter(new StringConverter<BaseCurrencyNetwork>() {
