@@ -61,6 +61,9 @@ public final class Preferences implements PersistedDataHost {
             new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/")
     ));
 
+    // TODO ltc explorers
+    //https://chainz.cryptoid.info/ltc/
+
 
     // payload is initialized so the default values are available for Property initialization.
     @Setter
