@@ -23,7 +23,7 @@ import io.bisq.common.app.Version;
 import io.bisq.common.crypto.KeyStorage;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
-import io.bisq.core.btc.BaseCryptoNetwork;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.UserAgent;
 import io.bisq.core.dao.DaoOptionKeys;
@@ -75,17 +75,17 @@ public class BisqEnvironment extends StandardEnvironment {
     private final String appDataDir;
     private final String btcNetworkDir;
     private final String logLevel, providers;
-    private BaseCryptoNetwork baseCryptoNetwork;
+    private BaseCurrencyNetwork baseCurrencyNetwork;
     private final String btcNodes, seedNodes, ignoreDevMsg, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             socks5ProxyHttpAddress;
 
-    public BaseCryptoNetwork getBaseCryptoNetwork() {
-        return baseCryptoNetwork;
+    public BaseCurrencyNetwork getBaseCurrencyNetwork() {
+        return baseCurrencyNetwork;
     }
 
-    public void saveBaseCryptoNetwork(BaseCryptoNetwork baseCryptoNetwork) {
+    public void saveBaseCryptoNetwork(BaseCurrencyNetwork baseCurrencyNetwork) {
         try {
             Resource resource = getAppDirPropertiesResource();
             File file = resource.getFile();
@@ -98,7 +98,7 @@ public class BisqEnvironment extends StandardEnvironment {
                     log.warn("propertiesObject not instance of Properties");
                 }
             }
-            properties.setProperty(BtcOptionKeys.BASE_CRYPTO_NETWORK, baseCryptoNetwork.name());
+            properties.setProperty(BtcOptionKeys.BASE_CRYPTO_NETWORK, baseCurrencyNetwork.name());
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
                 properties.store(fileOutputStream, null);
@@ -201,9 +201,9 @@ public class BisqEnvironment extends StandardEnvironment {
         propertySources.addFirst(commandLineProperties);
         try {
             propertySources.addLast(getAppDirProperties());
-            baseCryptoNetwork = BaseCryptoNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CRYPTO_NETWORK,
-                    BaseCryptoNetwork.DEFAULT.name()).toUpperCase());
-            btcNetworkDir = Paths.get(appDataDir, baseCryptoNetwork.name().toLowerCase()).toString();
+            baseCurrencyNetwork = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CRYPTO_NETWORK,
+                    BaseCurrencyNetwork.DEFAULT.name()).toUpperCase());
+            btcNetworkDir = Paths.get(appDataDir, baseCurrencyNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())
                 //noinspection ResultOfMethodCallIgnored
@@ -247,7 +247,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(NetworkOptionKeys.MY_ADDRESS, myAddress);
                 setProperty(NetworkOptionKeys.BAN_LIST, banList);
                 setProperty(NetworkOptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
-                setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(baseCryptoNetwork.ordinal()));
+                setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(baseCurrencyNetwork.ordinal()));
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS, socks5ProxyBtcAddress);
                 setProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, socks5ProxyHttpAddress);
 

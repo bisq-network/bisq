@@ -109,7 +109,7 @@ public class WalletsSetup {
 
         this.socks5DiscoverMode = evaluateMode(socks5DiscoverModeString);
 
-        WalletUtils.setBaseCryptoNetwork(bisqEnvironment.getBaseCryptoNetwork());
+        WalletUtils.setBaseCurrencyNetwork(bisqEnvironment.getBaseCurrencyNetwork());
         params = WalletUtils.getParameters();
         walletDir = new File(appDir, "wallet");
         PeerGroup.setIgnoreHttpSeeds(true);

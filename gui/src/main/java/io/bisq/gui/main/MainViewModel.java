@@ -216,7 +216,7 @@ public class MainViewModel implements ViewModel {
         this.keyRing = keyRing;
         this.formatter = formatter;
 
-        btcNetworkAsString = Res.get(WalletUtils.getBaseCryptoNetwork().name()) +
+        btcNetworkAsString = Res.get(WalletUtils.getBaseCurrencyNetwork().name()) +
                 (preferences.getUseTorForBitcoinJ() ? (" " + Res.get("mainView.footer.usingTor")) : "");
 
         TxIdTextField.setPreferences(preferences);

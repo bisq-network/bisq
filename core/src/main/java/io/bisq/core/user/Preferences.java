@@ -6,7 +6,7 @@ import io.bisq.common.proto.persistable.PersistedDataHost;
 import io.bisq.common.storage.Storage;
 import io.bisq.common.util.Utilities;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.btc.BaseCryptoNetwork;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.BtcOptionKeys;
 import io.bisq.core.btc.Restrictions;
 import io.bisq.core.btc.wallet.WalletUtils;
@@ -21,7 +21,6 @@ import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
-import org.bouncycastle.jce.provider.symmetric.ARC4;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -269,7 +268,7 @@ public final class Preferences implements PersistedDataHost {
     }
 
     public void setBlockChainExplorer(BlockChainExplorer blockChainExplorer) {
-        if (WalletUtils.getBaseCryptoNetwork() == BaseCryptoNetwork.BTC_MAINNET)
+        if (WalletUtils.getBaseCurrencyNetwork() == BaseCurrencyNetwork.BTC_MAINNET)
             setBlockChainExplorerMainNet(blockChainExplorer);
         else
             setBlockChainExplorerTestNet(blockChainExplorer);
@@ -447,12 +446,12 @@ public final class Preferences implements PersistedDataHost {
         persist();
     }
 
-    public BaseCryptoNetwork getBaseCrypteNetwork(BaseCryptoNetwork baseCrypteNetwork) {
-        return bisqEnvironment.getBaseCryptoNetwork();
+    public BaseCurrencyNetwork getBaseCrypteNetwork(BaseCurrencyNetwork baseCrypteNetwork) {
+        return bisqEnvironment.getBaseCurrencyNetwork();
     }
 
-    public void setBaseCrypteNetwork(BaseCryptoNetwork baseCrypteNetwork) {
-        if (bisqEnvironment.getBaseCryptoNetwork() != baseCrypteNetwork)
+    public void setBaseCrypteNetwork(BaseCurrencyNetwork baseCrypteNetwork) {
+        if (bisqEnvironment.getBaseCurrencyNetwork() != baseCrypteNetwork)
             bisqEnvironment.saveBaseCryptoNetwork(baseCrypteNetwork);
     }
 
@@ -481,14 +480,14 @@ public final class Preferences implements PersistedDataHost {
     }
 
     public BlockChainExplorer getBlockChainExplorer() {
-        if (WalletUtils.getBaseCryptoNetwork() == BaseCryptoNetwork.BTC_MAINNET)
+        if (WalletUtils.getBaseCurrencyNetwork() == BaseCurrencyNetwork.BTC_MAINNET)
             return prefPayload.getBlockChainExplorerMainNet();
         else
             return prefPayload.getBlockChainExplorerTestNet();
     }
 
     public ArrayList<BlockChainExplorer> getBlockChainExplorers() {
-        if (WalletUtils.getBaseCryptoNetwork() == BaseCryptoNetwork.BTC_MAINNET)
+        if (WalletUtils.getBaseCurrencyNetwork() == BaseCurrencyNetwork.BTC_MAINNET)
             return BLOCK_CHAIN_EXPLORERS_MAIN_NET;
         else
             return BLOCK_CHAIN_EXPLORERS_TEST_NET;
@@ -502,7 +501,7 @@ public final class Preferences implements PersistedDataHost {
         // We override the useTorForBitcoinJ and set to false if we have bitcoinNodes set
         // Atm we don't support onion addresses there
         // This check includes localhost, so we also override useTorForBitcoinJ
-        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty() || WalletUtils.getBaseCryptoNetwork() == BaseCryptoNetwork.BTC_REGTEST)
+        if (prefPayload.getBitcoinNodes() != null && !prefPayload.getBitcoinNodes().isEmpty() || WalletUtils.getBaseCurrencyNetwork() == BaseCurrencyNetwork.BTC_REGTEST)
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();

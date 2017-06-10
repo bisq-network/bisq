@@ -90,10 +90,8 @@ public class Version {
     public static void setBaseCryptoNetworkId(int baseCryptoNetworkId) {
         CRYPTO_NETWORK_ID = baseCryptoNetworkId;
 
-        // CRYPTO_NETWORK_ID  is 0, 1 or 2, we use for changes at NETWORK_PROTOCOL_VERSION a multiplication with 10
-        // to avoid conflicts:
-        // E.g. btc CRYPTO_NETWORK_ID=1, NETWORK_PROTOCOL_VERSION=1 -> getNetworkId()=2;
-        // CRYPTO_NETWORK_ID=0, NETWORK_PROTOCOL_VERSION=2 -> getNetworkId()=2; -> wrong
+        // CRYPTO_NETWORK_ID is ordinal of enum. We use for changes at NETWORK_PROTOCOL_VERSION a multiplication with 10
+        // to not mix up networks:
         p2pMessageVersion = CRYPTO_NETWORK_ID + 10 * P2P_NETWORK_VERSION;
     }
 

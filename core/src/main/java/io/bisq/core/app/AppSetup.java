@@ -41,7 +41,7 @@ public abstract class AppSetup {
         this.keyRing = keyRing;
         this.tradeStatisticsManager = tradeStatisticsManager;
 
-        Version.setBaseCryptoNetworkId(bisqEnvironment.getBaseCryptoNetwork().ordinal());
+        Version.setBaseCryptoNetworkId(bisqEnvironment.getBaseCurrencyNetwork().ordinal());
         Version.printVersion();
     }
 

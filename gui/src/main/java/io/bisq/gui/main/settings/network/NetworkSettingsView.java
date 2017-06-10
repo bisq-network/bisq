@@ -21,7 +21,7 @@ import io.bisq.common.Clock;
 import io.bisq.common.UserThread;
 import io.bisq.common.locale.Res;
 import io.bisq.core.app.BisqEnvironment;
-import io.bisq.core.btc.BaseCryptoNetwork;
+import io.bisq.core.btc.BaseCurrencyNetwork;
 import io.bisq.core.btc.wallet.WalletsSetup;
 import io.bisq.core.user.Preferences;
 import io.bisq.gui.app.BisqApp;
@@ -65,7 +65,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
     @FXML
     TextField onionAddress, totalTrafficTextField;
     @FXML
-    ComboBox<BaseCryptoNetwork> netWorkComboBox;
+    ComboBox<BaseCurrencyNetwork> netWorkComboBox;
     @FXML
     TextArea bitcoinPeersTextArea;
     @FXML
@@ -133,17 +133,17 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         GridPane.setValignment(p2PPeersLabel, VPos.TOP);
 
         bitcoinPeersTextArea.setPrefRowCount(6);
-        netWorkComboBox.setItems(FXCollections.observableArrayList(BaseCryptoNetwork.values()));
-        netWorkComboBox.getSelectionModel().select(bisqEnvironment.getBaseCryptoNetwork());
+        netWorkComboBox.setItems(FXCollections.observableArrayList(BaseCurrencyNetwork.values()));
+        netWorkComboBox.getSelectionModel().select(bisqEnvironment.getBaseCurrencyNetwork());
         netWorkComboBox.setOnAction(e -> onSelectNetwork());
-        netWorkComboBox.setConverter(new StringConverter<BaseCryptoNetwork>() {
+        netWorkComboBox.setConverter(new StringConverter<BaseCurrencyNetwork>() {
             @Override
-            public String toString(BaseCryptoNetwork baseCryptoNetwork) {
-                return Res.get(baseCryptoNetwork.name());
+            public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
+                return Res.get(baseCurrencyNetwork.name());
             }
 
             @Override
-            public BaseCryptoNetwork fromString(String string) {
+            public BaseCurrencyNetwork fromString(String string) {
                 return null;
             }
         });
@@ -283,7 +283,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
 
 
     private void onSelectNetwork() {
-        if (netWorkComboBox.getSelectionModel().getSelectedItem() != bisqEnvironment.getBaseCryptoNetwork())
+        if (netWorkComboBox.getSelectionModel().getSelectedItem() != bisqEnvironment.getBaseCurrencyNetwork())
             selectNetwork();
     }
 
@@ -296,7 +296,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
                 })
                 .actionButtonText("Shut down")
                 .closeButtonText("Cancel")
-                .onClose(() -> netWorkComboBox.getSelectionModel().select(bisqEnvironment.getBaseCryptoNetwork()))
+                .onClose(() -> netWorkComboBox.getSelectionModel().select(bisqEnvironment.getBaseCurrencyNetwork()))
                 .show();
     }
 }

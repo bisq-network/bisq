@@ -205,7 +205,7 @@ public class BisqApp extends Application {
                 }
             });
 
-            Version.setBaseCryptoNetworkId(injector.getInstance(BisqEnvironment.class).getBaseCryptoNetwork().ordinal());
+            Version.setBaseCryptoNetworkId(injector.getInstance(BisqEnvironment.class).getBaseCurrencyNetwork().ordinal());
             Version.printVersion();
 
             if (Utilities.isLinux())
